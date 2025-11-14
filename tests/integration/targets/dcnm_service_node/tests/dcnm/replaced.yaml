@@ -23,7 +23,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.response.DATA != None'
+      - 'result.response.DATA != None'
 
 - name: REPLACED - Verify if service fabric is deployed.
   cisco.dcnm.dcnm_rest:
@@ -34,7 +34,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.response.DATA != None'
+      - 'result.response.DATA != None'
 
 - name: REPLACED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -60,20 +60,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
@@ -98,20 +98,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: replaced
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: physical
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
@@ -133,7 +133,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -145,20 +145,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: replaced
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
@@ -180,7 +180,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
 
 - name: REPLACED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -206,19 +206,19 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
@@ -239,19 +239,19 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: replaced
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: physical
       svc_int_name: svc1
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
@@ -273,7 +273,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -285,19 +285,19 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: replaced
     config:
-    - name: SN-11
+      - name: SN-11
       type: load_balancer
       form_factor: physical
       svc_int_name: svc1
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
@@ -318,19 +318,19 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: replaced
     config:
-    - name: SN-11
+      - name: SN-11
       type: virtual_network_function
       form_factor: physical
       svc_int_name: svc1
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
@@ -351,20 +351,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: replaced
     config:
-    - name: SN-11111111111
+      - name: SN-11111111111
       type: firewall
       form_factor: physical
       svc_int_name: svc11
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
   register: result
   ignore_errors: true
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
@@ -381,20 +381,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: replaced
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: physical
       svc_int_name: svc111111111
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
   register: result
   ignore_errors: true
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
 
 - name: REPLACED - Replace Service Node with not supported change of already created attach interface
   cisco.dcnm.dcnm_service_node:
@@ -402,20 +402,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: replaced
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: physical
       svc_int_name: svc11
       attach_interface: "{{ ansible_int2 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
   register: result
   ignore_errors: true
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
 
 - name: REPLACED - Replace Service Node with not supported change of already created attached switch
   cisco.dcnm.dcnm_service_node:
@@ -423,20 +423,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: replaced
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: physical
       svc_int_name: svc11
       attach_interface: "{{ ansible_int2 }}"
       switches:
-      - "{{ ansible_switch5 }}"
+        - "{{ ansible_switch5 }}"
   register: result
   ignore_errors: true
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
 
 ###############################################
 ###                 CLEAN-UP                 ##

@@ -51,7 +51,7 @@ EXAMPLES = """
 
 - name: Log
   cisco.dcnm.dcnm_log:
-    msg: dcnm_vrf.merged - Create VRF myVrf 
+    msg: dcnm_vrf.merged - Create VRF myVrf
     severity: INFO
 
 - name: dcnm_vrf.merged - Create VRF myVrf
@@ -71,7 +71,7 @@ EXAMPLES = """
 
 - name: Log
   cisco.dcnm.dcnm_log:
-    msg: dcnm_vrf.merged - Create VRF myVrf DONE 
+    msg: dcnm_vrf.merged - Create VRF myVrf DONE
 
 """  # noqa
 

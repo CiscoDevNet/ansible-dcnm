@@ -90,7 +90,7 @@
 - name: SANITY - TC1 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: sanity
 
 - name: SANITY - TC1 - QUERY - Get network state in NDFC
@@ -128,7 +128,7 @@
 - name: SANITY - TC2 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: sanity
 
 - name: SANITY - TC2 - QUERY - Get network state in NDFC
@@ -153,7 +153,7 @@
 - name: SANITY - TC2 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: sanity
 
 ##############################################
@@ -177,7 +177,7 @@
 - name: SANITY - TC3 - ASSERT - Check changed flag
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: sanity
 
 - name: SANITY - TC3 - QUERY - Get network state in NDFC
@@ -232,7 +232,7 @@
 - name: SANITY - TC3 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: sanity
 
 - name: SANITY - END - Clean up any existing networks

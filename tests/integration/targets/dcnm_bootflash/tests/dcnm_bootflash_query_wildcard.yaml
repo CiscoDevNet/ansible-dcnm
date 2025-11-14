@@ -75,10 +75,8 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
-#                 "172.22.150.112": [
-#                     {
+#         "diff": [#             {
+#                 "172.22.150.112": [#                     {
 #                         "bootflash_type": "active",
 #                         "date": "Aug 03 01:37:06 2024",
 #                         "deviceName": "cvd-1211-spine",
@@ -89,9 +87,8 @@
 #                         "serialNumber": "FOX2109PGCS",
 #                         "size": "4"
 #                     }
-#                 ],
-#                 "172.22.150.113": [
-#                     {
+#],
+#                 "172.22.150.113": [#                     {
 #                         "bootflash_type": "active",
 #                         "date": "Aug 03 01:38:10 2024",
 #                         "deviceName": "cvd-1212-spine",
@@ -102,26 +99,23 @@
 #                         "serialNumber": "FOX2109PGD0",
 #                         "size": "4"
 #                     }
-#                 ],
+#],
 #                 "sequence_number": 1
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "bootflash_info",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "query"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "172.22.150.112": {
 #                     "DATA": {
 #                         "bootFlashDataMap": {
-#                             "bootflash:": [
-#                                {
+#                             "bootflash:": [#                                {
 #                                    "bootflash_type": "active",
 #                                    "date": "Aug 12 23:17:57 2024",
 #                                    "deviceName": "cvd-1211-spine",
@@ -132,7 +126,7 @@
 #                                    "serialNumber": "FOX2109PGCS",
 #                                    "size": "2"
 #                                }
-#                             ]
+#]
 #                         },
 #                         "bootFlashSpaceMap": {
 #                             "bootflash:": {
@@ -146,9 +140,8 @@
 #                                 "usedSpace": 8690008064
 #                             }
 #                         },
-#                         "partitions": [
-#                             "bootflash:"
-#                         ],
+#                         "partitions": [#                             "bootflash:"
+#],
 #                         "requiredSpace": "NA"
 #                     },
 #                     "MESSAGE": "OK",
@@ -159,8 +152,7 @@
 #                 "172.22.150.113": {
 #                     "DATA": {
 #                         "bootFlashDataMap": {
-#                             "bootflash:": [
-#                                 {
+#                             "bootflash:": [#                                 {
 #                                     "bootflash_type": "active",
 #                                     "date": "Jul 07 01:20:21 2024",
 #                                     "deviceName": "cvd-1212-spine",
@@ -171,7 +163,7 @@
 #                                     "serialNumber": "FOX2109PGD0",
 #                                     "size": "2"
 #                                 }
-#                             ]
+#]
 #                         },
 #                         "bootFlashSpaceMap": {
 #                             "bootflash:": {
@@ -185,9 +177,8 @@
 #                                 "usedSpace": 11054571520
 #                             }
 #                         },
-#                         "partitions": [
-#                             "bootflash:"
-#                         ],
+#                         "partitions": [#                             "bootflash:"
+#],
 #                         "requiredSpace": "NA"
 #                     },
 #                     "MESSAGE": "OK",
@@ -197,9 +188,8 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "172.22.150.112": {
 #                     "found": true,
 #                     "success": true
@@ -210,7 +200,7 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-#         ]
+#]
 #     }
 # }
 
@@ -242,7 +232,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.diff[0][switch1][0].filepath == switch1_filepath1
+      - result.diff[0][switch1][0].filepath == switch1_filepath1
     - result.diff[0][switch1][1].filepath == switch1_filepath2
     - result.diff[0][switch1][2].filepath == switch1_filepath3
     - result.diff[0][switch2][0].filepath == switch2_filepath1
@@ -251,8 +241,8 @@
     - result.changed == false
     - result.failed == false
     - (result.diff | length) == 1
-    - (result.diff[0] | length) == 3
-    - (result.response | length) == 1
+      - (result.diff[0] | length) == 3
+        - (result.response | length) == 1
     - result.response[0][switch1].RETURN_CODE == 200
     - result.response[0][switch2].RETURN_CODE == 200
     - result.response[0][switch1].MESSAGE == "OK"

@@ -14,7 +14,8 @@
   tags: sanity
 
 - name: set test_items
-  ansible.builtin.set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  ansible.builtin.set_fact:
+    test_items: "{{ test_cases.files | map(attribute='path') | list }}"
   tags: sanity
 
 - name: run test cases (connection=httpapi)
@@ -36,7 +37,7 @@
 
 - name: Set fact
   ansible.builtin.set_fact:
-    vpc_delete_path: "{{ vpc_delete_path | combine (item) }}"
+    vpc_delete_path: "{{ vpc_delete_path | combine(item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair?serialNumber='}
     - {'11': '/rest/vpcpair?serialNumber='}
@@ -47,7 +48,7 @@
 - name: Final Cleanup - Delete DCNM VXLAN Fabric VPC switch pair
   cisco.dcnm.dcnm_rest:
     method: DELETE
-    path: "{{ [vpc_delete_path[controller_version], test_data_common.vxlan_fabric_sno1] | join ('') }}"
+    path: "{{ [vpc_delete_path[controller_version], test_data_common.vxlan_fabric_sno1] | join('') }}"
   register: result
   ignore_errors: true
   when: (test_data_common.vxlan_fabric is defined and test_data_common.vxlan_fabric_sno1 is defined and test_data_common.vxlan_fabric_sno2 is defined)
@@ -90,7 +91,7 @@
 - name: Final Cleanup - Delete DCNM CXT Fabric VPC switch pair
   cisco.dcnm.dcnm_rest:
     method: DELETE
-    path: "{{ [vpc_delete_path[controller_version], test_data_common.cxt_fabric_sno1] | join ('') }}"
+    path: "{{ [vpc_delete_path[controller_version], test_data_common.cxt_fabric_sno1] | join('') }}"
   register: result
   ignore_errors: true
   when: (test_data_common.cxt_fabric is defined and test_data_common.cxt_fabric_sno1 is defined and test_data_common.cxt_fabric_sno2 is defined)

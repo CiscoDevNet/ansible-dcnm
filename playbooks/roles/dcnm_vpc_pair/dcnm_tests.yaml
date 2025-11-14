@@ -8,12 +8,13 @@
 # setup and uncomment the testcase you want to run.
 #
 - hosts: dcnm
+  name: Play for dcnm
   gather_facts: false
   connection: ansible.netcommon.httpapi
 
   vars:
     # testcase: "*merge*"
-    IT_CONTEXT: true
+    it_context: true
     test_data_common:
       switch_username: admin
       switch_password: "password"

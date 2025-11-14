@@ -41,7 +41,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: merged
 
@@ -125,7 +125,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: merged
 
@@ -192,7 +192,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: merged
 
@@ -257,7 +257,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: merged
 
@@ -318,7 +318,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'merged_result.changed == false'
+      - 'merged_result.changed == false'
     - 'merged_result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: merged
 
@@ -334,7 +334,7 @@
 - name: Merged TC13 - Prepare Config
   ansible.builtin.set_fact:
     switch_conf:
-    - seed_ip:
+      - seed_ip:
       max_hops: 0
       role: leaf
       auth_proto: MD5
@@ -360,7 +360,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'merged_result.changed == false'
+      - 'merged_result.changed == false'
     - '"Invalid parameters in playbook: seed_ip : Required parameter not found" in merged_result.msg'
   tags: merged
 
@@ -368,7 +368,7 @@
 - name: Merged TC14 - Prepare Config
   ansible.builtin.set_fact:
     switch_conf:
-    - seed_ip: "{{ test_data.sw1 }}"
+      - seed_ip: "{{ test_data.sw1 }}"
       auth_proto: MD5
       max_hops: 0
       role: invalid
@@ -394,7 +394,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'merged_result.changed == false'
+      - 'merged_result.changed == false'
     - '"Invalid choice " in merged_result.msg'
   tags: merged
 
@@ -402,7 +402,7 @@
 - name: Merged TC15 - Prepare Config
   ansible.builtin.set_fact:
     switch_conf:
-    - seed_ip: "{{ test_data.sw1 }}"
+      - seed_ip: "{{ test_data.sw1 }}"
       auth_proto: MD55DM
       max_hops: 0
       role: leaf
@@ -428,7 +428,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'merged_result.changed == false'
+      - 'merged_result.changed == false'
     - '"Invalid choice " in merged_result.msg'
   tags: merged
 
@@ -444,7 +444,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'merged_result.changed == false'
+      - 'merged_result.changed == false'
     - '"config: element is mandatory for this state merged" in merged_result.msg'
   tags: merged
 

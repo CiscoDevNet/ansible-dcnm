@@ -52,7 +52,7 @@
 - name: MERGED_ALL - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
 
 - name: MERGED_ALL - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
@@ -74,7 +74,7 @@
 - name: MERGED_ALL - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
 
 
 ##############################################

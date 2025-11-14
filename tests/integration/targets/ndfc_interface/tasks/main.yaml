@@ -12,7 +12,8 @@
       files: "{{ ndfc_testcases.files }}"
 
 - name: Build List of Test Items
-  ansible.builtin.set_fact: test_items="{{ ndfc_testcases.files | map(attribute='path') | list }}"
+  ansible.builtin.set_fact:
+    test_items: "{{ ndfc_testcases.files | map(attribute='path') | list }}"
 
 - name: Run NDFC Test Cases
   ansible.builtin.include_tasks: "{{ test_case_to_run }}"

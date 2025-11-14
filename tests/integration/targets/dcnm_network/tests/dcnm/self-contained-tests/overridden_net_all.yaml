@@ -61,7 +61,7 @@
 - name: OVERRIDDEN_ALL - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
 
 - name: OVERRIDDEN_ALL - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
@@ -91,7 +91,7 @@
 - name: OVERRIDDEN_ALL - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
 
 - name: OVERRIDDEN_ALL - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
@@ -113,7 +113,7 @@
 - name: OVERRIDDEN_ALL - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
 
 ##############################################
 ##                 CLEAN-UP                 ##

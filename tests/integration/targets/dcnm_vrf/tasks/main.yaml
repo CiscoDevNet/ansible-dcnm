@@ -39,7 +39,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'controller_version != "Unable to determine controller version"'
+      - 'controller_version != "Unable to determine controller version"'
   tags: sanity
 
 - name: Import Role Tasks

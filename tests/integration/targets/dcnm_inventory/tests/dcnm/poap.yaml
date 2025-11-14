@@ -22,9 +22,9 @@
       poap_gateway: "192.168.2.1/24"
       sw3: "{{ ansible_switch3 }}"
       deploy: "{{ deploy }}"
-    poap_enabled: False
-    poap_switch_present: False
-    found_fabric: False
+    poap_enabled: false
+    poap_switch_present: false
+    found_fabric: false
   delegate_to: localhost
   tags: poap
 
@@ -63,13 +63,13 @@
   cisco.dcnm.dcnm_fabric:
     state: query
     config:
-    - FABRIC_NAME: "{{ test_data.test_fabric }}"
+      - FABRIC_NAME: "{{ test_data.test_fabric }}"
   register: query_result
   tags: poap
 
 - name: Poap Base Task - Check Fabric
   ansible.builtin.set_fact:
-    found_fabric: True
+    found_fabric: true
     fabric_data: "{{ item }}"
   when: item['fabricName'] ==  "{{ test_data.test_fabric }}"
   loop: "{{ query_result.response[0].DATA }}"
@@ -84,7 +84,7 @@
 
 - name: Poap Base Task - Set Variable
   ansible.builtin.set_fact:
-    poap_enabled: True
+    poap_enabled: true
   when: fabric_data.nvPairs["BOOTSTRAP_ENABLE"] == "true"
   tags: poap
 
@@ -183,7 +183,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'merged_result.changed == false'
+      - 'merged_result.changed == false'
     - 'merged_result.response == "The switch provided is already part of the fabric and cannot be created again"'
   when: poap_enabled == True
   tags: poap
@@ -192,7 +192,7 @@
 - name: Poap TC3 - Query for POAP enabled swicthes
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
-    query_poap: True
+    query_poap: true
     state: query
   when: poap_enabled == True
   register: query_result
@@ -201,13 +201,13 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'query_result.response != None'
+      - 'query_result.response != None'
   when: poap_enabled == True
   tags: poap
 
 - name: Poap TC3 - Check Query for POAP enabled swicthes
   ansible.builtin.set_fact:
-    poap_switch_present: True
+    poap_switch_present: true
   when: (poap_enabled == True and (item['serialNumber'] == "{{ test_data.sw2_serial }}"))
   loop: "{{ query_result.response }}"
   ignore_errors: true
@@ -238,7 +238,7 @@
             version: "{{ test_data.poap_version }}"
             hostname: "{{ test_data.poap_hostname }}"
             config_data:
-                modulesModel: "{{ test_data.poap_modulesModel }}"
+              modulesModel: "{{ test_data.poap_modulesModel }}"
                 gateway: "{{ test_data.poap_gateway }}"
   when: (poap_enabled == True and poap_switch_present == True)
   delegate_to: localhost
@@ -288,7 +288,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
   when: (poap_enabled == True and poap_switch_present == True)
   tags: poap

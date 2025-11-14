@@ -104,7 +104,7 @@
 - name: DELETED - TC1 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: deleted
 
 - name: DELETED - TC1 - QUERY - Get network state in NDFC
@@ -134,7 +134,7 @@
 - name: DELETED - TC1 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: deleted
 
 - name: DELETED - TC1 - QUERY - Get network state in NDFC
@@ -161,7 +161,7 @@
 - name: DELETED - TC1 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: deleted
 
 # TC2
@@ -188,7 +188,7 @@
 - name: DELETED - TC2 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: deleted
 
 - name: DELETED - TC2 - QUERY - Get network state in NDFC
@@ -217,7 +217,7 @@
 - name: DELETED - TC2 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: deleted
 
 - name: DELETED - TC2 - QUERY - Get network state in NDFC
@@ -252,7 +252,7 @@
 - name: DELETED - TC2 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: deleted
 
 - name: DELETED - TC2 - Delete the other Single Network with deleted state
@@ -266,7 +266,7 @@
 - name: DELETED - TC2 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: deleted
 
 - name: DELETED - TC2 - QUERY - Get network state in NDFC
@@ -293,7 +293,7 @@
 - name: DELETED - TC2 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: deleted
 
 # TC3
@@ -329,7 +329,7 @@
 - name: DELETED - TC3 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: deleted
 
 - name: DELETED - TC3 - QUERY - Get network state in NDFC
@@ -355,7 +355,7 @@
 - name: DELETED - TC3 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: deleted
 
 
@@ -378,7 +378,7 @@
 - name: DELETED - TC4 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: deleted
 
 - name: DELETED - TC4 - QUERY - Get network state in NDFC
@@ -407,7 +407,7 @@
 - name: DELETED - TC4 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: deleted
 
 - name: DELETED - TC4 - QUERY - Get network state in NDFC
@@ -434,7 +434,7 @@
 - name: DELETED - TC4 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: deleted
 
 # TC5
@@ -455,7 +455,7 @@
 - name: DELETED - TC5 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: deleted
 
 - name: DELETED - TC5 - QUERY - Get network state in NDFC
@@ -483,7 +483,7 @@
 - name: DELETED - conf5 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: deleted
 
 - name: DELETED - TC5 - QUERY - Get network state in NDFC
@@ -510,7 +510,7 @@
 - name: DELETED - TC5 - conf5 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: deleted
 
 # TC6 - invalid configs
@@ -519,7 +519,7 @@
     fabric: "{{ test_data_common.fabric }}"
     state: deleted
     config:
-    - net_name:
+      - net_name:
       net_id: 7005
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
@@ -532,7 +532,7 @@
 - name: DELETED - TC6 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - '"Invalid parameters in playbook: net_name : Required parameter not found" in result.msg'
+      - '"Invalid parameters in playbook: net_name : Required parameter not found" in result.msg'
     - result.changed == false
   tags: deleted
 
@@ -541,7 +541,7 @@
     fabric: "{{ test_data_common.fabric }}"
     state: deleted
     config:
-    - net_name: invalid-name
+      - net_name: invalid-name
       net_id: 7005
       net_template: Default_Network_Universal
       net_extension_template: Default_Network_Extension_Universal
@@ -554,7 +554,7 @@
 - name: DELETED - TC6 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
     - result.response|length == 0
   tags: deleted
 

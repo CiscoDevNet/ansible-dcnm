@@ -1,6 +1,6 @@
 ---
 namespace: cisco
-name: dcnm
+name: Dcnm
 version: 3.9.0-dev
 readme: README.md
 authors:

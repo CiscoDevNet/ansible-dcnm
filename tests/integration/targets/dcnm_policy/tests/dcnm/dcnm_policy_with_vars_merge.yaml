@@ -44,8 +44,7 @@
       ignore_errors: true
 
     # Assert for Create responses
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result["msg"]["RETURN_CODE"] != 200'
           - '"OSPF_TAG" in result["msg"]["DATA"]["failureList"][0]["message"]'
           - '"LOOPBACK_IP" in result["msg"]["DATA"]["failureList"][0]["message"]'
@@ -74,8 +73,7 @@
               - ip: "{{ ansible_switch1 }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -83,8 +81,7 @@
           - '(result["diff"][0]["deploy"] | length) == 2'
 
     # Assert for Create responses
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
@@ -93,8 +90,7 @@
         index_var: my_idx
 
     # Assert for deploy responses
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
       when: (my_idx == (result["diff"][0]["merged"] | length))
@@ -128,8 +124,7 @@
               - ip: "{{ ansible_switch1 }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -137,8 +132,7 @@
           - '(result["diff"][0]["deploy"] | length) == 2'
 
     # Assert for Create responses
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
@@ -147,8 +141,7 @@
         index_var: my_idx
 
     # Assert for deploy responses
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) >= 2'
       when: (my_idx == (result["diff"][0]["merged"] | length))
@@ -193,8 +186,7 @@
       register: result
 
     # Assert for Create responses
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       when: (my_idx < (result.results[0]["diff"][0]["merged"] | length))
       loop: '{{ result.results[0].response }}'
@@ -202,8 +194,7 @@
         index_var: my_idx
 
     # Assert for deploy responses
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
       when: (my_idx == (result.results[0]["diff"][0]["merged"] | length))
@@ -227,8 +218,7 @@
              - ip: "{{ ansible_switch1 }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
       loop: '{{ result.response }}'

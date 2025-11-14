@@ -23,7 +23,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.response.DATA != None'
+      - 'result.response.DATA != None'
 
 - name: OVERRIDDEN - Verify if service fabric is deployed.
   cisco.dcnm.dcnm_rest:
@@ -34,7 +34,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.response.DATA != None'
+      - 'result.response.DATA != None'
 
 - name: OVERRIDDEN - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -60,20 +60,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
@@ -98,20 +98,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: overridden
     config:
-    - name: SN-12
+      - name: SN-12
       type: load_balancer
       form_factor: physical
       svc_int_name: svc12
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].METHOD == "DELETE"'
     - 'result.response[1].RETURN_CODE == 200'
@@ -135,7 +135,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
@@ -166,26 +166,26 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: virtual
       svc_int_name: svc11
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch1 }}"
+        - "{{ ansible_switch1 }}"
     - name: SN-12
       type: load_balancer
       form_factor: virtual
       svc_int_name: svc12
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch2 }}"
+        - "{{ ansible_switch2 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
@@ -215,26 +215,26 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: overridden
     config:
-    - name: SN-13
+      - name: SN-13
       type: virtual_network_function
       form_factor: virtual
       svc_int_name: svc13
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch1 }}"
+        - "{{ ansible_switch1 }}"
     - name: SN-14
       type: firewall
       form_factor: virtual
       svc_int_name: svc14
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch2 }}"
+        - "{{ ansible_switch2 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].METHOD == "DELETE"'
     - 'result.response[1].RETURN_CODE == 200'
@@ -269,7 +269,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: OVERRIDDEN - Clean up any existing service node

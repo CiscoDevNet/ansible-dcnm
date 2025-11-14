@@ -25,7 +25,7 @@
 ##                MERGE                     ##
 ##############################################
 
-    - name: Create different non-existing service route peerings including all objects - no optional elements
+    - name: Create different non-existing service route peerings including all objects - false optional elements
       cisco.dcnm.dcnm_service_route_peering: &dcnm_srp_all
         fabric: "{{ ansible_it_fabric }}"
         service_fabric: "{{ ansible_it_service_fabric }}"
@@ -33,29 +33,29 @@
           - name: IT-FW-RP1                                  # mandatory
             node_name: "{{ ansible_snode_1 }}"               # mandatory
             deploy_mode: intra_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
-            inside_network:                                  #
+            inside_network: #
               vrf: "{{ ansible_vrf_11 }}"                    # mandatory
-              name: rp1-sn1-inside-net                       # mandatory
+              name: Rp1-sn1-inside-net                       # mandatory
               profile:
                 ipv4_gw: 192.161.1.1/24                      # mandatory
             next_hop: 192.161.1.100                          # mandatory
-            outside_network:                                 #
+            outside_network: #
               vrf: "{{ ansible_vrf_11 }}"                    # mandatory
-              name: rp1-sn1-outside-net                      # mandatory
+              name: Rp1-sn1-outside-net                      # mandatory
               profile:
                 ipv4_gw: 192.161.2.1/24                      # mandatory
 
           - name: IT-FW-RP2                                  # mandatory
             node_name: "{{ ansible_snode_1 }}"               # mandatory
             deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
-            inside_network:                                  #
+            inside_network: #
               vrf: "{{ ansible_vrf_21 }}"                    # mandatory
-              name: rp2-sn1-inside-net                       # mandatory
+              name: Rp2-sn1-inside-net                       # mandatory
               profile:
                 ipv4_gw: 192.162.1.1/24                      # mandatory
-            outside_network:                                 #
+            outside_network: #
               vrf: "{{ ansible_vrf_22 }}"                    # mandatory
-              name: rp2-sn1-outside-net                      # mandatory
+              name: Rp2-sn1-outside-net                      # mandatory
               profile:
                 ipv4_gw: 192.162.2.1/24                      # mandatory
 
@@ -65,7 +65,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             inside_network:
               vrf: "{{ ansible_vrf_31 }}"                    # mandatory
-              name: rp3-sn1-inside-net                       # mandatory
+              name: Rp3-sn1-inside-net                       # mandatory
               profile:
                 ipv4_gw: 192.163.1.1/24                      # mandatory
                 ipv4_neighbor: 31.31.31.1                    # mandatory
@@ -74,7 +74,7 @@
                 ipv6_vpc_peer_lo: 2003:0702::1               # optional, default is ''
             outside_network:
               vrf: "{{ ansible_vrf_32 }}"                    # mandatory
-              name: rp3-sn1-outside-net                      # mandatory
+              name: Rp3-sn1-outside-net                      # mandatory
               profile:
                 ipv4_gw: 192.163.2.1/24                      # mandatory
                 ipv4_neighbor: 131.131.131.1                 # mandatory
@@ -89,7 +89,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_41 }}"                    # mandatory
-              name: rp4-sn2-first-arm                        # mandatory
+              name: Rp4-sn2-first-arm                        # mandatory
               profile:
                 ipv4_gw: 192.164.1.1/24                      # mandatory
                 ipv4_neighbor: 41.41.41.1                    # mandatory
@@ -104,7 +104,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
-              name: rp5-sn2-first-arm                        # mandatory
+              name: Rp5-sn2-first-arm                        # mandatory
               profile:
                 ipv4_gw: 192.165.1.1/24                      # mandatory
                 ipv4_neighbor: 51.51.51.1                    # mandatory
@@ -113,7 +113,7 @@
                 ipv6_vpc_peer_lo: 2005:0702::1               # optional, default is ''
             second_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
-              name: rp5-sn2-second-arm                       # mandatory
+              name: Rp5-sn2-second-arm                       # mandatory
               profile:
                 ipv4_gw: 192.165.2.1/24                      # mandatory
             reverse_next_hop: 192.165.1.100                  # mandatory
@@ -123,7 +123,7 @@
             deploy_mode: one_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             first_arm:
               vrf: "{{ ansible_vrf_61 }}"                    # mandatory
-              name: rp6-sn2-first-arm                        # mandatory
+              name: Rp6-sn2-first-arm                        # mandatory
               profile:
                 ipv4_gw: 192.166.1.1/24                      # mandatory
             reverse_next_hop: 192.166.1.100                  # mandatory
@@ -133,12 +133,12 @@
             deploy_mode: two_arm_adc                         # mandatory, choices=[one_arm_adc, two_arm_adc]
             first_arm:
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
-              name: rp7-sn2-first-arm                        # mandatory
+              name: Rp7-sn2-first-arm                        # mandatory
               profile:
                 ipv4_gw: 192.167.1.1/24                      # mandatory
             second_arm:
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
-              name: rp7-sn2-second-arm                       # mandatory
+              name: Rp7-sn2-second-arm                       # mandatory
               profile:
                 ipv4_gw: 192.167.2.1/24                      # mandatory
             reverse_next_hop: 192.167.1.100                  # mandatory
@@ -147,8 +147,7 @@
         state: merged
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 7'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -156,8 +155,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 7'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -165,8 +163,7 @@
       cisco.dcnm.dcnm_service_route_peering: *dcnm_srp_all
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -209,10 +206,9 @@
 
         state: deleted
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

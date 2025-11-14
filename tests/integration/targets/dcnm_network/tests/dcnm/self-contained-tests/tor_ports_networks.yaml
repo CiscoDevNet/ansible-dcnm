@@ -3,12 +3,10 @@
 ##############################################
 
 - block:
-  - set_fact:
-      rest_path: "/rest/control/fabrics/{{ test_data_common.fabric }}"
+  - ansible.builtin.set_fact: rest_path: "/rest/control/fabrics/{{ test_data_common.fabric }}"
     when: controller_version == "11"
 
-  - set_fact:
-      rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}"
+  - ansible.builtin.set_fact: rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}"
     when: controller_version >= "12"
 
   - name: TOR - Verify if fabric is deployed.
@@ -17,8 +15,7 @@
       path: "{{ rest_path }}"
     register: result
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.response.DATA != None'
 
   - name: TOR - Clean up any existing networks
@@ -50,7 +47,7 @@
               ports: ["{{ ansible_tor_int1 }}", "{{ ansible_tor_int2 }}"]
         - ip_address: "{{ ansible_switch2 }}"
           ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: True
+        deploy: true
     register: result
 
   - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -63,13 +60,12 @@
     retries: 30
     delay: 2
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
       - 'result.response[2].RETURN_CODE == 200'
-      - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+        - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
       - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
       - 'result.diff[0].attach[0].deploy == true'
       - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
@@ -85,14 +81,13 @@
     cisco.dcnm.dcnm_network: *conf1
     register: result
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.changed == false'
       - 'result.response|length == 0'
 
   - name: TOR - Attach new TOR ports to already Attached TOR ports
     cisco.dcnm.dcnm_network: &conf2
-      fabric: "{{ test_data_common.fabric }}"
+        fabric: "{{ test_data_common.fabric }}"
       state: merged
       config:
       - net_name: ansible-net13
@@ -108,9 +103,9 @@
           tor_ports:
             - ip_address: "{{ ansible_tor_switch1 }}"
               ports: ["{{ ansible_tor_int3 }}"]
-        - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch2 }}"
           ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: True
+        deploy: true
     register: result
 
   - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -123,15 +118,14 @@
     retries: 30
     delay: 2
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
       - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
       - 'result.diff[0].attach[0].deploy == true'
       - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-      - '"{{ ansible_tor_int1 }}" in result.diff[0].attach[0].tor_ports'
+        - '"{{ ansible_tor_int1 }}" in result.diff[0].attach[0].tor_ports'
       - '"{{ ansible_tor_int2 }}" in result.diff[0].attach[0].tor_ports'
       - '"{{ ansible_tor_int3 }}" in result.diff[0].attach[0].tor_ports'
       - 'result.diff[0].net_name == "ansible-net13"'
@@ -140,8 +134,7 @@
     cisco.dcnm.dcnm_network: *conf2
     register: result
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.changed == false'
       - 'result.response|length == 0'
 
@@ -167,7 +160,7 @@
           ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
         - ip_address: "{{ ansible_switch2 }}"
           ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: True
+        deploy: true
     register: result
 
   - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -180,8 +173,7 @@
     retries: 30
     delay: 2
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
@@ -190,7 +182,7 @@
       - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
       - 'result.diff[0].attach[0].deploy == true'
       - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-      - 'result.diff[0].attach[1].deploy == true'
+        - 'result.diff[0].attach[1].deploy == true'
       - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
       - 'result.diff[0].net_name == "ansible-net13"'
       - 'result.diff[0].net_id == 7005'
@@ -216,7 +208,7 @@
               ports: ["{{ ansible_tor_int3 }}"]
         - ip_address: "{{ ansible_switch2 }}"
           ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: True
+        deploy: true
     register: result
 
   - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -229,8 +221,7 @@
     retries: 30
     delay: 2
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
@@ -244,8 +235,7 @@
     cisco.dcnm.dcnm_network: *conf3
     register: result
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.changed == false'
       - 'result.response|length == 0'
 
@@ -269,7 +259,7 @@
               ports: ["{{ ansible_tor_int1 }}", "{{ ansible_tor_int2 }}"]
         - ip_address: "{{ ansible_switch2 }}"
           ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
-        deploy: True
+        deploy: true
     register: result
 
   - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -282,8 +272,7 @@
     retries: 30
     delay: 2
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
@@ -298,8 +287,7 @@
     cisco.dcnm.dcnm_network: *conf4
     register: result
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.changed == false'
       - 'result.response|length == 0'
 
@@ -321,7 +309,7 @@
           tor_ports:
             - ip_address: "{{ ansible_tor_switch1 }}"
               ports: ["{{ ansible_tor_int3 }}", "{{ ansible_tor_int4 }}"]
-        deploy: True
+        deploy: true
     register: result
 
   - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -334,8 +322,7 @@
     retries: 30
     delay: 2
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
@@ -350,8 +337,7 @@
     cisco.dcnm.dcnm_network: *conf5
     register: result
 
-  - assert:
-      that:
+  - ansible.builtin.assert: that:
       - 'result.changed == false'
       - 'result.response|length == 0'
 

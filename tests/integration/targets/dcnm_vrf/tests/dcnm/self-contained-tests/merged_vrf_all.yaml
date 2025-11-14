@@ -40,7 +40,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.response.DATA != None'
+      - 'result.response.DATA != None'
 
 - name: MERGED_ALL - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
@@ -56,7 +56,7 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
@@ -77,7 +77,7 @@
       bgp_password: "74657374"
       bgp_passwd_encrypt: 7
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result
@@ -95,7 +95,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
     - 'result.response[2].RETURN_CODE == 200'
@@ -114,7 +114,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 ###############################################

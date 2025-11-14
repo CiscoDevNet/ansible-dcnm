@@ -76,7 +76,7 @@
 - name: QUERY - TC1 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: query
 
 - name: QUERY - TC1 - QUERY - Get network state in NDFC using config
@@ -147,7 +147,7 @@
 - name: QUERY - TC4 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: query
 
 # TC5
@@ -168,7 +168,7 @@
 - name: QUERY - TC5 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: query
 
 - name: QUERY - TC5 - Query the L2 and L3 Network with config

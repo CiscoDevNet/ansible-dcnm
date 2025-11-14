@@ -68,8 +68,7 @@
     #       - '(result["diff"][0]["overridden"] | length) == 0'
     #       - '(result["diff"][0]["deploy"] | length) == 1'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -128,10 +127,9 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

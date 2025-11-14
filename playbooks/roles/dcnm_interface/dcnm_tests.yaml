@@ -7,13 +7,14 @@
 # Modify the vars section with details for your testing setup.
 #
 - hosts: dcnm
+  name: Play for dcnm
   gather_facts: false
   connection: ansible.netcommon.httpapi
 
   vars:
     # Uncomment testcase to run a specific test
     # testcase: dcnm_intf_sani*
-    # IT_CONTEXT: true
+    # it_context: true
     test_data_common:
       fabric: fabric_name
       # svi_fabric: svi_fabric_name  # Define this for dcnm_svi_* tests

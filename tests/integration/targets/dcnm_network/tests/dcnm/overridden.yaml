@@ -94,7 +94,7 @@
 - name: OVERRIDDEN - TC1 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
   tags: overridden
 
 - name: OVERRIDDEN - TC1 - QUERY - Get network state in NDFC
@@ -128,7 +128,7 @@
 - name: OVERRIDDEN - TC1 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
   tags: overridden
 
 - name: OVERRIDDEN - TC1 - QUERY - Get network state in NDFC
@@ -185,7 +185,7 @@
 - name: OVERRIDDEN - TC2 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
   tags: overridden
 
 - name: OVERRIDDEN - TC2 - QUERY - Get network state in NDFC
@@ -218,7 +218,7 @@
 - name: OVERRIDDEN - TC2 - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
   tags: overridden
 
 - name: OVERRIDDEN - TC2 - QUERY - Get network state in NDFC
@@ -243,7 +243,7 @@
 - name: OVERRIDDEN - TC2 - ASSERT - Check changed flag is false
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: overridden
 
 

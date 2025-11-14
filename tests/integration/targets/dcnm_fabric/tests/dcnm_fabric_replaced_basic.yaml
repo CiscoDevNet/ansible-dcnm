@@ -80,8 +80,7 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "ADVERTISE_PIP_BGP": true,
 #                 "ANYCAST_GW_MAC": "00aa.bbcc.ddee",
 #                 "BGP_AS": 65535,
@@ -102,10 +101,9 @@
 #                 "NXC_PROXY_PORT": 8088,
 #                 "sequence_number": 3
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -123,9 +121,8 @@
 #                 "sequence_number": 3,
 #                 "state": "merged"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "ADVERTISE_PIP_BGP": "true",
@@ -170,9 +167,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -187,7 +183,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#         ]
+#]
 #     }
 # }
 ################################################################################
@@ -285,8 +281,7 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "ADVERTISE_PIP_BGP": "false",
 #                 "ANYCAST_GW_MAC": "2020.0000.00aa",
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
@@ -310,10 +305,9 @@
 #             {
 #                 "sequence_number": 6
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "replace",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -349,9 +343,8 @@
 #                 "sequence_number": 6,
 #                 "state": "replaced"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "ADVERTISE_PIP_BGP": "false",
@@ -399,9 +392,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 6
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -431,7 +423,7 @@
 #                 "sequence_number": 6,
 #                 "success": true
 #             }
-#         ]
+#]
 #     }
 # }
 ################################################################################
@@ -549,8 +541,7 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "DCI_SUBNET_TARGET_MASK": "30",
 #                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "NXC_PROXY_PORT": "8080",
@@ -562,10 +553,9 @@
 #             {
 #                 "sequence_number": 3
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "replace",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -583,9 +573,8 @@
 #                 "sequence_number": 3,
 #                 "state": "replaced"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "BOOTSTRAP_ENABLE": "false",
@@ -611,9 +600,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -628,7 +616,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#         ]
+#]
 #     }
 # }
 ################################################################################
@@ -711,34 +699,30 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "replace",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "replaced"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "MESSAGE": "No fabrics to update for replaced state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+#]
 #     }
 # }
 ################################################################################
@@ -775,8 +759,7 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
 #             },
@@ -788,10 +771,9 @@
 #                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "sequence_number": 3
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -809,9 +791,8 @@
 #                 "sequence_number": 3,
 #                 "state": "deleted"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -835,9 +816,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -852,7 +832,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#         ]
+#]
 #     }
 # }
 ################################################################################

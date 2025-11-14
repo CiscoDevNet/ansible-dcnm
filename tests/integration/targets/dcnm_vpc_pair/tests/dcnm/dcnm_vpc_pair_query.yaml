@@ -236,5 +236,5 @@
   cisco.dcnm.dcnm_vpc_pair:
     src_fabric: "{{ test_data_common.fabric }}"
     state: deleted
-  when: IT_CONTEXT is not defined
+  when: it_context is not defined
   tags: query

@@ -10,6 +10,7 @@
 # 1. Ensure that the switches defined by switch1 and switch2 are
 #    not vPC Pairs.
 - hosts: dcnm
+  name: Play for dcnm
   gather_facts: false
   connection: ansible.netcommon.httpapi
 

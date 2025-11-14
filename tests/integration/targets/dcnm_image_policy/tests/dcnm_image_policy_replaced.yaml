@@ -85,7 +85,7 @@
   cisco.dcnm.dcnm_image_policy:
     state: deleted
     config:
-    - name: "{{ image_policy_1 }}"
+      - name: "{{ image_policy_1 }}"
     - name: "{{ image_policy_2 }}"
   register: result
 
@@ -101,8 +101,7 @@
 # ok: [dcnm] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "agnostic": false,
 #                 "epldImgName": "n9000-epld.10.2.5.M.img",
 #                 "nxosVersion": "10.2.5_nxos64-cs_64bit",
@@ -122,10 +121,9 @@
 #                 "policyType": "PLATFORM",
 #                 "sequence_number": 2
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -137,9 +135,8 @@
 #                 "sequence_number": 2,
 #                 "state": "merged"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "DATA": "Policy created successfully.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
@@ -155,9 +152,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -167,7 +163,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-#         ]
+#]
 #     }
 # }
 ################################################################################
@@ -201,7 +197,7 @@
     - result.failed == false
     - (result.diff | length) == 2
     - result.diff[0].policyName == image_policy_1
-    - result.diff[1].policyName == image_policy_2
+      - result.diff[1].policyName == image_policy_2
     - result.diff[0].policyDescr == image_policy_1
     - result.diff[1].policyDescr == image_policy_2
     - result.diff[0].agnostic == false
@@ -247,8 +243,7 @@
 # ok: [dcnm] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "agnostic": false,
 #                 "epldImgName": "n9000-epld.10.2.5.M.img",
 #                 "nxosVersion": "10.2.5_nxos64-cs_64bit",
@@ -260,18 +255,16 @@
 #                 "rpmimages": "",
 #                 "sequence_number": 1
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "replace",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "replaced"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "DATA": "Policy updated successfully.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
@@ -279,14 +272,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+#]
 #     }
 # }
 ################################################################################
@@ -319,7 +311,7 @@
     - result.diff[0].policyDescr == image_policy_1 + " replaced"
     - result.diff[0].epldImgName == epld_image_1
     - result.diff[0].nxosVersion == nxos_release_1
-    - result.diff[0].platform == "N9K"
+      - result.diff[0].platform == "N9K"
     - result.diff[0].policyType == "PLATFORM"
     - result.diff[0].sequence_number == 1
     - (result.metadata | length) == 1
@@ -344,8 +336,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "agnostic": false,
 #                 "epldImgName": "n9000-epld.10.2.5.M.img",
 #                 "fabricPolicyName": null,
@@ -383,10 +374,9 @@
 #                 "sequence_number": 2,
 #                 "unInstall": false
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "query",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -398,12 +388,10 @@
 #                 "sequence_number": 2,
 #                 "state": "query"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "DATA": {
-#                     "lastOperDataObject": [
-#                         {
+#                     "lastOperDataObject": [#                         {
 #                             "agnostic": false,
 #                             "epldImgName": "n9000-epld.10.2.5.M.img",
 #                             "fabricPolicyName": null,
@@ -439,7 +427,7 @@
 #                             "rpmimages": null,
 #                             "unInstall": false
 #                         }
-#                     ],
+#],
 #                     "message": "",
 #                     "status": "SUCCESS"
 #                 },
@@ -451,8 +439,7 @@
 #             },
 #             {
 #                 "DATA": {
-#                     "lastOperDataObject": [
-#                         {
+#                     "lastOperDataObject": [#                         {
 #                             "agnostic": false,
 #                             "epldImgName": "n9000-epld.10.2.5.M.img",
 #                             "fabricPolicyName": null,
@@ -488,7 +475,7 @@
 #                             "rpmimages": null,
 #                             "unInstall": false
 #                         }
-#                     ],
+#],
 #                     "message": "",
 #                     "status": "SUCCESS"
 #                 },
@@ -498,9 +485,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "found": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -510,7 +496,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-#         ]
+#]
 #     }
 # }
 ################################################################################
@@ -533,7 +519,7 @@
     - result.changed == false
     - result.failed == false
     - (result.diff | length) == 2
-    - result.diff[0].agnostic == false
+      - result.diff[0].agnostic == false
     - result.diff[1].agnostic == false
     - result.diff[0].policyName == image_policy_1
     - result.diff[1].policyName == image_policy_2
@@ -544,7 +530,7 @@
     - result.diff[0].platform == "N9K/N3K"
     - result.diff[1].platform == "N9K/N3K"
     - result.diff[0].policyType == "PLATFORM"
-    - result.diff[1].policyType == "PLATFORM"
+      - result.diff[1].policyType == "PLATFORM"
     - result.diff[0].ref_count == 0
     - result.diff[1].ref_count == 0
     - result.diff[0].sequence_number == 1
@@ -580,26 +566,22 @@
 # ok: [dcnm] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
-#                 "policyNames": [
-#                     "KR5M",
+#         "diff": [#             {
+#                 "policyNames": [#                     "KR5M",
 #                     "NR1F"
-#                 ],
+#],
 #                 "sequence_number": 1
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -607,14 +589,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+#]
 #     }
 # }
 ################################################################################
