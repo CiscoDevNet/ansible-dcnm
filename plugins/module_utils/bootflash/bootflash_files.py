@@ -13,7 +13,7 @@
 # limitations under the License.
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import copy
@@ -21,11 +21,10 @@ import inspect
 import logging
 from typing import Literal
 
-from ..common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import \
-    EpBootflashFiles
+from ..common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import EpBootflashFiles
 from ..common.conversion import ConversionUtils
-from ..common.results import Results
 from ..common.rest_send_v2 import RestSend
+from ..common.results import Results
 
 
 class BootflashFiles:
@@ -267,9 +266,7 @@ class BootflashFiles:
             self.rest_send.verb = self.ep_bootflash_files.verb
             self.rest_send.payload = self.payload
             self.rest_send.commit()
-            self.results.response_current = copy.deepcopy(
-                self.rest_send.response_current
-            )
+            self.results.response_current = copy.deepcopy(self.rest_send.response_current)
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
         else:
             self.results.result_current = {"success": True, "changed": False}
@@ -410,10 +407,7 @@ class BootflashFiles:
                 continue
             files = item.get("files")
             for file in files:
-                if (
-                    file.get("fileName") == self.filename
-                    and file.get("bootflashType") == self.supervisor
-                ):
+                if file.get("fileName") == self.filename and file.get("bootflashType") == self.supervisor:
                     return
             files.append(
                 {
