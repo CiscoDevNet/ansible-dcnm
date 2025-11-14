@@ -1,4 +1,0 @@
----
-- name: Include dcnm.yaml
-  ansible.builtin.include_tasks: dcnm.yaml
-  tags: ['dcnm']
