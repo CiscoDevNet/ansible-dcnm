@@ -19,7 +19,7 @@
     that:
       - 'result.response.DATA != None'
 
-  - name: TOR - Clean up any existing networks
+      - name: TOR - Clean up any existing networks
     cisco.dcnm.dcnm_network:
       fabric: "{{ test_data_common.fabric }}"
       state: deleted
@@ -79,7 +79,7 @@
       - 'result.diff[0].net_id == 7005'
       - 'result.diff[0].vrf_name == "Tenant-1"'
 
-  - name: TOR - conf1 - Idempotence
+      - name: TOR - conf1 - Idempotence
     cisco.dcnm.dcnm_network: *conf1
     register: result
 
@@ -88,7 +88,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-  - name: TOR - Attach new TOR ports to already Attached TOR ports
+      - name: TOR - Attach new TOR ports to already Attached TOR ports
     cisco.dcnm.dcnm_network: &conf2
         fabric: "{{ test_data_common.fabric }}"
       state: merged
@@ -134,7 +134,7 @@
       - '"{{ ansible_tor_int3 }}" in result.diff[0].attach[0].tor_ports'
       - 'result.diff[0].net_name == "ansible-net13"'
 
-  - name: TOR - conf2 - Idempotence
+      - name: TOR - conf2 - Idempotence
     cisco.dcnm.dcnm_network: *conf2
     register: result
 
@@ -143,7 +143,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-  - name: TOR - setup - Clean up any existing network
+      - name: TOR - setup - Clean up any existing network
     cisco.dcnm.dcnm_network:
       fabric: "{{ test_data_common.fabric }}"
       state: deleted
@@ -194,7 +194,7 @@
       - 'result.diff[0].net_id == 7005'
       - 'result.diff[0].vrf_name == "Tenant-1"'
 
-  - name: TOR - Attach new TOR ports to already Attached network ports
+      - name: TOR - Attach new TOR ports to already Attached network ports
     cisco.dcnm.dcnm_network: &conf3
       fabric: "{{ test_data_common.fabric }}"
       state: merged
@@ -238,7 +238,7 @@
       - '"{{ ansible_tor_int3 }}" in result.diff[0].attach[0].tor_ports'
       - 'result.diff[0].net_name == "ansible-net13"'
 
-  - name: TOR - conf3 - Idempotence
+      - name: TOR - conf3 - Idempotence
     cisco.dcnm.dcnm_network: *conf3
     register: result
 
@@ -247,7 +247,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-  - name: TOR - Replace new TOR ports to already Attached network ports
+      - name: TOR - Replace new TOR ports to already Attached network ports
     cisco.dcnm.dcnm_network: &conf4
       fabric: "{{ test_data_common.fabric }}"
       state: replaced
@@ -292,7 +292,7 @@
       - '"{{ ansible_tor_int2 }}" in result.diff[0].attach[0].tor_ports'
       - 'result.diff[0].net_name == "ansible-net13"'
 
-  - name: TOR - conf4 - Idempotence
+      - name: TOR - conf4 - Idempotence
     cisco.dcnm.dcnm_network: *conf4
     register: result
 
@@ -301,7 +301,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-  - name: TOR - Override new TOR ports to already Attached network ports
+      - name: TOR - Override new TOR ports to already Attached network ports
     cisco.dcnm.dcnm_network: &conf5
       fabric: "{{ test_data_common.fabric }}"
       state: overridden
@@ -344,7 +344,7 @@
       - '"{{ ansible_tor_int4 }}" in result.diff[0].attach[0].tor_ports'
       - 'result.diff[0].net_name == "ansible-net13"'
 
-  - name: TOR - conf5 - Idempotence
+      - name: TOR - conf5 - Idempotence
     cisco.dcnm.dcnm_network: *conf5
     register: result
 
@@ -357,7 +357,7 @@
 ##                 CLEAN-UP                 ##
 ##############################################
 
-  - name: TOR - setup - remove any networks
+      - name: TOR - setup - remove any networks
     cisco.dcnm.dcnm_network:
       fabric: "{{ test_data_common.fabric }}"
       state: deleted

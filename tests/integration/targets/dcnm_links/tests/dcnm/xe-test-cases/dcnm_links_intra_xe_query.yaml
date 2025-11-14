@@ -50,7 +50,7 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ###############################################
@@ -81,16 +81,16 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_xe_fabric }}"] | length) == 2'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_xe_fabric }}"] | length) == 2'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ###############################################

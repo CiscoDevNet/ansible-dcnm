@@ -63,9 +63,9 @@
   - name: Assert
   - ansible.builtin.assert:
     that:
-  - 'result.changed == true'
+      - 'result.changed == true'
 
-  - name: Add spine and leaf devices to fabric - idempotence check
+      - name: Add spine and leaf devices to fabric - idempotence check
     cisco.dcnm.dcnm_inventory: *spine_leaf_merged
     vars:
         ansible_command_timeout: 1000
@@ -75,9 +75,9 @@
   - name: Assert
   - ansible.builtin.assert:
     that:
-  - 'result.changed == false'
+      - 'result.changed == false'
 
-  - name: Query Spine Leaf Fabric
+      - name: Query Spine Leaf Fabric
     cisco.dcnm.dcnm_inventory:
       fabric: "{{ fabric_name }}"
       state: query

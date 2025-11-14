@@ -128,14 +128,14 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 9'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["response"] | length) == 9'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 9'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["response"] | length) == 9'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 
@@ -149,13 +149,13 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
+        - 'result.changed == false'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -222,14 +222,14 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 9'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["response"] | length) == 9'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 9'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["response"] | length) == 9'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -251,9 +251,9 @@
 
     - ansible.builtin.assert:
       that:
-          - '"switch : Required parameter not found" in result["msg"]'
+        - '"switch : Required parameter not found" in result["msg"]'
 
-    - name: Create Resources - Missing scope_type
+        - name: Create Resources - Missing scope_type
       cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
@@ -270,9 +270,9 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result["msg"] == "Mandatory parameter ''scope_type'' missing"'
+        - 'result["msg"] == "Mandatory parameter ''scope_type'' missing"'
 
-    - name: Create Resources - Missing pool_type
+        - name: Create Resources - Missing pool_type
       cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
@@ -289,9 +289,9 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result["msg"] == "Mandatory parameter ''pool_type'' missing"'
+        - 'result["msg"] == "Mandatory parameter ''pool_type'' missing"'
 
-    - name: Create Resources - Missing pool_name
+        - name: Create Resources - Missing pool_name
       cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
@@ -308,9 +308,9 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result["msg"] == "Mandatory parameter ''pool_name'' missing"'
+        - 'result["msg"] == "Mandatory parameter ''pool_name'' missing"'
 
-    - name: Create Resources - Missing entity_name
+        - name: Create Resources - Missing entity_name
       cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
@@ -327,9 +327,9 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result["msg"] == "Mandatory parameter ''entity_name'' missing"'
+        - 'result["msg"] == "Mandatory parameter ''entity_name'' missing"'
 
-    - name: Create Resources - Missing resource value
+        - name: Create Resources - Missing resource value
       cisco.dcnm.dcnm_resource_manager:
         state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
@@ -346,7 +346,7 @@
 
     - ansible.builtin.assert:
       that:
-          - '"resource : Required parameter not found" in result["msg"]'
+        - '"resource : Required parameter not found" in result["msg"]'
 
 ##############################################
 ##             CLEANUP                      ##
@@ -367,6 +367,6 @@
       when: it_context is not defined
 
     - ansible.builtin.assert:        that:
-          - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

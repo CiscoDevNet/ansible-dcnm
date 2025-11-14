@@ -53,17 +53,17 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 5'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 5'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 5'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 5'
 
     # Assert for Create responses
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Success" in item["DATA"]["successList"][0]["status"]'
+        - 'item["RETURN_CODE"] == 200'
+        - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -72,8 +72,8 @@
     # Assert for deploy responses
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
+        - 'item["RETURN_CODE"] == 200'
+        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -101,15 +101,15 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 5'
-          - '(result["diff"][0]["query"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 5'
+        - '(result["diff"][0]["query"] | length) == 0'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - 'item["MESSAGE"] == "OK"'
+        - 'item["RETURN_CODE"] == 200'
+        - 'item["MESSAGE"] == "OK"'
       loop: '{{ result.response }}'
 
     - name: Delete policies - Idempotence
@@ -118,15 +118,15 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
+        - 'result.changed == false'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - 'item["MESSAGE"] == "OK"'
+        - 'item["RETURN_CODE"] == 200'
+        - 'item["MESSAGE"] == "OK"'
       when: (my_idx < (result["diff"][0]["deleted"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -134,8 +134,8 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - 'item["MESSAGE"] == "OK"'
+        - 'item["RETURN_CODE"] == 200'
+        - 'item["MESSAGE"] == "OK"'
       when: (my_idx == (result["diff"][0]["deleted"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -143,8 +143,8 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Deleted successfully" in item["DATA"]["message"]'
+        - 'item["RETURN_CODE"] == 200'
+        - '"Deleted successfully" in item["DATA"]["message"]'
       when: (my_idx > (result["diff"][0]["deleted"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -156,17 +156,17 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 5'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 5'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 5'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 5'
 
     # Assert for Create responses
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Success" in item["DATA"]["successList"][0]["status"]'
+        - 'item["RETURN_CODE"] == 200'
+        - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -175,8 +175,8 @@
     # Assert for deploy responses
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
+        - 'item["RETURN_CODE"] == 200'
+        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -212,12 +212,12 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item.changed == true'
-          - '(item["diff"][0]["merged"] | length) == 0'
-          - '(item["diff"][0]["deleted"] | length) == 1'
-          - '(item["diff"][0]["query"] | length) == 0'
-          - 'item["response"][0]["RETURN_CODE"] == 200'
-          - 'item["response"][1]["MESSAGE"] == "OK"'
+        - 'item.changed == true'
+        - '(item["diff"][0]["merged"] | length) == 0'
+        - '(item["diff"][0]["deleted"] | length) == 1'
+        - '(item["diff"][0]["query"] | length) == 0'
+        - 'item["response"][0]["RETURN_CODE"] == 200'
+        - 'item["response"][1]["MESSAGE"] == "OK"'
       when: (my_idx < (list_len | int))
       loop: '{{ result["results"] }}'
       loop_control:
@@ -241,17 +241,17 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 2'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 2'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 2'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 2'
 
     # Assert for Create responses
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Success" in item["DATA"]["successList"][0]["status"]'
+        - 'item["RETURN_CODE"] == 200'
+        - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -260,8 +260,8 @@
     # Assert for deploy responses
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
+        - 'item["RETURN_CODE"] == 200'
+        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -279,15 +279,15 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 2'
-          - '(result["diff"][0]["query"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 2'
+        - '(result["diff"][0]["query"] | length) == 0'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - 'item["MESSAGE"] == "OK"'
+        - 'item["RETURN_CODE"] == 200'
+        - 'item["MESSAGE"] == "OK"'
       loop: '{{ result.response }}'
 
     - name: Create multiple policies for a template again
@@ -327,17 +327,17 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 5'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 5'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 5'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 5'
 
     # Assert for Create responses
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Success" in item["DATA"]["successList"][0]["status"]'
+        - 'item["RETURN_CODE"] == 200'
+        - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -346,8 +346,8 @@
     # Assert for deploy responses
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
+        - 'item["RETURN_CODE"] == 200'
+        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -383,12 +383,12 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item.changed == true'
-          - '(item["diff"][0]["merged"] | length) == 0'
-          - '(item["diff"][0]["deleted"] | length) == 1'
-          - '(item["diff"][0]["query"] | length) == 0'
-          - 'item["response"][0]["RETURN_CODE"] == 200'
-          - 'item["response"][1]["MESSAGE"] == "OK"'
+        - 'item.changed == true'
+        - '(item["diff"][0]["merged"] | length) == 0'
+        - '(item["diff"][0]["deleted"] | length) == 1'
+        - '(item["diff"][0]["query"] | length) == 0'
+        - 'item["response"][0]["RETURN_CODE"] == 200'
+        - 'item["response"][1]["MESSAGE"] == "OK"'
       when: (my_idx < (list_len | int))
       loop: '{{ result["results"] }}'
       loop_control:
@@ -409,17 +409,17 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 1'
 
     # Assert for Create responses
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Success" in item["DATA"]["successList"][0]["status"]'
+        - 'item["RETURN_CODE"] == 200'
+        - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -428,8 +428,8 @@
     # Assert for deploy responses
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
+        - 'item["RETURN_CODE"] == 200'
+        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -448,16 +448,16 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 1'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["response"] | length) == 1'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 1'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["response"] | length) == 1'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'result["response"][0]["RETURN_CODE"] == 200'
-          - 'result["response"][0]["MESSAGE"] == "OK"'
+        - 'result["response"][0]["RETURN_CODE"] == 200'
+        - 'result["response"][0]["MESSAGE"] == "OK"'
 
     # TBD: This test case needs to be refactored to test delete with and without deploy
     #      using a the switch_freeform template.  The following order should be verified.

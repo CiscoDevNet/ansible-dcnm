@@ -196,7 +196,7 @@
     - name: Assert
     - ansible.builtin.assert:
       that:
-    - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -228,7 +228,7 @@
     - name: Assert
     - ansible.builtin.assert:
       that:
-    - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 - name: Initialize the setup - sleep for 180 seconds for DCNM to completely update the state

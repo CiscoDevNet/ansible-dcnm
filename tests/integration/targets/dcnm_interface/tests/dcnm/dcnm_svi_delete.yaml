@@ -99,7 +99,7 @@
         that:
           - 'result.changed == True'
 
-    - name: QUERY - Get interface state in NDFC (delete)
+          - name: QUERY - Get interface state in NDFC (delete)
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.svi_fabric }}"
@@ -112,7 +112,7 @@
           - 'result.response is defined'
           - 'result.response | length == 0'
 
-    - name: Delete SVI interfaces - Idempotence
+          - name: Delete SVI interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *svi_del
       register: result
 
@@ -139,6 +139,6 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

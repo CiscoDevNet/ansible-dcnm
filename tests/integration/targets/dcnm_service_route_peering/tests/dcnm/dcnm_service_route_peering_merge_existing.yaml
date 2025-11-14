@@ -260,16 +260,16 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 7'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 7'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 7'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 7'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -461,16 +461,16 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+        - 'result.changed == false'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: Replace service route peerings RP1 to RP3 - Idempotence
@@ -479,19 +479,19 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+        - 'result.changed == false'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 0'
 
 
 ##############################################
 ##                MERGE RP4-RP7             ##
 ##############################################
 
-    - name: Replace service route peerings RP4 to RP7 - not specifying optional objects
+        - name: Replace service route peerings RP4 to RP7 - not specifying optional objects
       cisco.dcnm.dcnm_service_route_peering: &dcnm_srp_rep_47
         fabric: "{{ ansible_it_fabric }}"
         service_fabric: "{{ ansible_it_service_fabric }}"
@@ -670,16 +670,16 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+        - 'result.changed == false'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: Replace service route peerings RP4 to RP7  - Idempotence
@@ -688,19 +688,19 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+        - 'result.changed == false'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 0'
 
 
 ##############################################
 ##                MERGE RP4-RP7             ##
 ##############################################
 
-    - name: Merge service route peerings RP4 to RP7 - modifying certain objects
+        - name: Merge service route peerings RP4 to RP7 - modifying certain objects
       cisco.dcnm.dcnm_service_route_peering:
         fabric: "{{ ansible_it_fabric }}"
         service_fabric: "{{ ansible_it_service_fabric }}"
@@ -779,16 +779,16 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 4'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 4'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 4'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 4'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ##############################################

@@ -43,13 +43,13 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 1'
 
-    - name: Create more policies with the same template name but with some changes
+        - name: Create more policies with the same template name but with some changes
       cisco.dcnm.dcnm_policy:
         fabric: "{{ ansible_it_fabric }}"
         deploy: true
@@ -76,11 +76,11 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 3'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 3'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 3'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 3'
 
 ##############################################
 ##                CLEANUP                   ##
@@ -100,6 +100,6 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - 'item["MESSAGE"] == "OK"'
+        - 'item["RETURN_CODE"] == 200'
+        - 'item["MESSAGE"] == "OK"'
       loop: '{{ result.response }}'

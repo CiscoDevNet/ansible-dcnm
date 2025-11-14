@@ -229,27 +229,27 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.changed == true
-    - result.failed == false
+      - result.changed == true
+      - result.failed == false
 
-    - (result.diff | length) == 1
-    - result.diff[0][ansible_switch_1]["action"] == "image_policy_detach"
-    - result.diff[0][ansible_switch_2]["action"] == "image_policy_detach"
-    - result.diff[0][ansible_switch_1].policy_name == image_policy_1
-    - result.diff[0][ansible_switch_2].policy_name == image_policy_1
-    - result.diff[0].sequence_number == 1
+      - (result.diff | length) == 1
+      - result.diff[0][ansible_switch_1]["action"] == "image_policy_detach"
+      - result.diff[0][ansible_switch_2]["action"] == "image_policy_detach"
+      - result.diff[0][ansible_switch_1].policy_name == image_policy_1
+      - result.diff[0][ansible_switch_2].policy_name == image_policy_1
+      - result.diff[0].sequence_number == 1
 
-    - (result.response | length) == 1
-    - result.response[0].RETURN_CODE == 200
-    - result.response[0].DATA == "Successfully detach the policy from device."
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "DELETE"
-    - result.response[0].sequence_number == 1
+      - (result.response | length) == 1
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].DATA == "Successfully detach the policy from device."
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].sequence_number == 1
 
-    - (result.result | length) == 1
-    - result.result[0].changed == true
-    - result.result[0].success == true
-    - result.result[0].sequence_number == 1
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
 
 ################################################################################
 # QUERY - TEST - Verify image_policy_1 was removed from two switches.
@@ -318,36 +318,36 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.changed == false
-    - result.failed == false
-    - (result.diff | length) == 1
-    - result.diff[0][ansible_switch_1].ipAddress == ansible_switch_1
-    - result.diff[0][ansible_switch_2].ipAddress == ansible_switch_2
-    - result.diff[0][ansible_switch_3].ipAddress == ansible_switch_3
-    - result.diff[0][ansible_switch_1].policy == "None"
-    - result.diff[0][ansible_switch_2].policy == "None"
-    - result.diff[0][ansible_switch_3].policy == image_policy_1
-    - result.diff[0][ansible_switch_1].statusPercent == 0
-    - result.diff[0][ansible_switch_2].statusPercent == 0
-    - result.diff[0][ansible_switch_3].statusPercent == 100
-    - result.diff[0].sequence_number == 1
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0][ansible_switch_1].ipAddress == ansible_switch_1
+      - result.diff[0][ansible_switch_2].ipAddress == ansible_switch_2
+      - result.diff[0][ansible_switch_3].ipAddress == ansible_switch_3
+      - result.diff[0][ansible_switch_1].policy == "None"
+      - result.diff[0][ansible_switch_2].policy == "None"
+      - result.diff[0][ansible_switch_3].policy == image_policy_1
+      - result.diff[0][ansible_switch_1].statusPercent == 0
+      - result.diff[0][ansible_switch_2].statusPercent == 0
+      - result.diff[0][ansible_switch_3].statusPercent == 100
+      - result.diff[0].sequence_number == 1
 
-    - (result.metadata | length) == 1
-    - result.metadata[0].action == "switch_issu_details"
-    - result.metadata[0].check_mode == true
-    - result.metadata[0].sequence_number == 1
-    - result.metadata[0].state == "query"
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "switch_issu_details"
+      - result.metadata[0].check_mode == true
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "query"
 
-    - (result.response | length) == 1
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "GET"
-    - result.response[0].RETURN_CODE == 200
-    - result.response[0].sequence_number == 1
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "GET"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
 
-    - (result.result | length) == 1
-    - result.result[0].found == true
-    - result.result[0].sequence_number == 1
-    - result.result[0].success == true
+      - (result.result | length) == 1
+      - result.result[0].found == true
+      - result.result[0].sequence_number == 1
+      - result.result[0].success == true
 
 ################################################################################
 # QUERY - TEST - Detach policies from remaining switch and verify.
@@ -411,31 +411,31 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.changed == true
-    - result.failed == false
+      - result.changed == true
+      - result.failed == false
 
-    - (result.diff | length) == 1
-    - result.diff[0][ansible_switch_3]["action"] == "image_policy_detach"
-    - result.diff[0][ansible_switch_3]["policy_name"] == image_policy_1
-    - result.diff[0].sequence_number == 1
+      - (result.diff | length) == 1
+      - result.diff[0][ansible_switch_3]["action"] == "image_policy_detach"
+      - result.diff[0][ansible_switch_3]["policy_name"] == image_policy_1
+      - result.diff[0].sequence_number == 1
 
-    - (result.metadata | length) == 1
-    - result.metadata[0].action == "image_policy_detach"
-    - result.metadata[0].check_mode == false
-    - result.metadata[0].state == "deleted"
-    - result.metadata[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "image_policy_detach"
+      - result.metadata[0].check_mode == false
+      - result.metadata[0].state == "deleted"
+      - result.metadata[0].sequence_number == 1
 
-    - (result.response | length) == 1
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].RETURN_CODE == 200
-    - result.response[0].DATA == "Successfully detach the policy from device."
-    - result.response[0].METHOD == "DELETE"
-    - result.response[0].sequence_number == 1
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].DATA == "Successfully detach the policy from device."
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].sequence_number == 1
 
-    - (result.result | length) == 1
-    - result.result[0].changed == true
-    - result.result[0].success == true
-    - result.result[0].sequence_number == 1
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
 
 ################################################################################
 # QUERY - TEST - Verify image_policy_1 was removed from all switches.
@@ -510,35 +510,35 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.changed == false
-    - result.failed == false
+      - result.changed == false
+      - result.failed == false
 
-    - (result.diff | length) == 1
-    - result.diff[0][ansible_switch_1].ipAddress == ansible_switch_1
-    - result.diff[0][ansible_switch_2].ipAddress == ansible_switch_2
-    - result.diff[0][ansible_switch_3].ipAddress == ansible_switch_3
-    - result.diff[0][ansible_switch_1].policy == "None"
-    - result.diff[0][ansible_switch_2].policy == "None"
-    - result.diff[0][ansible_switch_3].policy == "None"
-    - result.diff[0][ansible_switch_1].statusPercent == 0
-    - result.diff[0][ansible_switch_2].statusPercent == 0
-    - result.diff[0][ansible_switch_3].statusPercent == 0
+      - (result.diff | length) == 1
+      - result.diff[0][ansible_switch_1].ipAddress == ansible_switch_1
+      - result.diff[0][ansible_switch_2].ipAddress == ansible_switch_2
+      - result.diff[0][ansible_switch_3].ipAddress == ansible_switch_3
+      - result.diff[0][ansible_switch_1].policy == "None"
+      - result.diff[0][ansible_switch_2].policy == "None"
+      - result.diff[0][ansible_switch_3].policy == "None"
+      - result.diff[0][ansible_switch_1].statusPercent == 0
+      - result.diff[0][ansible_switch_2].statusPercent == 0
+      - result.diff[0][ansible_switch_3].statusPercent == 0
 
-    - (result.metadata | length) == 1
-    - result.metadata[0].action == "switch_issu_details"
-    - result.metadata[0].check_mode == true
-    - result.metadata[0].state == "query"
-    - result.metadata[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "switch_issu_details"
+      - result.metadata[0].check_mode == true
+      - result.metadata[0].state == "query"
+      - result.metadata[0].sequence_number == 1
 
-    - (result.response | length) == 1
-    - result.response[0].RETURN_CODE == 200
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].DATA.status == "SUCCESS"
+      - (result.response | length) == 1
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].DATA.status == "SUCCESS"
 
-    - (result.result | length) == 1
-    - result.result[0].found == true
-    - result.result[0].success == true
-    - result.result[0].sequence_number == 1
+      - (result.result | length) == 1
+      - result.result[0].found == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
 
 ################################################################################
 # CLEANUP

@@ -199,7 +199,7 @@
         that:
           - '(result["response"] | length) >= 3'
 
-    - name: Query Links - with Src & Dst Fabric
+          - name: Query Links - with Src & Dst Fabric
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -211,7 +211,7 @@
         that:
           - '(result["response"] | length) >= 3'
 
-    - name: Query Links - with Src & Dst Fabric, Src Intf
+          - name: Query Links - with Src & Dst Fabric, Src Intf
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -224,7 +224,7 @@
         that:
           - '(result["response"] | length) >= 1'
 
-    - name: Query Links - with Src & Dst Fabric, Src Intf
+          - name: Query Links - with Src & Dst Fabric, Src Intf
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -237,7 +237,7 @@
         that:
           - '(result["response"] | length) >= 1'
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
+          - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -251,7 +251,7 @@
         that:
           - '(result["response"] | length) >= 1'
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
+          - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -265,7 +265,7 @@
         that:
           - '(result["response"] | length) >= 1'
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
+          - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -280,7 +280,7 @@
         that:
           - '(result["response"] | length) >= 1'
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
+          - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -295,7 +295,7 @@
         that:
           - '(result["response"] | length) >= 1'
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
+          - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -311,7 +311,7 @@
         that:
           - '(result["response"] | length) >= 1'
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
+          - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -327,7 +327,7 @@
         that:
           - '(result["response"] | length) >= 1'
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
+          - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -366,7 +366,7 @@
         that:
           - '(result["response"] | length) >= 3'
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
+          - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"

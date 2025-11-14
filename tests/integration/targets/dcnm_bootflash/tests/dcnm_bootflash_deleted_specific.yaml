@@ -189,9 +189,9 @@
 
 - name: DELETED - TEST - Delete specific ndfc_ut files on active supervisor bootflash.
   cisco.dcnm.dcnm_bootflash: &delete_files
-      state: deleted
-      config:
-        switches:
+    state: deleted
+    config:
+      switches:
           - ip_address: "{{ switch1 }}"
             targets:
               - filepath: "bootflash:/{{ switch1_file1 }}"
@@ -232,31 +232,31 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.diff[0][switch1][0].filepath == switch1_filepath1
-    - result.diff[0][switch1][1].filepath == switch1_filepath2
-    - result.diff[0][switch1][2].filepath == switch1_filepath3
-    - result.diff[0][switch1][3].filepath == switch1_filepath4
-    - result.diff[0][switch2][0].filepath == switch2_filepath1
+      - result.diff[0][switch1][0].filepath == switch1_filepath1
+      - result.diff[0][switch1][1].filepath == switch1_filepath2
+      - result.diff[0][switch1][2].filepath == switch1_filepath3
+      - result.diff[0][switch1][3].filepath == switch1_filepath4
+      - result.diff[0][switch2][0].filepath == switch2_filepath1
       - result.diff[0][switch2][1].filepath == switch2_filepath2
-        - result.diff[0][switch2][2].filepath == switch2_filepath3
-    - result.diff[0][switch2][3].filepath == switch2_filepath4
-    - result.changed == true
-    - result.failed == false
-    - (result.diff | length) == 1
-    - (result.diff[0] | length) == 3
-    - (result.response | length) == 1
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "DELETE"
-    - result.response[0].RETURN_CODE == 200
-    - (result.metadata | length) == 1
-    - result.metadata[0].action == "bootflash_delete"
-    - result.metadata[0].check_mode == False
-    - result.metadata[0].sequence_number == 1
-    - result.metadata[0].state == "deleted"
-    - (result.result | length) == 1
-    - result.result[0].changed == true
-    - result.result[0].sequence_number == 1
-    - result.result[0].success == true
+      - result.diff[0][switch2][2].filepath == switch2_filepath3
+      - result.diff[0][switch2][3].filepath == switch2_filepath4
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - (result.diff[0] | length) == 3
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "bootflash_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].sequence_number == 1
+      - result.result[0].success == true
 
 ################################################################################
 # DELETED - TEST - Delete files. Idempotence.
@@ -303,22 +303,22 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.changed == false
-    - result.failed == false
-    - (result.diff | length) == 1
-    - switch1 not in result.diff[0]
-    - switch2 not in result.diff[0]
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - switch1 not in result.diff[0]
+      - switch2 not in result.diff[0]
       - result.diff[0].sequence_number == 1
-    - (result.metadata | length) == 1
-    - result.metadata[0].action == "bootflash_delete"
-    - result.metadata[0].check_mode == False
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "bootflash_delete"
+      - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
-        - result.metadata[0].state == "deleted"
-    - (result.response | length) == 1
-    - result.response[0].MESSAGE == "No files to delete."
-    - result.response[0].RETURN_CODE == 200
-    - result.response[0].sequence_number == 1
-    - (result.result | length) == 1
-    - result.result[0].changed == false
-    - result.result[0].success == true
-    - result.result[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "No files to delete."
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - (result.result | length) == 1
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1

@@ -110,7 +110,7 @@
 ##               QUERY                      ##
 ##############################################
 
-    - name: Load Query Non-Existing Interface Config File
+          - name: Load Query Non-Existing Interface Config File
       ansible.builtin.set_fact:
         dcnm_interface_query_non_existing_conf: "{{ lookup('file', test_data_interfaces.query_non_existing_conf_file) | from_yaml }}"
       delegate_to: localhost

@@ -757,7 +757,7 @@
   ansible.builtin.assert:
     that:
       - '"Invalid parameters in playbook: net_name : Required parameter not found" in result.msg'
-    - result.changed == false
+      - result.changed == false
   tags: merged
 
 - name: MERGED - TC12 - Create Network with invalid VRF name
@@ -781,7 +781,7 @@
   ansible.builtin.assert:
     that:
       - '"VRF: Tenant-10000 is missing in fabric:" in result.msg'
-    - result.changed == false
+      - result.changed == false
   tags: merged
 
 - name: MERGED - TC12 - Create Network with invalid vlan id
@@ -805,7 +805,7 @@
   ansible.builtin.assert:
     that:
       - '"Invalid parameters in playbook: vlan_id:15000 : The item exceeds the allowed range of max 4094" in result.msg'
-    - result.changed == false
+      - result.changed == false
   tags: merged
 
 - name: MERGED - TC12 - Create Network and deploy in invalid switch
@@ -832,7 +832,7 @@
   ansible.builtin.assert:
     that:
       - '"Invalid parameters in playbook: ip_address : Required parameter not found" in result.msg'
-    - result.changed == false
+      - result.changed == false
   tags: merged
 
 - name: MERGED - TC12 - Create Network with out of range routing tag
@@ -857,7 +857,7 @@
   ansible.builtin.assert:
     that:
       - '"routing_tag: 4294967296 : The item exceeds the allowed range of max 4294967295" in result.msg'
-    - result.changed == false
+      - result.changed == false
   tags: merged
 
 - name: MERGED - TC12 - Create L2 only Network with a vrf name
@@ -882,7 +882,7 @@
   ansible.builtin.assert:
     that:
       - '"Invalid parameters in playbook: vrf_name should not be specified for L2 Networks" in result.msg'
-    - result.changed == false
+      - result.changed == false
   tags: merged
 
 - name: MERGED - TC12 - Create L3 Network without a vrf name
@@ -905,7 +905,7 @@
   ansible.builtin.assert:
     that:
       - '"Invalid parameters in playbook: vrf_name is required for L3 Networks" in result.msg'
-    - result.changed == false
+      - result.changed == false
   tags: merged
 
 - name: MERGED - TC12 - Create L3 Network with DHCP server IP alone
@@ -930,7 +930,7 @@
   ansible.builtin.assert:
     that:
       - '"Invalid parameters in playbook: DHCP server IP should be specified along with DHCP server VRF" in result.msg'
-    - result.changed == false
+      - result.changed == false
   tags: merged
 
 ##############################################
