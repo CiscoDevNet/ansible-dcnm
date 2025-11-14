@@ -29,6 +29,7 @@ import copy
 import inspect
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_bootflash import \
     Common
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
@@ -56,7 +57,8 @@ def test_bootflash_common_00000() -> None:
     assert instance.check_mode is False
     assert instance.config == params_deleted.get("config")
     assert instance.convert_target_to_params.class_name == "ConvertTargetToParams"
-    assert instance._rest_send is None
+    assert instance._rest_send.params == {}
+    assert instance._rest_send.class_name == "RestSend"
     assert instance.results.class_name == "Results"
     assert instance.results.check_mode is False
     assert instance.results.state == "deleted"
