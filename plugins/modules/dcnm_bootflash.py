@@ -191,24 +191,15 @@ import logging
 from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import \
-    BootflashFiles
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
-    BootflashInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import \
-    ConvertTargetToParams
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
-    Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-    SwitchDetails
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import BootflashFiles
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import BootflashInfo
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import ConvertTargetToParams
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import SwitchDetails
 
 
 class Common:
@@ -422,6 +413,7 @@ class Common:
             raise TypeError(msg)
         self._rest_send = value
 
+
 class Deleted(Common):
     """
     ### Summary
@@ -499,9 +491,7 @@ class Deleted(Common):
                 msg += "Error assigning BootflashInfo.filter_supervisor. "
                 msg += f"Error detail: {error}"
                 raise ValueError(msg) from error
-            self.files_to_delete[switch["ip_address"]].extend(
-                self.bootflash_info.matches
-            )
+            self.files_to_delete[switch["ip_address"]].extend(self.bootflash_info.matches)
 
     def update_bootflash_files(self, ip_address: str, target: dict[str, str]) -> None:
         """
@@ -737,9 +727,7 @@ def main():
             "choices": ["deleted", "query"],
         },
     }
-    ansible_module = AnsibleModule(
-        argument_spec=argument_spec, supports_check_mode=True
-    )
+    ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     params: dict[str, Any] = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
