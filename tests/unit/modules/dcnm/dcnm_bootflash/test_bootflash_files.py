@@ -20,7 +20,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -29,26 +29,24 @@ import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import \
-    BootflashFiles
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import \
-    ConvertTargetToParams
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-    SwitchDetails
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import BootflashFiles
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import ConvertTargetToParams
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import SwitchDetails
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-    MockAnsibleModule, configs_deleted, does_not_raise, params_deleted,
-    payloads_bootflash_files, responses_ep_all_switches,
-    responses_ep_bootflash_files, targets)
+    MockAnsibleModule,
+    configs_deleted,
+    does_not_raise,
+    params_deleted,
+    payloads_bootflash_files,
+    responses_ep_all_switches,
+    responses_ep_bootflash_files,
+    targets,
+)
 
 
 def test_bootflash_files_00000() -> None:
@@ -175,9 +173,7 @@ def test_bootflash_files_00100() -> None:
     assert instance.payload == payloads_bootflash_files(f"{key}a")
     assert instance.results.response_current is not None
     assert instance.results.response_current["RETURN_CODE"] == 200
-    assert instance.results.result == [
-        {"success": True, "changed": True, "sequence_number": 1}
-    ]
+    assert instance.results.result == [{"success": True, "changed": True, "sequence_number": 1}]
 
 
 def test_bootflash_files_00110() -> None:
@@ -795,9 +791,7 @@ def test_bootflash_files_00500() -> None:
 
     assert instance.results.response_current["RETURN_CODE"] == 200
     assert instance.results.response_current["MESSAGE"] == "No files to delete."
-    assert instance.results.result == [
-        {"success": True, "changed": False, "sequence_number": 1}
-    ]
+    assert instance.results.result == [{"success": True, "changed": False, "sequence_number": 1}]
 
 
 def test_bootflash_files_00600() -> None:
@@ -973,9 +967,7 @@ def test_bootflash_files_00800() -> None:
         instance.target = "foo"
 
 
-@pytest.mark.parametrize(
-    "parameter", ["filepath", "ip_address", "serial_number", "supervisor"]
-)
+@pytest.mark.parametrize("parameter", ["filepath", "ip_address", "serial_number", "supervisor"])
 def test_bootflash_files_00810(parameter) -> None:
     """
     ### Classes and Methods
