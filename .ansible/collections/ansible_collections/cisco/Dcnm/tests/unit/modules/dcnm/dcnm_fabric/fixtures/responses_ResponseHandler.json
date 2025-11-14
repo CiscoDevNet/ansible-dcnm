@@ -1,0 +1,59 @@
+{
+    "test_response_handler_00040a": {
+        "DATA": "Foo data",
+        "MESSAGE": "Not Found",
+        "METHOD": "GET",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 404,
+        "sequence_number": 1
+    },
+    "test_response_handler_00041a": {
+        "DATA": "Foo data",
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 500,
+        "sequence_number": 1
+    },
+    "test_response_handler_00042a": {
+        "DATA": "Foo data",
+        "MESSAGE": "ERROR",
+        "METHOD": "GET",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "test_response_handler_00043a": {
+        "DATA": "Foo data",
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "test_response_handler_00050a": {
+        "DATA": "Foo data",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 200,
+        "ERROR": "Foo error",
+        "sequence_number": 1
+    },
+    "test_response_handler_00051a": {
+        "DATA": "Foo data",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "test_response_handler_00052a": {
+        "DATA": "Foo data",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "Foo path",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    }
+}

@@ -1,0 +1,392 @@
+{
+  "create_policy_no_mand_elems" :  [
+  {
+    "dest_network": "MY_IT_NET_12",
+      "dest_vrf": "MY_IT_VRF_11",
+      "name": "service_policy_1",
+      "next_hop": "192.161.1.100",
+      "node_name": "IT-SN-1",
+      "policy": {
+        "acl_name": "pbr_acl_1",
+        "action": "permit",
+        "dest_port": 22,
+        "next_hop_option": "none",
+        "proto": "tcp",
+        "reverse_acl_name": "rev_pbr_acl_1",
+        "reverse_route_map_num": 102,
+        "route_map_num": 101,
+        "src_port": "any"
+      },
+      "reverse_next_hop": "192.161.2.100",
+      "reverse": false,
+      "rp_name": "IT-FW-RP1",
+      "src_network": "MY_IT_NET_11",
+      "src_vrf": "MY_IT_VRF_11"
+  }],
+
+  "create_sp1_sp3_config" :  [
+  {
+    "dest_network": "MY_IT_NET_12",
+      "dest_vrf": "MY_IT_VRF_11",
+      "name": "service_policy_1",
+      "next_hop": "192.161.1.100",
+      "node_name": "IT-SN-1",
+      "policy": {
+        "acl_name": "pbr_acl_1",
+        "action": "permit",
+        "dest_port": 22,
+        "next_hop_option": "none",
+        "proto": "tcp",
+        "reverse_acl_name": "rev_pbr_acl_1",
+        "reverse_route_map_num": 102,
+        "route_map_num": 101,
+        "src_port": "any"
+      },
+      "reverse_next_hop": "192.161.2.100",
+      "reverse": false,
+      "rp_name": "IT-FW-RP1",
+      "src_network": "MY_IT_NET_11",
+      "src_vrf": "MY_IT_VRF_11"
+  },
+  {
+    "dest_network": "MY_IT_NET_22",
+    "dest_vrf": "MY_IT_VRF_21",
+    "name": "service_policy_2",
+    "next_hop": "",
+    "node_name": "IT-SN-2",
+    "policy": {
+      "acl_name": "pbr_acl_2",
+      "action": "permit",
+      "dest_port": 2001,
+      "next_hop_option": "drop_on_fail",
+      "proto": "udp",
+      "reverse_acl_name": "rev_pbr_acl_2",
+      "reverse_route_map_num": 202,
+      "route_map_num": 201,
+      "src_port": 2000
+    },
+    "reverse_next_hop": "192.164.1.100",
+    "rp_name": "IT-ADC-RP4",
+    "src_network": "MY_IT_NET_21",
+    "src_vrf": "MY_IT_VRF_21"
+  },
+  {
+    "dest_network": "MY_IT_NET_22",
+    "dest_vrf": "MY_IT_VRF_21",
+    "name": "service_policy_3",
+    "next_hop": "",
+    "node_name": "IT-SN-2",
+    "policy": {
+      "acl_name": "pbr_acl_3",
+      "action": "deny",
+      "dest_port": 3001,
+      "next_hop_option": "drop",
+      "proto": "ip",
+      "reverse_acl_name": "rev_pbr_acl_3",
+      "reverse_route_map_num": 302,
+      "route_map_num": 301,
+      "src_port": 3000
+    },
+    "reverse_next_hop": "192.164.1.100",
+    "rp_name": "IT-ADC-RP5",
+    "src_network": "MY_IT_NET_21",
+    "src_vrf": "MY_IT_VRF_21"
+  }
+  ],
+
+  "create_sp1_sp2_no_opt_elems": [
+  {
+    "dest_network": "MY_IT_NET_12",
+    "dest_vrf": "MY_IT_VRF_11",
+    "name": "service_policy_1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "policy": {
+      "dest_port": 22,
+      "proto": "tcp",
+      "src_port": "any"
+    },
+    "reverse_next_hop": "192.161.2.100",
+    "rp_name": "IT-FW-RP1",
+    "src_network": "MY_IT_NET_11",
+    "src_vrf": "MY_IT_VRF_11"
+  },
+  {
+    "dest_network": "MY_IT_NET_22",
+    "dest_vrf": "MY_IT_VRF_21",
+    "name": "service_policy_2",
+    "next_hop": "",
+    "node_name": "IT-SN-2",
+    "policy": {
+      "action": "permit",
+      "dest_port": 2001,
+      "next_hop_option": "drop",
+      "proto": "udp",
+      "src_port": 2000
+    },
+    "reverse_next_hop": "192.164.1.100",
+    "rp_name": "IT-ADC-RP4",
+    "src_network": "MY_IT_NET_21",
+    "src_vrf": "MY_IT_VRF_21"
+  }
+  ],
+             
+  "replace_sp1_sp3_config" :  [
+  {
+    "dest_network": "MY_IT_NET_12",
+      "dest_vrf": "MY_IT_VRF_11",
+      "name": "service_policy_1",
+      "next_hop": "192.161.1.100",
+      "node_name": "IT-SN-1",
+      "policy": {
+        "acl_name": "pbr_acl_1",
+        "action": "deny",
+        "dest_port": 221,
+        "next_hop_option": "none",
+        "proto": "ip",
+        "reverse_acl_name": "rev_pbr_acl_1",
+        "reverse_route_map_num": 1102,
+        "route_map_num": 1101,
+        "src_port": "any"
+      },
+      "reverse_next_hop": "192.161.2.100",
+      "reverse": true,
+      "rp_name": "IT-FW-RP1",
+      "src_network": "MY_IT_NET_11",
+      "src_vrf": "MY_IT_VRF_11"
+  },
+  {
+    "dest_network": "MY_IT_NET_22",
+    "dest_vrf": "MY_IT_VRF_21",
+    "name": "service_policy_2",
+    "next_hop": "",
+    "node_name": "IT-SN-2",
+    "policy": {
+      "acl_name": "pbr_acl_2",
+      "action": "permit",
+      "dest_port": 2201,
+      "next_hop_option": "drop_on_fail",
+      "proto": "tcp",
+      "reverse_acl_name": "rev_pbr_acl_2",
+      "reverse_route_map_num": 2202,
+      "route_map_num": 2201,
+      "src_port": 2200
+    },
+    "reverse_next_hop": "192.164.1.100",
+    "rp_name": "IT-ADC-RP4",
+    "src_network": "MY_IT_NET_21",
+    "src_vrf": "MY_IT_VRF_21"
+  },
+  {
+    "dest_network": "MY_IT_NET_32",
+    "dest_vrf": "MY_IT_VRF_31",
+    "name": "service_policy_3",
+    "next_hop": "",
+    "node_name": "IT-SN-2",
+    "policy": {
+      "acl_name": "pbr_acl_3",
+      "action": "permit",
+      "dest_port": 3002,
+      "next_hop_option": "drop_on_fail",
+      "proto": "icmp",
+      "reverse_acl_name": "rev_pbr_acl_3",
+      "reverse_route_map_num": 3002,
+      "route_map_num": 3001,
+      "src_port": 3003
+    },
+    "reverse_next_hop": "192.164.1.100",
+    "rp_name": "IT-ADC-RP5",
+    "src_network": "MY_IT_NET_31",
+    "src_vrf": "MY_IT_VRF_31"
+  }
+  ],
+
+  "delete_policies_no_config": [],
+
+  "delete_policies_with_node_names": [
+  {
+    "node_name": "IT-SN-1"
+  },
+  {
+    "node_name": "IT-SN-2"
+  }
+  ],
+
+  "delete_policies_with_name_and_node_name": [
+  {
+    "name": "service_policy_1",
+    "node_name": "IT-SN-1"
+  },
+  {
+    "name": "service_policy_2",
+    "node_name": "IT-SN-2"
+  },
+
+  {
+    "name": "service_policy_3",
+    "node_name": "IT-SN-2"
+  }
+  ],
+
+  "delete_policies_with_node_name_and_rp_name": [
+  {
+    "node_name": "IT-SN-1",
+    "rp_name": "IT-FW-RP1"
+  },
+  {
+    "node_name": "IT-SN-2",
+    "rp_name": "IT-ADC-RP4"
+  },
+
+  {
+    "node_name": "IT-SN-2",
+    "rp_name": "IT-ADC-RP4"
+  }
+  ],
+
+  "delete_policies_no_mand_elems": [
+  {
+    "name": "service_policy_1"
+  },
+  {
+    "name": "service_policy_2"
+  },
+
+  {
+    "name": "service_policy_3"
+  }
+  ],
+
+  "query_non_existing": [
+  {
+    "name": "service_policy_10",
+    "node_name": "IT-SN-1"
+  },
+  {
+    "name": "service_policy_20",
+    "node_name": "IT-SN-2"
+  },
+  {
+    "name": "service_policy_30",
+    "node_name": "IT-SN-2"
+  }
+  ],
+
+  "query_with_node_name_sn1": [
+  {
+    "node_name": "IT-SN-1"
+  }
+  ],
+
+  "query_with_node_name_sn2": [
+  {
+    "node_name": "IT-SN-2"
+  }
+  ],
+
+  "query_with_node_and_policy_name": [
+  {
+    "name": "service_policy_1",
+    "node_name": "IT-SN-1"
+  },
+  {
+    "name": "service_policy_2",
+    "node_name": "IT-SN-2"
+  },
+  {
+    "name": "service_policy_3",
+    "node_name": "IT-SN-2"
+  }
+  ],
+
+  "query_no_mand_elems": [
+  {
+    "name": "service_policy_1"
+  },
+  {
+    "name": "service_policy_2"
+  },
+  {
+    "name": "service_policy_3"
+  }
+  ],
+
+  "override_policies_no_config": [],
+
+  "override_policies_create_new": [
+  {
+    "dest_network": "MY_IT_NET_12",
+    "dest_vrf": "MY_IT_VRF_11",
+    "name": "service_policy_1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "policy": {
+      "acl_name": "pbr_acl_555",
+      "action": "permit",
+      "dest_port": 22,
+      "next_hop_option": "none",
+      "proto": "icmp",
+      "reverse_acl_name": "rev_pbr_acl_555",
+      "reverse_route_map_num": 556,
+      "route_map_num": 555,
+      "src_port": 555
+    },
+    "reverse_next_hop": "192.161.2.100",
+    "rp_name": "IT-FW-RP1",
+    "src_network": "MY_IT_NET_11",
+    "src_vrf": "MY_IT_VRF_11"
+  }
+  ],
+
+  "override_policies_no_change": [
+  {
+    "dest_network": "MY_IT_NET_12",
+    "dest_vrf": "MY_IT_VRF_11",
+    "name": "service_policy_1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "reverse": false,
+    "policy": {
+      "acl_name": "pbr_acl_1",
+      "action": "permit",
+      "dest_port": 22,
+      "next_hop_option": "none",
+      "proto": "tcp",
+      "reverse_acl_name": "rev_pbr_acl_1",
+      "reverse_route_map_num": 102,
+      "route_map_num": 101,
+      "src_port": "any"
+    },
+    "reverse_next_hop": "192.161.2.100",
+    "rp_name": "IT-FW-RP1",
+    "src_network": "MY_IT_NET_11",
+    "src_vrf": "MY_IT_VRF_11"
+  }
+  ],
+
+  "override_policies_modify_exist": [
+  {
+    "dest_network": "MY_IT_NET_12",
+    "dest_vrf": "MY_IT_VRF_11",
+    "name": "service_policy_1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "policy": {
+      "acl_name": "pbr_acl_555",
+      "action": "permit",
+      "dest_port": 22,
+      "next_hop_option": "none",
+      "proto": "icmp",
+      "reverse_acl_name": "rev_pbr_acl_555",
+      "reverse_route_map_num": 556,
+      "route_map_num": 555,
+      "src_port": 555
+    },
+    "reverse_next_hop": "192.161.2.100",
+    "rp_name": "IT-FW-RP1",
+    "src_network": "MY_IT_NET_11",
+    "src_vrf": "MY_IT_VRF_11"
+  }
+  ]
+
+}

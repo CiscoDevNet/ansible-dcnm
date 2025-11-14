@@ -1,0 +1,48 @@
+{
+    "TEST_NOTES": [
+        "Mocked payloads for ImagePolicyUpdate unit tests.",
+        "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_update_bulk.py"
+    ],
+    "test_image_policy_payload_00120a": {
+        "agnostic": false,
+        "description": "image policy of 10.3(3)F",
+        "epld_image": "n9000-epld.10.3.2.F.img",
+        "name": "FOO",
+        "packages": {
+            "install": [
+                "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm"
+            ],
+            "uninstall": [
+                "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+            ]
+        },
+        "platform": "N9K",
+        "release": "10.3.1_nxos64-cs_64bit",
+        "type": "PLATFORM"
+    },
+    "test_image_policy_payload_00121a": {
+        "agnostic": false,
+        "description": "BAR",
+        "epld_image": "",
+        "name": "BAR",
+        "packages": {
+            "install": [],
+            "uninstall": []
+        },
+        "platform": "N9K",
+        "release": "10.3.1_nxos64-cs_64bit"
+    },
+    "test_image_policy_payload_00122a": {},
+    "test_image_policy_payload_00123a": {
+        "agnostic": false,
+        "description": "BAR",
+        "epld_image": "",
+        "name": "BAR",
+        "packages": {
+            "install": [],
+            "uninstall": []
+        },
+        "platform": "N9K",
+        "release": "10.3.1_nxos64-cs_64bit"
+    }
+}

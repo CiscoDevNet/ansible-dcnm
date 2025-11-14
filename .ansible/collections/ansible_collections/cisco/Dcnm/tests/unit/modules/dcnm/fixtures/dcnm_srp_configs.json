@@ -1,0 +1,1802 @@
+{
+  "delete_rp1_rp7_with_no_cfg": [],
+
+  "delete_rp1_rp7_with_node_name": [
+  {
+    "node_name": "IT-SN-1"
+  },
+  {
+    "node_name": "IT-SN-2"
+  }
+  ],
+
+  "delete_rp1_rp7_config": [
+  {
+    "name": "IT-FW-RP1",
+    "node_name": "IT-SN-1"
+  },
+  {
+    "name": "IT-FW-RP2",
+    "node_name": "IT-SN-1"
+  },
+  {
+    "name": "IT-FW-RP3",
+    "node_name": "IT-SN-1"
+  },
+  {
+    "name": "IT-ADC-RP4",
+    "node_name": "IT-SN-2"
+  },
+  {
+    "name": "IT-ADC-RP5",
+    "node_name": "IT-SN-2"
+  },
+  {
+    "name": "IT-ADC-RP6",
+    "node_name": "IT-SN-2"
+  },
+  {
+    "name": "IT-ADC-RP7",
+    "node_name": "IT-SN-2"
+  }
+  ],
+
+  "delete_no_mand_elems": [
+  {
+    "name": "IT-FW-RP1",
+    "node_name": "IT-SN-1"
+  }],
+
+  "merge_rp1_rp7_config" :  [
+  {
+    "deploy_mode": "intra_tenant_fw",
+    "inside_network": {
+      "name": "rp1-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 inside interface - change",
+        "ipv4_gw": "192.161.1.1/24",
+        "ipv6_gw": "2001:0901::01/64"
+      },
+      "vlan_id": 101,
+      "vrf": "IT_VRF_11"
+    },
+    "name": "IT-FW-RP1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp1-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 outside interface - change",
+        "ipv4_gw": "192.161.2.1/24",
+        "ipv6_gw": "2001:0902::1/64"
+      },
+      "vlan_id": 102,
+      "vrf": "IT_VRF_11"
+    },
+    "reverse_next_hop": "192.161.2.100"
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp2-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 inside interface - change",
+        "ipv4_gw": "192.162.1.1/24",
+        "ipv6_gw": "2002:0901::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "120.120.120.100",
+          "121.121.121.100"
+          ],
+          "subnet": "20.20.20.0/24"
+        }
+        ]
+      },
+      "vlan_id": 201,
+      "vrf": "IT_VRF_21"
+    },
+    "name": "IT-FW-RP2",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp2-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 outside interface - change",
+        "ipv4_gw": "192.162.2.1/24",
+        "ipv6_gw": "2002:0902::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "122.122.122.100",
+          "123.123.123.100"
+          ],
+          "subnet": "21.21.21.0/24"
+        }
+        ]
+      },
+      "vlan_id": 202,
+      "vrf": "IT_VRF_22"
+    },
+    "peering_option": "static"
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp3-sn1-inside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 inside interface - change",
+        "ipv4_gw": "192.163.1.1/24",
+        "ipv4_lo": "31.31.31.2",
+        "ipv4_neighbor": "31.31.31.1",
+        "ipv4_vpc_peer_lo": "31.31.31.3",
+        "ipv6_gw": "2003:0901::1/64",
+        "ipv6_lo": "2003:3932::01",
+        "ipv6_neighbor": "2003:3931::1",
+        "ipv6_vpc_peer_lo": "2003:3933::01",
+        "local_asn": 65301,
+        "neigh_int_descr": "RP3 SN1 inside interface - change",
+        "route_map_tag": 33111
+      },
+      "vlan_id": 301,
+      "vrf": "IT_VRF_31"
+    },
+    "name": "IT-FW-RP3",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp3-sn1-outside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 outside interface - change",
+        "ipv4_gw": "192.163.2.1/24",
+        "ipv4_lo": "131.131.131.2",
+        "ipv4_neighbor": "131.131.131.1",
+        "ipv4_vpc_peer_lo": "131.131.131.3",
+        "ipv6_gw": "2003:0902::1/64",
+        "ipv6_lo": "2003:8984::1:100:1",
+        "ipv6_neighbor": "2003:8983::1",
+        "ipv6_vpc_peer_lo": "2003:8985::1",
+        "local_asn": 65302,
+        "neigh_int_descr": "RP3 SN1 outside interface - change",
+        "route_map_tag": 31113
+      },
+      "vlan_id": 302,
+      "vrf": "IT_VRF_32"
+    },
+    "peering_option": "ebgp"
+  },
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp4-sn2-first-arm",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP4 SN2 first arm intf - change",
+        "ipv4_gw": "192.164.1.1/24",
+        "ipv4_lo": "41.41.41.2",
+        "ipv4_neighbor": "41.41.41.1",
+        "ipv4_vpc_peer_lo": "41.41.41.3",
+        "ipv6_gw": "2004:0901::1/64",
+        "ipv6_lo": "2004:4942::1",
+        "ipv6_neighbor": "2004:4941::1",
+        "ipv6_vpc_peer_lo": "2004:4943::1",
+        "local_asn": 65401,
+        "neigh_int_descr": "RP4 SN2 first arm - change",
+        "route_map_tag": 41112
+      },
+      "vlan_id": 401,
+      "vrf": "IT_VRF_41"
+    },
+    "name": "IT-ADC-RP4",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.164.1.100"
+  },
+  {
+    "deploy_mode": "two_arm_adc",
+    "first_arm": {
+      "name": "rp5-sn2-first-arm",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP5 SN2 first arm intf - change",
+        "ipv4_gw": "192.165.1.1/24",
+        "ipv4_lo": "51.51.51.2",
+        "ipv4_neighbor": "51.51.51.1",
+        "ipv4_vpc_peer_lo": "51.51.51.3",
+        "ipv6_gw": "2005:0901::1/64",
+        "ipv6_lo": "2005:5952::1",
+        "ipv6_neighbor": "2005:5951::1",
+        "ipv6_vpc_peer_lo": "2005:5953::1",
+        "local_asn": 65501,
+        "neigh_int_descr": "RP5 SN2 first arm - change",
+        "route_map_tag": 51115
+      },
+      "vlan_id": 501,
+      "vrf": "IT_VRF_51"
+    },
+    "name": "IT-ADC-RP5",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.165.1.100",
+    "second_arm": {
+      "name": "rp5-sn2-second-arm",
+      "profile": {
+        "int_descr": "RP5 SN2 second arm intf - change",
+        "ipv4_gw": "192.165.2.1/24",
+        "ipv6_gw": "2005:0902::1/64"
+      },
+      "vlan_id": 502,
+      "vrf": "IT_VRF_51"
+    }
+  },
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp6-sn2-first-arm",
+      "profile": {
+        "int_descr": "RP6 SN2 first arm intf - change",
+        "ipv4_gw": "192.166.1.1/24",
+        "ipv6_gw": "2006:0901::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "161.161.161.1",
+          "162.162.162.1"
+          ],
+          "subnet": "61.61.61.1/24"
+        },
+        {
+          "next_hop": [
+            "163.163.163.1",
+          "164.164.164.1"
+          ],
+          "subnet": "22.0.0.0/24"
+        }
+        ]
+      },
+      "vlan_id": 601,
+      "vrf": "IT_VRF_61"
+    },
+    "name": "IT-ADC-RP6",
+    "node_name": "IT-SN-2",
+    "peering_option": "static",
+    "reverse_next_hop": "192.166.1.100"
+  },
+  {
+    "deploy_mode": "two_arm_adc",
+    "first_arm": {
+      "name": "rp7-sn2-first-arm",
+      "profile": {
+        "int_descr": "RP6 SN2 first arm  intf - change",
+        "ipv4_gw": "192.167.1.1/24",
+        "ipv6_gw": "2007:0901::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "171.171.171.1",
+          "172.172.172.1"
+          ],
+          "subnet": "71.71.71.1/24"
+        }
+        ]
+      },
+      "vlan_id": 701,
+      "vrf": "IT_VRF_71"
+    },
+    "name": "IT-ADC-RP7",
+    "node_name": "IT-SN-2",
+    "peering_option": "static",
+    "reverse_next_hop": "192.167.1.100",
+    "second_arm": {
+      "name": "rp7-sn2-second-arm",
+      "profile": {
+        "int_descr": "RP7 SN2 second arm intf - change",
+        "ipv4_gw": "192.167.2.1/24",
+        "ipv6_gw": "2007:0902::1/64"
+      },
+      "vlan_id": 702,
+      "vrf": "IT_VRF_71"
+    }
+  }
+  ],
+  "create_rp1_rp3_rp5_config" :  [
+  {
+    "deploy_mode": "intra_tenant_fw",
+    "inside_network": {
+      "name": "rp1-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 inside interface",
+        "ipv4_gw": "192.161.1.1/24",
+        "ipv6_gw": "2001:0101::01/64",
+        "tag": 11111,
+        "vlan_name": "rp1-sn1-inside"
+      },
+      "vlan_id": 101,
+      "vrf": "IT_VRF_11"
+    },
+    "name": "IT-FW-RP1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp1-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 outside interface",
+        "ipv4_gw": "192.161.2.1/24",
+        "ipv6_gw": "2001:0102::1/64",
+        "tag": 11112,
+        "vlan_name": "rp1-sn1-outside"
+      },
+      "vlan_id": 102,
+      "vrf": "IT_VRF_11"
+    },
+    "reverse_next_hop": "192.161.2.100"
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp3-sn1-inside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 inside interface",
+        "ipv4_gw": "192.163.1.1/24",
+        "ipv4_lo": "31.31.31.2",
+        "ipv4_neighbor": "31.31.31.1",
+        "ipv4_vpc_peer_lo": "31.31.31.3",
+        "ipv6_gw": "2003:0101::1/64",
+        "ipv6_lo": "2003:3132::01",
+        "ipv6_neighbor": "2003:3131::1",
+        "ipv6_vpc_peer_lo": "2003:3133::01",
+        "local_asn": 65301,
+        "neigh_int_descr": "RP3 SN1 inside interface",
+        "route_map_tag": 33111,
+        "tag": 31111,
+        "vlan_name": "rp3-sn1-inside"
+      },
+      "vlan_id": 301,
+      "vrf": "IT_VRF_31"
+    },
+    "name": "IT-FW-RP3",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp3-sn1-outside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 outside interface",
+        "ipv4_gw": "192.163.2.1/24",
+        "ipv4_lo": "131.131.131.2",
+        "ipv4_neighbor": "131.131.131.1",
+        "ipv4_vpc_peer_lo": "131.131.131.3",
+        "ipv6_gw": "2003:0102::1/64",
+        "ipv6_lo": "2003:8384::1:100:1",
+        "ipv6_neighbor": "2003:8383::1",
+        "ipv6_vpc_peer_lo": "2003:8385::1",
+        "local_asn": 65302,
+        "neigh_int_descr": "RP3 SN1 outside interface",
+        "route_map_tag": 31113,
+        "tag": 31112,
+        "vlan_name": "rp3-sn1-outside"
+      },
+      "vlan_id": 302,
+      "vrf": "IT_VRF_32"
+    },
+    "peering_option": "ebgp"
+  },
+  {
+    "deploy_mode": "two_arm_adc",
+    "first_arm": {
+      "name": "rp5-sn2-first-arm",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP5 SN2 first arm intf",
+        "ipv4_gw": "192.165.1.1/24",
+        "ipv4_lo": "51.51.51.2",
+        "ipv4_neighbor": "51.51.51.1",
+        "ipv4_vpc_peer_lo": "51.51.51.3",
+        "ipv6_gw": "2005:0101::1/64",
+        "ipv6_lo": "2005:5152::1",
+        "ipv6_neighbor": "2005:5151::1",
+        "ipv6_vpc_peer_lo": "2005:5153::1",
+        "local_asn": 65501,
+        "neigh_int_descr": "RP5 SN2 first arm",
+        "route_map_tag": 51115,
+        "tag": 51111,
+        "vlan_name": "rp5-sn2-first-arm"
+      },
+      "vlan_id": 501,
+      "vrf": "IT_VRF_51"
+    },
+    "name": "IT-ADC-RP5",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.165.1.100",
+    "second_arm": {
+      "name": "rp5-sn2-second-arm",
+      "profile": {
+        "int_descr": "RP5 SN2 second arm intf",
+        "ipv4_gw": "192.165.2.1/24",
+        "ipv6_gw": "2005:0102::1/64",
+        "tag": 51112,
+        "vlan_name": "rp5-sn2-second-arm"
+      },
+      "vlan_id": 502,
+      "vrf": "IT_VRF_51"
+    }
+  }
+  ],
+  "update_rp2_rp4_config" :  [
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp2-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 inside interface - upd",
+        "ipv4_gw": "192.162.1.1/24",
+        "ipv6_gw": "2002:0109::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "120.120.129.100",
+          "121.121.121.100"
+          ],
+          "subnet": "20.20.20.0/24"
+        }
+        ],
+        "tag": 21111,
+        "vlan_name": "rp2-sn1-inside"
+      },
+      "vlan_id": 201,
+      "vrf": "IT_VRF_21"
+    },
+    "name": "IT-FW-RP2",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp2-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 outside interface - upd",
+        "ipv4_gw": "192.162.2.1/24",
+        "ipv6_gw": "2002:0102::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "122.122.122.100",
+          "123.123.123.100"
+          ],
+          "subnet": "21.21.21.0/24"
+        }
+        ],
+        "tag": 22222,
+        "vlan_name": "rp2-sn1-outside - upd"
+      },
+      "vlan_id": 202,
+      "vrf": "IT_VRF_22"
+    },
+    "peering_option": "static"
+  },
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp4-sn2-first-arm",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP4 SN2 first arm intf - upd",
+        "ipv4_gw": "192.164.1.1/24",
+        "ipv4_lo": "41.41.41.2",
+        "ipv4_neighbor": "41.41.41.1",
+        "ipv4_vpc_peer_lo": "41.41.41.3",
+        "ipv6_gw": "2004:0101::1/64",
+        "ipv6_lo": "2004:4142::1",
+        "ipv6_neighbor": "2004:4141::1",
+        "ipv6_vpc_peer_lo": "2004:4143::1",
+        "local_asn": 65401,
+        "neigh_int_descr": "RP4 SN2 first arm - upd",
+        "route_map_tag": 41119,
+        "tag": 41119,
+        "vlan_name": "rp4-sn2-first-arm-upd"
+      },
+      "vlan_id": 401,
+      "vrf": "IT_VRF_41"
+    },
+    "name": "IT-ADC-RP4",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.164.1.100"
+  }
+  ],
+  "replace_rp1_to_rp3_no_change" :  [
+  {
+    "deploy_mode": "intra_tenant_fw",
+    "inside_network": {
+      "name": "rp1-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 inside interface",
+        "ipv4_gw": "192.161.1.1/24",
+        "ipv6_gw": "2001:0101::01/64",
+        "tag": 11111,
+        "vlan_name": "rp1-sn1-inside"
+      },
+      "vlan_id": 101,
+      "vrf": "IT_VRF_11"
+    },
+    "name": "IT-FW-RP1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp1-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 outside interface",
+        "ipv4_gw": "192.161.2.1/24",
+        "ipv6_gw": "2001:0102::1/64",
+        "tag": 11112,
+        "vlan_name": "rp1-sn1-outside"
+      },
+      "vlan_id": 102,
+      "vrf": "IT_VRF_11"
+    },
+    "reverse_next_hop": "192.161.2.100"
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp2-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 inside interface",
+        "ipv4_gw": "192.162.1.1/24",
+        "ipv6_gw": "2002:0101::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "120.120.120.100",
+          "121.121.121.100"
+          ],
+          "subnet": "20.20.20.0/24"
+        }
+        ],
+        "tag": 21111,
+        "vlan_name": "rp2-sn1-inside"
+      },
+      "vlan_id": 201,
+      "vrf": "IT_VRF_21"
+    },
+    "name": "IT-FW-RP2",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp2-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 outside interface",
+        "ipv4_gw": "192.162.2.1/24",
+        "ipv6_gw": "2002:0102::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "122.122.122.100",
+          "123.123.123.100"
+          ],
+          "subnet": "21.21.21.0/24"
+        }
+        ],
+        "tag": 22222,
+        "vlan_name": "rp2-sn1-outside"
+      },
+      "vlan_id": 202,
+      "vrf": "IT_VRF_22"
+    },
+    "peering_option": "static"
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp3-sn1-inside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 inside interface",
+        "ipv4_gw": "192.163.1.1/24",
+        "ipv4_lo": "31.31.31.2",
+        "ipv4_neighbor": "31.31.31.1",
+        "ipv4_vpc_peer_lo": "31.31.31.3",
+        "ipv6_gw": "2003:0101::1/64",
+        "ipv6_lo": "2003:3132::01",
+        "ipv6_neighbor": "2003:3131::1",
+        "ipv6_vpc_peer_lo": "2003:3133::01",
+        "local_asn": 65301,
+        "neigh_int_descr": "RP3 SN1 inside interface",
+        "route_map_tag": 33111,
+        "tag": 31111,
+        "vlan_name": "rp3-sn1-inside"
+      },
+      "vlan_id": 301,
+      "vrf": "IT_VRF_31"
+    },
+    "name": "IT-FW-RP3",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp3-sn1-outside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 outside interface",
+        "ipv4_gw": "192.163.2.1/24",
+        "ipv4_lo": "131.131.131.2",
+        "ipv4_neighbor": "131.131.131.1",
+        "ipv4_vpc_peer_lo": "131.131.131.3",
+        "ipv6_gw": "2003:0102::1/64",
+        "ipv6_lo": "2003:8384::1:100:1",
+        "ipv6_neighbor": "2003:8383::1",
+        "ipv6_vpc_peer_lo": "2003:8385::1",
+        "local_asn": 65302,
+        "neigh_int_descr": "RP3 SN1 outside interface",
+        "route_map_tag": 31113,
+        "tag": 31112,
+        "vlan_name": "rp3-sn1-outside"
+      },
+      "vlan_id": 302,
+      "vrf": "IT_VRF_32"
+    },
+    "peering_option": "ebgp"
+  }
+  ],
+  "create_rp1_rp7_config" :  [
+  {
+    "deploy_mode": "intra_tenant_fw",
+    "inside_network": {
+      "name": "rp1-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 inside interface",
+        "ipv4_gw": "192.161.1.1/24",
+        "ipv6_gw": "2001:0101::01/64",
+        "tag": 11111,
+        "vlan_name": "rp1-sn1-inside"
+      },
+      "vlan_id": 101,
+      "vrf": "IT_VRF_11"
+    },
+    "name": "IT-FW-RP1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp1-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 outside interface",
+        "ipv4_gw": "192.161.2.1/24",
+        "ipv6_gw": "2001:0102::1/64",
+        "tag": 11112,
+        "vlan_name": "rp1-sn1-outside"
+      },
+      "vlan_id": 102,
+      "vrf": "IT_VRF_11"
+    },
+    "reverse_next_hop": "192.161.2.100"
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp2-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 inside interface",
+        "ipv4_gw": "192.162.1.1/24",
+        "ipv6_gw": "2002:0101::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "120.120.120.100",
+          "121.121.121.100"
+          ],
+          "subnet": "20.20.20.0/24"
+        }
+        ],
+        "tag": 21111,
+        "vlan_name": "rp2-sn1-inside"
+      },
+      "vlan_id": 201,
+      "vrf": "IT_VRF_21"
+    },
+    "name": "IT-FW-RP2",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp2-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 outside interface",
+        "ipv4_gw": "192.162.2.1/24",
+        "ipv6_gw": "2002:0102::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "122.122.122.100",
+          "123.123.123.100"
+          ],
+          "subnet": "21.21.21.0/24"
+        }
+        ],
+        "tag": 22222,
+        "vlan_name": "rp2-sn1-outside"
+      },
+      "vlan_id": 202,
+      "vrf": "IT_VRF_22"
+    },
+    "peering_option": "static"
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp3-sn1-inside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 inside interface",
+        "ipv4_gw": "192.163.1.1/24",
+        "ipv4_lo": "31.31.31.2",
+        "ipv4_neighbor": "31.31.31.1",
+        "ipv4_vpc_peer_lo": "31.31.31.3",
+        "ipv6_gw": "2003:0101::1/64",
+        "ipv6_lo": "2003:3132::01",
+        "ipv6_neighbor": "2003:3131::1",
+        "ipv6_vpc_peer_lo": "2003:3133::01",
+        "local_asn": 65301,
+        "neigh_int_descr": "RP3 SN1 inside interface",
+        "route_map_tag": 33111,
+        "tag": 31111,
+        "vlan_name": "rp3-sn1-inside"
+      },
+      "vlan_id": 301,
+      "vrf": "IT_VRF_31"
+    },
+    "name": "IT-FW-RP3",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp3-sn1-outside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 outside interface",
+        "ipv4_gw": "192.163.2.1/24",
+        "ipv4_lo": "131.131.131.2",
+        "ipv4_neighbor": "131.131.131.1",
+        "ipv4_vpc_peer_lo": "131.131.131.3",
+        "ipv6_gw": "2003:0102::1/64",
+        "ipv6_lo": "2003:8384::1:100:1",
+        "ipv6_neighbor": "2003:8383::1",
+        "ipv6_vpc_peer_lo": "2003:8385::1",
+        "local_asn": 65302,
+        "neigh_int_descr": "RP3 SN1 outside interface",
+        "route_map_tag": 31113,
+        "tag": 31112,
+        "vlan_name": "rp3-sn1-outside"
+      },
+      "vlan_id": 302,
+      "vrf": "IT_VRF_32"
+    },
+    "peering_option": "ebgp"
+  },
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp4-sn2-first-arm",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP4 SN2 first arm intf",
+        "ipv4_gw": "192.164.1.1/24",
+        "ipv4_lo": "41.41.41.2",
+        "ipv4_neighbor": "41.41.41.1",
+        "ipv4_vpc_peer_lo": "41.41.41.3",
+        "ipv6_gw": "2004:0101::1/64",
+        "ipv6_lo": "2004:4142::1",
+        "ipv6_neighbor": "2004:4141::1",
+        "ipv6_vpc_peer_lo": "2004:4143::1",
+        "local_asn": 65401,
+        "neigh_int_descr": "RP4 SN2 first arm",
+        "route_map_tag": 41112,
+        "tag": 41111,
+        "vlan_name": "rp4-sn2-first-arm"
+      },
+      "vlan_id": 401,
+      "vrf": "IT_VRF_41"
+    },
+    "name": "IT-ADC-RP4",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.164.1.100"
+  },
+  {
+    "deploy_mode": "two_arm_adc",
+    "first_arm": {
+      "name": "rp5-sn2-first-arm",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP5 SN2 first arm intf",
+        "ipv4_gw": "192.165.1.1/24",
+        "ipv4_lo": "51.51.51.2",
+        "ipv4_neighbor": "51.51.51.1",
+        "ipv4_vpc_peer_lo": "51.51.51.3",
+        "ipv6_gw": "2005:0101::1/64",
+        "ipv6_lo": "2005:5152::1",
+        "ipv6_neighbor": "2005:5151::1",
+        "ipv6_vpc_peer_lo": "2005:5153::1",
+        "local_asn": 65501,
+        "neigh_int_descr": "RP5 SN2 first arm",
+        "route_map_tag": 51115,
+        "tag": 51111,
+        "vlan_name": "rp5-sn2-first-arm"
+      },
+      "vlan_id": 501,
+      "vrf": "IT_VRF_51"
+    },
+    "name": "IT-ADC-RP5",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.165.1.100",
+    "second_arm": {
+      "name": "rp5-sn2-second-arm",
+      "profile": {
+        "int_descr": "RP5 SN2 second arm intf",
+        "ipv4_gw": "192.165.2.1/24",
+        "ipv6_gw": "2005:0102::1/64",
+        "tag": 51112,
+        "vlan_name": "rp5-sn2-second-arm"
+      },
+      "vlan_id": 502,
+      "vrf": "IT_VRF_51"
+    }
+  },
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp6-sn2-first-arm",
+      "profile": {
+        "int_descr": "RP6 SN2 first arm intf",
+        "ipv4_gw": "192.166.1.1/24",
+        "ipv6_gw": "2006:0101::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "161.161.161.1",
+          "162.162.162.1"
+          ],
+          "subnet": "61.61.61.1/24"
+        },
+        {
+          "next_hop": [
+            "163.163.163.1",
+          "164.164.164.1"
+          ],
+          "subnet": "22.0.0.0/24"
+        }
+        ],
+        "tag": 61111,
+        "vlan_name": "rp6-sn2-first-arm"
+      },
+      "vlan_id": 601,
+      "vrf": "IT_VRF_61"
+    },
+    "name": "IT-ADC-RP6",
+    "node_name": "IT-SN-2",
+    "peering_option": "static",
+    "reverse_next_hop": "192.166.1.100"
+  },
+  {
+    "deploy_mode": "two_arm_adc",
+    "first_arm": {
+      "name": "rp7-sn2-first-arm",
+      "profile": {
+        "int_descr": "RP6 SN2 first arm  intf",
+        "ipv4_gw": "192.167.1.1/24",
+        "ipv6_gw": "2007:0101::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "171.171.171.1",
+          "172.172.172.1"
+          ],
+          "subnet": "71.71.71.1/24"
+        }
+        ],
+        "tag": 71111,
+        "vlan_name": "rp7-sn2-first-arm"
+      },
+      "vlan_id": 701,
+      "vrf": "IT_VRF_71"
+    },
+    "name": "IT-ADC-RP7",
+    "node_name": "IT-SN-2",
+    "peering_option": "static",
+    "reverse_next_hop": "192.167.1.100",
+    "second_arm": {
+      "name": "rp7-sn2-second-arm",
+      "profile": {
+        "int_descr": "RP7 SN2 second arm intf",
+        "ipv4_gw": "192.167.2.1/24",
+        "ipv6_gw": "2007:0102::1/64",
+        "tag": 71112,
+        "vlan_name": "rp7-sn2-second-arm"
+      },
+      "vlan_id": 702,
+      "vrf": "IT_VRF_71"
+    }
+  }
+  ],
+  "create_no_intra_fw_mand_elems" :  [
+  {
+    "deploy_mode": "intra_tenant_fw",
+    "inside_network": {
+      "name": "rp1-sn1-inside-net",
+      "profile": {
+        "ipv4_gw": "192.161.1.1/24"
+      },
+      "vlan_id": 101,
+      "vrf": "IT_VRF_11"
+    },
+    "name": "IT-FW-RP1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp1-sn1-outside-net",
+      "profile": {
+        "ipv4_gw": "192.161.2.1/24"
+      },
+      "vlan_id": 102,
+      "vrf": "IT_VRF_11"
+    }
+  }],
+  "create_no_inter_fw_mand_elems" :  [
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp3-sn1-inside-net",
+      "profile": {
+        "ipv4_gw": "192.163.1.1/24",
+        "ipv4_lo": "31.31.31.2",
+        "ipv4_neighbor": "31.31.31.1"
+      },
+      "vlan_id": 301,
+      "vrf": "IT_VRF_31"
+    },
+    "name": "IT-FW-RP3",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp3-sn1-outside-net",
+      "profile": {
+        "ipv4_gw": "192.163.2.1/24",
+        "ipv4_lo": "131.131.131.2",
+        "ipv4_neighbor": "131.131.131.1"
+      },
+      "vlan_id": 302,
+      "vrf": "IT_VRF_32"
+    },
+    "peering_option": "ebgp"
+  }],
+
+  "create_no_adc_mand_elems" :  [
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp4-sn2-first-arm",
+      "profile": {
+        "ipv4_gw": "192.164.1.1/24",
+        "ipv4_lo": "41.41.41.2",
+        "ipv4_neighbor": "41.41.41.1"
+      },
+      "vlan_id": 401,
+      "vrf": "IT_VRF_41"
+    },
+    "name": "IT-ADC-RP4",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.164.1.100"
+  }],
+
+  "create_rp1_rp7_config_no_opt_elems" :  [
+  {
+    "deploy_mode": "intra_tenant_fw",
+    "inside_network": {
+      "name": "rp1-sn1-inside-net",
+      "profile": {
+        "ipv4_gw": "192.161.1.1/24"
+      },
+      "vrf": "IT_VRF_11"
+    },
+    "name": "IT-FW-RP1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp1-sn1-outside-net",
+      "profile": {
+        "ipv4_gw": "192.161.2.1/24"
+      },
+      "vrf": "IT_VRF_11"
+    }
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp2-sn1-inside-net",
+      "profile": {
+        "ipv4_gw": "192.162.1.1/24"
+      },
+      "vrf": "IT_VRF_21"
+    },
+    "name": "IT-FW-RP2",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp2-sn1-outside-net",
+      "profile": {
+        "ipv4_gw": "192.162.2.1/24"
+      },
+      "vrf": "IT_VRF_22"
+    }
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp3-sn1-inside-net",
+      "profile": {
+        "ipv4_gw": "192.163.1.1/24",
+        "ipv4_lo": "31.31.31.2",
+        "ipv4_neighbor": "31.31.31.1"
+      },
+      "vrf": "IT_VRF_31"
+    },
+    "name": "IT-FW-RP3",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp3-sn1-outside-net",
+      "profile": {
+        "ipv4_gw": "192.163.2.1/24",
+        "ipv4_lo": "131.131.131.2",
+        "ipv4_neighbor": "131.131.131.1"
+      },
+      "vrf": "IT_VRF_32"
+    },
+    "peering_option": "ebgp"
+  },
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp4-sn2-first-arm",
+      "profile": {
+        "ipv4_gw": "192.164.1.1/24",
+        "ipv4_lo": "41.41.41.2",
+        "ipv4_neighbor": "41.41.41.1"
+      },
+      "vrf": "IT_VRF_41"
+    },
+    "name": "IT-ADC-RP4",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.164.1.100"
+  },
+  {
+    "deploy_mode": "two_arm_adc",
+    "first_arm": {
+      "name": "rp5-sn2-first-arm",
+      "profile": {
+        "ipv4_gw": "192.165.1.1/24",
+        "ipv4_lo": "51.51.51.2",
+        "ipv4_neighbor": "51.51.51.1"
+      },
+      "vrf": "IT_VRF_51"
+    },
+    "name": "IT-ADC-RP5",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.165.1.100",
+    "second_arm": {
+      "name": "rp5-sn2-second-arm",
+      "profile": {
+        "ipv4_gw": "192.165.2.1/24"
+      },
+      "vrf": "IT_VRF_51"
+    }
+  },
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp6-sn2-first-arm",
+      "profile": {
+        "ipv4_gw": "192.166.1.1/24"
+      },
+      "vrf": "IT_VRF_61"
+    },
+    "name": "IT-ADC-RP6",
+    "node_name": "IT-SN-2",
+    "reverse_next_hop": "192.166.1.100"
+  },
+  {
+    "deploy_mode": "two_arm_adc",
+    "first_arm": {
+      "name": "rp7-sn2-first-arm",
+      "profile": {
+        "ipv4_gw": "192.167.1.1/24"
+      },
+      "vrf": "IT_VRF_71"
+    },
+    "name": "IT-ADC-RP7",
+    "node_name": "IT-SN-2",
+    "reverse_next_hop": "192.167.1.100",
+    "second_arm": {
+      "name": "rp7-sn2-second-arm",
+      "profile": {
+        "ipv4_gw": "192.167.2.1/24"
+      },
+      "vrf": "IT_VRF_71"
+    }
+  }
+  ],
+
+  "query_no_mand_elems": [
+  {
+    "name": "IT-FW-RP1-ABS",
+    "node_name": "IT-SN-1"
+  }],
+
+  "config_query_non_exist": [
+  {
+    "name": "IT-FW-RP1-ABS",
+    "node_name": "IT-SN-1"
+  },
+  {
+    "name": "IT-FW-RP2-ABS",
+    "node_name": "IT-SN-2"
+  }
+  ],
+
+  "config_query_with_node": [
+  {
+    "node_name": "IT-SN-1"
+  },
+  {
+    "node_name": "IT-SN-2"
+  }
+  ],
+
+  "config_query_with_peername": [
+  {
+    "name": "IT-FW-RP1",
+    "node_name": "IT-SN-1"
+  },
+  {
+    "name": "IT-FW-RP2",
+    "node_name": "IT-SN-1"
+  },
+  {
+    "name": "IT-FW-RP3",
+    "node_name": "IT-SN-1"
+  },
+  {
+    "name": "IT-ADC-RP4",
+    "node_name": "IT-SN-2"
+  },
+  {
+    "name": "IT-ADC-RP5",
+    "node_name": "IT-SN-2"
+  },
+  {
+    "name": "IT-ADC-RP6",
+    "node_name": "IT-SN-2"
+  },
+  {
+    "name": "IT-ADC-RP7",
+    "node_name": "IT-SN-2"
+  }
+  ],
+
+  "replace_rp1_to_rp3_no_opt_elems" :  [
+  {
+    "deploy_mode": "intra_tenant_fw",
+    "inside_network": {
+      "name": "rp1-sn1-inside-net",
+      "profile": {
+        "ipv4_gw": "192.161.1.1/24"
+      },
+      "vlan_id": 101,
+      "vrf": "IT_VRF_11"
+    },
+    "name": "IT-FW-RP1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp1-sn1-outside-net",
+      "profile": {
+        "ipv4_gw": "192.161.2.1/24"
+      },
+      "vlan_id": 102,
+      "vrf": "IT_VRF_11"
+    }
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp2-sn1-inside-net",
+      "profile": {
+        "ipv4_gw": "192.162.1.1/24"
+      },
+      "vlan_id": 201,
+      "vrf": "IT_VRF_21"
+    },
+    "name": "IT-FW-RP2",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp2-sn1-outside-net",
+      "profile": {
+        "ipv4_gw": "192.162.2.1/24"
+      },
+      "vlan_id": 202,
+      "vrf": "IT_VRF_22"
+    }
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp3-sn1-inside-net",
+      "profile": {
+        "ipv4_gw": "192.163.1.1/24",
+        "ipv4_lo": "31.31.31.2",
+        "ipv4_neighbor": "31.31.31.1"
+      },
+      "vlan_id": 301,
+      "vrf": "IT_VRF_31"
+    },
+    "name": "IT-FW-RP3",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp3-sn1-outside-net",
+      "profile": {
+        "ipv4_gw": "192.163.2.1/24",
+        "ipv4_lo": "131.131.131.2",
+        "ipv4_neighbor": "131.131.131.1"
+      },
+      "vlan_id": 302,
+      "vrf": "IT_VRF_32"
+    },
+    "peering_option": "ebgp"
+  }],
+
+  "replace_rp1_rp3_no_change" :  [
+  {
+    "deploy_mode": "intra_tenant_fw",
+    "inside_network": {
+      "name": "rp1-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 inside interface",
+        "ipv4_gw": "192.161.1.1/24",
+        "ipv6_gw": "2001:0101::01/64",
+        "tag": 11111,
+        "vlan_name": "rp1-sn1-inside"
+      },
+      "vlan_id": 101,
+      "vrf": "IT_VRF_11"
+    },
+    "name": "IT-FW-RP1",
+    "next_hop": "192.161.1.100",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp1-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 outside interface",
+        "ipv4_gw": "192.161.2.1/24",
+        "ipv6_gw": "2001:0102::1/64",
+        "tag": 11112,
+        "vlan_name": "rp1-sn1-outside"
+      },
+      "vlan_id": 102,
+      "vrf": "IT_VRF_11"
+    },
+    "reverse_next_hop": "192.161.2.100"
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp2-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 inside interface",
+        "ipv4_gw": "192.162.1.1/24",
+        "ipv6_gw": "2002:0101::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "120.120.120.100",
+          "121.121.121.100"
+          ],
+          "subnet": "20.20.20.0/24"
+        }
+        ],
+        "tag": 21111,
+        "vlan_name": "rp2-sn1-inside"
+      },
+      "vlan_id": 201,
+      "vrf": "IT_VRF_21"
+    },
+    "name": "IT-FW-RP2",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp2-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 outside interface",
+        "ipv4_gw": "192.162.2.1/24",
+        "ipv6_gw": "2002:0102::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "122.122.122.100",
+          "123.123.123.100"
+          ],
+          "subnet": "21.21.21.0/24"
+        }
+        ],
+        "tag": 22222,
+        "vlan_name": "rp2-sn1-outside"
+      },
+      "vlan_id": 202,
+      "vrf": "IT_VRF_22"
+    },
+    "peering_option": "static"
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp3-sn1-inside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 inside interface",
+        "ipv4_gw": "192.163.1.1/24",
+        "ipv4_lo": "31.31.31.2",
+        "ipv4_neighbor": "31.31.31.1",
+        "ipv4_vpc_peer_lo": "31.31.31.3",
+        "ipv6_gw": "2003:0101::1/64",
+        "ipv6_lo": "2003:3132::01",
+        "ipv6_neighbor": "2003:3131::1",
+        "ipv6_vpc_peer_lo": "2003:3133::01",
+        "local_asn": 65301,
+        "neigh_int_descr": "RP3 SN1 inside interface",
+        "route_map_tag": 33111,
+        "tag": 31111,
+        "vlan_name": "rp3-sn1-inside"
+      },
+      "vlan_id": 301,
+      "vrf": "IT_VRF_31"
+    },
+    "name": "IT-FW-RP3",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp3-sn1-outside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 outside interface",
+        "ipv4_gw": "192.163.2.1/24",
+        "ipv4_lo": "131.131.131.2",
+        "ipv4_neighbor": "131.131.131.1",
+        "ipv4_vpc_peer_lo": "131.131.131.3",
+        "ipv6_gw": "2003:0102::1/64",
+        "ipv6_lo": "2003:8384::1:100:1",
+        "ipv6_neighbor": "2003:8383::1",
+        "ipv6_vpc_peer_lo": "2003:8385::1",
+        "local_asn": 65302,
+        "neigh_int_descr": "RP3 SN1 outside interface",
+        "route_map_tag": 31113,
+        "tag": 31112,
+        "vlan_name": "rp3-sn1-outside"
+      },
+      "vlan_id": 302,
+      "vrf": "IT_VRF_32"
+    },
+    "peering_option": "ebgp"
+  }],
+  "replace_rp1_to_rp3": [
+  {
+    "deploy_mode": "intra_tenant_fw",
+    "inside_network": {
+      "name": "rp1-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 inside interface - REP",
+        "ipv4_gw": "192.161.1.1/24",
+        "ipv6_gw": "2101:0101::01/64",
+        "tag": 11101,
+        "vlan_name": "rp1-sn1-inside-rep"
+      },
+      "vlan_id": 101,
+      "vrf": "IT_VRF_11"
+    },
+    "name": "IT-FW-RP1",
+    "next_hop": "192.161.1.200",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp1-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP1 SN1 outside interface- REP",
+        "ipv4_gw": "192.161.2.1/24",
+        "ipv6_gw": "2101:0102::1/64",
+        "tag": 11102,
+        "vlan_name": "rp1-sn1-outside-rep"
+      },
+      "vlan_id": 102,
+      "vrf": "IT_VRF_11"
+    },
+    "reverse_next_hop": "192.161.2.200"
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp2-sn1-inside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 inside interface - REP",
+        "ipv4_gw": "192.162.1.1/24",
+        "ipv6_gw": "2102:0101::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "120.120.190.100",
+          "121.121.191.100"
+          ],
+          "subnet": "20.20.90.0/24"
+        }
+        ],
+        "tag": 21101,
+        "vlan_name": "rp2-sn1-inside-rep"
+      },
+      "vlan_id": 201,
+      "vrf": "IT_VRF_21"
+    },
+    "name": "IT-FW-RP2",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp2-sn1-outside-net",
+      "profile": {
+        "int_descr": "RP2 SN1 outside interface - REP",
+        "ipv4_gw": "192.162.2.1/24",
+        "ipv6_gw": "2102:0102::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "122.122.129.100",
+          "123.123.129.100"
+          ],
+          "subnet": "21.21.29.0/24"
+        }
+        ],
+        "tag": 22202,
+        "vlan_name": "rp2-sn1-outside-rep"
+      },
+      "vlan_id": 202,
+      "vrf": "IT_VRF_22"
+    },
+    "peering_option": "static"
+  },
+  {
+    "deploy_mode": "inter_tenant_fw",
+    "inside_network": {
+      "name": "rp3-sn1-inside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 inside interface - REP",
+        "ipv4_gw": "192.163.1.1/24",
+        "ipv4_lo": "31.31.39.2",
+        "ipv4_neighbor": "31.31.39.1",
+        "ipv4_vpc_peer_lo": "31.31.39.3",
+        "ipv6_gw": "2103:0101::1/64",
+        "ipv6_lo": "2103:3132::01",
+        "ipv6_neighbor": "2103:3131::1",
+        "ipv6_vpc_peer_lo": "2103:3133::01",
+        "local_asn": 65391,
+        "neigh_int_descr": "RP3 SN1 inside interface - REP",
+        "route_map_tag": 33101,
+        "tag": 31101,
+        "vlan_name": "rp3-sn1-inside-rep"
+      },
+      "vlan_id": 301,
+      "vrf": "IT_VRF_31"
+    },
+    "name": "IT-FW-RP3",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp3-sn1-outside-net",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP3 SN1 outside interface - REP",
+        "ipv4_gw": "192.163.2.1/24",
+        "ipv4_lo": "131.131.139.2",
+        "ipv4_neighbor": "131.131.139.1",
+        "ipv4_vpc_peer_lo": "131.131.139.3",
+        "ipv6_gw": "2103:0102::1/64",
+        "ipv6_lo": "2103:8384::1:100:1",
+        "ipv6_neighbor": "2103:8383::1",
+        "ipv6_vpc_peer_lo": "2103:8385::1",
+        "local_asn": 65392,
+        "neigh_int_descr": "RP3 SN1 outside interface - REP",
+        "route_map_tag": 31103,
+        "tag": 31102,
+        "vlan_name": "rp3-sn1-outside-rep"
+      },
+      "vlan_id": 302,
+      "vrf": "IT_VRF_32"
+    },
+    "peering_option": "ebgp"
+  }
+  ],
+
+  "replace_rp4_to_rp7": [
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp4-sn2-first-arm",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP4 SN2 first arm intf - REP",
+        "ipv4_gw": "192.164.1.1/24",
+        "ipv4_lo": "41.41.49.2",
+        "ipv4_neighbor": "41.41.49.1",
+        "ipv4_vpc_peer_lo": "41.41.49.3",
+        "ipv6_gw": "2104:0101::1/64",
+        "ipv6_lo": "2104:4142::1",
+        "ipv6_neighbor": "2104:4141::1",
+        "ipv6_vpc_peer_lo": "2104:4143::1",
+        "local_asn": 65491,
+        "neigh_int_descr": "RP4 SN2 first arm - REP",
+        "route_map_tag": 41102,
+        "tag": 41101,
+        "vlan_name": "rp4-sn2-first-arm-rep"
+      },
+      "vlan_id": 401,
+      "vrf": "IT_VRF_41"
+    },
+    "name": "IT-ADC-RP4",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.164.1.200"
+  },
+  {
+    "deploy_mode": "two_arm_adc",
+    "first_arm": {
+      "name": "rp5-sn2-first-arm",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP5 SN2 first arm intf - REP",
+        "ipv4_gw": "192.165.1.1/24",
+        "ipv4_lo": "51.51.59.2",
+        "ipv4_neighbor": "51.51.59.1",
+        "ipv4_vpc_peer_lo": "51.51.51.3",
+        "ipv6_gw": "2105:0101::1/64",
+        "ipv6_lo": "2105:5152::1",
+        "ipv6_neighbor": "2105:5151::1",
+        "ipv6_vpc_peer_lo": "2105:5153::1",
+        "local_asn": 65591,
+        "neigh_int_descr": "RP5 SN2 first arm - REP",
+        "route_map_tag": 51105,
+        "tag": 51101,
+        "vlan_name": "rp5-sn2-first-arm-rep"
+      },
+      "vlan_id": 501,
+      "vrf": "IT_VRF_51"
+    },
+    "name": "IT-ADC-RP5",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.165.1.200",
+    "second_arm": {
+      "name": "rp5-sn2-second-arm",
+      "profile": {
+        "int_descr": "RP5 SN2 second arm intf - REP",
+        "ipv4_gw": "192.165.2.1/24",
+        "ipv6_gw": "2105:0102::1/64",
+        "tag": 51102,
+        "vlan_name": "rp5-sn2-second-arm-rep"
+      },
+      "vlan_id": 502,
+      "vrf": "IT_VRF_51"
+    }
+  },
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp6-sn2-first-arm",
+      "profile": {
+        "int_descr": "RP6 SN2 first arm intf - REP",
+        "ipv4_gw": "192.166.1.1/24",
+        "ipv6_gw": "2106:0101::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "161.161.169.1",
+          "162.162.169.1"
+          ],
+          "subnet": "61.61.69.1/24"
+        },
+        {
+          "next_hop": [
+            "163.163.169.1",
+          "164.164.169.1"
+          ],
+          "subnet": "29.0.0.0/24"
+        }
+        ],
+        "tag": 61101,
+        "vlan_name": "rp6-sn2-first-arm-rep"
+      },
+      "vlan_id": 601,
+      "vrf": "IT_VRF_61"
+    },
+    "name": "IT-ADC-RP6",
+    "node_name": "IT-SN-2",
+    "peering_option": "static",
+    "reverse_next_hop": "192.166.1.200"
+  },
+  {
+    "deploy_mode": "two_arm_adc",
+    "first_arm": {
+      "name": "rp7-sn2-first-arm",
+      "profile": {
+        "int_descr": "RP6 SN2 first arm intf - REP",
+        "ipv4_gw": "192.167.1.1/24",
+        "ipv6_gw": "2107:0101::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "171.171.179.1",
+          "172.172.179.1"
+          ],
+          "subnet": "71.71.79.1/24"
+        }
+        ],
+        "tag": 71101,
+        "vlan_name": "rp7-sn2-first-arm-rep"
+      },
+      "vlan_id": 701,
+      "vrf": "IT_VRF_71"
+    },
+    "name": "IT-ADC-RP7",
+    "node_name": "IT-SN-2",
+    "peering_option": "static",
+    "reverse_next_hop": "192.167.1.200",
+    "second_arm": {
+      "name": "rp7-sn2-second-arm",
+      "profile": {
+        "int_descr": "RP7 SN2 second arm intf - REP",
+        "ipv4_gw": "192.167.2.1/24",
+        "ipv6_gw": "2107:0102::1/64",
+        "tag": 71102,
+        "vlan_name": "rp7-sn2-second-arm-rep"
+      },
+      "vlan_id": 702,
+      "vrf": "IT_VRF_71"
+    }
+  }
+  ],
+  "override_with_no_config" : [],
+  "override_with_snodes": [
+  {
+    "node_name": "IT-SN-1"
+  },
+  {
+    "node_name": "IT-SN-2"
+  }
+  ],
+  "override_with_existing_peering": [
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp6-sn2-first-arm",
+      "profile": {
+        "int_descr": "RP6 SN2 first arm intf",
+        "ipv4_gw": "192.166.1.1/24",
+        "ipv6_gw": "2006:0101::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "161.161.161.1",
+          "162.162.162.1"
+          ],
+          "subnet": "61.61.61.1/24"
+        },
+        {
+          "next_hop": [
+            "163.163.163.1",
+          "164.164.164.1"
+          ],
+          "subnet": "22.0.0.0/24"
+        }
+        ],
+        "tag": 61111,
+        "vlan_name": "rp6-sn2-first-arm"
+      },
+      "vlan_id": 601,
+      "vrf": "IT_VRF_61"
+    },
+    "name": "IT-ADC-RP6",
+    "node_name": "IT-SN-2",
+    "peering_option": "static",
+    "reverse_next_hop": "192.166.1.100"
+  }
+  ],
+  "override_with_existing_peering_updated": [
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp6-sn2-first-arm",
+      "profile": {
+        "int_descr": "RP6 SN2 first arm intf - ovr",
+        "ipv4_gw": "192.166.9.1/24",
+        "ipv6_gw": "2006:0109::1/64",
+        "static_route": [
+        {
+          "next_hop": [
+            "161.161.169.1",
+          "162.162.169.1"
+          ],
+          "subnet": "61.61.69.1/24"
+        },
+        {
+          "next_hop": [
+            "163.163.169.1",
+          "164.164.169.1"
+          ],
+          "subnet": "29.0.0.0/24"
+        }
+        ],
+        "tag": 61111,
+        "vlan_name": "rp6-sn2-first-arm"
+      },
+      "vlan_id": 601,
+      "vrf": "IT_VRF_61"
+    },
+    "name": "IT-ADC-RP6",
+    "node_name": "IT-SN-2",
+    "peering_option": "static",
+    "reverse_next_hop": "192.166.9.100"
+  }
+  ],
+  "override_with_new_peerings": [
+  {
+    "deploy_mode": "intra_tenant_fw",
+    "inside_network": {
+      "name": "rp1-sn1-inside-net-ovr",
+      "profile": {
+        "int_descr": "RP1 SN1 inside interface ovr",
+        "ipv4_gw": "192.161.91.1/24",
+        "ipv6_gw": "2001:0901::01/64",
+        "tag": 11191,
+        "vlan_name": "rp1-sn1-inside-ovr"
+      },
+      "vlan_id": 101,
+      "vrf": "IT_VRF_12"
+    },
+    "name": "IT-FW-RP-OVR1",
+    "next_hop": "192.161.91.100",
+    "node_name": "IT-SN-1",
+    "outside_network": {
+      "name": "rp1-sn1-outside-net-ovr",
+      "profile": {
+        "int_descr": "RP1 SN1 outside interface ovr",
+        "ipv4_gw": "192.161.92.1/24",
+        "ipv6_gw": "2001:0902::1/64",
+        "tag": 11192,
+        "vlan_name": "rp1-sn1-outside-ovr"
+      },
+      "vlan_id": 102,
+      "vrf": "IT_VRF_12"
+    },
+    "reverse_next_hop": "192.161.92.100"
+  },
+  {
+    "deploy_mode": "one_arm_adc",
+    "first_arm": {
+      "name": "rp4-sn2-first-arm-ovr",
+      "profile": {
+        "adv_host": true,
+        "int_descr": "RP4 SN2 first arm intf ovr",
+        "ipv4_gw": "192.164.91.1/24",
+        "ipv4_lo": "49.49.49.2",
+        "ipv4_neighbor": "49.49.49.1",
+        "ipv4_vpc_peer_lo": "49.49.49.3",
+        "ipv6_gw": "2004:0901:01::1/64",
+        "ipv6_lo": "2004:4942::1",
+        "ipv6_neighbor": "2004:4941::1",
+        "ipv6_vpc_peer_lo": "2004:4943::1",
+        "local_asn": 65491,
+        "neigh_int_descr": "RP4 SN2 first arm ovr",
+        "route_map_tag": 41192,
+        "tag": 41191,
+        "vlan_name": "rp3-sn1-first-arm-ovr"
+      },
+      "vlan_id": 401,
+      "vrf": "IT_VRF_42"
+    },
+    "name": "IT-ADC-RP-OVR4",
+    "node_name": "IT-SN-2",
+    "peering_option": "ebgp",
+    "reverse_next_hop": "192.164.91.100"
+  }
+  ]
+}

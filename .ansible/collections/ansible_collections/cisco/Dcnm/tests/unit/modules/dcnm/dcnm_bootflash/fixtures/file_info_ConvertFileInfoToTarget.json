@@ -1,0 +1,50 @@
+{
+    "TEST_NOTES": [
+        "Mocked playbook configurations for query-state tests.",
+        "tests/unit/modules/dcnm/dcnm_bootflash"
+    ],
+    "test_convert_file_info_to_target_00100a": {
+        "bootflash_type": "active",
+        "date": "Sep 19 22:20:07 2023",
+        "deviceName": "cvd-1212-spine",
+        "fileName": "n9000-epld.10.2.5.M.img",
+        "filePath": "bootflash:",
+        "ipAddr": " 192.168.1.1",
+        "name": "bootflash:",
+        "serialNumber": "BDY3814QDD0",
+        "size": "218233885"
+    },
+    "test_convert_file_info_to_target_00120a": {
+        "bootflash_type": "active",
+        "date": "Sep 19 22:20:07 2023",
+        "deviceName": "cvd-1212-spine",
+        "fileName": "foo",
+        "filePath": "bootflash:",
+        "ipAddr": " 192.168.1.1",
+        "name": 10,
+        "serialNumber": "BDY3814QDD0",
+        "size": "218233885"
+    },
+    "test_convert_file_info_to_target_00130a": {
+        "bootflash_type": "active",
+        "date": "Sep 19 22:20:07 2023",
+        "deviceName": "cvd-1212-spine",
+        "fileName": "foo",
+        "filePath": "bootflash:",
+        "ipAddr": " 192.168.1.1",
+        "name": "bootflash",
+        "serialNumber": "BDY3814QDD0",
+        "size": "218233885"
+    },
+    "test_convert_file_info_to_target_00210a": {
+        "bootflash_type": "active",
+        "date": "Sep 19 22:20:07 202",
+        "deviceName": "cvd-1212-spine",
+        "fileName": "foo",
+        "filePath": "bootflash:",
+        "ipAddr": " 192.168.1.1",
+        "name": "bootflash:",
+        "serialNumber": "BDY3814QDD0",
+        "size": "218233885"
+    }
+}

@@ -1,0 +1,80 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: lo100
+  type: lo
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: lo
+    int_vrf: ""
+    ipv4_addr: 192.168.1.1
+    ipv6_addr: fd06::0201
+    route_tag: ""
+    cmds:
+      - no shutdown
+    description: "loopback interface 100 configuration"
+
+- name: "{{ test_data_common.sub_intf1 }}"
+  type: sub_int
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: subint
+    vlan: 100
+    int_vrf: ""
+    ipv4_addr: 193.168.2.1
+    ipv4_mask_len: 24
+    ipv6_addr: fd16::0401
+    ipv6_mask_len: 64
+    mtu: 9216
+    cmds:
+      - no shutdown
+    description: "sub interface eth1/1.1 configuration"
+
+- name: po300
+  type: pc
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: trunk
+    members:
+      - "{{ test_data_common.eth_intf13 }}"
+    pc_mode: 'on'
+    bpdu_guard: true
+    port_type_fast: true
+    mtu: jumbo
+    allowed_vlans: none
+    cmds:
+      - no shutdown
+    description: "port channel acting as trunk"
+
+- name: vpc750
+  type: vpc
+  switch:
+    - "{{ test_data_common.switch1 }}"
+    - "{{ test_data_common.switch2 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: trunk
+    peer1_pcid: 310
+    peer2_pcid: 310
+    peer1_members:
+      - "{{ test_data_common.eth_intf6 }}"
+    peer2_members:
+      - "{{ test_data_common.eth_intf6 }}"
+    pc_mode: 'active'
+    bpdu_guard: true
+    port_type_fast: true
+    mtu: jumbo
+    peer1_allowed_vlans: none
+    peer2_allowed_vlans: none
+    peer1_description: "VPC acting as trunk peer1"
+    peer2_description: "VPC acting as trunk peer2"

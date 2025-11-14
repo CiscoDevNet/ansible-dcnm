@@ -1,0 +1,68 @@
+---
+- name: Test Entry Point - [dcnm_inventory]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+     Executing Base Tests - [dcnm_inventory]                  +"
+      - "----------------------------------------------------------------"
+
+# --------------------------------
+# Create Dictionary of Test Data
+# --------------------------------
+- name: Base - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    test_data:
+      test_fabric: "{{ ansible_it_fabric }}"
+      sw1: "{{ ansible_switch1 }}"
+      sw2: "{{ ansible_switch2 }}"
+      sw3: "{{ ansible_switch3 }}"
+      deploy: "{{ deploy }}"
+  delegate_to: localhost
+
+# ----------------------------------------------
+# Create Module Payloads using Jinja2 Templates
+# ----------------------------------------------
+
+- name: Base - Prepare Configuration
+  ansible.builtin.set_fact:
+    switch_conf:
+      - seed_ip: "{{test_data.sw1}}"
+        auth_proto: MD5
+        max_hops: 0
+        role: leaf
+      - seed_ip: "{{test_data.sw2}}"
+        auth_proto: MD5
+        max_hops: 0
+        role: spine
+      - seed_ip: "{{test_data.sw3}}"
+        auth_proto: MD5
+        max_hops: 0
+        role: border
+  delegate_to: localhost
+
+
+- name: Import Configuration Prepare Tasks
+  vars:
+    ansible.builtin.file: base
+  ansible.builtin.import_tasks: conf_prep_tasks.yaml
+
+# ----------------------------------------------
+# Test Setup
+# ----------------------------------------------
+- name: Base - Query Fabric Existence
+  cisco.dcnm.dcnm_fabric:
+    state: query
+    config:
+      - FABRIC_NAME: "{{ test_data.test_fabric }}"
+  register: query_result
+
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - query_result.result[0].found == true
+    fail_msg: "Fabric '{{ test_data.test_fabric }}' not found."
+
+- name: Base - Clean Up Existing Devices in Fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: deleted

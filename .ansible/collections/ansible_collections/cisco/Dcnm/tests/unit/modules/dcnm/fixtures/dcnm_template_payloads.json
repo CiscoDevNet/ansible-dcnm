@@ -1,0 +1,328 @@
+{
+  "template_get_policies_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=SAL1812NTBP,FOX1821H035,", 
+    "MESSAGE": "OK", 
+    "DATA": [
+    {
+      "id": 32720, 
+      "policyId": "POLICY-32820", 
+      "serialNumber": "SAL1812NTBP", 
+      "templateName": "template_installed", 
+      "fabricName": "mmudigon"
+    },
+    {
+      "id": 32720, 
+      "policyId": "POLICY-32720", 
+      "serialNumber": "FXC1912BCTP", 
+      "templateName": "template_installed2", 
+      "fabricName": "test-fabric"
+    }] 
+  },
+
+  "template_get_switches_resp": 
+  {
+    "RETURN_CODE": 200, "METHOD": "GET", "REQUEST_PATH": "https://10.64.78.151:443/rest/control/switches/roles", "MESSAGE": "OK", "DATA": [{"serialNumber": "SAL1812NTBP", "role": "leaf"}, {"serialNumber": "FOX1821H035", "role": "spine"}]
+  },
+
+  "template_validate_resp":
+  {
+    "RETURN_CODE": 200, "METHOD": "POST", "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/validate", "MESSAGE": "OK", "DATA": [{"reportItemType": "WARNING", "message": "Template does not have any parameters.", "startLine": 3, "endLine": 16, "startColumn": 1, "endColumn": 2}]
+  },
+
+  "template_create_succ_resp":
+  {
+    "DATA": {
+      "status": "Template Created "
+    },
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template",
+      "RETURN_CODE": 200
+  },
+
+  "template_create_in_use_resp": [
+  {
+    "DATA": "Invalid JSON response: Template creation failed with error. Template is already in use.Cannot be overwritten",
+    "MESSAGE": "Internal Server Error",
+    "METHOD": "POST",
+    "REQUEST_PATH": "https://10.122.197.8:443/rest/config/templates/template",
+    "RETURN_CODE": 500
+  }],
+
+  "template_delete_no_exist_resp_101": 
+  {
+    "RETURN_CODE": 500, "METHOD": "GET", "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_101", "MESSAGE": "Internal Server Error", "DATA": "Invalid JSON response: Failed to get template. Template with name template_101 not found"
+  },
+
+  "template_delete_no_exist_resp_102": 
+  {
+    "RETURN_CODE": 500, "METHOD": "GET", "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_101", "MESSAGE": "Internal Server Error", "DATA": "Invalid JSON response: Failed to get template. Template with name template_102 not found"
+  },
+
+  "template_delete_no_exist_resp_103": 
+  {
+    "RETURN_CODE": 500, "METHOD": "GET", "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_101", "MESSAGE": "Internal Server Error", "DATA": "Invalid JSON response: Failed to get template. Template with name template_103 not found"
+  },
+
+  "template_delete_no_exist_resp_104": 
+  {
+    "RETURN_CODE": 500, "METHOD": "GET", "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_101", "MESSAGE": "Internal Server Error", "DATA": "Invalid JSON response: Failed to get template. Template with name template_104 not found"
+  },
+
+  "template_delete_succ_resp":
+  {
+    "DATA": "Template deletion successful",
+    "MESSAGE": "OK",
+    "METHOD": "DELETE",
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/delete/bulk",
+    "RETURN_CODE": 200
+  },
+
+  "template_delete_inuse_resp":
+  {
+    "DATA": "Invalid JSON response: \"notDeletdTemplate\":[template_110_inuse, template_111_inuse]",
+    "MESSAGE": "OK",
+    "METHOD": "DELETE",
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/delete/bulk",
+    "RETURN_CODE": 200
+  },
+
+  "template_delete_no_exist_resp": [],
+
+  "template_policies":
+  {
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+    {
+      "policyId"     : "POLICY-35967",
+      "templateName" : "template_110_inuse",
+      "fabricName"   : "test-fabric",
+      "serialNumber" : "SAL1812NTBP"
+    },
+    {
+      "policyId"     : "POLICY-46328",
+      "templateName" : "template_111_inuse",
+      "fabricName"   : "test-fabric",
+      "serialNumber" : "FOX1821H035"
+    }]
+  },
+
+  "template_switches": 
+  {
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+    {
+      "serialNumber": "SAL1812NTBP",
+      "role": "leaf"
+    },
+    {
+      "serialNumber": "FOX1821H035",
+      "role": "spine"
+    }]
+  },
+
+
+  "template_101_have_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_101", 
+    "MESSAGE": "OK", 
+    "DATA":  
+    {
+      "instanceClassId": 1678, "assignedInstanceClassId": 0, "instanceName": "com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=template_101:type=true", "name": "template_101", "description": "Template_101", "userDefined": "True", "parameters": [], "tags": "internal policy 101", "supportedPlatforms": "All", "content": "##template properties\nname =template_101;\ndescription = ;\ntags = ;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\ncertificate /bootflash/telegraf.crt telegraf\ndestination-profile\nuse-vrf management\ndestination-group 101\nip address 101.195.225.176 port 57101 protocol gRPC encoding GPB\nsensor-group 100\ndata-source DME\npath sys/ch depth unbounded\nsubscription 101\ndst-grp 101\nsnsr-grp 101 sample-interval 10101\n##\n", "newContent": "##template properties\nname =template_101;\ndescription = ;\ntags = ;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\ncertificate /bootflash/telegraf.crt telegraf\ndestination-profile\nuse-vrf management\ndestination-group 101\nip address 201.195.225.176 port 57101 protocol gRPC encoding GPB\nsensor-group 101\ndata-source DME\npath sys/ch depth unbounded\nsubscription 101\ndst-grp 101\nsnsr-grp 101 sample-interval 10101\n##\n", "fileName": "template_101.template", "templateType": "POLICY", "contentType": "TEMPLATE_CLI", "templateSubType": "DEVICE", "dependencies": "", "published": "False", "timestamp": "2020-10-05 16:30:14", "importedTemplates": "None", "implements": "implements"
+    }
+  },
+
+  "template_102_have_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_102_inuse", 
+    "MESSAGE": "OK", 
+    "DATA": 
+    {
+      "instanceClassId": 1679, "assignedInstanceClassId": 0, "instanceName": "com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=template_102:type=true", "name": "template_102", "description": "Template_102", "userDefined": "True", "parameters": [], "tags": "internal policy 102", "supportedPlatforms": "All", "content": "##template properties\nname =template_102;\ndescription = Template_102;\ntags = internal policy 102;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\ncertificate /bootflash/telegraf.crt telegraf\ndestination-profile\nuse-vrf management\ndestination-group 102\nip address 102.195.225.176 port 57102 protocol gRPC encoding GPB\nsensor-group 102\ndata-source DME\npath sys/ch depth unbounded\nsubscription 102\ndst-grp 102\nsnsr-grp 102 sample-interval 10102\n##\n", "newContent": "##template properties\nname =template_102;\ndescription = Template_102;\ntags = internal policy 102;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\ncertificate /bootflash/telegraf.crt telegraf\ndestination-profile\nuse-vrf management\ndestination-group 102\nip address 202.195.225.176 port 57102 protocol gRPC encoding GPB\nsensor-group 102\ndata-source DME\npath sys/ch depth unbounded\nsubscription 102\ndst-grp 102\nsnsr-grp 102 sample-interval 10102\n##\n", "fileName": "template_102.template", "templateType": "POLICY", "contentType": "TEMPLATE_CLI", "templateSubType": "DEVICE", "dependencies": "", "published": "False", "timestamp": "2020-10-05 16:30:14", "importedTemplates": "None", "implements": "implements"
+    }
+  },
+
+  "template_103_have_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_103_inuse", 
+    "MESSAGE": "OK", 
+    "DATA": 
+    {
+      "instanceClassId": 1680, "assignedInstanceClassId": 0, "instanceName": "com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=template_103:type=true", "name": "template_103", "description": "Template_103", "userDefined": "True", "parameters": [], "tags": "internal policy 103", "supportedPlatforms": "All", "content": "##template properties\nname =template_103;\ndescription = Template_103;\ntags = internal policy 103;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\ncertificate /bootflash/telegraf.crt telegraf\ndestination-profile\nuse-vrf management\ndestination-group 103\nip address 103.195.225.176 port 57103 protocol gRPC encoding GPB\nsensor-group 103\ndata-source DME\npath sys/ch depth unbounded\nsubscription 103\ndst-grp 103\nsnsr-grp 103 sample-interval 10103\n##\n", "newContent": "##template properties\nname =template_103;\ndescription = Template_103;\ntags = internal policy 103;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\ncertificate /bootflash/telegraf.crt telegraf\ndestination-profile\nuse-vrf management\ndestination-group 103\nip address 203.195.225.176 port 57103 protocol gRPC encoding GPB\nsensor-group 103\ndata-source DME\npath sys/ch depth unbounded\nsubscription 103\ndst-grp 103\nsnsr-grp 103 sample-interval 10103\n##\n", "fileName": "template_103.template", "templateType": "POLICY", "contentType": "TEMPLATE_CLI", "templateSubType": "DEVICE", "dependencies": "", "published": "False", "timestamp": "2020-10-05 16:30:14", "importedTemplates": "None", "implements": "implements"
+    }
+  },
+
+  "template_104_have_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_104_inuse", 
+    "MESSAGE": "OK", 
+    "DATA": 
+    {
+      "instanceClassId": 1681, "assignedInstanceClassId": 0, "instanceName": "com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=template_104:type=true", "name": "template_104", "description": "Template_104", "userDefined": "True", "parameters": [], "tags": "internal policy 104", "supportedPlatforms": "All", "content": "##template properties\nname =template_104;\ndescription = Template_104;\ntags = internal policy 104;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\ncertificate /bootflash/telegraf.crt telegraf\ndestination-profile\nuse-vrf management\ndestination-group 104\nip address 104.195.225.176 port 57104 protocol gRPC encoding GPB\nsensor-group 104\ndata-source DME\npath sys/ch depth unbounded\nsubscription 104\ndst-grp 104\nsnsr-grp 104 sample-interval 10104\n##\n", "newContent": "##template properties\nname =template_104;\ndescription = Template_104;\ntags = internal policy 104;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements = implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\ncertificate /bootflash/telegraf.crt telegraf\ndestination-profile\nuse-vrf management\ndestination-group 104\nip address 204.195.225.176 port 57104 protocol gRPC encoding GPB\nsensor-group 104\ndata-source DME\npath sys/ch depth unbounded\nsubscription 104\ndst-grp 104\nsnsr-grp 104 sample-interval 10104\n##\n", "fileName": "template_104.template", "templateType": "POLICY", "contentType": "TEMPLATE_CLI", "templateSubType": "DEVICE", "dependencies": "", "published": "False", "timestamp": "2020-10-05 16:30:14", "importedTemplates": "None", "implements": "implements"
+    }
+  },
+
+  "template_110_inuse_have_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_110_inuse", 
+    "MESSAGE": "OK", 
+    "DATA": 
+    {
+      "instanceClassId": 1961, "assignedInstanceClassId": 0, "instanceName": "com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=template_110_inuse:type=true", "name": "template_110_inuse", "description": " Template_102", "userDefined": "True", "parameters": [], "tags": "[internal policy 102]", "supportedPlatforms": "All", "content": "##template properties\nname =template_110_inuse;\ndescription = Template_102;\ntags =internal policy 102;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements =implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 2\n ip address 10.195.224.176 port 52000 protocol gRPC encoding GPB\n sensor-group 2\n data-source DME\n path sys/ch depth unbounded\n subscription 2\n dst-grp 2\n snsr-grp 2 sample-interval 20000\n##", "newContent": "##template properties\nname =template_110_inuse;\ndescription = Template_102;\ntags =internal policy 102;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements =implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 2\n ip address 10.195.224.176 port 52000 protocol gRPC encoding GPB\n sensor-group 2\n data-source DME\n path sys/ch depth unbounded\n subscription 2\n dst-grp 2\n snsr-grp 2 sample-interval 20000\n##", "fileName": "template_110_inuse.template", "templateType": "POLICY", "contentType": "TEMPLATE_CLI", "templateSubType": "DEVICE", "dependencies": "", "published": "False", "timestamp": "2020-10-13 14:45:48", "importedTemplates": "None", "implements": "implements"
+    }
+  },
+
+  "template_111_inuse_have_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_111_inuse", 
+    "MESSAGE": "OK", 
+    "DATA": 
+    {
+      "instanceClassId": 1961, "assignedInstanceClassId": 0, "instanceName": "com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=template_111_inuse:type=true", "name": "template_111_inuse", "description": " Template_102", "userDefined": "True", "parameters": [], "tags": "[internal policy 102]", "supportedPlatforms": "All", "content": "##template properties\nname =template_111_inuse;\ndescription = Template_102;\ntags =internal policy 102;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements =implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 2\n ip address 10.195.224.176 port 52000 protocol gRPC encoding GPB\n sensor-group 2\n data-source DME\n path sys/ch depth unbounded\n subscription 2\n dst-grp 2\n snsr-grp 2 sample-interval 20000\n##", "newContent": "##template properties\nname =template_111_inuse;\ndescription = Template_102;\ntags =internal policy 102;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements =implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 2\n ip address 10.195.224.176 port 52000 protocol gRPC encoding GPB\n sensor-group 2\n data-source DME\n path sys/ch depth unbounded\n subscription 2\n dst-grp 2\n snsr-grp 2 sample-interval 20000\n##", "fileName": "template_111_inuse.template", "templateType": "POLICY", "contentType": "TEMPLATE_CLI", "templateSubType": "DEVICE", "dependencies": "", "published": "False", "timestamp": "2020-10-13 14:45:48", "importedTemplates": "None", "implements": "implements"
+    }
+  },
+
+  "template_110_inuse_query_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_110_inuse", 
+    "MESSAGE": "OK", 
+    "DATA": 
+    {
+      "content": "##template properties\nname =template_110_inuse;\ndescription = Template_110_inuse;\ntags =internal policy 110;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements =implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 101\n ip address 10.195.225.101 port 57101 protocol gRPC encoding GPB\n sensor-group 101\n data-source DME\n path sys/ch depth unbounded\n subscription 101\n dst-grp 101\n snsr-grp 101 sample-interval 10101\n##",
+      "description": " Template_110_inuse",
+      "name": "template_110_inuse",
+      "tags": "[internal policy 110 inuse]"
+    }
+  },
+  "template_111_inuse_query_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_111_inuse", 
+    "MESSAGE": "OK", 
+    "DATA": 
+    {
+      "content": "##template properties\nname =template_111_inuse;\ndescription = Template_111_inuse;\ntags =internal policy 111 inuse;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements =implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 102\n ip address 10.195.225.102 port 57102 protocol gRPC encoding GPB\n sensor-group 102\n data-source DME\n path sys/ch depth unbounded\n subscription 102\n dst-grp 102\n snsr-grp 102 sample-interval 10102\n##",
+      "description": " Template_111_inuse",
+      "name": "template_111_inuse",
+      "tags": "[internal policy 111 inuse]"
+    }
+  },
+
+  "template_101_query_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_101", 
+    "MESSAGE": "OK", 
+    "DATA": 
+    {
+      "content": "##template properties\nname =template_101;\ndescription = Template_101;\ntags =internal policy 101;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements =implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 101\n ip address 10.195.225.101 port 57101 protocol gRPC encoding GPB\n sensor-group 101\n data-source DME\n path sys/ch depth unbounded\n subscription 101\n dst-grp 101\n snsr-grp 101 sample-interval 10101\n##",
+      "description": " Template_101",
+      "name": "template_101",
+      "tags": "[internal policy 101]"
+    }
+  },
+  "template_102_query_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_102", 
+    "MESSAGE": "OK", 
+    "DATA": 
+    {
+      "content": "##template properties\nname =template_102;\ndescription = Template_102;\ntags =internal policy 102;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements =implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 102\n ip address 10.195.225.102 port 57102 protocol gRPC encoding GPB\n sensor-group 102\n data-source DME\n path sys/ch depth unbounded\n subscription 102\n dst-grp 102\n snsr-grp 102 sample-interval 10102\n##",
+      "description": " Template_102",
+      "name": "template_102",
+      "tags": "[internal policy 102]"
+    }
+  },
+  "template_103_query_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_103", 
+    "MESSAGE": "OK", 
+    "DATA": 
+    {
+      "content": "##template properties\nname =template_103;\ndescription = Template_103;\ntags =internal policy 103;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements =implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 103\n ip address 10.195.225.103 port 57103 protocol gRPC encoding GPB\n sensor-group 103\n data-source DME\n path sys/ch depth unbounded\n subscription 103\n dst-grp 103\n snsr-grp 103 sample-interval 10103\n##",
+      "description": " Template_103",
+      "name": "template_103",
+      "tags": "[internal policy 103]"
+    }
+  },
+  "template_104_query_resp":
+  {
+    "RETURN_CODE": 200, 
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/template_104", 
+    "MESSAGE": "OK", 
+    "DATA": 
+    {
+      "content": "##template properties\nname =template_104;\ndescription = Template_104;\ntags =internal policy 104;\nuserDefined = true;\nsupportedPlatforms = All;\ntemplateType = POLICY;\ntemplateSubType = DEVICE;\ncontentType = TEMPLATE_CLI;\nimplements =implements;\ndependencies = ;\npublished = false;\nimports = ;\n##\n##template variables\n##\n##template content\ntelemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 104\n ip address 10.195.225.104 port 57104 protocol gRPC encoding GPB\n sensor-group 104\n data-source DME\n path sys/ch depth unbounded\n subscription 104\n dst-grp 104\n snsr-grp 104 sample-interval 10104\n##",
+      "description": " Template_104",
+      "name": "template_104",
+      "tags": "[internal policy 104]"
+    }
+  },
+
+  "template_validation_fail_resp":
+  {
+    "DATA": [
+    {
+      "endColumn": 19,
+      "endLine": 7,
+      "message": "(DisplayName=\"AAA is not recognized as valid for loop index variable.",
+      "reportItemType": "ERROR",
+      "startColumn": 1,
+      "startLine": 7
+    },
+    {
+      "endColumn": 19,
+      "endLine": 10,
+      "message": "(DisplayName=\"AAA is not recognized as valid for loop index variable.",
+      "reportItemType": "ERROR",
+      "startColumn": 1,
+      "startLine": 10
+    },
+    {
+      "endColumn": 38,
+      "endLine": 15,
+      "message": "AAA_GROUP is not declared in template variables section. Will be considered as string parameter.",
+      "reportItemType": "WARNING",
+      "startColumn": 25,
+      "startLine": 15
+    },
+    {
+      "endColumn": 22,
+      "endLine": 16,
+      "message": "AAA_SERVER is not declared in template variables section. Will be considered as string parameter.",
+      "reportItemType": "WARNING",
+      "startColumn": 8,
+      "startLine": 16
+    }],
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "REQUEST_PATH": "https://10.64.78.151:443/rest/config/templates/validate",
+    "RETURN_CODE": 200
+  }
+}

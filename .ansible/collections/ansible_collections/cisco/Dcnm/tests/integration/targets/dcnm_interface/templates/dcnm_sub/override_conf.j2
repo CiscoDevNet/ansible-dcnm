@@ -1,0 +1,21 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: "{{ test_data_common.sub_intf3 }}"
+  type: sub_int
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: subint
+    vlan: 103
+    int_vrf: ""
+    ipv4_addr: 192.168.35.1
+    ipv4_mask_len: 24
+    ipv6_addr: fd2e::0405
+    ipv6_mask_len: 64
+    mtu: 9216
+    cmds:
+      - no shutdown
+    description: "sub interface eth1/1.3 configuration - override"

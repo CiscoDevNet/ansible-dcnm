@@ -1,0 +1,13 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: "{{ test_data_common.sub_intf1 }}"
+  type: sub_int
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: true
+  profile_sub:
+    mode: subint
+    vlan: 100
+    ipv4_addr: 192.168.1.1
+    ipv4_mask_len: 24

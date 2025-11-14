@@ -1,0 +1,1621 @@
+{
+  "mock_fab_inv": {
+      "10.10.10.224": {
+        "managable": true,
+        "serialNumber": "XYZKSJHSMK1"
+      },
+      "10.10.10.225": {
+        "managable": true,
+        "serialNumber": "XYZKSJHSMK2"
+      },
+      "10.10.10.226": {
+        "managable": true,
+        "serialNumber": "XYZKSJHSMK3"
+      }
+  },
+
+  "mock_ip_sn" : {
+    "10.10.10.224": "XYZKSJHSMK1",
+      "10.10.10.225": "XYZKSJHSMK2",
+      "10.10.10.226": "XYZKSJHSMK3"
+  },
+
+    "success_create_response_101" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK1",
+          "message": "POLICY-101101 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_101_sw2" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK2",
+          "message": "POLICY-153810 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_101_sw3" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK3",
+          "message": "POLICY-125810 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_102" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK1",
+          "message": "POLICY-123820 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_102_sw2" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK2",
+          "message": "POLICY-173810 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_102_sw3" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK3",
+          "message": "POLICY-195810 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_103" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create",
+      "MESSAGE": "OK",
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK1",
+          "message": "POLICY-123830 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_103_sw2" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK2", 
+          "message": "POLICY-273810 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_103_sw3" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK3", 
+          "message": "POLICY-395810 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_104" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK1", 
+          "message": "POLICY-104104 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_104_1" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK1", 
+          "message": "POLICY-153840 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_104_sw2" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK2", 
+          "message": "POLICY-373810 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_104_sw3" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK3", 
+          "message": "POLICY-895810 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_105" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK1", 
+          "message": "POLICY-123850 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_105_sw2" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK2", 
+          "message": "POLICY-673810 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_105_sw3" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK3", 
+          "message": "POLICY-795810 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_125" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK1", 
+          "message": "POLICY-125125 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_126" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK1", 
+          "message": "POLICY-126126 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_create_response_127" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/bulk-create", 
+      "MESSAGE": "OK", 
+      "DATA": {
+        "successList": [
+        {
+          "name": "XYZKSJHSMK1", 
+          "message": "POLICY-127127 is created successfully", "status": "Success"
+        }]
+      }
+    },
+
+    "success_deploy_response_125_127" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1", 
+        "successPTIList": "POLICY-125125,POLICY-126126,POLICY-127127"
+      }]
+    },
+
+    "success_deploy_response_125" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1", 
+        "successPTIList": "POLICY-125125"
+      }]
+    },
+
+    "success_deploy_response_4" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1", 
+        "successPTIList": "POLICY-123810,POLICY-123820,POLICY-123830,POLICY-123840"
+      }]
+    },
+
+    "success_deploy_response_101_101_5" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1",
+        "successPTIList": "POLICY-123810,POLICY-123820,POLICY-123830,POLICY-123840,POLICY-123850"
+      }]
+    },
+
+    "success_deploy_response_101_105" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1",
+        "successPTIList": "POLICY-123810,POLICY-123820,POLICY-123830,POLICY-123840,POLICY-123850"
+      }]
+    },
+
+    "success_deploy_response_101_105_11" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1",
+        "successPTIList": "POLICY-123810,POLICY-123820,POLICY-123830,POLICY-123840,POLICY-123850, POLICY-123860,POLICY-123870,POLICY-123880,POLICY-123890,POLICY-123900, POLICY-123910"
+      }]
+    },
+
+    "success_deploy_response_101_105_multi_switch" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1",
+        "successPTIList": "POLICY-124986,POLICY-987123"
+      },
+      {
+        "switchSN": "XYZKSJHSMK2", 
+        "successPTIList": "POLICY-123840,POLICY-123850,POLICY-321456"
+      },
+      {
+        "switchSN": "XYZKSJHSMK3", 
+        "successPTIList": "POLICY-123810,POLICY-123820,POLICY-123830"
+      }
+      ]
+    },
+
+    "success_deploy_response_104_105" :
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1", 
+        "successPTIList": "POLICY-123840,POLICY-123850"
+      }]
+    },
+
+    "success_deploy_response_101_101_1" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1",
+        "successPTIList": "POLICY-123990"
+      }]
+    },
+
+    "success_deploy_response_101_101_2" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1",
+        "successPTIList": "POLICY-123990, POLICY-129867"
+      }]
+    },
+
+    "success_deploy_response_101_101" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1", 
+        "successPTIList": "POLICY-123990,POLICY-125850"
+      }]
+    },
+
+    "success_deploy_response_104" :
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1",
+        "successPTIList": "POLICY-104104"
+      }]
+    },
+
+    "success_deploy_response_104_104_1" : 
+    {
+      "RETURN_CODE": 200, 
+      "METHOD": "POST", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/deploy", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "switchSN": "XYZKSJHSMK1", 
+        "successPTIList": "POLICY-123890,POLICY-124850"
+      }]
+    },
+
+    "get_response_101" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": 
+      {
+        "id": 101101, 
+        "policyId": "POLICY-101101", 
+        "description": "", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_101", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500, 
+        "status": "NA", 
+        "statusOn": 1605693124617, 
+        "createdOn": 1605693124617, 
+        "modifiedOn": 1605693124617, 
+        "fabricName": "mmudigon"
+      }
+    }, 
+
+    "get_response_102" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": 
+      {
+        "id": 102102, 
+        "policyId": "POLICY-102102", 
+        "description": "", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_102", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500, 
+        "status": "NA", 
+        "statusOn": 1605693124617, 
+        "createdOn": 1605693124617, 
+        "modifiedOn": 1605693124617, 
+        "fabricName": "mmudigon"
+      }
+    }, 
+
+    "get_response_103" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": 
+      {
+        "id": 103103, 
+        "policyId": "POLICY-103103", 
+        "description": "", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_103", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500, 
+        "status": "NA", 
+        "statusOn": 1605693124617, 
+        "createdOn": 1605693124617, 
+        "modifiedOn": 1605693124617, 
+        "fabricName": "mmudigon"
+      }
+    }, 
+
+    "get_response_104" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": 
+      {
+        "id": 104104, 
+        "policyId": "POLICY-104104", 
+        "description": "", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_104", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500, 
+        "status": "NA", 
+        "statusOn": 1605693124617, 
+        "createdOn": 1605693124617, 
+        "modifiedOn": 1605693124617, 
+        "fabricName": "mmudigon"
+      }
+    }, 
+
+    "get_response_105" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": 
+      {
+        "id": 105105, 
+        "policyId": "POLICY-105105", 
+        "description": "", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_105", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500, 
+        "status": "NA", 
+        "statusOn": 1605693124617, 
+        "createdOn": 1605693124617, 
+        "modifiedOn": 1605693124617, 
+        "fabricName": "mmudigon"
+      }
+    }, 
+
+    "have_response_101_105_multi" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": [
+        {
+          "id": 101101,
+          "policyId": "POLICY-101101",
+          "description": "policy101",
+          "serialNumber": "XYZKSJHSMK1",
+          "entityType": "SWITCH",
+          "entityName": "SWITCH",
+          "templateName": "template_101",
+          "templateContentType": "TEMPLATE_CLI",
+          "nvPairs": {
+            "FABRIC_NAME": "mmudigon"
+          },
+          "autoGenerated": false,
+          "deleted": false,
+          "source": "",
+          "priority": 101,
+          "status": "NA",
+          "statusOn": 1605693124239,
+          "createdOn": 1605693124239,
+          "modifiedOn": 1605693124239,
+          "fabricName": "mmudigon"
+        },
+        {
+          "id": 101201,
+          "policyId": "POLICY-101201",
+          "description": "",
+          "serialNumber": "XYZKSJHSMK1",
+          "entityType": "SWITCH",
+          "entityName": "SWITCH",
+          "templateName": "template_101",
+          "templateContentType": "TEMPLATE_CLI",
+          "nvPairs": {
+            "FABRIC_NAME": "mmudigon"
+          },
+          "autoGenerated": false,
+          "deleted": false,
+          "source": "",
+          "priority": 101,
+          "status": "NA",
+          "statusOn": 1605693124239,
+          "createdOn": 1605693124239,
+          "modifiedOn": 1605693124239,
+          "fabricName": "mmudigon"
+        },
+        {
+          "id": 101301,
+          "policyId": "POLICY-101301",
+          "description": "",
+          "serialNumber": "XYZKSJHSMK1",
+          "entityType": "SWITCH",
+          "entityName": "SWITCH",
+          "templateName": "template_101",
+          "templateContentType": "TEMPLATE_CLI",
+          "nvPairs": {
+            "FABRIC_NAME": "mmudigon"
+          },
+          "autoGenerated": false,
+          "deleted": false,
+          "source": "",
+          "priority": 101,
+          "status": "NA",
+          "statusOn": 1605693124239,
+          "createdOn": 1605693124239,
+          "modifiedOn": 1605693124239,
+          "fabricName": "mmudigon"
+        },
+        {
+          "id": 102102,
+          "policyId": "POLICY-102102",
+          "description": "102 - No piority given",
+          "serialNumber": "XYZKSJHSMK1",
+          "entityType": "SWITCH",
+          "entityName": "SWITCH",
+          "templateName": "template_102",
+          "templateContentType": "TEMPLATE_CLI",
+          "nvPairs": {
+            "FABRIC_NAME": "mmudigon"
+          },
+          "autoGenerated": false,
+          "deleted": false,
+          "source": "",
+          "priority": 500,
+          "status": "NA",
+          "statusOn": 1605693124377,
+          "createdOn": 1605693124377,
+          "modifiedOn": 1605693124377,
+          "fabricName": "mmudigon"
+        },
+        {
+          "id": 102202,
+          "policyId": "POLICY-102202",
+          "description": "102 - No piority given",
+          "serialNumber": "XYZKSJHSMK1",
+          "entityType": "SWITCH",
+          "entityName": "SWITCH",
+          "templateName": "template_102",
+          "templateContentType": "TEMPLATE_CLI",
+          "nvPairs": {
+            "FABRIC_NAME": "mmudigon"
+          },
+          "autoGenerated": false,
+          "deleted": false,
+          "source": "",
+          "priority": 500,
+          "status": "NA",
+          "statusOn": 1605693124377,
+          "createdOn": 1605693124377,
+          "modifiedOn": 1605693124377,
+          "fabricName": "mmudigon"
+        },
+        {
+          "id": 103103,
+          "policyId": "POLICY-103103",
+          "description": "Both description and priority given",
+          "serialNumber": "XYZKSJHSMK1",
+          "entityType": "SWITCH",
+          "entityName": "SWITCH",
+          "templateName": "template_103",
+          "templateContentType": "TEMPLATE_CLI",
+          "nvPairs": {
+            "FABRIC_NAME": "mmudigon"
+          },
+          "autoGenerated": false,
+          "deleted": false,
+          "source": "",
+          "priority": 500,
+          "status": "NA",
+          "statusOn": 1605693124502,
+          "createdOn": 1605693124502,
+          "modifiedOn": 1605693124502,
+          "fabricName": "mmudigon"
+        },
+        {
+          "id": 104104,
+          "policyId": "POLICY-104104",
+          "description": "policy104",
+          "serialNumber": "XYZKSJHSMK1",
+          "entityType": "SWITCH",
+          "entityName": "SWITCH",
+          "templateName": "template_104",
+          "templateContentType": "TEMPLATE_CLI",
+          "nvPairs": {
+            "FABRIC_NAME": "mmudigon"
+          },
+          "autoGenerated": false,
+          "deleted": false,
+          "source": "",
+          "priority": 500,
+          "status": "NA",
+          "statusOn": 1605693124617,
+          "createdOn": 1605693124617,
+          "modifiedOn": 1605693124617,
+          "fabricName": "mmudigon"
+        },
+        {
+          "id": 105105,
+          "policyId": "POLICY-105105",
+          "description": "policy105",
+          "serialNumber": "XYZKSJHSMK1",
+          "entityType": "SWITCH",
+          "entityName": "SWITCH",
+          "templateName": "template_105",
+          "templateContentType": "TEMPLATE_CLI",
+          "nvPairs": {
+            "FABRIC_NAME": "mmudigon"
+          },
+          "autoGenerated": false,
+          "deleted": false,
+          "source": "",
+          "priority": 500,
+          "status": "NA",
+          "statusOn": 1605693124733,
+          "createdOn": 1605693124733,
+          "modifiedOn": 1605693124733,
+          "fabricName": "mmudigon"
+        }
+      ]
+    },
+    "have_response_101_101_5" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "id": 101101,
+        "policyId": "POLICY-101101",
+        "description": "",
+        "serialNumber": "XYZKSJHSMK1",
+        "entityType": "SWITCH",
+        "entityName": "SWITCH",
+        "templateName": "template_101",
+        "templateContentType": "TEMPLATE_CLI",
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        },
+        "autoGenerated": false,
+        "deleted": false,
+        "source": "",
+        "priority": 101,
+        "status": "NA",
+        "statusOn": 1605693124239,
+        "createdOn": 1605693124239,
+        "modifiedOn": 1605693124239,
+        "fabricName": "mmudigon"
+      },
+      {
+        "id": 102102,
+        "policyId": "POLICY-102101",
+        "description": "102 - No piority given",
+        "serialNumber": "XYZKSJHSMK1",
+        "entityType": "SWITCH",
+        "entityName": "SWITCH",
+        "templateName": "template_101",
+        "templateContentType": "TEMPLATE_CLI",
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        },
+        "autoGenerated": false,
+        "deleted": false,
+        "source": "",
+        "priority": 500,
+        "status": "NA",
+        "statusOn": 1605693124377,
+        "createdOn": 1605693124377,
+        "modifiedOn": 1605693124377,
+        "fabricName": "mmudigon"
+      },
+      {
+        "id": 103103,
+        "policyId": "POLICY-103101",
+        "description": "Both description and priority given",
+        "serialNumber": "XYZKSJHSMK1",
+        "entityType": "SWITCH",
+        "entityName": "SWITCH",
+        "templateName": "template_101",
+        "templateContentType": "TEMPLATE_CLI",
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        },
+        "autoGenerated": false,
+        "deleted": false,
+        "source": "",
+        "priority": 500,
+        "status": "NA",
+        "statusOn": 1605693124502,
+        "createdOn": 1605693124502,
+        "modifiedOn": 1605693124502,
+        "fabricName": "mmudigon"
+      },
+      {
+        "id": 104104,
+        "policyId": "POLICY-104101",
+        "description": "",
+        "serialNumber": "XYZKSJHSMK1",
+        "entityType": "SWITCH",
+        "entityName": "SWITCH",
+        "templateName": "template_101",
+        "templateContentType": "TEMPLATE_CLI",
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        },
+        "autoGenerated": false,
+        "deleted": false,
+        "source": "",
+        "priority": 500,
+        "status": "NA",
+        "statusOn": 1605693124617,
+        "createdOn": 1605693124617,
+        "modifiedOn": 1605693124617,
+        "fabricName": "mmudigon"
+      },
+      {
+        "id": 105105,
+        "policyId": "POLICY-105101",
+        "description": "",
+        "serialNumber": "XYZKSJHSMK1",
+        "entityType": "SWITCH",
+        "entityName": "SWITCH",
+        "templateName": "template_101",
+        "templateContentType": "TEMPLATE_CLI",
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        },
+        "autoGenerated": false,
+        "deleted": false,
+        "source": "",
+        "priority": 500,
+        "status": "NA",
+        "statusOn": 1605693124733,
+        "createdOn": 1605693124733,
+        "modifiedOn": 1605693124733,
+        "fabricName": "mmudigon"
+      }]
+    },
+    "have_response_101_105" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "id": 101101, 
+        "policyId": "POLICY-101101", 
+        "description": "policy101", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_101", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 101, 
+        "status": "NA", 
+        "statusOn": 1605693124239, 
+        "createdOn": 1605693124239, 
+        "modifiedOn": 1605693124239, 
+        "fabricName": "mmudigon"
+      }, 
+      {
+        "id": 102102, 
+        "policyId": "POLICY-102102", 
+        "description": "policy102", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_102", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500,
+        "status": "NA", 
+        "statusOn": 1605693124377, 
+        "createdOn": 1605693124377, 
+        "modifiedOn": 1605693124377, 
+        "fabricName": "mmudigon"
+      }, 
+      {
+        "id": 103103, 
+        "policyId": "POLICY-103103", 
+        "description": "policy103", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_103", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500, 
+        "status": "NA", 
+        "statusOn": 1605693124502, 
+        "createdOn": 1605693124502, 
+        "modifiedOn": 1605693124502, 
+        "fabricName": "mmudigon"
+      }, 
+      {
+        "id": 104104, 
+        "policyId": "POLICY-104104", 
+        "description": "policy104", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_104", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500, 
+        "status": "NA", 
+        "statusOn": 1605693124617, 
+        "createdOn": 1605693124617, 
+        "modifiedOn": 1605693124617, 
+        "fabricName": "mmudigon"
+      }, 
+      {
+        "id": 105105, 
+        "policyId": "POLICY-105105", 
+        "description": "policy105", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_105", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500, 
+        "status": "NA", 
+        "statusOn": 1605693124733, 
+        "createdOn": 1605693124733, 
+        "modifiedOn": 1605693124733, 
+        "fabricName": "mmudigon"
+      }]
+    },
+
+    "get_response_125" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": 
+      {
+        "id": 125125, 
+        "policyId": "POLICY-125125", 
+        "description": "", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_125", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 125, 
+        "status": "NA", 
+        "statusOn": 1605693124617, 
+        "createdOn": 1605693124617, 
+        "modifiedOn": 1605693124617, 
+        "fabricName": "mmudigon"
+      }
+    }, 
+
+    "have_response_125" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "id": 125125, 
+        "policyId": "POLICY-125125", 
+        "description": "", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_125", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "OSPF_TAG": 2000,
+          "LOOPBACK_IP": "1.1.1.1",
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 125, 
+        "status": "NA", 
+        "statusOn": 1605693124239, 
+        "createdOn": 1605693124239, 
+        "modifiedOn": 1605693124239, 
+        "fabricName": "mmudigon"
+      }]
+    },
+
+    "have_response_101_102" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "id": 123810, 
+        "policyId": "POLICY-123810", 
+        "description": "", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_101", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 101, 
+        "status": "NA", 
+        "statusOn": 1605693124239, 
+        "createdOn": 1605693124239, 
+        "modifiedOn": 1605693124239, 
+        "fabricName": "mmudigon"
+      }, 
+      {
+        "id": 123820, 
+        "policyId": "POLICY-123820", 
+        "description": "102 - No piority given", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_102", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500,
+        "status": "NA", 
+        "statusOn": 1605693124377, 
+        "createdOn": 1605693124377, 
+        "modifiedOn": 1605693124377, 
+        "fabricName": "mmudigon"
+      }]
+    },
+
+    "have_response_104" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "id": 104104, 
+        "policyId": "POLICY-104104", 
+        "description": "create template_104", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_104", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 104, 
+        "status": "NA", 
+        "statusOn": 1605693124239, 
+        "createdOn": 1605693124239, 
+        "modifiedOn": 1605693124239, 
+        "fabricName": "mmudigon"
+      }]
+    }, 
+
+    "have_response_101_103" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "id": 123810, 
+        "policyId": "POLICY-123810", 
+        "description": "policy101", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_101", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 101, 
+        "status": "NA", 
+        "statusOn": 1605693124239, 
+        "createdOn": 1605693124239, 
+        "modifiedOn": 1605693124239, 
+        "fabricName": "mmudigon"
+      }, 
+      {
+        "id": 123820, 
+        "policyId": "POLICY-123820", 
+        "description": "policy102", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_102", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500,
+        "status": "NA", 
+        "statusOn": 1605693124377, 
+        "createdOn": 1605693124377, 
+        "modifiedOn": 1605693124377, 
+        "fabricName": "mmudigon"
+      }, 
+      {
+        "id": 123830, 
+        "policyId": "POLICY-123830", 
+        "description": "policy103", 
+        "serialNumber": "XYZKSJHSMK1", 
+        "entityType": "SWITCH", 
+        "entityName": "SWITCH", 
+        "templateName": "template_103", 
+        "templateContentType": "TEMPLATE_CLI", 
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        }, 
+        "autoGenerated": false, 
+        "deleted": false, 
+        "source": "", 
+        "priority": 500, 
+        "status": "NA", 
+        "statusOn": 1605693124502, 
+        "createdOn": 1605693124502, 
+        "modifiedOn": 1605693124502, 
+        "fabricName": "mmudigon"
+      }]
+    },
+
+    "policy_have_all_resp" : {
+      "RETURN_CODE": 200, 
+      "METHOD": "GET", 
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/switches?serialNumber=XYZKSJHSMK1", 
+      "MESSAGE": "OK", 
+      "DATA": [
+      {
+        "id": 59120,
+        "policyId": "POLICY-59120",
+        "serialNumber": "XYZKSJHSMK1",
+        "entityType": "SWITCH",
+        "entityName": "SWITCH",
+        "templateName": "switch_role_simulated",
+        "templateContentType": "PYTHON",
+        "nvPairs": {
+          "SWITCH_ROLE": "leaf",
+          "PRIORITY": "10",
+          "POLICY_DESC": "",
+          "POLICY_ID": "POLICY-59120"
+        },
+        "generatedConfig": "",
+        "autoGenerated": true,
+        "deleted": false,
+        "source": "",
+        "priority": 10,
+        "statusOn": 1605085510647,
+        "createdOn": 1604393237291,
+        "modifiedOn": 1605085510647,
+        "fabricName": "mmudigon"
+      },
+      {
+        "id": 59110,
+        "policyId": "POLICY-59110",
+        "serialNumber": "XYZKSJHSMK1",
+        "entityType": "SWITCH",
+        "entityName": "SWITCH",
+        "templateName": "nve_lb_id",
+        "templateContentType": "PYTHON",
+        "nvPairs": {
+          "PRIORITY": "10",
+          "POLICY_DESC": "",
+          "id": "1",
+          "POLICY_ID": "POLICY-59110"
+        },
+        "generatedConfig": "",
+        "autoGenerated": true,
+        "deleted": false,
+        "source": "",
+        "priority": 10,
+        "statusOn": 1605085510643,
+        "createdOn": 1604393237285,
+        "modifiedOn": 1605085510643,
+        "fabricName": "mmudigon"
+      },
+      {
+        "id": 59000,
+        "policyId": "POLICY-59000",
+        "serialNumber": "XYZKSJHSMK1",
+        "entityType": "SWITCH",
+        "entityName": "SWITCH",
+        "templateName": "feature_pim",
+        "templateContentType": "TEMPLATE_CLI",
+        "nvPairs": {
+
+        },
+        "generatedConfig": "feature pim\n\n\n",
+        "autoGenerated": true,
+        "deleted": false,
+        "source": "UNDERLAY",
+        "priority": 50,
+        "status": "NA",
+        "statusOn": 1604393237113,
+        "createdOn": 1604393237113,
+        "modifiedOn": 1604393237113,
+        "fabricName": "mmudigon"
+      },
+      {
+        "id": 59140,
+        "policyId": "POLICY-59140",
+        "serialNumber": "XYZKSJHSMK1",
+        "entityType": "SWITCH",
+        "entityName": "SWITCH",
+        "templateName": "feature_ngoam",
+        "templateContentType": "TEMPLATE_CLI",
+        "nvPairs": {
+
+        },
+        "generatedConfig": "feature ngoam\n\n\n",
+        "autoGenerated": true,
+        "deleted": false,
+        "source": "UNDERLAY",
+        "priority": 50,
+        "status": "NA",
+        "statusOn": 1604393237302,
+        "createdOn": 1604393237302,
+        "modifiedOn": 1604393237302,
+        "fabricName": "mmudigon"
+      },
+      {
+        "id": 59130,
+        "policyId": "POLICY-59130",
+        "serialNumber": "XYZKSJHSMK1",
+        "entityType": "SWITCH",
+        "entityName": "SWITCH",
+        "templateName": "feature_lacp",
+        "templateContentType": "TEMPLATE_CLI",
+        "nvPairs": {
+
+        },
+        "generatedConfig": "feature lacp\n\n\n",
+        "autoGenerated": true,
+        "deleted": false,
+        "source": "UNDERLAY",
+        "priority": 50,
+        "status": "NA",
+        "statusOn": 1604393237296,
+        "createdOn": 1604393237296,
+        "modifiedOn": 1604393237296,
+        "fabricName": "mmudigon"
+      }]
+    },
+
+    "mark_delete_response_101": 
+    {
+      "DATA": {
+        "autoGenerated": false,
+        "deleted": true,
+        "entityName": "SWITCH",
+        "entityType": "SWITCH",
+        "generatedConfig": "telemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 1\n ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB\n sensor-group 1\n data-source DME\n path sys/ch depth unbounded\n subscription 1\n dst-grp 1\n snsr-grp 1 sample-interval 10000\n\n\n",
+        "id": 238000,
+        "modifiedOn": 0,
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        },
+        "policyId": "POLICY-238000",
+        "priority": -500,
+        "serialNumber": "SAL1812NTBP",
+        "source": "",
+        "templateContentType": "TEMPLATE_CLI",
+        "templateName": "template_101"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/POLICY-238000",
+      "RETURN_CODE": 200
+    },
+
+    "mark_delete_response_102":
+    {
+      "DATA": {
+        "autoGenerated": false,
+        "deleted": true,
+        "entityName": "SWITCH",
+        "entityType": "SWITCH",
+        "generatedConfig": "telemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 2\n ip address 10.195.224.176 port 52000 protocol gRPC encoding GPB\n sensor-group 2\n data-source DME\n path sys/ch depth unbounded\n subscription 2\n dst-grp 2\n snsr-grp 2 sample-interval 20000\n\n\n",
+        "id": 238010,
+        "modifiedOn": 0,
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        },
+        "policyId": "POLICY-238010",
+        "priority": -500,
+        "serialNumber": "SAL1812NTBP",
+        "source": "",
+        "templateContentType": "TEMPLATE_CLI",
+        "templateName": "template_102"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/POLICY-238010",
+      "RETURN_CODE": 200
+    },
+
+    "mark_delete_response_103":
+    {
+      "DATA": {
+        "autoGenerated": false,
+        "deleted": true,
+        "entityName": "SWITCH",
+        "entityType": "SWITCH",
+        "generatedConfig": "telemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 3\n ip address 10.195.225.176 port 53000 protocol gRPC encoding GPB\n sensor-group 3\n data-source DME\n path sys/ch depth unbounded\n subscription 3\n dst-grp 3\n snsr-grp 2 sample-interval 30000\n\n\n",
+        "id": 238020,
+        "modifiedOn": 0,
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        },
+        "policyId": "POLICY-238020",
+        "priority": -500,
+        "serialNumber": "SAL1812NTBP",
+        "source": "",
+        "templateContentType": "TEMPLATE_CLI",
+        "templateName": "template_103"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/POLICY-238020",
+      "RETURN_CODE": 200
+    },
+
+    "mark_delete_response_104":
+    {
+      "DATA": {
+        "autoGenerated": false,
+        "deleted": true,
+        "entityName": "SWITCH",
+        "entityType": "SWITCH",
+        "generatedConfig": "telemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 4\n ip address 10.195.224.176 port 54000 protocol gRPC encoding GPB\n sensor-group 4\n data-source DME\n path sys/ch depth unbounded\n subscription 4\n dst-grp 4\n snsr-grp 4 sample-interval 40000\n\n\n",
+        "id": 238030,
+        "modifiedOn": 0,
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        },
+        "policyId": "POLICY-238030",
+        "priority": -500,
+        "serialNumber": "SAL1812NTBP",
+        "source": "",
+        "templateContentType": "TEMPLATE_CLI",
+        "templateName": "template_104"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/POLICY-238030",
+      "RETURN_CODE": 200
+    },
+
+    "mark_delete_response_105":
+    {
+      "DATA": {
+        "autoGenerated": false,
+        "deleted": true,
+        "entityName": "SWITCH",
+        "entityType": "SWITCH",
+        "generatedConfig": "telemetry\n certificate /bootflash/telegraf.crt telegraf\n destination-profile\n use-vrf management\n destination-group 5\n ip address 10.195.224.176 port 55000 protocol gRPC encoding GPB\n sensor-group 5\n data-source DME\n path sys/ch depth unbounded\n subscription 5\n dst-grp 5\n snsr-grp 5 sample-interval 50000\n\n\n",
+        "id": 238040,
+        "modifiedOn": 0,
+        "nvPairs": {
+          "FABRIC_NAME": "mmudigon"
+        },
+        "policyId": "POLICY-238040",
+        "priority": -500,
+        "serialNumber": "SAL1812NTBP",
+        "source": "",
+        "templateContentType": "TEMPLATE_CLI",
+        "templateName": "template_105"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/POLICY-238040",
+      "RETURN_CODE": 200
+    },
+
+    "delete_config_deploy_response_101_105":
+    {
+      "DATA": {
+        "status": "Config deployment has been triggered"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/fabrics/mmudigon/config-deploy/SAL1812NTBP",
+      "RETURN_CODE": 200
+    },
+
+    "delete_response_101":
+    {
+      "DATA": {
+        "message": "Deleted successfully",
+        "policyId": "POLICY-101101",
+        "status": "Success"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/POLICY-101101",
+      "RETURN_CODE": 200
+    },
+    "delete_response_102":
+    {
+      "DATA": {
+        "message": "Deleted successfully",
+        "policyId": "POLICY-102102",
+        "status": "Success"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/POLICY-102102",
+      "RETURN_CODE": 200
+    },
+    "delete_response_103":
+    {
+      "DATA": {
+        "message": "Deleted successfully",
+        "policyId": "POLICY-103103",
+        "status": "Success"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/POLICY-103103",
+      "RETURN_CODE": 200
+    },
+    "delete_response_104":
+    {
+      "DATA": {
+        "message": "Deleted successfully",
+        "policyId": "POLICY-104104",
+        "status": "Success"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/POLICY-104104",
+      "RETURN_CODE": 200
+    },
+    "delete_response_105":
+    {
+      "DATA": {
+        "message": "Deleted successfully",
+        "policyId": "POLICY-105105",
+        "status": "Success"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/policies/POLICY-105105",
+      "RETURN_CODE": 200
+    },
+
+    "config_preview": {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.64.78.151:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/mmudigon/config-preview?forceShowRun=false&showBrief=true",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchId": "XYZKSJHSMK1",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "XYZKSJHSMK2",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "XYZKSJHSMK3",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "SAL1812NTBP",
+        "status": "In-Sync"
+      }
+      ]
+    }
+}

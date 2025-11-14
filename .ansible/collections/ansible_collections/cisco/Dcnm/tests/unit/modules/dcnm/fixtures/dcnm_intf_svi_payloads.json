@@ -1,0 +1,51 @@
+{
+	"svi_merged_payloads" : 
+  {
+    "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=vlan1001",
+      "DATA": [
+      {
+        "interfaceType": "INTERFACE_VLAN",
+        "interfaces": [
+        {
+          "fabricName": "test_fabric",
+          "ifName": "vlan1001",
+          "interfaceType": "INTERFACE_VLAN",
+          "nvPairs": {
+            "ADMIN_STATE": "true",
+            "CONF": "no shutdown",
+            "DESC": "Switched vlan interface 1001",
+            "DISABLE_IP_REDIRECTS": "true",
+            "ENABLE_HSRP": "true",
+            "ENABLE_NETFLOW": "false",
+            "HSRP_GROUP": "10",
+            "HSRP_PRIORITY": "5",
+            "HSRP_VERSION": "1",
+            "HSRP_VIP": "192.168.2.100",
+            "INTF_NAME": "vlan1001",
+            "INTF_VRF": "blue",
+            "IP": "192.168.2.1",
+            "MAC": "0000.0101.ac0a",
+            "MTU": "9216",
+            "NETFLOW_MONITOR": "",
+            "PREEMPT": "true",
+            "PREFIX": "24",
+            "ROUTING_TAG": "1001",
+            "advSubnetInUnderlay": "true",
+            "dhcpServerAddr1": "192.200.1.1",
+            "dhcpServerAddr2": "192.200.1.2",
+            "dhcpServerAddr3": "192.200.1.3",
+            "vrfDhcp1": "blue",
+            "vrfDhcp2": "blue",
+            "vrfDhcp3": "blue"
+          },
+          "serialNumber": "SAL1819SAN8"
+        }
+        ],
+        "policy": "int_vlan",
+        "skipResourceCheck": "false"
+      }],
+    "RETURN_CODE": 200,
+    "METHOD": "GET"
+  }
+}

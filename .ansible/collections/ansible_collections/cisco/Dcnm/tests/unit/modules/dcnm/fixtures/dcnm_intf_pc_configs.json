@@ -1,0 +1,617 @@
+{
+  "mock_fab_inv_data": {
+    "192.168.1.108": {
+      "logicalName": "n9kv-108",
+        "serialNumber": "SAL1819SAN8",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+    },
+      "192.168.1.109": {
+        "logicalName": "n9kv-109",
+        "serialNumber": "FOX1821H035",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "None",
+        "managable": "False"
+      }
+  },
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
+      }
+    },
+
+    "mock_ip_sn" : {
+     "192.168.1.109": "FOX1821H035",
+     "192.168.1.108": "SAL1819SAN8" 
+    },
+
+    "mock_vpc_sno" : {
+      "192.168.1.108" : "FOX1821H035~SAL1819SAN8",
+      "192.168.1.109" : "FOX1821H035~SAL1819SAN8"
+    },
+
+		"mock_vpc_resp" : {
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+			"DATA": {
+				"vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+			},
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+		},
+
+    "mock_succ_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+      "RETURN_CODE": 200
+    },
+
+    "mock_deploy_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface/deploy",
+      "RETURN_CODE": 200
+    },
+
+    "pc_state_missing_config" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "description": "port channel trunk changed to access",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "on",
+        "mode": "access",
+        "members": [
+          "e1/29"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_access_host_11_1",
+        "admin_state": "True",
+        "access_vlan": 200,
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po300",
+      "deploy": "True"
+    }],
+
+    "pc_type_missing_config" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "description": "port channel trunk changed to access",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "on",
+        "mode": "access",
+        "members": [
+          "e1/29"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_access_host_11_1",
+        "admin_state": "True",
+        "access_vlan": 200,
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "name": "po300",
+      "deploy": "False"
+    }],
+
+    "pc_merged_config_policy_change" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "description": "port channel trunk changed to access",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "on",
+        "mode": "access",
+        "members": [
+          "e1/29"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_access_host_11_1",
+        "admin_state": "True",
+        "access_vlan": 200,
+	      "orphan_port": false,
+        "enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po300",
+      "deploy": "False"
+    }],
+
+    "pc_unmanagable_merged_config" : [
+    {
+      "switch": [
+        "n9kv-1"
+      ],
+      "profile": {
+        "description": "port channel acting as trunk",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "on",
+        "mode": "trunk",
+        "members": [
+          "e1/9"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_trunk_host_11_1",
+        "admin_state": "True",
+        "allowed_vlans": "none",
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po300",
+      "deploy": "True"
+    }
+  ],
+
+    "pc_merged_config" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "description": "port channel acting as trunk",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "on",
+        "mode": "trunk",
+        "members": [
+          "e1/9"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_trunk_host_11_1",
+        "admin_state": "True",
+        "allowed_vlans": "none",
+      	"native_vlan": "10",
+        "orphan_port": false,
+        "enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
+	      "speed": "Auto",
+	      "duplex": "auto",
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po300",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "access_vlan": 301,
+        "description": "port channel acting as access",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "default",
+        "pc_mode": "on",
+        "mode": "access",
+        "members": [
+          "e1/10"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_access_host_11_1",
+        "admin_state": "False",
+        "ifname": "Port-channel301",
+        "orphan_port": false,
+        "enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
+        "cmds": [
+          "no shutdown"
+        ],
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po301",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "int_vrf": "",
+        "route_tag": "",
+        "ipv4_mask_len": 8,
+        "admin_state": "False",
+        "fabric": "test_fabric",
+        "mtu": 9216,
+        "pc_mode": "on",
+        "mode": "l3",
+        "members": [
+          "e1/11"
+        ],
+        "sno": "SAL1819SAN8",
+        "policy": "int_l3_port_channel",
+        "ipv4_addr": "10.1.1.1",
+        "ifname": "Port-channel302",
+        "cmds": [
+          "no shutdown"
+        ],
+        "description": "port channel acting as l3"
+      },
+      "type": "pc",
+      "name": "po302",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "policy": "int_monitor_port_channel_11_1",
+        "sno": "SAL1819SAN8",
+        "ifname": "Port-channel303",
+        "mode": "monitor",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po303",
+      "deploy": "True"
+    }],
+
+    "pc_merged_vlan_range_config" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "description": "port channel acting as trunk",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "on",
+        "mode": "trunk",
+        "members": [
+          "e1/9"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_trunk_host_11_1",
+        "admin_state": "True",
+        "allowed_vlans": "20,30,40,50-60,70,90-100",
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po300",
+      "deploy": "True"
+    }],
+
+    "pc_deleted_config_deploy" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "name": "po999",
+      "deploy": "True"
+    }],
+
+    "pc_deleted_config_no_deploy" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "name": "po300",
+      "deploy": "False"
+    }],
+
+    "pc_deleted_config" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "description": "port channel acting as trunk",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "on",
+        "mode": "trunk",
+        "members": [
+          "e1/9"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_trunk_host_11_1",
+        "admin_state": "True",
+        "allowed_vlans": "none",
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po300",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "access_vlan": 301,
+        "description": "port channel acting as access",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "default",
+        "pc_mode": "on",
+        "mode": "access",
+        "members": [
+          "e1/10"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_access_host_11_1",
+        "admin_state": "False",
+        "ifname": "Port-channel301",
+        "cmds": [
+          "no shutdown"
+        ],
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po301",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "int_vrf": "",
+        "route_tag": "",
+        "ipv4_mask_len": 8,
+        "admin_state": "False",
+        "fabric": "test_fabric",
+        "mtu": 9216,
+        "pc_mode": "on",
+        "mode": "l3",
+        "members": [
+          "e1/11"
+        ],
+        "sno": "SAL1819SAN8",
+        "policy": "int_l3_port_channel",
+        "ipv4_addr": "10.1.1.1",
+        "ifname": "Port-channel302",
+        "cmds": [
+          "no shutdown"
+        ],
+        "description": "port channel acting as l3"
+      },
+      "type": "pc",
+      "name": "po302",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "policy": "int_monitor_port_channel_11_1",
+        "sno": "SAL1819SAN8",
+        "ifname": "Port-channel303",
+        "mode": "monitor",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po303",
+      "deploy": "True"
+    }],
+
+    "pc_replaced_config" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "description": "port channel acting as trunk -replaced",
+        "bpdu_guard": "False",
+        "sno": "SAL1819SAN8",
+        "mtu": "default",
+        "pc_mode": "active",
+        "mode": "trunk",
+        "members": [
+          "e1/29"
+        ],
+        "port_type_fast": "False",
+        "policy": "int_port_channel_trunk_host_11_1",
+        "admin_state": "False",
+        "allowed_vlans": "all",
+	      "native_vlan": "10",
+        "orphan_port": false,
+        "enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
+      	"speed": "Auto",
+	      "duplex": "auto",
+        "cmds": [
+          "no shutdown",
+        "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po300",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "access_vlan": 301,
+        "description": "port channel acting as access - replaced",
+        "bpdu_guard": "False",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "active",
+        "mode": "access",
+        "members": [
+          "e1/30"
+        ],
+        "port_type_fast": "False",
+        "policy": "int_port_channel_access_host_11_1",
+        "admin_state": "True",
+        "ifname": "Port-channel301",
+	      "orphan_port": false,
+        "enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
+        "cmds": [
+          "no shutdown",
+        "no shutdown"
+        ],
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po301",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "int_vrf": "default",
+        "route_tag": "1234",
+        "ipv4_mask_len": 16,
+        "admin_state": "True",
+        "fabric": "test_fabric",
+        "mtu": 1500,
+        "pc_mode": "active",
+        "mode": "l3",
+        "members": [
+          "e1/31"
+        ],
+        "sno": "SAL1819SAN8",
+        "policy": "int_l3_port_channel",
+        "ipv4_addr": "10.2.2.2",
+        "ifname": "Port-channel302",
+        "cmds": [
+          "no shutdown",
+        "no shutdown"
+        ],
+        "description": "port channel acting as l3 - replaced"
+      },
+      "type": "pc",
+      "name": "po302",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "policy": "int_monitor_port_channel_11_1",
+        "sno": "SAL1819SAN8",
+        "ifname": "Port-channel303",
+        "mode": "monitor",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po303",
+      "deploy": "True"
+    }],
+
+    "pc_overridden_config" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "description": "port channel acting as trunk",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "default",
+        "pc_mode": "active",
+        "mode": "trunk",
+        "members": [
+          "e1/29"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_trunk_host_11_1",
+        "admin_state": "True",
+        "allowed_vlans": "none",
+	      "native_vlan": "10",
+        "orphan_port": false,
+        "enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
+	      "speed": "Auto",
+	      "duplex": "auto",
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po300",
+      "deploy": "True"
+    }]
+}

@@ -1,0 +1,11 @@
+---
+- name: Build Fabric Base Config Data
+  ansible.builtin.template:
+    src: dcnm_inventory_conf.j2
+    dest: "{{ role_path }}/files/ndfc_inventory_{{file}}_conf.yaml"
+  delegate_to: localhost
+
+- name: Access Fabric Configuration Data and Save to Local Variable
+  ansible.builtin.set_fact:
+    "{{ 'ndfc_fabric_' + file +'_conf'  }}": "{{ lookup('file', '{{ role_path }}/files/ndfc_inventory_{{file}}_conf.yaml') | from_yaml }}"
+  delegate_to: localhost

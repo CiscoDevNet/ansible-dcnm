@@ -1,0 +1,551 @@
+{
+  "create_policy_125_127_with_vars": [
+    {
+      "create_additional_policy": false,
+      "name": "template_125",
+      "description": "125 - policy with vars",
+      "priority": 125,
+      "policy_vars": {
+        "OSPF_TAG": 2000,
+        "LOOPBACK_IP": "10.10.10.108"
+      }
+    },
+    {
+      "create_additional_policy": false,
+      "name": "template_126",
+      "description": "126 - policy with vars",
+      "priority": 126,
+      "policy_vars": {
+        "OSPF_TAG": 3000,
+        "LOOPBACK_IP": "10.10.10.109"
+      }
+    },
+    {
+      "create_additional_policy": false,
+      "name": "template_127",
+      "description": "127 - policy with vars",
+      "priority": 127,
+      "policy_vars": {
+        "OSPF_TAG": 4000,
+        "LOOPBACK_IP": "10.10.10.110"
+      }
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "create_policy_multi_switch_101_105": [
+    {
+      "create_additional_policy": false,
+      "name": "template_101",
+      "priority": 101
+    },
+    {
+      "create_additional_policy": false,
+      "description": "102 - No piority given",
+      "name": "template_102"
+    },
+    {
+      "create_additional_policy": false,
+      "description": "Both description and priority given",
+      "name": "template_103",
+      "priority": 500
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224",
+          "policies": [
+            {
+              "create_additional_policy": false,
+              "name": "template_104"
+            },
+            {
+              "create_additional_policy": false,
+              "name": "template_105"
+            }
+          ]
+        },
+        {
+          "ip": "10.10.10.225"
+        },
+        {
+          "ip": "10.10.10.226"
+        }
+      ]
+    }
+  ],
+
+  "create_policy_101_101_5": [
+    {
+      "create_additional_policy": false,
+      "name": "template_101",
+      "priority": 101,
+      "description": "Create again even if it exists"
+    },
+    {
+      "create_additional_policy": false,
+      "description": "101 - No piority given",
+      "name": "template_101"
+    },
+    {
+      "create_additional_policy": false,
+      "description": "Both description and priority given",
+      "name": "template_101",
+      "priority": 500
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224",
+          "policies": [
+            {
+              "create_additional_policy": false,
+              "name": "template_101",
+              "description": "description changed"
+            },
+            {
+              "create_additional_policy": false,
+              "name": "template_101",
+              "description": "description changed to verify merge"
+            }
+          ]
+        },
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "modify_policy_125_with_vars": [
+    {
+      "create_additional_policy": false,
+      "name": "POLICY-125125",
+      "priority": 125,
+      "policy_vars": {
+        "OSPF_TAG": 2000,
+        "LOOPBACK_IP": "11.11.11.108"
+      }
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "create_policy_101_105": [
+    {
+      "create_additional_policy": false,
+      "name": "template_101",
+      "description": "policy101",
+      "priority": 101
+    },
+    {
+      "create_additional_policy": false,
+      "description": "policy102",
+      "name": "template_102"
+    },
+    {
+      "create_additional_policy": false,
+      "name": "template_103",
+      "description": "policy103",
+      "priority": 500
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224",
+          "policies": [
+            {
+              "create_additional_policy": false,
+              "name": "template_104",
+              "description": "policy104"
+            },
+            {
+              "create_additional_policy": false,
+              "name": "template_105",
+              "description": "policy105"
+            }
+          ]
+        },
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "modify_policy_101_102": [
+    {
+      "create_additional_policy": false,
+      "name": "template_101_1",
+      "description": "policy101",
+      "priority": 101
+    },
+    {
+      "create_additional_policy": false,
+      "description": "policy102",
+      "name": "template_102_1"
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "create_policy_101_105_5": [
+    {
+      "create_additional_policy": false,
+      "name": "template_101",
+      "priority": 101
+    },
+    {
+      "create_additional_policy": false,
+      "description": "102 - No piority given",
+      "name": "template_102"
+    },
+    {
+      "create_additional_policy": false,
+      "description": "Both description and priority given",
+      "name": "template_103",
+      "priority": 500
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224",
+          "policies": [
+            {
+              "create_additional_policy": false,
+              "name": "template_101",
+              "description": "Description override - 10.10.10.225"
+            },
+            {
+              "create_additional_policy": false,
+              "name": "template_102",
+              "description": "Description override - 10.10.10.225"
+            }
+          ]
+        },
+        {
+          "ip": "10.10.10.225",
+          "policies": [
+            {
+              "create_additional_policy": false,
+              "name": "template_101",
+              "description": "Description override - 10.10.10.225"
+            },
+            {
+              "create_additional_policy": false,
+              "name": "template_102",
+              "description": "Description override - 10.10.10.225"
+            }
+          ]
+        },
+        {
+          "ip": "10.10.10.226",
+          "policies": [
+            {
+              "create_additional_policy": false,
+              "name": "template_104",
+              "description": "Description override - 10.10.10.225"
+            },
+            {
+              "create_additional_policy": false,
+              "name": "template_105",
+              "description": "Description override - 10.10.10.225"
+            }
+          ]
+        },
+        {
+          "ip": "10.10.10.226"
+        }
+      ]
+    }
+  ],
+
+  "create_policy_without_state_104_105": [
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224",
+          "policies": [
+            {
+              "create_additional_policy": false,
+              "name": "template_104"
+            },
+            {
+              "create_additional_policy": false,
+              "name": "template_105"
+            }
+          ]
+        },
+        {
+          "ip": "10.10.10.225"
+        }
+      ]
+    }
+  ],
+
+  "create_policy_additional_flags_104": [
+    {
+      "create_additional_policy": true,
+      "description": "create template_104",
+      "name": "template_104",
+      "priority": 104
+    },
+    {
+      "create_additional_policy": true,
+      "description": "create template_104",
+      "name": "template_104",
+      "priority": 104
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "modify_policy_104_with_policy_id": [
+    {
+      "create_additional_policy": false,
+      "description": "modifying policy with policy ID",
+      "name": "POLICY-123840",
+      "priority": 904
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "modify_policy_104_with_template_name": [
+    {
+      "create_additional_policy": false,
+      "description": "modifying policy with template name",
+      "name": "template_104",
+      "priority": 904
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "create_policy_no_deploy_104": [
+    {
+      "create_additional_policy": false,
+      "description": "create template_104",
+      "name": "template_104",
+      "priority": 104
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "create_policy_wrong_state_104": [
+    {
+      "create_additional_policy": false,
+      "description": "create template_104",
+      "name": "template_104",
+      "priority": 104
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "delete_policy_template_name_101_105": [
+    {
+      "name": "template_101"
+    },
+    {
+      "name": "template_102"
+    },
+    {
+      "name": "template_103"
+    },
+    {
+      "name": "template_104"
+    },
+    {
+      "name": "template_105"
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+  "delete_policy_template_desc_101_105": [
+    {
+      "name": "template_101",
+      "description": "policy101"
+    },
+    {
+      "name": "template_102",
+      "description": "policy102"
+    },
+    {
+      "name": "template_103",
+      "description": "policy103"
+    },
+    {
+      "name": "template_104",
+      "description": "policy104"
+    },
+    {
+      "name": "template_105",
+      "description": "policy105"
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "delete_policy_policy_id_101_105": [
+    {
+      "name": "POLICY-101101"
+    },
+    {
+      "name": "POLICY-102102"
+    },
+    {
+      "name": "POLICY-103103"
+    },
+    {
+      "name": "POLICY-104104"
+    },
+    {
+      "name": "POLICY-105105"
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "delete_policy_template_name_multi": [
+    {
+      "name": "template_101"
+    },
+    {
+      "name": "template_102"
+    },
+    {
+      "name": "template_103"
+    },
+    {
+      "name": "template_104"
+    },
+    {
+      "name": "template_105"
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "query_policy_with_switch_info": [
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "query_policy_with_policy_id": [
+    {
+      "name": "POLICY-101101"
+    },
+    {
+      "name": "POLICY-102102"
+    },
+    {
+      "name": "POLICY-103103"
+    },
+    {
+      "name": "POLICY-104104"
+    },
+    {
+      "name": "POLICY-105105"
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ],
+
+  "query_policy_with_template_name": [
+    {
+      "name": "template_101"
+    },
+    {
+      "name": "template_102"
+    },
+    {
+      "name": "template_103"
+    },
+    {
+      "name": "template_104"
+    },
+    {
+      "name": "template_105"
+    },
+    {
+      "switch": [
+        {
+          "ip": "10.10.10.224"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+    "test_image_stage_00900a": {
+        "TEST_NOTES": [
+            "Needed only for 200 RETURN_CODE",
+            "RETURN_CODE == 200",
+            "MESSAGE == OK"
+        ],
+        "DATA": [
+            {
+                "key": "FDO21120U5D",
+                "value": "No files to stage"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image",
+        "RETURN_CODE": 200
+    },
+    "test_image_stage_00910a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200",
+            "MESSAGE == OK"
+        ],
+        "DATA": [
+            {
+                "key": "FDO21120U5D",
+                "value": "No files to stage"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image",
+        "RETURN_CODE": 200
+    },
+    "test_image_stage_00910b": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200",
+            "MESSAGE == OK"
+        ],
+        "DATA": [
+            {
+                "key": "FDO21120U5D",
+                "value": "No files to stage"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image",
+        "RETURN_CODE": 200
+    },
+    "test_image_stage_00930a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 500",
+            "MESSAGE == NOK"
+        ],
+        "RETURN_CODE": 500,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image",
+        "MESSAGE": "NOK",
+        "DATA": {
+            "status": "FAILED",
+            "lastOperDataObject": [
+           ],
+            "message": ""
+        }
+    },
+    "test_image_stage_00940a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200",
+            "MESSAGE == OK"
+        ],
+        "DATA": [
+            {
+                "key": "FDO21120U5D",
+                "value": "File successfully staged."
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image",
+        "RETURN_CODE": 200
+    }
+}

@@ -1,0 +1,60 @@
+{
+    "test_image_upgrade_01020a": {
+        "devices": [
+            {
+                "policyName": "KR5M",
+                "serialNumber": "FDO21120U5D"
+            }
+        ],
+        "epldOptions": {
+            "golden": true,
+            "moduleNumber": 1
+        },
+        "epldUpgrade": true,
+        "issuUpgrade": false,
+        "issuUpgradeOptions1": {
+            "disruptive": true,
+            "forceNonDisruptive": false,
+            "nonDisruptive": false
+        },
+        "issuUpgradeOptions2": {
+            "biosForce": true
+        },
+        "pacakgeInstall": true,
+        "pacakgeUnInstall": false,
+        "reboot": false,
+        "rebootOptions": {
+            "configReload": true,
+            "writeErase": false
+        }
+    },
+    "test_image_upgrade_01030a": {
+        "devices": [
+            {
+                "policyName": "NR3F",
+                "serialNumber": "FDO21120U5D"
+            }
+        ],
+        "epldOptions": {
+            "golden": false,
+            "moduleNumber": "ALL"
+        },
+        "epldUpgrade": true,
+        "issuUpgrade": true,
+        "issuUpgradeOptions1": {
+            "disruptive": true,
+            "forceNonDisruptive": false,
+            "nonDisruptive": false
+        },
+        "issuUpgradeOptions2": {
+            "biosForce": false
+        },
+        "pacakgeInstall": true,
+        "pacakgeUnInstall": false,
+        "reboot": false,
+        "rebootOptions": {
+            "configReload": false,
+            "writeErase": false
+        }
+    }
+}

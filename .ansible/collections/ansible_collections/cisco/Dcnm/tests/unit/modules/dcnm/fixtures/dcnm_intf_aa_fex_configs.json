@@ -1,0 +1,270 @@
+{
+  "mock_fab_inv_data": {
+    "192.168.1.108": {
+      "logicalName": "n9kv-108",
+        "serialNumber": "SAL1819SAN8",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+    },
+      "192.168.1.109": {
+        "logicalName": "n9kv-109",
+        "serialNumber": "FOX1821H035",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "None",
+        "managable": "False"
+      }
+  },
+
+    "mock_ip_sn" : {
+      "192.168.1.109": "FOX1821H035",
+      "192.168.1.108": "SAL1819SAN8"
+    },
+
+    "mock_vpc_sno" : {
+      "192.168.1.108" : "FOX1821H035~SAL1819SAN8",
+      "192.168.1.109" : "FOX1821H035~SAL1819SAN8"
+    },
+
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
+      }
+    },
+
+    "mock_vpc_resp" : {
+      "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+      "DATA": {
+        "vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+      },
+      "RETURN_CODE": 200,
+      "METHOD": "GET"
+    },
+
+    "mock_succ_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+      "RETURN_CODE": 200
+    },
+
+    "mock_deploy_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface/deploy",
+      "RETURN_CODE": 200
+    },
+
+    "aa_fex_merged_config" : [
+    {
+      "deploy": true,
+      "name": "vpc150",
+      "profile": {
+        "admin_state": true,
+        "intf_name": "vPC150",
+        "peer1_cmds": [
+          "no shutdown"
+        ],
+        "peer2_cmds": [
+          "no shutdown"
+        ],
+        "description": "Port Channel for FEX 150",
+        "enable_netflow": false,
+        "peer1_members": [
+          "e1/10"
+        ],
+        "peer2_members": [
+          "e1/10"
+        ],
+        "mode": "port_channel_aa",
+        "mtu": "jumbo",
+        "peer1_po_description": "FEX port channel",
+        "peer2_po_description": "FEX port channel"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "aa_fex"
+    }],
+
+    "aa_fex_deleted_existing_config" : [
+    {
+      "name": "vpc150",
+      "type": "aa_fex",
+      "switch": [
+        "192.168.1.108"
+      ]
+    }],
+
+    "aa_fex_deleted_non_existing_config" : [
+    {
+      "name": "vpc111",
+      "type": "aa_fex",
+      "switch": [
+        "192.168.1.108"
+      ]
+    }],
+
+    "aa_fex_merge_existing_config": [
+    {
+      "deploy": true,
+      "name": "vpc150",
+      "profile": {
+        "admin_state": false,
+        "intf_name": "vPC150",
+        "peer1_cmds": [
+          "no shutdown"
+        ],
+        "peer2_cmds": [
+          "no shutdown"
+        ],
+        "description": "AA FEX I/F 150",
+        "peer1_members": [
+          "e1/11"
+        ],
+        "peer2_members": [
+          "e1/11"
+        ],
+        "mode": "port_channel_aa",
+        "mtu": "default",
+        "peer1_po_description": "PC 150 AA FEX - Merge",
+        "peer2_po_description": "PC 150 AA FEX - Merge"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "aa_fex"
+    }],
+
+    "aa_fex_merge_multi_switches_config": [
+    {
+      "deploy": true,
+      "name": "vpc155",
+      "profile": {
+        "admin_state": true,
+        "mode": "port_channel_aa"
+      },
+      "switch": [
+        "192.168.1.108",
+        "192.168.1.109"
+      ],
+      "type": "aa_fex"
+    }],
+
+    "aa_fex_replaced_config" : [
+    {
+      "deploy": true,
+      "name": "vpc150",
+      "profile": {
+        "admin_state": false,
+        "intf_name": "vPC150",
+        "peer1_cmds": [
+          "ip arp inspection trust"
+        ],
+        "peer2_cmds": [
+          "ip arp inspection trust"
+        ],
+        "enable_netflow": false,
+        "peer1_members": [
+          "e1/11"
+        ],
+        "peer2_members": [
+          "e1/11"
+        ],
+        "mode": "port_channel_aa",
+        "mtu": "default",
+        "peer1_po_description": "PC 150 for AA FEX - REP",
+        "peer2_po_description": "PC 150 for AA FEX - REP"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "aa_fex"
+    }],
+
+    "aa_fex_overridden_new_config" : [
+    {
+      "deploy": true,
+      "name": "vpc159",
+      "profile": {
+        "admin_state": true,
+        "intf_name": "vPC159",
+        "peer1_cmds": [
+          "no shutdown"
+        ],
+        "peer2_cmds": [
+          "no shutdown"
+        ],
+        "description": "AA FEX interface 159",
+        "enable_netflow": false,
+        "peer1_members": [
+          "e1/20"
+        ],
+        "peer2_members": [
+          "e1/20"
+        ],
+        "mode": "port_channel_aa",
+        "mtu": "jumbo",
+        "peer1_po_description": "PC 159 for AA FEX",
+        "peer2_po_description": "PC 159 for AA FEX"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "aa_fex"
+    }],
+
+    "aa_fex_overridden_modify_existing_config" : [
+    {
+      "deploy": true,
+      "name": "vpc150",
+      "profile": {
+        "admin_state": false,
+        "intf_name": "vPC150",
+        "peer1_cmds": [
+          "no shutdown"
+        ],
+        "peer2_cmds": [
+          "no shutdown"
+        ],
+        "description": "AA FEX interface 150 - MOD",
+        "enable_netflow": false,
+        "peer1_members": [
+          "e1/31"
+        ],
+        "peer2_members": [
+          "e1/31"
+        ],
+        "mode": "port_channel_aa",
+        "mtu": "jumbo",
+        "peer1_po_description": "PC 150 for AA FEX - OVR",
+        "peer2_po_description": "PC 150 for AA FEX - OVR"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "aa_fex"
+    }
+  ]
+}
