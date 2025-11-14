@@ -20,7 +20,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -29,11 +29,8 @@ import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_bootflash import \
-    Common
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-    configs_query, does_not_raise, params_deleted, params_query)
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_bootflash import Common
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import configs_query, does_not_raise, params_deleted, params_query
 
 
 def test_bootflash_common_00000() -> None:
