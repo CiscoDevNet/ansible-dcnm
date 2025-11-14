@@ -53,7 +53,15 @@
      - "switch_2 : {{ switch_2 }}"
      - "interface_2a : {{ interface_2a }}"
 
-- name: SETUP.1 - OVERRIDDEN - [dcnn_rest.GET] Verify if fabric is deployed.
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.1 - OVERRIDDEN - [dcnn_rest.GET] Verify if fabric is deployed."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_path }}"
@@ -61,9 +69,17 @@
 
 - assert:
     that:
-    - 'result.response.DATA != None'
+    - result.response.DATA != None
 
-- name: SETUP.2 - OVERRIDDEN - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.2 - OVERRIDDEN - [deleted] Delete all VRFs"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -105,20 +121,28 @@
 
 - assert:
     that:
-    - 'result_setup_3.changed == true'
-    - 'result_setup_3.response[0].RETURN_CODE == 200'
-    - 'result_setup_3.response[1].RETURN_CODE == 200'
-    - '(result_setup_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_setup_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_setup_3.diff[0].attach[0].deploy == true'
-    - 'result_setup_3.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_setup_3.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_setup_3.diff[0].attach[1].ip_address'
-    - 'result_setup_3.diff[0].vrf_name == "ansible-vrf-int1"'
+    - result_setup_3.changed == true
+    - result_setup_3.diff[0].attach[0].deploy == true
+    - result_setup_3.diff[0].attach[1].deploy == true
+    - result_setup_3.diff[0].vrf_name == "ansible-vrf-int1"
+    - result_setup_3.response[0].RETURN_CODE == 200
+    - result_setup_3.response[1].RETURN_CODE == 200
+    - result_setup_3.response[2].RETURN_CODE == 200
+    - (result_setup_3.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_setup_3.response[1].DATA|dict2items)[1].value == "SUCCESS"
+    - switch_1 in result_setup_3.diff[0].attach[0].ip_address
+    - switch_2 in result_setup_3.diff[0].attach[1].ip_address
 
 ###############################################
 ###              OVERRIDDEN                  ##
 ###############################################
+- name: Set fact
+  ansible.builtin.set_fact:
+    DEPLOYMENT_OF_VRFS: "Deployment of VRF(s) has been initiated successfully"
+
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.1 - OVERRIDDEN - [overridden] Override existing VRF ansible-vrf-int1 to create new VRF ansible-vrf-int2"
 
 - name: TEST.1 - OVERRIDDEN - [overridden] Override existing VRF ansible-vrf-int1 to create new VRF ansible-vrf-int2 (L3VNI W/O VLAN)
   cisco.dcnm.dcnm_vrf: &conf1
@@ -148,24 +172,41 @@
 
 - assert:
     that:
-    - 'result_1.changed == true'
-    - 'result_1.response[0].RETURN_CODE == 200'
-    - 'result_1.response[1].RETURN_CODE == 200'
-    - 'result_1.response[3].RETURN_CODE == 200'
-    - 'result_1.response[4].RETURN_CODE == 200'
-    - 'result_1.response[5].RETURN_CODE == 200'
-    - '(result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - '(result_1.response[5].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_1.response[5].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_1.diff[0].vrf_name == "ansible-vrf-int2"'
-    - 'result_1.diff[1].attach[0].deploy == false'
-    - 'result_1.diff[1].attach[1].deploy == false'
-    - 'result_1.diff[1].vrf_name == "ansible-vrf-int1"'
-    - '"enableL3VniNoVlan\":\"true\"" in result_1a.response[0].parent.vrfTemplateConfig'
-    - 'result_1a.response[0].parent.vrfStatus == "PENDING"'
+    - result_1.changed == true
+    - result_1.diff[0].attach[0].deploy == true
+    - result_1.diff[0].attach[1].deploy == true
+    - result_1.diff[0].vrf_name == "ansible-vrf-int2"
+    - result_1.diff[1].attach[0].deploy == false
+    - result_1.diff[1].attach[1].deploy == false
+    - result_1.diff[1].vrf_name == "ansible-vrf-int1"
+    - result_1.response[0].METHOD == "POST"
+    - result_1.response[1].METHOD == "POST"
+    - result_1.response[2].METHOD == "DELETE"
+    - result_1.response[3].METHOD == "POST"
+    - result_1.response[4].METHOD == "POST"
+    - result_1.response[5].METHOD == "POST"
+    - result_1.response[0].RETURN_CODE == 200
+    - result_1.response[1].RETURN_CODE == 200
+    - result_1.response[2].RETURN_CODE == 200
+    - result_1.response[3].RETURN_CODE == 200
+    - result_1.response[4].RETURN_CODE == 200
+    - result_1.response[5].RETURN_CODE == 200
+    - (result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"
+    - (result_1.response[4].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_1.response[4].DATA|dict2items)[1].value == "SUCCESS"
+    - result_1.response[1].DATA.status == DEPLOYMENT_OF_VRFS
+    - result_1.response[5].DATA.status == DEPLOYMENT_OF_VRFS
 
-- name: TEST.1c - OVERRIDDEN - [overridden] conf1 - Idempotence
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.1c - OVERRIDDEN - [overridden] conf1 - Idempotence"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: *conf1
   register: result_1c
 
@@ -175,10 +216,18 @@
 
 - assert:
     that:
-    - 'result_1c.changed == false'
-    - 'result_1c.response|length == 0'
+    - result_1c.changed == false
+    - result_1c.response|length == 0
 
-- name: TEST.1f - OVERRIDDEN - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.1f - OVERRIDDEN - [deleted] Delete all VRFs"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -524,7 +573,15 @@
 ##                 CLEAN-UP                 ##
 ##############################################
 
-- name: CLEANUP.1 - OVERRIDDEN - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "CLEANUP.1 - OVERRIDDEN - [deleted] Delete all VRFs"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
