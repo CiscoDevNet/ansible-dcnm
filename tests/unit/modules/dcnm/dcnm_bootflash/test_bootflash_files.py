@@ -83,8 +83,9 @@ def test_bootflash_files_00000() -> None:
     assert instance.filepath is None
     assert instance.ip_address is None
     assert instance.partition is None
-    assert instance._rest_send is None
-    assert instance._results is None
+    assert instance._rest_send.params == {}
+    assert instance._rest_send.class_name == "RestSend"
+    assert instance._results.class_name == "Results"
     assert instance.supervisor is None
     assert instance.switch_details is None
     assert instance.target is None
@@ -172,6 +173,7 @@ def test_bootflash_files_00100() -> None:
         instance.commit()
 
     assert instance.payload == payloads_bootflash_files(f"{key}a")
+    assert instance.results.response_current is not None
     assert instance.results.response_current["RETURN_CODE"] == 200
     assert instance.results.result == [
         {"success": True, "changed": True, "sequence_number": 1}
@@ -195,37 +197,9 @@ def test_bootflash_files_00110() -> None:
     """
     with does_not_raise():
         instance = BootflashFiles()
-        instance.results = Results()
         instance.switch_details = SwitchDetails()
 
-    match = r"BootflashFiles.validate_commit_parameters:\s+"
-    match += r"rest_send must be set before calling commit\(\)\."
-    with pytest.raises(ValueError, match=match):
-        instance.commit()
-
-
-def test_bootflash_files_00120() -> None:
-    """
-    ### Classes and Methods
-    - BootflashFiles()
-        - commit()
-        - validate_commit_parameters()
-
-    ### Summary
-    Verify ``ValueError`` is raised if ``results`` is not set before
-    calling commit.
-
-    ### Test
-    -   ValueError is raised by validate_commit_parameters().
-    -   Error message matches expectation.
-    """
-    with does_not_raise():
-        instance = BootflashFiles()
-        instance.rest_send = RestSend(params_deleted)
-        instance.switch_details = SwitchDetails()
-
-    match = r"BootflashFiles.validate_commit_parameters:\s+"
-    match += r"results must be set before calling commit\(\)\."
+    match = r"BootflashFiles\.rest_send: RestSend.params must be set before accessing\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -725,9 +699,7 @@ def test_bootflash_files_00310() -> None:
         instance = BootflashFiles()
         instance.switch_details = SwitchDetails()
 
-    match = r"BootflashFiles\.refresh_switch_details:\s+"
-    match += r"rest_send must be set before calling\s+"
-    match += r"refresh_switch_details\."
+    match = r"BootflashFiles\.rest_send: RestSend.params must be set before accessing\."
     with pytest.raises(ValueError, match=match):
         instance.refresh_switch_details()
 
