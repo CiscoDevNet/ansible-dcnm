@@ -435,7 +435,6 @@ EXAMPLES = """
   service_fabric: external
   state: query
   config:
-
 """
 
 import time

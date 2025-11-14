@@ -3673,8 +3673,8 @@ EXAMPLES = """
     state: query
     config:
       - FABRIC_NAME: VXLAN_Fabric
-    - FABRIC_NAME: MSD_Fabric
-    - FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: MSD_Fabric
+      - FABRIC_NAME: LAN_Fabric
   register: result
 - debug:
     var: result
