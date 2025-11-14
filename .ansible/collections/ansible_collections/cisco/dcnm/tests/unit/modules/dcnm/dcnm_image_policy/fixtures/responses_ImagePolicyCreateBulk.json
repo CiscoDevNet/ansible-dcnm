@@ -1,0 +1,82 @@
+{
+    "TEST_NOTES": [
+        "Mocked responses for ImagePolicyCreateBulk unit tests.",
+        "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create_bulk.py"
+    ],
+   "test_image_policy_create_bulk_00035a": {
+            "DATA": "Policy created successfully.",
+            "MESSAGE": "OK",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+            "RETURN_CODE": 200
+    },
+    "test_image_policy_create_bulk_00036a": {
+        "DATA": "Internal server error.",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 500
+    },
+    "test_image_policy_create_bulk_00037a": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+                {
+                    "policyName": "KR5M",
+                    "policyType": "PLATFORM",
+                    "nxosVersion": "10.2.5_nxos64-cs_64bit",
+                    "packageName": "",
+                    "platform": "N9K/N3K",
+                    "policyDescr": "KR5M",
+                    "platformPolicies": "",
+                    "epldImgName": "n9000-epld.10.2.5.M.img",
+                    "rpmimages": "",
+                    "imageName": "nxos64-cs.10.2.5.M.bin",
+                    "agnostic": "false",
+                    "role": "",
+                    "fabricPolicyName": "",
+                    "unInstall": "false",
+                    "ref_count": 0,
+                    "imagePresent": "Present"
+                },
+                {
+                    "policyName": "NR3F",
+                    "policyType": "PLATFORM",
+                    "nxosVersion": "10.3.1_nxos64-cs_64bit",
+                    "packageName": "",
+                    "platform": "N9K/N3K",
+                    "policyDescr": "NR3F",
+                    "platformPolicies": "",
+                    "epldImgName": "n9000-epld.10.3.1.F.img",
+                    "rpmimages": "",
+                    "imageName": "nxos64-cs.10.3.1.F.bin",
+                    "agnostic": "false",
+                    "role": "",
+                    "fabricPolicyName": "",
+                    "unInstall": "false",
+                    "ref_count": 0,
+                    "imagePresent": "Present"
+                }
+           ],
+            "message": ""
+        }
+    },
+    "test_image_policy_create_bulk_00037b": {
+        "DATA": "Policy created successfully.",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_create_bulk_00037c": {
+        "DATA": "Internal server error.",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 500
+    }
+}

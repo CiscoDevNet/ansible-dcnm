@@ -1,0 +1,1513 @@
+{
+  "mock_num_fab_data": {
+    "nvPairs": {
+      "UNDERLAY_IS_V6": "False"
+    }
+  },
+
+    "mock_unnum_fab_data": {
+      "nvPairs": {
+        "UNDERLAY_IS_V6": "False"
+      }
+    },
+
+    "mock_ipv6_fab_data": {
+      "nvPairs": {
+        "UNDERLAY_IS_V6": "True"
+      }
+    },
+
+    "mock_fab_inv_data": {
+      "192.168.123.150": {
+        "logicalName": "n9kv-100",
+        "serialNumber": "9M99N34RDED",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "192.168.123.151": {
+        "logicalName": "n9kv-200",
+        "serialNumber": "9NXHSNTEO6C",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "192.168.123.156": {
+        "logicalName": "n9kv-ipv6-1",
+        "serialNumber": "9BH0813WFWT",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "192.168.123.157": {
+        "logicalName": "n9kv-ipv6-2",
+        "serialNumber": "9ITWBH9OIAH",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "192.168.123.160": {
+        "logicalName": "n9kv-num-1",
+        "serialNumber": "9IF87L089SZ",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "192.168.123.161": {
+        "logicalName": "n9kv-num-2",
+        "serialNumber": "9FX7O3TU2QM",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "192.168.123.170": {
+        "logicalName": "n9kv-unnum-1",
+        "serialNumber": "9EFX823RUL3",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "192.168.123.171": {
+        "logicalName": "n9kv-unnum-2",
+        "serialNumber": "9AF3VNZYAKS",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "10.64.78.225": {
+        "logicalName": "n9kv-test1",
+        "serialNumber": "98YWRN9WCSC",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "10.64.78.226": {
+        "logicalName": "n9kv-test2",
+        "serialNumber": "94UTIRVSX58",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "10.64.78.227": {
+        "logicalName": "n9kv-227",
+        "serialNumber": "953E68OKK1L",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "10.64.78.228": {
+        "logicalName": "n9kv-228",
+        "serialNumber": "9WCPR0JUV6M",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "10.64.78.230": {
+        "logicalName": "test11",
+        "serialNumber": "9XLP8I4TPPM",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "10.64.78.231": {
+        "logicalName": "test22",
+        "serialNumber": "9E15XSEM5MS",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      },
+      "10.69.69.2": {
+        "logicalName": "n9kv-2",
+        "serialNumber": "TEST-SNO-2",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      },
+      "10.69.69.3": {
+        "logicalName": "n9kv-3",
+        "serialNumber": "TEST-SNO-3",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      },
+      "10.69.69.4": {
+        "logicalName": "n9kv-4",
+        "serialNumber": "TEST-SNO-4",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      },
+      "10.69.69.5": {
+        "logicalName": "n9kv-5",
+        "serialNumber": "TEST-SNO-5",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      },
+      "10.69.69.6": {
+        "logicalName": "n9kv-6",
+        "serialNumber": "TEST-SNO-6",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRoleEnum": "None",
+        "managable": "False"
+      }
+    },
+
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
+      }
+    },
+
+    "mock_ip_sn" : {
+      "192.168.123.150": "9M99N34RDED",
+      "192.168.123.151": "9NXHSNTEO6C",
+      "192.168.123.156": "9BH0813WFWT",
+      "192.168.123.157": "9ITWBH9OIAH",
+      "192.168.123.160": "9IF87L089SZ",
+      "192.168.123.161": "9FX7O3TU2QM",
+      "192.168.123.170": "9EFX823RUL3",
+      "192.168.123.171": "9AF3VNZYAKS",
+      "10.64.78.225": "98YWRN9WCSC",
+      "10.64.78.226": "94UTIRVSX58",
+      "10.64.78.227": "953E68OKK1L",
+      "10.64.78.228": "9WCPR0JUV6M",
+      "10.64.78.230": "9XLP8I4TPPM",
+      "10.64.78.231": "9E15XSEM5MS"
+    },
+
+    "mock_hn_sn" : {
+      "n9kv_100": "9M99N34RDED",
+      "n9kv-200": "9NXHSNTEO6C",
+      "n9kv-ipv6-1": "9BH0813WFWT",
+      "n9kv-ipv6-2": "9ITWBH9OIAH",
+      "n9kv-num-1": "9IF87L089SZ",
+      "n9kv-num-2": "9FX7O3TU2QM",
+      "n9kv-unnum-1": "9EFX823RUL3",
+      "n9kv-unnum-2": "9AF3VNZYAKS",
+      "n9kv-test1": "10.64.78.225",
+      "n9kv-test2": "10.64.78.226",
+      "n9kv-227": "10.64.78.227",
+      "n9kv-228": "10.64.78.228",
+      "test11": "10.64.78.230",
+      "test22": "10.64.78.231"
+    },
+
+    "mock_sn_hn" : {
+      "9M99N34RDED": "n9kv-100",
+      "9NXHSNTEO6C": "n9kv-200",
+      "9BH0813WFWT": "n9kv-ipv6-1",
+      "9ITWBH9OIAH": "n9kv-ipv6-2",
+      "9IF87L089SZ": "n9kv-num-1",
+      "9FX7O3TU2QM": "n9kv-num-2",
+      "9EFX823RUL3": "n9kv-unnum-1",
+      "9AF3VNZYAKS": "n9kv-unnum-2",
+      "98YWRN9WCSC": "n9kv-test1",
+      "94UTIRVSX58": "n9kv-test2",
+      "953E68OKK1L": "n9kv-227",
+      "9WCPR0JUV6M": "n9kv-228",
+      "9XLP8I4TPPM": "test11",
+      "9E15XSEM5MS": "test22"
+    },
+
+    "deploy_resp": {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "MESSAGE": "OK",
+      "DATA": {
+        "status": "Config deployment has been triggered"
+      }
+    },
+
+    "config_preview_resp": {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "switchId": "9M99N34RDED",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "9NXHSNTEO6C",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "9BH0813WFWT",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "9ITWBH9OIAH",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "9IF87L089SZ",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "9FX7O3TU2QM",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "9EFX823RUL3",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "9AF3VNZYAKS",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "98YWRN9WCSC",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "94UTIRVSX58",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "953E68OKK1L",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "9WCPR0JUV6M",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "9XLP8I4TPPM",
+        "status": "In-Sync"
+      },
+      {
+        "switchId": "9E15XSEM5MS",
+        "status": "In-Sync"
+      }
+      ]
+    },
+
+    "intra_have_link1_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links?switch1Sn=9IF87L089SZ&switch2Sn=9FX7O3TU2QM&switch1IfName=Ethernet1/1&switch2IfName=Ethernet1/1",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1446600",
+        "sw2-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/1",
+          "sw-sys-name": "n9kv-num-2",
+          "sw-serial-number": "9FX7O3TU2QM"
+        },
+        "link-dbid": 1856090,
+        "nvPairs": {
+          "PEER2_BFD_ECHO_DISABLE": "false",
+          "PEER2_DESC": "Description of dest",
+          "ENABLE_MACSEC": "false",
+          "PEER2_INTF": "Ethernet1/1",
+          "PEER1_INTF": "Ethernet1/1",
+          "FABRIC2": "mmudigon-numbered",
+          "PRIORITY": "500",
+          "LINK_UUID": "LINK-UUID-1446600",
+          "FABRIC1": "mmudigon-numbered",
+          "PEER1_DESC": "Description of source",
+          "PEER2_SN": "9FX7O3TU2QM",
+          "PEER1_SN": "9IF87L089SZ",
+          "MTU": "9216",
+          "PEER2_IP": "192.168.1.2",
+          "PEER2_CONF": "no shutdown",
+          "PEER1_IP": "192.168.1.1",
+          "PEER1_BFD_ECHO_DISABLE": "false",
+          "ADMIN_STATE": "true",
+          "PEER1_CONF": "no shutdown",
+          "HOSTNAME1": "Switch1",
+          "HOSTNAME2": "Switch2"
+        },
+        "templateName": "int_intra_fabric_num_link",
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/1",
+          "sw-sys-name": "n9kv-num-1",
+          "sw-serial-number": "9IF87L089SZ"
+        },
+        "fabricName": "mmudigon-numbered"
+      }
+    },
+
+    "intra_have_link2_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links?switch1Sn=9IF87L089SZ&switch2Sn=9FX7O3TU2QM&switch1IfName=Ethernet1/2&switch2IfName=Ethernet1/2",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1419150",
+        "sw2-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/2",
+          "sw-sys-name": "n9kv-num-2",
+          "sw-serial-number": "9FX7O3TU2QM"
+        },
+        "link-dbid": 1856250,
+        "nvPairs": {
+          "LINK_UUID": "LINK-UUID-1419150"
+        },
+        "templateName": "int_pre_provision_intra_fabric_link",
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/2",
+          "sw-sys-name": "n9kv-num-1",
+          "sw-serial-number": "9IF87L089SZ"
+        },
+        "fabricName": "mmudigon-numbered"
+      }
+    },
+
+    "intra_have_link3_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links?switch1Sn=9IF87L089SZ&switch2Sn=9FX7O3TU2QM&switch1IfName=Ethernet1/3&switch2IfName=Ethernet1/3",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1419160",
+        "sw2-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/3",
+          "sw-sys-name": "n9kv-num-2",
+          "sw-serial-number": "9FX7O3TU2QM"
+        },
+        "nvPairs": {
+          "PEER2_DESC": "Description of dest",
+          "PEER2_INTF": "Ethernet1/3",
+          "PEER1_INTF": "Ethernet1/3",
+          "FABRIC2": "mmudigon-numbered",
+          "LINK_UUID": "LINK-UUID-1419160",
+          "FABRIC1": "mmudigon-numbered",
+          "PEER1_DESC": "Description of source",
+          "PEER2_SN": "9FX7O3TU2QM",
+          "MTU": "1500",
+          "PEER2_IP": "192.168.2.2",
+          "PEER2_CONF": "no shutdown",
+          "PEER1_IP": "192.168.2.1",
+          "ADMIN_STATE": "true",
+          "PEER1_CONF": "no shutdown",
+          "HOSTNAME1": "Switch1",
+          "HOSTNAME2": "Switch2"
+        },
+        "templateName": "ios_xe_int_intra_fabric_num_link",
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/3",
+          "sw-sys-name": "n9kv-num-1",
+          "sw-serial-number": "9IF87L089SZ"
+        },
+        "fabricName": "mmudigon-numbered"
+      }
+    },
+
+    "intra_have_link1_unnum_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links?switch1Sn=9EFX823RUL3&switch2Sn=9AF3VNZYAKS&switch1IfName=Ethernet1/1&switch2IfName=Ethernet1/1",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1435300",
+        "sw2-info": {
+          "fabric-name": "mmudigon-unnumbered",
+          "if-name": "ethernet1/1",
+          "sw-sys-name": "n9kv-unnum-2",
+          "sw-serial-number": "9AF3VNZYAKS"
+        },
+        "nvPairs": {
+          "PEER2_DESC": "Description of dest",
+          "ENABLE_MACSEC": "false",
+          "PEER2_INTF": "Ethernet1/1",
+          "PEER1_INTF": "Ethernet1/1",
+          "FABRIC2": "mmudigon-unnumbered",
+          "LINK_UUID": "LINK-UUID-1435300",
+          "FABRIC1": "mmudigon-unnumbered",
+          "PEER1_DESC": "Description of source",
+          "PEER2_SN": "9AF3VNZYAKS",
+          "PEER1_SN": "9EFX823RUL3",
+          "MTU": "9216",
+          "PEER2_CONF": "no shutdown",
+          "ADMIN_STATE": "true",
+          "PEER1_CONF": "no shutdown",
+          "POLICY_DESC": "",
+          "HOSTNAME1": "Switch1",
+          "HOSTNAME2": "Switch2"
+        },
+        "templateName": "int_intra_fabric_unnum_link",
+        "sw1-info": {
+          "fabric-name": "mmudigon-unnumbered",
+          "if-name": "Ethernet1/1",
+          "sw-sys-name": "n9kv-unnum-1",
+          "sw-serial-number": "9EFX823RUL3"
+        },
+        "fabricName": "mmudigon-unnumbered"
+      }
+    },
+
+    "intra_have_link2_unnum_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links?switch1Sn=9EFX823RUL3&switch2Sn=9AF3VNZYAKS&switch1IfName=Ethernet1/2&switch2IfName=Ethernet1/2",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1446600",
+        "sw2-info": {
+          "fabric-name": "mmudigon-unnumbered",
+          "if-name": "Ethernet1/2",
+          "sw-sys-name": "n9kv-unnum-2",
+          "sw-serial-number": "9AF3VNZYAKS"
+        },
+        "nvPairs": {
+        },
+        "templateName": "int_pre_provision_intra_fabric_link",
+        "sw1-info": {
+          "fabric-name": "mmudigon-unnumbered",
+          "if-name": "ethernet1/2",
+          "sw-sys-name": "n9kv-unnum-1",
+          "sw-serial-number": "9EFX823RUL3"
+        },
+        "fabricName": "mmudigon-unnumbered"
+      }
+    },
+
+    "intra_have_link1_ipv6_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links?switch1Sn=9EFX823RUL3&switch2Sn=9AF3VNZYAKS&switch1IfName=Ethernet1/2&switch2IfName=Ethernet1/2",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1419050",
+        "sw2-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "ethernet1/1",
+          "sw-sys-name": "n9kv-ipv6-2",
+          "sw-serial-number": "9ITWBH9OIAH"
+        },
+        "nvPairs": {
+          "PEER2_DESC": "Description of dest",
+          "ENABLE_MACSEC": "false",
+          "PEER2_INTF": "Ethernet1/1",
+          "PEER1_INTF": "Ethernet1/1",
+          "FABRIC2": "mmudigon-ipv6-underlay",
+          "LINK_UUID": "LINK-UUID-1419050",
+          "FABRIC1": "mmudigon-ipv6-underlay",
+          "PEER1_DESC": "Description of source",
+          "PEER2_SN": "9ITWBH9OIAH",
+          "PEER1_SN": "9BH0813WFWT",
+          "MTU": "9216",
+          "PEER2_CONF": "no shutdown",
+          "ADMIN_STATE": "true",
+          "PEER1_CONF": "no shutdown",
+          "POLICY_DESC": "",
+          "HOSTNAME1": "Switch1",
+          "HOSTNAME2": "Switch2"
+        },
+        "templateName": "int_intra_fabric_ipv6_link_local",
+        "sw1-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "Ethernet1/1",
+          "sw-sys-name": "n9kv-ipv6-1",
+          "sw-serial-number": "9BH0813WFWT"
+        },
+        "fabricName": "mmudigon-ipv6-underlay"
+      }
+    },
+
+    "intra_have_link2_ipv6_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links?switch1Sn=9EFX823RUL3&switch2Sn=9AF3VNZYAKS&switch1IfName=Ethernet1/2&switch2IfName=Ethernet1/2",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1419110",
+        "sw2-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "ethernet1/2",
+          "sw-sys-name": "n9kv-ipv6-2",
+          "sw-serial-number": "9ITWBH9OIAH"
+        },
+        "link-dbid": 1859550,
+        "nvPairs": {
+        },
+        "templateName": "int_pre_provision_intra_fabric_link",
+        "sw1-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "ethernet1/2",
+          "sw-sys-name": "n9kv-ipv6-1",
+          "sw-serial-number": "9BH0813WFWT"
+        },
+        "fabricName": "mmudigon-ipv6-underlay"
+      }
+    },
+
+    "intra_have_link3_ipv6_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links?switch1Sn=9EFX823RUL3&switch2Sn=9AF3VNZYAKS&switch1IfName=Ethernet1/2&switch2IfName=Ethernet1/2",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1419180",
+        "sw2-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "ethernet1/3",
+          "sw-sys-name": "n9kv-ipv6-2",
+          "sw-serial-number": "9ITWBH9OIAH"
+        },
+        "nvPairs": {
+          "PEER2_BFD_ECHO_DISABLE": "false",
+          "PEER1_INTF": "Ethernet1/3",
+          "FABRIC2": "mmudigon-ipv6-underlay",
+          "FABRIC1": "mmudigon-ipv6-underlay",
+          "PEER1_DESC": "Description of source",
+          "PEER1_SN": "9BH0813WFWT",
+          "MTU": "1500",
+          "PEER1_IP": "",
+          "PEER1_CONF": "no shutdown",
+          "PEER2_V6IP": "fe80:0202::02",
+          "PEER2_DESC": "Description of dest",
+          "PEER1_V6IP": "fe80:0202::01",
+          "ENABLE_MACSEC": "false",
+          "PEER2_INTF": "Ethernet1/3",
+          "LINK_UUID": "LINK-UUID-1419180",
+          "PEER2_SN": "9ITWBH9OIAH",
+          "PEER2_IP": "",
+          "PEER2_CONF": "no shutdown",
+          "PEER1_BFD_ECHO_DISABLE": "false",
+          "ADMIN_STATE": "true",
+          "HOSTNAME1": "Switch1",
+          "HOSTNAME2": "Switch2"
+        },
+        "templateName": "int_intra_fabric_num_link",
+        "sw1-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "Ethernet1/3",
+          "sw-sys-name": "n9kv-ipv6-1",
+          "sw-serial-number": "9BH0813WFWT"
+        },
+        "fabricName": "mmudigon-ipv6-underlay"
+      }
+    },
+
+    "intra_have_link1_vpc_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links?switch1Sn=9M99N34RDED&switch2Sn=9NXHSNTEO6C&switch1IfName=Ethernet1/4&switch2IfName=Ethernet1/4",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1419030",
+        "sw2-info": {
+          "fabric-name": "mmudigon",
+          "if-name": "Ethernet1/4",
+          "sw-sys-name": "n9kv-200",
+          "sw-serial-number": "9NXHSNTEO6C"
+        },
+        "link-dbid": 1862750,
+        "nvPairs": {
+          "PEER2_DESC": "Description of dest",
+          "PEER2_INTF": "Ethernet1/4",
+          "PEER1_INTF": "Ethernet1/4",
+          "FABRIC2": "mmudigon",
+          "LINK_UUID": "LINK-UUID-1419030",
+          "FABRIC1": "mmudigon",
+          "PEER1_DESC": "Description of source",
+          "PEER2_SN": "9NXHSNTEO6C",
+          "PEER1_SN": "9M99N34RDED",
+          "MTU": "9216",
+          "PEER2_IP": "192.170.1.2",
+          "PEER2_CONF": "no shutdown",
+          "PEER1_IP": "192.170.1.1",
+          "ADMIN_STATE": "true",
+          "PEER1_CONF": "no shutdown",
+          "INTF_VRF": "test_vrf",
+          "HOSTNAME1": "Switch1",
+          "HOSTNAME2": "Switch2"
+        },
+        "templateName": "int_intra_vpc_peer_keep_alive_link",
+        "sw1-info": {
+          "fabric-name": "mmudigon",
+          "if-name": "ethernet1/4",
+          "sw-sys-name": "n9kv-100",
+          "sw-serial-number": "9M99N34RDED"
+        },
+        "fabricName": "mmudigon"
+      }
+    },
+
+    "inter_have_link1_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/links?switch1Sn=953E68OKK1L&switch2Sn=9E15XSEM5MS&switch1IfName=Ethernet1/3&switch2IfName=Ethernet1/3",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1446600",
+        "templateName": "ext_fabric_setup",
+        "sw2-info": {
+          "if-name": "ethernet1/3",
+          "sw-sys-name": "test22",
+          "sw-serial-number": "9E15XSEM5MS",
+          "fabric-name": "test_net"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/3",
+          "sw-sys-name": "n9kv-227",
+          "sw-serial-number": "953E68OKK1L"
+        },
+        "nvPairs": {
+          "SOURCE_IF_NAME": "Ethernet1/3",
+          "PEER2_DESC": "Description of dest",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "NEIGHBOR_IP": "193.168.1.2",
+          "VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython",
+          "PRIORITY": "500",
+          "AUTO_VRF_LITE_FLAG": "false",
+          "LINK_UUID": "LINK-UUID-1424200",
+          "DEST_FABRIC_NAME": "test_net",
+          "PEER1_DESC": "Description of source",
+          "IP_MASK": "193.168.1.1/24",
+          "DEST_SWITCH_NAME": "test22",
+          "MTU": "9216",
+          "NEIGHBOR_ASN": "1001",
+          "PEER2_CONF": "no shutdown",
+          "DEST_IF_NAME": "Ethernet1/3",
+          "DEST_SERIAL_NUMBER": "9E15XSEM5MS",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "PEER1_CONF": "no shutdown",
+          "asn": "1000"
+        }
+      }
+    },
+
+    "inter_have_link2_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/links?switch1Sn=953E68OKK1L&switch2Sn=9E15XSEM5MS&switch1IfName=Ethernet1/4&switch2IfName=Ethernet1/4",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1446600",
+        "templateName": "ext_multisite_underlay_setup",
+        "sw2-info": {
+          "if-name": "Ethernet1/4",
+          "sw-serial-number": "9E15XSEM5MS",
+          "fabric-name": "test_net",
+          "sw-sys-name": "test22"
+        },
+        "link-dbid": 1467700,
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/4",
+          "sw-serial-number": "953E68OKK1L",
+          "sw-sys-name": "n9kv-test3"
+        },
+        "nvPairs": {
+          "SOURCE_IF_NAME": "Ethernet1/4",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "NEIGHBOR_IP": "193.168.2.2",
+          "PRIORITY": "500",
+          "DEST_FABRIC_NAME": "test_net",
+          "PEER1_DESC": "Description of source",
+          "IP_MASK": "193.168.2.1/24",
+          "MTU": "9216",
+          "NEIGHBOR_ASN": "1201",
+          "DEST_SERIAL_NUMBER": "9E15XSEM5MS",
+          "BGP_PASSWORD_ENABLE": "true",
+          "PEER1_CONF": "no shutdown",
+          "MAX_PATHS": "1",
+          "PEER2_DESC": "Description of dest",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "LINK_UUID": "LINK-UUID-1424330",
+          "DEPLOY_DCI_TRACKING": "false",
+          "DEST_SWITCH_NAME": "test22",
+          "BGP_PASSWORD_INHERIT_FROM_MSD": "true",
+          "PEER2_CONF": "no shutdown",
+          "DEST_IF_NAME": "Ethernet1/4",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "asn": "1200",
+          "ROUTING_TAG": "12345"
+        }
+      }
+    },
+
+    "inter_have_link3_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/links?switch1Sn=953E68OKK1L&switch2Sn=9E15XSEM5MS&switch1IfName=Ethernet1/5&switch2IfName=Ethernet1/5",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1446600",
+        "templateName": "ext_evpn_multisite_overlay_setup",
+        "sw2-info": {
+          "if-name": "ethernet1/5",
+          "sw-serial-number": "9E15XSEM5MS",
+          "fabric-name": "test_net",
+          "sw-sys-name": "test22"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/5",
+          "sw-serial-number": "953E68OKK1L",
+          "sw-sys-name": "n9kv-test3"
+        },
+        "nvPairs": {
+          "TRM_ENABLED": "false",
+          "SOURCE_IF_NAME": "Ethernet1/5",
+          "BGP_AUTH_KEY_TYPE": "3",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "NEIGHBOR_IP": "193.168.3.2",
+          "LINK_UUID": "LINK-UUID-1424480",
+          "DEST_FABRIC_NAME": "test_net",
+          "BGP_PASSWORD": "17314053",
+          "DEST_SWITCH_NAME": "test22",
+          "NEIGHBOR_ASN": "1301",
+          "BGP_PASSWORD_INHERIT_FROM_MSD": "false",
+          "DEST_IF_NAME": "Ethernet1/5",
+          "DEST_SERIAL_NUMBER": "9E15XSEM5MS",
+          "BGP_MULTIHOP": "5",
+          "SOURCE_IP": "193.168.3.1",
+          "BGP_PASSWORD_ENABLE": "true",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "asn": "1300"
+        }
+      }
+    },
+
+    "inter_have_link4_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/links?switch1Sn=953E68OKK1L&switch2Sn=98YWRN9WCSC&switch1IfName=Ethernet1/6&switch2IfName=Ethernet1/6",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1446600",
+        "templateName": "ext_fabric_setup",
+        "sw2-info": {
+          "if-name": "Ethernet1/6",
+          "sw-serial-number": "98YWRN9WCSC",
+          "fabric-name": "test_net1",
+          "sw-sys-name": "n9kv-test1"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/6",
+          "sw-serial-number": "953E68OKK1L",
+          "sw-sys-name": "n9kv-test3"
+        },
+        "nvPairs": {
+          "SOURCE_IF_NAME": "Ethernet1/6",
+          "PEER2_DESC": "Description of dest",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "NEIGHBOR_IP": "193.168.4.2",
+          "VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython",
+          "AUTO_VRF_LITE_FLAG": "false",
+          "LINK_UUID": "LINK-UUID-1424530",
+          "DEST_FABRIC_NAME": "test_net1",
+          "PEER1_DESC": "Description of source",
+          "IP_MASK": "193.168.4.1/24",
+          "DEST_SWITCH_NAME": "n9kv-test1",
+          "MTU": "9216",
+          "NEIGHBOR_ASN": "1401",
+          "PEER2_CONF": "no shutdown",
+          "DEST_IF_NAME": "Ethernet1/6",
+          "DEST_SERIAL_NUMBER": "98YWRN9WCSC",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "PEER1_CONF": "no shutdown",
+          "asn": "1400"
+        }
+      }
+    },
+
+    "inter_have_link5_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/links?switch1Sn=953E68OKK1L&switch2Sn=98YWRN9WCSC&switch1IfName=Ethernet1/7&switch2IfName=Ethernet1/7",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1446600",
+        "templateName": "ext_multisite_underlay_setup",
+        "sw2-info": {
+          "if-name": "ethernet1/7",
+          "sw-serial-number": "98YWRN9WCSC",
+          "fabric-name": "test_net1",
+          "sw-sys-name": "n9kv-test1"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/7",
+          "sw-serial-number": "953E68OKK1L",
+          "sw-sys-name": "n9kv-test3"
+        },
+        "nvPairs": {
+          "SOURCE_IF_NAME": "Ethernet1/7",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "NEIGHBOR_IP": "193.168.5.2",
+          "PRIORITY": "500",
+          "DEST_FABRIC_NAME": "test_net1",
+          "PEER1_DESC": "Description of source",
+          "IP_MASK": "193.168.5.1/24",
+          "MTU": "9216",
+          "NEIGHBOR_ASN": "1501",
+          "DEST_SERIAL_NUMBER": "98YWRN9WCSC",
+          "BGP_PASSWORD_ENABLE": "true",
+          "PEER1_CONF": "no shutdown",
+          "MAX_PATHS": "1",
+          "PEER2_DESC": "Description of dest",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "LINK_UUID": "LINK-UUID-1424640",
+          "DEPLOY_DCI_TRACKING": "false",
+          "POLICY_ID": "POLICY-1468070",
+          "DEST_SWITCH_NAME": "n9kv-test1",
+          "BGP_PASSWORD_INHERIT_FROM_MSD": "true",
+          "PEER2_CONF": "no shutdown",
+          "DEST_IF_NAME": "Ethernet1/7",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "asn": "1500",
+          "ROUTING_TAG": "12345"
+        }
+      }
+    },
+
+    "inter_have_link6_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/links?switch1Sn=953E68OKK1L&switch2Sn=98YWRN9WCSC&switch1IfName=Ethernet1/8&switch2IfName=Ethernet1/8",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1446600",
+        "templateName": "ext_evpn_multisite_overlay_setup",
+        "sw2-info": {
+          "if-name": "Ethernet1/8",
+          "sw-serial-number": "98YWRN9WCSC",
+          "fabric-name": "test_net1",
+          "sw-sys-name": "n9kv-test1"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/8",
+          "sw-serial-number": "953E68OKK1L",
+          "sw-sys-name": "n9kv-test3"
+        },
+        "nvPairs": {
+          "TRM_ENABLED": "false",
+          "SOURCE_IF_NAME": "Ethernet1/8",
+          "BGP_AUTH_KEY_TYPE": "3",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "NEIGHBOR_IP": "193.168.6.2",
+          "LINK_UUID": "LINK-UUID-1424790",
+          "DEST_FABRIC_NAME": "test_net1",
+          "BGP_PASSWORD": "17314053",
+          "DEST_SWITCH_NAME": "n9kv-test1",
+          "NEIGHBOR_ASN": "1601",
+          "BGP_PASSWORD_INHERIT_FROM_MSD": "false",
+          "DEST_IF_NAME": "Ethernet1/8",
+          "DEST_SERIAL_NUMBER": "98YWRN9WCSC",
+          "BGP_MULTIHOP": "5",
+          "SOURCE_IP": "193.168.6.1",
+          "BGP_PASSWORD_ENABLE": "true",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "asn": "1600"
+        }
+      }
+    },
+    "inter_have_link7_num_fabric_response":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.64.78.151:443/rest/control/links?switch1Sn=953E68OKK1L&switch2Sn=98YWRN9WCSC&switch1IfName=Ethernet1/9&switch2IfName=Ethernet1/9",
+      "MESSAGE": "OK",
+      "DATA": {
+        "link-uuid": "LINK-UUID-1446600",
+        "sw2-info": {
+          "if-name": "ethernet1/9",
+          "sw-serial-number": "98YWRN9WCSC",
+          "fabric-name": "test_net1",
+          "sw-sys-name": "n9kv-test1"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/9",
+          "sw-serial-number": "953E68OKK1L",
+          "sw-sys-name": "n9kv-test3"
+        }
+      }
+    },
+
+    "merge_links_fabric_response":
+    {
+      "DATA": {
+        "linkUUID": "LINK-UUID-1446600",
+        "status": "Success"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links",
+      "RETURN_CODE": 200
+    },
+
+    "modify_replace_links_fabric_response":
+    {
+      "DATA": {
+        "linkUUID": "LINK-UUID-1446600",
+        "status": "Success"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links",
+      "RETURN_CODE": 200
+    },
+
+    "delete_links_fabric_response":
+    {
+      "DATA": {
+        "linkUUID": "LINK-UUID-1446600",
+        "status": "Success"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/LINK-UUID-1446600?isLogicalLink=false",
+      "RETURN_CODE": 200
+    },
+
+    "intra_query_links_num_fabric_response":
+    {
+      "MESSAGE": "OK",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/LINK-UUID-1446600?isLogicalLink=false",
+      "RETURN_CODE": 200,
+      "DATA": [
+      {
+        "fabricName": "mmudigon-numbered",
+        "link-uuid": "LINK-UUID-1446600",
+        "nvPairs": {
+        },
+        "policyId": "POLICY-1855130",
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/1",
+          "sw-serial-number": "9IF87L089SZ"
+        },
+        "sw2-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/1",
+          "sw-serial-number": "9FX7O3TU2QM"
+        },
+        "templateName": "int_intra_fabric_num_link"
+      },
+      {
+        "fabricName": "mmudigon-numbered",
+        "link-uuid": "LINK-UUID-1419150",
+        "nvPairs": {
+        },
+        "policyId": "POLICY-1855290",
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/2",
+          "sw-serial-number": "9IF87L089SZ"
+        },
+        "sw2-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/2",
+          "sw-serial-number": "9FX7O3TU2QM"
+        },
+        "templateName": "int_pre_provision_intra_fabric_link"
+      },
+      {
+        "fabricName": "mmudigon-numbered",
+        "link-uuid": "LINK-UUID-1419160",
+        "nvPairs": {
+        },
+        "policyId": "POLICY-1855310",
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/3",
+          "sw-serial-number": "9IF87L089SZ"
+        },
+        "sw2-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/3",
+          "sw-serial-number": "9FX7O3TU2QM"
+        },
+        "templateName": "ios_xe_int_intra_fabric_num_link"
+      }
+      ]
+    },
+
+    "intra_query_links_unnum_fabric_response":
+    {
+      "MESSAGE": "OK",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/LINK-UUID-1446600?isLogicalLink=false",
+      "RETURN_CODE": 200,
+      "DATA": [
+      {
+        "fabricName": "mmudigon-unnumbered",
+        "nvPairs": {
+          "ADMIN_STATE": "true",
+          "ENABLE_MACSEC": "false",
+          "FABRIC1": "mmudigon-unnumbered",
+          "FABRIC2": "mmudigon-unnumbered",
+          "HOSTNAME1": "Switch1",
+          "HOSTNAME2": "Switch2",
+          "MTU": "9216",
+          "PEER1_CONF": "",
+          "PEER1_DESC": "",
+          "PEER1_INTF": "Ethernet1/1",
+          "PEER1_SN": "9EFX823RUL3",
+          "PEER2_CONF": "",
+          "PEER2_DESC": "",
+          "PEER2_INTF": "Ethernet1/1",
+          "PEER2_SN": "9AF3VNZYAKS"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-unnumbered",
+          "if-name": "ethernet1/1",
+          "sw-serial-number": "9EFX823RUL3"
+        },
+        "sw2-info": {
+          "fabric-name": "mmudigon-unnumbered",
+          "if-name": "Ethernet1/1",
+          "sw-serial-number": "9AF3VNZYAKS"
+        },
+        "templateName": "int_intra_fabric_unnum_link"
+      },
+      {
+        "fabricName": "mmudigon-unnumbered",
+        "nvPairs": {
+        },
+        "policyId": "POLICY-1859300",
+        "sw1-info": {
+          "fabric-name": "mmudigon-unnumbered",
+          "if-name": "Ethernet1/2",
+          "sw-serial-number": "9EFX823RUL3"
+        },
+        "sw2-info": {
+          "fabric-name": "mmudigon-unnumbered",
+          "if-name": "ethernet1/2",
+          "sw-serial-number": "9AF3VNZYAKS"
+        },
+        "templateName": "int_pre_provision_intra_fabric_link"
+      }
+      ]
+
+    },
+
+    "intra_query_links_ipv6_fabric_response":
+    {
+      "MESSAGE": "OK",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/LINK-UUID-1446600?isLogicalLink=false",
+      "RETURN_CODE": 200,
+      "DATA": [
+      {
+        "fabricName": "mmudigon-ipv6-underlay",
+        "link-uuid": "LINK-UUID-1419050",
+        "nvPairs": {
+          "ADMIN_STATE": "true",
+          "ENABLE_MACSEC": "false",
+          "FABRIC1": "mmudigon-ipv6-underlay",
+          "FABRIC2": "mmudigon-ipv6-underlay",
+          "HOSTNAME1": "Switch1",
+          "HOSTNAME2": "Switch2",
+          "LINK_UUID": "LINK-UUID-1419050",
+          "MTU": "9216",
+          "PEER1_CONF": "",
+          "PEER1_DESC": "",
+          "PEER1_INTF": "Ethernet1/1",
+          "PEER1_SN": "9BH0813WFWT",
+          "PEER2_CONF": "",
+          "PEER2_DESC": "",
+          "PEER2_INTF": "Ethernet1/1",
+          "PEER2_SN": "9ITWBH9OIAH"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "ethernet1/1",
+          "if-op-reason": "Link not connected",
+          "sw-serial-number": "9BH0813WFWT"
+        },
+        "sw2-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "ethernet1/1",
+          "sw-serial-number": "9ITWBH9OIAH"
+        },
+        "templateName": "int_intra_fabric_ipv6_link_local"
+      },
+      {
+        "fabricName": "mmudigon-ipv6-underlay",
+        "link-uuid": "LINK-UUID-1419110",
+        "nvPairs": {
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "Ethernet1/2",
+          "sw-serial-number": "9BH0813WFWT"
+        },
+        "sw2-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "Ethernet1/2",
+          "sw-serial-number": "9ITWBH9OIAH"
+        },
+        "templateName": "int_pre_provision_intra_fabric_link"
+      },
+      {
+        "fabricName": "mmudigon-ipv6-underlay",
+        "link-uuid": "LINK-UUID-1419180",
+        "nvPairs": {
+          "ADMIN_STATE": "true",
+          "ENABLE_MACSEC": "false",
+          "FABRIC1": "mmudigon-ipv6-underlay",
+          "FABRIC2": "mmudigon-ipv6-underlay",
+          "HOSTNAME1": "Switch1",
+          "HOSTNAME2": "Switch2",
+          "LINK_UUID": "LINK-UUID-1419180",
+          "MTU": "9216",
+          "PEER1_BFD_ECHO_DISABLE": "false",
+          "PEER1_CONF": "",
+          "PEER1_DESC": "",
+          "PEER1_INTF": "Ethernet1/3",
+          "PEER1_IP": "",
+          "PEER1_SN": "9BH0813WFWT",
+          "PEER1_V6IP": "fe80:0202::01",
+          "PEER2_BFD_ECHO_DISABLE": "false",
+          "PEER2_CONF": "",
+          "PEER2_DESC": "",
+          "PEER2_INTF": "Ethernet1/3",
+          "PEER2_IP": "",
+          "PEER2_SN": "9ITWBH9OIAH",
+          "PEER2_V6IP": "fe80:0202::02"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "ethernet1/3",
+          "sw-serial-number": "9BH0813WFWT"
+        },
+        "sw2-info": {
+          "fabric-name": "mmudigon-ipv6-underlay",
+          "if-name": "Ethernet1/3",
+          "sw-serial-number": "9ITWBH9OIAH"
+        },
+        "templateName": "int_intra_fabric_num_link"
+      }]
+    },
+
+    "intra_query_links_vpc_response":
+    {
+      "MESSAGE": "OK",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/LINK-UUID-1446600?isLogicalLink=false",
+      "RETURN_CODE": 200,
+      "DATA": [
+      {
+        "fabricName": "mmudigon",
+        "nvPairs": {
+          "ADMIN_STATE": "true",
+          "FABRIC1": "mmudigon",
+          "FABRIC2": "mmudigon",
+          "HOSTNAME1": "Switch1",
+          "HOSTNAME2": "Switch2",
+          "INTF_VRF": "",
+          "LINK_UUID": "LINK-UUID-1419030",
+          "MTU": "9216",
+          "PEER1_CONF": "",
+          "PEER1_DESC": "",
+          "PEER1_INTF": "Ethernet1/4",
+          "PEER1_IP": "192.168.1.1",
+          "PEER1_SN": "9M99N34RDED",
+          "PEER2_CONF": "",
+          "PEER2_DESC": "",
+          "PEER2_INTF": "Ethernet1/4",
+          "PEER2_IP": "192.168.1.2",
+          "PEER2_SN": "9NXHSNTEO6C"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon",
+          "if-name": "ethernet1/4",
+          "sw-serial-number": "9M99N34RDED"
+        },
+        "sw2-info": {
+          "fabric-name": "mmudigon",
+          "if-name": "ethernet1/4",
+          "sw-serial-number": "9NXHSNTEO6C"
+        },
+        "templateName": "int_intra_vpc_peer_keep_alive_link"
+      }]
+    },
+
+    "inter_query_links_num_fabric_response":
+    {
+      "MESSAGE": "OK",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/LINK-UUID-1446600?isLogicalLink=false",
+      "RETURN_CODE": 200,
+      "DATA": [
+      {
+        "link-uuid": "LINK-UUID-1424790",
+        "nvPairs": {
+          "BGP_MULTIHOP": "5",
+          "BGP_PASSWORD_ENABLE": "true",
+          "BGP_PASSWORD_INHERIT_FROM_MSD": "true",
+          "DEST_FABRIC_NAME": "test_net1",
+          "DEST_IF_NAME": "Ethernet1/8",
+          "DEST_SERIAL_NUMBER": "98YWRN9WCSC",
+          "DEST_SWITCH_NAME": "n9kv-test1",
+          "LINK_UUID": "LINK-UUID-1424790",
+          "NEIGHBOR_ASN": "1601",
+          "NEIGHBOR_IP": "193.168.6.2",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "SOURCE_IF_NAME": "Ethernet1/8",
+          "SOURCE_IP": "193.168.6.1",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "TRM_ENABLED": "false",
+          "asn": "1600"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/8",
+          "sw-serial-number": "953E68OKK1L"
+        },
+        "sw2-info": {
+          "fabric-name": "test_net1",
+          "if-name": "ethernet1/8",
+          "sw-serial-number": "98YWRN9WCSC"
+        },
+        "templateName": "ext_evpn_multisite_overlay_setup"
+      },
+      {
+        "link-uuid": "LINK-UUID-1424640",
+        "nvPairs": {
+          "BGP_PASSWORD_ENABLE": "true",
+          "BGP_PASSWORD_INHERIT_FROM_MSD": "true",
+          "DEPLOY_DCI_TRACKING": "false",
+          "DEST_FABRIC_NAME": "test_net1",
+          "DEST_IF_NAME": "Ethernet1/7",
+          "DEST_SERIAL_NUMBER": "98YWRN9WCSC",
+          "DEST_SWITCH_NAME": "n9kv-test1",
+          "IP_MASK": "193.168.5.1/24",
+          "IS_METASWITCH": "false",
+          "LINK_UUID": "LINK-UUID-1424640",
+          "MAX_PATHS": "1",
+          "MTU": "9216",
+          "NEIGHBOR_ASN": "1501",
+          "NEIGHBOR_IP": "193.168.5.2",
+          "PEER1_CONF": "",
+          "PEER1_DESC": "",
+          "PEER2_CONF": "",
+          "PEER2_DESC": "",
+          "ROUTING_TAG": "",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "SOURCE_IF_NAME": "Ethernet1/7",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "asn": "1500"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/7",
+          "sw-serial-number": "953E68OKK1L"
+        },
+        "sw2-info": {
+          "fabric-name": "test_net1",
+          "if-name": "Ethernet1/7",
+          "sw-serial-number": "98YWRN9WCSC"
+        },
+        "templateName": "ext_multisite_underlay_setup"
+      },
+      {
+        "link-uuid": "LINK-UUID-1424530",
+        "nvPairs": {
+          "AUTO_VRF_LITE_FLAG": "false",
+          "DEST_FABRIC_NAME": "test_net1",
+          "DEST_IF_NAME": "Ethernet1/6",
+          "DEST_SERIAL_NUMBER": "98YWRN9WCSC",
+          "DEST_SWITCH_NAME": "n9kv-test1",
+          "IP_MASK": "193.168.4.1/24",
+          "LINK_UUID": "LINK-UUID-1424530",
+          "MTU": "9216",
+          "NEIGHBOR_ASN": "1401",
+          "NEIGHBOR_IP": "193.168.4.2",
+          "PEER1_CONF": "",
+          "PEER1_DESC": "",
+          "PEER2_CONF": "",
+          "PEER2_DESC": "",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "SOURCE_IF_NAME": "Ethernet1/6",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython",
+          "asn": "1400"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/6",
+          "sw-serial-number": "953E68OKK1L"
+        },
+        "sw2-info": {
+          "fabric-name": "test_net1",
+          "if-name": "Ethernet1/6",
+          "sw-serial-number": "98YWRN9WCSC"
+        },
+        "templateName": "ext_fabric_setup"
+      },
+      {
+        "link-uuid": "LINK-UUID-1424480",
+        "nvPairs": {
+          "BGP_MULTIHOP": "5",
+          "BGP_PASSWORD_ENABLE": "true",
+          "BGP_PASSWORD_INHERIT_FROM_MSD": "true",
+          "DEST_FABRIC_NAME": "test_net",
+          "DEST_IF_NAME": "Ethernet1/5",
+          "DEST_SERIAL_NUMBER": "9E15XSEM5MS",
+          "DEST_SWITCH_NAME": "test22",
+          "LINK_UUID": "LINK-UUID-1424480",
+          "NEIGHBOR_ASN": "1301",
+          "NEIGHBOR_IP": "193.168.3.2",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "SOURCE_IF_NAME": "Ethernet1/5",
+          "SOURCE_IP": "193.168.3.1",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "TRM_ENABLED": "false",
+          "asn": "1300"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/5",
+          "sw-serial-number": "953E68OKK1L"
+        },
+        "sw2-info": {
+          "fabric-name": "test_net",
+          "if-name": "ethernet1/5",
+          "sw-serial-number": "9E15XSEM5MS"
+        },
+        "templateName": "ext_evpn_multisite_overlay_setup"
+      },
+      {
+        "link-uuid": "LINK-UUID-1424330",
+        "nvPairs": {
+          "BGP_PASSWORD_ENABLE": "true",
+          "BGP_PASSWORD_INHERIT_FROM_MSD": "true",
+          "DEPLOY_DCI_TRACKING": "false",
+          "DEST_FABRIC_NAME": "test_net",
+          "DEST_IF_NAME": "Ethernet1/4",
+          "DEST_SERIAL_NUMBER": "9E15XSEM5MS",
+          "DEST_SWITCH_NAME": "test22",
+          "IP_MASK": "193.168.2.1/24",
+          "LINK_UUID": "LINK-UUID-1424330",
+          "MAX_PATHS": "1",
+          "MTU": "9216",
+          "NEIGHBOR_ASN": "1201",
+          "NEIGHBOR_IP": "193.168.2.2",
+          "PEER1_CONF": "",
+          "PEER1_DESC": "",
+          "PEER2_CONF": "",
+          "PEER2_DESC": "",
+          "ROUTING_TAG": "",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "SOURCE_IF_NAME": "Ethernet1/4",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "asn": "1200"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "ethernet1/4",
+          "sw-serial-number": "953E68OKK1L"
+        },
+        "sw2-info": {
+          "fabric-name": "test_net",
+          "if-name": "Ethernet1/4",
+          "sw-serial-number": "9E15XSEM5MS"
+        },
+        "templateName": "ext_multisite_underlay_setup"
+      },
+      {
+        "link-uuid": "LINK-UUID-1424200",
+        "nvPairs": {
+          "AUTO_VRF_LITE_FLAG": "false",
+          "DEST_FABRIC_NAME": "test_net",
+          "DEST_IF_NAME": "Ethernet1/3",
+          "DEST_SERIAL_NUMBER": "9E15XSEM5MS",
+          "DEST_SWITCH_NAME": "test22",
+          "IP_MASK": "193.168.1.1/24",
+          "LINK_UUID": "LINK-UUID-1424200",
+          "MTU": "9216",
+          "NEIGHBOR_ASN": "1001",
+          "NEIGHBOR_IP": "193.168.1.2",
+          "PEER1_CONF": "",
+          "PEER1_DESC": "",
+          "PEER2_CONF": "",
+          "PEER2_DESC": "",
+          "SOURCE_FABRIC_NAME": "mmudigon-numbered",
+          "SOURCE_IF_NAME": "Ethernet1/3",
+          "SOURCE_SERIAL_NUMBER": "953E68OKK1L",
+          "SOURCE_SWITCH_NAME": "n9kv-test3",
+          "VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython",
+          "asn": "1000"
+        },
+        "sw1-info": {
+          "fabric-name": "mmudigon-numbered",
+          "if-name": "Ethernet1/3",
+          "sw-serial-number": "953E68OKK1L"
+        },
+        "sw2-info": {
+          "fabric-name": "test_net",
+          "if-name": "ethernet1/3",
+          "sw-serial-number": "9E15XSEM5MS"
+        },
+        "templateName": "ext_fabric_setup"
+      }]
+    }
+}

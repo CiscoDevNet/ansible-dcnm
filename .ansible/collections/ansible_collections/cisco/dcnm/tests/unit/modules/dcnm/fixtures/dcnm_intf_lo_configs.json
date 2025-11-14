@@ -1,0 +1,351 @@
+{
+  "mock_fab_inv_data": {
+    "192.168.1.108": {
+      "logicalName": "n9kv-108",
+        "serialNumber": "SAL1819SAN8",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+    },
+      "192.168.1.109": {
+        "logicalName": "n9kv-109",
+        "serialNumber": "FOX1821H035",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "None",
+        "managable": "False"
+      }
+  },
+	"mock_ip_sn" : {
+		"192.168.1.109": "FOX1821H035",
+			"192.168.1.108": "SAL1819SAN8" 
+	},
+
+		"mock_vpc_sno" : {
+			"192.168.1.108" : "FOX1821H035~SAL1819SAN8",
+			"192.168.1.109" : "FOX1821H035~SAL1819SAN8"
+		},
+
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
+      }
+    },
+
+		"mock_vpc_resp" : {
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+			"DATA": {
+				"vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+			},
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+		},
+
+		"mock_succ_resp" : {
+			"DATA": {},
+			"MESSAGE": "OK",
+			"METHOD": "POST",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+			"RETURN_CODE": 200
+		},
+
+		"mock_deploy_resp" : {
+			"DATA": {},
+			"MESSAGE": "OK",
+			"METHOD": "POST",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface/deploy",
+			"RETURN_CODE": 200
+		},
+
+		"lo_merged_config": [
+		{
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"description": "loopback interface 100 configuration",
+				"sno": "SAL1819SAN8",
+				"cmds": [
+					"no shutdown"
+				],
+				"ipv4_addr": "100.10.10.1",
+				"mode": "lo",
+				"policy": "int_loopback_11_1",
+				"admin_state": "True",
+				"ifname": "Loopback100",
+				"route_tag": "",
+				"fabric": "test_fabric"
+			},
+			"type": "lo",
+			"name": "lo100",
+			"deploy": "True"
+		},
+		{
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"description": "loopback interface 101 configuration",
+				"sno": "SAL1819SAN8",
+				"cmds": [
+					"no shutdown"
+				],
+				"ipv4_addr": "101.10.10.1",
+				"mode": "lo",
+				"policy": "int_loopback_11_1",
+				"admin_state": "True",
+				"ifname": "Loopback101",
+				"route_tag": "",
+				"fabric": "test_fabric"
+			},
+			"type": "lo",
+			"name": "lo101",
+			"deploy": "True"
+		}],
+
+		"lo_replaced_config": [
+		{
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "fe80::01",
+				"int_vrf": "blue",
+				"description": "loopback interface 100 configuration - replaced",
+				"sno": "SAL1819SAN8",
+				"cmds": [
+					"no shutdown",
+					"no shutdown"
+				],
+				"ipv4_addr": "101.10.10.1",
+				"mode": "lo",
+				"policy": "int_loopback_11_1",
+				"admin_state": "False",
+				"ifname": "Loopback100",
+				"route_tag": "567",
+				"fabric": "test_fabric"
+			},
+			"type": "lo",
+			"name": "lo100",
+			"deploy": "True"
+		},
+		{
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "fe80::02",
+				"int_vrf": "red",
+				"description": "loopback interface 101 configuration - replaced",
+				"sno": "SAL1819SAN8",
+				"cmds": [
+					"no shutdown",
+					"no shutdown"
+				],
+				"ipv4_addr": "103.10.10.1",
+				"mode": "lo",
+				"policy": "int_loopback_11_1",
+				"admin_state": "False",
+				"ifname": "Loopback101",
+				"route_tag": "1234",
+				"fabric": "test_fabric"
+			},
+			"type": "lo",
+			"name": "lo101",
+			"deploy": "True"
+		}],
+
+		"lo_deleted_config": [
+		{
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"description": "loopback interface 100 configuration",
+				"sno": "SAL1819SAN8",
+				"cmds": [
+					"no shutdown"
+				],
+				"ipv4_addr": "100.10.10.1",
+				"mode": "lo",
+				"policy": "int_loopback_11_1",
+				"admin_state": "True",
+				"ifname": "Loopback100",
+				"route_tag": "",
+				"fabric": "test_fabric"
+			},
+			"type": "lo",
+			"name": "lo100",
+			"deploy": "True"
+		},
+		{
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"description": "loopback interface 101 configuration",
+				"sno": "SAL1819SAN8",
+				"cmds": [
+					"no shutdown"
+				],
+				"ipv4_addr": "101.10.10.1",
+				"mode": "lo",
+				"policy": "int_loopback_11_1",
+				"admin_state": "True",
+				"ifname": "Loopback101",
+				"route_tag": "",
+				"fabric": "test_fabric"
+			},
+			"type": "lo",
+			"name": "lo101",
+			"deploy": "True"
+		}],
+
+		"lo_overridden_config": [
+		{
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"description": "loopback interface 110 configuration",
+				"sno": "SAL1819SAN8",
+				"cmds": [
+					"no shutdown"
+				],
+				"ipv4_addr": "110.10.10.1",
+				"mode": "lo",
+				"policy": "int_loopback_11_1",
+				"admin_state": "True",
+				"ifname": "Loopback110",
+				"route_tag": "",
+				"fabric": "test_fabric"
+			},
+			"type": "lo",
+			"name": "lo100",
+			"deploy": "True"
+		},
+		{
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"description": "loopback interface 111 configuration",
+				"sno": "SAL1819SAN8",
+				"cmds": [
+					"no shutdown"
+				],
+				"ipv4_addr": "111.10.10.1",
+				"mode": "lo",
+				"policy": "int_loopback_11_1",
+				"admin_state": "True",
+				"ifname": "Loopback111",
+				"route_tag": "",
+				"fabric": "test_fabric"
+			},
+			"type": "lo",
+			"name": "lo101",
+			"deploy": "True"
+		}],
+
+		"lo_merged_existing_config": [
+		{
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "",
+        "ipv4_addr": "1.1.1.100",
+				"int_vrf": "",
+				"sno": "SAL1819SAN8",
+				"mode": "lo",
+				"policy": "int_loopback_11_1",
+				"ifname": "Loopback100",
+				"fabric": "test_fabric"
+			},
+			"type": "lo",
+			"name": "lo100",
+			"deploy": "True"
+		}],
+
+		"lo_overridden_non_existing_config": [
+		{
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"description": "loopback interface 900 configuration",
+				"sno": "SAL1819SAN8",
+				"cmds": [
+					"no shutdown"
+				],
+				"ipv4_addr": "15.15.15.1",
+				"mode": "lo",
+				"policy": "int_loopback_11_1",
+				"admin_state": "True",
+				"ifname": "Loopback900",
+				"route_tag": "",
+				"fabric": "test_fabric"
+			},
+			"type": "lo",
+			"name": "lo900",
+			"deploy": "True"
+		}],
+
+		"lo_overridden_existing_config": [
+		{
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"description": "loopback interface 200 configuration",
+				"sno": "SAL1819SAN8",
+				"cmds": [
+					"no shutdown"
+				],
+				"ipv4_addr": "15.15.15.1",
+				"mode": "lo",
+				"policy": "int_loopback_11_1",
+				"admin_state": "True",
+				"ifname": "Loopback200",
+				"route_tag": "",
+				"fabric": "test_fabric"
+			},
+			"type": "lo",
+			"name": "lo200",
+			"deploy": "True"
+		}]
+}

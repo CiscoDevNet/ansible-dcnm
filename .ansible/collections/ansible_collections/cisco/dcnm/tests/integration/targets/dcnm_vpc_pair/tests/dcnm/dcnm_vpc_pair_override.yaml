@@ -1,0 +1,291 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: OVERRIDDEN - Test Entry Point - [dcnm_vpc_pair]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [dcnm_vpc_pair]               +"
+      - "----------------------------------------------------------------"
+  tags: overridden
+
+##############################################
+##      Create Dictionary of Test Data      ##
+##############################################
+- name: OVERRIDDEN - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    # some cases are for a specific deploy state
+    deploy_local: true
+
+    test_data_overridden:
+      # ----------------------------------
+      # config templates and auto generated file location for test cases
+      # ----------------------------------
+      # TC1 - Initial VPC Pair Configuration for override
+      vpc_pair_initial_template: "overridden/dcnm_vpc_pair_overridden_initial_conf.j2"
+      vpc_pair_initial_file: "{{ role_path }}/files/dcnm_vpc_pair_overridden_initial_conf.yaml"
+      # ----------------------------------
+      # TC2 - Overridden VPC Pair Configuration
+      vpc_pair_overridden_template: "overridden/dcnm_vpc_pair_overridden_conf.j2"
+      vpc_pair_overridden_file: "{{ role_path }}/files/dcnm_vpc_pair_overridden_conf.yaml"
+  delegate_to: localhost
+  tags: overridden
+
+##############################################
+## Create Module Payloads using J2 Template ##
+##############################################
+
+- name: OVERRIDDEN - Create Config file from j2 for initial config
+  ansible.builtin.template:
+    src: "{{ test_data_overridden.vpc_pair_initial_template }}"
+    dest: "{{ test_data_overridden.vpc_pair_initial_file }}"
+  delegate_to: localhost
+  tags: overridden
+
+- name: OVERRIDDEN - Create Config file from j2 for overridden config
+  ansible.builtin.template:
+    src: "{{ test_data_overridden.vpc_pair_overridden_template }}"
+    dest: "{{ test_data_overridden.vpc_pair_overridden_file }}"
+  delegate_to: localhost
+  tags: overridden
+
+##############################################
+##                OVERRIDDEN               ##
+##############################################
+
+# TC1 - Override with a new VPC switch pair
+- name: OVERRIDDEN - TC1 - DELETED - Clean up any existing VPC pairs
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: overridden
+
+- name: OVERRIDDEN - TC1 - Load VPC Pair Initial Config File
+  ansible.builtin.set_fact:
+    dcnm_vpc_pair_initial_conf: "{{ lookup('file', '{{ test_data_overridden.vpc_pair_initial_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: overridden
+
+- name: OVERRIDDEN - TC1 - OVERRIDDEN - Create VPC Pair using overridden state
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: overridden
+    config: "{{ dcnm_vpc_pair_initial_conf }}"
+  register: result
+  tags: overridden
+
+- name: OVERRIDDEN - TC1 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+      - '(result["diff"][0]["merged"] | length) == 1'
+      - '(result["diff"][0]["modified"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'
+      - '(result["diff"][0]["deploy"] | length) == 1'
+  tags: overridden
+
+- name: OVERRIDDEN - TC1 - QUERY - Get VPC pair state in NDFC
+  cisco.dcnm.dcnm_vpc_pair:
+    state: query
+    src_fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: overridden
+
+- name: OVERRIDDEN - TC1 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_overridden.vpc_pair_initial_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: overridden
+
+# - name: OVERRIDDEN - TC1 - ASSERT - Check response codes
+#   assert:
+#     that:
+#       - 'item["RETURN_CODE"] == 200'
+#   loop: '{{ result.response }}'
+#   tags: overridden
+
+# TC2 - Override with same VPC switch pair with changes
+- name: OVERRIDDEN - TC2 - Load VPC Pair Overridden Config File
+  ansible.builtin.set_fact:
+    dcnm_vpc_pair_overridden_conf: "{{ lookup('file', '{{ test_data_overridden.vpc_pair_overridden_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: overridden
+
+- name: OVERRIDDEN - TC2 - OVERRIDDEN - Override VPC Pair with changes
+  cisco.dcnm.dcnm_vpc_pair: &conf_overridden
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: overridden
+    config: "{{ dcnm_vpc_pair_overridden_conf }}"
+  register: result
+  tags: overridden
+
+- name: OVERRIDDEN - TC2 - ASSERT - Check if changed flag is true for LANClassic
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+      - '(result["diff"][0]["merged"] | length) == 0'
+      - '(result["diff"][0]["modified"] | length) == 1'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'
+      - '(result["diff"][0]["deploy"] | length) == 1'
+  when: (fabric_type == "LANClassic")
+  tags: overridden
+
+- name: OVERRIDDEN - TC2 - ASSERT - Check if changed flag is false for VXLANFabric
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+      - '(result["diff"][0]["merged"] | length) == 0'
+      - '(result["diff"][0]["modified"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'
+      - '(result["diff"][0]["deploy"] | length) == 0'
+  when: (fabric_type == "VXLANFabric")
+  tags: overridden
+
+- name: OVERRIDDEN - TC2 - QUERY - Get VPC pair state in NDFC
+  cisco.dcnm.dcnm_vpc_pair:
+    state: query
+    src_fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: overridden
+
+- name: OVERRIDDEN - TC2 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_overridden.vpc_pair_overridden_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  when: (fabric_type == "LANClassic")
+  tags: overridden
+
+# - name: OVERRIDDEN - TC2 - ASSERT - Check response codes
+#   assert:
+#     that:
+#       - 'item["RETURN_CODE"] == 200'
+#   loop: '{{ result.response }}'
+#   tags: overridden
+
+# TC3 - Idempotence test
+- name: OVERRIDDEN - TC3 - conf - Idempotence
+  cisco.dcnm.dcnm_vpc_pair: *conf_overridden
+  register: result
+  tags: overridden
+
+- name: OVERRIDDEN - TC3 - ASSERT - Check if changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+      - '(result["diff"][0]["merged"] | length) == 0'
+      - '(result["diff"][0]["modified"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'
+      - '(result["diff"][0]["deploy"] | length) == 0'
+  tags: overridden
+
+# TC4 - Override existing VPC pair with no config (delete all)
+- name: OVERRIDDEN - TC4 - OVERRIDDEN - Delete all VPC pairs via override with no config
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: overridden
+    templates:
+      - vpc_pair
+  register: result
+  tags: overridden
+
+- name: OVERRIDDEN - TC4 - ASSERT - Check if deletion successful
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+      - '(result["diff"][0]["merged"] | length) == 0'
+      - '(result["diff"][0]["modified"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 1'
+      - '(result["diff"][0]["query"] | length) == 0'
+      - '(result["diff"][0]["deploy"] | length) == 0'
+  tags: overridden
+
+- name: OVERRIDDEN - TC4 - QUERY - Get VPC pair state in NDFC
+  cisco.dcnm.dcnm_vpc_pair:
+    state: query
+    src_fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: overridden
+
+- name: OVERRIDDEN - TC4 - VALIDITY CHECK - Verify VPC pair deletion via override
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: ""
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+    check_deleted: true
+  tags: overridden
+
+# - name: OVERRIDDEN - TC4 - ASSERT - Check response codes
+#   assert:
+#     that:
+#       - 'item["RETURN_CODE"] == 200'
+#   loop: '{{ result.response }}'
+#   tags: overridden
+
+# TC5 - Query to verify deletion
+- name: OVERRIDDEN - TC5 - QUERY - Verify VPC pair deletion
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: query
+    config:
+      - peerOneId: "{{ test_data_common.sw1 }}"
+        peerTwoId: "{{ test_data_common.sw2 }}"
+  register: result
+  until:
+    - '(result["response"] | length) == 0'
+  retries: 30
+  delay: 5
+  tags: overridden
+
+# TC6 - Override with no VPC pair and no config (should be no-op)
+- name: OVERRIDDEN - TC6 - OVERRIDDEN - Override with no VPC pairs (no-op)
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: overridden
+    templates:
+      - vpc_pair
+  register: result
+  tags: overridden
+
+- name: OVERRIDDEN - TC6 - ASSERT - Check if no change occurred
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+      - '(result["diff"][0]["merged"] | length) == 0'
+      - '(result["diff"][0]["modified"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'
+      - '(result["diff"][0]["deploy"] | length) == 0'
+  tags: overridden
+
+- name: OVERRIDDEN - TC6 - QUERY - Get VPC pair state in NDFC
+  cisco.dcnm.dcnm_vpc_pair:
+    state: query
+    src_fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: overridden
+
+- name: OVERRIDDEN - TC6 - VALIDITY CHECK - Verify no-op override
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: ""
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+    check_deleted: true
+  tags: overridden
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: OVERRIDDEN - END - remove VPC pairs
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  when: it_context is not defined
+  tags: overridden

@@ -1,0 +1,264 @@
+{
+  "mock_fab_inv_data": {
+    "192.168.1.108": {
+      "logicalName": "n9kv-108",
+        "serialNumber": "SAL1819SAN8",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+    },
+      "192.168.1.109": {
+        "logicalName": "n9kv-109",
+        "serialNumber": "FOX1821H035",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "None",
+        "managable": "False"
+      }
+  },
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
+      }
+    },
+
+    "mock_ip_sn" : {
+     "192.168.1.109": "FOX1821H035",
+     "192.168.1.108": "SAL1819SAN8" 
+    },
+
+    "mock_vpc_sno" : {
+      "192.168.1.108" : "FOX1821H035~SAL1819SAN8",
+      "192.168.1.109" : "FOX1821H035~SAL1819SAN8"
+    },
+
+		"mock_vpc_resp" : {
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+			"DATA": {
+				"vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+			},
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+		},
+
+    "mock_succ_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+      "RETURN_CODE": 200
+    },
+
+    "mock_deploy_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface/deploy",
+      "RETURN_CODE": 200
+    },
+
+    "svi_state_missing_config" : [
+    {
+      "name": "vlan1001",
+      "profile": {
+        "admin_state": true,
+        "adv_subnet_in_underlay": true,
+        "cmds": [
+          "no shutdown"
+        ],
+        "description": "Switched vlan interface 1001",
+        "dhcp_server_addr1": "192.200.1.1",
+        "dhcp_server_addr2": "192.200.1.2",
+        "dhcp_server_addr3": "192.200.1.3",
+        "disable_ip_redirects": true,
+        "enable_hsrp": true,
+        "enable_netflow": false,
+        "hsrp_group": 10,
+        "hsrp_priority": 5,
+        "hsrp_version": 1,
+        "hsrp_vip": "192.168.2.100",
+        "hsrp_vmac": "0000.0101.ac0a",
+        "int_vrf": "blue",
+        "ipv4_addr": "192.168.2.1",
+        "ipv4_mask_len": 24,
+        "mode": "vlan",
+        "mtu": 9216,
+        "netflow_monitor": "svi1001",
+        "preempt": true,
+        "route_tag": 1001,
+        "vrf_dhcp1": "blue",
+        "vrf_dhcp2": "blue",
+        "vrf_dhcp3": "blue"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "svi"
+    }],
+
+    "svi_type_missing_config" : [
+    {
+      "name": "vlan1001",
+      "profile": {
+        "admin_state": true,
+        "adv_subnet_in_underlay": true,
+        "cmds": [
+          "no shutdown"
+        ],
+        "description": "Switched vlan interface 1001",
+        "dhcp_server_addr1": "192.200.1.1",
+        "dhcp_server_addr2": "192.200.1.2",
+        "dhcp_server_addr3": "192.200.1.3",
+        "disable_ip_redirects": true,
+        "enable_hsrp": true,
+        "enable_netflow": false,
+        "hsrp_group": 10,
+        "hsrp_priority": 5,
+        "hsrp_version": 1,
+        "hsrp_vip": "192.168.2.100",
+        "hsrp_vmac": "0000.0101.ac0a",
+        "int_vrf": "blue",
+        "ipv4_addr": "192.168.2.1",
+        "ipv4_mask_len": 24,
+        "mode": "vlan",
+        "mtu": 9216,
+        "netflow_monitor": "svi1001",
+        "preempt": true,
+        "route_tag": 1001,
+        "vrf_dhcp1": "blue",
+        "vrf_dhcp2": "blue",
+        "vrf_dhcp3": "blue"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "svi"
+    }],
+
+    "svi_merged_config" : [
+    {
+      "name": "vlan1001",
+      "profile": {
+        "admin_state": true,
+        "adv_subnet_in_underlay": true,
+        "cmds": [
+          "no shutdown"
+        ],
+        "description": "Switched vlan interface 1001",
+        "dhcp_server_addr1": "192.200.1.1",
+        "dhcp_server_addr2": "192.200.1.2",
+        "dhcp_server_addr3": "192.200.1.3",
+        "disable_ip_redirects": true,
+        "enable_hsrp": true,
+        "enable_netflow": false,
+        "hsrp_group": 10,
+        "hsrp_priority": 5,
+        "hsrp_version": 1,
+        "hsrp_vip": "192.168.2.100",
+        "hsrp_vmac": "0000.0101.ac0a",
+        "int_vrf": "blue",
+        "ipv4_addr": "192.168.2.1",
+        "ipv4_mask_len": 24,
+        "mode": "vlan",
+        "mtu": 9216,
+        "netflow_monitor": "",
+        "preempt": true,
+        "route_tag": 1001,
+        "vrf_dhcp1": "blue",
+        "vrf_dhcp2": "blue",
+        "vrf_dhcp3": "blue"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "svi"
+    }],
+
+    "svi_deleted_existing_config" : [
+    {
+      "name": "vlan1001",
+      "type": "svi",
+      "switch": [
+        "192.168.1.108"
+      ]
+    }],
+
+    "svi_deleted_non_existing_config" : [
+    {
+      "name": "vlan1111",
+      "type": "svi",
+      "switch": [
+        "192.168.1.108"
+      ]
+    }],
+
+    "svi_replaced_config" : [
+    {
+      "name": "vlan1001",
+      "profile": {
+        "admin_state": false,
+        "adv_subnet_in_underlay": false,
+        "cmds": [
+          "no shutdown"
+        ],
+        "description": "Switched vlan interface 1001 - REP",
+        "dhcp_server_addr1": "192.201.1.1",
+        "dhcp_server_addr2": "192.201.1.2",
+        "dhcp_server_addr3": "192.201.1.3",
+        "disable_ip_redirects": false,
+        "enable_hsrp": true,
+        "enable_netflow": false,
+        "hsrp_group": 11,
+        "hsrp_priority": 6,
+        "hsrp_version": 1,
+        "hsrp_vip": "192.168.3.100",
+        "hsrp_vmac": "0000.0102.ac0a",
+        "int_vrf": "green",
+        "ipv4_addr": "192.168.3.1",
+        "ipv4_mask_len": 24,
+        "mode": "vlan",
+        "mtu": 3216,
+        "netflow_monitor": "svi1002",
+        "preempt": false,
+        "route_tag": 1002,
+        "vrf_dhcp1": "green",
+        "vrf_dhcp2": "green",
+        "vrf_dhcp3": "green"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "svi"
+    }],
+
+    "svi_overridden_config" : [
+    {
+      "name": "vlan1010",
+      "profile": {
+        "admin_state": false,
+        "mode": "vlan"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "svi"
+    }]
+}

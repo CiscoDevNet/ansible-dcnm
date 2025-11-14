@@ -1,0 +1,29 @@
+---
+# This playbook can be used to execute integration tests for
+# the role located in:
+#
+# tests/integration/targets/dcnm_image_policy
+#
+# Modify the hosts and vars sections with details for your testing
+# setup and uncomment the testcase you want to run.
+#
+- name: Play for dcnm
+  hosts: dcnm
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    # testcase: "*merge*"
+    it_context: true
+    test_data_common:
+      switch_username: admin
+      switch_password: "password"
+      fabric: fabric-stage
+      sw1: 192.168.10.1
+      sw2: 192.168.10.2
+      peer1_ip: 192.168.10.1
+      peer2_ip: 192.168.10.2
+      vpc_domain_id: 1000
+
+  roles:
+    - dcnm_vpc_pair

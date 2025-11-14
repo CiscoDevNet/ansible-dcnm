@@ -1,0 +1,59 @@
+{
+    "test_image_upgrade_image_policy_action_00030a": {
+        "RETURN_CODE": 200,
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy?serialNumber=FDO21120U5D,FDO211218GC,FOX2109PGD0",
+        "MESSAGE": "OK",
+        "DATA": "Successfully detach the policy from device."
+    },
+    "test_image_upgrade_image_policy_action_00031a": {
+        "RETURN_CODE": 500,
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy?serialNumber=FDO21120U5D,FDO211218GC,FOX2109PGD0",
+        "MESSAGE": "NOK",
+        "DATA": "Failed to detach the policy from device."
+    },
+    "test_image_upgrade_image_policy_action_00040a": {
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/attach-policy",
+        "MESSAGE": "OK",
+        "DATA": "[cvd-1313-leaf:Success]"
+    },
+    "test_image_upgrade_image_policy_action_00041a": {
+        "RETURN_CODE": 500,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/attach-policy",
+        "MESSAGE": "NOK",
+        "DATA": "[cvd-1313-leaf:Failed to attach policy to device.]"
+    },
+    "test_image_upgrade_image_policy_action_00050a": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443//appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/image-policy/KR5M",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "policyName": "KR5M",
+                "policyType": "PLATFORM",
+                "nxosVersion": "10.2.5_nxos64-cs_64bit",
+                "packageName": "",
+                "platform": "N9K/N3K",
+                "policyDescr": "KR5M",
+                "platformPolicies": "",
+                "epldImgName": "n9000-epld.10.2.5.M.img",
+                "imageName": "nxos64-cs.10.2.5.M.bin",
+                "agnostic": false,
+                "fabricPolicyName": "",
+                "unInstall": false
+            }
+        ]
+    },
+    "test_image_upgrade_image_policy_action_00051a": {
+        "RETURN_CODE": 500,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443//appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/image-policy/KR5M",
+        "MESSAGE": "NOK",
+        "DATA": []
+    }
+}

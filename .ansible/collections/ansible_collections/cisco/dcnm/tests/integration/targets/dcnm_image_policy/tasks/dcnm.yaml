@@ -1,0 +1,22 @@
+---
+- name: Collect dcnm test cases
+  ansible.builtin.find:
+    paths: "{{ role_path }}/tests"
+    patterns: "{{ testcase }}.yaml"
+  connection: local
+  register: dcnm_cases
+
+- name: Set fact
+  ansible.builtin.set_fact:
+    test_cases:
+      files: "{{ dcnm_cases.files }}"
+
+- name: Set test_items
+  ansible.builtin.set_fact:
+    test_items: "{{ test_cases.files | map(attribute='path') | list }}"
+
+- name: Run test cases (connection=httpapi)
+  ansible.builtin.include_tasks: "{{ test_case_to_run }}"
+  with_items: "{{ test_items }}"
+  loop_control:
+    loop_var: test_case_to_run

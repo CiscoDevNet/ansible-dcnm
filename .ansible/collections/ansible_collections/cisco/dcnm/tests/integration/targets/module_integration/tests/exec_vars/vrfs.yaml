@@ -1,0 +1,23 @@
+---
+vrfs:
+  - vrf_name: green_red
+    vrf_id: 470000
+    vrf_template: Default_VRF_Universal
+    vrf_extension_template: Default_VRF_Extension_Universal
+    vlan_id: 201
+    source: null
+    service_vrf_template: null
+  - vrf_name: engineering
+    vrf_id: 480000
+    vrf_template: Default_VRF_Universal
+    vrf_extension_template: Default_VRF_Extension_Universal
+    vlan_id: 401
+    source: null
+    service_vrf_template: null
+  - vrf_name: sales
+    vrf_id: 550000
+    vrf_template: Default_VRF_Universal
+    vrf_extension_template: Default_VRF_Extension_Universal
+    vlan_id: 501
+    source: null
+    service_vrf_template: null

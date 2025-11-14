@@ -1,0 +1,12 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: vpc150
+  type: aa_fex
+  switch:
+    - "{{ test_data_common.switch1 }}"
+    - "{{ test_data_common.switch2 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: port_channel_aa

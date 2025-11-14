@@ -1,0 +1,31 @@
+{
+    "test_image_validate_00930a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 500",
+            "MESSAGE == INTERNAL SERVER ERROR"
+        ],
+        "RETURN_CODE": 500,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image",
+        "MESSAGE": "INTERNAL SERVER ERROR",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+           ],
+            "message": ""
+        }
+    },
+    "test_image_validate_00940a": {
+        "TEST_NOTES": [],
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+           ],
+            "message": ""
+        }
+    }
+}

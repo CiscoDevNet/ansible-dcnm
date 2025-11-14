@@ -1,0 +1,33 @@
+{
+    "TEST_NOTES": [
+        "Mocked EpMaintenanceModeEnable() responses.",
+        "tests/unit/modules/dcnm/dcnm_maintenance_mode/test_dcnm_maintenance_mode_merged.py"
+    ],
+    "test_dcnm_maintenance_mode_merged_00100a": {
+        "DATA": {
+            "status": "Success"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/VXLAN_EVPN_Fabric/switches/FD2222222GA/maintenance-mode",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_merged_00100b": {
+        "DATA": {
+            "status": "Success"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/VXLAN_EVPN_Fabric/switches/FD3333333GA/maintenance-mode",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_merged_00300a": {
+        "DATA": {
+            "status": "Success"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/VXLAN_EVPN_Fabric/switches/FD3333333GA/maintenance-mode",
+        "RETURN_CODE": 200
+    }
+}

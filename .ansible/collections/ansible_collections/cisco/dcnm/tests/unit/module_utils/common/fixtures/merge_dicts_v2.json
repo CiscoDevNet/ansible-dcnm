@@ -1,0 +1,147 @@
+{
+    "test_merge_dicts_v2_00500": {
+        "TEST_NOTES": [
+            "keys from dict1 and dict2 are different",
+            "keys from dict1 and dict2 are merged unchanged."
+        ],
+        "dict1": {
+            "foo": 1
+        },
+        "dict2": {
+            "bar": 3
+        },
+        "dict_merged": {
+            "foo": 1,
+            "bar": 3
+        }
+    },
+    "test_merge_dicts_v2_00510": {
+        "TEST_NOTES": [
+            "dict1 and dict2 keys are the same",
+            "dict2 overwrites dict1"
+        ],
+        "dict1": {
+            "foo": 1
+        },
+        "dict2": {
+            "foo": 2
+        },
+        "dict_merged": {
+            "foo": 2
+        }
+    },
+    "test_merge_dicts_v2_00520": {
+        "TEST_NOTES": [
+            "dict1 and dict2 keys are the same",
+            "dict2 overwrites dict1, even though dict1 keys value is a dict"
+        ],
+        "dict1": {
+            "foo": {
+                "bar": 1
+            }
+        },
+        "dict2": {
+            "foo": 2
+        },
+        "dict_merged": {
+            "foo": 2
+        }
+    },
+    "test_merge_dicts_v2_00530": {
+        "TEST_NOTES": [
+            "dict1 and dict2 contain the same top-level keys",
+            "these keys both have a value that is a dict",
+            "dict1 nested-dict keys are the same as dict2 nested-dict keys",
+            "dict_merged nested-dict keys contain the values from dict2"
+        ],
+        "dict1": {
+            "foo": {
+                "bar": 1,
+                "baz": 1
+            }
+        },
+        "dict2": {
+            "foo": {
+                "bar": 2,
+                "baz": 2
+            }
+        },
+        "dict_merged": {
+            "foo": {
+                "bar": 2,
+                "baz": 2
+            }
+        }
+    },
+    "test_merge_dicts_v2_00540": {
+        "TEST_NOTES": [
+            "dict1 and dict2 contain the same top-level keys",
+            "these keys both have a value that is a dict",
+            "dict1 nested-dict keys are different from dict2 nested-dict keys",
+            "dict_merged contains all keys from dict1 and dict2 with values unchanged"
+        ],
+        "dict1": {
+            "foo": {
+                "bar": 1
+            }
+        },
+        "dict2": {
+            "foo": {
+                "baz": 2
+            }
+        },
+        "dict_merged": {
+            "foo": {
+                "bar": 1,
+                "baz": 2
+            }
+        }
+    },
+    "test_merge_dicts_v2_00550": {
+        "TEST_NOTES": [
+            "dict1 is empty",
+            "dict2 overwrites dict1",
+            "dict_merged == dict2"
+        ],
+        "dict1": {},
+        "dict2": {
+            "foo": 3,
+            "baz": {
+                "bar": 10,
+                "key1": "value1",
+                "key2": "value2"
+            } 
+        },
+        "dict_merged": {
+            "foo": 3,
+            "baz": {
+                "bar": 10,
+                "key1": "value1",
+                "key2": "value2"
+            }
+        }
+    },
+    "test_merge_dicts_v2_00560": {
+        "TEST_NOTES": [
+            "dict2 is empty",
+            "dict_merge == dict1"
+        ],
+        "dict1": {
+            "foo": 3,
+            "baz": {
+                "bar": 10,
+                "key1": "value1",
+                "key2": "value2"
+            }
+        },
+        "dict2": {},
+        "dict_merged": {
+            "foo": 3,
+            "baz": {
+                "bar": 10,
+                "key1": "value1",
+                "key2": "value2"
+            }
+        }
+    }
+}

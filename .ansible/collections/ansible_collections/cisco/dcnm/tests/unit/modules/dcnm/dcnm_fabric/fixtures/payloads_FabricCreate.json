@@ -1,0 +1,70 @@
+{
+    "TEST_NOTES": [
+        "Mocked payloads for FabricCreateBulk unit tests.",
+        "tests/unit/modules/dcnm/dcnm_fabric/test_fabric_create.py"
+    ],
+    "test_fabric_create_00020a": {
+            "TEST_NOTES": [
+                "Valid payload"
+            ],
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_fabric_create_00023a": {
+        "TEST_NOTES": [
+            "Valid payload"
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_fabric_create_00025a": {
+        "TEST_NOTES": [
+            "FABRIC_TYPE value is invalid"
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "INVALID_FABRIC_TYPE"
+    },
+    "test_fabric_create_00026a": {
+        "TEST_NOTES": [
+            "Valid payload"
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_fabric_create_00030a": {
+        "TEST_NOTES": [
+            "Valid payload"
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_fabric_create_00031a": {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_fabric_create_00032a": {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_fabric_create_00033a": {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "ANYCAST_GW_MAC": "00:12:34:56:78:9"
+    }
+}

@@ -1,0 +1,205 @@
+{
+    "TEST_NOTES": [
+        "Mocked payloads for ImagePolicyUpdate unit tests.",
+        "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_update_bulk.py"
+    ],
+    "test_image_policy_update_bulk_00020a": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.2.F.img",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "image policy of 10.3(3)F",
+            "policyName": "FOO",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        }
+    ],
+    "test_image_policy_update_bulk_00021a": {
+        "agnostic": false,
+        "epldImgName": "n9000-epld.10.3.2.F.img",
+        "nxosVersion": "10.3.1_nxos64-cs_64bit",
+        "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+        "platform": "N9K",
+        "policyDescr": "image policy of 10.3(3)F",
+        "policyName": "FOO",
+        "policyType": "PLATFORM",
+        "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+    },
+    "test_image_policy_update_bulk_00022a": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.2.F.img",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "image policy of 10.3(3)F",
+            "policyName": "FOO",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        }
+    ],
+    "test_image_policy_update_bulk_00022b": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.2.F.img",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "image policy of 10.3(3)F",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        }
+    ],
+    "test_image_policy_update_bulk_00022c": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.2.F.img",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "image policy of 10.3(3)F",
+            "policyName": "FOO",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        }
+    ],
+    "test_image_policy_update_bulk_00023a": ["IM_A_STRING_BUT_SHOULD_BE_A_DICT"],
+    "test_image_policy_update_bulk_00030a": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.2.5.M.img",
+            "nxosVersion": "10.2.5_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "KR5M updated",
+            "policyName": "KR5M",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        }
+    ],
+    "test_image_policy_update_bulk_00031a": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.2.F.img",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "image policy of 10.3(3)F",
+            "policyName": "FOO",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        }
+    ],
+    "test_image_policy_update_bulk_00032a": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.2.F.img",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "image policy of 10.3(3)F",
+            "policyName": "FOO",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        },
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.2.5.M.img",
+            "imageName": "nxos64-cs.10.2.5.M.bin",
+            "nxosVersion": "10.2.5_nxos64-cs_64bit",
+            "packageName": "",
+            "platform": "N9K",
+            "policyDescr": "KR5M updated",
+            "policyName": "KR5M",
+            "policyType": "PLATFORM",
+            "rpmimages": ""
+        }
+    ],
+    "test_image_policy_update_bulk_00034a": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.2.F.img",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "image policy of 10.3(3)F",
+            "policyName": "FOO",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        }
+    ],
+    "test_image_policy_update_bulk_00035a": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.2.5.M.img",
+            "nxosVersion": "10.2.5_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K/N3K",
+            "policyDescr": "KR5M updated",
+            "policyName": "KR5M",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        },
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.1.F.img",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "packageName": "",
+            "platform": "N9K/N3K",
+            "policyDescr": "NR3F updated",
+            "policyName": "NR3F",
+            "policyType": "PLATFORM",
+            "rpmimages": ""
+        }
+    ],
+    "test_image_policy_update_bulk_00036a": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.2.F.img",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "KR5M updated",
+            "policyName": "KR5M",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        }
+    ],
+    "test_image_policy_update_bulk_00037a": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.2.F.img",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "image policy of 10.3(3)F",
+            "policyName": "FOO",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        },
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.2.F.img",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "packageName": "",
+            "platform": "N9K",
+            "policyDescr": "image policy of 10.3(3)F",
+            "policyName": "BAR",
+            "policyType": "PLATFORM",
+            "rpmimages": ""
+        }
+    ],
+    "test_image_policy_update_bulk_00050a": [
+        {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.2.5.M.img",
+            "nxosVersion": "10.2.5_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "KR5M updated",
+            "policyName": "KR5M",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        }
+    ]
+}

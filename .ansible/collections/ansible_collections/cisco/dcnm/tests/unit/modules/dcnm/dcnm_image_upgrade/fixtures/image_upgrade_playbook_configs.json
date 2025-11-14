@@ -1,0 +1,315 @@
+{
+    "test_image_upgrade_upgrade_task_00003a": {
+        "TEST_NOTES": [
+            "fail_json is called because config.switches is not a list"
+        ],
+        "config": {
+            "switches": "FOO"
+        }
+    },
+    "test_image_upgrade_upgrade_task_00004a": {
+        "TEST_NOTES": [
+            "fail_json is called because config.switches is empty"
+        ],
+        "config": {
+            "switches": []
+        }
+    },
+    "test_image_upgrade_upgrade_task_00005a": {
+        "TEST_NOTES": [
+            "fail_json is called because mandatory keys are missing"
+        ],
+        "config": {
+            "switches": [
+                {
+                    "ip_address": "1.2.3.4"},
+                    {"foo": "bar"}
+            ]
+        }
+    },
+    "test_image_upgrade_upgrade_task_00030a": {
+        "TEST_NOTES": [
+            "switch 1.1.1.1 uses default options",
+            "switch 2.2.2.2 overrides default options"
+        ],
+        "config": {
+            "options": {
+                "epld": {
+                    "golden": false,
+                    "module": "ALL"
+                },
+                "nxos": {
+                    "bios_force": false,
+                    "mode": "disruptive"
+                },
+                "package": {
+                    "install": false,
+                    "uninstall": false
+                },
+                "reboot": {
+                    "config_reload": false,
+                    "write_erase": false
+                }
+            },
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "switches": [
+                {
+                    "ip_address": "1.1.1.1"
+                },
+                {
+                    "ip_address": "2.2.2.2",
+                    "options": {
+                        "epld": {
+                            "module": 1,
+                            "golden": true
+                        },
+                        "nxos": {
+                            "bios_force": true,
+                            "mode": "non_disruptive"
+                        },
+                        "package": {
+                            "install": true,
+                            "uninstall": true
+                        },
+                        "reboot": {
+                            "config_reload": true,
+                            "write_erase": true
+                        }
+                    },
+                    "reboot": true,
+                    "stage": false,
+                    "upgrade": {
+                        "epld": true,
+                        "nxos": false
+                    },
+                    "validate": false
+                }
+            ],
+            "upgrade": {
+                "epld": false,
+                "nxos": true
+            },
+            "validate": true
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00031a": {
+        "TEST_NOTES": [
+            "switch 1.1.1.1 overrides global_config.options.nxos.bios_force with default value (False)",
+            "switch 1.1.1.1 overrides global_config.options.nxos.mode with a non-default value (non_disruptive)",
+            "switch 1.1.1.1 overrides global_config.options.reboot.write_erase with default value (False)",
+            "switch 1.1.1.1 overrides global_config.reboot with default value (False)",
+            "switch 1.1.1.1 overrides global_config.stage with a non-default value (False)",
+            "switch 1.1.1.1 overrides global_config.validate with a non-default value (False)",
+            "switch 2.2.2.2 overrides global_config.upgrade.epld with a non-default value (True)"
+        ],
+        "config": {
+            "options": {
+                "epld": {
+                    "golden": false,
+                    "module": "ALL"
+                },
+                "nxos": {
+                    "bios_force": false,
+                    "mode": "disruptive"
+                },
+                "package": {
+                    "install": false,
+                    "uninstall": false
+                },
+                "reboot": {
+                    "config_reload": false,
+                    "write_erase": false
+                }
+            },
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "switches": [
+                {
+                    "ip_address": "1.1.1.1",
+                    "options": {
+                        "nxos": {
+                            "bios_force": false,
+                            "mode": "non_disruptive"
+                        },
+                        "reboot": {
+                            "write_erase": false
+                        }
+                    },
+                    "reboot": false,
+                    "stage": false,
+                    "validate": false
+                },
+                {
+                    "ip_address": "2.2.2.2",
+                    "upgrade": {
+                        "epld": true
+                    }
+                }
+            ],
+            "upgrade": {
+                "epld": false,
+                "nxos": true
+            },
+            "validate": true
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00040a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false}
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00041a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "upgrade": {"nxos": false}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00042a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "upgrade": {"epld": true}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00043a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00044a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"nxos": {"mode": "non_disruptive"}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00045a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"nxos": {"bios_force": true}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00046a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"epld": {"module": 27}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00047a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"epld": {"golden": true}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00048a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"reboot": {"config_reload": true}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00049a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"reboot": {"write_erase": true}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00050a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": true,
+                    "options": {"package": {"install": true}}
+                }
+            ]
+        },
+        "state": "merged"
+    },
+    "test_image_upgrade_upgrade_task_00051a": {
+        "config": {
+            "switches": [
+                {
+                    "policy": "KR5M",
+                    "ip_address": "172.22.150.102",
+                    "policy_changed": false,
+                    "options": {"package": {"uninstall": true}}
+                }
+            ]
+        },
+        "state": "merged"
+    }
+}

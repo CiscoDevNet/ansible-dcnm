@@ -1,0 +1,944 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: MERGED - Test Entry Point - [ndfc_network]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [ndfc_network]                +"
+      - "----------------------------------------------------------------"
+  tags: merged
+
+##############################################
+##      Create Dictionary of Test Data      ##
+##############################################
+- name: MERGED - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    # some cases are for a specific deploy state
+    deploy_local: false
+
+    test_data_merged:
+      # ----------------------------------
+      # config templates and auto generated file location for test cases
+      # ----------------------------------
+      # TC1
+      net1_no_attach_conf_template: "merged/dcnm_network_merged_net1_no_attach_conf.j2"
+      # undeployed
+      net1_no_attach_conf_file: "{{ role_path }}/files/dcnm_network_merged_net1_no_attach_conf.yaml"
+      # deployed
+      net1_no_attach_conf_deployed_file: "{{ role_path }}/files/dcnm_network_merged_net1_no_attach_conf_deployed.yaml"
+      # ----------------------------------
+      # TC3
+      net1_conf_template: "merged/dcnm_network_merged_net1_conf.j2"
+      # undeployed
+      net1_conf_file: "{{ role_path }}/files/dcnm_network_merged_net1_conf.yaml"
+      # deployed
+      net1_conf_deployed_file: "{{ role_path }}/files/dcnm_network_merged_net1_conf_deployed.yaml"
+      # ----------------------------------
+      # TC5
+      double_net_conf_template: "merged/dcnm_network_merged_double_net_conf.j2"
+      double_let_conf_file: "{{ role_path }}/files/dcnm_network_merged_double_net_conf.yaml"
+      # TC6
+      net1_multi_attach_conf_template: "merged/dcnm_network_merged_net1_multi_attach_conf.j2"
+      net1_multi_attach_conf_file: "{{ role_path }}/files/dcnm_network_merged_net1_multi_attach_conf.yaml"
+      # TC7
+      double_net_auto_vlan_conf: "merged/dcnm_network_merged_double_net_auto_vlan_conf.j2"
+      double_net_auto_vlan_file: "{{ role_path }}/files/dcnm_network_merged_double_net_auto_vlan_conf.yaml"
+      # TC8
+      net1_routing_tag_conf_template: "merged/dcnm_network_merged_net1_routing_tag_conf.j2"
+      net1_routing_tag_conf_file: "{{ role_path }}/files/dcnm_network_merged_net1_routing_tag_conf.yaml"
+      # TC9
+      l2only_net_conf_template: "merged/dcnm_network_merged_l2only_net_conf.j2"
+      l2only_net_conf_file: "{{ role_path }}/files/dcnm_network_merged_l2only_net_conf.yaml"
+      # TC10
+      l2_l3_net_conf_template: "merged/dcnm_network_merged_l2_l3_net_conf.j2"
+      l2_l3_net_conf_file: "{{ role_path }}/files/dcnm_network_merged_l2_l3_net_conf.yaml"
+      # TC11
+      # no attachments
+      l3_net_conf_template: "merged/dcnm_network_merged_l3_net_conf.j2"
+      l3_net_conf_file: "{{ role_path }}/files/dcnm_network_merged_l3_net_conf.yaml"
+      # only attachments
+      l3_net_only_attach_conf_template: "merged/dcnm_network_merged_l3_net_only_attach_conf.j2"
+      l3_net_only_attach_conf_file: "{{ role_path }}/files/dcnm_network_merged_l3_net_only_attach_conf.yaml"
+      # final config
+      l3_net_final_conf_template: "merged/dcnm_network_merged_l3_net_final_conf.j2"
+      l3_net_final_conf_file: "{{ role_path }}/files/dcnm_network_merged_l3_net_final_conf.yaml"
+  delegate_to: localhost
+  tags: merged
+
+##############################################
+## Create Module Payloads using J2 Template ##
+##############################################
+
+- name: MERGED - Create Config file from j2 without Deploy
+  ansible.builtin.template:
+    src: "{{ test_data_merged.net1_no_attach_conf_template }}"
+    dest: "{{ test_data_merged.net1_no_attach_conf_file }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - Create Config file from j2 with Attach and without deploy
+  ansible.builtin.template:
+    src: "{{ test_data_merged.net1_conf_template }}"
+    dest: "{{ test_data_merged.net1_conf_file }}"
+  delegate_to: localhost
+  tags: merged
+
+# flip deploy
+- name: MERGED - change deploy to true
+  ansible.builtin.set_fact:
+    deploy_local: true
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - Create Config file from j2 with Deploy
+  ansible.builtin.template:
+    src: "{{ test_data_merged.net1_no_attach_conf_template }}"
+    dest: "{{ test_data_merged.net1_no_attach_conf_deployed_file}}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - Create Config file from j2 with Attach and global deploy
+  ansible.builtin.template:
+    src: "{{ test_data_merged.net1_conf_template }}"
+    dest: "{{ test_data_merged.net1_conf_deployed_file }}"
+  delegate_to: localhost
+  tags: merged
+
+# uses global deploy now
+- name: MERGED - Create Config file from j2
+  ansible.builtin.template:
+    src: "{{ test_data_merged.double_net_conf_template }}"
+    dest: "{{ test_data_merged.double_let_conf_file }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - Create Config file from j2
+  ansible.builtin.template:
+    src: "{{ test_data_merged.net1_multi_attach_conf_template }}"
+    dest: "{{ test_data_merged.net1_multi_attach_conf_file }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - Create Config file from j2
+  ansible.builtin.template:
+    src: "{{ test_data_merged.double_net_auto_vlan_conf }}"
+    dest: "{{ test_data_merged.double_net_auto_vlan_file }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - Create Config file from j2
+  ansible.builtin.template:
+    src: "{{ test_data_merged.net1_routing_tag_conf_template }}"
+    dest: "{{ test_data_merged.net1_routing_tag_conf_file }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - Create Config file from j2
+  ansible.builtin.template:
+    src: "{{ test_data_merged.l2only_net_conf_template }}"
+    dest: "{{ test_data_merged.l2only_net_conf_file }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - Create Config file from j2
+  ansible.builtin.template:
+    src: "{{ test_data_merged.l2_l3_net_conf_template }}"
+    dest: "{{ test_data_merged.l2_l3_net_conf_file }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - Create Config file from j2
+  ansible.builtin.template:
+    src: "{{ test_data_merged.l3_net_conf_template }}"
+    dest: "{{ test_data_merged.l3_net_conf_file }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - Create Config file from j2
+  ansible.builtin.template:
+    src: "{{ test_data_merged.l3_net_only_attach_conf_template }}"
+    dest: "{{ test_data_merged.l3_net_only_attach_conf_file }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - Create Config file from j2
+  ansible.builtin.template:
+    src: "{{ test_data_merged.l3_net_final_conf_template }}"
+    dest: "{{ test_data_merged.l3_net_final_conf_file }}"
+  delegate_to: localhost
+  tags: merged
+
+
+##############################################
+##                MERGED                    ##
+##############################################
+
+# TC1
+- name: MERGED - TC1 - DELETED - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC1 - Load Network Config File without deploy
+  ansible.builtin.set_fact:
+    dcnm_network_net1_no_attach_conf: "{{ lookup('file', '{{ test_data_merged.net1_no_attach_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC1 - MERGED - Create New Network without Deploy
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_net1_no_attach_conf }}"
+  register: result
+  tags: merged
+
+- name: MERGED - TC1 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC1 - QUERY - Get network state in NDFC
+  cisco.dcnm.dcnm_network:
+    state: query
+    fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: merged
+
+- name: MERGED - TC1 - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data_merged.net1_no_attach_conf_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
+
+# TC2
+- name: MERGED - TC2 - DELETED - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC2 - Load Network Config File with deploy
+  ansible.builtin.set_fact:
+    dcnm_network_net1_no_attach_conf_deployed: "{{ lookup('file', '{{ test_data_merged.net1_no_attach_conf_deployed_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC2 - MERGED - Create New Network with Deploy
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_net1_no_attach_conf_deployed }}"
+  register: result
+  tags: merged
+
+- name: MERGED - TC2 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+# state does not change to DEPLOYED without attachment
+- name: MERGED - TC2 - Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: verify_result
+  until:
+    - "verify_result.response[0].parent.networkStatus is search('DEPLOYED|NA')"
+  retries: 30
+  delay: 5
+  tags: merged
+
+- name: MERGED - TC2 - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data_merged.net1_no_attach_conf_deployed_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
+
+# TC3
+- name: MERGED - TC3 - setup - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC3 - Load Network Config File with deploy
+  ansible.builtin.set_fact:
+    dcnm_network_net1_conf_deployed: "{{ lookup('file', '{{ test_data_merged.net1_conf_deployed_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC3 - MERGED - Create New Network with Attach and global deploy
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_net1_conf_deployed }}"
+  register: result
+  tags: merged
+
+- name: MERGED - TC3 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC3 - Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: verify_result
+  until:
+    - "verify_result.response[0].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 5
+  tags: merged
+
+- name: MERGED - TC3 - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data_merged.net1_conf_deployed_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
+
+# TC4
+- name: MERGED - TC4 - DELETED - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC4 - Load Network Config File without deploy
+  ansible.builtin.set_fact:
+    dcnm_network_net1_conf: "{{ lookup('file', '{{ test_data_merged.net1_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC4 - MERGED - Create New Network with no deploy
+  cisco.dcnm.dcnm_network: &conf
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_net1_conf }}"
+  register: result
+  tags: merged
+
+- name: MERGED - TC4 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC4 - QUERY - Get network state in NDFC
+  cisco.dcnm.dcnm_network:
+    state: query
+    fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: merged
+
+- name: MERGED - TC4 - conf - Idempotence
+  cisco.dcnm.dcnm_network: *conf
+  register: result
+  tags: merged
+
+- name: MERGED - TC4 - ASSERT - Check if changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: merged
+
+# TC5
+- name: MERGED - TC5 - DELETED - Clean up any existing network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC5 - Load Network Config File with deploy
+  ansible.builtin.set_fact:
+    dcnm_network_double_net_conf: "{{ lookup('file', '{{ test_data_merged.double_let_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC5 - MERGED - Create, Attach and Deploy Multiple Network with Single Switch Attach
+  cisco.dcnm.dcnm_network: &conf1
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_double_net_conf }}"
+  register: result
+
+- name: MERGED - TC5 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC5 - QUERY - Verify network state in NDFC
+  cisco.dcnm.dcnm_network:
+    state: query
+    fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: merged
+
+- name: MERGED - TC5 - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data_merged.double_let_conf_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
+
+- name: MERGED - TC5 - conf1 - Idempotence
+  cisco.dcnm.dcnm_network: *conf1
+  register: result
+  tags: merged
+
+- name: MERGED - TC5 - ASSERT - Check if changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: merged
+
+# TC6
+- name: MERGED - TC6 - DELETED - Clean up any existing network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC6 - Load Network Config File
+  ansible.builtin.set_fact:
+    dcnm_network_net1_multi_attach_conf: "{{ lookup('file', '{{ test_data_merged.net1_multi_attach_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC6 - MERGED - Create, Attach Single Network with Multiple Switch Attach
+  cisco.dcnm.dcnm_network: &conf2
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_net1_multi_attach_conf }}"
+  register: result
+  tags: merged
+
+- name: MERGED - TC6 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC6 - QUERY - Verify network state in NDFC
+  cisco.dcnm.dcnm_network:
+    state: query
+    fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: merged
+
+- name: MERGED - TC6 - conf2 - Idempotence
+  cisco.dcnm.dcnm_network: *conf2
+  register: result
+  tags: merged
+
+- name: MERGED - TC6 - ASSERT - Check if changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: merged
+
+# TC7
+- name: MERGED - TC7 - DELETED - Clean up any existing network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC7 - Load Network Config File
+  ansible.builtin.set_fact:
+    dcnm_network_double_net_auto_vlan_conf: "{{ lookup('file', '{{ test_data_merged.double_net_auto_vlan_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC7 - Create, Attach Multiple Network with Multiple Switch Attach - Automatic Vlan Proposed
+  cisco.dcnm.dcnm_network: &conf3
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_double_net_auto_vlan_conf }}"
+  register: result
+  tags: merged
+
+- name: MERGED - TC7 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC7 - QUERY - Verify network state in NDFC
+  cisco.dcnm.dcnm_network:
+    state: query
+    fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: merged
+
+- name: MERGED - TC7 - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data_merged.double_net_auto_vlan_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+    ignore_fields:
+      - "vlanId"
+  tags: merged
+
+- name: MERGED - TC7 - conf3 - Idempotence
+  cisco.dcnm.dcnm_network: *conf3
+  register: result
+  tags: merged
+
+- name: MERGED - TC7 - ASSERT - Check if changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: merged
+
+# TC8
+- name: MERGED - TC8 - DELETED - Clean up any existing network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC8 - Load Network Config File
+  ansible.builtin.set_fact:
+    dcnm_network_net1_routing_tag_conf: "{{ lookup('file', '{{ test_data_merged.net1_routing_tag_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC8 - MERGED - Create, Attach Single Network with Multiple Switch Attach - Routing Tag Specified
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_net1_routing_tag_conf }}"
+  register: result
+  tags: merged
+
+- name: MERGED - TC8 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC8 - QUERY - Verify network state in NDFC
+  cisco.dcnm.dcnm_network:
+    state: query
+    fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: merged
+
+- name: MERGED - TC8 - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data_merged.net1_routing_tag_conf_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
+
+# TC9
+- name: MERGED - TC9 - DELETED- Clean up any existing network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC9 - Load Network Config File
+  ansible.builtin.set_fact:
+    dcnm_network_l2only_net_conf: "{{ lookup('file', '{{ test_data_merged.l2only_net_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC9 - MERGED - Create L2 only networks along with all dhcp, arp options
+  cisco.dcnm.dcnm_network: &conf4
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_l2only_net_conf }}"
+  register: result
+  tags: merged
+
+- name: MERGED - TC9 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC9 - QUERY - Verify network state in NDFC
+  cisco.dcnm.dcnm_network:
+    state: query
+    fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: merged
+
+- name: MERGED - TC9 - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data_merged.l2only_net_conf_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
+
+- name: MERGED - TC9 - conf4 - Idempotence
+  cisco.dcnm.dcnm_network: *conf4
+  register: result
+  tags: merged
+
+- name: MERGED - TC9 - ASSERT - Check if changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: merged
+
+
+# TC10
+- name: MERGED - TC10 - DELETED - Clean up any existing network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC10 - Load Network Config File
+  ansible.builtin.set_fact:
+    dcnm_network_l2_l3_net_conf: "{{ lookup('file', '{{ test_data_merged.l2_l3_net_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC10 - MERGED - Create L3 networks along with all dhcp, arp options
+  cisco.dcnm.dcnm_network: &conf5
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_l2_l3_net_conf }}"
+  register: result
+  tags: merged
+
+- name: MERGED - TC10 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC10 - QUERY - Verify network state in NDFC
+  cisco.dcnm.dcnm_network:
+    state: query
+    fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: merged
+
+- name: MERGED - TC10 - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data_merged.l2_l3_net_conf_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
+
+- name: MERGED - TC10 - conf5 - Idempotence
+  cisco.dcnm.dcnm_network: *conf5
+  register: result
+  tags: merged
+
+- name: MERGED - TC10 - ASSERT - Check if changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: merged
+
+# TC11
+- name: MERGED - TC11 - DELETED - Clean up any existing network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC11 - Load Network Config File
+  ansible.builtin.set_fact:
+    dcnm_network_l3_net_conf: "{{ lookup('file', '{{ test_data_merged.l3_net_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC11 - Create L3 networks along with all dhcp, arp options without attach
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_l3_net_conf }}"
+  register: result
+  tags: merged
+
+- name: MERGED - TC11 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC11 - QUERY - Verify network state in NDFC
+  cisco.dcnm.dcnm_network:
+    state: query
+    fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: merged
+
+- name: MERGED - TC11 - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data_merged.l3_net_conf_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
+
+- name: MERGED - TC11 - Load Network Config File
+  ansible.builtin.set_fact:
+    dcnm_network_l3_net_only_attach_conf: "{{ lookup('file', '{{ test_data_merged.l3_net_only_attach_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC11 - Load Network Config File
+  ansible.builtin.set_fact:
+    dcnm_network_l3_net_final_conf: "{{ lookup('file', '{{ test_data_merged.l3_net_final_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: merged
+
+- name: MERGED - TC11 - attach networks to already created network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_l3_net_only_attach_conf }}"
+  register: result
+  tags: merged
+
+- name: MERGED - TC11 - ASSERT - Check if changed flag is true
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC11 - QUERY - Verify network state in NDFC
+  cisco.dcnm.dcnm_network:
+    state: query
+    fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: merged
+
+- name: MERGED - TC11 - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data_merged.l3_net_final_conf_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
+
+# TC12 Invalid test cases
+- name: MERGED - TC12 - DELETED - Clean up any existing network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC12 - Create Network with invalid network name
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name:
+        vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 1500
+      gw_ip_subnet: '192.168.30.1/24'
+      deploy: true
+  register: result
+  ignore_errors: true
+  tags: merged
+
+- name: MERGED - TC12 - ASSERT - Check invalid network name
+  ansible.builtin.assert:
+    that:
+      - '"Invalid parameters in playbook: net_name : Required parameter not found" in result.msg'
+    - result.changed == false
+  tags: merged
+
+- name: MERGED - TC12 - Create Network with invalid VRF name
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net13
+      vrf_name: Tenant-10000
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 1500
+      gw_ip_subnet: '192.168.30.1/24'
+      deploy: true
+  register: result
+  ignore_errors: true
+  tags: merged
+
+- name: MERGED - TC12 - ASSERT - Check invalid VRF name
+  ansible.builtin.assert:
+    that:
+      - '"VRF: Tenant-10000 is missing in fabric:" in result.msg'
+    - result.changed == false
+  tags: merged
+
+- name: MERGED - TC12 - Create Network with invalid vlan id
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 15000
+      gw_ip_subnet: '192.168.30.1/24'
+      deploy: true
+  register: result
+  ignore_errors: true
+  tags: merged
+
+- name: MERGED - TC12 - ASSERT - Check invalid vlan id
+  ansible.builtin.assert:
+    that:
+      - '"Invalid parameters in playbook: vlan_id:15000 : The item exceeds the allowed range of max 4094" in result.msg'
+    - result.changed == false
+  tags: merged
+
+- name: MERGED - TC12 - Create Network and deploy in invalid switch
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 1500
+      gw_ip_subnet: '192.168.30.1/24'
+      attach:
+        - ip_address:
+        ports: ["{{ test_data_common.sw1_int1 }}", "{{ test_data_common.sw1_int2 }}"]
+      deploy: false
+  register: result
+  ignore_errors: true
+  tags: merged
+
+- name: MERGED - TC12 - ASSERT - Check invalid switch
+  ansible.builtin.assert:
+    that:
+      - '"Invalid parameters in playbook: ip_address : Required parameter not found" in result.msg'
+    - result.changed == false
+  tags: merged
+
+- name: MERGED - TC12 - Create Network with out of range routing tag
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net13
+      vrf_name: Tenant-1000
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 1500
+      routing_tag: 4294967296
+      gw_ip_subnet: '192.168.30.1/24'
+      deploy: true
+  register: result
+  ignore_errors: true
+  tags: merged
+
+- name: MERGED - TC12 - ASSERT - Check invalid routing tag
+  ansible.builtin.assert:
+    that:
+      - '"routing_tag: 4294967296 : The item exceeds the allowed range of max 4294967295" in result.msg'
+    - result.changed == false
+  tags: merged
+
+- name: MERGED - TC12 - Create L2 only Network with a vrf name
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net13
+      vrf_name: Tenant-1000
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 1500
+      gw_ip_subnet: '192.168.30.1/24'
+      is_l2only: true
+      deploy: true
+  register: result
+  ignore_errors: true
+  tags: merged
+
+- name: MERGED - TC12 - ASSERT - Check invalid vrf name
+  ansible.builtin.assert:
+    that:
+      - '"Invalid parameters in playbook: vrf_name should not be specified for L2 Networks" in result.msg'
+    - result.changed == false
+  tags: merged
+
+- name: MERGED - TC12 - Create L3 Network without a vrf name
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net13
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 1500
+      gw_ip_subnet: '192.168.30.1/24'
+      deploy: true
+  register: result
+  ignore_errors: true
+  tags: merged
+
+- name: MERGED - TC12 - ASSERT - Check invalid vrf name
+  ansible.builtin.assert:
+    that:
+      - '"Invalid parameters in playbook: vrf_name is required for L3 Networks" in result.msg'
+    - result.changed == false
+  tags: merged
+
+- name: MERGED - TC12 - Create L3 Network with DHCP server IP alone
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      vlan_id: 1500
+      gw_ip_subnet: '192.168.30.1/24'
+      dhcp_srvr1_ip: '1.1.1.1'
+      deploy: true
+  register: result
+  ignore_errors: true
+  tags: merged
+
+- name: MERGED - TC12 - ASSERT - Check invalid vrf name
+  ansible.builtin.assert:
+    that:
+      - '"Invalid parameters in playbook: DHCP server IP should be specified along with DHCP server VRF" in result.msg'
+    - result.changed == false
+  tags: merged
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: MERGED - END - remove networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
