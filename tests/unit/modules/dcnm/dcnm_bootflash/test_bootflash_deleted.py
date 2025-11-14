@@ -72,7 +72,8 @@ def test_bootflash_deleted_00000() -> None:
     assert instance.check_mode is False
     assert instance.config == params_deleted.get("config")
     assert instance.convert_target_to_params.class_name == "ConvertTargetToParams"
-    assert instance._rest_send is None
+    assert instance._rest_send.params == {}
+    assert instance._rest_send.class_name == "RestSend"
     assert instance.results.class_name == "Results"
     assert instance.results.check_mode is False
     assert instance.results.state == "deleted"
