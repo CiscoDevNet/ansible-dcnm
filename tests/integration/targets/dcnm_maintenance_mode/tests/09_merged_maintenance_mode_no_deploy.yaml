@@ -83,7 +83,7 @@
 #                 },
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 - name: MERGED - SETUP - ensure switches are in normal mode
   cisco.dcnm.dcnm_maintenance_mode:
         state: query
@@ -139,7 +139,7 @@
 #                 },
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 - name: MERGED - TEST - Verify switch mode is inconsistent (global config)
   cisco.dcnm.dcnm_maintenance_mode:
         state: query
@@ -195,7 +195,7 @@
 #                 },
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 - name: MERGED - TEST - Verify switch mode is normal (global config)
   cisco.dcnm.dcnm_maintenance_mode:
         state: query
@@ -290,7 +290,7 @@
 #                 },
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 - name: MERGED - TEST - Verify switch mode is inconsistent (switch config)
   cisco.dcnm.dcnm_maintenance_mode:
         state: query
@@ -348,7 +348,7 @@
 #                 },
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 - name: MERGED - TEST - Verify switch mode is normal (switch config)
   cisco.dcnm.dcnm_maintenance_mode:
         state: query

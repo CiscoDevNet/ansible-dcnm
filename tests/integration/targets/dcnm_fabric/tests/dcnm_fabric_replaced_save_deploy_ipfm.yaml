@@ -88,7 +88,7 @@
 #                 "FABRIC_NAME": "IPFM_Fabric",
 #                 "sequence_number": 1
 #             },
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "create",
@@ -96,7 +96,7 @@
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
@@ -110,13 +110,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -190,7 +190,7 @@
 #                 "FABRIC_MTU": 9216,
 #                 "sequence_number": 1
 #             },
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "replace",
@@ -198,7 +198,7 @@
 #                 "sequence_number": 1,
 #                 "state": "replaced"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
@@ -232,7 +232,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -248,7 +248,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -327,7 +327,7 @@
 #         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "replace",
@@ -335,19 +335,19 @@
 #                 "sequence_number": 1,
 #                 "state": "replaced"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "MESSAGE": "No fabrics to update for replaced state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -411,7 +411,7 @@
 #                 "FABRIC_NAME": "IPFM_Fabric",
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "delete",
@@ -419,7 +419,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Fabric 'IPFM_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
@@ -433,7 +433,7 @@
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################

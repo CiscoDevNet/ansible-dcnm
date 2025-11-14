@@ -87,7 +87,7 @@
     state: deleted
     config:
       - name: "{{ image_policy_1 }}"
-    - name: "{{ image_policy_2 }}"
+      - name: "{{ image_policy_2 }}"
   register: result
 
 - name: Debug
@@ -123,7 +123,7 @@
 #                 "policyType": "PLATFORM",
 #                 "sequence_number": 2
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "create",
@@ -137,7 +137,7 @@
 #                 "sequence_number": 2,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Policy created successfully.",
 #                 "MESSAGE": "OK",
@@ -154,7 +154,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -165,7 +165,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -256,7 +256,7 @@
 #         "changed": true,
 #         "diff": [#             {
 #                 "policyNames": [#                     "NR1F"
-#],
+# ],
 #                 "sequence_number": 1
 #             },
 #             {
@@ -271,7 +271,7 @@
 #                 "rpmimages": "",
 #                 "sequence_number": 2
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "delete",
@@ -285,7 +285,7 @@
 #                 "sequence_number": 2,
 #                 "state": "overridden"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
@@ -302,7 +302,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -313,7 +313,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 - name: OVERRIDDEN - TEST - override image_policy_1 which will delete image_policy_2
@@ -403,7 +403,7 @@
 #                 "sequence_number": 1,
 #                 "unInstall": false
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "query",
@@ -411,7 +411,7 @@
 #                 "sequence_number": 1,
 #                 "state": "query"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "lastOperDataObject": [#                         {
@@ -432,7 +432,7 @@
 #                             "rpmimages": "",
 #                             "unInstall": false
 #                         }
-#],
+# ],
 #                     "message": "",
 #                     "status": "SUCCESS"
 #                 },
@@ -442,13 +442,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "found": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -505,10 +505,10 @@
 #         "changed": true,
 #         "diff": [#             {
 #                 "policyNames": [#                     "KR5M"
-#],
+# ],
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "delete",
@@ -516,7 +516,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
@@ -525,13 +525,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 - name: OVERRIDDEN - CLEANUP - Delete image policies and verify

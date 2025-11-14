@@ -117,7 +117,7 @@
 #                        "size": "2",
 #                        "supervisor": "active"
 #                    }
-#],
+# ],
 #                "172.22.150.113": [#                    {
 #                        "date": "2024-08-13 01:01:14",
 #                        "device_name": "cvd-1212-spine",
@@ -154,10 +154,10 @@
 #                        "size": "2",
 #                        "supervisor": "active"
 #                    }
-#],
+# ],
 #                "sequence_number": 1
 #            }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "bootflash_delete",
@@ -165,7 +165,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "File(s) Deleted Successfully. \nDeleted files:  [air.ndfc_ut, earth.ndfc_ut, water.ndfc_ut, fire.ndfc_ut][green.ndfc_ut, blue.ndfc_ut, black.ndfc_ut, red.ndfc_ut]",
 #                 "MESSAGE": "OK",
@@ -174,13 +174,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -200,7 +200,7 @@
                 supervisor: active
               - filepath: "bootflash:/{{ switch1_file3 }}"
                 supervisor: active
-                - filepath: "bootflash:/{{ switch1_file4 }}"
+              - filepath: "bootflash:/{{ switch1_file4 }}"
                 supervisor: active
           - ip_address: "{{ switch2 }}"
             targets:
@@ -268,7 +268,7 @@
 #         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "bootflash_delete",
@@ -276,19 +276,19 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "MESSAGE": "No files to delete.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 #################################################################################

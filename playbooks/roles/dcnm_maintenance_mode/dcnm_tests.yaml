@@ -14,8 +14,8 @@
 # 2. For all other test cases, ensure that
 #    Fabric Controller -> Admin -> System Settings -> Feature Management
 #    "Fabric Builder" is checked.
-- hosts: dcnm
-  name: Play for dcnm
+- name: Play for dcnm
+  hosts: dcnm
   gather_facts: false
   connection: ansible.netcommon.httpapi
 

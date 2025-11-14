@@ -47,7 +47,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
+      - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: sanity
 
 # ---------------------------------------------- #
@@ -134,7 +134,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response == "The switch provided is already part of the fabric and there is no more device to delete in the fabric"'
+      - 'result.response == "The switch provided is already part of the fabric and there is no more device to delete in the fabric"'
   tags: sanity
 
 # ---------------------------------------------- #

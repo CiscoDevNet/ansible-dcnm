@@ -128,9 +128,9 @@
 - name: RMA TC2 - Add Switch to the Fabric
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
-   state: merged
-   config: "{{ ndfc_fabric_rma_conf }}"
-   deploy: "{{ test_data.deploy }}"
+  state: merged
+  config: "{{ ndfc_fabric_rma_conf }}"
+  deploy: "{{ test_data.deploy }}"
   when: rma_enabled == True
   register: merged_result
   tags: rma
@@ -218,10 +218,12 @@
                   gateway: '{{ test_data.rma_gateway }}'
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
         - 'result.changed == true'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
   when: (rma_enabled == True and rma_switch_present == True)

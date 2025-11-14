@@ -126,13 +126,15 @@
             resource: "fe:80:0505::05/64"          # The value of the resource being created
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 9'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["response"] | length) == 9'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -144,13 +146,15 @@
       cisco.dcnm.dcnm_resource_manager: *rm_delete
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 9'
           - '(result["response"][0]["DATA"]["successList"] | length) == 9'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -162,12 +166,14 @@
       cisco.dcnm.dcnm_resource_manager: *rm_delete
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -184,7 +190,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result["msg"] == "Mandatory parameter ''scope_type'' missing"'
 
 ##############################################
@@ -200,10 +207,11 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result["msg"] == "Mandatory parameter ''pool_type'' missing"'
 
- ##############################################
+##############################################
 ##        MISSING PARAMS IN DELETE          ##
 ##############################################
 
@@ -218,7 +226,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result["msg"] == "Mandatory parameter ''entity_name'' missing"'
 
 ##############################################
@@ -236,7 +245,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result["msg"] == "Mandatory parameter ''pool_name'' missing"'
 
 ##############################################

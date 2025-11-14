@@ -89,8 +89,8 @@
             interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/24 # optional
             neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
+            ipv6_addr: "2010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
               - ip_address: "{{ switch_3 }}"
       deploy: true
@@ -151,15 +151,15 @@
             interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/24 # optional
             neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
+            ipv6_addr: "2010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
               - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ interface_2b }}" # mandatory
             ipv4_addr: 20.33.0.2/24 # optional
             neighbor_ipv4: 20.33.0.1 # optional
-            ipv6_addr: 3010::10:34:0:7/64 # optional
-            neighbor_ipv6: 3010::10:34:0:3 # optional
+            ipv6_addr: "3010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "3010::10:34:0:3 # optional"
             dot1q: 21 # dot1q can be got from dcnm
               - ip_address: "{{ switch_3 }}"
       deploy: true
@@ -218,8 +218,8 @@
             interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/24 # optional
             neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
+            ipv6_addr: "2010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
               - ip_address: "{{ switch_3 }}"
       deploy: true
@@ -276,15 +276,15 @@
             interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/24 # optional
             neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
+            ipv6_addr: "2010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
               - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ interface_2b }}" # mandatory
             ipv4_addr: 20.33.0.2/24 # optional
             neighbor_ipv4: 20.33.0.1 # optional
-            ipv6_addr: 3010::10:34:0:7/64 # optional
-            neighbor_ipv6: 3010::10:34:0:3 # optional
+            ipv6_addr: "3010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "3010::10:34:0:3 # optional"
             dot1q: 21 # dot1q can be got from dcnm
       deploy: true
   register: result
@@ -364,8 +364,8 @@
             interface: "{{ interface_1a }}" # mandatory
             ipv4_addr: 40.33.0.2/24 # optional
             neighbor_ipv4: 40.33.0.1 # optional
-            ipv6_addr: 5010::10:34:0:7/64 # optional
-            neighbor_ipv6: 5010::10:34:0:3 # optional
+            ipv6_addr: "5010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "5010::10:34:0:3 # optional"
             dot1q: 4 # dot1q can be got from dcnm
               - ip_address: "{{ switch_2 }}"
         vrf_lite:
@@ -373,15 +373,15 @@
             interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/24 # optional
             neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
+            ipv6_addr: "2010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
               - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ interface_2b }}" # mandatory
             ipv4_addr: 20.33.0.2/24 # optional
             neighbor_ipv4: 20.33.0.1 # optional
-            ipv6_addr: 3010::10:34:0:7/64 # optional
-            neighbor_ipv6: 3010::10:34:0:3 # optional
+            ipv6_addr: "3010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "3010::10:34:0:3 # optional"
             dot1q: 21 # dot1q can be got from dcnm
       deploy: true
   register: result

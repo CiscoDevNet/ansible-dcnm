@@ -54,7 +54,8 @@
 
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -74,8 +75,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
@@ -89,8 +90,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.2.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.2.2                           # IP address of the interface in dst fabric
@@ -104,8 +105,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_addr: 193.168.3.1                             # IP address of interface in src fabric
               neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
@@ -119,8 +120,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.4.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.4.2                           # IP address of the interface in dst fabric
@@ -134,8 +135,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
             ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.5.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.5.2                           # IP address of the interface in dst fabric
@@ -149,8 +150,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
             ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_addr: 193.168.6.1                             # IP address of interface in src fabric
               neighbor_ip: 193.168.6.2                           # IP address of the interface in dst fabric
@@ -160,7 +161,8 @@
 
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 6'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -168,7 +170,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -183,7 +186,8 @@
         src_fabric: "{{ ansible_num_fabric }}"
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 6'
 
     - name: Query Links - with Src & Dst Fabric
@@ -194,7 +198,8 @@
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # optional, Destination fabric
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 3'
 
     - name: Query Links - with Src & Dst Fabric
@@ -205,7 +210,8 @@
           - dst_fabric: "{{ ansible_ipv6_fabric }}"              # optional, Destination fabric
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 3'
 
     - name: Query Links - with Src & Dst Fabric, Src Intf
@@ -217,7 +223,8 @@
             src_interface: "{{ intf_1_3 }}"                      # optional, Interface on the Source fabric
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src Intf
@@ -229,7 +236,8 @@
             src_interface: "{{ intf_1_6 }}"                      # optional, Interface on the Source fabric
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
@@ -242,7 +250,8 @@
             dst_interface: "{{ intf_1_3 }}"                      # optional, Interface on the Destination fabric
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
@@ -255,7 +264,8 @@
             dst_interface: "{{ intf_1_6 }}"                      # optional, Interface on the Destination fabric
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
@@ -269,7 +279,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
@@ -283,7 +294,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
@@ -298,7 +310,8 @@
             dst_device: "{{ ansible_unnum_switch1 }}"            # optional, Device on the Destination fabric
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
@@ -313,7 +326,8 @@
             dst_device: "{{ ansible_ipv6_switch1 }}"             # optional, Device on the Destination fabric
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
@@ -327,8 +341,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # optional, Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # optional, template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
 
 
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # optional, Destination fabric
@@ -337,8 +351,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # optional, Device on the Destination fabric
             ansible.builtin.template: ext_multisite_underlay_setup               # optional, template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
 
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # optional, Destination fabric
             src_interface: "{{ intf_1_5 }}"                      # optional, Interface on the Source fabric
@@ -346,12 +360,13 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # optional, Device on the Destination fabric
             ansible.builtin.template: ext_evpn_multisite_overlay_setup           # optional, template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
 
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 3'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
@@ -365,8 +380,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # optional, Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # optional, template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
 
 
           - dst_fabric: "{{ ansible_ipv6_fabric }}"              # optional, Destination fabric
@@ -375,8 +390,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # optional, Device on the Destination fabric
             ansible.builtin.template: ext_multisite_underlay_setup               # optional, template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
 
           - dst_fabric: "{{ ansible_ipv6_fabric }}"              # optional, Destination fabric
             src_interface: "{{ intf_1_8 }}"                      # optional, Interface on the Source fabric
@@ -384,12 +399,13 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # optional, Device on the Destination fabric
             ansible.builtin.template: ext_evpn_multisite_overlay_setup           # optional, template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
 
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 3'
 
 ##############################################
@@ -403,7 +419,7 @@
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert: that:
+  - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

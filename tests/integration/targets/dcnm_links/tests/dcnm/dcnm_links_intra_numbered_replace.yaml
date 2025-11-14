@@ -48,7 +48,8 @@
 
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -67,9 +68,9 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
             ansible.builtin.template: int_intra_fabric_num_link                  # template to be applied, choose from
-                                                                 #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
+                                                                #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
 
             profile:
               peer1_ipv4_addr: 192.168.1.1                       # IP address of the Source interface
@@ -92,12 +93,13 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
             ansible.builtin.template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
-                                                                 #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
+                                                                #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -105,7 +107,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 2'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -124,9 +127,9 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
             ansible.builtin.template: int_intra_fabric_num_link                  # template to be applied, choose from
-                                                                 #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
+                                                                #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
 
             profile:
               peer1_ipv4_addr: 192.169.1.1                       # IP address of the Source interface
@@ -145,12 +148,13 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
             ansible.builtin.template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
-                                                                 #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
+                                                                #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 1'
@@ -158,7 +162,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 2'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -170,7 +175,8 @@
       cisco.dcnm.dcnm_links: *links_replace
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -178,7 +184,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 2'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -193,7 +200,7 @@
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert: that:
+  - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

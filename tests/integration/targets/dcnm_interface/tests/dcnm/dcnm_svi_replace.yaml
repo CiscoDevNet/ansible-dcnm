@@ -140,7 +140,8 @@
     #       - '(result["diff"][0]["replaced"] | length) == 0'
     #       - '(result["diff"][0]["overridden"] | length) == 0'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -158,7 +159,8 @@
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

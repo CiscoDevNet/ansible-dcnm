@@ -101,7 +101,7 @@
 #                 "NXC_PROXY_PORT": 8088,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "create",
@@ -121,7 +121,7 @@
 #                 "sequence_number": 3,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
@@ -167,7 +167,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -183,7 +183,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -194,13 +194,13 @@
       - FABRIC_NAME: "{{ fabric_name_1 }}"
         FABRIC_TYPE: "{{ fabric_type_1 }}"
         ADVERTISE_PIP_BGP: true
-        ANYCAST_GW_MAC: 00:aa:bb:cc:dd:ee
+        ANYCAST_GW_MAC: "00:aa:bb:cc:dd:ee"
         BGP_AS: 65535
         REPLICATION_MODE: Ingress
         DEPLOY: false
       - FABRIC_NAME: "{{ fabric_name_2 }}"
         FABRIC_TYPE: "{{ fabric_type_2 }}"
-        ANYCAST_GW_MAC: 00:aa:bb:cc:dd:ee
+        ANYCAST_GW_MAC: "00:aa:bb:cc:dd:ee"
         DEPLOY: true
       - FABRIC_NAME: "{{ fabric_name_3 }}"
         FABRIC_TYPE: "{{ fabric_type_3 }}"
@@ -305,7 +305,7 @@
 #             {
 #                 "sequence_number": 6
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "replace",
@@ -343,7 +343,7 @@
 #                 "sequence_number": 6,
 #                 "state": "replaced"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
@@ -392,7 +392,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 6
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -423,7 +423,7 @@
 #                 "sequence_number": 6,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -553,7 +553,7 @@
 #             {
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "replace",
@@ -573,7 +573,7 @@
 #                 "sequence_number": 3,
 #                 "state": "replaced"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
@@ -600,7 +600,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -616,7 +616,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -702,7 +702,7 @@
 #         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "replace",
@@ -710,19 +710,19 @@
 #                 "sequence_number": 1,
 #                 "state": "replaced"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "MESSAGE": "No fabrics to update for replaced state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -771,7 +771,7 @@
 #                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "delete",
@@ -791,7 +791,7 @@
 #                 "sequence_number": 3,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
@@ -816,7 +816,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -832,7 +832,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################

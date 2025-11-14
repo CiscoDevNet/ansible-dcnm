@@ -50,7 +50,7 @@
   ansible.builtin.assert:
     that:
       - 'result_1.changed == false'
-    - 'result_1.failed == false'
+      - 'result_1.failed == false'
 
 
 - name: TEST.2 - Verify ERROR severity.
@@ -67,7 +67,7 @@
   ansible.builtin.assert:
     that:
       - 'result_2.changed == false'
-    - 'result_2.failed == false'
+      - 'result_2.failed == false'
 
 - name: TEST.3 - Verify INFO severity.
   cisco.dcnm.dcnm_log:

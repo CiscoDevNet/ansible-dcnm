@@ -15,7 +15,8 @@
       path: "{{ rest_path }}"
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.response.DATA != None'
 
   - name: TOR - Clean up any existing networks
@@ -60,7 +61,8 @@
     retries: 30
     delay: 2
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
@@ -81,7 +83,8 @@
     cisco.dcnm.dcnm_network: *conf1
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == false'
       - 'result.response|length == 0'
 
@@ -118,7 +121,8 @@
     retries: 30
     delay: 2
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
@@ -134,7 +138,8 @@
     cisco.dcnm.dcnm_network: *conf2
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == false'
       - 'result.response|length == 0'
 
@@ -173,7 +178,8 @@
     retries: 30
     delay: 2
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
@@ -221,7 +227,8 @@
     retries: 30
     delay: 2
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
@@ -235,7 +242,8 @@
     cisco.dcnm.dcnm_network: *conf3
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == false'
       - 'result.response|length == 0'
 
@@ -272,7 +280,8 @@
     retries: 30
     delay: 2
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
@@ -287,7 +296,8 @@
     cisco.dcnm.dcnm_network: *conf4
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == false'
       - 'result.response|length == 0'
 
@@ -322,7 +332,8 @@
     retries: 30
     delay: 2
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
@@ -337,7 +348,8 @@
     cisco.dcnm.dcnm_network: *conf5
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == false'
       - 'result.response|length == 0'
 

@@ -22,83 +22,84 @@
             src_device: "dummy-switch-1"                         # Device on the Source fabric
             dst_device: "{{ ansible_num_switch1 }}"              # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
           - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
             src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
           - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
             src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-test-sw100"                        # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
           - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
             src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-svi1"                              # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
           - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
             src_interface: "{{ intf_1_6 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_6 }}"                      # Interface on the Destination fabric
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
           - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
             src_interface: "{{ intf_1_7 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_7 }}"                      # Interface on the Destination fabric
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-svi1"                              # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
           - dst_fabric: "{{ ansible_ext_fabric }}"               # Destination fabric
             src_interface: "{{ intf_1_8 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_8 }}"                      # Interface on the Destination fabric
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-test-sw4"                          # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
             src_interface: "{{ intf_1_9 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_9 }}"                      # Interface on the Destination fabric
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
           - dst_fabric: "{{ ansible_ext_fabric }}"               # Destination fabric
             src_interface: "{{ intf_1_10 }}"                     # Interface on the Source fabric
             dst_interface: "{{ intf_1_10 }}"                     # Interface on the Destination fabric
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-ext-sw1"                           # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
             src_interface: "{{ intf_1_11 }}"                     # Interface on the Source fabric
             dst_interface: "{{ intf_1_11 }}"                     # Interface on the Destination fabric
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -117,8 +118,8 @@
             src_device: "dummy-switch-1"                         # Device on the Source fabric
             dst_device: "{{ ansible_num_switch1 }}"              # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
@@ -127,7 +128,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '("Monitoring mode" in result["msg"])'
           - '("No changes are allowed on the fabric" in result["msg"])'
           - '("{{ ansible_extmon_fabric }}" in result["msg"])'
@@ -143,8 +145,8 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.2.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.2.2                           # IP address of the interface in dst fabric
@@ -153,7 +155,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -170,7 +173,8 @@
       cisco.dcnm.dcnm_links: *links_create1
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -194,11 +198,12 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
 #############################################
@@ -216,8 +221,8 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-test-sw100"                        # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.3.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
@@ -228,7 +233,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -248,8 +254,8 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-test-sw100"                        # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.20.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.20.2                           # IP address of the interface in dst fabric
@@ -260,7 +266,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 1'
@@ -280,8 +287,8 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-test-sw100"                        # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.20.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.20.2                           # IP address of the interface in dst fabric
@@ -292,7 +299,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 1'
@@ -309,7 +317,8 @@
       cisco.dcnm.dcnm_links: *links_create2
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 1'
@@ -333,11 +342,12 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-test-sw100"                        # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
 #############################################
@@ -355,8 +365,8 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-svi1"                              # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.4.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.4.2                           # IP address of the interface in dst fabric
@@ -365,7 +375,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -382,7 +393,8 @@
       cisco.dcnm.dcnm_links: *links_create3
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -406,11 +418,12 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-svi1"                              # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
 #############################################
@@ -428,8 +441,8 @@
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.5.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.5.2                           # IP address of the interface in dst fabric
@@ -438,7 +451,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -455,7 +469,8 @@
       cisco.dcnm.dcnm_links: *links_create4
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -479,11 +494,12 @@
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
 #############################################
@@ -501,8 +517,8 @@
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-svi1"                              # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.6.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.6.2                           # IP address of the interface in dst fabric
@@ -511,7 +527,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -528,7 +545,8 @@
       cisco.dcnm.dcnm_links: *links_create5
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -552,11 +570,12 @@
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-svi1"                              # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
 #############################################
@@ -574,8 +593,8 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-test-sw4"                          # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.7.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.7.2                           # IP address of the interface in dst fabric
@@ -584,7 +603,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -601,7 +621,8 @@
       cisco.dcnm.dcnm_links: *links_create6
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -625,11 +646,12 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-test-sw4"                          # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
 #############################################
@@ -647,8 +669,8 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.8.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.8.2                           # IP address of the interface in dst fabric
@@ -657,7 +679,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -674,7 +697,8 @@
       cisco.dcnm.dcnm_links: *links_create7
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -698,11 +722,12 @@
             src_device: "n9kv-test-sw1"                          # Device on the Source fabric
             dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
 #############################################
@@ -720,8 +745,8 @@
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-ext-sw1"                           # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.9.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.9.2                           # IP address of the interface in dst fabric
@@ -730,7 +755,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -747,7 +773,8 @@
       cisco.dcnm.dcnm_links: *links_create8
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -771,11 +798,12 @@
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-ext-sw1"                           # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           '(result["response"] | length) >= 1'
 
 #############################################
@@ -793,8 +821,8 @@
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.10.1/24                       # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.10.2                          # IP address of the interface in dst fabric
@@ -803,7 +831,8 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -820,7 +849,8 @@
       cisco.dcnm.dcnm_links: *links_create9
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -844,8 +874,8 @@
             src_device: "n9kv-num-1"                             # Device on the Source fabric
             dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
       register: result
 
     - ansible.builtin.assert: that:

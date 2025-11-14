@@ -99,8 +99,8 @@
   ansible.builtin.assert:
     that:
       - 'result_2b.changed == false'
-    - 'result_2b.response|length == 0'
-    - 'result_2b.diff|length == 0'
+      - 'result_2b.response|length == 0'
+      - 'result_2b.diff|length == 0'
 
 ################################################
 ####                 CLEAN-UP                 ##

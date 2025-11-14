@@ -54,7 +54,8 @@
 
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -73,8 +74,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
@@ -82,7 +83,7 @@
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
               mtu: 9216                                          #
               auto_deploy: false                                 # optional, default is false
-                                                                 # Flag that controls auto generation of neighbor VRF Lite configuration
+                                                                # Flag that controls auto generation of neighbor VRF Lite configuration
               peer1_description: "Description of source"         # optional, default is ""
               peer2_description: "Description of dest"           # optional, default is ""
               peer1_cmds: # Freeform config for source interface
@@ -96,8 +97,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.4.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.4.2                           # IP address of the interface in dst fabric
@@ -105,7 +106,7 @@
               dst_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in destination fabric
               mtu: 9216                                          #
               auto_deploy: false                                 # optional, default is false
-                                                                 # Flag that controls auto generation of neighbor VRF Lite configuration
+                                                                # Flag that controls auto generation of neighbor VRF Lite configuration
               peer1_description: "Description of source"         # optional, default is ""
               peer2_description: "Description of dest"           # optional, default is ""
               peer1_cmds: # Freeform config for source interface
@@ -114,7 +115,8 @@
                 - false shutdown                                    # optional, default is ""
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -124,7 +126,8 @@
           - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 1'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_ipv6_fabric }}"] | length) == 1'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -143,8 +146,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.2.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.2.2                           # IP address of the interface in dst fabric
@@ -158,8 +161,8 @@
               ebgp_password: 9BFE3270E19CA112                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
               inherit_from_msd: true                             # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco]
+                                                                # is false. Default is 3
+                                                                # choose from [3 - 3DES, 7 - Cisco]
               peer1_description: "Description of source"         # optional, default is ""
               peer2_description: "Description of dest"           # optional, default is ""
               peer1_cmds: # Freeform config for source interface
@@ -173,8 +176,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_addr: 193.168.3.1                             # IP address of interface in src fabric
               neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
@@ -186,8 +189,8 @@
               ebgp_password: 9BFE3270E19CA112                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
               inherit_from_msd: false                            # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco]
+                                                                # is false. Default is 3
+                                                                # choose from [3 - 3DES, 7 - Cisco]
 
           - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
             src_interface: "{{ intf_1_7 }}"                      # Interface on the Source fabric
@@ -195,8 +198,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
             ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.5.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.5.2                           # IP address of the interface in dst fabric
@@ -210,8 +213,8 @@
               ebgp_password: 9BFE3270E19CA112                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
               inherit_from_msd: true                             # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco]
+                                                                # is false. Default is 3
+                                                                # choose from [3 - 3DES, 7 - Cisco]
               peer1_description: "Description of source"         # optional, default is ""
               peer2_description: "Description of dest"           # optional, default is ""
               peer1_cmds: # Freeform config for source interface
@@ -225,8 +228,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
             ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_addr: 193.168.6.1                             # IP address of interface in src fabric
               neighbor_ip: 193.168.6.2                           # IP address of the interface in dst fabric
@@ -238,12 +241,13 @@
               ebgp_password: 9BFE3270E19CA112                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
               inherit_from_msd: false                            # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco]
+                                                                # is false. Default is 3
+                                                                # choose from [3 - 3DES, 7 - Cisco]
       register: result
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 4'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -254,7 +258,8 @@
           - '(result["diff"][0]["deploy"][0]["{{ ansible_ipv6_fabric }}"] | length) == 1'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
@@ -274,8 +279,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.10.1/24                       # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.10.2                          # IP address of the interface in dst fabric
@@ -283,7 +288,7 @@
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
               mtu: 1216                                          #
               auto_deploy: true                                  # optional, default is false
-                                                                 # Flag that controls auto generation of neighbor VRF Lite configuration
+                                                                # Flag that controls auto generation of neighbor VRF Lite configuration
               peer1_description: "Description of source - REP"   # optional, default is ""
               peer2_description: "Description of dest - REP"     # optional, default is ""
               peer1_cmds: # Freeform config for source interface
@@ -297,8 +302,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.40.1/24                       # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.40.2                          # IP address of the interface in dst fabric
@@ -306,7 +311,7 @@
               dst_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in destination fabric
               mtu: 4216                                          #
               auto_deploy: true                                  # optional, default is false
-                                                                 # Flag that controls auto generation of neighbor VRF Lite configuration
+                                                                # Flag that controls auto generation of neighbor VRF Lite configuration
               peer1_description: "Description of source - REP"   # optional, default is ""
               peer2_description: "Description of dest - REP"     # optional, default is ""
               peer1_cmds: # Freeform config for source interface
@@ -315,7 +320,8 @@
                 - false shutdown                                    # optional, default is ""
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 2'
@@ -325,7 +331,8 @@
           - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 1'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_ipv6_fabric }}"] | length) == 1'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -337,7 +344,8 @@
       cisco.dcnm.dcnm_links: *links_replace1
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -347,7 +355,8 @@
           - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 1'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_ipv6_fabric }}"] | length) == 1'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -367,8 +376,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.20.1/24                       # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.20.2                          # IP address of the interface in dst fabric
@@ -382,8 +391,8 @@
               ebgp_password: 28E71E338DA17111                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
               inherit_from_msd: false                            # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 7                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco]
+                                                                # is false. Default is 3
+                                                                # choose from [3 - 3DES, 7 - Cisco]
               peer1_description: "Description of source - REP"   # optional, default is ""
               peer2_description: "Description of dest - REP"     # optional, default is ""
 
@@ -393,8 +402,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_addr: 193.168.30.1                            # IP address of interface in src fabric
               neighbor_ip: 193.168.30.2                          # IP address of the interface in dst fabric
@@ -406,8 +415,8 @@
               ebgp_password: 8F8F790E1CB7AF60                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
               inherit_from_msd: true                             # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 7                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco]
+                                                                # is false. Default is 3
+                                                                # choose from [3 - 3DES, 7 - Cisco]
 
           - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
             src_interface: "{{ intf_1_7 }}"                      # Interface on the Source fabric
@@ -415,8 +424,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
             ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_subnet: 193.168.50.1/24                       # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.50.2                          # IP address of the interface in dst fabric
@@ -430,8 +439,8 @@
               ebgp_password: 34DEA21BE32A757D                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
               inherit_from_msd: false                            # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 7                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco]
+                                                                # is false. Default is 3
+                                                                # choose from [3 - 3DES, 7 - Cisco]
               peer1_description: "Description of source"         # optional, default is ""
               peer2_description: "Description of dest"           # optional, default is ""
 
@@ -441,8 +450,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
             ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
-                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup]
+                                                                #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                #     ext_evpn_multisite_overlay_setup]
             profile:
               ipv4_addr: 193.168.60.1                            # IP address of interface in src fabric
               neighbor_ip: 193.168.60.2                          # IP address of the interface in dst fabric
@@ -454,12 +463,13 @@
               ebgp_password: 0DAEAF7E1F5F0CC6                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
               inherit_from_msd: false                            # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 7                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco]
+                                                                # is false. Default is 3
+                                                                # choose from [3 - 3DES, 7 - Cisco]
       register: result
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 4'
@@ -470,7 +480,8 @@
           - '(result["diff"][0]["deploy"][0]["{{ ansible_ipv6_fabric }}"] | length) == 1'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
@@ -484,7 +495,8 @@
       register: result
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -495,7 +507,8 @@
           - '(result["diff"][0]["deploy"][0]["{{ ansible_ipv6_fabric }}"] | length) == 1'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
@@ -511,7 +524,7 @@
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert: that:
+  - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

@@ -250,8 +250,8 @@
             interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
+            ipv6_addr: "2010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # optional controller can provide
       deploy: true
   register: result_3
@@ -359,8 +359,8 @@
             interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
+            ipv6_addr: "2010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # optional controller can provide
       deploy: true
   register: result_5
@@ -430,8 +430,8 @@
             interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
+            ipv6_addr: "2010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # optional controller can provide
       deploy: false
   register: result_6
@@ -527,8 +527,8 @@
             interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
+            ipv6_addr: "2010::10:34:0:7/64 # optional"
+            neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # optional controller can provide
       deploy: false
   register: result_8

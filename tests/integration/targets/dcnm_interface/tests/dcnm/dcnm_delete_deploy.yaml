@@ -139,7 +139,8 @@
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'
@@ -249,7 +250,8 @@
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined
