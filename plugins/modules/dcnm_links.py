@@ -495,33 +495,33 @@ EXAMPLES = """
 #
 # INTER-FABRIC
 
-  - name: Create Links including optional parameters
-    cisco.dcnm.dcnm_links: &links_merge_with_opt
-        state: merged                                            # choose from [merged, replaced, deleted, query]
-        src_fabric: "{{ ansible_num_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
-            profile:
-              ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
-              neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
-              src_asn: 1000                                      # BGP ASN in source fabric
-              dst_asn: 1001                                      # BGP ASN in destination fabric
-              mtu: 9216                                          #
-              auto_deploy: false                                 # optional, default is false
-                                                                 # Flag that controls auto generation of neighbor VRF Lite configuration
-              peer1_description: "Description of source"         # optional, default is ""
-              peer2_description: "Description of dest"           # optional, default is ""
-              peer1_cmds:                                        # Freeform config for source interface
-                - no shutdown                                    # optional, default is ""
-              peer2_cmds:                                        # Freeform config for destination interface
-                - no shutdown                                    # optional, default is ""
+- name: Create Links including optional parameters
+  cisco.dcnm.dcnm_links: &links_merge_with_opt
+    state: merged                                            # choose from [merged, replaced, deleted, query]
+    src_fabric: "{{ ansible_num_fabric }}"
+    config:
+      - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+        src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+        dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+        template: ext_fabric_setup                           # template to be applied, choose from
+                                                             #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                             #     ext_evpn_multisite_overlay_setup ]
+        profile:
+          ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
+          neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
+          src_asn: 1000                                      # BGP ASN in source fabric
+          dst_asn: 1001                                      # BGP ASN in destination fabric
+          mtu: 9216                                          #
+          auto_deploy: false                                 # optional, default is false
+                                                             # Flag that controls auto generation of neighbor VRF Lite configuration
+          peer1_description: "Description of source"         # optional, default is ""
+          peer2_description: "Description of dest"           # optional, default is ""
+          peer1_cmds:                                        # Freeform config for source interface
+            - no shutdown                                    # optional, default is ""
+          peer2_cmds:                                        # Freeform config for destination interface
+            - no shutdown                                    # optional, default is ""
 
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
             src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
@@ -541,7 +541,7 @@ EXAMPLES = """
               max_paths: 1                                       # optional, default is 1
               route_tag: 12345                                   # optional, optional is ""
               ebgp_password_enable: true                         # optional, default is true
-              ebgp_password: 0102030405                          # optional, required only if ebgp_password_enable flag is true, and inherit_from_msd
+              ebgp_password: "0102030405"                        # optional, required only if ebgp_password_enable flag is true, and inherit_from_msd
                                                                  # is false.
               inherit_from_msd: true # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true, and inherit_from_msd
@@ -570,7 +570,7 @@ EXAMPLES = """
               trm_enabled: false                                 # optional, default is false
               bgp_multihop: 5                                    # optional, default is 5
               ebgp_password_enable: true                         # optional, default is true
-              ebgp_password: 0102030405                          # optional, required only if ebgp_password_enable flag is true, and inherit_from_msd
+              ebgp_password: "0102030405"                        # optional, required only if ebgp_password_enable flag is true, and inherit_from_msd
                                                                  # is false. Default is 3
               inherit_from_msd: false                            # optional, required only if ebgp_password_enable flag is true, default is false
               ebpg_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true, and inherit_from_msd

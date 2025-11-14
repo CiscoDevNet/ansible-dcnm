@@ -449,15 +449,15 @@ EXAMPLES = """
         service_vrf_template: null
         attach:
           - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
-    - vrf_name: ansible-vrf-r2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      service_vrf_template: null
-      attach:
-        - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
+          - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
 
 # VRF LITE Extension attached
 - name: Merge vrfs

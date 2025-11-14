@@ -128,18 +128,17 @@ EXAMPLES = """
     state: merged
     config:
       deploy: false
-        mode: maintenance
-        switches:
-          - ip_address: 192.168.1.2
-                mode: normal
-            - ip_address: 192.160.1.3
-                deploy: true
-                wait_for_mode_change: true
-            - ip_address: 192.160.1.4
+      mode: maintenance
+      switches:
+        - ip_address: 192.168.1.2
+          mode: normal
+        - ip_address: 192.160.1.3
+          deploy: true
+          wait_for_mode_change: true
+        - ip_address: 192.160.1.4
   register: result
 - debug:
     var: result
-
 """
 # pylint: disable=wrong-import-position
 import copy

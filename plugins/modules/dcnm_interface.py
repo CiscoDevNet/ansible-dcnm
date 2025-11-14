@@ -1805,7 +1805,6 @@ EXAMPLES = """
           - "192.172.1.1"
       - name: vpc750
         switch:
-
 """
 
 import copy

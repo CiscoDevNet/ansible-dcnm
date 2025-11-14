@@ -1155,7 +1155,6 @@ EXAMPLES = """
     fabric: test-fabric
     service_fabric: external
     config:
-
 """
 
 import re

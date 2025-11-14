@@ -349,26 +349,26 @@ EXAMPLES = """
         gw_ip_subnet: '192.168.30.1/24'
         attach:
           - ip_address: 192.168.1.224
-          ports: [Ethernet1/13, Ethernet1/14]
-      - ip_address: 192.168.1.225
-        ports: [Ethernet1/13, Ethernet1/14]
+            ports: [Ethernet1/13, Ethernet1/14]
+          - ip_address: 192.168.1.225
+            ports: [Ethernet1/13, Ethernet1/14]
         deploy: true
-    - net_name: ansible-net12
-      vrf_name: Tenant-2
-      net_id: 7002
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 151
-      gw_ip_subnet: '192.168.40.1/24'
-      attach:
-        - ip_address: 192.168.1.224
-          ports: [Ethernet1/11, Ethernet1/12]
-          tor_ports:
-            - ip_address: 192.168.1.120
-            ports: [Ethernet1/14, Ethernet1/15]
-      - ip_address: 192.168.1.225
-        ports: [Ethernet1/11, Ethernet1/12]
-      deploy: false
+      - net_name: ansible-net12
+        vrf_name: Tenant-2
+        net_id: 7002
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 151
+        gw_ip_subnet: '192.168.40.1/24'
+        attach:
+          - ip_address: 192.168.1.224
+            ports: [Ethernet1/11, Ethernet1/12]
+            tor_ports:
+              - ip_address: 192.168.1.120
+                ports: [Ethernet1/14, Ethernet1/15]
+          - ip_address: 192.168.1.225
+            ports: [Ethernet1/11, Ethernet1/12]
+        deploy: false
 
 - name: Replace networks
   cisco.dcnm.dcnm_network:

@@ -372,31 +372,31 @@ EXAMPLES = """
               golden: false
 
 # Detach image policy NR3F from two devices
-  - name: stage/upgrade devices
-      cisco.dcnm.dcnm_image_upgrade:
-            state: deleted
-            config:
-                policy: NR3F
-                switches:
-                    - ip_address: 192.168.1.1
-                - ip_address: 192.168.1.2
+- name: stage/upgrade devices
+  cisco.dcnm.dcnm_image_upgrade:
+    state: deleted
+    config:
+      policy: NR3F
+      switches:
+        - ip_address: 192.168.1.1
+        - ip_address: 192.168.1.2
 
 # Query ISSU details for three devices
-    - name: query switch ISSU status
-        cisco.dcnm.dcnm_image_upgrade:
-            state: query
-            config:
-                policy: KMR5
-                switches:
-                    - ip_address: 192.168.1.1
-                    policy: OR1F
-                - ip_address: 192.168.1.2
-                    policy: NR2F
-                - ip_address: 192.168.1.3 # will query policy KMR5
-        register: result
-    - name: print result
-        ansible.builtin.debug:
-            var: result
+- name: query switch ISSU status
+  cisco.dcnm.dcnm_image_upgrade:
+    state: query
+    config:
+      policy: KMR5
+      switches:
+        - ip_address: 192.168.1.1
+          policy: OR1F
+        - ip_address: 192.168.1.2
+          policy: NR2F
+        - ip_address: 192.168.1.3 # will query policy KMR5
+  register: result
+- name: print result
+  ansible.builtin.debug:
+    var: result
 """
 
 
