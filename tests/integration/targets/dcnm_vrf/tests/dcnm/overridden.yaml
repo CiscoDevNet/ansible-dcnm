@@ -110,15 +110,15 @@
   ansible.builtin.assert:
     that:
       - 'result_setup_3.changed == true'
-    - 'result_setup_3.response[0].RETURN_CODE == 200'
-    - 'result_setup_3.response[1].RETURN_CODE == 200'
-    - '(result_setup_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_setup_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_setup_3.diff[0].attach[0].deploy == true'
-    - 'result_setup_3.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_setup_3.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_setup_3.diff[0].attach[1].ip_address'
-    - 'result_setup_3.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_setup_3.response[0].RETURN_CODE == 200'
+      - 'result_setup_3.response[1].RETURN_CODE == 200'
+      - '(result_setup_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_setup_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_setup_3.diff[0].attach[0].deploy == true'
+      - 'result_setup_3.diff[0].attach[1].deploy == true'
+      - '"{{ switch_1 }}" in result_setup_3.diff[0].attach[0].ip_address'
+      - '"{{ switch_2 }}" in result_setup_3.diff[0].attach[1].ip_address'
+      - 'result_setup_3.diff[0].vrf_name == "ansible-vrf-int1"'
 
 ###############################################
 ###              OVERRIDDEN                  ##
@@ -154,21 +154,21 @@
   ansible.builtin.assert:
     that:
       - 'result_1.changed == true'
-    - 'result_1.response[0].RETURN_CODE == 200'
-    - 'result_1.response[1].RETURN_CODE == 200'
-    - 'result_1.response[3].RETURN_CODE == 200'
-    - 'result_1.response[4].RETURN_CODE == 200'
-    - 'result_1.response[5].RETURN_CODE == 200'
-    - '(result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - '(result_1.response[5].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_1.response[5].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_1.diff[0].vrf_name == "ansible-vrf-int2"'
-    - 'result_1.diff[1].attach[0].deploy == false'
-    - 'result_1.diff[1].attach[1].deploy == false'
-    - 'result_1.diff[1].vrf_name == "ansible-vrf-int1"'
-    - '"enableL3VniNoVlan\": \"true\"" in result_1a.response[0].parent.vrfTemplateConfig'
-    - 'result_1a.response[0].parent.vrfStatus == "PENDING"'
+      - 'result_1.response[0].RETURN_CODE == 200'
+      - 'result_1.response[1].RETURN_CODE == 200'
+      - 'result_1.response[3].RETURN_CODE == 200'
+      - 'result_1.response[4].RETURN_CODE == 200'
+      - 'result_1.response[5].RETURN_CODE == 200'
+      - '(result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+      - '(result_1.response[5].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_1.response[5].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_1.diff[0].vrf_name == "ansible-vrf-int2"'
+      - 'result_1.diff[1].attach[0].deploy == false'
+      - 'result_1.diff[1].attach[1].deploy == false'
+      - 'result_1.diff[1].vrf_name == "ansible-vrf-int1"'
+      - '"enableL3VniNoVlan\": \"true\"" in result_1a.response[0].parent.vrfTemplateConfig'
+      - 'result_1a.response[0].parent.vrfStatus == "PENDING"'
 
 - name: TEST.1c - OVERRIDDEN - [overridden] conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
@@ -182,7 +182,7 @@
   ansible.builtin.assert:
     that:
       - 'result_1c.changed == false'
-    - 'result_1c.response|length == 0'
+      - 'result_1c.response|length == 0'
 
 - name: TEST.1f - OVERRIDDEN - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
@@ -224,16 +224,16 @@
   ansible.builtin.assert:
     that:
       - 'result_2.changed == true'
-    - 'result_2.response[0].RETURN_CODE == 200'
-    - 'result_2.response[1].RETURN_CODE == 200'
-    - 'result_2.response[2].RETURN_CODE == 200'
-    - '(result_2.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_2.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_2.diff[0].attach[0].deploy == true'
-    - 'result_2.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_2.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_2.diff[0].attach[1].ip_address'
-    - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_2.response[0].RETURN_CODE == 200'
+      - 'result_2.response[1].RETURN_CODE == 200'
+      - 'result_2.response[2].RETURN_CODE == 200'
+      - '(result_2.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_2.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_2.diff[0].attach[0].deploy == true'
+      - 'result_2.diff[0].attach[1].deploy == true'
+      - '"{{ switch_1 }}" in result_2.diff[0].attach[0].ip_address'
+      - '"{{ switch_2 }}" in result_2.diff[0].attach[1].ip_address'
+      - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
 
 - name: TEST.2c - OVERRIDDEN - [overridden] Override existing VRF ansible-vrf-int1 to create new VRF ansible-vrf-int2
   cisco.dcnm.dcnm_vrf: &conf2
@@ -269,23 +269,23 @@
   ansible.builtin.assert:
     that:
       - 'result_2c.changed == true'
-    - 'result_2c.response[0].RETURN_CODE == 200'
-    - 'result_2c.response[1].RETURN_CODE == 200'
-    - 'result_2c.response[2].RETURN_CODE == 200'
-    - 'result_2c.response[3].RETURN_CODE == 200'
-    - 'result_2c.response[4].RETURN_CODE == 200'
-    - 'result_2c.response[5].RETURN_CODE == 200'
-    - 'result_2c.response[6].RETURN_CODE == 200'
-    - '(result_2c.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_2c.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - '(result_2c.response[5].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_2c.response[5].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_2c.diff[0].attach[0].deploy == true'
-    - 'result_2c.diff[0].attach[1].deploy == true'
-    - 'result_2c.diff[0].vrf_name == "ansible-vrf-int2"'
-    - 'result_2c.diff[1].attach[0].deploy == false'
-    - 'result_2c.diff[1].attach[1].deploy == false'
-    - 'result_2c.diff[1].vrf_name == "ansible-vrf-int1"'
+      - 'result_2c.response[0].RETURN_CODE == 200'
+      - 'result_2c.response[1].RETURN_CODE == 200'
+      - 'result_2c.response[2].RETURN_CODE == 200'
+      - 'result_2c.response[3].RETURN_CODE == 200'
+      - 'result_2c.response[4].RETURN_CODE == 200'
+      - 'result_2c.response[5].RETURN_CODE == 200'
+      - 'result_2c.response[6].RETURN_CODE == 200'
+      - '(result_2c.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_2c.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+      - '(result_2c.response[5].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_2c.response[5].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_2c.diff[0].attach[0].deploy == true'
+      - 'result_2c.diff[0].attach[1].deploy == true'
+      - 'result_2c.diff[0].vrf_name == "ansible-vrf-int2"'
+      - 'result_2c.diff[1].attach[0].deploy == false'
+      - 'result_2c.diff[1].attach[1].deploy == false'
+      - 'result_2c.diff[1].vrf_name == "ansible-vrf-int1"'
 
 - name: TEST.2f - OVERRIDDEN - [overridden] conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
@@ -299,7 +299,7 @@
   ansible.builtin.assert:
     that:
       - 'result_2f.changed == false'
-    - 'result_2f.response|length == 0'
+      - 'result_2f.response|length == 0'
 
 - name: TEST.3 - OVERRIDDEN - [merged] ansible-vrf-int2 to add vrf_lite extension to switch_2
   cisco.dcnm.dcnm_vrf:
@@ -351,16 +351,16 @@
   ansible.builtin.assert:
     that:
       - 'result_3.changed == true'
-    - 'result_3.response[0].RETURN_CODE == 200'
-    - 'result_3.response[1].RETURN_CODE == 200'
-    - 'result_3.response[2].RETURN_CODE == 200'
-    - '(result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_3.diff[0].attach[0].deploy == true'
-    - 'result_3.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
-    - 'result_3.diff[0].vrf_name == "ansible-vrf-int2"'
+      - 'result_3.response[0].RETURN_CODE == 200'
+      - 'result_3.response[1].RETURN_CODE == 200'
+      - 'result_3.response[2].RETURN_CODE == 200'
+      - '(result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_3.diff[0].attach[0].deploy == true'
+      - 'result_3.diff[0].attach[1].deploy == true'
+      - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
+      - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
+      - 'result_3.diff[0].vrf_name == "ansible-vrf-int2"'
 
 - name: TEST.4 - OVERRIDDEN - [overridden] Override vrf_lite extension with new dot1q value
   cisco.dcnm.dcnm_vrf: &conf4
@@ -431,11 +431,11 @@
   ansible.builtin.assert:
     that:
       - 'result_4.changed == true'
-    - 'result_4.response[0].RETURN_CODE == 200'
-    - 'result_4.response[1].RETURN_CODE == 200'
-    - '(result_4.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result_4.diff[0].attach[0].deploy == true'
-    - 'result_4.diff[0].vrf_name == "ansible-vrf-int2"'
+      - 'result_4.response[0].RETURN_CODE == 200'
+      - 'result_4.response[1].RETURN_CODE == 200'
+      - '(result_4.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - 'result_4.diff[0].attach[0].deploy == true'
+      - 'result_4.diff[0].vrf_name == "ansible-vrf-int2"'
 
 - name: TEST.4f - OVERRIDDEN - [overridden] conf4 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf4
@@ -449,7 +449,7 @@
   ansible.builtin.assert:
     that:
       - 'result_4f.changed == false'
-    - 'result_4f.response|length == 0'
+      - 'result_4f.response|length == 0'
 
 - name: TEST.5 - OVERRIDDEN - [overridden] Override ansible-vrf-int2 to create ansible-vrf-int1 with LITE Extension
   cisco.dcnm.dcnm_vrf: &conf5
@@ -501,24 +501,24 @@
   ansible.builtin.assert:
     that:
       - 'result_5.changed == true'
-    - 'result_5.response[0].RETURN_CODE == 200'
-    - 'result_5.response[1].RETURN_CODE == 200'
-    - 'result_5.response[2].RETURN_CODE == 200'
-    - 'result_5.response[3].RETURN_CODE == 200'
-    - 'result_5.response[4].RETURN_CODE == 200'
-    - 'result_5.response[5].RETURN_CODE == 200'
-    - 'result_5.response[6].RETURN_CODE == 200'
-    - '(result_5.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_5.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - '(result_5.response[5].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_5.response[5].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_5.response[2].METHOD == "DELETE"'
-    - 'result_5.diff[0].attach[0].deploy == true'
-    - 'result_5.diff[0].attach[1].deploy == true'
-    - 'result_5.diff[0].vrf_name == "ansible-vrf-int1"'
-    - 'result_5.diff[1].attach[0].deploy == false'
-    - 'result_5.diff[1].attach[1].deploy == false'
-    - 'result_5.diff[1].vrf_name == "ansible-vrf-int2"'
+      - 'result_5.response[0].RETURN_CODE == 200'
+      - 'result_5.response[1].RETURN_CODE == 200'
+      - 'result_5.response[2].RETURN_CODE == 200'
+      - 'result_5.response[3].RETURN_CODE == 200'
+      - 'result_5.response[4].RETURN_CODE == 200'
+      - 'result_5.response[5].RETURN_CODE == 200'
+      - 'result_5.response[6].RETURN_CODE == 200'
+      - '(result_5.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_5.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+      - '(result_5.response[5].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_5.response[5].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_5.response[2].METHOD == "DELETE"'
+      - 'result_5.diff[0].attach[0].deploy == true'
+      - 'result_5.diff[0].attach[1].deploy == true'
+      - 'result_5.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_5.diff[1].attach[0].deploy == false'
+      - 'result_5.diff[1].attach[1].deploy == false'
+      - 'result_5.diff[1].vrf_name == "ansible-vrf-int2"'
 
 - name: TEST.5d - OVERRIDDEN - [overridden] conf5 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf5
@@ -532,7 +532,7 @@
   ansible.builtin.assert:
     that:
       - 'result_5d.changed == false'
-    - 'result_5d.response|length == 0'
+      - 'result_5d.response|length == 0'
 
 ##############################################
 ##                 CLEAN-UP                 ##

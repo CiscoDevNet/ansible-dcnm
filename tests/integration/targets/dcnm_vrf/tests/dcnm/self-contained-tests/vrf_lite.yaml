@@ -110,19 +110,19 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ switch_3 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result.diff[0].attach[1].ip_address'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
-    - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[2].RETURN_CODE == 200'
+      - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - 'result.diff[0].attach[1].deploy == true'
+      - '"{{ switch_3 }}" in result.diff[0].attach[0].ip_address'
+      - '"{{ switch_2 }}" in result.diff[0].attach[1].ip_address'
+      - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+      - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
 
 - name: MERGED - conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
@@ -132,7 +132,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: VRF LITE- Attach and Deploy second VRF LITE EXTENSION Provided by the User in one switch
   cisco.dcnm.dcnm_vrf: &conf2
@@ -179,17 +179,17 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
-    - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"{{ interface_2b }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"20.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
+      - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+      - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"{{ interface_2b }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"20.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
 
 - name: VRF LITE - conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
@@ -199,7 +199,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: VRF LITE- Replace VRF LITE Attachment and Deploy by the User in one switch
   cisco.dcnm.dcnm_vrf: &conf3
@@ -239,15 +239,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
-    - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
+      - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+      - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
 
 - name: MERGED - conf3 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf3
@@ -257,7 +257,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: VRF LITE- Override VRF and VRF LITE EXTENSION Provided by the User
   cisco.dcnm.dcnm_vrf: &conf4
@@ -303,27 +303,27 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[3].RETURN_CODE == 200'
-    - 'result.response[4].RETURN_CODE == 200'
-    - 'result.response[5].RETURN_CODE == 200'
-    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - 'result.diff[1].attach[0].deploy == false'
-    - 'result.diff[1].attach[1].deploy == false'
-    - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ switch_3 }}" in result.diff[1].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result.diff[1].attach[1].ip_address'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
-    - 'result.diff[1].vrf_name == "ansible-vrf-int1"'
-    - '"{{ interface_2a }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-    - '"ansible-vrf-int1" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-    - '"10.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-    - '"{{ interface_2b }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-    - '"20.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[2].RETURN_CODE == 200'
+      - 'result.response[3].RETURN_CODE == 200'
+      - 'result.response[4].RETURN_CODE == 200'
+      - 'result.response[5].RETURN_CODE == 200'
+      - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - 'result.diff[1].attach[0].deploy == false'
+      - 'result.diff[1].attach[1].deploy == false'
+      - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
+      - '"{{ switch_3 }}" in result.diff[1].attach[0].ip_address'
+      - '"{{ switch_2 }}" in result.diff[1].attach[1].ip_address'
+      - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
+      - 'result.diff[1].vrf_name == "ansible-vrf-int1"'
+      - '"{{ interface_2a }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - '"ansible-vrf-int1" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - '"10.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - '"{{ interface_2b }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - '"20.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
 
 - name: VRF LITE - conf4 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf4
@@ -333,7 +333,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: VRF LITE - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
@@ -400,24 +400,24 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
-    - '"{{ interface_1a }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-    - '"ansible-vrf-int3" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-    - '"40.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-    - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"{{ interface_2b }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-    - '"20.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[2].RETURN_CODE == 200'
+      - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - 'result.diff[0].attach[1].deploy == true'
+      - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
+      - '"{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
+      - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
+      - '"{{ interface_1a }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - '"ansible-vrf-int3" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - '"40.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"{{ interface_2b }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"20.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
 
 - name: VRF LITE - conf5 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf5
@@ -427,7 +427,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 ###############################################
 ###                 CLEAN-UP                 ##

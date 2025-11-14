@@ -102,14 +102,14 @@
   ansible.builtin.assert:
     that:
       - 'result_setup_4.changed == true'
-    - 'result_setup_4.response[0].RETURN_CODE == 200'
-    - 'result_setup_4.response[1].RETURN_CODE == 200'
-    - 'result_setup_4.response[2].RETURN_CODE == 200'
-    - '(result_setup_4.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_setup_4.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_setup_4.diff[0].attach[0].deploy == true'
-    - 'result_setup_4.diff[0].attach[1].deploy == true'
-    - 'result_setup_4.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_setup_4.response[0].RETURN_CODE == 200'
+      - 'result_setup_4.response[1].RETURN_CODE == 200'
+      - 'result_setup_4.response[2].RETURN_CODE == 200'
+      - '(result_setup_4.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_setup_4.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_setup_4.diff[0].attach[0].deploy == true'
+      - 'result_setup_4.diff[0].attach[1].deploy == true'
+      - 'result_setup_4.diff[0].vrf_name == "ansible-vrf-int1"'
 
 ###############################################
 ###                REPLACED                  ##
@@ -145,13 +145,13 @@
   ansible.builtin.assert:
     that:
       - 'result_1.changed == true'
-    - 'result_1.response[0].RETURN_CODE == 200'
-    - 'result_1.response[1].RETURN_CODE == 200'
-    - '(result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_1.diff[0].attach[0].deploy == false'
-    - 'result_1.diff[0].attach[1].deploy == false'
-    - 'result_1.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_1.response[0].RETURN_CODE == 200'
+      - 'result_1.response[1].RETURN_CODE == 200'
+      - '(result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_1.diff[0].attach[0].deploy == false'
+      - 'result_1.diff[0].attach[1].deploy == false'
+      - 'result_1.diff[0].vrf_name == "ansible-vrf-int1"'
 
 - name: TEST.1c - REPLACED - conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
@@ -200,15 +200,15 @@
   ansible.builtin.assert:
     that:
       - 'result_2.changed == true'
-    - 'result_2.response[0].RETURN_CODE == 200'
-    - 'result_2.response[1].RETURN_CODE == 200'
-    - '(result_2.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_2.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_2.diff[0].attach[0].deploy == true'
-    - 'result_2.diff[0].attach[1].deploy == true'
-    - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
-    - 'result_2.diff[0].attach[0].vlan_id == 500'
-    - 'result_2.diff[0].attach[1].vlan_id == 500'
+      - 'result_2.response[0].RETURN_CODE == 200'
+      - 'result_2.response[1].RETURN_CODE == 200'
+      - '(result_2.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_2.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_2.diff[0].attach[0].deploy == true'
+      - 'result_2.diff[0].attach[1].deploy == true'
+      - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_2.diff[0].attach[0].vlan_id == 500'
+      - 'result_2.diff[0].attach[1].vlan_id == 500'
 
 - name: TEST.2c - REPLACED - [replaced] conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
@@ -274,16 +274,16 @@
   ansible.builtin.assert:
     that:
       - 'result_3.changed == true'
-    - 'result_3.response[0].RETURN_CODE == 200'
-    - 'result_3.response[1].RETURN_CODE == 200'
-    - 'result_3.response[2].RETURN_CODE == 200'
-    - '(result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_3.diff[0].attach[0].deploy == true'
-    - 'result_3.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
-    - 'result_3.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_3.response[0].RETURN_CODE == 200'
+      - 'result_3.response[1].RETURN_CODE == 200'
+      - 'result_3.response[2].RETURN_CODE == 200'
+      - '(result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_3.diff[0].attach[0].deploy == true'
+      - 'result_3.diff[0].attach[1].deploy == true'
+      - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
+      - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
+      - 'result_3.diff[0].vrf_name == "ansible-vrf-int1"'
 
 - name: TEST.4 - REPLACED - [replaced] Update existing VRF - Delete VRF LITE Attachment
   cisco.dcnm.dcnm_vrf: &conf4
@@ -322,11 +322,11 @@
   ansible.builtin.assert:
     that:
       - 'result_4.changed == true'
-    - 'result_4.response[0].RETURN_CODE == 200'
-    - 'result_4.response[1].RETURN_CODE == 200'
-    - '(result_4.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result_4.diff[0].attach[0].deploy == false'
-    - 'result_4.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_4.response[0].RETURN_CODE == 200'
+      - 'result_4.response[1].RETURN_CODE == 200'
+      - '(result_4.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - 'result_4.diff[0].attach[0].deploy == false'
+      - 'result_4.diff[0].vrf_name == "ansible-vrf-int1"'
 
 - name: TEST.4d - REPLACED - conf4 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf4
@@ -383,12 +383,12 @@
   ansible.builtin.assert:
     that:
       - 'result_5.changed == true'
-    - 'result_5.response[0].RETURN_CODE == 200'
-    - 'result_5.response[1].RETURN_CODE == 200'
-    - '(result_5.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result_5.diff[0].attach[0].deploy == true'
-    - 'result_5.diff[0].vrf_name == "ansible-vrf-int1"'
-    - 'result_5.diff[0].attach[0].vlan_id == 500'
+      - 'result_5.response[0].RETURN_CODE == 200'
+      - 'result_5.response[1].RETURN_CODE == 200'
+      - '(result_5.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - 'result_5.diff[0].attach[0].deploy == true'
+      - 'result_5.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_5.diff[0].attach[0].vlan_id == 500'
 
 - name: TEST.5c - REPLACED - conf5 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf5
@@ -450,15 +450,15 @@
   ansible.builtin.assert:
     that:
       - 'result_6.changed == true'
-    - 'result_6.response[0].RETURN_CODE == 200'
-    - 'result_6.response[1].RETURN_CODE == 200'
-    - '(result_6.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_6.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_6.diff[0].attach[0].deploy == true'
-    - '"{{ switch_2 }}" in result_6.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_6.diff[0].attach[1].ip_address'
-    - '"{{ switch_1 }}" in result_6.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_6.diff[0].attach[1].ip_address'
-    - 'result_6.diff[0].vrf_name == "ansible-vrf-int1"'
-    - '"enableL3VniNoVlan\": \"true\"" in result_6a.response[0].parent.vrfTemplateConfig'
+      - 'result_6.response[0].RETURN_CODE == 200'
+      - 'result_6.response[1].RETURN_CODE == 200'
+      - '(result_6.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_6.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_6.diff[0].attach[0].deploy == true'
+      - '"{{ switch_2 }}" in result_6.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_6.diff[0].attach[1].ip_address'
+      - '"{{ switch_1 }}" in result_6.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_6.diff[0].attach[1].ip_address'
+      - 'result_6.diff[0].vrf_name == "ansible-vrf-int1"'
+      - '"enableL3VniNoVlan\": \"true\"" in result_6a.response[0].parent.vrfTemplateConfig'
 
 - name: TEST.7 - REPLACED - [replaced] Update existing VRF - Delete VRF LITE Attachment
   cisco.dcnm.dcnm_vrf: &conf7
@@ -489,12 +489,12 @@
   ansible.builtin.assert:
     that:
       - 'result_7.changed == true'
-    - 'result_7.response[0].RETURN_CODE == 200'
-    - 'result_7.response[1].RETURN_CODE == 200'
-    - '(result_7.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result_7.diff[0].attach[0].deploy == false'
-    - 'result_7.diff[0].vrf_name == "ansible-vrf-int1"'
-    - '"enableL3VniNoVlan\": \"true\"" in result_7b.response[0].parent.vrfTemplateConfig'
+      - 'result_7.response[0].RETURN_CODE == 200'
+      - 'result_7.response[1].RETURN_CODE == 200'
+      - '(result_7.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - 'result_7.diff[0].attach[0].deploy == false'
+      - 'result_7.diff[0].vrf_name == "ansible-vrf-int1"'
+      - '"enableL3VniNoVlan\": \"true\"" in result_7b.response[0].parent.vrfTemplateConfig'
 
 - name: TEST.7d - REPLACED - conf7 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf7
@@ -547,11 +547,11 @@
   ansible.builtin.assert:
     that:
       - 'result_8.changed == true'
-    - 'result_8.response[0].RETURN_CODE == 200'
-    - '(result_8.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result_8.diff[0].attach[0].deploy == true'
-    - 'result_8.diff[0].vrf_name == "ansible-vrf-int1"'
-    - '"enableL3VniNoVlan\": \"true\"" in result_8a.response[0].parent.vrfTemplateConfig'
+      - 'result_8.response[0].RETURN_CODE == 200'
+      - '(result_8.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - 'result_8.diff[0].attach[0].deploy == true'
+      - 'result_8.diff[0].vrf_name == "ansible-vrf-int1"'
+      - '"enableL3VniNoVlan\": \"true\"" in result_8a.response[0].parent.vrfTemplateConfig'
 
 - name: TEST.8c - REPLACED - conf8 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf8

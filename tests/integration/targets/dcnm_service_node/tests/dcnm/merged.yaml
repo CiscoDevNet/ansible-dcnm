@@ -77,15 +77,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: MERGED - conf - Idempotence
   cisco.dcnm.dcnm_service_node: *conf
@@ -95,7 +95,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -134,15 +134,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: MERGED - conf1 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf1
@@ -152,7 +152,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -191,15 +191,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "ADC"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "ADC"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: MERGED - conf2 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf2
@@ -209,7 +209,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -248,15 +248,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "VNF"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "VNF"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: MERGED - conf3 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf3
@@ -266,7 +266,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -306,15 +306,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: MERGED - conf - Idempotence
   cisco.dcnm.dcnm_service_node: *conf4
@@ -324,7 +324,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -352,15 +352,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "ADC"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "ADC"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: MERGED - conf5 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf5
@@ -370,7 +370,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -398,15 +398,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "VNF"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "VNF"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: MERGED - conf - Idempotence
   cisco.dcnm.dcnm_service_node: *conf6
@@ -416,7 +416,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -443,15 +443,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "VNF"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "VNF"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -495,33 +495,33 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "VNF"'
-    - 'result.response[0].DATA.name == "SN-11"'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[1].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[1].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[1].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[1].DATA.formFactor == "Virtual"'
-    - 'result.response[1].DATA.interfaceName == "svc2"'
-    - 'result.response[1].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[1].DATA.type == "Firewall"'
-    - 'result.response[1].DATA.name == "SN-12"'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[2].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[2].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[2].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[2].DATA.formFactor == "Virtual"'
-    - 'result.response[2].DATA.interfaceName == "svc3"'
-    - 'result.response[2].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[2].DATA.type == "ADC"'
-    - 'result.response[2].DATA.name == "SN-13"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "VNF"'
+      - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[1].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[1].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[1].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[1].DATA.formFactor == "Virtual"'
+      - 'result.response[1].DATA.interfaceName == "svc2"'
+      - 'result.response[1].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[1].DATA.type == "Firewall"'
+      - 'result.response[1].DATA.name == "SN-12"'
+      - 'result.response[2].RETURN_CODE == 200'
+      - 'result.response[2].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[2].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[2].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[2].DATA.formFactor == "Virtual"'
+      - 'result.response[2].DATA.interfaceName == "svc3"'
+      - 'result.response[2].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[2].DATA.type == "ADC"'
+      - 'result.response[2].DATA.name == "SN-13"'
 
 - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -565,33 +565,33 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "VNF"'
-    - 'result.response[0].DATA.name == "SN-11"'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[1].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[1].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[1].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[1].DATA.formFactor == "Physical"'
-    - 'result.response[1].DATA.interfaceName == "svc2"'
-    - 'result.response[1].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[1].DATA.type == "Firewall"'
-    - 'result.response[1].DATA.name == "SN-12"'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[2].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[2].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[2].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[2].DATA.formFactor == "Physical"'
-    - 'result.response[2].DATA.interfaceName == "svc3"'
-    - 'result.response[2].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[2].DATA.type == "ADC"'
-    - 'result.response[2].DATA.name == "SN-13"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "VNF"'
+      - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[1].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[1].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[1].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[1].DATA.formFactor == "Physical"'
+      - 'result.response[1].DATA.interfaceName == "svc2"'
+      - 'result.response[1].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[1].DATA.type == "Firewall"'
+      - 'result.response[1].DATA.name == "SN-12"'
+      - 'result.response[2].RETURN_CODE == 200'
+      - 'result.response[2].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[2].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[2].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[2].DATA.formFactor == "Physical"'
+      - 'result.response[2].DATA.interfaceName == "svc3"'
+      - 'result.response[2].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[2].DATA.type == "ADC"'
+      - 'result.response[2].DATA.name == "SN-13"'
 
 - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -644,7 +644,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - '"if two switches are provided, vpc is only interface option" in result.msg'
+      - '"if two switches are provided, vpc is only interface option" in result.msg'
 
 - name: MERGED - Create Service Node with 1 switch and valid vpc name
   cisco.dcnm.dcnm_service_node:
@@ -666,7 +666,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - '"For 1 switch, vpc is not the interface option" in result.msg'
+      - '"For 1 switch, vpc is not the interface option" in result.msg'
 
 - name: MERGED - Create Service Node with more than 2 switch and valid vpc name
   cisco.dcnm.dcnm_service_node:
@@ -690,7 +690,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - '"Upto 2 switches only allowed" in result.msg'
+      - '"Upto 2 switches only allowed" in result.msg'
 
 - name: MERGED - Create Service Node without required parameter
   cisco.dcnm.dcnm_service_node:
@@ -712,7 +712,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - '"Required parameter not found" in result.msg'
+      - '"Required parameter not found" in result.msg'
 
 - name: MERGED - Create Service Node with wrong type
   cisco.dcnm.dcnm_service_node:
@@ -734,7 +734,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - '"Invalid choice provided" in result.msg'
+      - '"Invalid choice provided" in result.msg'
 
 - name: MERGED - Create Service Node with wrong formfactor
   cisco.dcnm.dcnm_service_node:
@@ -756,7 +756,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - '"Invalid choice provided" in result.msg'
+      - '"Invalid choice provided" in result.msg'
 
 ###############################################
 ###                 CLEAN-UP                 ##

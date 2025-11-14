@@ -72,7 +72,7 @@
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.diff[0].attach|length == 0'
       - 'result.diff[0].net_name == "ansible-net15"'
-        - 'result.diff[0].net_id == 7005'
+      - 'result.diff[0].net_id == 7005'
       - 'result.diff[0].vrf_name == "Tenant-1"'
 
   - name: ING_REP - setup - Clean up any existing networks
@@ -115,7 +115,7 @@
       - 'result.response[1].RETURN_CODE == 200'
       - 'result.response[2].RETURN_CODE == 200'
       - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-        - 'result.diff[0].attach[0].deploy == true'
+      - 'result.diff[0].attach[0].deploy == true'
       - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
       - 'result.diff[0].net_name == "ansible-net16"'
       - 'result.diff[0].net_id == 7005'
