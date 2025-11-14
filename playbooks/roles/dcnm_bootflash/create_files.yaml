@@ -1,5 +1,6 @@
 ---
-- gather_facts: false
+- name: Create bootflash files on switch1
+  gather_facts: false
   hosts:
     - switch1
   tasks:
@@ -13,7 +14,8 @@
           - echo 1 > bootflash: /{{ nxos_vars.switch1_file3 }}
           - echo 1 > bootflash: /{{ nxos_vars.switch1_file4 }}
 
-- gather_facts: false
+- name: Create bootflash files on switch2
+  gather_facts: false
   hosts:
     - switch2
   tasks:

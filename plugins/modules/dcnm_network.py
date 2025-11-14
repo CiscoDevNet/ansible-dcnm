@@ -341,7 +341,7 @@ EXAMPLES = """
     state: merged
     config:
       - net_name: ansible-net13
-      vrf_name: Tenant-1
+        vrf_name: Tenant-1
         net_id: 7005
         net_template: Default_Network_Universal
         net_extension_template: Default_Network_Extension_Universal

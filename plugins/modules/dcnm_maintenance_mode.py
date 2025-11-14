@@ -109,12 +109,12 @@ EXAMPLES = """
     state: merged
     config:
       deploy: true
-        wait_for_mode_change: true
-        mode: maintenance
-        switches:
-          - ip_address: 192.168.1.2
-            - ip_address: 192.160.1.3
-            - ip_address: 192.160.1.4
+      wait_for_mode_change: true
+      mode: maintenance
+      switches:
+        - ip_address: 192.168.1.2
+        - ip_address: 192.160.1.3
+        - ip_address: 192.160.1.4
   register: result
 - debug:
     var: result

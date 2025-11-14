@@ -60,7 +60,7 @@ EXAMPLES = """
     state: merged
     config:
       - vrf_name: myVrf
-      vrf_id: 9008011
+        vrf_id: 9008011
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 2000
