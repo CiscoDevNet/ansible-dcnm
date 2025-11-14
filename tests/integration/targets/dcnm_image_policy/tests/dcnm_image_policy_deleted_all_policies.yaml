@@ -189,37 +189,37 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.changed == true
-    - result.failed == false
-    - (result.diff | length) == 2
-    - result.diff[0].policyName == image_policy_1
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[0].policyName == image_policy_1
       - result.diff[0].policyDescr == image_policy_1
-    - result.diff[0].epldImgName == epld_image_1
-    - result.diff[0].nxosVersion == nxos_release_1
-    - result.diff[0].sequence_number == 1
-    - result.diff[1].policyName == image_policy_2
-    - result.diff[1].policyDescr == image_policy_2
-    - result.diff[1].epldImgName == epld_image_2
-    - result.diff[1].nxosVersion == nxos_release_2
-    - result.diff[1].sequence_number == 2
-    - (result.metadata | length) == 2
-    - result.metadata[0].action == "create"
-    - result.metadata[0].check_mode == False
-    - result.metadata[0].sequence_number == 1
-    - result.metadata[0].state == "merged"
-    - result.metadata[1].action == "create"
-    - result.metadata[1].check_mode == False
-    - result.metadata[1].sequence_number == 2
-    - result.metadata[1].state == "merged"
-    - (result.response | length) == 2
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "POST"
-    - result.response[0].RETURN_CODE == 200
-    - result.response[0].sequence_number == 1
-    - result.response[1].MESSAGE == "OK"
-    - result.response[1].METHOD == "POST"
-    - result.response[1].RETURN_CODE == 200
-    - result.response[1].sequence_number == 2
+      - result.diff[0].epldImgName == epld_image_1
+      - result.diff[0].nxosVersion == nxos_release_1
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].policyName == image_policy_2
+      - result.diff[1].policyDescr == image_policy_2
+      - result.diff[1].epldImgName == epld_image_2
+      - result.diff[1].nxosVersion == nxos_release_2
+      - result.diff[1].sequence_number == 2
+      - (result.metadata | length) == 2
+      - result.metadata[0].action == "create"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - result.metadata[1].action == "create"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - (result.response | length) == 2
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
 
 ################################################################################
 # DELETED - TEST - Delete all image policies and verify the result
@@ -271,21 +271,21 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.changed == true
-    - result.failed == false
-    - (result.diff | length) == 1
-    - image_policy_1 in result.diff[0].policyNames
-    - image_policy_2 in result.diff[0].policyNames
-    - (result.response | length) == 1
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "DELETE"
-    - result.response[0].RETURN_CODE == 200
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - image_policy_1 in result.diff[0].policyNames
+      - image_policy_2 in result.diff[0].policyNames
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
       - (result.metadata | length) == 1
-    - result.metadata[0].action == "delete"
-    - result.metadata[0].check_mode == False
-    - result.metadata[0].sequence_number == 1
-    - result.metadata[0].state == "deleted"
-    - (result.result | length) == 1
-    - result.result[0].changed == true
-    - result.result[0].sequence_number == 1
-    - result.result[0].success == true
+      - result.metadata[0].action == "delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].sequence_number == 1
+      - result.result[0].success == true

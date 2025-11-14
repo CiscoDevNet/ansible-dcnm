@@ -71,7 +71,7 @@
           - 'result.response[0].RETURN_CODE == 200'
           - 'result.response[1].RETURN_CODE == 200'
 
-    - name: Configure access ethernet interfaces - Idempotence
+          - name: Configure access ethernet interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *config_interfaces
       register: result
 
@@ -80,7 +80,7 @@
           - 'result.changed == false'
           - 'result.response|length == 0'
 
-    - name: Add Tenant VRF
+          - name: Add Tenant VRF
       cisco.dcnm.dcnm_vrf: &add_vrf
       fabric: "{{ fabric_name }}"
       state: merged
@@ -101,7 +101,7 @@
           - 'result.response[1].RETURN_CODE == 200'
           - 'result.response[2].RETURN_CODE == 200'
 
-    - name: Add Tenant VRF - Idempotence
+          - name: Add Tenant VRF - Idempotence
       cisco.dcnm.dcnm_vrf: *add_vrf
       register: result
 
@@ -110,7 +110,7 @@
           - 'result.changed == false'
           - 'result.response|length == 0'
 
-    - name: Add Networks
+          - name: Add Networks
       cisco.dcnm.dcnm_network: &add_networks
       fabric: "{{ fabric_name }}"
       state: merged
@@ -149,7 +149,7 @@
           - 'result.response[2].RETURN_CODE == 200'
           - 'result.response[3].RETURN_CODE == 200'
 
-    - name: Sleep for 30 seconds before checking idempotence state
+          - name: Sleep for 30 seconds before checking idempotence state
       ansible.builtin.wait_for:
         timeout: 30
 

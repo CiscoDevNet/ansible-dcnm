@@ -94,15 +94,15 @@
       register: result
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 4'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 4'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Template Created" in item["DATA"]["status"]'
+        - 'item["RETURN_CODE"] == 200'
+        - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
 
     - name: Modifying existing templates
@@ -180,15 +180,15 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 3'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 3'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Template Created" in item["DATA"]["status"]'
+        - 'item["RETURN_CODE"] == 200'
+        - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
 
     - name: Modifying existing templates - Idempotence
@@ -197,12 +197,12 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
+        - 'result.changed == false'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
 
-    - name: Query modified templates
+        - name: Query modified templates
       cisco.dcnm.dcnm_template:
         state: query       # only choose form [merged, deleted, query]
         config:
@@ -218,19 +218,19 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 4'
-          - '("Template_101 - added this description" in result["response"][0]["description"])'
-          - '("Template_102 - added this" in result["response"][1]["description"])'
-          - '("internal policy 102 - added this" in result["response"][1]["tags"])'
-          - '("Template_103 - added this" in result["response"][2]["description"])'
-          - '("internal policy 103 - added this" in result["response"][2]["tags"])'
-          - '("Template_104" in result["response"][3]["description"])'
-          - '("internal policy 104" in result["response"][3]["tags"])'
-          - '("port 54000" in result["response"][3]["content"])'
-          - '("sample-interval 40000" in result["response"][3]["content"])'
+        - 'result.changed == false'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 4'
+        - '("Template_101 - added this description" in result["response"][0]["description"])'
+        - '("Template_102 - added this" in result["response"][1]["description"])'
+        - '("internal policy 102 - added this" in result["response"][1]["tags"])'
+        - '("Template_103 - added this" in result["response"][2]["description"])'
+        - '("internal policy 103 - added this" in result["response"][2]["tags"])'
+        - '("Template_104" in result["response"][3]["description"])'
+        - '("internal policy 104" in result["response"][3]["tags"])'
+        - '("port 54000" in result["response"][3]["content"])'
+        - '("sample-interval 40000" in result["response"][3]["content"])'
 
 ##############################################
 ##             CLEANUP                      ##
@@ -254,8 +254,8 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Template deletion successful" in item["DATA"]'
+        - 'item["RETURN_CODE"] == 200'
+        - '"Template deletion successful" in item["DATA"]'
       loop: '{{ result.response }}'
 
     - ansible.builtin.assert:        that:

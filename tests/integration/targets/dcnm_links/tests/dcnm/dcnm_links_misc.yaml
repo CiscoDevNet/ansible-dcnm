@@ -100,7 +100,7 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 #############################################
@@ -130,11 +130,11 @@
 
     - ansible.builtin.assert:
       that:
-          - '("Monitoring mode" in result["msg"])'
-          - '("No changes are allowed on the fabric" in result["msg"])'
-          - '("{{ ansible_extmon_fabric }}" in result["msg"])'
+        - '("Monitoring mode" in result["msg"])'
+        - '("No changes are allowed on the fabric" in result["msg"])'
+        - '("{{ ansible_extmon_fabric }}" in result["msg"])'
 
-    - name: Create Links - Destination Fabric - Monitoring, Source Switches Not Managable and Destination Switches Not Managable (in POAP)
+        - name: Create Links - Destination Fabric - Monitoring, Source Switches Not Managable and Destination Switches Not Managable (in POAP)
       cisco.dcnm.dcnm_links: &links_create1
         state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -157,37 +157,37 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
 ############################################
 #             IDEMPOTENCE                  #
 ############################################
 
-          - name: Create Links - Idempotence
+        - name: Create Links - Idempotence
       cisco.dcnm.dcnm_links: *links_create1
       register: result
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
 ###############################################
 ###             QUERY                        ##
 ###############################################
 
-          - name: Query Links
+        - name: Query Links
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -235,15 +235,15 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
-    - name: Merge Links - Destination Fabric - Monitoring, Source Switches Not Managable and Destination Switches Not Managable (not present)
+        - name: Merge Links - Destination Fabric - Monitoring, Source Switches Not Managable and Destination Switches Not Managable (not present)
       cisco.dcnm.dcnm_links:
         state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -268,15 +268,15 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 1'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
-    - name: Merge Links - Destination Fabric - Monitoring, Source Switches Not Managable and Destination Switches Not Managable (not present)
+        - name: Merge Links - Destination Fabric - Monitoring, Source Switches Not Managable and Destination Switches Not Managable (not present)
       cisco.dcnm.dcnm_links:
         state: replaced                                          # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -301,37 +301,37 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 1'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
 #############################################
 #             IDEMPOTENCE                  ##
 #############################################
 
-          - name: Create Links - Idempotence
+        - name: Create Links - Idempotence
       cisco.dcnm.dcnm_links: *links_create2
       register: result
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 1'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
 ###############################################
 ###             QUERY                        ##
 ###############################################
 
-          - name: Query Links
+        - name: Query Links
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -377,37 +377,37 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
 #############################################
 #             IDEMPOTENCE                  ##
 #############################################
 
-          - name: Create Links - Idempotence
+        - name: Create Links - Idempotence
       cisco.dcnm.dcnm_links: *links_create3
       register: result
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
 ###############################################
 ###             QUERY                        ##
 ###############################################
 
-          - name: Query Links
+        - name: Query Links
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -453,37 +453,37 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
 #############################################
 #             IDEMPOTENCE                  ##
 #############################################
 
-          - name: Create Links - Idempotence
+        - name: Create Links - Idempotence
       cisco.dcnm.dcnm_links: *links_create4
       register: result
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
 ###############################################
 ###             QUERY                        ##
 ###############################################
 
-          - name: Query Links
+        - name: Query Links
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -529,37 +529,37 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
 #############################################
 #             IDEMPOTENCE                  ##
 #############################################
 
-          - name: Create Links - Idempotence
+        - name: Create Links - Idempotence
       cisco.dcnm.dcnm_links: *links_create5
       register: result
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_svi_fabric }}"] | length) == 0'
 
 ###############################################
 ###             QUERY                        ##
 ###############################################
 
-          - name: Query Links
+        - name: Query Links
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -605,37 +605,37 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_ext_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_ext_fabric }}"] | length) == 0'
 
 #############################################
 #             IDEMPOTENCE                  ##
 #############################################
 
-          - name: Create Links - Idempotence
+        - name: Create Links - Idempotence
       cisco.dcnm.dcnm_links: *links_create6
       register: result
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_ext_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_ext_fabric }}"] | length) == 0'
 
 ###############################################
 ###             QUERY                        ##
 ###############################################
 
-          - name: Query Links
+        - name: Query Links
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -681,37 +681,37 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 0'
 
 #############################################
 #             IDEMPOTENCE                  ##
 #############################################
 
-          - name: Create Links - Idempotence
+        - name: Create Links - Idempotence
       cisco.dcnm.dcnm_links: *links_create7
       register: result
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 0'
 
 ###############################################
 ###             QUERY                        ##
 ###############################################
 
-          - name: Query Links
+        - name: Query Links
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -757,37 +757,37 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_ext_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_ext_fabric }}"] | length) == 0'
 
 #############################################
 #             IDEMPOTENCE                  ##
 #############################################
 
-          - name: Create Links - Idempotence
+        - name: Create Links - Idempotence
       cisco.dcnm.dcnm_links: *links_create8
       register: result
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_ext_fabric }}"] | length) == 0'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_ext_fabric }}"] | length) == 0'
 
 ###############################################
 ###             QUERY                        ##
 ###############################################
 
-          - name: Query Links
+        - name: Query Links
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -833,37 +833,37 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 1'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 1'
 
 #############################################
 #             IDEMPOTENCE                  ##
 #############################################
 
-          - name: Create Links - Idempotence
+        - name: Create Links - Idempotence
       cisco.dcnm.dcnm_links: *links_create9
       register: result
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
-          - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 1'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_num_fabric }}"] | length) == 1'
+        - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 1'
 
 ###############################################
 ###             QUERY                        ##
 ###############################################
 
-          - name: Query Links
+        - name: Query Links
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -893,6 +893,6 @@
       when: it_context is not defined
 
     - ansible.builtin.assert:        that:
-          - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

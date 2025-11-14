@@ -156,18 +156,18 @@
 - name: Assert
   ansible.builtin.assert:
         that:
-              - result_maintenance_mode.failed == false
-              - result_maintenance_mode.metadata[2].action == "change_sytem_mode"
-              - result_maintenance_mode.metadata[3].action == "change_sytem_mode"
-              - result_maintenance_mode.metadata[2].check_mode == False
-              - result_maintenance_mode.metadata[3].check_mode == False
-              - result_maintenance_mode.metadata[2].state == "merged"
-              - result_maintenance_mode.metadata[3].state == "merged"
-              - result_maintenance_mode.response[2].DATA.status == "Success"
-              - result_maintenance_mode.response[3].DATA.status == "Success"
-              - result_maintenance_mode.response[2].METHOD == "POST"
-              - result_maintenance_mode.response[3].METHOD == "POST"
-              - result_maintenance_mode.response[2].RETURN_CODE == 200
-              - result_maintenance_mode.response[3].RETURN_CODE == 200
-              - result_maintenance_mode.response[4].DATA.status is match 'Success'
-              - result_maintenance_mode.response[5].DATA.status is match 'Success'
+          - result_maintenance_mode.failed == false
+          - result_maintenance_mode.metadata[2].action == "change_sytem_mode"
+          - result_maintenance_mode.metadata[3].action == "change_sytem_mode"
+          - result_maintenance_mode.metadata[2].check_mode == False
+          - result_maintenance_mode.metadata[3].check_mode == False
+          - result_maintenance_mode.metadata[2].state == "merged"
+          - result_maintenance_mode.metadata[3].state == "merged"
+          - result_maintenance_mode.response[2].DATA.status == "Success"
+          - result_maintenance_mode.response[3].DATA.status == "Success"
+          - result_maintenance_mode.response[2].METHOD == "POST"
+          - result_maintenance_mode.response[3].METHOD == "POST"
+          - result_maintenance_mode.response[2].RETURN_CODE == 200
+          - result_maintenance_mode.response[3].RETURN_CODE == 200
+          - result_maintenance_mode.response[4].DATA.status is match 'Success'
+          - result_maintenance_mode.response[5].DATA.status is match 'Success'

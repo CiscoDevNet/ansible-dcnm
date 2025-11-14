@@ -64,17 +64,17 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 5'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 5'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 5'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 5'
 
     # Assert for Create responses
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Success" in item["DATA"]["successList"][0]["status"]'
+        - 'item["RETURN_CODE"] == 200'
+        - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -83,8 +83,8 @@
     # Assert for deploy responses
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
+        - 'item["RETURN_CODE"] == 200'
+        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -120,14 +120,14 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) != 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-          - '(result["response"] | length) != 0'
+        - 'result.changed == false'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) != 0'
+        - '(result["diff"][0]["deploy"] | length) == 0'
+        - '(result["response"] | length) != 0'
 
-    - name: Query specific policies
+        - name: Query specific policies
       cisco.dcnm.dcnm_policy:
         fabric: "{{ ansible_it_fabric }}"
         state: query
@@ -141,14 +141,14 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 3'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-          - '(result["response"] | length) == 3'
+        - 'result.changed == false'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 3'
+        - '(result["diff"][0]["deploy"] | length) == 0'
+        - '(result["response"] | length) == 3'
 
-    - name: Create additional policies same as  existing policies
+        - name: Create additional policies same as  existing policies
       cisco.dcnm.dcnm_policy:
         fabric: "{{ ansible_it_fabric }}"
         state: merged
@@ -175,17 +175,17 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 4'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 4'
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 4'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 4'
 
     # Assert for Create responses
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Success" in item["DATA"]["successList"][0]["status"]'
+        - 'item["RETURN_CODE"] == 200'
+        - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -194,8 +194,8 @@
     # Assert for deploy responses
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
-          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 4'
+        - 'item["RETURN_CODE"] == 200'
+        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 4'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -215,14 +215,14 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 3'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-          - '(result["response"] | length) == 7'
+        - 'result.changed == false'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 3'
+        - '(result["diff"][0]["deploy"] | length) == 0'
+        - '(result["response"] | length) == 7'
 
-    - name: Query policies with policy ID
+        - name: Query policies with policy ID
       cisco.dcnm.dcnm_policy:
         fabric: "{{ ansible_it_fabric }}"
         state: query
@@ -235,12 +235,12 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["changed"] == false'
-          - '(item["diff"][0]["merged"] | length) == 0'
-          - '(item["diff"][0]["deleted"] | length) == 0'
-          - '(item["diff"][0]["query"] | length) == 1'
-          - '(item["diff"][0]["deploy"] | length) == 0'
-          - '(item["response"] | length) == 1'
+        - 'item["changed"] == false'
+        - '(item["diff"][0]["merged"] | length) == 0'
+        - '(item["diff"][0]["deleted"] | length) == 0'
+        - '(item["diff"][0]["query"] | length) == 1'
+        - '(item["diff"][0]["deploy"] | length) == 0'
+        - '(item["response"] | length) == 1'
       loop: '{{ result.results }}'
 
 ##############################################

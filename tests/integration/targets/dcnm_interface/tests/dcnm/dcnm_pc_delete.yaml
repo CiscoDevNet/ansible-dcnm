@@ -94,7 +94,7 @@
         that:
           - 'verify_result.response | length == 0'
 
-    - name: Delete port channel interfaces - Idempotence
+          - name: Delete port channel interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *pc_del
       register: result
 
@@ -121,6 +121,6 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

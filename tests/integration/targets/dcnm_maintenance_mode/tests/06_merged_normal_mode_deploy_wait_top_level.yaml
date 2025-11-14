@@ -151,18 +151,18 @@
 - name: Assert
   ansible.builtin.assert:
         that:
-              - result_normal_mode.failed == false
-              - result_normal_mode.metadata[2].action == "change_sytem_mode"
-              - result_normal_mode.metadata[3].action == "change_sytem_mode"
-              - result_normal_mode.metadata[2].check_mode == False
-              - result_normal_mode.metadata[3].check_mode == False
-              - result_normal_mode.metadata[2].state == "merged"
-              - result_normal_mode.metadata[3].state == "merged"
-              - result_normal_mode.response[2].DATA.status == "Success"
-              - result_normal_mode.response[3].DATA.status == "Success"
-              - result_normal_mode.response[2].METHOD == "DELETE"
-              - result_normal_mode.response[3].METHOD == "DELETE"
-              - result_normal_mode.response[2].RETURN_CODE == 200
-              - result_normal_mode.response[3].RETURN_CODE == 200
-              - result_normal_mode.response[4].DATA.status is match 'Success'
-              - result_normal_mode.response[5].DATA.status is match 'Success'
+          - result_normal_mode.failed == false
+          - result_normal_mode.metadata[2].action == "change_sytem_mode"
+          - result_normal_mode.metadata[3].action == "change_sytem_mode"
+          - result_normal_mode.metadata[2].check_mode == False
+          - result_normal_mode.metadata[3].check_mode == False
+          - result_normal_mode.metadata[2].state == "merged"
+          - result_normal_mode.metadata[3].state == "merged"
+          - result_normal_mode.response[2].DATA.status == "Success"
+          - result_normal_mode.response[3].DATA.status == "Success"
+          - result_normal_mode.response[2].METHOD == "DELETE"
+          - result_normal_mode.response[3].METHOD == "DELETE"
+          - result_normal_mode.response[2].RETURN_CODE == 200
+          - result_normal_mode.response[3].RETURN_CODE == 200
+          - result_normal_mode.response[4].DATA.status is match 'Success'
+          - result_normal_mode.response[5].DATA.status is match 'Success'

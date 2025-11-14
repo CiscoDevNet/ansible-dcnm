@@ -134,7 +134,7 @@
 ##                MERGE                     ##
 ##############################################
 
-    - name: Create ST FEX interfaces including optional parameters
+          - name: Create ST FEX interfaces including optional parameters
       cisco.dcnm.dcnm_interface: &fex_merge2
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
@@ -181,7 +181,7 @@
 ##                MERGE                     ##
 ##############################################
 
-    - name: Merge ST FEX interface
+          - name: Merge ST FEX interface
       cisco.dcnm.dcnm_interface: &fex_merge3
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
@@ -263,6 +263,6 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

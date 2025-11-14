@@ -107,7 +107,7 @@
 ##              DELETE 2                    ##
 ##############################################
 
-    - name: Delete interfaces again, global deploy as true
+          - name: Delete interfaces again, global deploy as true
       cisco.dcnm.dcnm_interface:
         check_deploy: true
         deploy: true
@@ -131,7 +131,7 @@
 ##              DELETE 3                    ##
 ##############################################
 
-    - name: Delete interfaces - Idempotence
+          - name: Delete interfaces - Idempotence
       cisco.dcnm.dcnm_interface:
         check_deploy: true
         deploy: true
@@ -141,15 +141,15 @@
 
     - ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - 'result.response is defined'
-          - 'result.response | length >= 0'
+        - 'result.changed == false'
+        - 'result.response is defined'
+        - 'result.response | length >= 0'
 
 ##############################################
 ##                MERGE 2                   ##
 ##############################################
 
-          - name: Load Interface Config File - Deploy Merge 2
+        - name: Load Interface Config File - Deploy Merge 2
       ansible.builtin.set_fact:
         dcnm_interface_deploy_merge2_conf: "{{ lookup('file', test_data_interfaces.deploy_merge2_conf_file) | from_yaml }}"
       delegate_to: localhost
@@ -210,7 +210,7 @@
 ##              DELETE 5                    ##
 ##############################################
 
-    - name: Load Interface Config File - Deploy Delete 2
+          - name: Load Interface Config File - Deploy Delete 2
       ansible.builtin.set_fact:
         dcnm_interface_deploy_delete2_conf: "{{ lookup('file', test_data_interfaces.deploy_delete2_conf_file) | from_yaml }}"
       delegate_to: localhost
@@ -252,6 +252,6 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

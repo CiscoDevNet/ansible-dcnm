@@ -349,6 +349,6 @@
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - ansible.builtin.assert:        that:
-          - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)

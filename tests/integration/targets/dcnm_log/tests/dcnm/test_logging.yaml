@@ -137,7 +137,7 @@
     that:
       - 'result_6.changed == false'
       - 'result_6.failed == true'
-    - error_message in result_6.msg
+      - error_message in result_6.msg
 
 - name: TEST.7 - Negative. Missing msg.
   cisco.dcnm.dcnm_log:
@@ -158,4 +158,4 @@
     that:
       - 'result_7.changed == false'
       - 'result_7.failed == true'
-    - error_message in result_7.msg
+      - error_message in result_7.msg

@@ -95,7 +95,7 @@
         that:
           - 'verify_result.response | length == 0'
 
-    - name: Delete AA FEX interfaces - Idempotence
+          - name: Delete AA FEX interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *fex_del
       register: result
 
@@ -122,6 +122,6 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

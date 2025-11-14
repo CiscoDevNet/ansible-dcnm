@@ -96,7 +96,7 @@
 ##                MERGE                     ##
 ##############################################
 
-    - name: Load Merged Interface Config File
+          - name: Load Merged Interface Config File
       ansible.builtin.set_fact:
         dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
       delegate_to: localhost
@@ -140,7 +140,7 @@
 ##                MERGE                     ##
 ##############################################
 
-    - name: Load Merge Modify Interface Config File
+          - name: Load Merge Modify Interface Config File
       ansible.builtin.set_fact:
         dcnm_interface_merge_modify_conf: "{{ lookup('file', test_data_interfaces.merge_modify_conf_file) | from_yaml }}"
       delegate_to: localhost
@@ -184,6 +184,6 @@
 
     - ansible.builtin.assert:
       that:
-          - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

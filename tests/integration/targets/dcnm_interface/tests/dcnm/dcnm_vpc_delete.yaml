@@ -117,7 +117,7 @@
         that:
           - 'verify_result.response | length == 0'
 
-    - name: Delete vPC interfaces - Idempotence
+          - name: Delete vPC interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *vpc_del
       register: result
 
