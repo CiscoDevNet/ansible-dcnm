@@ -100,7 +100,7 @@
 #                 "IS_READ_ONLY": false,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_create",
@@ -120,7 +120,7 @@
 #                 "sequence_number": 3,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
@@ -160,7 +160,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -176,7 +176,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -269,7 +269,7 @@
 #             {
 #                 "sequence_number": 6
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_update",
@@ -307,7 +307,7 @@
 #                 "sequence_number": 6,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
@@ -356,7 +356,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 6
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -387,7 +387,7 @@
 #                 "sequence_number": 6,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -404,7 +404,7 @@
         DEPLOY: false
       - FABRIC_NAME: "{{ fabric_name_2 }}"
         FABRIC_TYPE: "{{ fabric_type_2 }}"
-        ANYCAST_GW_MAC: aa:aa:bb:bb:cc:cc
+        ANYCAST_GW_MAC: "aa:aa:bb:bb:cc:cc"
         DEPLOY: false
   register: result
 - name: Debug
@@ -515,7 +515,7 @@
 #             {
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_update",
@@ -535,7 +535,7 @@
 #                 "sequence_number": 3,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
@@ -561,7 +561,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -577,7 +577,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -642,7 +642,7 @@
 #         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_update",
@@ -650,19 +650,19 @@
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "MESSAGE": "No fabrics to update for merged state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -711,7 +711,7 @@
 #                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_delete",
@@ -731,7 +731,7 @@
 #                 "sequence_number": 3,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
@@ -756,7 +756,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -772,7 +772,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################

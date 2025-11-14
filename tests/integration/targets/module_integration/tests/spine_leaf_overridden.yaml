@@ -26,7 +26,8 @@
       config: "{{ vrfs }}"
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
   - 'result.changed == true'
   - 'result.response|length == 3'
 
@@ -34,7 +35,8 @@
     cisco.dcnm.dcnm_vrf: *add_vrfs
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
   - 'result.changed == false'
 
   - name: Query VRF State
@@ -146,7 +148,8 @@
           deploy: true
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
   - 'result.changed == true'
 
   - name: Query fabric state until vrfStatus transitions to DEPLOYED state
@@ -167,7 +170,8 @@
       state: query
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
   - 'result.response[0].parent.vrfName == "green_red"'
   - 'result.response[0].parent.vrfId == 470000'
   - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
@@ -247,7 +251,8 @@
       state: query
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
   - 'result.response[0].parent.vrfName == "green_red"'
   - 'result.response[0].parent.vrfId == 470000'
   - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
@@ -312,7 +317,8 @@
       state: query
     register: result
 
-  - ansible.builtin.assert: that:
+  - ansible.builtin.assert:
+    that:
   - 'result.response[0].parent.vrfName == "green_red"'
   - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
   - 'result.response[0].attach|length == 4'

@@ -71,7 +71,7 @@
 #                 "LOOPBACK0_IP_RANGE": "10.2.0.0/22",
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_create",
@@ -79,7 +79,7 @@
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "asn": "65005",
@@ -105,13 +105,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -180,7 +180,7 @@
 #             {
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_replace",
@@ -200,7 +200,7 @@
 #                 "sequence_number": 3,
 #                 "state": "replaced"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "asn": "65005",
@@ -238,7 +238,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -254,7 +254,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -333,7 +333,7 @@
 #         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_replace",
@@ -341,19 +341,19 @@
 #                 "sequence_number": 1,
 #                 "state": "replaced"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "MESSAGE": "No fabrics to update for replaced state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -394,7 +394,7 @@
 #                 "FABRIC_NAME": "ISN_Fabric",
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_delete",
@@ -402,7 +402,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Invalid JSON response: Fabric 'ISN_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
@@ -411,13 +411,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################

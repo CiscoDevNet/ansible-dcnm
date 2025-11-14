@@ -37,7 +37,7 @@
 #                 "IS_READ_ONLY": false,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "create",
@@ -45,7 +45,7 @@
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
@@ -60,13 +60,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################

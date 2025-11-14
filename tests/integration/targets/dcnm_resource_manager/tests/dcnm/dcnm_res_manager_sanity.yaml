@@ -130,13 +130,15 @@
             resource: "fe:80:0505::05/64"            # The value of the resource being created
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 9'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["response"] | length) == 9'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -150,7 +152,8 @@
         fabric: "{{ ansible_it_fabric }}"
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '(result["response"] | length) != 0'
 
     - name: SANITY- Creating entity_names
@@ -183,7 +186,8 @@
 
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["entityName"] in {{ entity_names }}'
       loop: '{{ result.response }}'
 
@@ -199,7 +203,8 @@
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 9'

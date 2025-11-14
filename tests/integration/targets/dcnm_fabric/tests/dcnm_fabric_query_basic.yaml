@@ -98,7 +98,7 @@
 #                 "IS_READ_ONLY": false,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_create",
@@ -118,7 +118,7 @@
 #                 "sequence_number": 3,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
@@ -158,7 +158,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -174,7 +174,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -706,7 +706,7 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_query",
@@ -714,7 +714,7 @@
 #                 "sequence_number": 1,
 #                 "state": "query"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": [#                     {
 #                         "createdOn": 1721954059451,
@@ -1178,20 +1178,20 @@
 #                         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
 #                         "vrfTemplate": "Default_VRF_Universal"
 #                     }
-#],
+# ],
 #                 "MESSAGE": "OK",
 #                 "METHOD": "GET",
 #                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "found": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -1250,7 +1250,7 @@
 #                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_delete",
@@ -1270,7 +1270,7 @@
 #                 "sequence_number": 3,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
@@ -1295,7 +1295,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -1311,7 +1311,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################

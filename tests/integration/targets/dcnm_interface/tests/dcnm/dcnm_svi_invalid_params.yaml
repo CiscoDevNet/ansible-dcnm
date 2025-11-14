@@ -31,7 +31,8 @@
       ignore_errors: true
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '("Invalid parameters" in result["msg"])'
           - '("admin_state" in result["msg"])'
 
@@ -49,11 +50,12 @@
             deploy: true                                  # choose from [true, false]
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
-             # mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+            # mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
       ignore_errors: true
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '("Invalid parameters" in result["msg"])'
           - '("mode" in result["msg"])'
 
@@ -75,7 +77,8 @@
       ignore_errors: true
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '("Invalid parameters" in result["msg"])'
           - '("ipv4_mask_len" in result["msg"])'
 
@@ -97,7 +100,8 @@
       ignore_errors: true
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '("Invalid parameters" in result["msg"])'
           - '("preempt" in result["msg"])'
 
@@ -119,7 +123,8 @@
       ignore_errors: true
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '("Invalid parameters" in result["msg"])'
           - '("hsrp_vip" in result["msg"])'
 
@@ -142,7 +147,8 @@
       ignore_errors: true
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '("Invalid parameters" in result["msg"])'
           - '("hsrp_group" in result["msg"])'
 
@@ -164,7 +170,8 @@
       ignore_errors: true
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '("Invalid parameters" in result["msg"])'
           - '("netflow_monitor" in result["msg"])'
 
@@ -186,7 +193,8 @@
       ignore_errors: true
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '("Invalid parameters" in result["msg"])'
           - '("vrf_dhcp1" in result["msg"])'
 
@@ -208,7 +216,8 @@
       ignore_errors: true
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '("Invalid parameters" in result["msg"])'
           - '("vrf_dhcp2" in result["msg"])'
 

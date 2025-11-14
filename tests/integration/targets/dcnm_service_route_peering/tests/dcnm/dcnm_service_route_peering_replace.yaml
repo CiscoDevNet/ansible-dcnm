@@ -39,7 +39,7 @@
               vlan_id: 101                                   # mandatory
               profile:
                 ipv4_gw: 192.161.1.1/24                      # mandatory
-                ipv6_gw: 2001:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2001:db01::1/64                     # optional, default is ''"
                 vlan_name: rp1-sn1-inside                    # optional, default is ''
                 int_descr: "RP1 SN1 inside interface"        # optional, default is ''
                 tag: 11111                                   # optional, default is 12345
@@ -50,7 +50,7 @@
               vlan_id: 102                                   # mandatory
               profile:
                 ipv4_gw: 192.161.2.1/24                      # mandatory
-                ipv6_gw: 2001:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2001:db02::1/64                     # optional, default is ''"
                 vlan_name: rp1-sn1-outside                   # optional, default is ''
                 int_descr: "RP1 SN1 outside interface"       # optionL, default is ''
                 tag: 11112                                   # optional, default is 12345
@@ -66,7 +66,7 @@
               vlan_id: 201                                   # mandatory
               profile:
                 ipv4_gw: 192.162.1.1/24                      # mandatory
-                ipv6_gw: 2002:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2002:db01::1/64                     # optional, default is ''"
                 vlan_name: rp2-sn1-inside                    # optional, default is ''
                 int_descr: "RP2 SN1 inside interface"        # optional, default is ''
                 static_route: # optional, default is ''
@@ -81,7 +81,7 @@
               vlan_id: 202                                   # mandatory
               profile:
                 ipv4_gw: 192.162.2.1/24                      # mandatory
-                ipv6_gw: 2002:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2002:db02::1/64                     # optional, default is ''"
                 vlan_name: rp2-sn1-outside                   # optional, default is ''
                 int_descr: "RP2 SN1 outside interface"       # optional, default is ''
                 static_route: # optional, default is ''
@@ -101,16 +101,16 @@
               vlan_id: 301                                   # mandatory
               profile:
                 ipv4_gw: 192.163.1.1/24                      # mandatory
-                ipv6_gw: 2003:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2003:db01::1/64                     # optional, default is ''"
                 vlan_name: rp3-sn1-inside                    # optional, default is ''
                 int_descr: "RP3 SN1 inside interface"        # optional, default is ''
                 tag: 31111                                   # optional, default is 12345
                 ipv4_neighbor: 31.31.31.1                    # mandatory
                 ipv4_lo: 31.11.1.2                           # mandatory
                 ipv4_vpc_peer_lo: 31.11.1.3                  # optional, default is ''
-                ipv6_neighbor: 2003:3131::1                  # optional, default is ''
-                ipv6_lo: 2003:1102::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2003:1103::1               # optional, default is ''
+                ipv6_neighbor: "2003:3131::1                  # optional, default is ''"
+                ipv6_lo: "2003:1102::1                        # optional, default is ''"
+                ipv6_vpc_peer_lo: "2003:1103::1               # optional, default is ''"
                 route_map_tag: 33111                         # optional, default is 12345
                 neigh_int_descr: "RP3 SN1 inside interface"  # optional, default is ''
                 local_asn: 65301                             # optional, default is ''
@@ -121,16 +121,16 @@
               vlan_id: 302                                   # mandatory
               profile:
                 ipv4_gw: 192.163.2.1/24                      # mandatory
-                ipv6_gw: 2003:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2003:db02::1/64                     # optional, default is ''"
                 vlan_name: rp3-sn1-outside                   # optional, default is ''
                 int_descr: "RP3 SN1 outside interface"       # optional, default is ''
                 tag: 31112                                   # optional, default is 12345
                 ipv4_neighbor: 131.131.131.1                 # mandatory
                 ipv4_lo: 131.11.1.2                          # mandatory
                 ipv4_vpc_peer_lo: 131.11.1.3                 # optional, default is ''
-                ipv6_neighbor: 2003:8383::1                  # optional, default is ''
-                ipv6_lo: 2003:1104::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2003:1105::1               # optional, default is ''
+                ipv6_neighbor: "2003:8383::1                  # optional, default is ''"
+                ipv6_lo: "2003:1104::1                        # optional, default is ''"
+                ipv6_vpc_peer_lo: "2003:1105::1               # optional, default is ''"
                 route_map_tag: 33112                         # optional, default is 12345
                 neigh_int_descr: "RP3 SN1 outside interface" # optional, default is ''
                 local_asn: 65302                             # optional, default is ''
@@ -146,16 +146,16 @@
               vlan_id: 401                                   # mandatory
               profile:
                 ipv4_gw: 192.164.1.1/24                      # mandatory
-                ipv6_gw: 2004:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2004:db01::1/64                     # optional, default is ''"
                 vlan_name: rp4-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP4 SN2 first arm intf"          # optional, default is ''
                 tag: 41111                                   # optional, default is 12345
                 ipv4_neighbor: 41.41.41.1                    # mandatory
                 ipv4_lo: 41.11.1.2                           # mandatory
                 ipv4_vpc_peer_lo: 41.11.1.3                  # optional, default is ''
-                ipv6_neighbor: 2004:4141::1                  # optional, default is ''
-                ipv6_lo: 2004:1102::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2004:1103::1               # optional, default is ''
+                ipv6_neighbor: "2004:4141::1                  # optional, default is ''"
+                ipv6_lo: "2004:1102::1                        # optional, default is ''"
+                ipv6_vpc_peer_lo: "2004:1103::1               # optional, default is ''"
                 route_map_tag: 44111                         # optional, default is 12345
                 neigh_int_descr: "RP4 SN2 first arm"         # optional, default is ''
                 local_asn: 65401                             # optional, default is ''
@@ -172,16 +172,16 @@
               vlan_id: 501                                   # mandatory
               profile:
                 ipv4_gw: 192.165.1.1/24                      # mandatory
-                ipv6_gw: 2005:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2005:db01::1/64                     # optional, default is ''"
                 vlan_name: rp5-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP5 SN2 first arm intf"          # optional, default is ''
                 tag: 51111                                   # optional, default is 12345
                 ipv4_neighbor: 51.51.51.1                    # mandatory
                 ipv4_lo: 51.11.1.2                           # mandatory
                 ipv4_vpc_peer_lo: 51.11.1.3                  # optional, default is ''
-                ipv6_neighbor: 2005:5151::1                  # optional, default is ''
-                ipv6_lo: 2005:1102::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2005:1103::1               # optional, default is ''
+                ipv6_neighbor: "2005:5151::1                  # optional, default is ''"
+                ipv6_lo: "2005:1102::1                        # optional, default is ''"
+                ipv6_vpc_peer_lo: "2005:1103::1               # optional, default is ''"
                 route_map_tag: 55111                         # optional, default is 12345
                 neigh_int_descr: "RP5 SN2 first arm"         # optional, default is ''
                 local_asn: 65501                             # optional, default is ''
@@ -192,7 +192,7 @@
               vlan_id: 502                                   # mandatory
               profile:
                 ipv4_gw: 192.165.2.1/24                      # mandatory
-                ipv6_gw: 2005:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2005:db02::1/64                     # optional, default is ''"
                 vlan_name: rp5-sn2-second-arm                # optional, default is ''
                 int_descr: "RP5 SN2 second arm intf"         # optional, default is ''
                 tag: 51112                                   # optional, default is 12345
@@ -208,7 +208,7 @@
               vlan_id: 601                                   # mandatory
               profile:
                 ipv4_gw: 192.166.1.1/24                      # mandatory
-                ipv6_gw: 2006:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2006:db01::1/64                     # optional, default is ''"
                 vlan_name: rp6-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP6 SN2 first arm intf"          # optional, default is ''
                 tag: 61111                                   # optional, default is 12345
@@ -233,7 +233,7 @@
               vlan_id: 701                                   # mandatory
               profile:
                 ipv4_gw: 192.167.1.1/24                      # mandatory
-                ipv6_gw: 2007:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2007:db01::1/64                     # optional, default is ''"
                 vlan_name: rp7-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP6 SN2 first arm  intf"         # optional, default is ''
                 tag: 71111                                   # optional, default is 12345
@@ -248,7 +248,7 @@
               vlan_id: 702                                   # mandatory
               profile:
                 ipv4_gw: 192.167.2.1/24                      # mandatory
-                ipv6_gw: 2007:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2007:db02::1/64                     # optional, default is ''"
                 vlan_name: rp7-sn2-second-arm                # optional, default is ''
                 int_descr: "RP7 SN2 second arm intf"         # optional, default is ''
                 tag: 71112                                   # optional, default is 12345
@@ -258,7 +258,8 @@
         state: replaced
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 7'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -266,7 +267,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 7'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -288,7 +290,7 @@
               vlan_id: 191                                   # mandatory
               profile:
                 ipv4_gw: 192.161.1.1/24                      # mandatory
-                ipv6_gw: 2001:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2001:db01::1/64                     # optional, default is ''"
                 vlan_name: rep-rp1-sn1-inside                # optional, default is ''
                 int_descr: "RP1 SN1 inside interface - REP"  # optional, default is ''
                 tag: 12111                                   # optional, default is 12345
@@ -299,7 +301,7 @@
               vlan_id: 192                                   # mandatory
               profile:
                 ipv4_gw: 192.161.2.1/24                      # mandatory
-                ipv6_gw: 2001:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2001:db02::1/64                     # optional, default is ''"
                 vlan_name: rep-rp1-sn1-outside               # optional, default is ''
                 int_descr: "RP1 SN1 outside interface- REP"  # optionL, default is ''
                 tag: 12112                                   # optional, default is 12345
@@ -315,7 +317,7 @@
               vlan_id: 291                                   # mandatory
               profile:
                 ipv4_gw: 192.162.1.1/24                      # mandatory
-                ipv6_gw: 2002:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2002:db01::1/64                     # optional, default is ''"
                 vlan_name: rep-rp2-sn1-inside                    # optional, default is ''
                 int_descr: "RP2 SN1 inside interface - REP"  # optional, default is ''
                 static_route: # optional, default is ''
@@ -330,7 +332,7 @@
               vlan_id: 292                                   # mandatory
               profile:
                 ipv4_gw: 192.162.2.1/24                      # mandatory
-                ipv6_gw: 2002:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2002:db02::1/64                     # optional, default is ''"
                 vlan_name: rep-rp2-sn1-outside                   # optional, default is ''
                 int_descr: "RP2 SN1 outside interface - REP" # optional, default is ''
                 static_route: # optional, default is ''
@@ -350,16 +352,16 @@
               vlan_id: 391                                         # mandatory
               profile:
                 ipv4_gw: 192.163.1.1/24                            # mandatory
-                ipv6_gw: 2003:db01::1/64                           # optional, default is ''
+                ipv6_gw: "2003:db01::1/64                           # optional, default is ''"
                 vlan_name: rep-rp3-sn1-inside                      # optional, default is ''
                 int_descr: "RP3 SN1 inside interface - REP"        # optional, default is ''
                 tag: 32111                                         # optional, default is 12345
                 ipv4_neighbor: 31.31.39.1                          # mandatory
                 ipv4_lo: 32.11.2.2                                 # mandatory
                 ipv4_vpc_peer_lo: 32.11.2.3                        # optional, default is ''
-                ipv6_neighbor: 2103:3131::1                        # optional, default is ''
-                ipv6_lo: 2103:1102::1                              # optional, default is ''
-                ipv6_vpc_peer_lo: 2103:1103::1                     # optional, default is ''
+                ipv6_neighbor: "2103:3131::1                        # optional, default is ''"
+                ipv6_lo: "2103:1102::1                              # optional, default is ''"
+                ipv6_vpc_peer_lo: "2103:1103::1                     # optional, default is ''"
                 route_map_tag: 33211                               # optional, default is 12345
                 neigh_int_descr: "RP3 SN1 inside interface - REP"  # optional, default is ''
                 local_asn: 65391                                   # optional, default is ''
@@ -370,16 +372,16 @@
               vlan_id: 302                                         # mandatory
               profile:
                 ipv4_gw: 192.163.2.1/24                            # mandatory
-                ipv6_gw: 2003:db02::1/64                           # optional, default is ''
+                ipv6_gw: "2003:db02::1/64                           # optional, default is ''"
                 vlan_name: rep-rp3-sn1-outside                     # optional, default is ''
                 int_descr: "RP3 SN1 outside interface - REP"       # optional, default is ''
                 tag: 32112                                         # optional, default is 12345
                 ipv4_neighbor: 131.131.139.1                       # mandatory
                 ipv4_lo: 132.11.2.2                                # mandatory
                 ipv4_vpc_peer_lo: 132.11.2.3                       # optional, default is ''
-                ipv6_neighbor: 2103:8383::1                        # optional, default is ''
-                ipv6_lo: 2103:1104::1                              # optional, default is ''
-                ipv6_vpc_peer_lo: 2103:1105::1                     # optional, default is ''
+                ipv6_neighbor: "2103:8383::1                        # optional, default is ''"
+                ipv6_lo: "2103:1104::1                              # optional, default is ''"
+                ipv6_vpc_peer_lo: "2103:1105::1                     # optional, default is ''"
                 route_map_tag: 33212                               # optional, default is 12345
                 neigh_int_descr: "RP3 SN1 outside interface - REP" # optional, default is ''
                 local_asn: 65392                                   # optional, default is ''
@@ -395,16 +397,16 @@
               vlan_id: 401                                   # mandatory
               profile:
                 ipv4_gw: 192.164.1.1/24                      # mandatory
-                ipv6_gw: 2004:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2004:db01::1/64                     # optional, default is ''"
                 vlan_name: rp4-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP4 SN2 first arm intf"          # optional, default is ''
                 tag: 41111                                   # optional, default is 12345
                 ipv4_neighbor: 41.41.41.1                    # mandatory
                 ipv4_lo: 41.11.1.2                           # mandatory
                 ipv4_vpc_peer_lo: 41.11.1.3                  # optional, default is ''
-                ipv6_neighbor: 2004:4141::1                  # optional, default is ''
-                ipv6_lo: 2004:1102::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2004:1103::1               # optional, default is ''
+                ipv6_neighbor: "2004:4141::1                  # optional, default is ''"
+                ipv6_lo: "2004:1102::1                        # optional, default is ''"
+                ipv6_vpc_peer_lo: "2004:1103::1               # optional, default is ''"
                 route_map_tag: 44111                         # optional, default is 12345
                 neigh_int_descr: "RP4 SN2 first arm"         # optional, default is ''
                 local_asn: 65401                             # optional, default is ''
@@ -421,16 +423,16 @@
               vlan_id: 501                                   # mandatory
               profile:
                 ipv4_gw: 192.165.1.1/24                      # mandatory
-                ipv6_gw: 2005:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2005:db01::1/64                     # optional, default is ''"
                 vlan_name: rp5-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP5 SN2 first arm intf"          # optional, default is ''
                 tag: 51111                                   # optional, default is 12345
                 ipv4_neighbor: 51.51.51.1                    # mandatory
                 ipv4_lo: 51.11.1.2                           # mandatory
                 ipv4_vpc_peer_lo: 51.11.1.3                  # optional, default is ''
-                ipv6_neighbor: 2005:5151::1                  # optional, default is ''
-                ipv6_lo: 2005:1102::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2005:1103::1               # optional, default is ''
+                ipv6_neighbor: "2005:5151::1                  # optional, default is ''"
+                ipv6_lo: "2005:1102::1                        # optional, default is ''"
+                ipv6_vpc_peer_lo: "2005:1103::1               # optional, default is ''"
                 route_map_tag: 55111                         # optional, default is 12345
                 neigh_int_descr: "RP5 SN2 first arm"         # optional, default is ''
                 local_asn: 65501                             # optional, default is ''
@@ -441,7 +443,7 @@
               vlan_id: 502                                   # mandatory
               profile:
                 ipv4_gw: 192.165.2.1/24                      # mandatory
-                ipv6_gw: 2005:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2005:db02::1/64                     # optional, default is ''"
                 vlan_name: rp5-sn2-second-arm                # optional, default is ''
                 int_descr: "RP5 SN2 second arm intf"         # optional, default is ''
                 tag: 51112                                   # optional, default is 12345
@@ -457,7 +459,7 @@
               vlan_id: 601                                   # mandatory
               profile:
                 ipv4_gw: 192.166.1.1/24                      # mandatory
-                ipv6_gw: 2006:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2006:db01::1/64                     # optional, default is ''"
                 vlan_name: rp6-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP6 SN2 first arm intf"          # optional, default is ''
                 tag: 61111                                   # optional, default is 12345
@@ -482,7 +484,7 @@
               vlan_id: 701                                   # mandatory
               profile:
                 ipv4_gw: 192.167.1.1/24                      # mandatory
-                ipv6_gw: 2007:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2007:db01::1/64                     # optional, default is ''"
                 vlan_name: rp7-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP6 SN2 first arm  intf"         # optional, default is ''
                 tag: 71111                                   # optional, default is 12345
@@ -497,7 +499,7 @@
               vlan_id: 702                                   # mandatory
               profile:
                 ipv4_gw: 192.167.2.1/24                      # mandatory
-                ipv6_gw: 2007:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2007:db02::1/64                     # optional, default is ''"
                 vlan_name: rp7-sn2-second-arm                # optional, default is ''
                 int_descr: "RP7 SN2 second arm intf"         # optional, default is ''
                 tag: 71112                                   # optional, default is 12345
@@ -507,7 +509,8 @@
         state: replaced
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -515,7 +518,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 3'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -523,7 +527,8 @@
       cisco.dcnm.dcnm_service_route_peering: *dcnm_srp_rep_13
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -550,7 +555,7 @@
               vlan_id: 191                                   # mandatory
               profile:
                 ipv4_gw: 192.161.1.1/24                      # mandatory
-                ipv6_gw: 2001:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2001:db01::1/64                     # optional, default is ''"
                 vlan_name: rep-rp1-sn1-inside                # optional, default is ''
                 int_descr: "RP1 SN1 inside interface - REP"  # optional, default is ''
                 tag: 12111                                   # optional, default is 12345
@@ -561,7 +566,7 @@
               vlan_id: 192                                   # mandatory
               profile:
                 ipv4_gw: 192.161.2.1/24                      # mandatory
-                ipv6_gw: 2001:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2001:db02::1/64                     # optional, default is ''"
                 vlan_name: rep-rp1-sn1-outside               # optional, default is ''
                 int_descr: "RP1 SN1 outside interface- REP"  # optionL, default is ''
                 tag: 12112                                   # optional, default is 12345
@@ -578,7 +583,7 @@
               vlan_id: 291                                   # mandatory
               profile:
                 ipv4_gw: 192.162.1.1/24                      # mandatory
-                ipv6_gw: 2002:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2002:db01::1/64                     # optional, default is ''"
                 vlan_name: rep-rp2-sn1-inside                # optional, default is ''
                 int_descr: "RP2 SN1 inside interface - REP"  # optional, default is ''
                 static_route: # optional, default is ''
@@ -593,7 +598,7 @@
               vlan_id: 292                                   # mandatory
               profile:
                 ipv4_gw: 192.162.2.1/24                      # mandatory
-                ipv6_gw: 2002:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2002:db02::1/64                     # optional, default is ''"
                 vlan_name: rep-rp2-sn1-outside               # optional, default is ''
                 int_descr: "RP2 SN1 outside interface - REP" # optional, default is ''
                 static_route: # optional, default is ''
@@ -613,16 +618,16 @@
               vlan_id: 391                                         # mandatory
               profile:
                 ipv4_gw: 192.163.1.1/24                            # mandatory
-                ipv6_gw: 2003:db01::1/64                           # optional, default is ''
+                ipv6_gw: "2003:db01::1/64                           # optional, default is ''"
                 vlan_name: rep-rp3-sn1-inside                      # optional, default is ''
                 int_descr: "RP3 SN1 inside interface - REP"        # optional, default is ''
                 tag: 32111                                         # optional, default is 12345
                 ipv4_neighbor: 31.31.39.1                          # mandatory
                 ipv4_lo: 32.11.2.2                                 # mandatory
                 ipv4_vpc_peer_lo: 32.11.2.3                        # optional, default is ''
-                ipv6_neighbor: 2103:3131::1                        # optional, default is ''
-                ipv6_lo: 2103:1102::1                              # optional, default is ''
-                ipv6_vpc_peer_lo: 2103:1103::1                     # optional, default is ''
+                ipv6_neighbor: "2103:3131::1                        # optional, default is ''"
+                ipv6_lo: "2103:1102::1                              # optional, default is ''"
+                ipv6_vpc_peer_lo: "2103:1103::1                     # optional, default is ''"
                 route_map_tag: 33211                               # optional, default is 12345
                 neigh_int_descr: "RP3 SN1 inside interface - REP"  # optional, default is ''
                 local_asn: 65391                                   # optional, default is ''
@@ -633,16 +638,16 @@
               vlan_id: 302                                         # mandatory
               profile:
                 ipv4_gw: 192.163.2.1/24                            # mandatory
-                ipv6_gw: 2003:db02::1/64                           # optional, default is ''
+                ipv6_gw: "2003:db02::1/64                           # optional, default is ''"
                 vlan_name: rep-rp3-sn1-outside                     # optional, default is ''
                 int_descr: "RP3 SN1 outside interface - REP"       # optional, default is ''
                 tag: 32112                                         # optional, default is 12345
                 ipv4_neighbor: 131.131.139.1                       # mandatory
                 ipv4_lo: 132.11.2.2                                # mandatory
                 ipv4_vpc_peer_lo: 132.11.2.3                       # optional, default is ''
-                ipv6_neighbor: 2103:8383::1                        # optional, default is ''
-                ipv6_lo: 2103:1104::1                              # optional, default is ''
-                ipv6_vpc_peer_lo: 2103:1105::1                     # optional, default is ''
+                ipv6_neighbor: "2103:8383::1                        # optional, default is ''"
+                ipv6_lo: "2103:1104::1                              # optional, default is ''"
+                ipv6_vpc_peer_lo: "2103:1105::1                     # optional, default is ''"
                 route_map_tag: 33212                               # optional, default is 12345
                 neigh_int_descr: "RP3 SN1 outside interface - REP" # optional, default is ''
                 local_asn: 65392                                   # optional, default is ''
@@ -658,16 +663,16 @@
               vlan_id: 491                                   # mandatory
               profile:
                 ipv4_gw: 192.164.1.1/24                      # mandatory
-                ipv6_gw: 2004:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2004:db01::1/64                     # optional, default is ''"
                 vlan_name: rep-rp4-sn2-first-arm             # optional, default is ''
                 int_descr: "RP4 SN2 first arm intf - REP"    # optional, default is ''
                 tag: 42111                                   # optional, default is 12345
                 ipv4_neighbor: 41.41.49.1                    # mandatory
                 ipv4_lo: 42.11.2.2                           # mandatory
                 ipv4_vpc_peer_lo: 42.11.2.3                  # optional, default is ''
-                ipv6_neighbor: 2104:4141::1                  # optional, default is ''
-                ipv6_lo: 2104:1102::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2104:1103::1               # optional, default is ''
+                ipv6_neighbor: "2104:4141::1                  # optional, default is ''"
+                ipv6_lo: "2104:1102::1                        # optional, default is ''"
+                ipv6_vpc_peer_lo: "2104:1103::1               # optional, default is ''"
                 route_map_tag: 44211                         # optional, default is 12345
                 neigh_int_descr: "RP4 SN2 first arm - REP"   # optional, default is ''
                 local_asn: 65491                             # optional, default is ''
@@ -684,16 +689,16 @@
               vlan_id: 591                                   # mandatory
               profile:
                 ipv4_gw: 192.165.1.1/24                      # mandatory
-                ipv6_gw: 2005:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2005:db01::1/64                     # optional, default is ''"
                 vlan_name: rep-rp5-sn2-first-arm             # optional, default is ''
                 int_descr: "RP5 SN2 first arm intf - REP"    # optional, default is ''
                 tag: 52111                                   # optional, default is 12345
                 ipv4_neighbor: 51.51.59.1                    # mandatory
                 ipv4_lo: 52.11.2.2                           # mandatory
                 ipv4_vpc_peer_lo: 52.11.2.3                  # optional, default is ''
-                ipv6_neighbor: 2105:5151::1                  # optional, default is ''
-                ipv6_lo: 2105:1102::1                        # optional, default is ''
-                ipv6_vpc_peer_lo: 2105:1103::1               # optional, default is ''
+                ipv6_neighbor: "2105:5151::1                  # optional, default is ''"
+                ipv6_lo: "2105:1102::1                        # optional, default is ''"
+                ipv6_vpc_peer_lo: "2105:1103::1               # optional, default is ''"
                 route_map_tag: 55211                         # optional, default is 12345
                 neigh_int_descr: "RP5 SN2 first arm - REP"   # optional, default is ''
                 local_asn: 65591                             # optional, default is ''
@@ -704,7 +709,7 @@
               vlan_id: 592                                   # mandatory
               profile:
                 ipv4_gw: 192.165.2.1/24                      # mandatory
-                ipv6_gw: 2005:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2005:db02::1/64                     # optional, default is ''"
                 vlan_name: rep-rp5-sn2-second-arm            # optional, default is ''
                 int_descr: "RP5 SN2 second arm intf - REP"   # optional, default is ''
                 tag: 52112                                   # optional, default is 12345
@@ -720,7 +725,7 @@
               vlan_id: 691                                   # mandatory
               profile:
                 ipv4_gw: 192.166.1.1/24                      # mandatory
-                ipv6_gw: 2006:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2006:db01::1/64                     # optional, default is ''"
                 vlan_name: rep-rp6-sn2-first-arm             # optional, default is ''
                 int_descr: "RP6 SN2 first arm intf - REP"    # optional, default is ''
                 tag: 62111                                   # optional, default is 12345
@@ -745,7 +750,7 @@
               vlan_id: 791                                   # mandatory
               profile:
                 ipv4_gw: 192.167.1.1/24                      # mandatory
-                ipv6_gw: 2007:db01::1/64                     # optional, default is ''
+                ipv6_gw: "2007:db01::1/64                     # optional, default is ''"
                 vlan_name: rep-rp7-sn2-first-arm             # optional, default is ''
                 int_descr: "RP6 SN2 first arm intf - REP"    # optional, default is ''
                 tag: 72111                                   # optional, default is 12345
@@ -760,7 +765,7 @@
               vlan_id: 792                                   # mandatory
               profile:
                 ipv4_gw: 192.167.2.1/24                      # mandatory
-                ipv6_gw: 2007:db02::1/64                     # optional, default is ''
+                ipv6_gw: "2007:db02::1/64                     # optional, default is ''"
                 vlan_name: rep-rp7-sn2-second-arm            # optional, default is ''
                 int_descr: "RP7 SN2 second arm intf - REP"   # optional, default is ''
                 tag: 72112                                   # optional, default is 12345
@@ -770,7 +775,8 @@
         state: replaced
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -778,7 +784,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 4'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -786,7 +793,8 @@
       cisco.dcnm.dcnm_service_route_peering: *dcnm_srp_rep_47
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'

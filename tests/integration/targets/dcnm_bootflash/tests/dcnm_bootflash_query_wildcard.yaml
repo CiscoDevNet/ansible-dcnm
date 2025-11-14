@@ -87,7 +87,7 @@
 #                         "serialNumber": "FOX2109PGCS",
 #                         "size": "4"
 #                     }
-#],
+# ],
 #                 "172.22.150.113": [#                     {
 #                         "bootflash_type": "active",
 #                         "date": "Aug 03 01:38:10 2024",
@@ -99,10 +99,10 @@
 #                         "serialNumber": "FOX2109PGD0",
 #                         "size": "4"
 #                     }
-#],
+# ],
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "bootflash_info",
@@ -110,7 +110,7 @@
 #                 "sequence_number": 1,
 #                 "state": "query"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "172.22.150.112": {
 #                     "DATA": {
@@ -126,7 +126,7 @@
 #                                    "serialNumber": "FOX2109PGCS",
 #                                    "size": "2"
 #                                }
-#]
+# ]
 #                         },
 #                         "bootFlashSpaceMap": {
 #                             "bootflash:": {
@@ -141,7 +141,7 @@
 #                             }
 #                         },
 #                         "partitions": [#                             "bootflash:"
-#],
+# ],
 #                         "requiredSpace": "NA"
 #                     },
 #                     "MESSAGE": "OK",
@@ -163,7 +163,7 @@
 #                                     "serialNumber": "FOX2109PGD0",
 #                                     "size": "2"
 #                                 }
-#]
+# ]
 #                         },
 #                         "bootFlashSpaceMap": {
 #                             "bootflash:": {
@@ -178,7 +178,7 @@
 #                             }
 #                         },
 #                         "partitions": [#                             "bootflash:"
-#],
+# ],
 #                         "requiredSpace": "NA"
 #                     },
 #                     "MESSAGE": "OK",
@@ -188,7 +188,7 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "172.22.150.112": {
 #                     "found": true,
@@ -200,7 +200,7 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-#]
+# ]
 #     }
 # }
 
@@ -233,8 +233,8 @@
   ansible.builtin.assert:
     that:
       - result.diff[0][switch1][0].filepath == switch1_filepath1
-    - result.diff[0][switch1][1].filepath == switch1_filepath2
-    - result.diff[0][switch1][2].filepath == switch1_filepath3
+      - result.diff[0][switch1][1].filepath == switch1_filepath2
+      - result.diff[0][switch1][2].filepath == switch1_filepath3
     - result.diff[0][switch2][0].filepath == switch2_filepath1
     - result.diff[0][switch2][1].filepath == switch2_filepath2
     - result.diff[0][switch2][2].filepath == switch2_filepath3

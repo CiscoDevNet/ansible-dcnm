@@ -81,7 +81,8 @@
     #       - '(result["diff"][0]["overridden"] | length) == 0'
     #       - '(result["diff"][0]["deploy"] | length) == 3'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -102,7 +103,8 @@
         config: "{{ dcnm_interface_query_conf }}"
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -111,7 +113,8 @@
           - '(result["diff"][0]["deploy"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 3'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '(result["response"] | length) != 0'
 
     - name: Query interface details - Subset of Existing
@@ -122,7 +125,8 @@
         config: "{{ lookup('file', test_data_interfaces.query_subset_conf_file) | from_yaml }}"
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -131,7 +135,8 @@
           - '(result["diff"][0]["deploy"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 2'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '(result["response"] | length) != 0'
 
     - name: Query interface details - Existing and Non-Existing
@@ -152,7 +157,8 @@
     #       - '(result["diff"][0]["deploy"] | length) == 0'
     #       - '(result["diff"][0]["query"] | length) == 1'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '(result["response"] | length) != 0'
 
     - name: Query interface details - Non-Existing
@@ -163,7 +169,8 @@
         config: "{{ lookup('file', test_data_interfaces.query_nonexist_conf_file) | from_yaml }}"
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -172,7 +179,8 @@
           - '(result["diff"][0]["deploy"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '(result["response"] | length) == 0'
 
 ##############################################
@@ -189,7 +197,7 @@
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert: that:
+  - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

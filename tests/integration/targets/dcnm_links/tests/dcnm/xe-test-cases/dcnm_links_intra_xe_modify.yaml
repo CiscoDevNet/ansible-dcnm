@@ -27,9 +27,9 @@
             dst_interface: "{{ intf_1_2 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
-                                                                 #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
+                                                                #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
           - dst_fabric: "{{ ansible_xe_fabric }}"                # Destination fabric
             src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
@@ -50,7 +50,8 @@
 
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -69,15 +70,15 @@
             src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
             ansible.builtin.template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
-                                                                 #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
+                                                                #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
 
             profile:
               peer1_ipv4_addr: 192.169.1.1                       # IPV4 address of the Source interface
               peer2_ipv4_addr: 192.169.1.2                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: 2080:29::01                       # optional, default is ""
-              peer2_ipv6_addr: 2080:29::02                       # optional, default is ""
+              peer1_ipv6_addr: "2080:29::01                       # optional, default is """
+              peer2_ipv6_addr: "2080:29::02                       # optional, default is """
               admin_state: true                                  # choose from [true, false]
               mtu: 1500                                          # optional, default is 1500
               peer1_description: "Description of source - 3"     # optional, default is ""
@@ -91,7 +92,8 @@
                 - false shutdown                                    # optional, default is ""
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -99,7 +101,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_xe_fabric }}"] | length) == 2'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -119,15 +122,15 @@
             src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
             ansible.builtin.template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
-                                                                 #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
+                                                                #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
 
             profile:
               peer1_ipv4_addr: 193.169.1.1                       # IPV4 address of the Source interface
               peer2_ipv4_addr: 193.169.1.2                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: 2089:29::01                       # optional, default is ""
-              peer2_ipv6_addr: 2089:29::02                       # optional, default is ""
+              peer1_ipv6_addr: "2089:29::01                       # optional, default is """
+              peer2_ipv6_addr: "2089:29::02                       # optional, default is """
               admin_state: false                                 # choose from [true, false]
               mtu: 2000                                          # optional, default is 1500
               peer1_description: "MOD - Description of source - 3"     # optional, default is ""
@@ -142,7 +145,8 @@
 
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 1'
@@ -150,7 +154,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_xe_fabric }}"] | length) == 2'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 

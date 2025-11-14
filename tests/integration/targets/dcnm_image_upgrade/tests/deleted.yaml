@@ -68,8 +68,8 @@
     state: merged
     config:
       policy: "{{ image_policy_1 }}"
-        reboot: false
-        stage: true
+      reboot: false
+      stage: true
         validate: true
         upgrade:
           nxos: true
@@ -144,7 +144,7 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "image_policy_detach",
@@ -152,7 +152,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Successfully detach the policy from device.",
 #                 "MESSAGE": "OK",
@@ -161,13 +161,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -227,7 +227,7 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "image_policy_detach",
@@ -235,7 +235,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Successfully detach the policy from device.",
 #                 "MESSAGE": "OK",
@@ -244,13 +244,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################

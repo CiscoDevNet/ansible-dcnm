@@ -66,7 +66,7 @@
 #                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_create",
@@ -74,7 +74,7 @@
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
@@ -134,13 +134,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################
@@ -179,7 +179,7 @@
 #                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_delete",
@@ -187,7 +187,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Fabric 'VXLAN_EVPN_MSD_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
@@ -196,13 +196,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ###############################################################################################
@@ -246,7 +246,7 @@
 #         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "fabric_delete",
@@ -254,19 +254,19 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "MESSAGE": "No fabrics to delete",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 ################################################################################

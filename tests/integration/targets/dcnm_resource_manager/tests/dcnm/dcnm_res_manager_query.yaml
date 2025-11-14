@@ -126,13 +126,15 @@
             resource: "fe:80:0505::05/64"            # The value of the resource being created
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 9'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["response"] | length) == 9'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -146,7 +148,8 @@
         fabric: "{{ ansible_it_fabric }}"
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '(result["response"] | length) != 0'
 
     - name: Creating entity_names
@@ -179,7 +182,8 @@
 
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["entityName"] in {{ entity_names }}'
       loop: '{{ result.response }}'
 
@@ -192,7 +196,8 @@
               - "{{ ansible_switch1 }}"
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["ipAddress"] == "{{ ansible_switch1 }}"'
       loop: '{{ result.response }}'
 
@@ -205,7 +210,8 @@
               - "{{ ansible_switch2 }}"
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["ipAddress"] == "{{ ansible_switch2 }}"'
       loop: '{{ result.response }}'
 
@@ -225,7 +231,8 @@
           - pool_name: "SUBNET"                      # Based on the 'poolType', select appropriate name
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["resourcePool"]["fabricName"] == "{{ ansible_it_fabric }}"'
           - 'item["resourcePool"]["poolName"] in ["BGP_ASN_ID",
                                                     "L3_VNI",
@@ -272,7 +279,8 @@
               - "{{ ansible_switch1 }}"
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'item["ipAddress"] == "{{ ansible_switch1 }}"'
       loop: '{{ result.response }}'
 
@@ -292,7 +300,8 @@
               - "{{ ansible_switch1 }}"
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - '(result["response"] | length) != 0'
 
 ##############################################
@@ -306,7 +315,8 @@
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 9'

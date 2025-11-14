@@ -78,7 +78,7 @@
     state: deleted
     config:
       - name: "{{ image_policy_1 }}"
-    - name: "{{ image_policy_2 }}"
+      - name: "{{ image_policy_2 }}"
   register: result
 
 - name: Debug
@@ -111,7 +111,7 @@
 #                 "policyType": "PLATFORM",
 #                 "sequence_number": 2
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "create",
@@ -125,7 +125,7 @@
 #                 "sequence_number": 2,
 #                 "state": "merged"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Policy created successfully.",
 #                 "MESSAGE": "OK",
@@ -142,7 +142,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "found": true,
 #                 "sequence_number": 0,
@@ -158,7 +158,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 
@@ -228,10 +228,10 @@
 #         "changed": true,
 #         "diff": [#             {
 #                 "policyNames": [#                     "KR5M"
-#],
+# ],
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "delete",
@@ -239,7 +239,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
@@ -249,13 +249,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 - name: DELETED - TEST - Delete first image policy (image_policy_1) and verify
@@ -299,10 +299,10 @@
 #         "changed": true,
 #         "diff": [#             {
 #                 "policyNames": [#                     "NR1F"
-#],
+# ],
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "failed": false,
 #         "metadata": [#             {
 #                 "action": "delete",
@@ -310,7 +310,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#],
+# ],
 #         "response": [#             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
@@ -319,13 +319,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#],
+# ],
 #         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#]
+# ]
 #     }
 # }
 
