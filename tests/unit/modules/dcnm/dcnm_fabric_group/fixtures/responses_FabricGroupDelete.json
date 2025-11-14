@@ -1,0 +1,32 @@
+{
+    "TEST_NOTES": [
+        "Mocked responses for fabric group delete operations.",
+        "tests/unit/modules/dcnm/dcnm_fabric_group/test_fabric_group_delete.py",
+        "",
+        "INSTRUCTIONS FOR GATHERING RESPONSES:",
+        "1. Use the NDFC API endpoint: DELETE /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabric_name}",
+        "2. Responses should contain delete operation results"
+    ],
+    "test_fabric_group_delete_00030b": {
+        "TEST_NOTES": [
+            "Successful delete of fabric group MFG1",
+            "NDFC Response for DELETE /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MFG1"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MFG1",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "test_fabric_group_delete_00032b": {
+        "TEST_NOTES": [
+            "Failed delete - fabric group does not exist",
+            "NDFC Response for DELETE /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MFG1"
+        ],
+        "RETURN_CODE": 500,
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MFG1",
+        "MESSAGE": "Internal Server Error",
+        "DATA": "Invalid JSON response: Error getting MSD or child fabrics MFG1: fabric not found"
+    }
+}

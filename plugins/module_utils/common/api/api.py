@@ -14,7 +14,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import logging
@@ -45,7 +45,7 @@ class Api:
         self._init_properties()
 
     def _init_properties(self):
-        self.properties = {}
+        self.properties: dict = {}
         self.properties["path"] = None
         self.properties["verb"] = None
 
