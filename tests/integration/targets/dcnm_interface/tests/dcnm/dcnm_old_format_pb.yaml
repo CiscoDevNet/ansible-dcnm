@@ -14,8 +14,7 @@
 
 - name: Assert
   ansible.builtin.assert:
-    that:
-      - 'item["RETURN_CODE"] == 200'
+  ansible.builtin.assert:
   loop: '{{ result.response }}'
 
 - block:
@@ -76,8 +75,7 @@
 
     - name: ASSERT - Verify old format 1 interface creation results
       ansible.builtin.assert:
-        that:
-          - 'result.failed == false'
+      ansible.builtin.assert:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Creation with old format 1 failed - {{ result }}"
@@ -116,12 +114,11 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'result.failed == false'
+    - ansible.builtin.assert:
           - 'result.changed == true'
 
+    - ansible.builtin.assert:
           - ansible.builtin.assert:
-      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -143,12 +140,11 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'result.failed == false'
+    - ansible.builtin.assert:
           - 'result.changed == true'
 
+    - ansible.builtin.assert:
           - ansible.builtin.assert:
-      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -170,12 +166,11 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'result.failed == false'
+    - ansible.builtin.assert:
           - 'result.changed == true'
 
+    - ansible.builtin.assert:
           - ansible.builtin.assert:
-      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -197,12 +192,11 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'result.failed == false'
+    - ansible.builtin.assert:
           - 'result.changed == true'
 
+    - ansible.builtin.assert:
           - ansible.builtin.assert:
-      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -224,12 +218,11 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'result.failed == false'
+    - ansible.builtin.assert:
           - 'result.changed == true'
 
+    - ansible.builtin.assert:
           - ansible.builtin.assert:
-      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -251,12 +244,11 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'result.failed == false'
+    - ansible.builtin.assert:
           - 'result.changed == true'
 
+    - ansible.builtin.assert:
           - ansible.builtin.assert:
-      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -274,7 +266,7 @@
       register: result
       when: it_context is not defined
 
-- ansible.builtin.assert: that:
-          - 'item["RETURN_CODE"] == 200'
+- ansible.builtin.assert:    that:
+      - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

@@ -90,14 +90,14 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 600
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 600
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_1
 
 - name: TEST.1a - MERGED - [query] Wait for vrfStatus == DEPLOYED
@@ -163,14 +163,14 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      l3vni_wo_vlan: true
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        l3vni_wo_vlan: true
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: false
+        deploy: false
   register: result_2
 
 - name: TEST.2a - MERGED - [query] query VRF state
@@ -221,13 +221,13 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_3
 
 - name: TEST.3a - MERGED - [query] Wait for vrfStatus == DEPLOYED
@@ -290,11 +290,11 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
@@ -305,7 +305,7 @@
             ipv6_addr: "2010::10:34:0:7/64 # optional"
             neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
-      deploy: true
+        deploy: true
   register: result_4
 
 - name: TEST.4a - MERGED - [query] Wait for vrfStatus == DEPLOYED
@@ -369,16 +369,16 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      l3vni_wo_vlan: true
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        l3vni_wo_vlan: true
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - interface: "{{ interface_2a }}" # mandatory
-      deploy: false
+        deploy: false
   register: result_5
 
 - name: TEST.5a - MERGED - [query] query VRF state
@@ -436,15 +436,15 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - interface: "{{ interface_2a }}" # mandatory
-      deploy: true
+        deploy: true
   register: result_6
 
 - name: TEST.6a - MERGED - [query] Wait for vrfStatus == DEPLOYED
@@ -541,16 +541,16 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-      deploy: true
+        deploy: true
   register: result_9
   ignore_errors: true
 
@@ -574,11 +574,11 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_3 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
@@ -588,7 +588,7 @@
             ipv6_addr: "2010::10:34:0:7/64 # optional"
             neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
-      deploy: true
+        deploy: true
   register: result_10
   ignore_errors: true
 

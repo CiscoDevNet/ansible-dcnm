@@ -148,6 +148,6 @@
       cisco.dcnm.dcnm_links: *links_delete
       register: result
 
-  - ansible.builtin.assert: that:
-          - 'item["RETURN_CODE"] == 200'
+  - ansible.builtin.assert:      that:
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

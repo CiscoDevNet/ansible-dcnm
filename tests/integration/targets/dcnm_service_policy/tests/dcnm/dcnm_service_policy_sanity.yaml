@@ -371,8 +371,8 @@
       when: it_context is not defined
       tags: sanity
 
-  - ansible.builtin.assert: that:
-          - 'item["RETURN_CODE"] == 200'
+  - ansible.builtin.assert:      that:
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined
       tags: sanity

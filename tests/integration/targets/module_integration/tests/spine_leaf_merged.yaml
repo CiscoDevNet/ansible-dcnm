@@ -20,11 +20,11 @@
 - block:
 
     - name: Add Tenant VRF Objects
-    cisco.dcnm.dcnm_vrf: &add_vrfs
+      cisco.dcnm.dcnm_vrf: &add_vrfs
       fabric: "{{ fabric_name }}"
       state: merged
       config: "{{ vrfs }}"
-    register: result
+      register: result
 
   - ansible.builtin.assert:
     that:
@@ -341,5 +341,5 @@
   - 'result.response[2].attach[2].switchDetailsList[0].islanAttached == true'
   - 'result.response[2].attach[3].switchDetailsList[0].islanAttached == true'
 
-  always:
+    always:
     - ansible.builtin.debug: msg="End dcnm_fabric spine_leaf_merged test"

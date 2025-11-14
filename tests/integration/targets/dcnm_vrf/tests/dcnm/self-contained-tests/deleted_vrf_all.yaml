@@ -57,29 +57,29 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      source: null
-      service_vrf_template: null
-      vrf_vlan_name: "test"
-      vrf_intf_desc: "test vrf interface"
-      vrf_description: "test vrf"
-      vrf_int_mtu: 2100
-      loopback_route_tag: 54321
-      max_bgp_paths: 6
-      max_ibgp_paths: 7
-      ipv6_linklocal_enable: false
-      adv_host_routes: true
-      adv_default_routes: false
-      static_default_route: false
-      bgp_password: "74657374"
-      bgp_passwd_encrypt: 7
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        source: null
+        service_vrf_template: null
+        vrf_vlan_name: "test"
+        vrf_intf_desc: "test vrf interface"
+        vrf_description: "test vrf"
+        vrf_int_mtu: 2100
+        loopback_route_tag: 54321
+        max_bgp_paths: 6
+        max_ibgp_paths: 7
+        ipv6_linklocal_enable: false
+        adv_host_routes: true
+        adv_default_routes: false
+        static_default_route: false
+        bgp_password: "74657374"
+        bgp_passwd_encrypt: 7
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result
 
 - name: Query fabric state until vrfStatus transitions to DEPLOYED state

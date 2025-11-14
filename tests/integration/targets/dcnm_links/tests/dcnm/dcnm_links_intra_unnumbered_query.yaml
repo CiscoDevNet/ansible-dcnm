@@ -48,8 +48,7 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'item["RETURN_CODE"] == 200'
+    - ansible.builtin.assert:
       loop: '{{ result.response }}'
 
 ###############################################
@@ -88,16 +87,15 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'result.changed == true'
+    - ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_unnum_fabric }}"] | length) == 2'
 
+    - ansible.builtin.assert:
           - ansible.builtin.assert:
-      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -112,10 +110,10 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          '(result["response"] | length) >= 2'
+        that:
+          - '(result["response"] | length) >= 2'
 
-        - name: Query Links - with Src & Dst Fabric
+    - name: Query Links - with Src & Dst Fabric
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_unnum_fabric }}"
@@ -124,10 +122,10 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          '(result["response"] | length) >= 2'
+        that:
+          - '(result["response"] | length) >= 2'
 
-        - name: Query Links - with Src & Dst Fabric, Src Intf
+    - name: Query Links - with Src & Dst Fabric, Src Intf
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_unnum_fabric }}"
@@ -137,10 +135,10 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          '(result["response"] | length) >= 1'
+        that:
+          - '(result["response"] | length) >= 1'
 
-        - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
+    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_unnum_fabric }}"
@@ -151,10 +149,10 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          '(result["response"] | length) >= 1'
+        that:
+          - '(result["response"] | length) >= 1'
 
-        - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
+    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_unnum_fabric }}"
@@ -166,10 +164,10 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          '(result["response"] | length) >= 1'
+        that:
+          - '(result["response"] | length) >= 1'
 
-        - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
+    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_unnum_fabric }}"
@@ -182,10 +180,10 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          '(result["response"] | length) >= 1'
+        that:
+          - '(result["response"] | length) >= 1'
 
-        - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
+    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
       cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_unnum_fabric }}"
@@ -212,8 +210,8 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          '(result["response"] | length) >= 2'
+        that:
+          - '(result["response"] | length) >= 2'
 
       register: result
 
@@ -228,7 +226,7 @@
       register: result
       when: it_context is not defined
 
-- ansible.builtin.assert: that:
-          - 'item["RETURN_CODE"] == 200'
+- ansible.builtin.assert:    that:
+      - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

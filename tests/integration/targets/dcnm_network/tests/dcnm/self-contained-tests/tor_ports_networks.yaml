@@ -361,4 +361,4 @@
     cisco.dcnm.dcnm_network:
       fabric: "{{ test_data_common.fabric }}"
       state: deleted
-  when: test_tor_pair is defined
+    when: test_tor_pair is defined

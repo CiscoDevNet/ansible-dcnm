@@ -37,7 +37,7 @@
           - '("admin_state" in result["msg"])'
 
 
-          - name: Create SVI interfaces w/o mode
+    - name: Create SVI interfaces w/o mode
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
@@ -59,7 +59,7 @@
           - '("Invalid parameters" in result["msg"])'
           - '("mode" in result["msg"])'
 
-          - name: Create SVI interfaces with ipv4_addr but w/o mask length
+    - name: Create SVI interfaces with ipv4_addr but w/o mask length
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
@@ -82,7 +82,7 @@
           - '("Invalid parameters" in result["msg"])'
           - '("ipv4_mask_len" in result["msg"])'
 
-          - name: Create SVI interfaces with HSRP not enabled, but preempt included
+    - name: Create SVI interfaces with HSRP not enabled, but preempt included
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
@@ -105,7 +105,7 @@
           - '("Invalid parameters" in result["msg"])'
           - '("preempt" in result["msg"])'
 
-          - name: Create SVI interfaces with HSRP enabled but w/o HSRP VIP
+    - name: Create SVI interfaces with HSRP enabled but w/o HSRP VIP
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
@@ -128,7 +128,7 @@
           - '("Invalid parameters" in result["msg"])'
           - '("hsrp_vip" in result["msg"])'
 
-          - name: Create SVI interfaces with HSRP enabled but w/o HSRP Group
+    - name: Create SVI interfaces with HSRP enabled but w/o HSRP Group
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
@@ -152,7 +152,7 @@
           - '("Invalid parameters" in result["msg"])'
           - '("hsrp_group" in result["msg"])'
 
-          - name: Create SVI interfaces with NETFLOW enabled but w/o NETFLOW Monitor
+    - name: Create SVI interfaces with NETFLOW enabled but w/o NETFLOW Monitor
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
@@ -175,7 +175,7 @@
           - '("Invalid parameters" in result["msg"])'
           - '("netflow_monitor" in result["msg"])'
 
-          - name: Create SVI interfaces with DHCP1 Server Address but w/o VRF DHCP1
+    - name: Create SVI interfaces with DHCP1 Server Address but w/o VRF DHCP1
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
@@ -198,7 +198,7 @@
           - '("Invalid parameters" in result["msg"])'
           - '("vrf_dhcp1" in result["msg"])'
 
-          - name: Create SVI interfaces with DHCP2 Server Address but w/o VRF DHCP2
+    - name: Create SVI interfaces with DHCP2 Server Address but w/o VRF DHCP2
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
@@ -221,7 +221,7 @@
           - '("Invalid parameters" in result["msg"])'
           - '("vrf_dhcp2" in result["msg"])'
 
-          - name: Create SVI interfaces with DHCP3 Server Address but w/o VRF DHCP3
+    - name: Create SVI interfaces with DHCP3 Server Address but w/o VRF DHCP3
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
@@ -239,6 +239,6 @@
       ignore_errors: true
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:        that:
           - '("Invalid parameters" in result["msg"])'
           - '("vrf_dhcp3" in result["msg"])'

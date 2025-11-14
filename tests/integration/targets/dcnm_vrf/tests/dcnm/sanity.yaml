@@ -77,14 +77,14 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_1
   tags: sanity
 
@@ -154,14 +154,14 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      l3vni_wo_vlan: true
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        l3vni_wo_vlan: true
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: false
+        deploy: false
   register: result_1g
   tags: sanity
 
@@ -224,14 +224,14 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_2
   tags: sanity
 
@@ -271,10 +271,10 @@
     state: replaced
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
   register: result_2c
   tags: sanity
 
@@ -334,14 +334,14 @@
     state: replaced
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_2i
   tags: sanity
 
@@ -418,14 +418,14 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_3
   tags: sanity
 
@@ -467,14 +467,14 @@
     state: overridden
     config:
       - vrf_name: ansible-vrf-int2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_3c
   tags: sanity
 
@@ -554,14 +554,14 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_4
   tags: sanity
 
@@ -655,14 +655,14 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_5
   tags: sanity
 
@@ -704,9 +704,9 @@
     state: deleted
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
   register: result_5c
   tags: sanity
 

@@ -70,14 +70,14 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_setup_4
 
 - name: SETUP.4a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
@@ -121,10 +121,10 @@
     state: replaced
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
   register: result_1
 
 - name: TEST.1a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
@@ -172,14 +172,14 @@
     state: replaced
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_2
 
 - name: TEST.2a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
@@ -238,11 +238,11 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
@@ -253,7 +253,7 @@
             ipv6_addr: "2010::10:34:0:7/64 # optional"
             neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # optional controller can provide
-      deploy: true
+        deploy: true
   register: result_3
 
 - name: TEST.3a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
@@ -291,13 +291,13 @@
     state: replaced
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
-      deploy: true
+        deploy: true
   register: result_4
 
 - name: TEST.4a - REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
@@ -347,11 +347,11 @@
     state: replaced
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
@@ -362,7 +362,7 @@
             ipv6_addr: "2010::10:34:0:7/64 # optional"
             neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # optional controller can provide
-      deploy: true
+        deploy: true
   register: result_5
 
 - name: TEST.5a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
@@ -418,11 +418,11 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      l3vni_wo_vlan: true
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        l3vni_wo_vlan: true
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
@@ -433,7 +433,7 @@
             ipv6_addr: "2010::10:34:0:7/64 # optional"
             neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # optional controller can provide
-      deploy: false
+        deploy: false
   register: result_6
 
 - name: TEST.6a - REPLACED - [query] query VRF state
@@ -466,13 +466,13 @@
     state: replaced
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      l3vni_wo_vlan: true
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        l3vni_wo_vlan: true
+        attach:
         - ip_address: "{{ switch_1 }}"
-      deploy: false
+        deploy: false
   register: result_7
 
 - name: TEST.7b - REPLACED - [query] query VRF state
@@ -515,11 +515,11 @@
     state: replaced
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      l3vni_wo_vlan: true
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        l3vni_wo_vlan: true
+        attach:
         - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
@@ -530,7 +530,7 @@
             ipv6_addr: "2010::10:34:0:7/64 # optional"
             neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # optional controller can provide
-      deploy: false
+        deploy: false
   register: result_8
 
 - name: TEST.8a - REPLACED - [query] query VRF state

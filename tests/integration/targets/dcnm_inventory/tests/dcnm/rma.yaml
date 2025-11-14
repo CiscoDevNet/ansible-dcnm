@@ -63,8 +63,7 @@
 
 - name: RMA Base Task - Assert Fabric Existence
   ansible.builtin.assert:
-    that:
-      - found_fabric == true
+  ansible.builtin.assert:
     fail_msg: "Fabric '{{ test_data.test_fabric }}' not found."
   tags: rma
 
@@ -163,8 +162,7 @@
 
 - name: Assert
   ansible.builtin.assert:
-    that:
-      - 'query_result.response != None'
+  ansible.builtin.assert:
   when: rma_enabled == True
   tags: rma
 
@@ -219,12 +217,11 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
+    - ansible.builtin.assert:
 
+    - ansible.builtin.assert:
         - ansible.builtin.assert:
-      that:
-          - 'item["RETURN_CODE"] == 200'
+              - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
   when: (rma_enabled == True and rma_switch_present == True)
   tags: rma

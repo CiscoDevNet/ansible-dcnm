@@ -129,4 +129,4 @@
     cisco.dcnm.dcnm_network:
       fabric: "{{ test_data_common.fabric }}"
       state: deleted
-  when: test_ing_fabric is defined
+    when: test_ing_fabric is defined

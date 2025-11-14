@@ -239,7 +239,7 @@
             hostname: "{{ test_data.poap_hostname }}"
             config_data:
               modulesModel: "{{ test_data.poap_modulesModel }}"
-                gateway: "{{ test_data.poap_gateway }}"
+              gateway: "{{ test_data.poap_gateway }}"
   when: (poap_enabled == True and poap_switch_present == True)
   delegate_to: localhost
   tags: poap

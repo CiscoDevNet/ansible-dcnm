@@ -47,11 +47,11 @@
     state: deleted
     config:
       - name: "{{ ansible_snode_1 }}"
-      type: firewall
-      form_factor: physical
-      svc_int_name: svc1
-      attach_interface: "{{ ansible_att_intf1 }}"
-      switches:
+        type: firewall
+        form_factor: physical
+        svc_int_name: svc1
+        attach_interface: "{{ ansible_att_intf1 }}"
+        switches:
         - "{{ ansible_switch1 }}"
     - name: "{{ ansible_snode_2 }}"
       type: load_balancer

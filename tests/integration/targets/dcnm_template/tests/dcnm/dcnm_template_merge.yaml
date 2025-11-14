@@ -214,7 +214,7 @@
           - '"Template deletion successful" in item["DATA"]'
       loop: '{{ result.response }}'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 5'
