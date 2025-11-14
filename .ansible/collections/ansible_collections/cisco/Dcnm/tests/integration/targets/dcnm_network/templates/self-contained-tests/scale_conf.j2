@@ -1,8 +1,0 @@
-{% for i in range(801) %}
-- net_name: "TEST_NET{{ "%03d"|format(i + 1) }}"
-  vrf_name: "Tenant-1"
-  deploy: false
-  net_id: {{ 50001 + i }}
-  vlan_id: {{ 2001 + i }}
-  attach: []
-{% endfor %}
