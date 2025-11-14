@@ -511,7 +511,7 @@
             - ip: "{{ ansible_switch1 }}"
       register: result
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:        that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
       loop: '{{ result.response }}'

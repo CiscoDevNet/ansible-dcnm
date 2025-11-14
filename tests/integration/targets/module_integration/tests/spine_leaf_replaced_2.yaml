@@ -17,7 +17,7 @@
 - block:
 
     - name: Add 3 VRFs and deploy them to all leaf devices
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: replaced
       config:
@@ -45,7 +45,7 @@
             - ip_address: "{{ leaf2 }}"
             - ip_address: "{{ leaf3 }}"
             - ip_address: "{{ leaf4 }}"
-    register: result
+      register: result
 
   - name: Query fabric state until vrfStatus transitions to DEPLOYED state
     cisco.dcnm.dcnm_vrf:
@@ -77,5 +77,5 @@
     register: result
 
 
-  always:
+    always:
     - ansible.builtin.debug: msg="End dcnm_fabric spine_leaf_replaced_2 test"

@@ -359,14 +359,14 @@
       register: result
       when: it_context is not defined
 
-  - ansible.builtin.assert: that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 9'
-          - '(result["response"][0]["DATA"]["successList"] | length) == 9'
+  - ansible.builtin.assert:      that:
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 0'
+        - '(result["diff"][0]["deleted"] | length) == 9'
+        - '(result["response"][0]["DATA"]["successList"] | length) == 9'
       when: it_context is not defined
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:        that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

@@ -369,9 +369,9 @@
   ansible.builtin.set_fact:
     switch_conf:
       - seed_ip: "{{ test_data.sw1 }}"
-      auth_proto: MD5
-      max_hops: 0
-      role: invalid
+        auth_proto: MD5
+        max_hops: 0
+        role: invalid
   delegate_to: localhost
   tags: merged
 
@@ -403,9 +403,9 @@
   ansible.builtin.set_fact:
     switch_conf:
       - seed_ip: "{{ test_data.sw1 }}"
-      auth_proto: MD55DM
-      max_hops: 0
-      role: leaf
+        auth_proto: MD55DM
+        max_hops: 0
+        role: leaf
   delegate_to: localhost
   tags: merged
 

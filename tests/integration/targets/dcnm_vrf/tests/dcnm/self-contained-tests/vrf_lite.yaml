@@ -78,11 +78,11 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
@@ -93,7 +93,7 @@
             neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
               - ip_address: "{{ switch_3 }}"
-      deploy: true
+        deploy: true
   register: result
 
 - name: Query fabric state until vrfStatus transitions to DEPLOYED state
@@ -140,11 +140,11 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
@@ -162,7 +162,7 @@
             neighbor_ipv6: "3010::10:34:0:3 # optional"
             dot1q: 21 # dot1q can be got from dcnm
               - ip_address: "{{ switch_3 }}"
-      deploy: true
+        deploy: true
   register: result
 
 - name: Query fabric state until vrfStatus transitions to DEPLOYED state
@@ -207,11 +207,11 @@
     state: replaced
     config:
       - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
         - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
@@ -222,7 +222,7 @@
             neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
               - ip_address: "{{ switch_3 }}"
-      deploy: true
+        deploy: true
   register: result
 
 - name: Query fabric state until vrfStatus transitions to DEPLOYED state
@@ -265,11 +265,11 @@
     state: overridden
     config:
       - vrf_name: ansible-vrf-int2
-      vrf_id: 9008013
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 400
-      attach:
+        vrf_id: 9008013
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 400
+        attach:
         - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
@@ -286,7 +286,7 @@
             ipv6_addr: "3010::10:34:0:7/64 # optional"
             neighbor_ipv6: "3010::10:34:0:3 # optional"
             dot1q: 21 # dot1q can be got from dcnm
-      deploy: true
+        deploy: true
   register: result
 
 - name: Query fabric state until vrfStatus transitions to DEPLOYED state
@@ -353,11 +353,11 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int2
-      vrf_id: 9008015
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 400
-      attach:
+        vrf_id: 9008015
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 400
+        attach:
         - ip_address: "{{ switch_1 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int3 # optional
@@ -383,7 +383,7 @@
             ipv6_addr: "3010::10:34:0:7/64 # optional"
             neighbor_ipv6: "3010::10:34:0:3 # optional"
             dot1q: 21 # dot1q can be got from dcnm
-      deploy: true
+        deploy: true
   register: result
 
 - name: Query fabric state until vrfStatus transitions to DEPLOYED state

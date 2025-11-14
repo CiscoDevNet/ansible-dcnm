@@ -173,7 +173,7 @@
     state: query
     config:
       - seed_ip: "{{ test_data.sw1 }}"
-      role: leaf
+        role: leaf
   register: query_result
   tags: query
 
@@ -188,9 +188,9 @@
   ansible.builtin.set_fact:
     switch_conf:
       - seed_ip: "{{ test_data.sw1 }}"
-      max_hops: 0
-      auth_proto: MD5
-      role: border_gateway
+        max_hops: 0
+        auth_proto: MD5
+        role: border_gateway
     - seed_ip: "{{ test_data.sw2 }}"
       max_hops: 0
       auth_proto: MD5

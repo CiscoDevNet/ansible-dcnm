@@ -49,8 +49,7 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'item["RETURN_CODE"] == 200'
+    - ansible.builtin.assert:
       loop: '{{ result.response }}'
 
 ##############################################
@@ -107,16 +106,15 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'result.changed == true'
+    - ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 3'
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_ipv6_fabric }}"] | length) == 2'
 
+    - ansible.builtin.assert:
           - ansible.builtin.assert:
-      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -130,16 +128,15 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'result.changed == true'
+    - ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 3'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_ipv6_fabric }}"] | length) == 2'
 
+    - ansible.builtin.assert:
           - ansible.builtin.assert:
-      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -153,16 +150,15 @@
       register: result
 
     - ansible.builtin.assert:
-      that:
-          - 'result.changed == false'
+    - ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
+    - ansible.builtin.assert:
           - ansible.builtin.assert:
-      that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -176,6 +172,6 @@
       cisco.dcnm.dcnm_links: *links_delete
       register: result
 
-- ansible.builtin.assert: that:
-          - 'item["RETURN_CODE"] == 200'
+- ansible.builtin.assert:    that:
+      - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

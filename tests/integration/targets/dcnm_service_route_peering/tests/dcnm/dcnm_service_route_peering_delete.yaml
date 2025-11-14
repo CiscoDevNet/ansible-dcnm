@@ -530,6 +530,6 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - ansible.builtin.assert: that:
+    - ansible.builtin.assert:        that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

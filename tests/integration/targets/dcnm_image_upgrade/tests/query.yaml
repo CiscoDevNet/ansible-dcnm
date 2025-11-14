@@ -130,11 +130,11 @@
 - name: QUERY - TEST - Verify image_policy_1 is attached to all switches.
   cisco.dcnm.dcnm_image_upgrade:
     state: query
-        config:
-          switches:
-              - ip_address: "{{ ansible_switch_1 }}"
-              - ip_address: "{{ ansible_switch_2 }}"
-              - ip_address: "{{ ansible_switch_3 }}"
+    config:
+      switches:
+        - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
 - name: Debug

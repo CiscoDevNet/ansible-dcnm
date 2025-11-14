@@ -73,11 +73,11 @@
     state: merged
     config:
       - name: SN-11
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc1
-      attach_interface: "{{ ansible_int1 }}"
-      switches:
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc1
+        attach_interface: "{{ ansible_int1 }}"
+        switches:
         - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
@@ -109,11 +109,11 @@
     state: replaced
     config:
       - name: SN-11
-      type: firewall
-      form_factor: physical
-      svc_int_name: svc1
-      attach_interface: "{{ ansible_int1 }}"
-      switches:
+        type: firewall
+        form_factor: physical
+        svc_int_name: svc1
+        attach_interface: "{{ ansible_int1 }}"
+        switches:
         - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
@@ -155,11 +155,11 @@
     state: replaced
     config:
       - name: SN-11
-      type: load_balancer
-      form_factor: physical
-      svc_int_name: svc1
-      attach_interface: "{{ ansible_int1 }}"
-      switches:
+        type: load_balancer
+        form_factor: physical
+        svc_int_name: svc1
+        attach_interface: "{{ ansible_int1 }}"
+        switches:
         - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
@@ -191,11 +191,11 @@
     state: replaced
     config:
       - name: SN-11
-      type: virtual_network_function
-      form_factor: physical
-      svc_int_name: svc1
-      attach_interface: "{{ ansible_int1 }}"
-      switches:
+        type: virtual_network_function
+        form_factor: physical
+        svc_int_name: svc1
+        attach_interface: "{{ ansible_int1 }}"
+        switches:
         - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
@@ -227,11 +227,11 @@
     state: replaced
     config:
       - name: SN-11111111111
-      type: firewall
-      form_factor: physical
-      svc_int_name: svc11
-      attach_interface: "{{ ansible_int1 }}"
-      switches:
+        type: firewall
+        form_factor: physical
+        svc_int_name: svc11
+        attach_interface: "{{ ansible_int1 }}"
+        switches:
         - "{{ ansible_switch1 }}"
   register: result
   ignore_errors: true
@@ -282,11 +282,11 @@
     state: merged
     config:
       - name: SN-11
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc11
-      attach_interface: "{{ ansible_int1 }}"
-      switches:
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc11
+        attach_interface: "{{ ansible_int1 }}"
+        switches:
         - "{{ ansible_switch1 }}"
     - name: SN-12
       type: load_balancer
@@ -334,11 +334,11 @@
     state: overridden
     config:
       - name: SN-13
-      type: virtual_network_function
-      form_factor: virtual
-      svc_int_name: svc13
-      attach_interface: "{{ ansible_int1 }}"
-      switches:
+        type: virtual_network_function
+        form_factor: virtual
+        svc_int_name: svc13
+        attach_interface: "{{ ansible_int1 }}"
+        switches:
         - "{{ ansible_switch1 }}"
     - name: SN-14
       type: firewall
@@ -426,11 +426,11 @@
     state: merged
     config:
       - name: SN-11
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc1
-      attach_interface: "{{ ansible_int1 }}"
-      switches:
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc1
+        attach_interface: "{{ ansible_int1 }}"
+        switches:
         - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
@@ -462,11 +462,11 @@
     state: query
     config:
       - name: SN-11
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc1
-      attach_interface: "{{ ansible_int1 }}"
-      switches:
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc1
+        attach_interface: "{{ ansible_int1 }}"
+        switches:
         - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
