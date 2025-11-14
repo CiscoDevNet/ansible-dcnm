@@ -1,0 +1,23 @@
+{
+    "test_notes": [
+        "Mocked responses for FabricConfigDeploy() unit tests."
+    ],
+    "test_fabric_config_deploy_00210a": {
+        "DATA": {
+            "status": "Configuration deployment completed."
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/f1/config-deploy?forceShowRun=false",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_config_deploy_00220a": {
+        "DATA": {
+            "status": "Configuration deployment failed."
+        },
+        "MESSAGE": "Internal server error",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/f1/config-deploy?forceShowRun=false",
+        "RETURN_CODE": 500
+    }
+}

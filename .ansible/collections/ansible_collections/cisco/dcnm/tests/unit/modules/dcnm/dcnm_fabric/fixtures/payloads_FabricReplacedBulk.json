@@ -1,0 +1,47 @@
+{
+    "TEST_NOTES": [
+        "Mocked payloads for FabricCreateBulk unit tests.",
+        "tests/unit/modules/dcnm/dcnm_fabric/test_fabric_replaced_bulk.py"
+    ],
+    "test_fabric_replaced_bulk_00020a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+    "test_fabric_replaced_bulk_00024a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        },
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f2",
+            "FABRIC_TYPE": "VXLAN_EVPN_MSD"
+        },
+        {
+            "DEPLOY": true,
+            "FABRIC_NAME": "f3",
+            "FABRIC_TYPE": "LAN_CLASSIC"
+        }
+    ],
+    "test_fabric_replaced_bulk_00030a": [
+        {
+            "ANYCAST_GW_MAC": "0001aabbccdd",
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "DEFAULT_QUEUING_POLICY_CLOUDSCALE": "a",
+            "DEFAULT_QUEUING_POLICY_OTHER": "b",
+            "DEFAULT_QUEUING_POLICY_R_SERIES": "c",
+            "STATIC_UNDERLAY_IP_ALLOC": false,
+            "VPC_DELAY_RESTORE_TIME": 300
+        }
+    ]
+}

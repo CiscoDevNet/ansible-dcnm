@@ -1,0 +1,76 @@
+{
+	"pc_have" : [
+	{
+		u'policy': u'int_port_channel_trunk_host_11_1',
+			u'interfaces': [
+			{
+				u'ifName': u'port-channel300',
+				u'serialNumber': u'SAL1819SAN8',
+				u'nvPairs': {
+					u'MEMBER_INTERFACES': u'e1/9',
+					u'FABRIC_NAME': u'test_fabric',
+					u'PO_ID': u'Port-channel300',
+					u'MTU': u'jumbo',
+					u'PRIORITY': u'500',
+					u'PORTTYPE_FAST_ENABLED': u'True',
+					u'PC_MODE': u'on',
+					u'POLICY_DESC': u'',
+					u'CONF': u'no shutdown',
+					u'BPDUGUARD_ENABLED': u'True',
+					u'ADMIN_STATE': u'True',
+					u'POLICY_ID': u'POLICY-1844640',
+					u'ALLOWED_VLANS': u'none',
+					u'DESC': u'port channel acting as trunk'
+				}
+			}]
+	},
+	{
+		u'policy': u'int_port_channel_access_host_11_1',
+		u'interfaces': [
+		{
+			u'ifName': u'port-channel301',
+			u'serialNumber': u'SAL1819SAN8',
+			u'nvPairs': {
+				u'ACCESS_VLAN': u'301',
+				u'MEMBER_INTERFACES': u'e1/10',
+				u'FABRIC_NAME': u'test_fabric',
+				u'PO_ID': u'Port-channel301',
+				u'MTU': u'default',
+				u'PRIORITY': u'500',
+				u'PORTTYPE_FAST_ENABLED': u'True',
+				u'PC_MODE': u'on',
+				u'POLICY_DESC': u'',
+				u'CONF': u'no shutdown',
+				u'BPDUGUARD_ENABLED': u'True',
+				u'ADMIN_STATE': u'False',
+				u'POLICY_ID': u'POLICY-1844740',
+				u'DESC': u'port channel acting as access'
+			}
+		}]
+	},
+	{
+		u'policy': u'int_l3_port_channel',
+		u'interfaces': [
+		{
+			u'ifName': u'port-channel302',
+			u'serialNumber': u'SAL1819SAN8',
+			u'nvPairs': {
+				u'INTF_VRF': u'',
+				u'MEMBER_INTERFACES': u'e1/11',
+				u'FABRIC_NAME': u'test_fabric',
+				u'IP': u'10.1.1.1',
+				u'PO_ID': u'Port-channel302',
+				u'MTU': u'9216',
+				u'PRIORITY': u'500',
+				u'ROUTING_TAG': u'',
+				u'PREFIX': u'8',
+				u'PC_MODE': u'on',
+				u'POLICY_DESC': u'',
+				u'CONF': u'no shutdown',
+				u'ADMIN_STATE': u'False',
+				u'POLICY_ID': u'POLICY-1844840',
+				u'DESC': u'port channel acting as l3'
+			}
+		}]
+	}], 
+}

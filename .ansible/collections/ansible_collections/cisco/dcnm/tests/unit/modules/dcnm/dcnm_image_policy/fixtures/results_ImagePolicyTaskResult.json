@@ -1,0 +1,110 @@
+{
+
+    "TEST_NOTES": [
+        "Mocked results for ImagePolicyTaskResult unit tests.",
+        "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_task_result.py"
+    ],
+    "test_image_policy_task_result_00030a": {
+        "changed": false,
+        "failed": true,
+        "diff": {
+            "diff_deleted": [],
+            "diff_merged": [],
+            "diff_overridden": [],
+            "diff_query": [],
+            "diff_replaced": []
+        },
+        "response": {
+            "response_deleted": [],
+            "response_merged": [],
+            "response_overridden": [],
+            "response_query": [],
+            "response_replaced": []
+        }
+    },
+    "test_image_policy_task_result_00040a": {
+        "changed": true,
+        "diff": {
+            "deleted": [{"foo": "bar"}],
+            "merged": [],
+            "overridden": [],
+            "query": [],
+            "replaced": []
+        },
+        "response": {
+            "deleted": [{"foo": "bar"}],
+            "merged": [],
+            "overridden": [],
+            "query": [],
+            "replaced": []
+        }
+    },
+    "test_image_policy_task_result_00040b": {
+        "changed": true,
+        "diff": {
+            "deleted": [],
+            "merged": [{"foo": "bar"}],
+            "overridden": [],
+            "query": [],
+            "replaced": []
+        },
+        "response": {
+            "deleted": [],
+            "merged": [{"foo": "bar"}],
+            "overridden": [],
+            "query": [],
+            "replaced": []
+        }
+    },
+    "test_image_policy_task_result_00040c": {
+        "changed": true,
+        "diff": {
+            "deleted": [],
+            "merged": [],
+            "overridden": [{"foo": "bar"}],
+            "query": [],
+            "replaced": []
+        },
+        "response": {
+            "deleted": [],
+            "merged": [],
+            "overridden": [{"foo": "bar"}],
+            "query": [],
+            "replaced": []
+        }
+    },
+    "test_image_policy_task_result_00040d": {
+        "changed": false,
+        "diff": {
+            "deleted": [],
+            "merged": [],
+            "overridden": [],
+            "query": [{"foo": "bar"}],
+            "replaced": []
+        },
+        "response": {
+            "deleted": [],
+            "merged": [],
+            "overridden": [],
+            "query": [{"foo": "bar"}],
+            "replaced": []
+        }
+    },
+    "test_image_policy_task_result_00040e": {
+        "changed": true,
+        "diff": {
+            "deleted": [],
+            "merged": [],
+            "overridden": [],
+            "query": [],
+            "replaced": [{"foo": "bar"}]
+        },
+        "response": {
+            "deleted": [],
+            "merged": [],
+            "overridden": [],
+            "query": [],
+            "replaced": [{"foo": "bar"}]
+        }
+    }
+}

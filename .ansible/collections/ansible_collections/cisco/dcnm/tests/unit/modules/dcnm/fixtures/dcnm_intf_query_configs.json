@@ -1,0 +1,113 @@
+{
+  "mock_fab_inv_data": {
+    "192.168.1.108": {
+      "logicalName": "n9kv-108",
+        "serialNumber": "SAL1819SAN8",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+    },
+      "192.168.1.109": {
+        "logicalName": "n9kv-109",
+        "serialNumber": "FOX1821H035",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "None",
+        "managable": "False"
+      }
+  },
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
+      }
+    },
+
+    "mock_ip_sn" : {
+     "192.168.1.109": "FOX1821H035",
+     "192.168.1.108": "SAL1819SAN8" 
+    },
+
+		"mock_vpc_resp" : {
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+			"DATA": {
+				"vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+			},
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+		},
+
+    "mock_succ_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+      "RETURN_CODE": 200
+    },
+
+    "query_config" : [
+    {
+      "name": "po150",
+      "switch": [
+        "192.168.1.108"
+      ]
+    },
+    {
+      "name": "vlan1001",
+      "switch": [
+        "192.168.1.108"
+      ]
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ]
+    },
+    {
+      "name": "po350",
+      "switch": [
+        "192.168.1.108"
+      ]
+    },
+    {
+      "name": "lo450",
+      "switch": [
+        "192.168.1.108"
+      ]
+    },
+    {
+      "name": "eth1/1",
+      "switch": [
+        "192.168.1.108"
+      ]
+    },
+    {
+      "name": "eth1/15.2",
+      "switch": [
+        "192.168.1.108"
+      ]
+    },
+    {
+      "name": "vpc750",
+      "switch": [
+        "192.168.1.108"
+      ]
+    }]
+}

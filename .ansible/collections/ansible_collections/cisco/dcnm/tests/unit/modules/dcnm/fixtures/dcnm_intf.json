@@ -1,0 +1,436 @@
+{
+    "mock_ip_sn" : {
+      "10.10.10.224": "XYZKSJHSMK1",
+      "10.10.10.225": "XYZKSJHSMK2", 
+      "10.10.10.226": "XYZKSJHSMK3"
+    },
+    "playbook_config_input_validation" : [
+      {
+        "vrf_template": "Default_VRF_Universal",
+        "vrf_extension_template": "Default_VRF_Extension_Universal",
+        "source": "None",
+        "service_vrf_template": "None",
+        "attach": [
+          {
+            "ip_address": "10.10.10.224",
+            "deploy": true
+          },
+          {
+            "vlan_id": "203",
+            "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+    "playbook_config" : [
+      {
+        "vrf_name": "test_vrf_1",
+        "vrf_id": "9008011",
+        "vrf_template": "Default_VRF_Universal",
+        "vrf_extension_template": "Default_VRF_Extension_Universal",
+        "source": "None",
+        "service_vrf_template": "None",
+        "attach": [
+          {
+            "ip_address": "10.10.10.224",
+            "vlan_id": "202",
+            "deploy": true
+          },
+          {
+            "ip_address": "10.10.10.225",
+            "vlan_id": "203",
+            "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+    "playbook_config_update": [
+      {
+        "vrf_name": "test_vrf_1",
+        "vrf_id": "9008011",
+        "vrf_template": "Default_VRF_Universal",
+        "vrf_extension_template": "Default_VRF_Extension_Universal",
+        "source": "None",
+        "service_vrf_template": "None",
+        "attach": [
+          {
+            "ip_address": "10.10.10.225",
+            "vlan_id": "203",
+            "deploy": true
+          },
+          {
+            "ip_address": "10.10.10.226",
+            "vlan_id": "204",
+            "deploy": true
+          }
+        ],
+        "deploy": true
+      }
+    ],
+  "playbook_config_update_vlan": [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.225",
+          "vlan_id": "303",
+          "deploy": true
+        },
+        {
+          "ip_address": "10.10.10.226",
+          "vlan_id": "304",
+          "deploy": true
+        }
+      ],
+      "deploy": true
+    }
+  ],
+    "playbook_config_override": [
+    {
+      "vrf_name": "test_vrf_2",
+      "vrf_id": "9008012",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.225",
+          "vlan_id": "303",
+          "deploy": true
+        },
+        {
+          "ip_address": "10.10.10.226",
+          "vlan_id": "304",
+          "deploy": true
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_config_incorrect_vrfid": [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008012",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224",
+          "vlan_id": "202",
+          "deploy": true
+        },
+        {
+          "ip_address": "10.10.10.225",
+          "vlan_id": "203",
+          "deploy": true
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_config_replace": [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.225",
+          "vlan_id": "203",
+          "deploy": true
+        },
+        {
+          "ip_address": "10.10.10.226",
+          "vlan_id": "204",
+          "deploy": true
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_config_replace_no_atch": [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "source": "None",
+      "service_vrf_template": "None"
+    }
+  ],
+  "mock_vrf_attach_object_del_not_ready": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "lanAttachState": "DEPLOYED"
+          },
+          {
+            "lanAttachState": "DEPLOYED"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_vrf_attach_object_del_oos": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "lanAttachState": "OUT-OF-SYNC"
+          },
+          {
+            "lanAttachState": "OUT-OF-SYNC"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_vrf_attach_object_del_ready": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "lanAttachState": "NA"
+          },
+          {
+            "lanAttachState": "NA"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_vrf_object": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE":"OK",
+    "DATA": [
+      {
+        "fabric": "test_fabric",
+        "vrfName": "test_vrf_1",
+        "vrfTemplate": "Default_VRF_Universal",
+        "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+        "serviceVrfTemplate": "None",
+        "source": "None",
+        "vrfStatus": "DEPLOYED",
+        "vrfId": "9008011"
+      }
+    ]
+  },
+  "mock_vrf_attach_object" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "202",
+            "vrfId": "9008011"
+          },
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf2",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK2",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.225",
+            "vlanId": "203",
+            "vrfId": "9008011"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_vrf_attach_object_pending": {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "PENDING",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "202",
+            "vrfId": "9008011"
+          },
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf2",
+            "lanAttachState": "PENDING",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK2",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.225",
+            "vlanId": "203",
+            "vrfId": "9008011"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_vrf_object_dcnm_only": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+      {
+        "fabric": "test_fabric",
+        "vrfName": "test_vrf_dcnm",
+        "vrfTemplate": "Default_VRF_Universal",
+        "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+        "serviceVrfTemplate": "None",
+        "source": "None",
+        "vrfStatus": "DEPLOYED",
+        "vrfId": "9008013"
+      }
+    ]
+  },
+  "mock_vrf_attach_object_dcnm_only": {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_dcnm",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_dcnm",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "402",
+            "vrfId": "9008013"
+          },
+          {
+            "vrfName": "test_vrf_dcnm",
+            "switchName": "n9kv_leaf2",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK2",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.225",
+            "vlanId": "403",
+            "vrfId": "9008013"
+          }
+        ]
+      }
+    ]
+  },
+  "attach_success_resp": {
+    "DATA": {
+      "test-vrf-1--XYZKSJHSMK1(leaf1)": "SUCCESS",
+      "test-vrf-1--XYZKSJHSMK2(leaf2)": "SUCCESS"
+    },
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "attach_success_resp2": {
+    "DATA": {
+      "test-vrf-2--XYZKSJHSMK2(leaf2)": "SUCCESS",
+      "test-vrf-2--XYZKSJHSMK3(leaf3)": "SUCCESS"
+    },
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "deploy_success_resp": {
+    "DATA": {"status": ""},
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "blank_data": {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "get_have_failure": {
+    "DATA": "Invalid JSON response: Invalid Fabric: demo-fabric-123",
+    "ERROR": "Not Found",
+    "METHOD": "GET",
+    "RETURN_CODE": 404,
+    "MESSAGE": "OK"
+  },
+  "error1": {
+    "DATA": "None",
+    "ERROR": "There is an error",
+    "METHOD": "POST",
+    "RETURN_CODE": 400,
+    "MESSAGE": "OK"
+  },
+  "error2": {
+    "DATA": {
+      "test-vrf-1--XYZKSJHSMK1(leaf1)": "Entered VRF VLAN ID 203 is in use already",
+      "test-vrf-1--XYZKSJHSMK2(leaf2)": "SUCCESS"
+    },
+    "ERROR": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK"
+  },
+  "error3": {
+    "DATA": "No switches PENDING for deployment",
+    "ERROR": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK"
+  },
+  "delete_success_resp": {
+    "ERROR": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK"
+  }
+}

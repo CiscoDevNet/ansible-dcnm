@@ -1,0 +1,13 @@
+---
+# ansible-lint configuration
+
+# Exclude paths that shouldn't be linted
+exclude_paths:
+  - .github/
+  - .git/
+
+# Skip specific rules
+skip_list:
+  # Skip ignore-errors - used legitimately in test setup/cleanup tasks where
+  # tasks may fail intentionally (e.g., version detection, cleanup operations)
+  - ignore-errors

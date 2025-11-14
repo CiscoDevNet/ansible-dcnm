@@ -1,0 +1,115 @@
+{
+	"st_fex_merged_payloads_150" :
+  {
+    "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Port-channel150",
+      "DATA": [
+      {
+        "interfaceType": "STRAIGHT_TROUGH_FEX",
+        "interfaces": [
+        {
+          "fabricName": "test_fabric",
+          "ifName": "port-channel150",
+          "interfaceType": "STRAIGHT_TROUGH_FEX",
+          "nvPairs": {
+            "FEX_ID": "150",
+            "PRIORITY": "500",
+            "FABRIC_NAME": "test_fabric",
+            "POLICY_ID": "POLICY-8928470",
+            "PO_DESC": "FEX port channel",
+            "DESC": "Port Channel for FEX 150",
+            "MTU": "jumbo",
+            "SPEED": "Auto",
+            "MEMBER_INTERFACES": "e1/10",
+            "PO_ID": "Port-channel150",
+            "ENABLE_NETFLOW": "false",
+            "ADMIN_STATE": "true",
+            "POLICY_DESC": "",
+            "CONF": "no shutdown"
+          },
+          "serialNumber": "SAL1819SAN8"
+        }
+        ],
+        "policy": "int_port_channel_fex_11_1",
+        "skipResourceCheck": "false"
+      }],
+    "RETURN_CODE": 200,
+    "METHOD": "GET"
+  },
+
+	"st_fex_merged_payloads_151" :
+  {
+    "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&Port-channel151",
+      "DATA": [
+      {
+        "interfaceType": "STRAIGHT_TROUGH_FEX",
+        "interfaces": [
+        {
+          "fabricName": "test_fabric",
+          "ifName": "port-channel151",
+          "interfaceType": "STRAIGHT_TROUGH_FEX",
+          "nvPairs": {
+            "FEX_ID": "151",
+            "PRIORITY": "500",
+            "FABRIC_NAME": "test_fabric",
+            "POLICY_ID": "POLICY-8928470",
+            "PO_DESC": "FEX port channel",
+            "DESC": "Port Channel for FEX 151",
+            "MTU": "jumbo",
+            "SPEED": "Auto",
+            "MEMBER_INTERFACES": "e1/11",
+            "PO_ID": "Port-channel151",
+            "ENABLE_NETFLOW": "false",
+            "ADMIN_STATE": "true",
+            "POLICY_DESC": "",
+            "CONF": "no shutdown"
+          },
+          "serialNumber": "SAL1819SAN8"
+        }
+        ],
+        "policy": "int_port_channel_fex_11_1",
+        "skipResourceCheck": "false"
+      }],
+    "RETURN_CODE": 200,
+    "METHOD": "GET"
+  },
+
+	"st_fex_merged_payloads_152" :
+  {
+    "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&Port-channel152",
+      "DATA": [
+      {
+        "interfaceType": "STRAIGHT_TROUGH_FEX",
+        "interfaces": [
+        {
+          "fabricName": "test_fabric",
+          "ifName": "port-channel152",
+          "interfaceType": "STRAIGHT_TROUGH_FEX",
+          "nvPairs": {
+            "FEX_ID": "152",
+            "PRIORITY": "500",
+            "FABRIC_NAME": "test_fabric",
+            "POLICY_ID": "POLICY-8928470",
+            "PO_DESC": "FEX port channel",
+            "DESC": "Port Channel for FEX 152",
+            "MTU": "jumbo",
+            "SPEED": "Auto",
+            "MEMBER_INTERFACES": "e1/11",
+            "PO_ID": "Port-channel152",
+            "ENABLE_NETFLOW": "false",
+            "ADMIN_STATE": "true",
+            "POLICY_DESC": "",
+            "CONF": "no shutdown"
+          },
+          "serialNumber": "SAL1819SAN8"
+        }
+        ],
+        "policy": "int_port_channel_fex_11_1",
+        "skipResourceCheck": "false"
+      }],
+    "RETURN_CODE": 200,
+    "METHOD": "GET"
+  }
+}

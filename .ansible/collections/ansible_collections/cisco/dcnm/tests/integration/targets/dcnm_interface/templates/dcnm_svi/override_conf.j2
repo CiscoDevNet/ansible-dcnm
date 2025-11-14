@@ -1,0 +1,23 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: vlan1002
+  type: svi
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    int_vrf: green
+    ipv4_addr: 192.168.3.1
+    ipv4_mask_len: 24
+    mtu: 9216
+    route_tag: 1002
+    disable_ip_redirects: true
+    cmds:
+      - no shutdown
+    admin_state: true
+    enable_hsrp: false
+    adv_subnet_in_underlay: true
+    enable_netflow: false
+    mode: vlan
+    description: Override SVI interface 1002

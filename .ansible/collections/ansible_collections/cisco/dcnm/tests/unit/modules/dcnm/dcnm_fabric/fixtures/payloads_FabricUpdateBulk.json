@@ -1,0 +1,98 @@
+{
+    "TEST_NOTES": [
+        "Mocked payloads for FabricCreateBulk unit tests.",
+        "tests/unit/modules/dcnm/dcnm_fabric/test_fabric_update_bulk.py"
+    ],
+    "test_fabric_update_bulk_00020a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+    "test_fabric_update_bulk_00025a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+    "test_fabric_update_bulk_00030a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+    "test_fabric_update_bulk_00031a": [
+        {
+            "ANYCAST_GW_MAC": "0001aabbccdd",
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "STATIC_UNDERLAY_IP_ALLOC": false,
+            "VPC_DELAY_RESTORE_TIME": 300
+        }
+    ],
+    "test_fabric_update_bulk_00032a": [
+        {
+            "BGP_AS": 65001,
+            "BOO": true,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+    "test_fabric_update_bulk_00033a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "ANYCAST_GW_MAC": "0001zzbbccdd"
+        }
+    ],
+    "test_fabric_update_bulk_00034a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "VPC_DELAY_RESTORE_TIME": 60,
+            "FABRIC_NAME": "f1",
+            "STATIC_UNDERLAY_IP_ALLOC": false,
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+    "test_fabric_update_bulk_00035a": [
+        {
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "VPC_DELAY_RESTORE_TIME": 300,
+            "FABRIC_NAME": "f1",
+            "STATIC_UNDERLAY_IP_ALLOC": false,
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "ANYCAST_GW_MAC": "0001aabbccdd"
+        }
+    ],
+    "test_fabric_update_bulk_00036a": [
+        {
+            "BGP_AS": 65001,
+            "BOO": true,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+   "test_fabric_update_bulk_00040a": [
+        {
+            "ANYCAST_GW_MAC": "0001aabbccdd",
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ]
+}

@@ -1,0 +1,159 @@
+{
+    "TEST_NOTES": [
+        "Mocked payloads for VerifyPlaybookParams unit tests.",
+        "tests/unit/modules/dcnm/dcnm_fabric/test_verify_playbook_params.py"
+    ],
+    "test_verify_playbook_params_00050a": {
+            "TEST_NOTES": [
+                "Dependent parameters for REPLICATION_MODE are satisfied."
+            ],
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "REPLICATION_MODE": "Ingress",
+            "UNDERLAY_IS_V6": false
+    },
+    "test_verify_playbook_params_00051a": {
+        "TEST_NOTES": [
+            "Valid minimal playbook config."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_verify_playbook_params_00053a": {
+        "TEST_NOTES": [
+            "Valid minimal playbook config."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_verify_playbook_params_00060a": {
+        "TEST_NOTES": [
+            "Dependent parameters for REPLICATION_MODE are not satisfied."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "REPLICATION_MODE": "Ingress"
+    },
+    "test_verify_playbook_params_00070a": {
+        "TEST_NOTES": [
+            "Dependent parameters for V6_SUBNET_RANGE are not satisfied."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "V6_SUBNET_RANGE": "fd00::a05:0/112"
+    },
+    "test_verify_playbook_params_00080a": {
+        "TEST_NOTES": [
+            "Dependent parameters for V6_SUBNET_RANGE are not satisfied."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "V6_SUBNET_RANGE": "fd00::a05:0/112"
+    },
+    "test_verify_playbook_params_00090a": {
+        "TEST_NOTES": [
+            "REPLICATION_MODE value is invalid."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "REPLICATION_MODE": "INVALID_VALUE"
+    },
+    "test_verify_playbook_params_00100a": {
+        "TEST_NOTES": [
+            "ADVERTISE_PIP_BGP accepts boolean, but user provided 0."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "ADVERTISE_PIP_BGP": 0
+    },
+    "test_verify_playbook_params_00200a": {
+        "TEST_NOTES": [
+            "Playbook contains all requisite parameters and values to satisfy the rule",
+            "Rule type: AND",
+            "User parameter: V6_SUBNET_TARGET_MASK == 127",
+            "Dependent parameter: UNDERLAY_IS_V6 == True",
+            "USE_LINK_LOCAL == False"
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "V6_SUBNET_TARGET_MASK": 127,
+        "UNDERLAY_IS_V6": true,
+        "USE_LINK_LOCAL": false
+    },
+    "test_verify_playbook_params_00210a": {
+        "TEST_NOTES": [
+            "Playbook contains all requisite parameters to satisfy the rule",
+            "Value for USE_LINK_LOCAL does not satisfy the rule",
+            "Rule type: AND",
+            "User parameter: V6_SUBNET_TARGET_MASK == 127",
+            "Dependent parameter: UNDERLAY_IS_V6 == True",
+            "USE_LINK_LOCAL == True"
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "V6_SUBNET_TARGET_MASK": 127,
+        "UNDERLAY_IS_V6": true,
+        "USE_LINK_LOCAL": true
+    },
+    "test_verify_playbook_params_00300a": {
+        "TEST_NOTES": [
+            "Playbook contains all requisite parameters to satisfy the rule",
+            "Rule type: OR",
+            "User parameter: STP_BRIDGE_PRIORITY == 45056",
+            "Dependent parameter: STP_ROOT_OPTION == rpvst+"
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "STP_BRIDGE_PRIORITY": 45056,
+        "STP_ROOT_OPTION": "rpvst+"
+    },
+    "test_verify_playbook_params_00300b": {
+        "TEST_NOTES": [
+            "Playbook contains all requisite parameters to satisfy the rule",
+            "Rule type: OR",
+            "User parameter: STP_BRIDGE_PRIORITY == 45056",
+            "Dependent parameter: STP_ROOT_OPTION == mst"
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "STP_BRIDGE_PRIORITY": 45056,
+        "STP_ROOT_OPTION": "mst"
+    },
+    "test_verify_playbook_params_00310a": {
+        "TEST_NOTES": [
+            "Playbook does not contain all requisite parameters to satisfy the rule",
+            "Rule type: OR",
+            "User parameter: STP_BRIDGE_PRIORITY == 45056",
+            "Dependent parameter: STP_ROOT_OPTION is missing."
+        ],
+        "BGP_AS": 65001,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "STP_BRIDGE_PRIORITY": 45056
+    }
+}

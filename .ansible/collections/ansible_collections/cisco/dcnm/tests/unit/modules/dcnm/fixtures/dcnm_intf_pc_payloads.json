@@ -1,0 +1,145 @@
+{
+	"pc_merged_trunk_payloads" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Port-channel300",
+			"DATA": [
+			{
+				"policy": "int_port_channel_trunk_host_11_1",
+				"interfaces": [
+				{
+					"ifName": "port-channel300",
+					"serialNumber": "SAL1819SAN8",
+					"nvPairs": {
+						"MEMBER_INTERFACES": "e1/9",
+						"FABRIC_NAME": "test_fabric",
+						"PO_ID": "Port-channel300",
+						"MTU": "jumbo",
+            					"SPEED": "auto",
+						"PORT_DUPLEX_MODE": "auto",
+						"PRIORITY": "500",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"PC_MODE": "on",
+						"POLICY_DESC": "",
+						"CONF": "no shutdown",
+						"BPDUGUARD_ENABLED": "True",
+						"ADMIN_STATE": "True",
+						"POLICY_ID": "POLICY-1849470",
+						"ALLOWED_VLANS": "none",
+						"NATIVE_VLAN": "10",
+						"ENABLE_ORPHAN_PORT": false,
+						"ENABLE_PFC": false,
+						"CDP_ENABLE": true,
+						"ENABLE_MONITOR": false,
+						"DESC": "port channel acting as trunk"
+					}
+				}],
+        "skipResourceCheck": "True"
+			}
+		],
+		"RETURN_CODE": 200,
+		"METHOD": "GET"
+	},
+	"pc_merged_access_payloads" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Port-channel301",
+			"DATA": [
+			{
+				"policy": "int_port_channel_access_host_11_1",
+				"interfaces": [
+				{
+					"ifName": "port-channel301",
+					"serialNumber": "SAL1819SAN8",
+					"nvPairs": {
+						"ACCESS_VLAN": "301",
+						"MEMBER_INTERFACES": "e1/10",
+						"FABRIC_NAME": "test_fabric",
+						"PO_ID": "Port-channel301",
+						"MTU": "default",
+            					"SPEED": "auto",
+						"PORT_DUPLEX_MODE": "auto",
+						"PRIORITY": "500",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"PC_MODE": "on",
+						"POLICY_DESC": "",
+						"CONF": "no shutdown",
+						"BPDUGUARD_ENABLED": "True",
+						"ADMIN_STATE": "False",
+						"POLICY_ID": "POLICY-1849730",
+						"DESC": "port channel acting as access",
+						"ENABLE_ORPHAN_PORT": false,
+						"ENABLE_PFC": false,
+						"CDP_ENABLE": true,
+						"ENABLE_MONITOR": false
+					}
+				}],
+        "skipResourceCheck": "True"
+			}
+		],
+		"RETURN_CODE": 200,
+		"METHOD": "GET"
+	},
+	"pc_merged_l3_payloads" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Port-channel302",
+			"DATA": [
+			{
+				"policy": "int_l3_port_channel",
+				"interfaces": [
+				{
+					"ifName": "port-channel302",
+					"serialNumber": "SAL1819SAN8",
+					"nvPairs": {
+						"INTF_VRF": "",
+						"MEMBER_INTERFACES": "e1/11",
+						"FABRIC_NAME": "test_fabric",
+						"IP": "10.1.1.1",
+						"PO_ID": "Port-channel302",
+						"MTU": "9216",
+            "SPEED": "auto",
+						"PRIORITY": "500",
+						"ROUTING_TAG": "",
+						"PREFIX": "8",
+						"PC_MODE": "on",
+						"POLICY_DESC": "",
+						"CONF": "no shutdown",
+						"ADMIN_STATE": "False",
+						"POLICY_ID": "POLICY-1849830",
+						"DESC": "port channel acting as l3"
+					}
+				}],
+        "skipResourceCheck": "True"
+			}
+		],
+		"RETURN_CODE": 200,
+		"METHOD": "GET"
+	},
+	"pc_merged_monitor_payloads" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Port-channel303",
+			"DATA": [
+			{
+				"policy": "int_monitor_port_channel_11_1",
+				"interfaces": [
+				{
+					"ifName": "port-channel303",
+					"serialNumber": "SAL1819SAN8",
+					"nvPairs": {
+						"PRIORITY": "500",
+						"FABRIC_NAME": "test_fabric",
+						"POLICY_DESC": "",
+						"INTF_NAME": "Port-channel303",
+            "SPEED": "auto",
+						"POLICY_ID": "POLICY-1849940"
+					}
+				}],
+        "skipResourceCheck": "True"
+			}
+			],
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+	}
+}

@@ -1,0 +1,396 @@
+{
+  "mock_fab_inv_data": {
+    "192.168.1.108": {
+      "logicalName": "n9kv-108",
+        "serialNumber": "SAL1819SAN8",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+    },
+      "192.168.1.109": {
+        "logicalName": "n9kv-109",
+        "serialNumber": "FOX1821H035",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "None",
+        "managable": "False"
+      }
+  },
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
+      }
+    },
+
+	"mock_ip_sn" : {
+		"192.168.1.109": "FOX1821H035",
+		"192.168.1.108": "SAL1819SAN8" 
+	},
+
+		"mock_vpc_resp" : {
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+			"DATA": {
+				"vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+			},
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+		},
+
+	"mock_succ_resp" : {
+		"DATA": {},
+		"MESSAGE": "OK",
+		"METHOD": "POST",
+		"REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+		"RETURN_CODE": 200
+	},
+
+		"mock_deploy_resp" : {
+			"DATA": {},
+			"MESSAGE": "OK",
+			"METHOD": "POST",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface/deploy",
+			"RETURN_CODE": 200
+		},
+
+		"vpc_merged_config" : [
+		{
+			"profile": {
+				"peer2_pcid": 1,
+				"fabric": "test_fabric",
+				"bpdu_guard": "True",
+				"pc_mode": "on",
+				"peer1_members": [
+					"e1/14"
+				],
+				"peer2_members": [
+					"e1/14"
+				],
+				"peer2_cmds": [
+					"no shutdown"
+				],
+				"peer1_pcid": 1,
+				"mtu": "jumbo",
+				"peer1_cmds": [
+					"no shutdown"
+				],
+				"peer1_allowed_vlans": "none",
+				"peer1_native_vlan": "10",
+				"mode": "trunk",
+				"policy": "int_vpc_trunk_host_11_1",
+				"port_type_fast": "True",
+				"peer2_description": "VPC acting as trunk peer2",
+				"admin_state": "True",
+				"ifname": "vPC750",
+				"peer1_description": "VPC acting as trunk peer1",
+				"sno": "FOX1821H035~SAL1819SAN8",
+				"peer2_allowed_vlans": "none",
+				"peer2_native_vlan": "10"
+			},
+			"switch": [
+					"192.168.1.109",
+			    "192.168.1.108"
+			],
+			"type": "vpc",
+			"name": "vpc750",
+			"deploy": "True"
+		},
+		{
+			"profile": {
+				"sno": "FOX1821H035~SAL1819SAN8",
+				"peer2_members": [
+					"e1/15"
+				],
+				"peer2_access_vlan": "",
+				"bpdu_guard": "True",
+				"fabric": "test_fabric",
+				"peer2_cmds": [
+					"no shutdown"
+				],
+				"peer1_access_vlan": "",
+				"peer1_members": [
+					"e1/15"
+				],
+				"peer1_pcid": 2,
+				"mtu": "jumbo",
+				"peer1_cmds": [
+					"no shutdown"
+				],
+				"admin_state": "True",
+				"mode": "access",
+				"policy": "int_vpc_access_host_11_1",
+				"port_type_fast": "True",
+				"peer2_description": "VPC acting as access peer2",
+				"pc_mode": "on",
+				"ifname": "vPC751",
+				"peer1_description": "VPC acting as access peer1",
+				"peer2_pcid": 2
+			},
+			"switch": [
+					"192.168.1.109",
+			    "192.168.1.108"
+			],
+			"type": "vpc",
+			"name": "vpc751",
+			"deploy": "True"
+		}],
+
+		"vpc_replaced_config" : [
+		{
+			"profile": {
+				"peer2_pcid": 1,
+				"fabric": "test_fabric",
+				"bpdu_guard": "True",
+				"pc_mode": "active",
+				"peer1_members": [
+					"e1/17"
+				],
+				"peer2_members": [
+					"e1/17"
+				],
+				"peer2_cmds": [
+					"no shutdown"
+				],
+				"peer1_pcid": 1,
+				"mtu": "jumbo",
+				"peer1_cmds": [
+					"no shutdown"
+				],
+				"peer1_allowed_vlans": "none",
+				"peer1_native_vlan": "10",
+				"mode": "trunk",
+				"policy": "int_vpc_trunk_host_11_1",
+				"port_type_fast": "False",
+				"peer2_description": "VPC acting as trunk peer2 - replaced",
+				"admin_state": "False",
+				"ifname": "vPC750",
+				"peer1_description": "VPC acting as trunk peer1 - replaced",
+				"sno": "FOX1821H035~SAL1819SAN8",
+				"peer2_allowed_vlans": "all",
+				"peer2_native_vlan": "10"
+			},
+			"switch": [
+					"192.168.1.109",
+			    "192.168.1.108"
+			],
+			"type": "vpc",
+			"name": "vpc750",
+			"deploy": "True"
+		},
+		{
+			"profile": {
+				"sno": "FOX1821H035~SAL1819SAN8",
+				"peer2_members": [
+					"e1/25"
+				],
+				"peer2_access_vlan": "100",
+				"bpdu_guard": "False",
+				"fabric": "test_fabric",
+				"peer2_cmds": [
+					"no shutdown",
+					"no shutdown"
+				],
+				"peer1_access_vlan": "200",
+				"peer1_members": [
+					"e1/25"
+				],
+				"peer1_pcid": 2,
+				"mtu": "default",
+				"peer1_cmds": [
+					"no shutdown",
+					"no shutdown"
+				],
+				"admin_state": "False",
+				"mode": "access",
+				"policy": "int_vpc_access_host_11_1",
+				"port_type_fast": "False",
+				"peer2_description": "VPC acting as access peer2 - replaced",
+				"pc_mode": "active",
+				"ifname": "vPC751",
+				"peer1_description": "VPC acting as access peer1 - replaced",
+				"peer2_pcid": 2
+			},
+			"switch": [
+					"192.168.1.109",
+			    "192.168.1.108"
+			],
+			"type": "vpc",
+			"name": "vpc751",
+			"deploy": "True"
+		}],
+
+		"vpc_deleted_config" : [
+		{
+			"profile": {
+				"peer2_pcid": 1,
+				"fabric": "test_fabric",
+				"bpdu_guard": "True",
+				"pc_mode": "on",
+				"peer1_members": [
+					"e1/14"
+				],
+				"peer2_members": [
+					"e1/14"
+				],
+				"peer2_cmds": [
+					"no shutdown"
+				],
+				"peer1_pcid": 1,
+				"mtu": "jumbo",
+				"peer1_cmds": [
+					"no shutdown"
+				],
+				"peer1_allowed_vlans": "none",
+				"mode": "trunk",
+				"policy": "int_vpc_trunk_host_11_1",
+				"port_type_fast": "True",
+				"peer2_description": "VPC acting as trunk peer2",
+				"admin_state": "True",
+				"ifname": "vPC750",
+				"peer1_description": "VPC acting as trunk peer1",
+				"sno": "FOX1821H035~SAL1819SAN8",
+				"peer2_allowed_vlans": "none"
+			},
+			"switch": [
+					"192.168.1.109",
+			    "192.168.1.108"
+			],
+			"type": "vpc",
+			"name": "vpc750",
+			"deploy": "True"
+		},
+		{
+			"profile": {
+				"sno": "FOX1821H035~SAL1819SAN8",
+				"peer2_members": [
+					"e1/15"
+				],
+				"peer2_access_vlan": "",
+				"bpdu_guard": "True",
+				"fabric": "test_fabric",
+				"peer2_cmds": [
+					"no shutdown"
+				],
+				"peer1_access_vlan": "",
+				"peer1_members": [
+					"e1/15"
+				],
+				"peer1_pcid": 2,
+				"mtu": "jumbo",
+				"peer1_cmds": [
+					"no shutdown"
+				],
+				"admin_state": "True",
+				"mode": "access",
+				"policy": "int_vpc_access_host_11_1",
+				"port_type_fast": "True",
+				"peer2_description": "VPC acting as access peer2",
+				"pc_mode": "on",
+				"ifname": "vPC751",
+				"peer1_description": "VPC acting as access peer1",
+				"peer2_pcid": 2
+			},
+			"switch": [
+					"192.168.1.109",
+			    "192.168.1.108"
+			],
+			"type": "vpc",
+			"name": "vpc751",
+			"deploy": "True"
+		}],
+
+		"vpc_overridden_config" : [
+		{
+			"profile": {
+				"peer2_pcid": 1,
+				"fabric": "test_fabric",
+				"bpdu_guard": "True",
+				"pc_mode": "on",
+				"peer1_members": [
+					"e1/14"
+				],
+				"peer2_members": [
+					"e1/14"
+				],
+				"peer2_cmds": [
+					"no shutdown"
+				],
+				"peer1_pcid": 1,
+				"mtu": "jumbo",
+				"peer1_cmds": [
+					"no shutdown"
+				],
+				"peer1_allowed_vlans": "none",
+				"peer1_native_vlan": "10",
+				"mode": "trunk",
+				"policy": "int_vpc_trunk_host_11_1",
+				"port_type_fast": "True",
+				"peer2_description": "VPC acting as trunk peer2",
+				"admin_state": "True",
+				"ifname": "vPC750",
+				"peer1_description": "VPC acting as trunk peer1",
+				"sno": "FOX1821H035~SAL1819SAN8",
+				"peer2_allowed_vlans": "none",
+				"peer2_native_vlan": "10"
+			},
+			"switch": [
+					"192.168.1.109",
+			    "192.168.1.108"
+			],
+			"type": "vpc",
+			"name": "vpc750",
+			"deploy": "True"
+		}],
+
+		"vpc_members_missing_config" : [
+		{
+			"profile": {
+				"sno": "FOX1821H035~SAL1819SAN8",
+				"peer2_access_vlan": "",
+				"bpdu_guard": "True",
+				"fabric": "test_fabric",
+				"peer2_cmds": [
+					"no shutdown"
+				],
+				"peer1_access_vlan": "",
+				"peer1_pcid": 2,
+				"mtu": "jumbo",
+				"peer1_cmds": [
+					"no shutdown"
+				],
+				"admin_state": "True",
+				"mode": "access",
+				"policy": "int_vpc_access_host_11_1",
+				"port_type_fast": "True",
+				"peer2_description": "VPC acting as access peer2",
+				"pc_mode": "on",
+				"ifname": "vPC751",
+				"peer1_description": "VPC acting as access peer1",
+				"peer2_pcid": 2
+			},
+			"switch": [
+					"192.168.1.109",
+			    "192.168.1.108"
+			],
+			"type": "vpc",
+			"name": "vpc751",
+			"deploy": "True"
+		}]
+}

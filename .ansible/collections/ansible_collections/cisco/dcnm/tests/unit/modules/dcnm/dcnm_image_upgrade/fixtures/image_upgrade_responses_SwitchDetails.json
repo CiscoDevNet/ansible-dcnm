@@ -1,0 +1,204 @@
+{
+    "test_image_upgrade_switch_details_00020a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "DATA.ipAddress"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "ipAddress": "172.22.150.110"
+            }
+        ]
+    },
+    "test_image_upgrade_switch_details_00021a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "DATA: key/values removed which are not needed by the test"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "ipAddress": "172.22.150.110",
+                "hostName": "cvd-1111-bgw"
+            },
+            {
+                "fabricName": "easy",
+                "hostName": "cvd-1112-bgw",
+                "ipAddress": "172.22.150.111",
+                "logicalName": "cvd-1112-bgw",
+                "model": "N9K-C9504",
+                "serialNumber": "FOX2109PGD1",
+                "switchRole": "border gateway"
+            }
+        ]
+    },
+    "test_image_upgrade_switch_details_00022a": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "ipAddress": "172.22.150.110"
+            }
+        ]
+    },
+    "test_image_upgrade_switch_details_00022b": {
+        "RETURN_CODE": 404,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/bad/path",
+        "MESSAGE": "Not Found",
+        "DATA": {}
+    },
+    "test_image_upgrade_switch_details_00022c": {
+        "RETURN_CODE": 500,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "Internal Server Error",
+        "DATA": {}
+    },
+    "test_image_upgrade_switch_details_00023a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "DATA: key/values removed which are not needed by the test"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "fabricName": "easy",
+                "hostName": "cvd-1111-bgw",
+                "ipAddress": "172.22.150.110",
+                "licenseViolation": "false",
+                "location": "null",
+                "logicalName": "cvd-1111-bgw",
+                "managable": "true",
+                "model": "N9K-C9504",
+                "present": "true",
+                "serialNumber": "FOX2109PGCT",
+                "switchRole": "border gateway"
+            }
+        ]
+    },
+    "test_image_upgrade_switch_details_00024a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "DATA: Contains ipAddress which is not known"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "ipAddress": "5.5.5.5"
+            }
+        ]
+    },
+    "test_image_upgrade_switch_details_00025a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "DATA: Does not contain a key named FOO",
+            "DATA.ipAddress is needed for the test"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "ipAddress": "172.22.150.110"
+            }
+        ]
+    },
+    "test_image_upgrade_switch_details_00030a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "model: null",
+            "DATA: key/values removed which are not needed by the test"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "ipAddress": "172.22.150.110",
+                "hostName": "cvd-1111-bgw"
+            },
+            {
+                "fabricName": "easy",
+                "hostName": "cvd-1112-bgw",
+                "ipAddress": "172.22.150.111",
+                "logicalName": "cvd-1112-bgw",
+                "model": null,
+                "serialNumber": "FOX2109PGD1",
+                "switchRole": "border gateway"
+            }
+        ]
+    },
+    "test_image_upgrade_image_policy_action_00030a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [{}]
+    },
+    "test_image_upgrade_image_policy_action_00031a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [{}]
+    },
+    "test_image_upgrade_image_policy_action_00040a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [{}]
+    },
+    "test_image_upgrade_image_policy_action_00050a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [{}]
+    },
+    "test_image_upgrade_image_policy_action_00051a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "MESSAGE": "OK",
+        "DATA": [{}]
+    }
+}

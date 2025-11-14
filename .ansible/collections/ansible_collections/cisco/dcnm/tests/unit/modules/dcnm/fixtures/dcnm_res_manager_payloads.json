@@ -1,0 +1,1276 @@
+{
+  "create_rm_l3vni_resp":
+  {
+    "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/resources",
+      "MESSAGE": "OK",
+      "DATA": {
+        "resource": 101,
+        "dbId": 20547
+      }
+  },
+    "create_rm_l2vni_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/resources",
+      "MESSAGE": "OK",
+      "DATA": {
+        "resource": 102,
+        "dbId": 20548
+      }
+    },
+    "create_rm_id_dev_sw1_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/resources",
+      "MESSAGE": "OK",
+      "DATA": {
+        "resource": 200,
+        "dbId": 20549
+      }
+    },
+    "create_rm_id_dev_sw2_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/resources",
+      "MESSAGE": "OK",
+      "DATA": {
+        "resource": 200,
+        "dbId": 20550
+      }
+    },
+    "create_rm_vpcid_dev_pair_sw1_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/resources",
+      "MESSAGE": "OK",
+      "DATA": {
+        "resource": 500,
+        "dbId": 20551
+      }
+    },
+    "create_rm_vpcid_dev_pair_sw2_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/resources",
+      "MESSAGE": "OK",
+      "DATA": {
+        "resource": 500,
+        "dbId": 20552
+      }
+    },
+    "create_rm_ip_fabric_resp":{
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/resources",
+      "MESSAGE": "OK",
+      "DATA": {
+        "resource": "110.1.1.1",
+        "dbId": 20553
+      }
+    },
+    "create_rm_ip_dev_int_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/resources",
+      "MESSAGE": "OK",
+      "DATA": {
+        "resource": "fe:80::4",
+        "dbId": 20554
+      }
+    },
+    "create_rm_subnet_link_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/resources",
+      "MESSAGE": "OK",
+      "DATA": {
+        "resource": "fe:80:505::5/64",
+        "dbId": 20555
+      }
+    },
+    "delete_rm_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/resources?id=20574,20575,20576,20577,20578,20579,20580,20581,20582",
+      "MESSAGE": "OK",
+      "DATA": {
+        "successList": [
+          20574,
+        20575,
+        20576,
+        20577,
+        20578,
+        20579,
+        20580,
+        20581,
+        20582
+        ]
+      }
+    } ,
+    "get_rm_id_l3vni_resp":{
+
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/pools",
+      "MESSAGE": "OK",
+      "DATA":[{
+        "id": 20574,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "L3_VNI",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "L3_VNI",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Fabric",
+        "entityName": "l3_vni_fabric",
+        "allocatedIp": "101",
+        "allocatedOn": 1649049896210,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "mmudigon",
+        "ipAddress": "",
+        "switchName": ""
+      }]
+    },
+    "get_rm_id_l2vni_resp":{
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/pools",
+      "MESSAGE": "OK",
+      "DATA":[{
+        "id": 20575,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "L2_VNI",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "L2_VNI",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Fabric",
+        "entityName": "l2_vni_fabric",
+        "allocatedIp": "102",
+        "allocatedOn": 1649049898599,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "mmudigon",
+        "ipAddress": "",
+        "switchName": ""
+      }]
+    },
+    "get_rm_id_dev_sw1_resp":{
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/pools",
+      "MESSAGE": "OK",
+      "DATA":[{
+        "id": 20576,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "LOOPBACK_ID",
+          "fabricName": "None",
+          "vrfName": "None",
+          "poolType": "LOOPBACK_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "loopback_dev",
+        "allocatedIp": "200",
+        "allocatedOn": 1649049900999,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      }]
+    },
+    "get_rm_id_dev_sw2_resp":{
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/pools",
+      "MESSAGE": "OK",
+      "DATA":[{
+        "id": 20577,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "LOOPBACK_ID",
+          "fabricName": "None",
+          "vrfName": "None",
+          "poolType": "LOOPBACK_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "loopback_dev",
+        "allocatedIp": "200",
+        "allocatedOn": 1649049903213,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      }]
+    },
+    "get_rm_vpcid_dev_pair_sw1_resp":{
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/pools",
+      "MESSAGE": "OK",
+      "DATA":[{
+        "id": 20578,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "VPC_ID",
+          "fabricName": "None",
+          "vrfName": "None",
+          "poolType": "VPC_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DevicePair",
+        "entityName": "9M99N34RDED~9NXHSNTEO6C",
+        "allocatedIp": "500",
+        "allocatedOn": 1649049905593,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      }]
+    },
+    "get_rm_vpcid_dev_pair_sw2_resp":{
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/pools",
+      "MESSAGE": "OK",
+      "DATA":[{
+        "id": 20579,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "VPC_ID",
+          "fabricName": "None",
+          "vrfName": "None",
+          "poolType": "VPC_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DevicePair",
+        "entityName": "9M99N34RDED~9NXHSNTEO6C",
+        "allocatedIp": "500",
+        "allocatedOn": 1649049905603,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      }]
+    },
+    "get_rm_ip_fabric_resp":{
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/pools",
+      "MESSAGE": "OK",
+      "DATA":[{
+        "id": 20580,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "LOOPBACK0_IP_POOL",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Fabric",
+        "entityName": "mmudigon-2",
+        "allocatedIp": "110.1.1.1",
+        "allocatedOn": 1649049910202,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "mmudigon-2",
+        "ipAddress": "",
+        "switchName": ""
+      }]
+    },
+    "get_rm_ip_dev_int_resp":{
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/pools",
+      "MESSAGE": "OK",
+      "DATA":[{
+        "id": 20581,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "LOOPBACK1_IP_POOL",
+          "fabricName": "None",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DeviceInterface",
+        "entityName": "9M99N34RDED~Ethernet1/10",
+        "allocatedIp": "fe:80::4",
+        "allocatedOn": 1649049912705,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      }]
+    },
+    "get_rm_subnet_link_resp":{
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon/pools",
+      "MESSAGE": "OK",
+      "DATA":[{
+        "id": 20582,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "SUBNET",
+          "fabricName": "None",
+          "vrfName": "None",
+          "poolType": "SUBNET_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Link",
+        "entityName": "9M99N34RDED~Ethernet1/3~9NXHSNTEO6C~Ethernet1/3",
+        "allocatedIp": "fe:80:505::5/64",
+        "allocatedOn": 1649049915007,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      }]
+    },
+
+    "query_rm_resp":{
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/mmudigon",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "id": 2480,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "LOOPBACK_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "loopback0",
+        "allocatedIp": "0",
+        "allocatedOn": 1635405579291,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 2486,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "LOOPBACK_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "loopback1",
+        "allocatedIp": "1",
+        "allocatedOn": 1635405580801,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 12893,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "TOP_DOWN_VRF_VLAN",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "MY_IT_VRF_71",
+        "allocatedIp": "2001",
+        "allocatedOn": 1639480642281,
+        "allocatedFlag": false,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 13296,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "TOP_DOWN_NETWORK_VLAN",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "vlan3000",
+        "allocatedIp": "3000",
+        "allocatedOn": 1642482549483,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 19858,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "LOOPBACK_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "loopback0",
+        "allocatedIp": "0",
+        "allocatedOn": 1646833111581,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 19860,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "LOOPBACK_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "loopback1",
+        "allocatedIp": "1",
+        "allocatedOn": 1646833112183,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 19884,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "TOP_DOWN_VRF_VLAN",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "MY_IT_VRF_11",
+        "allocatedIp": "2000",
+        "allocatedOn": 1646889683549,
+        "allocatedFlag": false,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 19886,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "TOP_DOWN_VRF_VLAN",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "MY_IT_VRF_21",
+        "allocatedIp": "2001",
+        "allocatedOn": 1646889689719,
+        "allocatedFlag": false,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 19961,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "TOP_DOWN_VRF_VLAN",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "MY_IT_VRF_11",
+        "allocatedIp": "2000",
+        "allocatedOn": 1647407756432,
+        "allocatedFlag": false,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 19981,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "VPC_PEER_LINK_VLAN",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DevicePair",
+        "entityName": "9M99N34RDED~9NXHSNTEO6C",
+        "allocatedIp": "3600",
+        "allocatedOn": 1647513662346,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 19982,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "VPC_PEER_LINK_VLAN",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DevicePair",
+        "entityName": "9M99N34RDED~9NXHSNTEO6C",
+        "allocatedIp": "3600",
+        "allocatedOn": 1647513662346,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 19983,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "PORT_CHANNEL_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "port-channel500",
+        "allocatedIp": "500",
+        "allocatedOn": 1647513662364,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 19987,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "PORT_CHANNEL_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "port-channel500",
+        "allocatedIp": "500",
+        "allocatedOn": 1647513666451,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 20289,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "LOOPBACK_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "Loopback100",
+        "allocatedIp": "100",
+        "allocatedOn": 1648056311906,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 20292,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "PORT_CHANNEL_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "Port-channel300",
+        "allocatedIp": "300",
+        "allocatedOn": 1648056318112,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 20293,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "VPC_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DevicePair",
+        "entityName": "9M99N34RDED~9NXHSNTEO6C~vPC750",
+        "allocatedIp": "750",
+        "allocatedOn": 1648056323413,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 20294,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "VPC_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DevicePair",
+        "entityName": "9M99N34RDED~9NXHSNTEO6C~vPC750",
+        "allocatedIp": "750",
+        "allocatedOn": 1648056323418,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 20295,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "PORT_CHANNEL_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "vPC750",
+        "allocatedIp": "310",
+        "allocatedOn": 1648056323743,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 20296,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "PORT_CHANNEL_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "vPC750",
+        "allocatedIp": "310",
+        "allocatedOn": 1648056324100,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 20594,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "LOOPBACK_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "loopback_dev",
+        "allocatedIp": "200",
+        "allocatedOn": 1649060112224,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 20595,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "LOOPBACK_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Device",
+        "entityName": "loopback_dev",
+        "allocatedIp": "200",
+        "allocatedOn": 1649060114523,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 20596,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "VPC_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DevicePair",
+        "entityName": "9M99N34RDED~9NXHSNTEO6C",
+        "allocatedIp": "500",
+        "allocatedOn": 1649060116773,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 20597,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "VPC_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DevicePair",
+        "entityName": "9M99N34RDED~9NXHSNTEO6C",
+        "allocatedIp": "500",
+        "allocatedOn": 1649060116777,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 20291,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "TOP_DOWN_L3_DOT1Q",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DeviceInterface",
+        "entityName": "Ethernet1/1.10",
+        "allocatedIp": "10",
+        "allocatedOn": 1648056315208,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 19980,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "VPC_DOMAIN_ID",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Fabric",
+        "entityName": "9M99N34RDED~9NXHSNTEO6C",
+        "allocatedIp": "1",
+        "allocatedOn": 1647513662288,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "mmudigon",
+        "ipAddress": "",
+        "switchName": ""
+      },
+      {
+        "id": 20013,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "L3_VNI",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Fabric",
+        "entityName": "MyVRF_50000",
+        "allocatedIp": "50000",
+        "allocatedOn": 1647927265256,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "mmudigon",
+        "ipAddress": "",
+        "switchName": ""
+      },
+      {
+        "id": 20014,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "L2_VNI",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Fabric",
+        "entityName": "MyNetwork_30000",
+        "allocatedIp": "30000",
+        "allocatedOn": 1647927279161,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "mmudigon",
+        "ipAddress": "",
+        "switchName": ""
+      },
+      {
+        "id": 20592,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "L3_VNI",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Fabric",
+        "entityName": "l3_vni_fabric",
+        "allocatedIp": "101",
+        "allocatedOn": 1649060107501,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "mmudigon",
+        "ipAddress": "",
+        "switchName": ""
+      },
+      {
+        "id": 20593,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "L2_VNI",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Fabric",
+        "entityName": "l2_vni_fabric",
+        "allocatedIp": "102",
+        "allocatedOn": 1649060109931,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "mmudigon",
+        "ipAddress": "",
+        "switchName": ""
+      },
+      {
+        "id": 2478,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Fabric",
+        "entityName": "ANYCAST_RP",
+        "allocatedIp": "10.254.254.1",
+        "allocatedOn": 1635405578997,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "ANYCAST_RP",
+        "ipAddress": "",
+        "switchName": ""
+      },
+      {
+        "id": 2479,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DeviceInterface",
+        "entityName": "9M99N34RDED~loopback0",
+        "allocatedIp": "10.2.0.1",
+        "allocatedOn": 1635405579238,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 2485,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DeviceInterface",
+        "entityName": "9M99N34RDED~loopback1",
+        "allocatedIp": "10.3.0.2",
+        "allocatedOn": 1635405580751,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 19857,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DeviceInterface",
+        "entityName": "9NXHSNTEO6C~loopback0",
+        "allocatedIp": "10.2.0.2",
+        "allocatedOn": 1646833111520,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 19859,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DeviceInterface",
+        "entityName": "9NXHSNTEO6C~loopback1",
+        "allocatedIp": "10.3.0.1",
+        "allocatedOn": 1646833112133,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 19984,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "SUBNET_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Link",
+        "entityName": "9M99N34RDED~Vlan3600~9NXHSNTEO6C~Vlan3600",
+        "allocatedIp": "10.4.0.0/30",
+        "allocatedOn": 1647513664206,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 19985,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DeviceInterface",
+        "entityName": "9M99N34RDED~Vlan3600",
+        "allocatedIp": "10.4.0.1",
+        "allocatedOn": 1647513664224,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 19986,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DeviceInterface",
+        "entityName": "9M99N34RDED~9NXHSNTEO6C~loopback1",
+        "allocatedIp": "10.3.0.3",
+        "allocatedOn": 1647513664287,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 19988,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DeviceInterface",
+        "entityName": "9NXHSNTEO6C~Vlan3600",
+        "allocatedIp": "10.4.0.2",
+        "allocatedOn": 1647513668192,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9NXHSNTEO6C",
+        "ipAddress": "192.168.123.151",
+        "switchName": "n9kv-200"
+      },
+      {
+        "id": 20015,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Fabric",
+        "entityName": "MyNetwork_30000",
+        "allocatedIp": "239.1.1.1",
+        "allocatedOn": 1647927279169,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "MyNetwork_30000",
+        "ipAddress": "",
+        "switchName": ""
+      },
+      {
+        "id": 20290,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DeviceInterface",
+        "entityName": "9M99N34RDED~loopback100",
+        "allocatedIp": "192.168.1.1",
+        "allocatedOn": 1648056312299,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 20598,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Fabric",
+        "entityName": "mmudigon-2",
+        "allocatedIp": "110.1.1.1",
+        "allocatedOn": 1649060121393,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "mmudigon-2",
+        "ipAddress": "",
+        "switchName": ""
+      },
+      {
+        "id": 20599,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "IP_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "DeviceInterface",
+        "entityName": "9M99N34RDED~Ethernet1/10",
+        "allocatedIp": "fe:80::4",
+        "allocatedOn": 1649060123699,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      },
+      {
+        "id": 20600,
+        "resourcePool": {
+          "id": 0,
+          "poolName": "",
+          "fabricName": "mmudigon",
+          "vrfName": "None",
+          "poolType": "SUBNET_POOL",
+          "dynamicSubnetRange": "None",
+          "targetSubnet": 0,
+          "overlapAllowed": false
+        },
+        "entityType": "Link",
+        "entityName": "9M99N34RDED~Ethernet1/3~9NXHSNTEO6C~Ethernet1/3",
+        "allocatedIp": "fe:80:505::5/64",
+        "allocatedOn": 1649060126019,
+        "allocatedFlag": true,
+        "allocatedScopeValue": "9M99N34RDED",
+        "ipAddress": "192.168.123.150",
+        "switchName": "n9kv-100"
+      }
+      ]
+    }
+}

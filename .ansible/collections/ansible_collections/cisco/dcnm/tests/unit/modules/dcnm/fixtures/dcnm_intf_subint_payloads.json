@@ -1,0 +1,74 @@
+{
+	"subint_merged_payloads_1" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Ethernet1/30",
+			"DATA": [
+			{
+				"policy": "int_subif_11_1",
+				"interfaces": [
+				{
+					"ifName": "Ethernet1/25.1",
+					"serialNumber": "SAL1819SAN8",
+					"nvPairs": {
+						"INTF_VRF": "",
+						"CONF": "no shutdown",
+						"FABRIC_NAME": "test_fabric",
+						"IP": "1.1.1.1",
+						"VLAN": "100",
+						"MTU": "9216",
+            					"SPEED": "auto",
+						"PRIORITY": "500",
+						"PREFIX": "24",
+						"ADMIN_STATE": "True",
+						"POLICY_DESC": "",
+						"INTF_NAME": "Ethernet1/25.1",
+						"ROUTING_TAG": "12345",
+						"IPv6": "",
+						"IPv6_PREFIX": "",
+						"DESC": "sub interface eth25/1.1 configuration",
+						"POLICY_ID": "POLICY-1901730"
+					}
+				}],
+        "skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+	},
+		"subint_merged_payloads_2" :
+		{
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Ethernet1/30",
+			"DATA": [
+			{
+				"policy": "int_subif_11_1",
+				"interfaces": [
+				{
+					"ifName": "Ethernet1/25.2",
+					"serialNumber": "SAL1819SAN8",
+					"nvPairs": {
+						"INTF_VRF": "",
+						"CONF": "no shutdown",
+						"FABRIC_NAME": "test_fabric",
+						"IP": "1.1.1.2",
+						"VLAN": "101",
+						"MTU": "9216",
+            					"SPEED": "auto",
+						"PRIORITY": "500",
+						"PREFIX": "24",
+						"ADMIN_STATE": "True",
+						"POLICY_DESC": "",
+						"INTF_NAME": "Ethernet1/25.2",
+						"ROUTING_TAG": "12345",
+						"IPv6": "",
+						"IPv6_PREFIX": "",
+						"DESC": "sub interface eth1/25.2 configuration",
+						"POLICY_ID": "POLICY-1901720"
+					}
+				}],
+        "skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+		}
+}

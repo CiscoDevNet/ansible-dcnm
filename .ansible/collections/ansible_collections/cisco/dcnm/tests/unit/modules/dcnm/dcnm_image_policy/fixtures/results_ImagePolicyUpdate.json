@@ -1,0 +1,6 @@
+{
+    "TEST_NOTES": [
+        "Mocked results for ImagePolicyUpdate unit tests.",
+        "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_update.py"
+    ]
+}

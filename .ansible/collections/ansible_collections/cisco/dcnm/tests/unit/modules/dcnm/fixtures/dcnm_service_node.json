@@ -1,0 +1,612 @@
+{
+    "mock_ip_sn" : {
+      "10.10.10.224": "XYZKSJHSMK1",
+      "10.10.10.225": "XYZKSJHSMK2",
+      "10.10.10.226": "XYZKSJHSMK3",
+      "10.10.10.227": "XYZKSJHSMK4",
+      "10.10.10.228": "XYZKSJHSMK5"
+    },
+
+    "playbook_config" : [
+      {
+        "name": "SN-11",
+        "type": "firewall",
+        "form_factor": "physical",
+        "svc_int_name": "svc1",
+        "attach_interface": "Ethernet1/1",
+        "switches": "10.10.10.224"
+      }
+    ],
+
+    "playbook_config_replace_new" : [
+      {
+        "name": "SN-11",
+        "type": "firewall",
+        "form_factor": "physical",
+        "svc_int_name": "svc1",
+        "attach_interface": "Ethernet1/1",
+        "switches": "10.10.10.224"
+      }
+    ],
+
+    "playbook_config_replace_new1" : [
+      {
+        "name": "SN-11",
+        "type": "load_balancer",
+        "form_factor": "physical",
+        "svc_int_name": "svc1",
+        "attach_interface": "Ethernet1/1",
+        "switches": "10.10.10.224"
+      }
+    ],
+
+    "playbook_new_config" : [
+      {
+        "name": "SN-12",
+        "type": "load_balancer",
+        "form_factor": "virtual",
+        "svc_int_name": "svc12",
+        "attach_interface": "Ethernet1/12",
+        "switches": "10.10.10.225"
+      }
+    ],
+
+    "playbook_over_config" : [
+      {
+        "name": "SN-11",
+        "type": "firewall",
+        "form_factor": "physical",
+        "svc_int_name": "scv1",
+        "attach_interface": "Ethernet1/1",
+        "switches": "10.10.10.224"
+      }
+    ],
+
+    "playbook_config_name" : [
+      {
+        "name": "SN-11"
+      }
+    ],
+
+    "playbook_config_virtual" : [
+      {
+        "name": "SN-11",
+        "type": "firewall",
+        "form_factor": "virtual",
+        "svc_int_name": "svc1",
+        "attach_interface": "Ethernet1/1",
+        "switches": "10.10.10.224"
+      }
+    ],
+
+    "playbook_config_load" : [
+      {
+        "name": "SN-11",
+        "type": "load_balancer",
+        "form_factor": "virtual",
+        "svc_int_name": "svc1",
+        "attach_interface": "Ethernet1/1",
+        "switches": "10.10.10.224"
+      }
+    ],
+
+    "playbook_config_vnf" : [
+      {
+        "name": "SN-11",
+        "type": "virtual_network_function",
+        "form_factor": "virtual",
+        "svc_int_name": "svc1",
+        "attach_interface": "Ethernet1/1",
+        "switches": "10.10.10.224"
+      }
+    ],
+
+    "playbook_config_vpc" : [
+      {
+        "name": "SN-11",
+        "type": "firewall",
+        "form_factor": "physical",
+        "svc_int_name": "svc1",
+        "attach_interface": "vPC1",
+        "switches": ["10.10.10.224", "10.10.10.225"]
+      }
+    ],
+
+     "playbook_config_invalid_vpc" : [
+      {
+        "name": "SN-11",
+        "type": "firewall",
+        "form_factor": "physical",
+        "svc_int_name": "svc1",
+        "attach_interface": "vPortchannel12",
+        "switches": ["10.10.10.224", "10.10.10.225"]
+      }
+    ],
+
+    "playbook_config_more_switch" : [
+      {
+        "name": "SN-11",
+        "type": "firewall",
+        "form_factor": "physical",
+        "svc_int_name": "svc1",
+        "attach_interface": "vPC1",
+        "switches": ["10.10.10.224", "10.10.10.225", "10.10.10.226"]
+      }
+    ],
+
+    "playbook_config_noparams" : [
+      {
+        "name": "",
+        "type": "firewall",
+        "form_factor": "physical",
+        "svc_int_name": "svc1",
+        "attach_interface": "Ethernet1/1",
+        "switches": "10.10.10.224"
+      }
+    ],
+
+    "playbook_config_no_type" : [
+      {
+        "name": "SN-11",
+        "type": "karth",
+        "form_factor": "physical",
+        "svc_int_name": "svc1",
+        "attach_interface": "Ethernet1/1",
+        "switches": "10.10.10.224"
+      }
+    ],
+
+    "playbook_config_no_ff" : [
+      {
+        "name": "SN-11",
+        "type": "firewall",
+        "form_factor": "babu",
+        "svc_int_name": "svc1",
+        "attach_interface": "Ethernet1/1",
+        "switches": "10.10.10.224"
+      }
+    ],
+
+    "playbook_config_no_vpc" : [
+      {
+        "name": "SN-11",
+        "type": "firewall",
+        "form_factor": "physical",
+        "svc_int_name": "svc1",
+        "attach_interface": "vPC1",
+        "switches": "10.10.10.224"
+      }
+    ],
+
+    "playbook_config_query" : [
+      {
+        "switches": "10.10.10.224"
+      }
+    ],
+
+  "mock_sn_1_object": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE":"",
+    "DATA": [
+        {
+            "attachedFabricName": "test_fabric",
+            "attachedSwitchInterfaceName": "Ethernet1/1",
+            "attachedSwitchSn": "XYZKSJHSMK1",
+            "fabricName": "external",
+            "formFactor": "Virtual",
+            "interfaceName": "svc1",
+            "lastUpdated": 1611748269292,
+            "linkTemplateName": "service_link_trunk",
+            "linkUuid": "LINK-UUID-141180",
+            "name": "SN-11",
+            "nvPairs": {
+                "ADMIN_STATE": "true",
+                "ALLOWED_VLANS": "none",
+                "BPDUGUARD_ENABLED": "no",
+                "DEST_FABRIC_NAME": "external",
+                "DEST_SWITCH_NAME": "SN-11",
+                "IS_METASWITCH": "false",
+                "LINK_UUID": "LINK-UUID-141180",
+                "MTU": "jumbo",
+                "POLICY_DESC": "",
+                "POLICY_ID": "POLICY-141190",
+                "PORTTYPE_FAST_ENABLED": "true",
+                "PRIORITY": "500",
+                "SOURCE_FABRIC_NAME": "test_fabric",
+                "SOURCE_SWITCH_NAME": "dt-n9k1",
+                "SPEED": "Auto"
+            },
+            "type": "Firewall",
+            "vpcSwitchesAttached": false
+        }
+    ]
+  },
+
+  "mock_sn_merge_1_success": {
+    "MESSAGE": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": {
+        "attachedFabricName": "test_fabric",
+        "attachedSwitchInterfaceName": "Ethernet1/1",
+        "attachedSwitchSn": "XYZKSJHSMK1",
+        "fabricName": "external",
+        "formFactor": "Physical",
+        "interfaceName": "scv1",
+        "lastUpdated": 1612515571015,
+        "linkTemplateName": "service_link_trunk",
+        "linkUuid": "LINK-UUID-287550",
+        "name": "SN-11",
+        "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ALLOWED_VLANS": "none",
+            "BPDUGUARD_ENABLED": "no",
+            "MTU": "jumbo",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "SPEED": "Auto"
+        },
+        "type": "Firewall",
+        "vpcSwitchesAttached": false
+    }
+  },
+
+  "mock_sn_merge_2_success": {
+    "MESSAGE": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": {
+        "attachedFabricName": "test_fabric",
+        "attachedSwitchInterfaceName": "Ethernet1/1",
+        "attachedSwitchSn": "XYZKSJHSMK1",
+        "fabricName": "external",
+        "formFactor": "Virtual",
+        "interfaceName": "scv1",
+        "lastUpdated": 1612515571015,
+        "linkTemplateName": "service_link_trunk",
+        "linkUuid": "LINK-UUID-287550",
+        "name": "SN-11",
+        "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ALLOWED_VLANS": "none",
+            "BPDUGUARD_ENABLED": "no",
+            "MTU": "jumbo",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "SPEED": "Auto"
+        },
+        "type": "Firewall",
+        "vpcSwitchesAttached": false
+    }
+  },
+
+  "mock_sn_merge_3_success": {
+    "MESSAGE": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": {
+        "attachedFabricName": "test_fabric",
+        "attachedSwitchInterfaceName": "Ethernet1/1",
+        "attachedSwitchSn": "XYZKSJHSMK1",
+        "fabricName": "external",
+        "formFactor": "Virtual",
+        "interfaceName": "scv1",
+        "lastUpdated": 1612515571015,
+        "linkTemplateName": "service_link_trunk",
+        "linkUuid": "LINK-UUID-287550",
+        "name": "SN-11",
+        "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ALLOWED_VLANS": "none",
+            "BPDUGUARD_ENABLED": "no",
+            "MTU": "jumbo",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "SPEED": "Auto"
+        },
+        "type": "AVB",
+        "vpcSwitchesAttached": false
+    }
+  },
+
+  "mock_sn_merge_4_success": {
+    "MESSAGE": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": {
+        "attachedFabricName": "test_fabric",
+        "attachedSwitchInterfaceName": "Ethernet1/1",
+        "attachedSwitchSn": "XYZKSJHSMK1",
+        "fabricName": "external",
+        "formFactor": "Virtual",
+        "interfaceName": "scv1",
+        "lastUpdated": 1612515571015,
+        "linkTemplateName": "service_link_trunk",
+        "linkUuid": "LINK-UUID-287550",
+        "name": "SN-11",
+        "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ALLOWED_VLANS": "none",
+            "BPDUGUARD_ENABLED": "no",
+            "MTU": "jumbo",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "SPEED": "Auto"
+        },
+        "type": "VNF",
+        "vpcSwitchesAttached": false
+    }
+  },
+
+  "mock_sn_merge_5_success": {
+    "MESSAGE": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": {
+        "attachedFabricName": "test_fabric",
+        "attachedSwitchInterfaceName": "vPC1",
+        "attachedSwitchSn": "XYZKSJHSMK1, XYZKSJHSMK2",
+        "fabricName": "external",
+        "formFactor": "Physical",
+        "interfaceName": "scv1",
+        "lastUpdated": 1612515571015,
+        "linkTemplateName": "service_link_trunk",
+        "linkUuid": "LINK-UUID-287550",
+        "name": "SN-11",
+        "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ALLOWED_VLANS": "none",
+            "BPDUGUARD_ENABLED": "no",
+            "MTU": "jumbo",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "SPEED": "Auto"
+        },
+        "type": "Firewall",
+        "vpcSwitchesAttached": false
+    }
+  },
+
+  "mock_sn_merge_6_success": {
+    "MESSAGE": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": {
+        "attachedFabricName": "test_fabric",
+        "attachedSwitchInterfaceName": "Ethernet1/2",
+        "attachedSwitchSn": "XYZKSJHSMK2",
+        "fabricName": "external",
+        "formFactor": "Virtual",
+        "interfaceName": "scv12",
+        "lastUpdated": 1612515571015,
+        "linkTemplateName": "service_link_trunk",
+        "linkUuid": "LINK-UUID-287550",
+        "name": "SN-12",
+        "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ALLOWED_VLANS": "none",
+            "BPDUGUARD_ENABLED": "no",
+            "MTU": "jumbo",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "SPEED": "Auto"
+        },
+        "type": "ADC",
+        "vpcSwitchesAttached": false
+    }
+  },
+
+  "mock_sn_replace_1_success": {
+    "MESSAGE": "",
+    "METHOD": "PUT",
+    "RETURN_CODE": 200,
+    "DATA": {
+        "attachedFabricName": "test_fabric",
+        "attachedSwitchInterfaceName": "Ethernet1/1",
+        "attachedSwitchSn": "XYZKSJHSMK1",
+        "fabricName": "external",
+        "formFactor": "Virtual",
+        "interfaceName": "scv11",
+        "lastUpdated": 1612515571015,
+        "linkTemplateName": "service_link_trunk",
+        "linkUuid": "LINK-UUID-287550",
+        "name": "SN-11",
+        "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ALLOWED_VLANS": "none",
+            "BPDUGUARD_ENABLED": "no",
+            "MTU": "jumbo",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "SPEED": "Auto"
+        },
+        "type": "Firewall",
+        "vpcSwitchesAttached": false
+    }
+  },
+
+  "mock_sn_replace_2_success": {
+    "MESSAGE": "",
+    "METHOD": "PUT",
+    "RETURN_CODE": 200,
+    "DATA": {
+        "attachedFabricName": "test_fabric",
+        "attachedSwitchInterfaceName": "Ethernet1/1",
+        "attachedSwitchSn": "XYZKSJHSMK1",
+        "fabricName": "external",
+        "formFactor": "Virtual",
+        "interfaceName": "scv11",
+        "lastUpdated": 1612515571015,
+        "linkTemplateName": "service_link_trunk",
+        "linkUuid": "LINK-UUID-287550",
+        "name": "SN-11",
+        "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ALLOWED_VLANS": "none",
+            "BPDUGUARD_ENABLED": "no",
+            "MTU": "jumbo",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "SPEED": "Auto"
+        },
+        "type": "ADC",
+        "vpcSwitchesAttached": false
+    }
+  },
+
+  "mock_sn_have_success": {
+    "MESSAGE": "",
+    "METHOD": "GET",
+    "RETURN_CODE": 200,
+    "DATA": [
+        {
+            "attachedFabricName": "test_fabric",
+            "attachedSwitchInterfaceName": "Ethernet1/1",
+            "attachedSwitchSn": "XYZKSJHSMK1",
+            "fabricName": "external",
+            "formFactor": "Physical",
+            "interfaceName": "scv1",
+            "lastUpdated": 1612604671520,
+            "linkTemplateName": "service_link_trunk",
+            "linkUuid": "LINK-UUID-304470",
+            "name": "SN-11",
+            "nvPairs": {
+                "ADMIN_STATE": "true",
+                "ALLOWED_VLANS": "none",
+                "BPDUGUARD_ENABLED": "no",
+                "DEST_FABRIC_NAME": "external",
+                "DEST_IF_NAME": "scv1",
+                "DEST_SERIAL_NUMBER": "SN-11-external",
+                "DEST_SWITCH_NAME": "SN-11",
+                "IS_METASWITCH": "true",
+                "LINK_UUID": "LINK-UUID-304470",
+                "MTU": "jumbo",
+                "POLICY_DESC": "",
+                "POLICY_ID": "POLICY-304480",
+                "PORTTYPE_FAST_ENABLED": "true",
+                "PRIORITY": "500",
+                "SOURCE_FABRIC_NAME": "test_fabric",
+                "SOURCE_IF_NAME": "Ethernet1/1",
+                "SOURCE_SERIAL_NUMBER": "XYZKSJHSMK1",
+                "SOURCE_SWITCH_NAME": "XYZKSJHSMK1",
+                "SPEED": "Auto"
+            },
+            "type": "Firewall",
+            "vpcSwitchesAttached": false
+        }
+    ]
+  },
+
+  "mock_sn_query_success": {
+     "attachedFabricName": "Fabric1",
+        "attachedSwitchInterfaceName": "Ethernet1/1",
+        "attachedSwitchSn": "SAL1812NTBP",
+        "fabricName": "external",
+        "formFactor": "Physical",
+        "interfaceName": "scv1",
+        "lastUpdated": 1612606479781,
+        "linkTemplateName": "service_link_trunk",
+        "linkUuid": "LINK-UUID-304710",
+        "name": "SN-11",
+        "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ALLOWED_VLANS": "none",
+            "BPDUGUARD_ENABLED": "no",
+            "DEST_FABRIC_NAME": "external",
+            "DEST_IF_NAME": "scv1",
+            "DEST_SERIAL_NUMBER": "SN-11-external",
+            "DEST_SWITCH_NAME": "SN-11",
+            "IS_METASWITCH": "true",
+            "LINK_UUID": "LINK-UUID-304710",
+            "MTU": "jumbo",
+            "POLICY_DESC": "",
+            "POLICY_ID": "POLICY-304720",
+            "PORTTYPE_FAST_ENABLED": "true",
+            "PRIORITY": "500",
+            "SOURCE_FABRIC_NAME": "Fabric1",
+            "SOURCE_IF_NAME": "Ethernet1/1",
+            "SOURCE_SERIAL_NUMBER": "SAL1812NTBP",
+            "SOURCE_SWITCH_NAME": "SAL1812NTBP",
+            "SPEED": "Auto"
+        },
+        "type": "Firewall",
+        "vpcSwitchesAttached": false
+  },
+
+  "blank_data": {
+    "DATA": [],
+    "MESSAGE": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "blank_get_data": {
+    "DATA": [],
+    "MESSAGE": "",
+    "METHOD": "GET",
+    "RETURN_CODE": 200
+  },
+
+  "blank_data_null": {
+    "DATA": [],
+    "MESSAGE": "",
+    "METHOD": "",
+    "RETURN_CODE": 0
+  },
+
+
+  "get_have_failure": {
+    "DATA": "Invalid JSON response: Invalid Fabric: demo-fabric-123",
+    "ERROR": "Not Found",
+    "METHOD": "GET",
+    "RETURN_CODE": 404,
+    "MESSAGE": "OK"
+  },
+  "error1": {
+    "DATA": "None",
+    "ERROR": "There is an error",
+    "METHOD": "POST",
+    "RETURN_CODE": 400,
+    "MESSAGE": "OK"
+  },
+
+  "sn_delete_success_resp": {
+    "DATA": {},
+    "ERROR": "",
+    "METHOD": "DELETE",
+    "RETURN_CODE": 200,
+    "MESSAGE": ""
+  },
+  "sn_query_success_resp": {
+    "DATA": {},
+    "ERROR": "",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "MESSAGE": ""
+  },
+
+  "sn_inv_data": {
+    "10.10.10.224":{
+      "ipAddress": "10.10.10.224",
+      "logicalName": "dt-n9k1",
+      "serialNumber": "XYZKSJHSMK1",
+      "switchRole": "leaf"
+    },
+    "10.10.10.225":{
+      "ipAddress": "10.10.10.225",
+      "logicalName": "dt-n9k2",
+      "serialNumber": "XYZKSJHSMK2",
+      "switchRole": "leaf"
+    },
+    "10.10.10.226":{
+      "ipAddress": "10.10.10.226",
+      "logicalName": "dt-n9k3",
+      "serialNumber": "XYZKSJHSMK3",
+      "switchRole": "leaf"
+    },
+    "10.10.10.227":{
+      "ipAddress": "10.10.10.227",
+      "logicalName": "dt-n9k4",
+      "serialNumber": "XYZKSJHSMK4",
+      "switchRole": "border spine"
+    },
+    "10.10.10.228":{
+      "ipAddress": "10.10.10.228",
+      "logicalName": "dt-n9k5",
+      "serialNumber": "XYZKSJHSMK5",
+      "switchRole": "border"
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+    "TEST_NOTES": [
+        "Mocked responses for EpPolicyCreate endpoint.",
+        "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create_bulk.py"
+    ],
+    "test_image_policy_create_00031a": {
+        "DATA": "Policy created successfully.",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_create_00035a": {
+        "DATA": "Policy created successfully.",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_create_00036a": {
+        "DATA": "Internal server error.",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 500
+    },
+    "test_image_policy_create_bulk_00031a": {
+        "DATA": "Policy created successfully.",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_create_bulk_00032a": {
+        "DATA": "Policy created successfully.",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_create_bulk_00035a": {
+            "DATA": "Policy created successfully.",
+            "MESSAGE": "OK",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+            "RETURN_CODE": 200
+    },
+    "test_image_policy_create_bulk_00036a": {
+        "DATA": "Internal server error.",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 500
+    },
+    "test_image_policy_create_bulk_00037b": {
+        "DATA": "Policy created successfully.",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_create_bulk_00037c": {
+        "DATA": "Internal server error.",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+        "RETURN_CODE": 500
+    }
+}

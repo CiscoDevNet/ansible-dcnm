@@ -1,0 +1,431 @@
+{
+    "mock_fab_inv_data": {
+      "192.168.123.150": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      },
+      "192.168.123.151": {
+        "isVpcConfigured": "True",
+        "vpcDomain": 1
+      }
+    },
+
+	"mock_ip_sn" : {
+		"192.168.123.150": "9M99N34RDED",
+			"192.168.123.151": "9NXHSNTEO6C" 
+	},
+
+  "create_rm_config": [
+  {
+    "entity_name": "l3_vni_fabric",
+      "pool_name": "L3_VNI",
+      "pool_type": "ID",
+      "resource": "101",
+      "scope_type": "fabric"
+  },
+  {
+    "entity_name": "l2_vni_fabric",
+    "pool_name": "L2_VNI",
+    "pool_type": "ID",
+    "resource": "102",
+    "scope_type": "fabric"
+  },
+  {
+    "entity_name": "loopback_dev",
+    "pool_name": "LOOPBACK_ID",
+    "pool_type": "ID",
+    "resource": "200",
+    "scope_type": "device",
+    "switch": [
+      "192.168.123.150",
+    "192.168.123.151"
+    ]
+  },
+  {
+    "entity_name": "9M99N34RDED~9NXHSNTEO6C",
+    "pool_name": "VPC_ID",
+    "pool_type": "ID",
+    "resource": "500",
+    "scope_type": "device_pair",
+    "switch": [
+      "192.168.123.150",
+    "192.168.123.151"
+    ]
+  },
+  {
+    "entity_name": "mmudigon-2",
+    "pool_name": "LOOPBACK0_IP_POOL",
+    "pool_type": "IP",
+    "resource": "110.1.1.1",
+    "scope_type": "fabric"
+  },
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/10",
+    "pool_name": "LOOPBACK1_IP_POOL",
+    "pool_type": "IP",
+    "resource": "fe:80::04",
+    "scope_type": "device_interface",
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/3~9NXHSNTEO6C~Ethernet1/3",
+    "pool_name": "SUBNET",
+    "pool_type": "SUBNET",
+    "resource": "fe:80:0505::05/64",
+    "scope_type": "link",
+    "switch": [
+      "192.168.123.150"
+    ]
+  }],
+
+  "modify_rm_config": [
+  {
+    "entity_name": "l3_vni_fabric",
+    "pool_name": "L3_VNI",
+    "pool_type": "ID",
+    "resource": "1001",
+    "scope_type": "fabric"
+  },
+  {
+    "entity_name": "l2_vni_fabric",
+    "pool_name": "L2_VNI",
+    "pool_type": "ID",
+    "resource": "1002",
+    "scope_type": "fabric"
+  },
+  {
+    "entity_name": "loopback_dev",
+    "pool_name": "LOOPBACK_ID",
+    "pool_type": "ID",
+    "resource": "1003",
+    "scope_type": "device",
+    "switch": [
+      "192.168.123.150",
+    "192.168.123.151"
+    ]
+  },
+  {
+    "entity_name": "9M99N34RDED~9NXHSNTEO6C",
+    "pool_name": "VPC_ID",
+    "pool_type": "ID",
+    "resource": "1005",
+    "scope_type": "device_pair",
+    "switch": [
+      "192.168.123.150",
+    "192.168.123.151"
+    ]
+  },
+  {
+    "entity_name": "mmudigon-2",
+    "pool_name": "LOOPBACK0_IP_POOL",
+    "pool_type": "IP",
+    "resource": "111.1.1.1",
+    "scope_type": "fabric"
+  },
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/10",
+    "pool_name": "LOOPBACK1_IP_POOL",
+    "pool_type": "IP",
+    "resource": "fe:81::04",
+    "scope_type": "device_interface",
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/3~9NXHSNTEO6C~Ethernet1/3",
+    "pool_name": "SUBNET",
+    "pool_type": "SUBNET",
+    "resource": "fe:81:0505::05/64",
+    "scope_type": "link",
+    "switch": [
+      "192.168.123.150"
+    ]
+  }],
+
+  "delete_rm_config": [
+  {
+    "entity_name": "l3_vni_fabric",
+    "pool_name": "L3_VNI",
+    "pool_type": "ID",
+    "scope_type": "fabric"
+  },
+  {
+    "entity_name": "l2_vni_fabric",
+    "pool_name": "L2_VNI",
+    "pool_type": "ID",
+    "scope_type": "fabric"
+  },
+  {
+    "entity_name": "loopback_dev",
+    "pool_name": "LOOPBACK_ID",
+    "pool_type": "ID",
+    "scope_type": "device",
+    "switch": [
+      "192.168.123.150",
+    "192.168.123.151"
+    ]
+  },
+  {
+    "entity_name": "9M99N34RDED~9NXHSNTEO6C",
+    "pool_name": "VPC_ID",
+    "pool_type": "ID",
+    "scope_type": "device_pair",
+    "switch": [
+      "192.168.123.150",
+    "192.168.123.151"
+    ]
+  },
+  {
+    "entity_name": "mmudigon-2",
+    "pool_name": "LOOPBACK0_IP_POOL",
+    "pool_type": "IP",
+    "scope_type": "fabric"
+  },
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/10",
+    "pool_name": "LOOPBACK1_IP_POOL",
+    "pool_type": "IP",
+    "scope_type": "device_interface",
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/3~9NXHSNTEO6C~Ethernet1/3",
+    "pool_name": "SUBNET",
+    "pool_type": "SUBNET",
+    "scope_type": "link",
+    "switch": [
+      "192.168.123.150"
+    ]
+  }],
+
+  "query_rm_with_non_exist_entity_name_config": [
+  {
+    "entity_name": "non_exist_en_1"
+  },
+  {
+    "entity_name": "non_exist_en_2"
+  },
+  {
+    "entity_name": "non_exist_en_3"
+  }],
+
+  "query_rm_with_entity_name_config": [
+  {
+    "entity_name": "bgp_asn_id_fabric"
+  },
+  {
+    "entity_name": "l3_vni_fabric"
+  },
+  {
+    "entity_name": "l2_vni_fabric"
+  },
+  {
+    "entity_name": "loopback_dev"
+  },
+  {
+    "entity_name": "9M99N34RDED~9NXHSNTEO6C"
+  },
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/10"
+  },
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/2~9NXHSNTEO6C~Ethernet1/2"
+  },
+  {
+    "entity_name": "mmudigon-2"
+  },
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/20"
+  },
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/3~9NXHSNTEO6C~Ethernet1/3"
+  }
+  ],
+
+  "query_rm_with_switch_config": [
+  {
+    "switch": [
+      "192.168.123.150"
+    ]
+  }
+  ],
+
+  "query_rm_with_poolname_config": [
+  {
+    "pool_name": "BGP_ASN_ID"
+  },
+  {
+    "pool_name": "L3_VNI"
+  },
+  {
+    "pool_name": "L2_VNI"
+  },
+  {
+    "pool_name": "LOOPBACK_ID"
+  },
+  {
+    "pool_name": "VPC_PEER_LINK_VLAN"
+  },
+  {
+    "pool_name": "VPC_ID"
+  },
+  {
+    "pool_name": "LOOPBACK0_IP_POOL"
+  },
+  {
+    "pool_name": "LOOPBACK1_IP_POOL"
+  },
+  {
+    "pool_name": "SUBNET"
+  }
+  ],
+
+  "query_rm_with_poolname_and_switch_config": [
+  {
+    "pool_name": "BGP_ASN_ID",
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "pool_name": "L3_VNI",
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "pool_name": "L2_VNI",
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "pool_name": "LOOPBACK_ID",
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "pool_name": "VPC_PEER_LINK_VLAN",
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "pool_name": "VPC_ID",
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "pool_name": "LOOPBACK0_IP_POOL",
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "pool_name": "LOOPBACK1_IP_POOL",
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "pool_name": "SUBNET",
+    "switch": [
+      "192.168.123.150"
+    ]
+  }
+  ],
+
+  "query_rm_with_mixed_config": [
+  {
+    "entity_name": "l2_vni_fabric"
+  },
+  {
+    "switch": [
+      "192.168.123.150"
+    ]
+  },
+  {
+    "switch": [
+      "192.168.123.151"
+    ]
+  },
+  {
+    "pool_name": "LOOPBACK_ID"
+  },
+  {
+    "pool_name": "VPC_ID",
+    "switch": [
+      "192.168.123.150"
+    ]
+  }],
+
+  "create_rm_inv_l2vni_config": [
+  {
+    "entity_name": "l2_vni_fabric",
+    "pool_name": "L2_VNI",
+    "pool_type": "ID",
+    "resource": "102",
+    "scope_type": "link"
+  }],
+  "create_rm_inv_ldev_config": [
+  {
+    "entity_name": "loopback_dev",
+    "pool_name": "LOOPBACK_ID",
+    "pool_type": "ID",
+    "resource": "200",
+    "scope_type": "device_pair",
+    "switch": [
+      "192.168.123.150",
+    "192.168.123.151"
+    ]
+  }],
+  "create_rm_inv_vpcid_config": [
+  {
+    "entity_name": "9M99N34RDED~9NXHSNTEO6C",
+    "pool_name": "VPC_ID",
+    "pool_type": "ID",
+    "resource": "500",
+    "scope_type": "device_interface",
+    "switch": [
+      "192.168.123.150",
+    "192.168.123.151"
+    ]
+  }],
+  "create_rm_inv_lip0_config": [
+  {
+    "entity_name": "mmudigon-2",
+    "pool_name": "LOOPBACK0_IP_POOL",
+    "pool_type": "IP",
+    "resource": "110.1.1.1",
+    "scope_type": "device"
+  }],
+  "create_rm_inv_lip1_config": [
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/10",
+    "pool_name": "LOOPBACK1_IP_POOL",
+    "pool_type": "IP",
+    "resource": "fe:80::04",
+    "scope_type": "link",
+    "switch": [
+      "192.168.123.150"
+    ]
+  }],
+  "create_rm_inv_subnet_config": [
+  {
+    "entity_name": "9M99N34RDED~Ethernet1/3~9NXHSNTEO6C~Ethernet1/3",
+    "pool_name": "SUBNET",
+    "pool_type": "SUBNET",
+    "resource": "fe:80:0505::05/64",
+    "scope_type": "fabric",
+    "switch": [
+      "192.168.123.150"
+    ]
+  }]
+}

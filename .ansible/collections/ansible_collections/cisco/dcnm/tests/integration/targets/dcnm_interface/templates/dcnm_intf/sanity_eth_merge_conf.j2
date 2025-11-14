@@ -1,0 +1,82 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: "{{ test_data_common.eth_intf7 }}"
+  type: eth
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: trunk
+    speed: 'Auto'
+    bpdu_guard: true
+    port_type_fast: true
+    mtu: jumbo
+    allowed_vlans: none
+    cmds:
+      - no shutdown
+    description: "eth interface  acting as trunk"
+
+- name: "{{ test_data_common.eth_intf8 }}"
+  type: eth
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: access
+    speed: 'Auto'
+    bpdu_guard: true
+    port_type_fast: true
+    mtu: default
+    access_vlan: 31
+    cmds:
+      - no shutdown
+    description: "eth interface acting as access"
+
+- name: "{{ test_data_common.eth_intf9 }}"
+  type: eth
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: routed
+    speed: 'Auto'
+    int_vrf: ""
+    ipv4_addr: 192.168.1.1
+    ipv4_mask_len: 24
+    route_tag: ""
+    mtu: 9216
+    cmds:
+      - no shutdown
+    description: "eth interface acting as routed"
+
+- name: "{{ test_data_common.eth_intf10 }}"
+  type: eth
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: epl_routed
+    speed: 'Auto'
+    int_vrf: ""
+    ipv4_addr: 192.168.2.1
+    ipv4_mask_len: 24
+    ipv6_addr: fd05::0102
+    ipv6_mask_len: 64
+    route_tag: ""
+    mtu: 9216
+    cmds:
+      - no shutdown
+    description: "eth interface acting as epl_routed"
+
+- name: "{{ test_data_common.eth_intf11 }}"
+  type: eth
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    mode: monitor

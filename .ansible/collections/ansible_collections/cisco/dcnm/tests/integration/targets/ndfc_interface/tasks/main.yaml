@@ -1,0 +1,22 @@
+---
+- name: Discover NDFC Test Cases
+  ansible.builtin.find:
+    paths: "{{ role_path }}/tests"
+    patterns: "{{ testcase }}.yaml"
+  connection: local
+  register: ndfc_testcases
+
+- name: Set fact
+  ansible.builtin.set_fact:
+    test_cases:
+      files: "{{ ndfc_testcases.files }}"
+
+- name: Build List of Test Items
+  ansible.builtin.set_fact:
+    test_items: "{{ ndfc_testcases.files | map(attribute='path') | list }}"
+
+- name: Run NDFC Test Cases
+  ansible.builtin.include_tasks: "{{ test_case_to_run }}"
+  with_items: "{{ test_items }}"
+  loop_control:
+    loop_var: test_case_to_run

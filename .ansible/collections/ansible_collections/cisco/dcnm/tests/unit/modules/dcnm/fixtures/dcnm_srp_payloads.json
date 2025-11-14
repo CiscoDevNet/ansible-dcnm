@@ -1,0 +1,3414 @@
+{
+  "create_rp7_resp_inv_req_err":
+  {
+    "DATA": {
+      "error": {
+        "code": "InvalidRequest",
+          "detail": "Invalid request is supplied. Cannot find the requested route peering for attachment retrieval"
+      }
+    },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 400
+  },
+
+    "create_rp7_resp_inv_fab_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "InvalidFabric",
+          "detail": "The specified standalone, or MSD member, easy fabric does not exist. Cannot find the specified attached fabric mmudigon-2"
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 400
+    },
+
+    "create_rp7_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 400
+    },
+
+    "create_rp7_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 400
+    },
+
+    "create_rp4_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 400
+    },
+
+    "det_rp1_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1/attachments",
+      "RETURN_CODE": 400
+    },
+
+    "deploy_rp4_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4/deployments",
+      "RETURN_CODE": 400
+    },
+
+    "delete_rp7_resp_unauth_err":
+    {
+      "DATA": {
+        "error": {
+          "code": "UserUnauthorized",
+          "detail": "User is not authenticated, or not authorized to access the requested resources. "
+        }
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7",
+      "RETURN_CODE": 400
+    },
+
+    "create_rp1_resp" :
+    {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
+        "deploymentMode": "IntraTenantFW",
+        "enabled": true,
+        "fabricName": "external",
+        "lastUpdated": 1612504100184,
+        "nextHopIp": "192.161.1.100",
+        "peeringName": "IT-FW-RP1",
+        "peeringOption": "None",
+        "reverseNextHopIp": "192.161.2.100",
+        "routes": [],
+        "serviceNetworks": [
+        {
+          "networkName": "rp1-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.161.1.1/24",
+            "gatewayIpV6Address": "2001:0101::01/64",
+            "intfDescription": "RP1 SN1 inside interface fw:inside:external:IT-SN-1:external-intf:IT-FW-RP1",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp1-sn1-inside-net",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30005",
+            "suppressArp": "false",
+            "tag": "11111",
+            "trmEnabled": "false",
+            "vlanId": "101",
+            "vlanName": "rp1-sn1-inside",
+            "vrfName": "IT_VRF_11"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 101,
+          "vrfName": "IT_VRF_11"
+        },
+        {
+          "networkName": "rp1-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.161.2.1/24",
+            "gatewayIpV6Address": "2001:0102::1/64",
+            "intfDescription": "RP1 SN1 outside interface fw:outside:external:IT-SN-1:external-intf:IT-FW-RP1",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp1-sn1-outside-net",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30006",
+            "suppressArp": "false",
+            "tag": "11112",
+            "trmEnabled": "false",
+            "vlanId": "102",
+            "vlanName": "rp1-sn1-outside",
+            "vrfName": "IT_VRF_11"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 102,
+          "vrfName": "IT_VRF_11"
+        }
+        ],
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall"
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings",
+      "RETURN_CODE": 200
+    },
+    "create_rp2_resp" : {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
+        "deploymentMode": "InterTenantFW",
+        "enabled": true,
+        "fabricName": "external",
+        "lastUpdated": 1612504107408,
+        "peeringName": "IT-FW-RP2",
+        "peeringOption": "StaticPeering",
+        "routes": [
+        {
+          "nvPairs": {
+            "MULTI_ROUTES": "20.20.20.0/24,120.120.120.100\n20.20.20.0/24,121.121.121.100",
+            "NEIGHBOR_ASN": "1500",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_21"
+          },
+          "templateName": "service_static_route",
+          "vrfName": "IT_VRF_21"
+        },
+        {
+          "nvPairs": {
+            "MULTI_ROUTES": "21.21.21.0/24,122.122.122.100\n21.21.21.0/24,123.123.123.100",
+            "NEIGHBOR_ASN": "1500",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_22"
+          },
+          "templateName": "service_static_route",
+          "vrfName": "IT_VRF_22"
+        }
+        ],
+        "serviceNetworks": [
+        {
+          "networkName": "rp2-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.162.1.1/24",
+            "gatewayIpV6Address": "2002:0101::1/64",
+            "intfDescription": "RP2 SN1 inside interface fw:inside:external:IT-SN-1:external-intf:IT-FW-RP2",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp2-sn1-inside-net",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30007",
+            "suppressArp": "false",
+            "tag": "21111",
+            "trmEnabled": "false",
+            "vlanId": "201",
+            "vlanName": "rp2-sn1-inside",
+            "vrfName": "IT_VRF_21"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 201,
+          "vrfName": "IT_VRF_21"
+        },
+        {
+          "networkName": "rp2-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.162.2.1/24",
+            "gatewayIpV6Address": "2002:0102::1/64",
+            "intfDescription": "RP2 SN1 outside interface fw:outside:external:IT-SN-1:external-intf:IT-FW-RP2",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp2-sn1-outside-net",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30008",
+            "suppressArp": "false",
+            "tag": "22222",
+            "trmEnabled": "false",
+            "vlanId": "202",
+            "vlanName": "rp2-sn1-outside",
+            "vrfName": "IT_VRF_22"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 202,
+          "vrfName": "IT_VRF_22"
+        }
+        ],
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall"
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings",
+      "RETURN_CODE": 200
+    },
+    "create_rp3_resp" : {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
+        "deploymentMode": "InterTenantFW",
+        "enabled": true,
+        "fabricName": "external",
+        "lastUpdated": 1612504115514,
+        "peeringName": "IT-FW-RP3",
+        "peeringOption": "EBGPDynamicPeering",
+        "routes": [
+        {
+          "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "DESC": "RP3 SN1 inside interface",
+            "LOCAL_ASN": "65301",
+            "LOOPBACK_IP": "31.31.31.2",
+            "LOOPBACK_IPV6": "2003:3132::01",
+            "NEIGHBOR_ASN": "1500",
+            "NEIGHBOR_IP": "31.31.31.1",
+            "NEIGHBOR_IPV6": "2003:3131::1",
+            "PEER_LOOPBACK_IP": "31.31.31.3",
+            "PEER_LOOPBACK_IPV6": "2003:3133::01",
+            "ROUTE_MAP_TAG": "33111",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_31"
+          },
+          "templateName": "service_ebgp_route",
+          "vrfName": "IT_VRF_31"
+        },
+        {
+          "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "DESC": "RP3 SN1 outside interface",
+            "LOCAL_ASN": "65302",
+            "LOOPBACK_IP": "131.131.131.2",
+            "LOOPBACK_IPV6": "2003:8384::1:100:1",
+            "NEIGHBOR_ASN": "1500",
+            "NEIGHBOR_IP": "131.131.131.1",
+            "NEIGHBOR_IPV6": "2003:8383::1",
+            "PEER_LOOPBACK_IP": "131.131.131.3",
+            "PEER_LOOPBACK_IPV6": "2003:8385::1",
+            "ROUTE_MAP_TAG": "31113",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_32"
+          },
+          "templateName": "service_ebgp_route",
+          "vrfName": "IT_VRF_32"
+        }
+        ],
+        "serviceNetworks": [
+        {
+          "networkName": "rp3-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.163.1.1/24",
+            "gatewayIpV6Address": "2003:0101::1/64",
+            "intfDescription": "RP3 SN1 inside interface fw:inside:external:IT-SN-1:external-intf:IT-FW-RP3",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp3-sn1-inside-net",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30009",
+            "suppressArp": "false",
+            "tag": "31111",
+            "trmEnabled": "false",
+            "vlanId": "301",
+            "vlanName": "rp3-sn1-inside",
+            "vrfName": "IT_VRF_31"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 301,
+          "vrfName": "IT_VRF_31"
+        },
+        {
+          "networkName": "rp3-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.163.2.1/24",
+            "gatewayIpV6Address": "2003:0102::1/64",
+            "intfDescription": "RP3 SN1 outside interface fw:outside:external:IT-SN-1:external-intf:IT-FW-RP3",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp3-sn1-outside-net",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30010",
+            "suppressArp": "false",
+            "tag": "31112",
+            "trmEnabled": "false",
+            "vlanId": "302",
+            "vlanName": "rp3-sn1-outside",
+            "vrfName": "IT_VRF_32"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 302,
+          "vrfName": "IT_VRF_32"
+        }
+        ],
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall"
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings",
+      "RETURN_CODE": 200
+    },
+    "create_rp4_resp" : {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
+        "deploymentMode": "OneArmADC",
+        "enabled": true,
+        "fabricName": "external",
+        "lastUpdated": 1612504123921,
+        "nextHopIp": "",
+        "peeringName": "IT-ADC-RP4",
+        "peeringOption": "EBGPDynamicPeering",
+        "reverseNextHopIp": "192.164.1.100",
+        "routes": [
+        {
+          "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "DESC": "RP4 SN2 first arm",
+            "LOCAL_ASN": "65401",
+            "LOOPBACK_IP": "41.41.41.2",
+            "LOOPBACK_IPV6": "2004:4142::1",
+            "NEIGHBOR_ASN": "1500",
+            "NEIGHBOR_IP": "41.41.41.1",
+            "NEIGHBOR_IPV6": "2004:4141::1",
+            "PEER_LOOPBACK_IP": "41.41.41.3",
+            "PEER_LOOPBACK_IPV6": "2004:4143::1",
+            "ROUTE_MAP_TAG": "41112",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_41"
+          },
+          "templateName": "service_ebgp_route",
+          "vrfName": "IT_VRF_41"
+        }
+        ],
+        "serviceNetworks": [
+        {
+          "networkName": "rp4-sn1-first-arm",
+          "networkType": "ArmOneADC",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.164.1.1/24",
+            "gatewayIpV6Address": "2004:0101::1/64",
+            "intfDescription": "RP4 SN1 first arm intf lb:one:external:IT-SN-2:external-intf:IT-ADC-RP4",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp4-sn1-first-arm",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30011",
+            "suppressArp": "false",
+            "tag": "41111",
+            "trmEnabled": "false",
+            "vlanId": "401",
+            "vlanName": "rp3-sn1-first-arm",
+            "vrfName": "IT_VRF_41"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 401,
+          "vrfName": "IT_VRF_41"
+        }
+        ],
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC"
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 200
+    },
+    "create_rp5_resp" : {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
+        "deploymentMode": "TwoArmADC",
+        "enabled": true,
+        "fabricName": "external",
+        "lastUpdated": 1612504131111,
+        "nextHopIp": "",
+        "peeringName": "IT-ADC-RP5",
+        "peeringOption": "EBGPDynamicPeering",
+        "reverseNextHopIp": "192.165.1.100",
+        "routes": [
+        {
+          "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "DESC": "RP5 SN2 first arm",
+            "LOCAL_ASN": "65501",
+            "LOOPBACK_IP": "51.51.51.2",
+            "LOOPBACK_IPV6": "2005:5152::1",
+            "NEIGHBOR_ASN": "1500",
+            "NEIGHBOR_IP": "51.51.51.1",
+            "NEIGHBOR_IPV6": "2005:5151::1",
+            "PEER_LOOPBACK_IP": "51.51.51.3",
+            "PEER_LOOPBACK_IPV6": "2005:5153::1",
+            "ROUTE_MAP_TAG": "51115",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_51"
+          },
+          "templateName": "service_ebgp_route",
+          "vrfName": "IT_VRF_51"
+        }
+        ],
+        "serviceNetworks": [
+        {
+          "networkName": "rp5-sn2-first-arm",
+          "networkType": "ArmOneADC",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.165.1.1/24",
+            "gatewayIpV6Address": "2005:0101::1/64",
+            "intfDescription": "RP5 SN2 first arm intf lb:one:external:IT-SN-2:external-intf:IT-ADC-RP5",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp5-sn2-first-arm",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30012",
+            "suppressArp": "false",
+            "tag": "51111",
+            "trmEnabled": "false",
+            "vlanId": "501",
+            "vlanName": "rp5-sn2-first-arm",
+            "vrfName": "IT_VRF_51"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 501,
+          "vrfName": "IT_VRF_51"
+        },
+        {
+          "networkName": "rp5-sn2-second-arm",
+          "networkType": "ArmTwoADC",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.165.2.1/24",
+            "gatewayIpV6Address": "2005:0102::1/64",
+            "intfDescription": "RP5 SN2 second arm intf lb:two:external:IT-SN-2:external-intf:IT-ADC-RP5",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp5-sn2-second-arm",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30013",
+            "suppressArp": "false",
+            "tag": "51112",
+            "trmEnabled": "false",
+            "vlanId": "502",
+            "vlanName": "rp5-sn2-second-arm",
+            "vrfName": "IT_VRF_51"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 502,
+          "vrfName": "IT_VRF_51"
+        }
+        ],
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC"
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 200
+    },
+    "create_rp6_resp" : {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
+        "deploymentMode": "OneArmADC",
+        "enabled": true,
+        "fabricName": "external",
+        "lastUpdated": 1612504137242,
+        "nextHopIp": "",
+        "peeringName": "IT-ADC-RP6",
+        "peeringOption": "StaticPeering",
+        "reverseNextHopIp": "192.166.1.100",
+        "routes": [
+        {
+          "nvPairs": {
+            "MULTI_ROUTES": "61.61.61.1/24,161.161.161.1\n61.61.61.1/24,162.162.162.1\n22.0.0.0/24,163.163.163.1\n22.0.0.0/24,164.164.164.1",
+            "NEIGHBOR_ASN": "1500",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_61"
+          },
+          "templateName": "service_static_route",
+          "vrfName": "IT_VRF_61"
+        }
+        ],
+        "serviceNetworks": [
+        {
+          "networkName": "rp6-sn2-first-arm",
+          "networkType": "ArmOneADC",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.166.1.1/24",
+            "gatewayIpV6Address": "2006:0101::1/64",
+            "intfDescription": "RP6 SN2 first arm intf lb:one:external:IT-SN-2:external-intf:IT-ADC-RP6",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp6-sn2-first-arm",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30014",
+            "suppressArp": "false",
+            "tag": "61111",
+            "trmEnabled": "false",
+            "vlanId": "601",
+            "vlanName": "rp6-sn2-first-arm",
+            "vrfName": "IT_VRF_61"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 601,
+          "vrfName": "IT_VRF_61"
+        }
+        ],
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC"
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 200
+    },
+    "create_rp7_resp" : {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
+        "deploymentMode": "TwoArmADC",
+        "enabled": true,
+        "fabricName": "external",
+        "lastUpdated": 1612504143911,
+        "nextHopIp": "",
+        "peeringName": "IT-ADC-RP7",
+        "peeringOption": "StaticPeering",
+        "reverseNextHopIp": "192.167.1.100",
+        "routes": [
+        {
+          "nvPairs": {
+            "MULTI_ROUTES": "71.71.71.1/24,171.171.171.1\n71.71.71.1/24,172.172.172.1",
+            "NEIGHBOR_ASN": "1500",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_71"
+          },
+          "templateName": "service_static_route",
+          "vrfName": "IT_VRF_71"
+        }
+        ],
+        "serviceNetworks": [
+        {
+          "networkName": "rp7-sn2-first-arm",
+          "networkType": "ArmOneADC",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.167.1.1/24",
+            "gatewayIpV6Address": "2007:0101::1/64",
+            "intfDescription": "RP6 SN2 first arm  intf lb:one:external:IT-SN-2:external-intf:IT-ADC-RP7",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp7-sn2-first-arm",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30015",
+            "suppressArp": "false",
+            "tag": "71111",
+            "trmEnabled": "false",
+            "vlanId": "701",
+            "vlanName": "rp7-sn2-first-arm",
+            "vrfName": "IT_VRF_71"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 701,
+          "vrfName": "IT_VRF_71"
+        },
+        {
+          "networkName": "rp7-sn2-second-arm",
+          "networkType": "ArmTwoADC",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.167.2.1/24",
+            "gatewayIpV6Address": "2007:0102::1/64",
+            "intfDescription": "RP7 SN2 second arm intf lb:two:external:IT-SN-2:external-intf:IT-ADC-RP7",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "networkName": "rp7-sn2-second-arm",
+            "nveId": "1",
+            "rtBothAuto": "false",
+            "segmentId": "30016",
+            "suppressArp": "false",
+            "tag": "71112",
+            "trmEnabled": "false",
+            "vlanId": "702",
+            "vlanName": "rp7-sn2-second-arm",
+            "vrfName": "IT_VRF_71"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 702,
+          "vrfName": "IT_VRF_71"
+        }
+        ],
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC"
+      },
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings",
+      "RETURN_CODE": 200
+    },
+
+    "detach_rp1_rp3_resp":
+      {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP1",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP3",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP2",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "DELETE",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-1/peerings/mmudigon-2/attachments?peering-names=IT-FW-RP2,IT-FW-RP3,IT-FW-RP1",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+     "detach_rp4_rp7_resp":
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP7",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP6",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP5",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP4",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "DELETE",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/attachments?peering-names=IT-ADC-RP5,IT-ADC-RP4,IT-ADC-RP6,IT-ADC-RP7",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "deploy_rp1_rp3_resp": 
+      {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP1",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP3",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP2",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-1/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "deploy_rp4_rp7_resp": 
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP7",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP6",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP5",
+                    "status": "Success"
+                },
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP4",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "deploy_rp_ovr1_resp": 
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-FW-RP-OVR1",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "deploy_rp_ovr4_resp": 
+        {
+            "DATA": [
+                {
+                    "detail": "",
+                    "peeringName": "IT-ADC-RP-OVR4",
+                    "status": "Success"
+                }
+            ],
+            "MESSAGE": "",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external-2/service-nodes/IT-SN-2/peerings/mmudigon-2/deployments",
+            "RETRIES": 1,
+            "RETURN_CODE": 200
+        },
+
+    "del_deploy_rp1_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 101,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 101,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp2_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 201,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 201,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP2/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp3_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 301,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 301,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP3/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp4_resp" :     {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 401,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 401,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp5_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 501,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 501,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP5/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp6_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 601,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 601,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP6/attachments",
+      "RETURN_CODE": 200
+    },
+    "del_deploy_rp7_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 701,
+          "attachState": "NA",
+          "lanAttached": false
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 701,
+          "attachState": "NA",
+          "lanAttached": false
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7/attachments",
+      "RETURN_CODE": 200
+    },
+    "attach_rp1_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 101,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 101,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1/attachments",
+      "RETURN_CODE": 200
+    },
+    "attach_rp2_resp" : {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 201,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 201,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP2/attachments",
+      "RETURN_CODE": 200
+    },
+    "attach_rp3_resp" :       {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 301,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 301,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP3/attachments",
+      "RETURN_CODE": 200
+    },
+    "attach_rp4_resp" :     {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 401,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 401,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4/attachments",
+      "RETURN_CODE": 200
+    },
+    "attach_rp5_resp" :     {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 501,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 501,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP5/attachments",
+      "RETURN_CODE": 200
+    },
+    "attach_rp6_resp" :     {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 601,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 601,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP6/attachments",
+      "RETURN_CODE": 200
+    },
+    "attach_rp7_resp" :     {
+      "DATA": [{
+        "switchAttaches": [
+        {
+          "switchName": "dt-n9k2-1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.175",
+          "portNames": "Ethernet1/1",
+          "vlanId": 701,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        },
+        {
+          "switchName": "dt-n9k1",
+          "switchSerialNumber": "SAL1820SDPP",
+          "switchIp": "10.122.84.174",
+          "portNames": "Ethernet1/1",
+          "vlanId": 701,
+          "attachState": "DEPLOYED",
+          "lanAttached": true
+        }
+        ]
+      }],
+      "MESSAGE": "",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7/attachments",
+      "RETURN_CODE": 200
+    },
+    "config_deploy_resp" :     {
+      "DATA": {
+        "status": "Config deployment has been triggered"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/control/fabrics/mmudigon/config-deploy",
+      "RETURN_CODE": 200
+    },
+    "delete_rp1_resp" : {
+      "DATA": {},
+      "MESSAGE": "",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1",
+      "RETURN_CODE": 200
+    },
+    "delete_rp2_resp" : {
+      "DATA": {},
+      "MESSAGE": "",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP2",
+      "RETURN_CODE": 200
+    },
+    "delete_rp3_resp" : {
+      "DATA": {},
+      "MESSAGE": "",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP3",
+      "RETURN_CODE": 200
+    },
+    "delete_rp4_resp" : {
+      "DATA": {},
+      "MESSAGE": "",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4",
+      "RETURN_CODE": 200
+    },
+    "delete_rp5_resp" : {
+      "DATA": {},
+      "MESSAGE": "",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP5",
+      "RETURN_CODE": 200
+    },
+    "delete_rp6_resp" : {
+      "DATA": {},
+      "MESSAGE": "",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP6",
+      "RETURN_CODE": 200
+    },
+    "delete_rp7_resp" : {
+      "DATA": {},
+      "MESSAGE": "",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7",
+      "RETURN_CODE": 200
+    },
+
+    "have_it_sn1_resp": {
+      "MESSAGE": "",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon",
+      "RETURN_CODE": 200,
+      "DATA": [{
+        "peeringName": "IT-FW-RP1",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall",
+        "peeringOption": "None",
+        "deploymentMode": "IntraTenantFW",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_11",
+          "networkName": "rp1-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "vlanId": 101,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "101",
+            "gatewayIpAddress": "192.161.1.1/24",
+            "networkName": "rp1-sn1-inside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp1-sn1-inside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP1 SN1 inside interface fw:inside:external:IT-SN-1:external-intf-1:IT-FW-RP1",
+            "segmentId": "30005",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2001:0101::01/64",
+            "dhcpServerAddr2": "",
+            "tag": "11111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_11"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_11",
+          "networkName": "rp1-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "vlanId": 102,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "102",
+            "gatewayIpAddress": "192.161.2.1/24",
+            "networkName": "rp1-sn1-outside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp1-sn1-outside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP1 SN1 outside interface fw:outside:external:IT-SN-1:external-intf-1:IT-FW-RP1",
+            "segmentId": "30006",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2001:0102::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "11112",
+            "nveId": "1",
+            "vrfName": "IT_VRF_11"
+          }
+        }
+        ],
+        "routes": [
+
+        ],
+        "nextHopIp": "192.161.1.100",
+        "reverseNextHopIp": "192.161.2.100",
+        "enabled": "True",
+        "lastUpdated": 1612867982779,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Network",
+          "resourceName": "rp1-sn1-inside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp1-sn1-outside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      },
+      {
+        "peeringName": "IT-FW-RP2",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall",
+        "peeringOption": "StaticPeering",
+        "deploymentMode": "InterTenantFW",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_21",
+          "networkName": "rp2-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "vlanId": 201,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "201",
+            "gatewayIpAddress": "192.162.1.1/24",
+            "networkName": "rp2-sn1-inside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp2-sn1-inside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP2 SN1 inside interface fw:inside:external:IT-SN-1:external-intf-1:IT-FW-RP2",
+            "segmentId": "30009",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2002:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "21111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_21"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_22",
+          "networkName": "rp2-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "vlanId": 202,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "202",
+            "gatewayIpAddress": "192.162.2.1/24",
+            "networkName": "rp2-sn1-outside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp2-sn1-outside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP2 SN1 outside interface fw:outside:external:IT-SN-1:external-intf-1:IT-FW-RP2",
+            "segmentId": "30010",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2002:0102::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "22222",
+            "nveId": "1",
+            "vrfName": "IT_VRF_22"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_21",
+          "templateName": "service_static_route",
+          "nvPairs": {
+            "VRF_NAME": "IT_VRF_21",
+            "MULTI_ROUTES": "20.20.20.0/24,120.120.120.100\n20.20.20.0/24,121.121.121.100",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_22",
+          "templateName": "service_static_route",
+          "nvPairs": {
+            "VRF_NAME": "IT_VRF_22",
+            "MULTI_ROUTES": "21.21.21.0/24,122.122.122.100\n21.21.21.0/24,123.123.123.100",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "enabled": "True",
+        "lastUpdated": 1612867989552,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_21~service_static_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_22~service_static_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp2-sn1-inside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp2-sn1-outside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      },
+      {
+        "peeringName": "IT-FW-RP3",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall",
+        "peeringOption": "EBGPDynamicPeering",
+        "deploymentMode": "InterTenantFW",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_31",
+          "networkName": "rp3-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "vlanId": 301,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "301",
+            "gatewayIpAddress": "192.163.1.1/24",
+            "networkName": "rp3-sn1-inside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp3-sn1-inside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP3 SN1 inside interface fw:inside:external:IT-SN-1:external-intf-1:IT-FW-RP3",
+            "segmentId": "30011",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2003:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "31111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_31"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_32",
+          "networkName": "rp3-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "vlanId": 302,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "302",
+            "gatewayIpAddress": "192.163.2.1/24",
+            "networkName": "rp3-sn1-outside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp3-sn1-outside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP3 SN1 outside interface fw:outside:external:IT-SN-1:external-intf-1:IT-FW-RP3",
+            "segmentId": "30012",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2003:0102::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "31112",
+            "nveId": "1",
+            "vrfName": "IT_VRF_32"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_31",
+          "templateName": "service_ebgp_route",
+          "nvPairs": {
+            "NEIGHBOR_IP": "31.31.31.1",
+            "LOOPBACK_IP": "31.31.31.2",
+            "PEER_LOOPBACK_IP": "31.31.31.3",
+            "NEIGHBOR_IPV6": "2003:3131::1",
+            "LOOPBACK_IPV6": "2003:3132::01",
+            "PEER_LOOPBACK_IPV6": "2003:3133::01",
+            "ROUTE_MAP_TAG": "33111",
+            "DESC": "RP3 SN1 inside interface",
+            "LOCAL_ASN": "65301",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "ADMIN_STATE": "true",
+            "VRF_NAME": "IT_VRF_31",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_32",
+          "templateName": "service_ebgp_route",
+          "nvPairs": {
+            "NEIGHBOR_IP": "131.131.131.1",
+            "LOOPBACK_IP": "131.131.131.2",
+            "PEER_LOOPBACK_IP": "131.131.131.3",
+            "NEIGHBOR_IPV6": "2003:8383::1",
+            "LOOPBACK_IPV6": "2003:8384::1:100:1",
+            "PEER_LOOPBACK_IPV6": "2003:8385::1",
+            "ROUTE_MAP_TAG": "31113",
+            "DESC": "RP3 SN1 outside interface",
+            "LOCAL_ASN": "65302",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "ADMIN_STATE": "true",
+            "VRF_NAME": "IT_VRF_32",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "enabled": "True",
+        "lastUpdated": 1612867999301,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_31~service_ebgp_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_32~service_ebgp_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp3-sn1-inside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp3-sn1-outside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      }
+      ]
+    },
+
+    "have_it_sn2_resp": {
+      "MESSAGE": "",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon",
+      "RETURN_CODE": 200,
+      "DATA" : [
+      {
+        "peeringName": "IT-ADC-RP4",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC",
+        "peeringOption": "EBGPDynamicPeering",
+        "deploymentMode": "OneArmADC",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_41",
+          "networkName": "rp4-sn2-first-arm",
+          "networkType": "ArmOneADC",
+          "vlanId": 401,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "401",
+            "gatewayIpAddress": "192.164.1.1/24",
+            "networkName": "rp4-sn2-first-arm",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp4-sn2-first-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP4 SN2 first arm intf lb:one:external:IT-SN-2:external-intf-2:IT-ADC-RP4",
+            "segmentId": "30013",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2004:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "41111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_41"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_41",
+          "templateName": "service_ebgp_route",
+          "nvPairs": {
+            "NEIGHBOR_IP": "41.41.41.1",
+            "LOOPBACK_IP": "41.41.41.2",
+            "PEER_LOOPBACK_IP": "41.41.41.3",
+            "NEIGHBOR_IPV6": "2004:4141::1",
+            "LOOPBACK_IPV6": "2004:4142::1",
+            "PEER_LOOPBACK_IPV6": "2004:4143::1",
+            "ROUTE_MAP_TAG": "41112",
+            "DESC": "RP4 SN2 first arm",
+            "LOCAL_ASN": "65401",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "ADMIN_STATE": "true",
+            "VRF_NAME": "IT_VRF_41",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "nextHopIp": "",
+        "reverseNextHopIp": "192.164.1.100",
+        "enabled": "True",
+        "lastUpdated": 1612868008195,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_41~service_ebgp_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp4-sn2-first-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      },
+      {
+        "peeringName": "IT-ADC-RP5",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC",
+        "peeringOption": "EBGPDynamicPeering",
+        "deploymentMode": "TwoArmADC",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_51",
+          "networkName": "rp5-sn2-first-arm",
+          "networkType": "ArmOneADC",
+          "vlanId": 501,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "501",
+            "gatewayIpAddress": "192.165.1.1/24",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp5-sn2-first-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP5 SN2 first arm intf lb:one:external:IT-SN-2:external-intf-2:IT-ADC-RP5",
+            "segmentId": "30007",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2005:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "51111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_51"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_51",
+          "networkName": "rp5-sn2-second-arm",
+          "networkType": "ArmTwoADC",
+          "vlanId": 502,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "502",
+            "gatewayIpAddress": "192.165.2.1/24",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp5-sn2-second-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP5 SN2 second arm intf lb:two:external:IT-SN-2:external-intf-2:IT-ADC-RP5",
+            "segmentId": "30008",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2005:0102::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "51112",
+            "nveId": "1",
+            "vrfName": "IT_VRF_51"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_51",
+          "templateName": "service_ebgp_route",
+          "nvPairs": {
+            "NEIGHBOR_IP": "51.51.51.1",
+            "LOOPBACK_IP": "51.51.51.2",
+            "PEER_LOOPBACK_IP": "51.51.51.3",
+            "NEIGHBOR_IPV6": "2005:5151::1",
+            "LOOPBACK_IPV6": "2005:5152::1",
+            "PEER_LOOPBACK_IPV6": "2005:5153::1",
+            "ROUTE_MAP_TAG": "51115",
+            "DESC": "RP5 SN2 first arm",
+            "LOCAL_ASN": "65501",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "ADMIN_STATE": "true",
+            "VRF_NAME": "IT_VRF_51",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "nextHopIp": "",
+        "reverseNextHopIp": "192.165.1.100",
+        "enabled": "True",
+        "lastUpdated": 1612868017158,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_51~service_ebgp_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp5-sn2-first-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp5-sn2-second-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      },
+      {
+        "peeringName": "IT-ADC-RP6",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC",
+        "peeringOption": "StaticPeering",
+        "deploymentMode": "OneArmADC",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_61",
+          "networkName": "rp6-sn2-first-arm",
+          "networkType": "ArmOneADC",
+          "vlanId": 601,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "601",
+            "gatewayIpAddress": "192.166.1.1/24",
+            "networkName": "rp6-sn2-first-arm",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp6-sn2-first-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP6 SN2 first arm intf lb:one:external:IT-SN-2:external-intf-2:IT-ADC-RP6",
+            "segmentId": "30014",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2006:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "61111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_61"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_61",
+          "templateName": "service_static_route",
+          "nvPairs": {
+            "VRF_NAME": "IT_VRF_61",
+            "MULTI_ROUTES": "61.61.61.1/24,161.161.161.1\n61.61.61.1/24,162.162.162.1\n22.0.0.0/24,163.163.163.1\n22.0.0.0/24,164.164.164.1",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "nextHopIp": "",
+        "reverseNextHopIp": "192.166.1.100",
+        "enabled": "True",
+        "lastUpdated": 1612868027172,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_61~service_static_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp6-sn2-first-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      },
+      {
+        "peeringName": "IT-ADC-RP7",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC",
+        "peeringOption": "StaticPeering",
+        "deploymentMode": "TwoArmADC",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_71",
+          "networkName": "rp7-sn2-first-arm",
+          "networkType": "ArmOneADC",
+          "vlanId": 701,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "701",
+            "gatewayIpAddress": "192.167.1.1/24",
+            "networkName": "rp7-sn2-first-arm",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp7-sn2-first-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP6 SN2 first arm  intf lb:one:external:IT-SN-2:external-intf-2:IT-ADC-RP7",
+            "segmentId": "30015",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2007:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "71111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_71"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_71",
+          "networkName": "rp7-sn2-second-arm",
+          "networkType": "ArmTwoADC",
+          "vlanId": 702,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "702",
+            "gatewayIpAddress": "192.167.2.1/24",
+            "networkName": "rp7-sn2-second-arm",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp7-sn2-second-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP7 SN2 second arm intf lb:two:external:IT-SN-2:external-intf-2:IT-ADC-RP7",
+            "segmentId": "30016",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2007:0102::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "71112",
+            "nveId": "1",
+            "vrfName": "IT_VRF_71"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_71",
+          "templateName": "service_static_route",
+          "nvPairs": {
+            "VRF_NAME": "IT_VRF_71",
+            "MULTI_ROUTES": "71.71.71.1/24,171.171.171.1\n71.71.71.1/24,172.172.172.1",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "nextHopIp": "",
+        "reverseNextHopIp": "192.167.1.100",
+        "enabled": "True",
+        "lastUpdated": 1612868035280,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_71~service_static_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp7-sn2-first-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp7-sn2-second-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      }
+      ]
+    },
+
+    "have_rp1_resp": {
+      "MESSAGE": "",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-ADC-RP1",
+      "RETURN_CODE": 200,
+      "DATA": {
+        "peeringName": "IT-FW-RP1",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall",
+        "peeringOption": "None",
+        "deploymentMode": "IntraTenantFW",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_11",
+          "networkName": "rp1-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "vlanId": 101,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "101",
+            "gatewayIpAddress": "192.161.1.1/24",
+            "networkName": "rp1-sn1-inside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp1-sn1-inside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP1 SN1 inside interface fw:inside:external:IT-SN-1:external-intf-1:IT-FW-RP1",
+            "segmentId": "30005",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2001:0101::01/64",
+            "dhcpServerAddr2": "",
+            "tag": "11111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_11"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_11",
+          "networkName": "rp1-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "vlanId": 102,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "102",
+            "gatewayIpAddress": "192.161.2.1/24",
+            "networkName": "rp1-sn1-outside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp1-sn1-outside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP1 SN1 outside interface fw:outside:external:IT-SN-1:external-intf-1:IT-FW-RP1",
+            "segmentId": "30006",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2001:0102::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "11112",
+            "nveId": "1",
+            "vrfName": "IT_VRF_11"
+          }
+        }
+        ],
+        "routes": [
+
+        ],
+        "nextHopIp": "192.161.1.100",
+        "reverseNextHopIp": "192.161.2.100",
+        "enabled": "True",
+        "lastUpdated": 1612867982779,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Network",
+          "resourceName": "rp1-sn1-inside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp1-sn1-outside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      }
+    },
+    "have_rp2_resp": {
+      "MESSAGE": "",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-ADC-RP2",
+      "RETURN_CODE": 200,
+      "DATA": {
+        "peeringName": "IT-FW-RP2",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall",
+        "peeringOption": "StaticPeering",
+        "deploymentMode": "InterTenantFW",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_21",
+          "networkName": "rp2-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "vlanId": 201,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "201",
+            "gatewayIpAddress": "192.162.1.1/24",
+            "networkName": "rp2-sn1-inside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp2-sn1-inside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP2 SN1 inside interface fw:inside:external:IT-SN-1:external-intf-1:IT-FW-RP2",
+            "segmentId": "30009",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2002:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "21111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_21"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_22",
+          "networkName": "rp2-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "vlanId": 202,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "202",
+            "gatewayIpAddress": "192.162.2.1/24",
+            "networkName": "rp2-sn1-outside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp2-sn1-outside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP2 SN1 outside interface fw:outside:external:IT-SN-1:external-intf-1:IT-FW-RP2",
+            "segmentId": "30010",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2002:0102::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "22222",
+            "nveId": "1",
+            "vrfName": "IT_VRF_22"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_21",
+          "templateName": "service_static_route",
+          "nvPairs": {
+            "VRF_NAME": "IT_VRF_21",
+            "MULTI_ROUTES": "20.20.20.0/24,120.120.120.100\n20.20.20.0/24,121.121.121.100",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_22",
+          "templateName": "service_static_route",
+          "nvPairs": {
+            "VRF_NAME": "IT_VRF_22",
+            "MULTI_ROUTES": "21.21.21.0/24,122.122.122.100\n21.21.21.0/24,123.123.123.100",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "enabled": "True",
+        "lastUpdated": 1612867989552,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_21~service_static_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_22~service_static_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp2-sn1-inside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp2-sn1-outside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      }
+    },
+    "have_rp3_resp": {
+      "MESSAGE": "",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-ADC-RP3",
+      "RETURN_CODE": 200,
+      "DATA": {
+        "peeringName": "IT-FW-RP3",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall",
+        "peeringOption": "EBGPDynamicPeering",
+        "deploymentMode": "InterTenantFW",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_31",
+          "networkName": "rp3-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "vlanId": 301,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "301",
+            "gatewayIpAddress": "192.163.1.1/24",
+            "networkName": "rp3-sn1-inside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp3-sn1-inside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP3 SN1 inside interface fw:inside:external:IT-SN-1:external-intf-1:IT-FW-RP3",
+            "segmentId": "30011",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2003:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "31111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_31"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_32",
+          "networkName": "rp3-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "vlanId": 302,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "302",
+            "gatewayIpAddress": "192.163.2.1/24",
+            "networkName": "rp3-sn1-outside-net",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp3-sn1-outside",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP3 SN1 outside interface fw:outside:external:IT-SN-1:external-intf-1:IT-FW-RP3",
+            "segmentId": "30012",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2003:0102::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "31112",
+            "nveId": "1",
+            "vrfName": "IT_VRF_32"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_31",
+          "templateName": "service_ebgp_route",
+          "nvPairs": {
+            "NEIGHBOR_IP": "31.31.31.1",
+            "LOOPBACK_IP": "31.31.31.2",
+            "PEER_LOOPBACK_IP": "31.31.31.3",
+            "NEIGHBOR_IPV6": "2003:3131::1",
+            "LOOPBACK_IPV6": "2003:3132::01",
+            "PEER_LOOPBACK_IPV6": "2003:3133::01",
+            "ROUTE_MAP_TAG": "33111",
+            "DESC": "RP3 SN1 inside interface",
+            "LOCAL_ASN": "65301",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "ADMIN_STATE": "true",
+            "VRF_NAME": "IT_VRF_31",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_32",
+          "templateName": "service_ebgp_route",
+          "nvPairs": {
+            "NEIGHBOR_IP": "131.131.131.1",
+            "LOOPBACK_IP": "131.131.131.2",
+            "PEER_LOOPBACK_IP": "131.131.131.3",
+            "NEIGHBOR_IPV6": "2003:8383::1",
+            "LOOPBACK_IPV6": "2003:8384::1:100:1",
+            "PEER_LOOPBACK_IPV6": "2003:8385::1",
+            "ROUTE_MAP_TAG": "31113",
+            "DESC": "RP3 SN1 outside interface",
+            "LOCAL_ASN": "65302",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "ADMIN_STATE": "true",
+            "VRF_NAME": "IT_VRF_32",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "enabled": "True",
+        "lastUpdated": 1612867999301,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_31~service_ebgp_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_32~service_ebgp_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp3-sn1-inside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp3-sn1-outside-net",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      }
+    },
+    "have_rp4_resp": {
+      "MESSAGE": "",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP4",
+      "RETURN_CODE": 200,
+      "DATA": {
+        "peeringName": "IT-ADC-RP4",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC",
+        "peeringOption": "EBGPDynamicPeering",
+        "deploymentMode": "OneArmADC",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_41",
+          "networkName": "rp4-sn2-first-arm",
+          "networkType": "ArmOneADC",
+          "vlanId": 401,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "401",
+            "gatewayIpAddress": "192.164.1.1/24",
+            "networkName": "rp4-sn2-first-arm",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp4-sn2-first-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP4 SN2 first arm intf lb:one:external:IT-SN-2:external-intf-2:IT-ADC-RP4",
+            "segmentId": "30013",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2004:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "41111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_41"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_41",
+          "templateName": "service_ebgp_route",
+          "nvPairs": {
+            "NEIGHBOR_IP": "41.41.41.1",
+            "LOOPBACK_IP": "41.41.41.2",
+            "PEER_LOOPBACK_IP": "41.41.41.3",
+            "NEIGHBOR_IPV6": "2004:4141::1",
+            "LOOPBACK_IPV6": "2004:4142::1",
+            "PEER_LOOPBACK_IPV6": "2004:4143::1",
+            "ROUTE_MAP_TAG": "41112",
+            "DESC": "RP4 SN2 first arm",
+            "LOCAL_ASN": "65401",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "ADMIN_STATE": "true",
+            "VRF_NAME": "IT_VRF_41",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "nextHopIp": "",
+        "reverseNextHopIp": "192.164.1.100",
+        "enabled": "True",
+        "lastUpdated": 1612868008195,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_41~service_ebgp_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp4-sn2-first-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      }
+    },
+    "have_rp5_resp": {
+      "MESSAGE": "",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP5",
+      "RETURN_CODE": 200,
+      "DATA": {
+        "peeringName": "IT-ADC-RP5",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC",
+        "peeringOption": "EBGPDynamicPeering",
+        "deploymentMode": "TwoArmADC",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_51",
+          "networkName": "rp5-sn2-first-arm",
+          "networkType": "ArmOneADC",
+          "vlanId": 501,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "501",
+            "gatewayIpAddress": "192.165.1.1/24",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp5-sn2-first-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP5 SN2 first arm intf lb:one:external:IT-SN-2:external-intf-2:IT-ADC-RP5",
+            "segmentId": "30007",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2005:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "51111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_51"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_51",
+          "networkName": "rp5-sn2-second-arm",
+          "networkType": "ArmTwoADC",
+          "vlanId": 502,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "502",
+            "gatewayIpAddress": "192.165.2.1/24",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp5-sn2-second-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP5 SN2 second arm intf lb:two:external:IT-SN-2:external-intf-2:IT-ADC-RP5",
+            "segmentId": "30008",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2005:0102::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "51112",
+            "nveId": "1",
+            "vrfName": "IT_VRF_51"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_51",
+          "templateName": "service_ebgp_route",
+          "nvPairs": {
+            "NEIGHBOR_IP": "51.51.51.1",
+            "LOOPBACK_IP": "51.51.51.2",
+            "PEER_LOOPBACK_IP": "51.51.51.3",
+            "NEIGHBOR_IPV6": "2005:5151::1",
+            "LOOPBACK_IPV6": "2005:5152::1",
+            "PEER_LOOPBACK_IPV6": "2005:5153::1",
+            "ROUTE_MAP_TAG": "51115",
+            "DESC": "RP5 SN2 first arm",
+            "LOCAL_ASN": "65501",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "ADMIN_STATE": "true",
+            "VRF_NAME": "IT_VRF_51",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "nextHopIp": "",
+        "reverseNextHopIp": "192.165.1.100",
+        "enabled": "True",
+        "lastUpdated": 1612868017158,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_51~service_ebgp_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp5-sn2-first-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp5-sn2-second-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      }
+    },
+    "have_rp6_resp": {
+      "MESSAGE": "",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP6",
+      "RETURN_CODE": 200,
+      "DATA": {
+        "peeringName": "IT-ADC-RP6",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC",
+        "peeringOption": "StaticPeering",
+        "deploymentMode": "OneArmADC",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_61",
+          "networkName": "rp6-sn2-first-arm",
+          "networkType": "ArmOneADC",
+          "vlanId": 601,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "601",
+            "gatewayIpAddress": "192.166.1.1/24",
+            "networkName": "rp6-sn2-first-arm",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp6-sn2-first-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP6 SN2 first arm intf lb:one:external:IT-SN-2:external-intf-2:IT-ADC-RP6",
+            "segmentId": "30014",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2006:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "61111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_61"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_61",
+          "templateName": "service_static_route",
+          "nvPairs": {
+            "VRF_NAME": "IT_VRF_61",
+            "MULTI_ROUTES": "61.61.61.1/24,161.161.161.1\n61.61.61.1/24,162.162.162.1\n22.0.0.0/24,163.163.163.1\n22.0.0.0/24,164.164.164.1",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "nextHopIp": "",
+        "reverseNextHopIp": "192.166.1.100",
+        "enabled": "True",
+        "lastUpdated": 1612868027172,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_61~service_static_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp6-sn2-first-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      }
+    },
+    "have_rp7_resp": {
+      "MESSAGE": "",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-2/peerings/mmudigon/IT-ADC-RP7",
+      "RETURN_CODE": 200,
+      "DATA": {
+        "peeringName": "IT-ADC-RP7",
+        "fabricName": "external",
+        "attachedFabricName": "mmudigon",
+        "serviceNodeName": "IT-SN-2",
+        "serviceNodeType": "ADC",
+        "peeringOption": "StaticPeering",
+        "deploymentMode": "TwoArmADC",
+        "serviceNetworks": [
+        {
+          "vrfName": "IT_VRF_71",
+          "networkName": "rp7-sn2-first-arm",
+          "networkType": "ArmOneADC",
+          "vlanId": 701,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "701",
+            "gatewayIpAddress": "192.167.1.1/24",
+            "networkName": "rp7-sn2-first-arm",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp7-sn2-first-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP6 SN2 first arm  intf lb:one:external:IT-SN-2:external-intf-2:IT-ADC-RP7",
+            "segmentId": "30015",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2007:0101::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "71111",
+            "nveId": "1",
+            "vrfName": "IT_VRF_71"
+          }
+        },
+        {
+          "vrfName": "IT_VRF_71",
+          "networkName": "rp7-sn2-second-arm",
+          "networkType": "ArmTwoADC",
+          "vlanId": 702,
+          "templateName": "Service_Network_Universal",
+          "nvPairs": {
+            "suppressArp": "false",
+            "loopbackId": "",
+            "vlanId": "702",
+            "gatewayIpAddress": "192.167.2.1/24",
+            "networkName": "rp7-sn2-second-arm",
+            "enableL3OnBorder": "false",
+            "vlanName": "rp7-sn2-second-arm",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "intfDescription": "RP7 SN2 second arm intf lb:two:external:IT-SN-2:external-intf-2:IT-ADC-RP7",
+            "segmentId": "30016",
+            "mcastGroup": "239.1.1.0",
+            "dhcpServerAddr3": "",
+            "trmEnabled": "false",
+            "gatewayIpV6Address": "2007:0102::1/64",
+            "dhcpServerAddr2": "",
+            "tag": "71112",
+            "nveId": "1",
+            "vrfName": "IT_VRF_71"
+          }
+        }
+        ],
+        "routes": [
+        {
+          "vrfName": "IT_VRF_71",
+          "templateName": "service_static_route",
+          "nvPairs": {
+            "VRF_NAME": "IT_VRF_71",
+            "MULTI_ROUTES": "71.71.71.1/24,171.171.171.1\n71.71.71.1/24,172.172.172.1",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "NEIGHBOR_ASN": "1500"
+          }
+        }
+        ],
+        "nextHopIp": "",
+        "reverseNextHopIp": "192.167.1.100",
+        "enabled": "True",
+        "lastUpdated": 1612868035280,
+        "status": "In-Sync",
+        "statusDetails": [
+        {
+          "resourceType": "Policy",
+          "resourceName": "IT_VRF_71~service_static_route",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp7-sn2-first-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        },
+        {
+          "resourceType": "Network",
+          "resourceName": "rp7-sn2-second-arm",
+          "fabricName": "mmudigon",
+          "switchStatuses": [
+          {
+            "switchSerialNumber": "SAL1820SDPP",
+            "status": "In-Sync",
+            "updatedBy": "config-compliance",
+            "updatedTime": 1612868242683
+          }
+          ]
+        }
+        ]
+      }
+    },
+
+    "replaced_rp1_resp" : {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
+        "deploymentMode": "IntraTenantFW",
+        "enabled": true,
+        "fabricName": "external",
+        "lastUpdated": 1612942460116,
+        "nextHopIp": "192.161.1.200",
+        "peeringName": "IT-FW-RP1",
+        "peeringOption": "None",
+        "reverseNextHopIp": "192.161.2.200",
+        "routes": [],
+        "serviceNetworks": [
+        {
+          "networkName": "rp1-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.161.1.1/24",
+            "gatewayIpV6Address": "2101:0101::01/64",
+            "intfDescription": "RP1 SN1 inside interface - REP fw:inside:external:IT-SN-1:external-intf-1:IT-FW-RP1",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "rtBothAuto": "false",
+            "suppressArp": "false",
+            "tag": "11101",
+            "trmEnabled": "false",
+            "vlanId": "191",
+            "vlanName": "rp1-sn1-inside-rep"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 191,
+          "vrfName": "IT_VRF_11"
+        },
+        {
+          "networkName": "rp1-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.161.2.1/24",
+            "gatewayIpV6Address": "2101:0102::1/64",
+            "intfDescription": "RP1 SN1 outside interface- REP fw:outside:external:IT-SN-1:external-intf-1:IT-FW-RP1",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "rtBothAuto": "false",
+            "suppressArp": "false",
+            "tag": "11102",
+            "trmEnabled": "false",
+            "vlanId": "192",
+            "vlanName": "rp1-sn1-outside-rep"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 192,
+          "vrfName": "IT_VRF_11"
+        }
+        ],
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall"
+      },
+      "MESSAGE": "",
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP1",
+      "RETURN_CODE": 200
+    },
+    "replaced_rp2_resp": {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
+        "deploymentMode": "InterTenantFW",
+        "enabled": true,
+        "fabricName": "external",
+        "lastUpdated": 1612942469457,
+        "peeringName": "IT-FW-RP2",
+        "peeringOption": "StaticPeering",
+        "routes": [
+        {
+          "nvPairs": {
+            "MULTI_ROUTES": "20.20.90.0/24,120.120.190.100\n20.20.90.0/24,121.121.191.100",
+            "NEIGHBOR_ASN": "1500",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_21"
+          },
+          "templateName": "service_static_route",
+          "vrfName": "IT_VRF_21"
+        },
+        {
+          "nvPairs": {
+            "MULTI_ROUTES": "21.21.29.0/24,122.122.129.100\n21.21.29.0/24,123.123.129.100",
+            "NEIGHBOR_ASN": "1500",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_22"
+          },
+          "templateName": "service_static_route",
+          "vrfName": "IT_VRF_22"
+        }
+        ],
+        "serviceNetworks": [
+        {
+          "networkName": "rp2-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.162.1.1/24",
+            "gatewayIpV6Address": "2102:0101::1/64",
+            "intfDescription": "RP2 SN1 inside interface - REP fw:inside:external:IT-SN-1:external-intf-1:IT-FW-RP2",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "rtBothAuto": "false",
+            "suppressArp": "false",
+            "tag": "21101",
+            "trmEnabled": "false",
+            "vlanId": "291",
+            "vlanName": "rp2-sn1-inside-rep"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 291,
+          "vrfName": "IT_VRF_21"
+        },
+        {
+          "networkName": "rp2-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.162.2.1/24",
+            "gatewayIpV6Address": "2102:0102::1/64",
+            "intfDescription": "RP2 SN1 outside interface - REP fw:outside:external:IT-SN-1:external-intf-1:IT-FW-RP2",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "rtBothAuto": "false",
+            "suppressArp": "false",
+            "tag": "22202",
+            "trmEnabled": "false",
+            "vlanId": "292",
+            "vlanName": "rp2-sn1-outside-rep"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 292,
+          "vrfName": "IT_VRF_22"
+        }
+        ],
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall"
+      },
+      "MESSAGE": "",
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP2",
+      "RETURN_CODE": 200
+    },
+
+    "replaced_rp3_resp": {
+      "DATA": {
+        "attachedFabricName": "mmudigon",
+        "deploymentMode": "InterTenantFW",
+        "enabled": true,
+        "fabricName": "external",
+        "lastUpdated": 1612942479141,
+        "peeringName": "IT-FW-RP3",
+        "peeringOption": "EBGPDynamicPeering",
+        "routes": [
+        {
+          "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "DESC": "RP3 SN1 inside interface - REP",
+            "LOCAL_ASN": "65391",
+            "LOOPBACK_IP": "31.31.39.2",
+            "LOOPBACK_IPV6": "2103:3132::01",
+            "NEIGHBOR_ASN": "1500",
+            "NEIGHBOR_IP": "31.31.39.1",
+            "NEIGHBOR_IPV6": "2103:3131::1",
+            "PEER_LOOPBACK_IP": "31.31.39.3",
+            "PEER_LOOPBACK_IPV6": "2103:3133::01",
+            "ROUTE_MAP_TAG": "33101",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_31"
+          },
+          "templateName": "service_ebgp_route",
+          "vrfName": "IT_VRF_31"
+        },
+        {
+          "nvPairs": {
+            "ADMIN_STATE": "true",
+            "ADVERTISE_HOST_ROUTE": "true",
+            "DESC": "RP3 SN1 outside interface - REP",
+            "LOCAL_ASN": "65392",
+            "LOOPBACK_IP": "131.131.139.2",
+            "LOOPBACK_IPV6": "2103:8384::1:100:1",
+            "NEIGHBOR_ASN": "1500",
+            "NEIGHBOR_IP": "131.131.139.1",
+            "NEIGHBOR_IPV6": "2103:8383::1",
+            "PEER_LOOPBACK_IP": "131.131.139.3",
+            "PEER_LOOPBACK_IPV6": "2103:8385::1",
+            "ROUTE_MAP_TAG": "31103",
+            "SERVICE_LEAF_SWITCH": "SAL1820SDPP",
+            "VRF_NAME": "IT_VRF_32"
+          },
+          "templateName": "service_ebgp_route",
+          "vrfName": "IT_VRF_32"
+        }
+        ],
+        "serviceNetworks": [
+        {
+          "networkName": "rp3-sn1-inside-net",
+          "networkType": "InsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.163.1.1/24",
+            "gatewayIpV6Address": "2103:0101::1/64",
+            "intfDescription": "RP3 SN1 inside interface - REP fw:inside:external:IT-SN-1:external-intf-1:IT-FW-RP3",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "rtBothAuto": "false",
+            "suppressArp": "false",
+            "tag": "31101",
+            "trmEnabled": "false",
+            "vlanId": "391",
+            "vlanName": "rp3-sn1-inside-rep"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 391,
+          "vrfName": "IT_VRF_31"
+        },
+        {
+          "networkName": "rp3-sn1-outside-net",
+          "networkType": "OutsideNetworkFW",
+          "nvPairs": {
+            "enableIR": "false",
+            "enableL3OnBorder": "false",
+            "gatewayIpAddress": "192.163.2.1/24",
+            "gatewayIpV6Address": "2103:0102::1/64",
+            "intfDescription": "RP3 SN1 outside interface - REP fw:outside:external:IT-SN-1:external-intf-1:IT-FW-RP3",
+            "isLayer2Only": "false",
+            "mcastGroup": "239.1.1.0",
+            "rtBothAuto": "false",
+            "suppressArp": "false",
+            "tag": "31102",
+            "trmEnabled": "false",
+            "vlanId": "302",
+            "vlanName": "rp3-sn1-outside-rep"
+          },
+          "templateName": "Service_Network_Universal",
+          "vlanId": 302,
+          "vrfName": "IT_VRF_32"
+        }
+        ],
+        "serviceNodeName": "IT-SN-1",
+        "serviceNodeType": "Firewall"
+      },
+      "MESSAGE": "",
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/external/service-nodes/IT-SN-1/peerings/mmudigon/IT-FW-RP3",
+      "RETURN_CODE": 200
+    },
+
+    "serv_nodes_resp" : {
+      "MESSAGE": "",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/appcenter/Cisco/elasticservice/elasticservice-api/?atached-fabric=mmudigon",
+      "RETURN_CODE": 200,
+      "DATA" :[
+      {
+        "name" : "IT-SN-1"
+      },
+      {
+        "name" : "IT-SN-2"
+      }
+      ]
+    },
+
+    "vlan_id_alloc_resp_rp1" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 101
+    },
+
+    "vlan_id_alloc_resp_rp2" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 201
+    },
+
+    "vlan_id_alloc_resp_rp3" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 301
+    },
+
+    "vlan_id_alloc_resp_rp4" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 401
+    },
+
+    "vlan_id_alloc_resp_rp5" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 501
+    },
+
+    "vlan_id_alloc_resp_rp6" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 601
+    },
+
+    "vlan_id_alloc_resp_rp7" : {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/resource-manager/vlan/mmudigon?vlanUsageType=SERVICE_NETWORK_VLAN",
+      "MESSAGE": "OK",
+      "DATA": 701
+    }
+}

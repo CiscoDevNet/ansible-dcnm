@@ -1,0 +1,31 @@
+{
+    "test_notes": [
+        "Mocked fabric nvPairs for VerifyPlaybookParams() unit tests"
+    ],
+    "test_verify_playbook_params_00050a": {
+        "TEST_NOTES": [
+            "Dependent parameters for REPLICATION_MODE are not satisfied."
+        ],
+        "BGP_AS": "65001",
+        "FABRIC_NAME": "f1",
+        "REPLICATION_MODE": "Ingress",
+        "UNDERLAY_IS_V6": "true"
+    },
+    "test_verify_playbook_params_00060a": {
+        "TEST_NOTES": [
+            "Dependent parameters for REPLICATION_MODE are not satisfied."
+        ],
+        "BGP_AS": "65001",
+        "FABRIC_NAME": "f1",
+        "REPLICATION_MODE": "Ingress",
+        "UNDERLAY_IS_V6": "true"
+    },
+    "test_verify_playbook_params_00080a": {
+        "TEST_NOTES": [
+            "Relevant dependent parameters are not in the controller config."
+        ],
+        "BGP_AS": "65001",
+        "FABRIC_NAME": "f1",
+        "V6_SUBNET_RANGE": "fd00::a04:0/112"
+    }
+}

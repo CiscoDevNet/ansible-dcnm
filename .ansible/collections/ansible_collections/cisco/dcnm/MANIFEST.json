@@ -1,0 +1,48 @@
+{
+ "collection_info": {
+  "namespace": "cisco",
+  "name": "dcnm",
+  "version": "3.9.0-dev",
+  "authors": [
+   "Shrishail Kariyappanavar <nkshrishail>",
+   "Mallik Mudigonda <mmudigon>",
+   "Karthik Babu Harichandra Babu <kharicha>",
+   "Mike Wiebe <mikewiebe>",
+   "Praveen Ramoorthy <praveenramoorthy>",
+   "Allen Robel <allenrobel>",
+   "Shangxin Du <dsx1123>",
+   "Akshayanat Saravanan <AKDRG>",
+   "Neil John <neiljohn-gh>",
+   "Sivakami Sivaraman <sivakasi-cisco>"
+  ],
+  "readme": "README.md",
+  "tags": [
+   "cisco",
+   "ndfc",
+   "dcnm",
+   "nxos",
+   "networking",
+   "vxlan"
+  ],
+  "description": "Ansible collection for the Cisco Nexus\u00ae Dashboard Fabric Controller (NDFC) - formerly DCNM",
+  "license": [
+   "Apache-2.0"
+  ],
+  "license_file": null,
+  "dependencies": {
+   "ansible.netcommon": ">=4.1.0"
+  },
+  "repository": "https://github.com/CiscoDevNet/ansible-dcnm",
+  "documentation": null,
+  "homepage": null,
+  "issues": null
+ },
+ "file_manifest_file": {
+  "name": "FILES.json",
+  "ftype": "file",
+  "chksum_type": "sha256",
+  "chksum_sha256": "863e7af2cdf328cf44ef97960d9ee31d319b2bcbbcb2b697de3665a97b9933bf",
+  "format": 1
+ },
+ "format": 1
+}
