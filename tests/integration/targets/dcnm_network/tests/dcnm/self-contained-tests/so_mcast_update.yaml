@@ -61,7 +61,7 @@
 - name: SO_MCAST_UPDATE - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
 
 - name: SO_MCAST_UPDATE - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
@@ -91,7 +91,7 @@
 - name: SO_MCAST_UPDATE - ASSERT - Check changed flag is true
   ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
 
 - name: SO_MCAST_UPDATE - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:

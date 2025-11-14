@@ -25,11 +25,11 @@
 
 - name: Set Test Control Flag
   ansible.builtin.set_fact:
-    run_test: True
+    run_test: true
 
 - name: Test will not be run since Loopback101 does not appear to exist
   ansible.builtin.set_fact:
-    run_test: False
+    run_test: false
   when: lpk101_data.response == []
 
 - name: Access Policy Data If Loopack101 Data Is Available
@@ -39,7 +39,7 @@
 
 - name: Test will not be run since Loopback101 is not an MPLS Fabric Loopback
   ansible.builtin.set_fact:
-    run_test: False
+    run_test: false
   when: (loopback_policy is defined) and (loopback_policy != 'int_mpls_loopback')
 
 - name: Debug
@@ -247,10 +247,9 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

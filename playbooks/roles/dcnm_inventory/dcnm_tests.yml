@@ -1,5 +1,7 @@
 ---
+  name: Play for ndfc
 - hosts: ndfc
+  name: Play for ndfc
   gather_facts: false
   connection: ansible.netcommon.httpapi
 

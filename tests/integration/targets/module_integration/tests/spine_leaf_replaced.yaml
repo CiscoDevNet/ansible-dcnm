@@ -19,25 +19,23 @@
 
 - block:
 
-  - name: Add Tenant VRF Objects
+    - name: Add Tenant VRF Objects
     cisco.dcnm.dcnm_vrf: &add_vrfs
       fabric: "{{ fabric_name }}"
       state: replaced
       config: "{{ vrfs }}"
     register: result
 
-  - assert:
-      that:
-      - 'result.changed == true'
-      - 'result.response|length == 3'
+  - ansible.builtin.assert: that:
+  - 'result.changed == true'
+  - 'result.response|length == 3'
 
   - name: Add Tenant VRF Objects - Idempotence
     cisco.dcnm.dcnm_vrf: *add_vrfs
     register: result
 
-  - assert:
-      that:
-      - 'result.changed == false'
+  - ansible.builtin.assert: that:
+  - 'result.changed == false'
 
   - name: Query VRF State
     cisco.dcnm.dcnm_vrf:
@@ -45,9 +43,9 @@
       state: query
     register: result
 
-  - assert: &vrf_created_no_attach_deploy
+  - ansible.builtin.assert: &vrf_created_no_attach_deploy
       that:
-      - 'result.response[0].parent.vrfName == "green_red"'
+        - 'result.response[0].parent.vrfName == "green_red"'
       - 'result.response[0].parent.vrfId == 470000'
       - 'result.response[0].parent.vrfStatus == "NA"'
       - 'result.response[0].attach|length == 4'
@@ -86,7 +84,7 @@
             - ip_address: "{{ leaf3 }}"
             - ip_address: "{{ leaf4 }}"
           deploy: false
-        - vrf_name: engineering
+            - vrf_name: engineering
           vrf_id: 480000
           vlan_id: 401
           attach:
@@ -95,7 +93,7 @@
             - ip_address: "{{ leaf3 }}"
             - ip_address: "{{ leaf4 }}"
           deploy: false
-        - vrf_name: sales
+            - vrf_name: sales
           vrf_id: 550000
           vlan_id: 501
           attach:
@@ -112,7 +110,7 @@
       state: query
     register: result
 
-  - assert: *vrf_created_no_attach_deploy
+  - ansible.builtin.assert: *vrf_created_no_attach_deploy
 
   - name: Specify attachments to switches with global deploy flag set to true
     cisco.dcnm.dcnm_vrf:
@@ -128,7 +126,7 @@
             - ip_address: "{{ leaf3 }}"
             - ip_address: "{{ leaf4 }}"
           deploy: true
-        - vrf_name: engineering
+            - vrf_name: engineering
           vrf_id: 480000
           vlan_id: 401
           attach:
@@ -137,7 +135,7 @@
             - ip_address: "{{ leaf3 }}"
             - ip_address: "{{ leaf4 }}"
           deploy: true
-        - vrf_name: sales
+            - vrf_name: sales
           vrf_id: 550000
           vlan_id: 501
           attach:
@@ -148,9 +146,8 @@
           deploy: true
     register: result
 
-  - assert:
-      that:
-      - 'result.changed == true'
+  - ansible.builtin.assert: that:
+  - 'result.changed == true'
 
   - name: Query fabric state until vrfStatus transitions to DEPLOYED state
     cisco.dcnm.dcnm_vrf:
@@ -170,32 +167,31 @@
       state: query
     register: result
 
-  - assert:
-      that:
-      - 'result.response[0].parent.vrfName == "green_red"'
-      - 'result.response[0].parent.vrfId == 470000'
-      - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
-      - 'result.response[0].attach|length == 4'
-      - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-      - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-      - 'result.response[0].attach[2].switchDetailsList[0].islanAttached == true'
-      - 'result.response[0].attach[3].switchDetailsList[0].islanAttached == true'
-      - 'result.response[1].parent.vrfName == "engineering"'
-      - 'result.response[1].parent.vrfId == 480000'
-      - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
-      - 'result.response[1].attach|length == 4'
-      - 'result.response[1].attach[0].switchDetailsList[0].islanAttached == true'
-      - 'result.response[1].attach[1].switchDetailsList[0].islanAttached == true'
-      - 'result.response[1].attach[2].switchDetailsList[0].islanAttached == true'
-      - 'result.response[1].attach[3].switchDetailsList[0].islanAttached == true'
-      - 'result.response[2].parent.vrfName == "sales"'
-      - 'result.response[2].parent.vrfId == 550000'
-      - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
-      - 'result.response[2].attach|length == 4'
-      - 'result.response[2].attach[0].switchDetailsList[0].islanAttached == true'
-      - 'result.response[2].attach[1].switchDetailsList[0].islanAttached == true'
-      - 'result.response[2].attach[2].switchDetailsList[0].islanAttached == true'
-      - 'result.response[2].attach[3].switchDetailsList[0].islanAttached == true'
+  - ansible.builtin.assert: that:
+  - 'result.response[0].parent.vrfName == "green_red"'
+  - 'result.response[0].parent.vrfId == 470000'
+  - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  - 'result.response[0].attach|length == 4'
+  - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+  - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+  - 'result.response[0].attach[2].switchDetailsList[0].islanAttached == true'
+  - 'result.response[0].attach[3].switchDetailsList[0].islanAttached == true'
+  - 'result.response[1].parent.vrfName == "engineering"'
+  - 'result.response[1].parent.vrfId == 480000'
+  - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
+  - 'result.response[1].attach|length == 4'
+  - 'result.response[1].attach[0].switchDetailsList[0].islanAttached == true'
+  - 'result.response[1].attach[1].switchDetailsList[0].islanAttached == true'
+  - 'result.response[1].attach[2].switchDetailsList[0].islanAttached == true'
+  - 'result.response[1].attach[3].switchDetailsList[0].islanAttached == true'
+  - 'result.response[2].parent.vrfName == "sales"'
+  - 'result.response[2].parent.vrfId == 550000'
+  - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
+  - 'result.response[2].attach|length == 4'
+  - 'result.response[2].attach[0].switchDetailsList[0].islanAttached == true'
+  - 'result.response[2].attach[1].switchDetailsList[0].islanAttached == true'
+  - 'result.response[2].attach[2].switchDetailsList[0].islanAttached == true'
+  - 'result.response[2].attach[3].switchDetailsList[0].islanAttached == true'
 
   - name: Cleanup - Delete Tenant VRFs
     cisco.dcnm.dcnm_vrf:
@@ -213,9 +209,9 @@
           attach:
             - ip_address: "{{ leaf1 }}"
               deploy: true
-            - ip_address: "{{ leaf2 }}"
+                - ip_address: "{{ leaf2 }}"
               deploy: true
-            - ip_address: "{{ leaf3 }}"
+                - ip_address: "{{ leaf3 }}"
             - ip_address: "{{ leaf4 }}"
           deploy: false
           # vrf green_red should be deployed on leaf1, leaf2
@@ -226,9 +222,9 @@
           attach:
             - ip_address: "{{ leaf1 }}"
               deploy: false
-            - ip_address: "{{ leaf2 }}"
+                - ip_address: "{{ leaf2 }}"
               deploy: false
-            - ip_address: "{{ leaf3 }}"
+                - ip_address: "{{ leaf3 }}"
             - ip_address: "{{ leaf4 }}"
           deploy: true
           # vrf engineering should be deployed on leaf3, leaf4
@@ -251,14 +247,13 @@
       state: query
     register: result
 
-  - assert:
-      that:
-      - 'result.response[0].parent.vrfName == "green_red"'
-      - 'result.response[0].parent.vrfId == 470000'
-      - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
-      - 'result.response[1].parent.vrfName == "engineering"'
-      - 'result.response[1].parent.vrfId == 480000'
-      - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
+  - ansible.builtin.assert: that:
+  - 'result.response[0].parent.vrfName == "green_red"'
+  - 'result.response[0].parent.vrfId == 470000'
+  - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  - 'result.response[1].parent.vrfName == "engineering"'
+  - 'result.response[1].parent.vrfId == 480000'
+  - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
 
   - name: Cleanup - Delete Tenant VRFs
     cisco.dcnm.dcnm_vrf:
@@ -279,7 +274,7 @@
             - ip_address: "{{ leaf3 }}"
             - ip_address: "{{ leaf4 }}"
           deploy: true
-        - vrf_name: engineering
+            - vrf_name: engineering
           # vrf_id: 480000
           # vlan_id: 401
           attach:
@@ -288,7 +283,7 @@
             - ip_address: "{{ leaf3 }}"
             - ip_address: "{{ leaf4 }}"
           deploy: true
-        - vrf_name: sales
+            - vrf_name: sales
           # vrf_id: 550000
           # vlan_id: 501
           attach:
@@ -317,29 +312,28 @@
       state: query
     register: result
 
-  - assert:
-      that:
-      - 'result.response[0].parent.vrfName == "green_red"'
-      - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
-      - 'result.response[0].attach|length == 4'
-      - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-      - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-      - 'result.response[0].attach[2].switchDetailsList[0].islanAttached == true'
-      - 'result.response[0].attach[3].switchDetailsList[0].islanAttached == true'
-      - 'result.response[1].parent.vrfName == "engineering"'
-      - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
-      - 'result.response[1].attach|length == 4'
-      - 'result.response[1].attach[0].switchDetailsList[0].islanAttached == true'
-      - 'result.response[1].attach[1].switchDetailsList[0].islanAttached == true'
-      - 'result.response[1].attach[2].switchDetailsList[0].islanAttached == true'
-      - 'result.response[1].attach[3].switchDetailsList[0].islanAttached == true'
-      - 'result.response[2].parent.vrfName == "sales"'
-      - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
-      - 'result.response[2].attach|length == 4'
-      - 'result.response[2].attach[0].switchDetailsList[0].islanAttached == true'
-      - 'result.response[2].attach[1].switchDetailsList[0].islanAttached == true'
-      - 'result.response[2].attach[2].switchDetailsList[0].islanAttached == true'
-      - 'result.response[2].attach[3].switchDetailsList[0].islanAttached == true'
+  - ansible.builtin.assert: that:
+  - 'result.response[0].parent.vrfName == "green_red"'
+  - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  - 'result.response[0].attach|length == 4'
+  - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+  - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+  - 'result.response[0].attach[2].switchDetailsList[0].islanAttached == true'
+  - 'result.response[0].attach[3].switchDetailsList[0].islanAttached == true'
+  - 'result.response[1].parent.vrfName == "engineering"'
+  - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
+  - 'result.response[1].attach|length == 4'
+  - 'result.response[1].attach[0].switchDetailsList[0].islanAttached == true'
+  - 'result.response[1].attach[1].switchDetailsList[0].islanAttached == true'
+  - 'result.response[1].attach[2].switchDetailsList[0].islanAttached == true'
+  - 'result.response[1].attach[3].switchDetailsList[0].islanAttached == true'
+  - 'result.response[2].parent.vrfName == "sales"'
+  - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
+  - 'result.response[2].attach|length == 4'
+  - 'result.response[2].attach[0].switchDetailsList[0].islanAttached == true'
+  - 'result.response[2].attach[1].switchDetailsList[0].islanAttached == true'
+  - 'result.response[2].attach[2].switchDetailsList[0].islanAttached == true'
+  - 'result.response[2].attach[3].switchDetailsList[0].islanAttached == true'
 
   always:
-    - debug: msg="End dcnm_fabric spine_leaf_replaced test"
+    - ansible.builtin.debug: msg="End dcnm_fabric spine_leaf_replaced test"

@@ -28,6 +28,7 @@
 #
 #
 - hosts: dcnm
+  name: Play for dcnm
   gather_facts: false
   connection: ansible.netcommon.httpapi
 # Uncomment and modify if not using dynamic_inventory.py

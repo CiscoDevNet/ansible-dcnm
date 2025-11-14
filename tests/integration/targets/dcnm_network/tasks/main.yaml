@@ -63,7 +63,8 @@
   tags: always
 
 - name: MAIN - Build List of Test Items
-  ansible.builtin.set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  ansible.builtin.set_fact:
+    test_items: "{{ test_cases.files | map(attribute='path') | list }}"
   delegate_to: localhost
   tags: always
 

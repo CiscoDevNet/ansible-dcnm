@@ -54,7 +54,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.response.DATA != None'
+      - 'result.response.DATA != None'
 
 - name: MERGED - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
@@ -77,13 +77,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_2 }}"
+        - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ interface_2a }}" # mandatory
@@ -92,7 +92,7 @@
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm
-      - ip_address: "{{ switch_3 }}"
+              - ip_address: "{{ switch_3 }}"
       deploy: true
   register: result
 
@@ -109,7 +109,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
     - 'result.response[2].RETURN_CODE == 200'
@@ -131,7 +131,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: VRF LITE- Attach and Deploy second VRF LITE EXTENSION Provided by the User in one switch
@@ -139,13 +139,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_2 }}"
+        - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ interface_2a }}" # mandatory
@@ -154,14 +154,14 @@
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm
-          - peer_vrf: ansible-vrf-int1 # optional
+              - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ interface_2b }}" # mandatory
             ipv4_addr: 20.33.0.2/24 # optional
             neighbor_ipv4: 20.33.0.1 # optional
             ipv6_addr: 3010::10:34:0:7/64 # optional
             neighbor_ipv6: 3010::10:34:0:3 # optional
             dot1q: 21 # dot1q can be got from dcnm
-      - ip_address: "{{ switch_3 }}"
+              - ip_address: "{{ switch_3 }}"
       deploy: true
   register: result
 
@@ -178,7 +178,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
     - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
@@ -198,7 +198,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: VRF LITE- Replace VRF LITE Attachment and Deploy by the User in one switch
@@ -206,13 +206,13 @@
     fabric: "{{ fabric_1 }}"
     state: replaced
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_2 }}"
+        - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ interface_2a }}" # mandatory
@@ -221,7 +221,7 @@
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm
-      - ip_address: "{{ switch_3 }}"
+              - ip_address: "{{ switch_3 }}"
       deploy: true
   register: result
 
@@ -238,7 +238,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
     - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
@@ -256,7 +256,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: VRF LITE- Override VRF and VRF LITE EXTENSION Provided by the User
@@ -264,13 +264,13 @@
     fabric: "{{ fabric_1 }}"
     state: overridden
     config:
-    - vrf_name: ansible-vrf-int2
+      - vrf_name: ansible-vrf-int2
       vrf_id: 9008013
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 400
       attach:
-      - ip_address: "{{ switch_2 }}"
+        - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ interface_2a }}" # mandatory
@@ -279,7 +279,7 @@
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm
-          - peer_vrf: ansible-vrf-int1 # optional
+              - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ interface_2b }}" # mandatory
             ipv4_addr: 20.33.0.2/24 # optional
             neighbor_ipv4: 20.33.0.1 # optional
@@ -302,7 +302,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
     - 'result.response[2].RETURN_CODE == 200'
@@ -332,7 +332,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: VRF LITE - Clean up any existing vrfs
@@ -352,13 +352,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int2
+      - vrf_name: ansible-vrf-int2
       vrf_id: 9008015
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 400
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int3 # optional
             interface: "{{ interface_1a }}" # mandatory
@@ -367,7 +367,7 @@
             ipv6_addr: 5010::10:34:0:7/64 # optional
             neighbor_ipv6: 5010::10:34:0:3 # optional
             dot1q: 4 # dot1q can be got from dcnm
-      - ip_address: "{{ switch_2 }}"
+              - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ interface_2a }}" # mandatory
@@ -376,7 +376,7 @@
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm
-          - peer_vrf: ansible-vrf-int1 # optional
+              - peer_vrf: ansible-vrf-int1 # optional
             interface: "{{ interface_2b }}" # mandatory
             ipv4_addr: 20.33.0.2/24 # optional
             neighbor_ipv4: 20.33.0.1 # optional
@@ -399,7 +399,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[1].RETURN_CODE == 200'
     - 'result.response[2].RETURN_CODE == 200'
@@ -426,7 +426,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 ###############################################

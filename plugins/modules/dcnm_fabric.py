@@ -3577,12 +3577,12 @@ EXAMPLES = """
       - FABRIC_NAME: VXLAN_Fabric
         FABRIC_TYPE: VXLAN_EVPN
         BGP_AS: 65000
-    - FABRIC_NAME: BGP_Fabric
+      - FABRIC_NAME: BGP_Fabric
         FABRIC_TYPE: BGP
         BGP_AS: 65001
-    - FABRIC_NAME: MSD_Fabric
+      - FABRIC_NAME: MSD_Fabric
         FABRIC_TYPE: VXLAN_EVPN_MSD
-    - FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: LAN_Fabric
         FABRIC_TYPE: LAN_CLASSIC
   register: result
 - debug:
@@ -3712,7 +3712,6 @@ EXAMPLES = """
             ENABLE_PVLAN: false
 
 # Resulting error message (edited for brevity)
-
 """
 # pylint: disable=wrong-import-position
 import copy

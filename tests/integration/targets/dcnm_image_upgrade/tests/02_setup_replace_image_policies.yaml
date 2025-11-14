@@ -27,7 +27,7 @@
   cisco.dcnm.dcnm_image_policy:
     state: replaced
     config:
-    - name: "{{ image_policy_1 }}"
+      - name: "{{ image_policy_1 }}"
       agnostic: false
       description: "{{ image_policy_1 }}"
       epld_image: "{{ epld_image_1 }}"
@@ -48,7 +48,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
     - result.failed == false
     - (result.diff | length) == 2
     - result.diff[0].policyName == image_policy_1

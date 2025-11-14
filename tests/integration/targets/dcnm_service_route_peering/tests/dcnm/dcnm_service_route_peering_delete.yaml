@@ -33,9 +33,9 @@
           - name: IT-FW-RP1                                  # mandatory
             node_name: "{{ ansible_snode_1 }}"               # mandatory
             deploy_mode: intra_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
-            inside_network:                                  #
+            inside_network: #
               vrf: "{{ ansible_vrf_11 }}"                    # mandatory
-              name: rp1-sn1-inside-net                       # mandatory
+              name: Rp1-sn1-inside-net                       # mandatory
               vlan_id: 101                                   # mandatory
               profile:
                 ipv4_gw: 192.161.1.1/24                      # mandatory
@@ -44,9 +44,9 @@
                 int_descr: "RP1 SN1 inside interface"        # optional, default is ''
                 tag: 11111                                   # optional, default is 12345
             next_hop: 192.161.1.100                          # mandatory
-            outside_network:                                 #
+            outside_network: #
               vrf: "{{ ansible_vrf_11 }}"                    # mandatory
-              name: rp1-sn1-outside-net                      # mandatory
+              name: Rp1-sn1-outside-net                      # mandatory
               vlan_id: 102                                   # mandatory
               profile:
                 ipv4_gw: 192.161.2.1/24                      # mandatory
@@ -60,31 +60,31 @@
             node_name: "{{ ansible_snode_1 }}"               # mandatory
             deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
-            inside_network:                                  #
+            inside_network: #
               vrf: "{{ ansible_vrf_21 }}"                    # mandatory
-              name: rp2-sn1-inside-net                       # mandatory
+              name: Rp2-sn1-inside-net                       # mandatory
               vlan_id: 201                                   # mandatory
               profile:
                 ipv4_gw: 192.162.1.1/24                      # mandatory
                 ipv6_gw: 2002:db01::1/64                     # optional, default is ''
                 vlan_name: rp2-sn1-inside                    # optional, default is ''
                 int_descr: "RP2 SN1 inside interface"        # optional, default is ''
-                static_route:                                # optional, default is ''
+                static_route: # optional, default is ''
                   - subnet: 20.20.20.0/24
                     next_hop:
                       - 120.120.120.100
                       - 121.121.121.100
                 tag: 21111                                   # optional, default is 12345
-            outside_network:                                 #
+            outside_network: #
               vrf: "{{ ansible_vrf_22 }}"                    # mandatory
-              name: rp2-sn1-outside-net                      # mandatory
+              name: Rp2-sn1-outside-net                      # mandatory
               vlan_id: 202                                   # mandatory
               profile:
                 ipv4_gw: 192.162.2.1/24                      # mandatory
                 ipv6_gw: 2002:db02::1/64                     # optional, default is ''
                 vlan_name: rp2-sn1-outside                   # optional, default is ''
                 int_descr: "RP2 SN1 outside interface"       # optional, default is ''
-                static_route:                                # optional, default is ''
+                static_route: # optional, default is ''
                   - subnet: 21.21.21.0/24
                     next_hop:
                       - 122.122.122.100
@@ -97,7 +97,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             inside_network:
               vrf: "{{ ansible_vrf_31 }}"                    # mandatory
-              name: rp3-sn1-inside-net                       # mandatory
+              name: Rp3-sn1-inside-net                       # mandatory
               vlan_id: 301                                   # mandatory
               profile:
                 ipv4_gw: 192.163.1.1/24                      # mandatory
@@ -117,7 +117,7 @@
                 adv_host: true                               # optional, default is false
             outside_network:
               vrf: "{{ ansible_vrf_32 }}"                    # mandatory
-              name: rp3-sn1-outside-net                      # mandatory
+              name: Rp3-sn1-outside-net                      # mandatory
               vlan_id: 302                                   # mandatory
               profile:
                 ipv4_gw: 192.163.2.1/24                      # mandatory
@@ -142,7 +142,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_41 }}"                    # mandatory
-              name: rp4-sn2-first-arm                        # mandatory
+              name: Rp4-sn2-first-arm                        # mandatory
               vlan_id: 401                                   # mandatory
               profile:
                 ipv4_gw: 192.164.1.1/24                      # mandatory
@@ -168,7 +168,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
-              name: rp5-sn2-first-arm                        # mandatory
+              name: Rp5-sn2-first-arm                        # mandatory
               vlan_id: 501                                   # mandatory
               profile:
                 ipv4_gw: 192.165.1.1/24                      # mandatory
@@ -188,7 +188,7 @@
                 adv_host: true                               # optional, default is false
             second_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
-              name: rp5-sn2-second-arm                       # mandatory
+              name: Rp5-sn2-second-arm                       # mandatory
               vlan_id: 502                                   # mandatory
               profile:
                 ipv4_gw: 192.165.2.1/24                      # mandatory
@@ -204,7 +204,7 @@
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_61 }}"                    # mandatory
-              name: rp6-sn2-first-arm                        # mandatory
+              name: Rp6-sn2-first-arm                        # mandatory
               vlan_id: 601                                   # mandatory
               profile:
                 ipv4_gw: 192.166.1.1/24                      # mandatory
@@ -212,7 +212,7 @@
                 vlan_name: rp6-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP6 SN2 first arm intf"          # optional, default is ''
                 tag: 61111                                   # optional, default is 12345
-                static_route:                                # optional, default is ''
+                static_route: # optional, default is ''
                   - subnet: 61.61.61.1/24
                     next_hop:
                       - 161.161.161.1
@@ -229,7 +229,7 @@
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
-              name: rp7-sn2-first-arm                        # mandatory
+              name: Rp7-sn2-first-arm                        # mandatory
               vlan_id: 701                                   # mandatory
               profile:
                 ipv4_gw: 192.167.1.1/24                      # mandatory
@@ -237,14 +237,14 @@
                 vlan_name: rp7-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP6 SN2 first arm  intf"         # optional, default is ''
                 tag: 71111                                   # optional, default is 12345
-                static_route:                                # optional, default is ''
+                static_route: # optional, default is ''
                   - subnet: 71.71.71.1/24
                     next_hop:
                       - 171.171.171.1
                       - 172.172.172.1
             second_arm:
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
-              name: rp7-sn2-second-arm                       # mandatory
+              name: Rp7-sn2-second-arm                       # mandatory
               vlan_id: 702                                   # mandatory
               profile:
                 ipv4_gw: 192.167.2.1/24                      # mandatory
@@ -258,8 +258,7 @@
         state: merged
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 7'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -267,8 +266,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 7'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -305,8 +303,7 @@
         state: deleted
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 7'
@@ -314,8 +311,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -323,8 +319,7 @@
       cisco.dcnm.dcnm_service_route_peering: *dncm_srp_delete_all
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -332,8 +327,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -349,9 +343,9 @@
           - name: IT-FW-RP1                                  # mandatory
             node_name: "{{ ansible_snode_1 }}"               # mandatory
             deploy_mode: intra_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
-            inside_network:                                  #
+            inside_network: #
               vrf: "{{ ansible_vrf_11 }}"                    # mandatory
-              name: rp1-sn1-inside-net                       # mandatory
+              name: Rp1-sn1-inside-net                       # mandatory
               vlan_id: 101                                   # mandatory
               profile:
                 ipv4_gw: 192.161.1.1/24                      # mandatory
@@ -360,9 +354,9 @@
                 int_descr: "RP1 SN1 inside interface"        # optional, default is ''
                 tag: 11111                                   # optional, default is 12345
             next_hop: 192.161.1.100                          # mandatory
-            outside_network:                                 #
+            outside_network: #
               vrf: "{{ ansible_vrf_11 }}"                    # mandatory
-              name: rp1-sn1-outside-net                      # mandatory
+              name: Rp1-sn1-outside-net                      # mandatory
               vlan_id: 102                                   # mandatory
               profile:
                 ipv4_gw: 192.161.2.1/24                      # mandatory
@@ -376,31 +370,31 @@
             node_name: "{{ ansible_snode_1 }}"               # mandatory
             deploy_mode: inter_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
-            inside_network:                                  #
+            inside_network: #
               vrf: "{{ ansible_vrf_21 }}"                    # mandatory
-              name: rp2-sn1-inside-net                       # mandatory
+              name: Rp2-sn1-inside-net                       # mandatory
               vlan_id: 201                                   # mandatory
               profile:
                 ipv4_gw: 192.162.1.1/24                      # mandatory
                 ipv6_gw: 2002:db01::1/64                     # optional, default is ''
                 vlan_name: rp2-sn1-inside                    # optional, default is ''
                 int_descr: "RP2 SN1 inside interface"        # optional, default is ''
-                static_route:                                # optional, default is ''
+                static_route: # optional, default is ''
                   - subnet: 20.20.20.0/24
                     next_hop:
                       - 120.120.120.100
                       - 121.121.121.100
                 tag: 21111                                   # optional, default is 12345
-            outside_network:                                 #
+            outside_network: #
               vrf: "{{ ansible_vrf_22 }}"                    # mandatory
-              name: rp2-sn1-outside-net                      # mandatory
+              name: Rp2-sn1-outside-net                      # mandatory
               vlan_id: 202                                   # mandatory
               profile:
                 ipv4_gw: 192.162.2.1/24                      # mandatory
                 ipv6_gw: 2002:db02::1/64                     # optional, default is ''
                 vlan_name: rp2-sn1-outside                   # optional, default is ''
                 int_descr: "RP2 SN1 outside interface"       # optional, default is ''
-                static_route:                                # optional, default is ''
+                static_route: # optional, default is ''
                   - subnet: 21.21.21.0/24
                     next_hop:
                       - 122.122.122.100
@@ -413,7 +407,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_41 }}"                    # mandatory
-              name: rp4-sn2-first-arm                        # mandatory
+              name: Rp4-sn2-first-arm                        # mandatory
               vlan_id: 401                                   # mandatory
               profile:
                 ipv4_gw: 192.164.1.1/24                      # mandatory
@@ -439,7 +433,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
-              name: rp5-sn2-first-arm                        # mandatory
+              name: Rp5-sn2-first-arm                        # mandatory
               vlan_id: 501                                   # mandatory
               profile:
                 ipv4_gw: 192.165.1.1/24                      # mandatory
@@ -459,7 +453,7 @@
                 adv_host: true                               # optional, default is false
             second_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
-              name: rp5-sn2-second-arm                       # mandatory
+              name: Rp5-sn2-second-arm                       # mandatory
               vlan_id: 502                                   # mandatory
               profile:
                 ipv4_gw: 192.165.2.1/24                      # mandatory
@@ -471,8 +465,7 @@
 
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 4'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -480,8 +473,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 4'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -498,8 +490,7 @@
         state: deleted
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 2'
@@ -507,8 +498,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -521,8 +511,7 @@
         state: deleted
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 2'
@@ -530,7 +519,6 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

@@ -184,7 +184,7 @@
 
 - name: Set fact
   ansible.builtin.set_fact:
-    vxlan_config_save_path: "{{ vxlan_config_save_path | combine (item) }}"
+    vxlan_config_save_path: "{{ vxlan_config_save_path | combine(item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-save'}
     - {'11': '/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-save'}
@@ -192,7 +192,7 @@
 
 - name: Set fact
   ansible.builtin.set_fact:
-    cxt_config_save_path: "{{ cxt_config_save_path | combine (item) }}"
+    cxt_config_save_path: "{{ cxt_config_save_path | combine(item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-save'}
     - {'11': '/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-save'}
@@ -200,14 +200,14 @@
 
 - name: Set fact
   ansible.builtin.set_fact:
-    vpc_create_path: "{{ vpc_create_path | combine (item) }}"
+    vpc_create_path: "{{ vpc_create_path | combine(item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair'}
     - {'11': '/rest/vpcpair'}
 
 - name: Set fact
   ansible.builtin.set_fact:
-    vpc_vxlan_deploy_path: "{{ vpc_vxlan_deploy_path | combine (item) }}"
+    vpc_vxlan_deploy_path: "{{ vpc_vxlan_deploy_path | combine(item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-deploy/{{ test_data_common.vxlan_fabric_sno1 }},{{ test_data_common.vxlan_fabric_sno2 }}'}
     - {'11': '/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-deploy/{{ test_data_common.vxlan_fabric_sno1 }},{{ test_data_common.vxlan_fabric_sno2 }}'}
@@ -215,7 +215,7 @@
 
 - name: Set fact
   ansible.builtin.set_fact:
-    vpc_cxt_deploy_path: "{{ vpc_cxt_deploy_path | combine (item) }}"
+    vpc_cxt_deploy_path: "{{ vpc_cxt_deploy_path | combine(item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-deploy/{{ test_data_common.cxt_fabric_sno1 }},{{ test_data_common.cxt_fabric_sno2 }}'}
     - {'11': '/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-deploy/{{ test_data_common.cxt_fabric_sno1 }},{{ test_data_common.cxt_fabric_sno2 }}'}
@@ -223,10 +223,10 @@
 
 - name: Set fact
   ansible.builtin.set_fact:
-    vxlan_vpc_create: False
-    vxlan_vpc_deploy: False
-    cxt_vpc_create: False
-    cxt_vpc_deploy: False
+    vxlan_vpc_create: false
+    vxlan_vpc_deploy: false
+    cxt_vpc_create: false
+    cxt_vpc_deploy: false
 
 - name: Set fact
   ansible.builtin.set_fact:
@@ -235,7 +235,7 @@
       "peerTwoId": "{{ sw_sn_mapping[test_data_common.vxlan_fabric_sw2] | default(test_data_common.vxlan_fabric_sno2) }}",
       "useVirtualPeerlink": false
     }
-    vxlan_vpc_create: True
+    vxlan_vpc_create: true
     vxlan_vpc_deploy: "{{ test_data_common.deploy | bool }}"
   when: (test_data_common.vxlan_fabric is defined and test_data_common.vxlan_fabric_sno1 is defined and test_data_common.vxlan_fabric_sno2 is defined)
 
@@ -277,7 +277,7 @@
         "PEER2_PO_CONF": ""
       }
     }
-    cxt_vpc_create: True
+    cxt_vpc_create: true
     cxt_vpc_deploy: "{{ test_data_common.deploy | bool }}"
   when: (test_data_common.cxt_fabric is defined and test_data_common.cxt_fabric_sno1 is defined and test_data_common.cxt_fabric_sno2 is defined)
 
@@ -319,7 +319,7 @@
 - name: Deploy VPC switch pair
   cisco.dcnm.dcnm_rest:
     method: POST
-    path:  "{{ vpc_vxlan_deploy_path[controller_version] }}"
+    path: "{{ vpc_vxlan_deploy_path[controller_version] }}"
   register: result
   with_sequence: count=1
   loop_control:
@@ -370,7 +370,7 @@
 - name: Deploy VPC switch pair
   cisco.dcnm.dcnm_rest:
     method: POST
-    path:  "{{ vpc_cxt_deploy_path[controller_version] }}"
+    path: "{{ vpc_cxt_deploy_path[controller_version] }}"
   register: result
   with_sequence: count=1
   loop_control:

@@ -12,10 +12,11 @@
       files: "{{ dcnm_cases.files }}"
 
 - name: set test_items
-  ansible.builtin.set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  ansible.builtin.set_fact:
+    test_items: "{{ test_cases.files | map(attribute='path') | list }}"
 
 - name: run test cases (connection=httpapi)
-  include: "{{ test_case_to_run }}"
+  ansible.builtin.include_tasks: "{{ test_case_to_run }}"
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run
@@ -34,7 +35,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-        - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Cleanup - sleep for 180 seconds for DCNM to completely update the state
@@ -83,7 +84,7 @@
     service_fabric: "{{ ansible_it_service_fabric }}"
     state: deleted
     config:
-    - name: "{{ ansible_snode_1 }}"
+      - name: "{{ ansible_snode_1 }}"
       type: firewall
       form_factor: physical
       svc_int_name: svc1
@@ -102,7 +103,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Cleanup - sleep for 40 seconds for DCNM to completely update the state
@@ -167,7 +168,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Cleanup - sleep for 40 seconds for DCNM to completely update the state
@@ -181,19 +182,19 @@
     config:
       - vrf_name: "{{ ansible_vrf_11 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_21 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_31 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_41 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
   register: result
 

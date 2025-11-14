@@ -80,25 +80,25 @@
   cisco.dcnm.dcnm_image_upgrade:
     state: merged
     config:
-        policy: "{{ image_policy_1}}"
+      policy: "{{ image_policy_1}}"
         reboot: false
         stage: true
         validate: true
         upgrade:
-            nxos: true
+          nxos: true
             epld: false
         options:
-            nxos:
-                mode: disruptive
+          nxos:
+              mode: disruptive
                 bios_force: false
             epld:
-                module: ALL
+              module: ALL
                 golden: false
             reboot:
-                config_reload: false
+              config_reload: false
                 write_erase: false
             package:
-                install: false
+              install: false
                 uninstall: false
         switches:
           - ip_address: "{{ ansible_switch_1 }}"
@@ -121,8 +121,8 @@
   cisco.dcnm.dcnm_image_upgrade:
     state: query
     config:
-        switches:
-        - ip_address: "{{ ansible_switch_1 }}"
+      switches:
+          - ip_address: "{{ ansible_switch_1 }}"
         - ip_address: "{{ ansible_switch_2 }}"
         - ip_address: "{{ ansible_switch_3 }}"
   register: result
@@ -158,25 +158,25 @@
   cisco.dcnm.dcnm_image_upgrade:
     state: merged
     config:
-        policy: "{{ image_policy_1}}"
+      policy: "{{ image_policy_1}}"
         reboot: false
         stage: true
         validate: true
         upgrade:
-            nxos: true
+          nxos: true
             epld: false
         options:
-            nxos:
-                mode: disruptive
+          nxos:
+              mode: disruptive
                 bios_force: false
             epld:
-                module: ALL
+              module: ALL
                 golden: false
             reboot:
-                config_reload: false
+              config_reload: false
                 write_erase: false
             package:
-                install: false
+              install: false
                 uninstall: false
         switches:
           - ip_address: "{{ ansible_switch_1 }}"
@@ -190,7 +190,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
     - result.failed == false
     - (result.diff | length) == 6
     - (result.metadata | length) == 6
@@ -205,25 +205,25 @@
   cisco.dcnm.dcnm_image_upgrade:
     state: merged
     config:
-        policy: "{{ image_policy_2}}"
+      policy: "{{ image_policy_2}}"
         reboot: false
         stage: true
         validate: true
         upgrade:
-            nxos: true
+          nxos: true
             epld: false
         options:
-            nxos:
-                mode: disruptive
+          nxos:
+              mode: disruptive
                 bios_force: false
             epld:
-                module: ALL
+              module: ALL
                 golden: false
             reboot:
-                config_reload: false
+              config_reload: false
                 write_erase: false
             package:
-                install: false
+              install: false
                 uninstall: false
         switches:
           - ip_address: "{{ ansible_switch_1 }}"
@@ -246,8 +246,8 @@
   cisco.dcnm.dcnm_image_upgrade:
     state: query
     config:
-        switches:
-        - ip_address: "{{ ansible_switch_1 }}"
+      switches:
+          - ip_address: "{{ ansible_switch_1 }}"
         - ip_address: "{{ ansible_switch_2 }}"
         - ip_address: "{{ ansible_switch_3 }}"
   register: result
@@ -281,25 +281,25 @@
   cisco.dcnm.dcnm_image_upgrade:
     state: merged
     config:
-        policy: "{{ image_policy_2}}"
+      policy: "{{ image_policy_2}}"
         reboot: false
         stage: true
         validate: true
         upgrade:
-            nxos: true
+          nxos: true
             epld: false
         options:
-            nxos:
-                mode: disruptive
+          nxos:
+              mode: disruptive
                 bios_force: false
             epld:
-                module: ALL
+              module: ALL
                 golden: false
             reboot:
-                config_reload: false
+              config_reload: false
                 write_erase: false
             package:
-                install: false
+              install: false
                 uninstall: false
         switches:
           - ip_address: "{{ ansible_switch_1 }}"
@@ -313,7 +313,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
     - result.failed == false
     - (result.diff | length) == 6
     - (result.metadata | length) == 6

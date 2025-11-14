@@ -11,7 +11,7 @@
     fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
     deploy: false
-    override_intf_types:                  # choose from [pc, vpc, sub_int, lo, eth, svi]
+    override_intf_types: # choose from [pc, vpc, sub_int, lo, eth, svi]
       - sub_int
       - lo
       - pc
@@ -94,7 +94,7 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
         deploy: false
-        override_intf_types:                  # choose from [pc, vpc, sub_int, lo, eth, svi]
+        override_intf_types: # choose from [pc, vpc, sub_int, lo, eth, svi]
           - vpc
       register: result
 
@@ -118,7 +118,7 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
         deploy: false
-        override_intf_types:                  # choose from [pc, vpc, sub_int, lo, eth, svi]
+        override_intf_types: # choose from [pc, vpc, sub_int, lo, eth, svi]
           - pc
         config: "{{ dcnm_interface_override_specific_types_pc_conf }}"
       register: result
@@ -138,7 +138,7 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
         deploy: false
-        override_intf_types:                  # choose from [pc, vpc, sub_int, lo, eth, svi]
+        override_intf_types: # choose from [pc, vpc, sub_int, lo, eth, svi]
           - lo
           - sub_int
       register: result
@@ -159,17 +159,17 @@
       cisco.dcnm.dcnm_interface:
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-        override_intf_types:                  # choose from [pc, vpc, sub_int, lo, eth, svi]
+        override_intf_types: # choose from [pc, vpc, sub_int, lo, eth, svi]
           - lo
           - sub_int
           - pc
         deploy: false
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
     - name: ASSERT - Check return codes for cleanup
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

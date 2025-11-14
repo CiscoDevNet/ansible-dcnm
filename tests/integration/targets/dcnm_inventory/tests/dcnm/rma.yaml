@@ -20,9 +20,9 @@
       rma_modulesModel: "['SW1-K1234v']"
       rma_gateway: "192.168.2.1/24"
       deploy: "{{ deploy }}"
-      rma_enabled: False
-      rma_switch_present: False
-      found_fabric: False
+      rma_enabled: false
+      rma_switch_present: false
+      found_fabric: false
   delegate_to: localhost
   tags: rma
 
@@ -55,7 +55,7 @@
 
 - name: RMA Base Task - Check Fabric
   ansible.builtin.set_fact:
-    found_fabric: True
+    found_fabric: true
     fabric_data: "{{ item }}"
   when: item['fabricName'] ==  "{{ test_data.test_fabric }}"
   loop: "{{ query_result.response[0].DATA }}"
@@ -70,7 +70,7 @@
 
 - name: RMA Base Task - Set Variable
   ansible.builtin.set_fact:
-    rma_enabled: True
+    rma_enabled: true
   when: fabric_data.nvPairs["BOOTSTRAP_ENABLE"] == "true"
   tags: rma
 
@@ -127,7 +127,7 @@
 
 - name: RMA TC2 - Add Switch to the Fabric
   cisco.dcnm.dcnm_inventory:
-   fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data.test_fabric }}"
    state: merged
    config: "{{ ndfc_fabric_rma_conf }}"
    deploy: "{{ test_data.deploy }}"
@@ -155,7 +155,7 @@
 - name: RMA TC2 - Query for POAP enabled swicthes
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
-    query_poap: True
+    query_poap: true
     state: query
   when: rma_enabled == True
   register: query_result
@@ -164,13 +164,13 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'query_result.response != None'
+      - 'query_result.response != None'
   when: rma_enabled == True
   tags: rma
 
 - name: RMA TC2 - Check Query for POAP enabled swicthes
   ansible.builtin.set_fact:
-    rma_switch_present: True
+    rma_switch_present: true
   when: (rma_enabled == True and (item['serialNumber'] == "{{ test_data.sw1_serial }}"))
   loop: "{{ query_result.response }}"
   ignore_errors: true
@@ -218,12 +218,10 @@
                   gateway: '{{ test_data.rma_gateway }}'
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
         - 'result.changed == true'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
   when: (rma_enabled == True and rma_switch_present == True)

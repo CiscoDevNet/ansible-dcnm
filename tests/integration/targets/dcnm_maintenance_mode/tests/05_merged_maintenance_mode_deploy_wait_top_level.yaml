@@ -58,8 +58,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             },
 #             {
@@ -76,7 +75,7 @@
 #                 },
 #                 "sequence_number": 3
 #             }
-#         ],
+#],
 - name: MERGED - SETUP - Ensure switch mode is normal
   cisco.dcnm.dcnm_maintenance_mode:
         state: query
@@ -116,8 +115,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             },
 #             {
@@ -134,7 +132,7 @@
 #                 },
 #                 "sequence_number": 3
 #             }
-#         ],
+#],
 - name: MERGED - TEST - Verify switch mode is maintenance (top-level)
   cisco.dcnm.dcnm_maintenance_mode:
         state: query

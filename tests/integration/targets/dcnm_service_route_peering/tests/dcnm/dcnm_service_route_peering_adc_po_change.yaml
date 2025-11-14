@@ -36,7 +36,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_41 }}"                    # mandatory
-              name: rp4-sn2-first-arm                        # mandatory
+              name: Rp4-sn2-first-arm                        # mandatory
               vlan_id: 401                                   # mandatory
               profile:
                 ipv4_gw: 192.164.1.1/24                      # mandatory
@@ -62,7 +62,7 @@
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_61 }}"                    # mandatory
-              name: rp6-sn2-first-arm                        # mandatory
+              name: Rp6-sn2-first-arm                        # mandatory
               vlan_id: 601                                   # mandatory
               profile:
                 ipv4_gw: 192.166.1.1/24                      # mandatory
@@ -70,7 +70,7 @@
                 vlan_name: rp6-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP6 SN2 first arm intf"          # optional, default is ''
                 tag: 61111                                   # optional, default is 12345
-                static_route:                                # optional, default is ''
+                static_route: # optional, default is ''
                   - subnet: 61.61.61.1/24
                     next_hop:
                       - 161.161.161.1
@@ -86,8 +86,7 @@
         state: merged
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -95,8 +94,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -115,7 +113,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_61 }}"                    # mandatory
-              name: rp6-sn2-first-arm                        # mandatory
+              name: Rp6-sn2-first-arm                        # mandatory
               vlan_id: 601                                   # mandatory
               profile:
                 ipv4_gw: 192.166.1.1/24                      # mandatory
@@ -141,7 +139,7 @@
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_41 }}"                    # mandatory
-              name: rp4-sn2-first-arm                        # mandatory
+              name: Rp4-sn2-first-arm                        # mandatory
               vlan_id: 401                                   # mandatory
               profile:
                 ipv4_gw: 192.164.1.1/24                      # mandatory
@@ -149,7 +147,7 @@
                 vlan_name: rp4-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP4 SN2 first arm intf"          # optional, default is ''
                 tag: 41111                                   # optional, default is 12345
-                static_route:                                # optional, default is ''
+                static_route: # optional, default is ''
                   - subnet: 41.41.41.1/24
                     next_hop:
                       - 141.141.141.1
@@ -165,8 +163,7 @@
         state: merged
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -174,8 +171,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -194,7 +190,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
-              name: rp5-sn2-first-arm                        # mandatory
+              name: Rp5-sn2-first-arm                        # mandatory
               vlan_id: 501                                   # mandatory
               profile:
                 ipv4_gw: 192.165.1.1/24                      # mandatory
@@ -214,7 +210,7 @@
                 adv_host: true                               # optional, default is false
             second_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
-              name: rp5-sn2-second-arm                       # mandatory
+              name: Rp5-sn2-second-arm                       # mandatory
               vlan_id: 502                                   # mandatory
               profile:
                 ipv4_gw: 192.165.2.1/24                      # mandatory
@@ -230,7 +226,7 @@
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
-              name: rp7-sn2-first-arm                        # mandatory
+              name: Rp7-sn2-first-arm                        # mandatory
               vlan_id: 701                                   # mandatory
               profile:
                 ipv4_gw: 192.167.1.1/24                      # mandatory
@@ -238,14 +234,14 @@
                 vlan_name: rp7-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP6 SN2 first arm  intf"         # optional, default is ''
                 tag: 71111                                   # optional, default is 12345
-                static_route:                                # optional, default is ''
+                static_route: # optional, default is ''
                   - subnet: 71.71.71.1/24
                     next_hop:
                       - 171.171.171.1
                       - 172.172.172.1
             second_arm:
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
-              name: rp7-sn2-second-arm                       # mandatory
+              name: Rp7-sn2-second-arm                       # mandatory
               vlan_id: 702                                   # mandatory
               profile:
                 ipv4_gw: 192.167.2.1/24                      # mandatory
@@ -259,8 +255,7 @@
         state: merged
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -268,8 +263,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -288,7 +282,7 @@
             peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
-              name: rp7-sn2-first-arm                        # mandatory
+              name: Rp7-sn2-first-arm                        # mandatory
               vlan_id: 701                                   # mandatory
               profile:
                 ipv4_gw: 192.167.1.1/24                      # mandatory
@@ -308,7 +302,7 @@
                 adv_host: true                               # optional, default is false
             second_arm:
               vrf: "{{ ansible_vrf_71 }}"                    # mandatory
-              name: rp7-sn2-second-arm                       # mandatory
+              name: Rp7-sn2-second-arm                       # mandatory
               vlan_id: 702                                   # mandatory
               profile:
                 ipv4_gw: 192.167.2.1/24                      # mandatory
@@ -324,7 +318,7 @@
             peering_option: static                           # optional, default is static, choices=[static, ebgp]
             first_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
-              name: rp5-sn2-first-arm                        # mandatory
+              name: Rp5-sn2-first-arm                        # mandatory
               vlan_id: 501                                   # mandatory
               profile:
                 ipv4_gw: 192.165.1.1/24                      # mandatory
@@ -332,14 +326,14 @@
                 vlan_name: rp5-sn2-first-arm                 # optional, default is ''
                 int_descr: "RP5 SN2 first arm  intf"         # optional, default is ''
                 tag: 51111                                   # optional, default is 12345
-                static_route:                                # optional, default is ''
+                static_route: # optional, default is ''
                   - subnet: 51.51.51.1/24
                     next_hop:
                       - 151.151.151.1
                       - 152.152.152.1
             second_arm:
               vrf: "{{ ansible_vrf_51 }}"                    # mandatory
-              name: rp5-sn2-second-arm                       # mandatory
+              name: Rp5-sn2-second-arm                       # mandatory
               vlan_id: 502                                   # mandatory
               profile:
                 ipv4_gw: 192.165.2.1/24                      # mandatory
@@ -353,8 +347,7 @@
         state: merged
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -362,8 +355,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -402,10 +394,9 @@
 
         state: deleted
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

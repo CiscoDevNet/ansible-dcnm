@@ -41,7 +41,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
   tags: overridden
 
 # TC - 3
@@ -154,7 +154,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'overridden_result.changed == false'
+      - 'overridden_result.changed == false'
   tags: overridden
 
 # ----------------------------------------------

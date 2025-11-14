@@ -39,9 +39,9 @@
   ansible.builtin.debug:
     var: item
   with_items:
-     - "fabric_1 : {{ fabric_1 }}"
-     - "switch_1 : {{ switch_1 }}"
-     - "switch_2 : {{ switch_2 }}"
+    - "fabric_1 : {{ fabric_1 }}"
+    - "switch_1 : {{ switch_1 }}"
+    - "switch_2 : {{ switch_2 }}"
 
 - name: SETUP.1 - SANITY - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
@@ -53,7 +53,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_setup_1.response.DATA != None'
+      - 'result_setup_1.response.DATA != None'
   tags: sanity
 
 - name: SETUP.2 - SANITY - [deleted] Delete all VRFs
@@ -76,13 +76,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result_1
@@ -107,7 +107,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_1.changed == true'
+      - 'result_1.changed == true'
     - 'result_1.response[0].RETURN_CODE == 200'
     - 'result_1.response[1].RETURN_CODE == 200'
     - 'result_1.response[2].RETURN_CODE == 200'
@@ -133,7 +133,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_1c.changed == false'
+      - 'result_1c.changed == false'
     - 'result_1c.response|length == 0'
   tags: sanity
 
@@ -153,13 +153,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       l3vni_wo_vlan: true
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: false
   register: result_1g
@@ -180,7 +180,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_1g.changed == true'
+      - 'result_1g.changed == true'
     - 'result_1g.response[0].RETURN_CODE == 200'
     - 'result_1g.response[1].RETURN_CODE == 200'
     - '(result_1g.response[1].DATA|dict2items)[0].value == "SUCCESS"'
@@ -188,7 +188,7 @@
     - '"{{ switch_1 }}" in result_1g.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_1g.diff[0].attach[1].ip_address'
     - '"{{ switch_2 }}" in result_1g.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_1g.diff[0].attach[1].ip_address'
     - 'result_1g.diff[0].vrf_name == "ansible-vrf-int1"'
-    - '"enableL3VniNoVlan\":\"true\"" in result_1h.response[0].parent.vrfTemplateConfig'
+    - '"enableL3VniNoVlan\": \"true\"" in result_1h.response[0].parent.vrfTemplateConfig'
   tags: sanity
 
 - name: TEST.1j - SANITY MERGED - conf1 - Idempotence
@@ -204,7 +204,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_1j.changed == false'
+      - 'result_1j.changed == false'
     - 'result_1j.response|length == 0'
   tags: sanity
 
@@ -223,13 +223,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result_2
@@ -254,7 +254,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_2.changed == true'
+      - 'result_2.changed == true'
     - 'result_2.response[0].RETURN_CODE == 200'
     - 'result_2.response[1].RETURN_CODE == 200'
     - 'result_2.response[2].RETURN_CODE == 200'
@@ -270,7 +270,7 @@
     fabric: "{{ fabric_1 }}"
     state: replaced
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
@@ -302,7 +302,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_2c.changed == true'
+      - 'result_2c.changed == true'
     - 'result_2c.response[0].RETURN_CODE == 200'
     - 'result_2c.response[1].RETURN_CODE == 200'
     - '(result_2c.response[0].DATA|dict2items)[0].value == "SUCCESS"'
@@ -325,7 +325,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_2g.changed == false'
+      - 'result_2g.changed == false'
   tags: sanity
 
 - name: TEST.2i - SANITY REPLACED - [replaced] Update existing VRF - create attachments
@@ -333,13 +333,13 @@
     fabric: "{{ fabric_1 }}"
     state: replaced
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result_2i
@@ -369,7 +369,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_2i.changed == true'
+      - 'result_2i.changed == true'
     - 'result_2i.response[0].RETURN_CODE == 200'
     - 'result_2i.response[1].RETURN_CODE == 200'
     - '(result_2i.response[0].DATA|dict2items)[0].value == "SUCCESS"'
@@ -394,7 +394,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_2m.changed == false'
+      - 'result_2m.changed == false'
   tags: sanity
 
 - name: TEST.2o - SANITY REPLACED - [deleted] Delete all VRFs
@@ -417,13 +417,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result_3
@@ -448,7 +448,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_3.changed == true'
+      - 'result_3.changed == true'
     - 'result_3.response[0].RETURN_CODE == 200'
     - 'result_3.response[1].RETURN_CODE == 200'
     - 'result_3.response[2].RETURN_CODE == 200'
@@ -466,13 +466,13 @@
     fabric: "{{ fabric_1 }}"
     state: overridden
     config:
-    - vrf_name: ansible-vrf-int2
+      - vrf_name: ansible-vrf-int2
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result_3c
@@ -497,7 +497,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_3c.changed == true'
+      - 'result_3c.changed == true'
     - 'result_3c.response[0].RETURN_CODE == 200'
     - 'result_3c.response[1].RETURN_CODE == 200'
     - 'result_3c.response[2].RETURN_CODE == 200'
@@ -529,7 +529,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_3f.changed == false'
+      - 'result_3f.changed == false'
     - 'result_3f.response|length == 0'
   tags: sanity
 
@@ -553,13 +553,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result_4
@@ -584,7 +584,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_4.changed == true'
+      - 'result_4.changed == true'
     - 'result_4.response[0].RETURN_CODE == 200'
     - 'result_4.response[1].RETURN_CODE == 200'
     - 'result_4.response[2].RETURN_CODE == 200'
@@ -622,7 +622,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_4c.changed == false'
+      - 'result_4c.changed == false'
     - 'result_4c.response[0].parent.vrfName == "ansible-vrf-int1"'
     - 'result_4c.response[0].parent.vrfId == 9008011'
     - 'result_4c.response[0].parent.vrfStatus == "DEPLOYED"'
@@ -654,13 +654,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result_5
@@ -685,7 +685,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_5.changed == true'
+      - 'result_5.changed == true'
     - 'result_5.response[0].RETURN_CODE == 200'
     - 'result_5.response[1].RETURN_CODE == 200'
     - 'result_5.response[2].RETURN_CODE == 200'
@@ -703,7 +703,7 @@
     fabric: "{{ fabric_1 }}"
     state: deleted
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
@@ -718,7 +718,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_5c.changed == true'
+      - 'result_5c.changed == true'
     - 'result_5c.response[0].RETURN_CODE == 200'
     - 'result_5c.response[1].RETURN_CODE == 200'
     - 'result_5c.response[1].MESSAGE == "OK"'
@@ -744,7 +744,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_5e.changed == false'
+      - 'result_5e.changed == false'
     - 'result_5e.response|length == 0'
     - 'result_5e.diff|length == 0'
   tags: sanity

@@ -46,7 +46,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: sanity
 
@@ -133,7 +133,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response == "The switch provided is already part of the fabric and there is no more device to delete in the fabric"'
   tags: sanity
 
@@ -180,7 +180,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response == "The switch provided is not part of the fabric and cannot be deleted"'
 
 # ---------------------------------------------- #
@@ -191,7 +191,7 @@
 - name: Sanity TC8 - Reset - Prepare Conf
   ansible.builtin.set_fact:
     switch_conf:
-    - seed_ip: "{{ test_data.sw1 }}"
+      - seed_ip: "{{ test_data.sw1 }}"
       max_hops: 0
       preserve_config: false
     - seed_ip: "{{ test_data.sw2 }}"

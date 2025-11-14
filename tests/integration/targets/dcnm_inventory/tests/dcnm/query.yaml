@@ -125,7 +125,7 @@
     fabric: "{{ test_data.test_fabric }}"
     state: query
     config:
-    - seed_ip: "{{ test_data.sw1 }}"
+      - seed_ip: "{{ test_data.sw1 }}"
       role: spine
   register: query_result
   tags: query
@@ -133,7 +133,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - '"The queried switch is not part of the fabric configured" in query_result.response'
+      - '"The queried switch is not part of the fabric configured" in query_result.response'
   tags: query
 
 # TC - 7
@@ -172,7 +172,7 @@
     fabric: "{{ test_data.test_fabric }}"
     state: query
     config:
-    - seed_ip: "{{ test_data.sw1 }}"
+      - seed_ip: "{{ test_data.sw1 }}"
       role: leaf
   register: query_result
   tags: query
@@ -180,14 +180,14 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - '"The queried switch is not part of the fabric configured" in query_result.response'
+      - '"The queried switch is not part of the fabric configured" in query_result.response'
   tags: query
 
 # TC - 9
 - name: Query TC9 - Prepare Config
   ansible.builtin.set_fact:
     switch_conf:
-    - seed_ip: "{{ test_data.sw1 }}"
+      - seed_ip: "{{ test_data.sw1 }}"
       max_hops: 0
       auth_proto: MD5
       role: border_gateway

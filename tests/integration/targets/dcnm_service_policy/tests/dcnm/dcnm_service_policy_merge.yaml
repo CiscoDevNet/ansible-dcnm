@@ -30,7 +30,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-        - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - block:
@@ -62,7 +62,7 @@
               src_port: any                                   # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 22                                   # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  none                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: none                          # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_10                            # optional, default value will be auto-generated
               reverse_acl_name: rev_acl_10                    # optional, default value will be auto-generated
               route_map_num: 101                              # optional, default value will be auto-generated
@@ -82,7 +82,7 @@
               src_port: 2000                                  # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 2001                                 # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_20                            # optional, default value will be auto-generated
               reverse_acl_name: rev_acl_20                    # optional, default value will be auto-generated
               route_map_num: 201                              # optional, default value will be auto-generated
@@ -103,7 +103,7 @@
               src_port: 3000                                  # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 3001                                 # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_30                            # optional, default value will be auto-generated
               reverse_acl_name: rev_acl_30                    # optional, default value will be auto-generated
               route_map_num: 301                              # optional, default value will be auto-generated
@@ -123,7 +123,7 @@
               src_port: 4000                                  # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 4001                                 # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_40                            # optional, default value will be auto-generated
               reverse_acl_name: rev_acl_40                    # optional, default value will be auto-generated
               route_map_num: 401                              # optional, default value will be auto-generated
@@ -143,15 +143,14 @@
               src_port: 5000                                  # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 5001                                 # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_50                            # optional, default value will be auto-generated
               reverse_acl_name: rev_acl_50                    # optional, default value will be auto-generated
               route_map_num: 501                              # optional, default value will be auto-generated
               reverse_route_map_num: 502                      # optional, default value will be auto-generated
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 5'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -159,8 +158,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 5'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -168,8 +166,7 @@
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_create_all
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -193,8 +190,7 @@
             node_name: "{{ ansible_snode_2 }}"                # mandatory
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 3'
@@ -202,8 +198,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -243,11 +238,10 @@
               src_port: 2000                                  # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 2001                                 # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -255,8 +249,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -282,15 +275,14 @@
               src_port: 3000                                  # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 3001                                 # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_30                            # optional, default value will be auto-generated
               reverse_acl_name: rev_acl_30                    # optional, default value will be auto-generated
               route_map_num: 301                              # optional, default value will be auto-generated
               reverse_route_map_num: 302                      # optional, default value will be auto-generated
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -298,8 +290,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -325,15 +316,14 @@
               src_port: 3000                                  # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 3001                                 # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_30                            # optional, default value will be auto-generated
               reverse_acl_name: rev_acl_30                    # optional, default value will be auto-generated
               route_map_num: 301                              # optional, default value will be auto-generated
               reverse_route_map_num: 302                      # optional, default value will be auto-generated
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -341,8 +331,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 1'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -369,8 +358,7 @@
               dest_port: 4401                                 # mandatory, choices=[any, Min:1, Max:65535)]
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -378,8 +366,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 1'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -392,10 +379,9 @@
     - name: Delete service policies
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_del_all
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

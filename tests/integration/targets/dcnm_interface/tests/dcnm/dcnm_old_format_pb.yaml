@@ -115,13 +115,11 @@
         config: "{{ dcnm_interface_old_format2_conf }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.failed == false'
           - 'result.changed == true'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -142,13 +140,11 @@
         config: "{{ dcnm_interface_old_format3_conf }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.failed == false'
           - 'result.changed == true'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -169,13 +165,11 @@
         config: "{{ dcnm_interface_old_format4_conf }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.failed == false'
           - 'result.changed == true'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -196,13 +190,11 @@
         config: "{{ dcnm_interface_old_format5_conf }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.failed == false'
           - 'result.changed == true'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -223,13 +215,11 @@
         config: "{{ dcnm_interface_old_format6_conf }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.failed == false'
           - 'result.changed == true'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -250,13 +240,11 @@
         config: "{{ dcnm_interface_old_format7_conf }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.failed == false'
           - 'result.changed == true'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -272,10 +260,9 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

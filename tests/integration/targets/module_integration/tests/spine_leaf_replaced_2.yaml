@@ -16,7 +16,7 @@
 
 - block:
 
-  - name: Add 3 VRFs and deploy them to all leaf devices
+    - name: Add 3 VRFs and deploy them to all leaf devices
     cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: replaced
@@ -78,4 +78,4 @@
 
 
   always:
-    - debug: msg="End dcnm_fabric spine_leaf_replaced_2 test"
+    - ansible.builtin.debug: msg="End dcnm_fabric spine_leaf_replaced_2 test"

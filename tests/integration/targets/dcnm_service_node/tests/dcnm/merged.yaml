@@ -23,7 +23,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.response.DATA != None'
+      - 'result.response.DATA != None'
 
 - name: MERGED - Verify if service fabric is deployed.
   cisco.dcnm.dcnm_rest:
@@ -34,7 +34,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.response.DATA != None'
+      - 'result.response.DATA != None'
 
 - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -64,19 +64,19 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch1 }}"
+        - "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
@@ -94,7 +94,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
@@ -121,19 +121,19 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: physical
       svc_int_name: svc1
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch1 }}"
+        - "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
@@ -151,7 +151,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
@@ -178,19 +178,19 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: load_balancer
       form_factor: physical
       svc_int_name: svc1
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch1 }}"
+        - "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
@@ -208,7 +208,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
@@ -235,19 +235,19 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: virtual_network_function
       form_factor: physical
       svc_int_name: svc1
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch1 }}"
+        - "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
@@ -265,7 +265,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
@@ -292,20 +292,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
@@ -323,7 +323,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
@@ -338,20 +338,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: load_balancer
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
@@ -369,7 +369,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
@@ -384,20 +384,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: virtual_network_function
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
@@ -415,7 +415,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response|length == 0'
 
 - name: MERGED - Clean up any existing service node
@@ -429,20 +429,20 @@
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
     config:
-    - name: SN-11
+      - name: SN-11
       type: virtual_network_function
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
@@ -465,13 +465,13 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: virtual_network_function
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
     - name: SN-12
       type: firewall
@@ -479,7 +479,7 @@
       svc_int_name: svc2
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
     - name: SN-13
       type: load_balancer
@@ -487,14 +487,14 @@
       svc_int_name: svc3
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
@@ -535,13 +535,13 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: virtual_network_function
       form_factor: physical
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
     - name: SN-12
       type: firewall
@@ -549,7 +549,7 @@
       svc_int_name: svc2
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
     - name: SN-13
       type: load_balancer
@@ -557,14 +557,14 @@
       svc_int_name: svc3
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
     - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
     - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
@@ -605,13 +605,13 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: virtual_network_function
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc2 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
   ignore_errors: true
@@ -620,7 +620,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
   when: controller_version == "11"
 
 - name: MERGED - Create Service Node with 2 switches and invalid vpc name
@@ -629,13 +629,13 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: virtual_network_function
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: vPortchannel12
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
       - "{{ ansible_switch5 }}"
   register: result
   ignore_errors: true
@@ -643,7 +643,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - '"if two switches are provided, vpc is only interface option" in result.msg'
 
 - name: MERGED - Create Service Node with 1 switch and valid vpc name
@@ -652,20 +652,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: virtual_network_function
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch4 }}"
+        - "{{ ansible_switch4 }}"
   register: result
   ignore_errors: true
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - '"For 1 switch, vpc is not the interface option" in result.msg'
 
 - name: MERGED - Create Service Node with more than 2 switch and valid vpc name
@@ -674,13 +674,13 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: virtual_network_function
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_vpc1 }}"
       switches:
-      - "{{ ansible_switch1 }}"
+        - "{{ ansible_switch1 }}"
       - "{{ ansible_switch2 }}"
       - "{{ ansible_switch4 }}"
   register: result
@@ -689,7 +689,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - '"Upto 2 switches only allowed" in result.msg'
 
 - name: MERGED - Create Service Node without required parameter
@@ -698,20 +698,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type:
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch1 }}"
+        - "{{ ansible_switch1 }}"
   register: result
   ignore_errors: true
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - '"Required parameter not found" in result.msg'
 
 - name: MERGED - Create Service Node with wrong type
@@ -720,20 +720,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: karth
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch1 }}"
+        - "{{ ansible_switch1 }}"
   register: result
   ignore_errors: true
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - '"Invalid choice provided" in result.msg'
 
 - name: MERGED - Create Service Node with wrong formfactor
@@ -742,20 +742,20 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
       form_factor: not
       svc_int_name: svc1
       attach_interface: "{{ ansible_int1 }}"
       switches:
-      - "{{ ansible_switch1 }}"
+        - "{{ ansible_switch1 }}"
   register: result
   ignore_errors: true
 
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - '"Invalid choice provided" in result.msg'
 
 ###############################################

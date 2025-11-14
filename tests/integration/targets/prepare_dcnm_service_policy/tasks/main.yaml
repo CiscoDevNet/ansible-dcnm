@@ -36,7 +36,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-        - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Initialize the setup - sleep for 180 seconds for DCNM to completely update the state
@@ -93,7 +93,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 ###############################################
@@ -158,7 +158,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Initialize the setup - sleep for 40 seconds for DCNM to completely update the state
@@ -176,19 +176,19 @@
     config:
       - vrf_name: "{{ ansible_vrf_11 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_21 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_31 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_41 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
   register: result
 
@@ -213,16 +213,16 @@
     config:
       - vrf_name: "{{ ansible_vrf_11 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
       - vrf_name: "{{ ansible_vrf_21 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
       - vrf_name: "{{ ansible_vrf_31 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
       - vrf_name: "{{ ansible_vrf_41 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
@@ -251,7 +251,7 @@
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 111
         gw_ip_subnet: '11.11.11.1/24'
-        deploy: True
+        deploy: true
       - net_name: "{{ ansible_net_12 }}"
         vrf_name: "{{ ansible_vrf_11 }}"
         net_id: 120
@@ -259,7 +259,7 @@
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 121
         gw_ip_subnet: '12.12.12.1/24'
-        deploy: True
+        deploy: true
       - net_name: "{{ ansible_net_21 }}"
         vrf_name: "{{ ansible_vrf_21 }}"
         net_id: 210
@@ -267,7 +267,7 @@
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 211
         gw_ip_subnet: '21.21.21.1/24'
-        deploy: True
+        deploy: true
       - net_name: "{{ ansible_net_22 }}"
         vrf_name: "{{ ansible_vrf_21 }}"
         net_id: 220
@@ -275,7 +275,7 @@
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 221
         gw_ip_subnet: '22.22.22.1/24'
-        deploy: True
+        deploy: true
       - net_name: "{{ ansible_net_31 }}"
         vrf_name: "{{ ansible_vrf_31 }}"
         net_id: 310
@@ -283,7 +283,7 @@
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 311
         gw_ip_subnet: '31.31.31.1/24'
-        deploy: True
+        deploy: true
       - net_name: "{{ ansible_net_32 }}"
         vrf_name: "{{ ansible_vrf_31 }}"
         net_id: 320
@@ -291,7 +291,7 @@
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 321
         gw_ip_subnet: '32.32.32.1/24'
-        deploy: True
+        deploy: true
       - net_name: "{{ ansible_net_41 }}"
         vrf_name: "{{ ansible_vrf_41 }}"
         net_id: 410
@@ -299,7 +299,7 @@
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 411
         gw_ip_subnet: '41.41.41.1/24'
-        deploy: True
+        deploy: true
       - net_name: "{{ ansible_net_42 }}"
         vrf_name: "{{ ansible_vrf_41 }}"
         net_id: 420
@@ -307,7 +307,7 @@
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 421
         gw_ip_subnet: '42.42.42.1/24'
-        deploy: True
+        deploy: true
   register: result
 
 - name: Assert
@@ -349,7 +349,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 ###############################################
@@ -365,16 +365,16 @@
       - name: IT-FW-RP1                                  # mandatory
         node_name: "{{ ansible_snode_1 }}"               # mandatory
         deploy_mode: intra_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
-        inside_network:                                  #
+        inside_network: #
           vrf: "{{ ansible_vrf_11 }}"                    # mandatory
-          name: rp1-sn1-inside-net                       # mandatory
+          name: Rp1-sn1-inside-net                       # mandatory
           vlan_id: 101                                   # mandatory
           profile:
             ipv4_gw: 192.161.1.1/24                      # mandatory
         next_hop: 192.161.1.100                          # mandatory
-        outside_network:                                 #
+        outside_network: #
           vrf: "{{ ansible_vrf_11 }}"                    # mandatory
-          name: rp1-sn1-outside-net                      # mandatory
+          name: Rp1-sn1-outside-net                      # mandatory
           vlan_id: 102                                   # mandatory
           profile:
             ipv4_gw: 192.161.2.1/24                      # mandatory
@@ -386,7 +386,7 @@
         peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
         first_arm:
           vrf: "{{ ansible_vrf_21 }}"                    # mandatory
-          name: rp4-sn2-first-arm                        # mandatory
+          name: Rp4-sn2-first-arm                        # mandatory
           vlan_id: 401                                   # mandatory
           profile:
             ipv4_gw: 192.164.1.1/24                      # mandatory
@@ -400,7 +400,7 @@
         peering_option: ebgp                             # optional, default is static, choices=[static, ebgp]
         first_arm:
           vrf: "{{ ansible_vrf_31 }}"                    # mandatory
-          name: rp5-sn2-first-arm                        # mandatory
+          name: Rp5-sn2-first-arm                        # mandatory
           vlan_id: 501                                   # mandatory
           profile:
             ipv4_gw: 192.165.1.1/24                      # mandatory
@@ -408,7 +408,7 @@
             ipv4_lo: 51.51.51.2                          # mandatory
         second_arm:
           vrf: "{{ ansible_vrf_31 }}"                    # mandatory
-          name: rp5-sn2-second-arm                       # mandatory
+          name: Rp5-sn2-second-arm                       # mandatory
           vlan_id: 502                                   # mandatory
           profile:
             ipv4_gw: 192.165.2.1/24                      # mandatory
@@ -420,7 +420,7 @@
         peering_option: static                           # optional, default is static, choices=[static, ebgp]
         first_arm:
           vrf: "{{ ansible_vrf_41 }}"                    # mandatory
-          name: rp6-sn2-first-arm                        # mandatory
+          name: Rp6-sn2-first-arm                        # mandatory
           vlan_id: 601                                   # mandatory
           profile:
             ipv4_gw: 192.166.2.1/24                      # mandatory
@@ -429,7 +429,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 ###############################################
@@ -453,7 +453,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Initialize the setup - sleep for 180 seconds for DCNM to completely update the state

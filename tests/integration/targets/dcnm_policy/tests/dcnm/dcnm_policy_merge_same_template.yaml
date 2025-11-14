@@ -41,8 +41,7 @@
               - ip: "{{ ansible_switch2 }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -74,8 +73,7 @@
               - ip: "{{ ansible_switch2 }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 3'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -98,8 +96,7 @@
              - ip: "{{ ansible_switch2 }}"
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
       loop: '{{ result.response }}'

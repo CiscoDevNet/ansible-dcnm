@@ -30,7 +30,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-        - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - block:
@@ -61,7 +61,7 @@
               src_port: any                                   # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 22                                   # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  none                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: none                          # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_10                            # optional, default value will be auto-generated
               reverse_acl_name: rev_acl_10                    # optional, default value will be auto-generated
               route_map_num: 101                              # optional, default value will be auto-generated
@@ -81,12 +81,11 @@
               src_port: 2000                                  # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 2001                                 # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
 
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -94,8 +93,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -125,7 +123,7 @@
               src_port: 501                                   # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 502                                  # mandatory, choices=[any, Min:1, Max:65535)]
               action: deny                                    # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
 
           - name: service_policy_2                            # mandatory
             node_name: "{{ ansible_snode_2 }}"                # mandatory
@@ -141,15 +139,14 @@
               src_port: 5000                                  # mandatory, choices=[any, Min:1, Max:65535)]
               dest_port: 5001                                 # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
+              next_hop_option: drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_21                            # optional, default value will be auto-generated
               reverse_acl_name: rev_acl_22                    # optional, default value will be auto-generated
               route_map_num: 2201                             # optional, default value will be auto-generated
               reverse_route_map_num: 2202                     # optional, default value will be auto-generated
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -157,8 +154,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -166,8 +162,7 @@
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_replace_all
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -184,10 +179,9 @@
     - name: Delete service policies
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_del_all
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

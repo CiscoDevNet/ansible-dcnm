@@ -14,7 +14,8 @@
   tags: sanity
 
 - name: set test_items
-  ansible.builtin.set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  ansible.builtin.set_fact:
+    test_items: "{{ test_cases.files | map(attribute='path') | list }}"
   tags: sanity
 
 - name: run test cases (connection=httpapi)

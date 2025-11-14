@@ -25,7 +25,7 @@
   ansible.builtin.debug:
     var: item
   with_items:
-     - "fabric_1 : {{ fabric_1 }}"
+    - "fabric_1 : {{ fabric_1 }}"
 
 - name: SETUP.1 - SCALE - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
@@ -36,7 +36,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'setup_result_1.response.DATA != None'
+      - 'setup_result_1.response.DATA != None'
 
 - name: SETUP.2 - SCALE - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
@@ -85,7 +85,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_2.changed == true'
+      - 'result_2.changed == true'
 
 - name: TEST.2b - SCALE - [deleted] conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
@@ -98,7 +98,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_2b.changed == false'
+      - 'result_2b.changed == false'
     - 'result_2b.response|length == 0'
     - 'result_2b.diff|length == 0'
 

@@ -39,10 +39,10 @@
   ansible.builtin.debug:
     var: item
   with_items:
-     - "fabric_1 : {{ fabric_1 }}"
-     - "switch_1 : {{ switch_1 }}"
-     - "switch_2 : {{ switch_2 }}"
-     - "interface_2a : {{ interface_2a }}"
+    - "fabric_1 : {{ fabric_1 }}"
+    - "switch_1 : {{ switch_1 }}"
+    - "switch_2 : {{ switch_2 }}"
+    - "interface_2a : {{ interface_2a }}"
 
 - name: SETUP.1 - DELETED - [dcnm_rest.GET] Verify fabric is deployed.
   cisco.dcnm.dcnm_rest:
@@ -53,7 +53,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_setup_1.response.DATA != None'
+      - 'result_setup_1.response.DATA != None'
 
 - name: SETUP.2 - DELETED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
@@ -71,13 +71,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result_setup_3
@@ -99,7 +99,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_setup_3.changed == true'
+      - 'result_setup_3.changed == true'
     - 'result_setup_3.response[0].RETURN_CODE == 200'
     - 'result_setup_3.response[1].RETURN_CODE == 200'
     - 'result_setup_3.response[2].RETURN_CODE == 200'
@@ -120,7 +120,7 @@
     fabric: "{{ fabric_1 }}"
     state: deleted
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
@@ -137,7 +137,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_1.changed == true'
+      - 'result_1.changed == true'
     - 'result_1.response[0].RETURN_CODE == 200'
     - 'result_1.response[1].RETURN_CODE == 200'
     - 'result_1.response[1].MESSAGE == "OK"'
@@ -160,7 +160,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_1c.changed == false'
+      - 'result_1c.changed == false'
     - 'result_1c.response|length == 0'
     - 'result_1c.diff|length == 0'
 
@@ -169,13 +169,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       l3vni_wo_vlan: true
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: false
   register: result_1e
@@ -193,7 +193,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_1e.changed == true'
+      - 'result_1e.changed == true'
     - 'result_1e.response[0].RETURN_CODE == 200'
     - 'result_1e.response[1].RETURN_CODE == 200'
     - '(result_1e.response[1].DATA|dict2items)[0].value == "SUCCESS"'
@@ -201,14 +201,14 @@
     - '"{{ switch_1 }}" in result_1e.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_1e.diff[0].attach[1].ip_address'
     - '"{{ switch_2 }}" in result_1e.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_1e.diff[0].attach[1].ip_address'
     - 'result_1e.diff[0].vrf_name == "ansible-vrf-int1"'
-    - '"enableL3VniNoVlan\":\"true\"" in result_1f.response[0].parent.vrfTemplateConfig'
+    - '"enableL3VniNoVlan\": \"true\"" in result_1f.response[0].parent.vrfTemplateConfig'
 
 - name: TEST.1h - DELETED - [deleted] Delete VRF ansible-vrf-int1
   cisco.dcnm.dcnm_vrf: &conf1h
     fabric: "{{ fabric_1 }}"
     state: deleted
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
@@ -221,7 +221,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_1h.changed == true'
+      - 'result_1h.changed == true'
     - 'result_1h.response[0].RETURN_CODE == 200'
     - 'result_1h.response[1].RETURN_CODE == 200'
     - 'result_1h.response[1].MESSAGE == "OK"'
@@ -244,7 +244,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_1k.changed == false'
+      - 'result_1k.changed == false'
     - 'result_1k.response|length == 0'
     - 'result_1k.diff|length == 0'
 
@@ -253,13 +253,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
@@ -289,7 +289,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_2.changed == true'
+      - 'result_2.changed == true'
     - 'result_2.response[0].RETURN_CODE == 200'
     - 'result_2.response[1].RETURN_CODE == 200'
     - 'result_2.response[2].RETURN_CODE == 200'
@@ -306,13 +306,13 @@
     fabric: "{{ fabric_1 }}"
     state: deleted
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
@@ -332,7 +332,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_2b.changed == true'
+      - 'result_2b.changed == true'
     - 'result_2b.response[0].RETURN_CODE == 200'
     - 'result_2b.response[1].RETURN_CODE == 200'
     - 'result_2b.response[1].MESSAGE == "OK"'
@@ -362,7 +362,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_2e.changed == false'
+      - 'result_2e.changed == false'
     - 'result_2e.response|length == 0'
     - 'result_2e.diff|length == 0'
 
@@ -371,13 +371,13 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
+      - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ switch_1 }}"
+        - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
@@ -407,7 +407,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_3.changed == true'
+      - 'result_3.changed == true'
     - 'result_3.response[0].RETURN_CODE == 200'
     - 'result_3.response[1].RETURN_CODE == 200'
     - 'result_3.response[2].RETURN_CODE == 200'
@@ -433,7 +433,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_3c.changed == true'
+      - 'result_3c.changed == true'
     - 'result_3c.response[0].RETURN_CODE == 200'
     - 'result_3c.response[1].RETURN_CODE == 200'
     - 'result_3c.response[1].MESSAGE == "OK"'
@@ -463,7 +463,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_3e.changed == false'
+      - 'result_3e.changed == false'
     - 'result_3e.response|length == 0'
     - 'result_3e.diff|length == 0'
 

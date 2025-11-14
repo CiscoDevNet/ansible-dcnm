@@ -30,7 +30,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - ndfc_logging_config != ""
+      - ndfc_logging_config != ""
 
 ##############################################
 ##                 TESTS                    ##
@@ -49,7 +49,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_1.changed == false'
+      - 'result_1.changed == false'
     - 'result_1.failed == false'
 
 
@@ -66,7 +66,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_2.changed == false'
+      - 'result_2.changed == false'
     - 'result_2.failed == false'
 
 - name: TEST.3 - Verify INFO severity.
@@ -82,7 +82,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_3.changed == false'
+      - 'result_3.changed == false'
     - 'result_3.failed == false'
 
 - name: TEST.4 - Verify WARNING severity.
@@ -98,7 +98,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_4.changed == false'
+      - 'result_4.changed == false'
     - 'result_4.failed == false'
 
 - name: TEST.5 - Verify missing severity uses default (DEBUG).
@@ -114,7 +114,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_5.changed == false'
+      - 'result_5.changed == false'
     - 'result_5.failed == false'
 
 - name: TEST.6 - Negative. Verify invalid severity (FOO).
@@ -135,7 +135,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_6.changed == false'
+      - 'result_6.changed == false'
     - 'result_6.failed == true'
     - error_message in result_6.msg
 
@@ -156,6 +156,6 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result_7.changed == false'
+      - 'result_7.changed == false'
     - 'result_7.failed == true'
     - error_message in result_7.msg

@@ -38,7 +38,7 @@
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
     config:
-    - seed_ip: "{{ test_data.sw1 }}"
+      - seed_ip: "{{ test_data.sw1 }}"
   register: delete_result
   tags: deleted
 
@@ -72,7 +72,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response == "The switch provided is not part of the fabric and cannot be deleted"'
   tags: deleted
 
@@ -152,7 +152,7 @@
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
     config:
-    - seed_ip:
+      - seed_ip:
   register: result
   ignore_errors: true
   tags: deleted
@@ -160,7 +160,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - '"Invalid parameters in playbook: seed_ip : Required parameter not found" in result.msg'
   tags: deleted
 
@@ -200,6 +200,6 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
     - 'result.response == "The switch provided is not part of the fabric and cannot be deleted"'
   tags: deleted

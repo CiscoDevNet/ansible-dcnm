@@ -40,7 +40,8 @@
   tags: always
 
 - name: MAIN - Build List of Test Items
-  ansible.builtin.set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  ansible.builtin.set_fact:
+    test_items: "{{ test_cases.files | map(attribute='path') | list }}"
   delegate_to: localhost
   tags: always
 
@@ -55,5 +56,5 @@
   cisco.dcnm.dcnm_vpc_pair:
     src_fabric: "{{ test_data_common.fabric }}"
     state: deleted
-  when: IT_CONTEXT is not defined
+  when: it_context is not defined
   tags: always

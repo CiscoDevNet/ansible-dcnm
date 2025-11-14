@@ -53,7 +53,7 @@
   cisco.dcnm.dcnm_fabric:
     state: query
     config:
-    - FABRIC_NAME: "{{ test_data.test_fabric }}"
+      - FABRIC_NAME: "{{ test_data.test_fabric }}"
   register: query_result
 
 - name: Assert

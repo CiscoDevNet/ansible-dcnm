@@ -52,8 +52,7 @@
               server $$AAA_SERVER$$
       register: result
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["failed"] | length) == 1'
@@ -66,8 +65,7 @@
       loop: "{{ lookup('list', result['response'][0]['DATA']) }}"
       when: '"ERROR" == item.get("reportItemType")'
 
-    - assert:
-        that:
+    - ansible.builtin.assert: that:
           - 'error_exists == true'
 
 ##############################################

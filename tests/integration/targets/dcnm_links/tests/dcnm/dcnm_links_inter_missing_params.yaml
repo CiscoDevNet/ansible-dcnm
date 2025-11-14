@@ -22,8 +22,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
             ansible.builtin.template: dcnm_links_invalid_template                # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
@@ -43,8 +43,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
@@ -64,8 +64,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
@@ -85,8 +85,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
@@ -106,8 +106,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
@@ -127,8 +127,8 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
@@ -148,8 +148,8 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
@@ -188,8 +188,8 @@
             src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
@@ -209,8 +209,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
@@ -231,8 +231,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
@@ -252,8 +252,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
@@ -273,8 +273,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
 
             profile:
               ipv4_addr: 193.168.1.1                             # IP address of interface in src fabric with mask
@@ -290,8 +290,8 @@
         config:
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
             ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
       ignore_errors: true
       register: result
 
@@ -306,8 +306,8 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+                                                                 #   [ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup]
             profile:
               dummy: 1
       ignore_errors: true

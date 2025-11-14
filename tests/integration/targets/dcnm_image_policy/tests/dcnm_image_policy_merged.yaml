@@ -75,7 +75,7 @@
   cisco.dcnm.dcnm_image_policy:
     state: deleted
     config:
-    - name: "{{ image_policy_1 }}"
+      - name: "{{ image_policy_1 }}"
     - name: "{{ image_policy_2 }}"
   register: result
 
@@ -90,8 +90,7 @@
 # ok: [dcnm] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "agnostic": false,
 #                 "epldImgName": "n9000-epld.10.2.5.M.img",
 #                 "nxosVersion": "10.2.5_nxos64-cs_64bit",
@@ -111,10 +110,9 @@
 #                 "policyType": "PLATFORM",
 #                 "sequence_number": 2
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -126,9 +124,8 @@
 #                 "sequence_number": 2,
 #                 "state": "merged"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "DATA": "Policy created successfully.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
@@ -144,9 +141,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -156,7 +152,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-#         ]
+#]
 #     }
 # }
 ################################################################################
@@ -191,7 +187,7 @@
     - result.failed == false
     - (result.diff | length) == 2
     - result.diff[0].policyName == image_policy_1
-    - result.diff[1].policyName == image_policy_2
+      - result.diff[1].policyName == image_policy_2
     - result.diff[0].policyDescr == image_policy_1
     - result.diff[1].policyDescr == image_policy_2
     - result.diff[0].agnostic == false
@@ -258,7 +254,7 @@
     - result.failed == false
     - (result.diff | length) == 2
     - result.diff[0].policyName == image_policy_1
-    - result.diff[1].policyName == image_policy_2
+      - result.diff[1].policyName == image_policy_2
     - result.diff[0].policyDescr == image_policy_1 + " edited"
     - result.diff[1].policyDescr == image_policy_2 + " edited"
     - result.diff[0].agnostic == false
@@ -304,26 +300,22 @@
 # ok: [dcnm] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
-#                 "policyNames": [
-#                     "NR1F",
+#         "diff": [#             {
+#                 "policyNames": [#                     "NR1F",
 #                     "KR5M"
-#                 ],
+#],
 #                 "sequence_number": 1
 #             }
-#         ],
+#],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#         ],
-#         "response": [
-#             {
+#],
+#         "response": [#             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -331,9 +323,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+#],
+#         "result": [#             {
 #                 "found": true,
 #                 "sequence_number": 0,
 #                 "success": true
@@ -343,7 +334,7 @@
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+#]
 #     }
 # }
 
@@ -371,7 +362,7 @@
     - result.response[0].MESSAGE == "OK"
     - result.response[0].METHOD == "DELETE"
     - result.response[0].RETURN_CODE == 200
-    - (result.metadata | length) == 1
+      - (result.metadata | length) == 1
     - result.metadata[0].action == "delete"
     - result.metadata[0].check_mode == False
     - result.metadata[0].sequence_number == 1
