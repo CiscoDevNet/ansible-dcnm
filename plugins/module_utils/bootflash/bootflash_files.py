@@ -460,16 +460,17 @@ class BootflashFiles:
 
             # Check if file already exists (same filename AND supervisor)
             for file in item["files"]:
-                if (file.get("fileName") == self.filename and
-                    file.get("bootflashType") == self.supervisor):
+                if file.get("fileName") == self.filename and file.get("bootflashType") == self.supervisor:
                     return  # File already in payload
 
             # Add the new file
-            item["files"].append({
-                "bootflashType": self.supervisor,
-                "fileName": self.filename,
-                "filePath": self.filepath,
-            })
+            item["files"].append(
+                {
+                    "bootflashType": self.supervisor,
+                    "fileName": self.filename,
+                    "filePath": self.filepath,
+                }
+            )
             return  # Done - exit after finding matching item
 
     def add_file_to_payload(self) -> None:
