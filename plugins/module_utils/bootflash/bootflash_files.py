@@ -19,12 +19,13 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import logging
-from typing import Literal
+from typing import Any, Literal
 
 from ..common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import EpBootflashFiles
 from ..common.conversion import ConversionUtils
 from ..common.rest_send_v2 import RestSend
 from ..common.results import Results
+from ..common.switch_details import SwitchDetails
 
 
 class BootflashFiles:
@@ -106,42 +107,44 @@ class BootflashFiles:
     ```
     """
 
-    def __init__(self):
-        self.class_name = self.__class__.__name__
+    def __init__(self) -> None:
+        self.class_name: str = self.__class__.__name__
 
-        self.action = "bootflash_delete"
-        self.conversion = ConversionUtils()
+        self.action: Literal["bootflash_delete"] = "bootflash_delete"
+        self.conversion: ConversionUtils = ConversionUtils()
         # self.diff is keyed on switch ip_address and is updated
         # in self.update_diff().
-        self.diff = {}
-        self.ep_bootflash_files = EpBootflashFiles()
+        self.diff: dict[str, Any] = {}
+        self.ep_bootflash_files: EpBootflashFiles = EpBootflashFiles()
 
-        self.ok_to_delete_files_reason = None
-        self.mandatory_target_keys = [
+        self.ok_to_delete_files_reason: str = ""
+        self.mandatory_target_keys: list[str] = [
             "filepath",
             "ip_address",
             "serial_number",
             "supervisor",
         ]
-        self.payload = {"deleteFiles": []}
-        self.switch_details_refreshed = False
+        self.payload: dict[str, list[dict[str, Any]]] = {"deleteFiles": []}
+        self.switch_details_refreshed: bool = False
 
-        self._filename = None
-        self._filepath = None
-        self._ip_address = None
-        self._partition = None
+        self._filename: str = ""
+        self._filepath: str = ""
+        self._ip_address: str = ""
+        self._partition: str = ""
         self._rest_send: RestSend = RestSend({})
         self._results: Results = Results()
-        self._supervisor = None
-        self._switch_details = None
-        self._target = None
+        self._supervisor: str = ""
+        self._switch_details: SwitchDetails = SwitchDetails()
+        self._switch_details.results = Results()
+        self._switch_details.rest_send = RestSend({})
+        self._target: dict[str, str] = {}
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = "ENTERED BootflashQuery(): "
         msg += f"action {self.action}, "
         self.log.debug(msg)
 
-    def refresh_switch_details(self):
+    def refresh_switch_details(self) -> None:
         """
         ### Summary
         If switch details are not already refreshed, refresh them.
@@ -151,9 +154,13 @@ class BootflashFiles:
                 -   ``switch_details`` is not set.
                 -   ``rest_send`` is not set.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        if self.switch_details is None:
+        if not self._rest_send_instantiated():
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"rest_send must be set before calling {method_name}."
+            raise ValueError(f"{msg}")
+        if not self._switch_details_instantiated():
             msg = f"{self.class_name}.{method_name}: "
             msg += f"switch_details must be set before calling {method_name}."
             raise ValueError(f"{msg}")
@@ -163,7 +170,7 @@ class BootflashFiles:
             self.switch_details.refresh()
             self.switch_details_refreshed = True
 
-    def ip_address_to_serial_number(self, ip_address):
+    def ip_address_to_serial_number(self, ip_address: str) -> str:
         """
         ### Summary
         Convert ip_address to serial_number.
@@ -172,7 +179,7 @@ class BootflashFiles:
         -   ``ValueError`` if:
                 -   switch_details is not set.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         self.refresh_switch_details()
 
@@ -185,7 +192,7 @@ class BootflashFiles:
             raise ValueError(msg) from error
         return serial_number
 
-    def ok_to_delete_files(self, ip_address):
+    def ok_to_delete_files(self, ip_address: str) -> bool:
         """
         ### Summary
         -   Return True if files can be deleted on the switch with ip_address.
@@ -203,34 +210,69 @@ class BootflashFiles:
             return False
         return True
 
+    def _rest_send_instantiated(self) -> bool:
+        """
+        # Summary
+
+        - Return True if rest_send is properly instantiated.
+        - Return False otherwise.
+
+        ## Raises
+
+        None
+        """
+        try:
+            if not self._rest_send.params:
+                return False
+        except AttributeError:
+            return False
+        return True
+
+    def _switch_details_instantiated(self) -> bool:
+        """
+        # Summary
+
+        - Return True if switch_details is properly instantiated.
+        - Return False otherwise.
+
+        ## Raises
+
+        None
+        """
+        try:
+            if not self._switch_details.rest_send.params:
+                return False
+        except AttributeError:
+            return False
+        return True
+
     def validate_commit_parameters(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Verify that mandatory prerequisites are met before calling commit.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   rest_send is not set.
-                -   results is not set.
-                -   switch_details is not set.
-                -   payload is not set.
+        ## Raises
+
+        ### ValueError
+
+        -   rest_send is not properly initialized.
+        -   switch_details is not properly initialized.
         """
         # pylint: disable=no-member
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        def raise_exception(property_name):
+        def raise_exception(property_name: str) -> None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{property_name} must be set before calling commit()."
             raise ValueError(f"{msg}")
 
-        if not self.rest_send:
+        if not self._rest_send_instantiated():
             raise_exception("rest_send")
-        if not self.results:
-            raise_exception("results")
-        if not self.switch_details:
+        if not self._switch_details_instantiated():
             raise_exception("switch_details")
 
-    def commit(self):
+    def commit(self) -> None:
         """
         ### Summary
         Send the payload to delete files.
@@ -252,7 +294,7 @@ class BootflashFiles:
 
         self.delete_files()
 
-    def delete_files(self):
+    def delete_files(self) -> None:
         """
         ### Summary
         Delete files that have been added with add_files().
@@ -278,7 +320,7 @@ class BootflashFiles:
         self.results.diff_current = copy.deepcopy(self.diff)
         self.results.register_task_result()
 
-    def validate_prerequisites_for_add_file(self):
+    def validate_prerequisites_for_add_file(self) -> None:
         """
         ### Summary
         Verify that mandatory prerequisites are met before calling add_file()
@@ -292,9 +334,9 @@ class BootflashFiles:
                 -   ``switch_details`` is not set.
                 -   ``target`` is not set.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        def raise_exception(property_name):
+        def raise_exception(property_name: str) -> None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{property_name} must be set before calling add_file()."
             raise ValueError(f"{msg}")
@@ -307,12 +349,12 @@ class BootflashFiles:
             raise_exception("ip_address")
         if not self.supervisor:
             raise_exception("supervisor")
-        if not self.switch_details:
+        if not self._switch_details_instantiated():
             raise_exception("switch_details")
         if not self.target:
             raise_exception("target")
 
-    def partition_and_serial_number_exist_in_payload(self):
+    def partition_and_serial_number_exist_in_payload(self) -> bool:
         """
         ### Summary
         -   Return True if the partition and serialNumber associated with the
@@ -349,10 +391,10 @@ class BootflashFiles:
             }
         ]
         """
-        found = False
+        found: bool = False
         for item in self.payload["deleteFiles"]:
-            serial_number = item.get("serialNumber")
-            partition = item.get("partition")
+            serial_number: str = item.get("serialNumber", "")
+            partition: str = item.get("partition", "")
             if serial_number != self.ip_address_to_serial_number(self.ip_address):
                 continue
             if partition != self.partition:
@@ -361,19 +403,23 @@ class BootflashFiles:
             break
         return found
 
-    def add_file_to_existing_payload(self):
+    def add_file_to_existing_payload(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Add a file to the payload if the following are true:
+
         -   The serialNumber and partition associated with the file exist in
             the payload.
         -   The file does not already exist in the files list for that
             serialNumber and partition.
 
-        ### Raises
+        ## Raises
+
         None
 
-        ### Details
+        ## Details
+
         We are looking at the following structure.
 
         ```json
@@ -397,28 +443,36 @@ class BootflashFiles:
                 },
             ]
         }
-        """
-        for item in self.payload["deleteFiles"]:
-            serial_number = item.get("serialNumber")
-            partition = item.get("partition")
-            if serial_number != self.ip_address_to_serial_number(self.ip_address):
-                continue
-            if partition != self.partition:
-                continue
-            files = item.get("files")
-            for file in files:
-                if file.get("fileName") == self.filename and file.get("bootflashType") == self.supervisor:
-                    return
-            files.append(
-                {
-                    "bootflashType": self.supervisor,
-                    "fileName": self.filename,
-                    "filePath": self.filepath,
-                }
-            )
-            item.update({"files": files})
+        ```
 
-    def add_file_to_payload(self):
+        """
+        serial_number: str = self.ip_address_to_serial_number(self.ip_address)
+
+        for item in self.payload["deleteFiles"]:
+            if item.get("serialNumber") != serial_number:
+                continue
+            if item.get("partition") != self.partition:
+                continue
+
+            # Ensure files list exists
+            if "files" not in item:
+                item["files"] = []
+
+            # Check if file already exists (same filename AND supervisor)
+            for file in item["files"]:
+                if (file.get("fileName") == self.filename and
+                    file.get("bootflashType") == self.supervisor):
+                    return  # File already in payload
+
+            # Add the new file
+            item["files"].append({
+                "bootflashType": self.supervisor,
+                "fileName": self.filename,
+                "filePath": self.filepath,
+            })
+            return  # Done - exit after finding matching item
+
+    def add_file_to_payload(self) -> None:
         """
         ### Summary
         Add a file to the payload if the serialNumber and partition do not
@@ -443,7 +497,7 @@ class BootflashFiles:
         else:
             self.add_file_to_existing_payload()
 
-    def add_file(self):
+    def add_file(self) -> None:
         """
         ### Summary
         Add a file to the payload.
@@ -452,7 +506,7 @@ class BootflashFiles:
         -   ``ValueError`` if:
                 -   The switch does not allow file deletion.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.validate_prerequisites_for_add_file()
 
         if not self.ok_to_delete_files(self.ip_address):
@@ -464,7 +518,7 @@ class BootflashFiles:
         self.add_file_to_payload()
         self.update_diff()
 
-    def update_diff(self):
+    def update_diff(self) -> None:
         """
         ### Summary
         Update ``diff`` with ``target``.
@@ -478,13 +532,13 @@ class BootflashFiles:
         -   ``target`` has already been validated to be a dictionary and to
             contain ``ip_address`` in ``target.setter``.
         """
-        ip_address = self.target.get("ip_address")
+        ip_address: str = self.target.get("ip_address", "")
         if ip_address not in self.diff:
             self.diff[ip_address] = []
         self.diff[ip_address].append(self.target)
 
     @property
-    def filepath(self):
+    def filepath(self) -> str:
         """
         ### Summary
         Return the current ``filepath``.
@@ -504,11 +558,11 @@ class BootflashFiles:
         return self._filepath
 
     @filepath.setter
-    def filepath(self, value):
+    def filepath(self, value: str) -> None:
         self._filepath = value
 
     @property
-    def filename(self):
+    def filename(self) -> str:
         """
         ### Summary
         Return the current ``filename``.
@@ -527,11 +581,11 @@ class BootflashFiles:
         return self._filename
 
     @filename.setter
-    def filename(self, value):
+    def filename(self, value: str) -> None:
         self._filename = value
 
     @property
-    def ip_address(self):
+    def ip_address(self) -> str:
         """
         ### Summary
         The ip address of the switch on which ``filename`` resides.
@@ -548,11 +602,11 @@ class BootflashFiles:
         return self._ip_address
 
     @ip_address.setter
-    def ip_address(self, value):
+    def ip_address(self, value: str) -> None:
         self._ip_address = value
 
     @property
-    def partition(self):
+    def partition(self) -> str:
         """
         ### Summary
         The partition on which ``filename`` resides.
@@ -569,11 +623,11 @@ class BootflashFiles:
         return self._partition
 
     @partition.setter
-    def partition(self, value):
+    def partition(self, value: str) -> None:
         self._partition = value
 
     @property
-    def rest_send(self):
+    def rest_send(self) -> RestSend:
         """
         # Summary
 
@@ -655,7 +709,7 @@ class BootflashFiles:
         self._results = value
 
     @property
-    def supervisor(self):
+    def supervisor(self) -> str:
         """
         ### Summary
         Return the current ``supervisor``.
@@ -676,11 +730,11 @@ class BootflashFiles:
         return self._supervisor
 
     @supervisor.setter
-    def supervisor(self, value):
+    def supervisor(self, value: str) -> None:
         self._supervisor = value
 
     @property
-    def switch_details(self):
+    def switch_details(self) -> SwitchDetails:
         """
         ### Summary
         An instance of the ``SwitchDetails()`` class.
@@ -709,7 +763,7 @@ class BootflashFiles:
         self._switch_details = value
 
     @property
-    def target(self):
+    def target(self) -> dict[str, str]:
         """
         ### Summary
         ``target`` is a dictionary that is used to set the diff passed to
@@ -759,7 +813,7 @@ class BootflashFiles:
         return self._target
 
     @target.setter
-    def target(self, value):
+    def target(self, value: dict[str, str]) -> None:
         method_name = inspect.stack()[0][3]
 
         msg = f"{self.class_name}.{method_name}: "
