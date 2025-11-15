@@ -182,7 +182,7 @@ options:
         - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
             dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated
             indicating these are mutually exclusive options
-        - This will eventually replace dhcp_srvr1_ip, dhcp_srvr1_vrf, 
+        - This will eventually replace dhcp_srvr1_ip, dhcp_srvr1_vrf,
             dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf
         type: list
         elements: dict
