@@ -129,41 +129,61 @@ options:
       dhcp_srvr1_ip:
         description:
         - DHCP relay IP address of the first DHCP server
+        - If dhcp_servers and dhcp_srvr1_ip are specified an error message is generated
+            indicating these are mutually exclusive options
+        - dhcp_servers will eventually replace dhcp_srvr1_ip and dhcp_srvr1_vrf
         type: str
         required: false
       dhcp_srvr1_vrf:
         description:
         - VRF ID of first DHCP server
+        - If not specified, will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 dhcp_srvr1_vrf must be specified for dhcp_srvr1_ip
+        - dhcp_servers will eventually replace dhcp_srvr1_ip and dhcp_srvr1_vrf
         type: str
         required: false
       dhcp_srvr2_ip:
         description:
         - DHCP relay IP address of the second DHCP server
+        - If dhcp_servers and dhcp_srvr2_ip are specified an error message is generated
+            indicating these are mutually exclusive options
+        - dhcp_servers will eventually replace dhcp_srvr2_ip and dhcp_srvr2_vrf
         type: str
         required: false
       dhcp_srvr2_vrf:
         description:
         - VRF ID of second DHCP server
+        - If not specified, will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 dhcp_srvr2_vrf must be specified for dhcp_srvr2_ip
+        - dhcp_servers will eventually replace dhcp_srvr2_ip and dhcp_srvr2_vrf
         type: str
         required: false
       dhcp_srvr3_ip:
         description:
         - DHCP relay IP address of the third DHCP server
+        - If dhcp_servers and dhcp_srvr3_ip are specified an error message is generated
+            indicating these are mutually exclusive options
+        - dhcp_servers will eventually replace dhcp_srvr3_ip and dhcp_srvr3_vrf
         type: str
         required: false
       dhcp_srvr3_vrf:
         description:
         - VRF ID of third DHCP server
+        - If not specified, will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 dhcp_srvr3_vrf must be specified for dhcp_srvr3_ip
+        - dhcp_servers will eventually replace dhcp_srvr3_ip and dhcp_srvr3_vrf
         type: str
         required: false
       dhcp_servers:
         description:
         - List of DHCP server_vrf pairs where 'srvr_ip' is the IP key and 'srvr_vrf' is the VRF key
-        - This is an alternative to dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
-            dhcp_srvr3_ip, dhcp_srvr3_vrf
+        - The 'srvr_vrf' key is optional, if not specified will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 'srvr_vrf' must be specified for each DHCP server
         - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
             dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated
             indicating these are mutually exclusive options
+        - This will eventually replace dhcp_srvr1_ip, dhcp_srvr1_vrf, 
+            dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf
         type: list
         elements: dict
         required: false
