@@ -337,7 +337,9 @@ def test_bootflash_deleted_03200() -> None:
         instance.rest_send = rest_send
         instance.bootflash_files.switch_details = SwitchDetails()
         instance.bootflash_files.rest_send = rest_send
+        instance.bootflash_files.switch_details.rest_send = rest_send
         instance.bootflash_files.switch_details.results = Results()
+
     match = r"Deleted\.update_bootflash_files:\s+"
     match += r"Error adding file to bootflash_files\.\s+"
     match += r"Error detail:\s+"
@@ -401,6 +403,7 @@ def test_bootflash_deleted_03210() -> None:
         instance.rest_send = rest_send
         instance.bootflash_files.switch_details = SwitchDetails()
         instance.bootflash_files.rest_send = rest_send
+        instance.bootflash_files.switch_details.rest_send = rest_send
         instance.bootflash_files.switch_details.results = Results()
     match = r"Deleted\.update_bootflash_files:\s+"
     match += r"Error adding file to bootflash_files\.\s+"
