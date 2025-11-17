@@ -24,7 +24,7 @@
   ##############################################
   ## MERGE create two policies
   ##############################################
-    - name: MERGE create two policies
+  - name: MERGE create two policies
     cisco.dcnm.dcnm_service_policy:
       fabric: "{{ ansible_it_fabric }}"
       service_fabric: "{{ ansible_it_service_fabric }}"

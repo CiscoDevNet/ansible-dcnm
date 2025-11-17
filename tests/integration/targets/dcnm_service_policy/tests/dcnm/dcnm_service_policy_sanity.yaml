@@ -30,7 +30,7 @@
   ##############################################
   ## MERGE create all & idempotence
   ##############################################
-    - name: SANITY MERGE create all
+  - name: SANITY MERGE create all
     cisco.dcnm.dcnm_service_policy: &sanity_merge_all
       fabric: "{{ ansible_it_fabric }}"
       service_fabric: "{{ ansible_it_service_fabric }}"
