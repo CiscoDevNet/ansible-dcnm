@@ -21,13 +21,14 @@ import copy
 import inspect
 import logging
 from pathlib import PurePosixPath
-from typing import Literal
+from typing import Any, Literal
 
 from ..common.api.v1.imagemanagement.rest.discovery.discovery import EpBootflashDiscovery
 from ..common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import EpBootflashInfo
 from ..common.conversion import ConversionUtils
 from ..common.rest_send_v2 import RestSend
 from ..common.results import Results
+from ..common.switch_details import SwitchDetails
 from .convert_file_info_to_target import ConvertFileInfoToTarget
 
 
@@ -96,19 +97,12 @@ class BootflashInfo:
 
     instance = BootflashInfo()
     instance.results = Results()
+    instance.rest_send = rest_send
 
-    # BootflashInfo() uses SwitchDetails() to convert
-    # switch ip addresses to switch serial numbers since
-    # the NDFC API selects switches by serial number.
-    instance.switch_details = SwitchDetails()
-
-    # We pass switch_details.results a separate instance of
-    # results because we are not interested in its results.
-    instance.switch_details.results = Results()
     instance.switches = ["192.168.1.1", "192.168.1.2"]
     instance.refresh()
 
-    # Filters can be added indenpendently of each other.
+    # Filters can be added independently of each other.
     # The more filters added, the more specific the results.
     # ``filter_switch`` is limited to the switches in the
     # ``instance.switches`` list, since this is the information
@@ -168,33 +162,33 @@ class BootflashInfo:
     ```
     """
 
-    def __init__(self):
-        self.class_name = self.__class__.__name__
+    def __init__(self) -> None:
+        self.class_name: str = self.__class__.__name__
 
-        self.action = "bootflash_info"
-        self.bootflash_data_map = {}
-        self.conversion = ConversionUtils()
-        self.convert_file_info_to_target = ConvertFileInfoToTarget()
-        self.ep_bootflash_discovery = EpBootflashDiscovery()
-        self.ep_bootflash_info = EpBootflashInfo()
-        self.info_dict = {}
-        self._matches = []
+        self.action: str = "bootflash_info"
+        self.bootflash_data_map: dict = {}
+        self.conversion: ConversionUtils = ConversionUtils()
+        self.convert_file_info_to_target: ConvertFileInfoToTarget = ConvertFileInfoToTarget()
+        self.ep_bootflash_discovery: EpBootflashDiscovery = EpBootflashDiscovery()
+        self.ep_bootflash_info: EpBootflashInfo = EpBootflashInfo()
+        self.info_dict: dict[str, Any] = {}
+        self._matches: list[dict[str, str]] = []
 
         # Used to collect individual responses and results for each
         # switch in self.switches.  Keyed on switch ip_address.
         # Updated in refresh_bootflash_info().
-        self.diff_dict = {}
-        self.response_dict = {}
-        self.result_dict = {}
+        self.diff_dict: dict[str, list[dict[str, str]]] = {}
+        self.response_dict: dict[str, dict] = {}
+        self.result_dict: dict[str, dict] = {}
 
         self._rest_send: RestSend = RestSend({})
         self._results: Results = Results()
-        self._switch_details = None
-        self._switches = None
+        self._switch_details: SwitchDetails = SwitchDetails()
+        self._switches: list[str] = []
 
-        self._filter_filepath = None
-        self._filter_supervisor = None
-        self._filter_switch = None
+        self._filter_filepath: str = ""
+        self._filter_supervisor: str = ""
+        self._filter_switch: str = ""
 
         self.valid_supervisor = ["active", "standby"]
 
@@ -223,13 +217,9 @@ class BootflashInfo:
             msg += f"{property_name} must be set prior to calling refresh."
             raise ValueError(msg)
 
-        if self.rest_send is None:
+        if not self.rest_send.params:
             raise_value_error_if_not_set("rest_send")
-        if self.results is None:
-            raise_value_error_if_not_set("results")
-        if self.switch_details is None:
-            raise_value_error_if_not_set("switch_details")
-        if self.switches is None:
+        if not self.switches:
             raise_value_error_if_not_set("switches")
 
     # pylint: disable=no-member
