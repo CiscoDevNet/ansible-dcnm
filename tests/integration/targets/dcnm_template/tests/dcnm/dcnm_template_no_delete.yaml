@@ -2,88 +2,100 @@
 ##               SETUP                      ##
 ##############################################
 
-- name: Initialize the setup
+- name: Initialize template_101 (pre-test)
   cisco.dcnm.dcnm_template:
     config:
       - name: template_101
+  register: init_result
 
-  register: result
-
-- name: Assert
+- name: Assert initialization responses
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+    loop: '{{ init_result.response }}'
 
 - block:
 
 ##############################################
-##                MERGE                     ##
+##                CREATE                    ##
 ##############################################
 
-    - name: Create a template
-      cisco.dcnm.dcnm_template: &temp_merge
+    - name: Create template_101
+      cisco.dcnm.dcnm_template:
+        state: merged
         config:
           - name: template_101
             description: "Template_101"
             tags: "internal policy 101"
             content: |
-                certificate /bootflash/telegraf.crt telegraf
-                destination-profile
-                  use-vrf management
-                destination-group 1
-                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
-                sensor-group 1
-                  data-source DME
-                  path sys/ch depth unbounded
-                subscription 1
-                  dst-grp 1
-                  snsr-grp 1 sample-interval 10000
+              certificate /bootflash/telegraf.crt telegraf
+              destination-profile
+                use-vrf management
+              destination-group 1
+                ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+              sensor-group 1
+                data-source DME
+                path sys/ch depth unbounded
+              subscription 1
+                dst-grp 1
+                snsr-grp 1 sample-interval 10000
+      register: create_result
 
-      register: result
-
-    - name: ASSERT - Check condition
+    - name: Assert create diff
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 1'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - 'create_result.changed == true'
+          - '(create_result.diff[0].merged | length) == 1'
+          - '(create_result.diff[0].deleted | length) == 0'
+          - '(create_result.diff[0].query | length) == 0'
 
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Template Created" in item["DATA"]["status"]'
-      loop: '{{ result.response }}'
+    - name: Assert create responses
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Template Created" in item["DATA"]["status"]'
+        loop: '{{ create_result.response }}'
 
-    - name: Delete templates along with the template which is already installed on a switch
+##############################################
+##           DELETE (IN-USE)                ##
+##############################################
+
+    - name: Attempt delete of in-use templates plus created one
       cisco.dcnm.dcnm_template:
-        state: deleted       # only choose form [merged, deleted, query]
+        state: deleted
         config:
           - name: template_inuse_1
           - name: template_inuse_2
           - name: template_101
+      register: delete_inuse_result
 
-      register: result
-
-    - name: ASSERT - Check condition
+    - name: Assert in-use deletion behavior
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_1" in item["DATA"])'
-        - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_2" in item["DATA"])'
-        - '(result["template-policy-map"] | length == 2)'
-        - '"template_inuse_1" in result["template-policy-map"].keys()'
-        - '"template_inuse_2" in result["template-policy-map"].keys()'
-      loop: '{{ result.response }}'
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '("Templates in use, not deleted" in item["DATA"])'
+        loop: '{{ delete_inuse_result.response }}'
 
-    - name: Delete a template which is not existing
+    - name: Assert template-policy-map keys
+      ansible.builtin.assert:
+        that:
+          - '(delete_inuse_result["template-policy-map"] | length) == 2'
+          - '"template_inuse_1" in delete_inuse_result["template-policy-map"].keys()'
+          - '"template_inuse_2" in delete_inuse_result["template-policy-map"].keys()'
+
+##############################################
+##             DELETE (NON-EXISTENT)        ##
+##############################################
+
+    - name: Delete non-existent template
       cisco.dcnm.dcnm_template:
-        state: deleted       # only choose form [merged, deleted, query]
+        state: deleted
         config:
           - name: template_1000
-      register: result
+      register: delete_missing_result
 
-    - ansible.builtin.assert:        that:
+    - name: Assert delete non-existent response codes
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+        loop: '{{ delete_missing_result.response }}'

@@ -1,54 +1,48 @@
 ##############################################
-##               SETUP                      ##
+##               SETUP (SANITY)             ##
 ##############################################
 
-- name: SANITY- Initialize the setup
+- name: SANITY - Initialize templates
   cisco.dcnm.dcnm_template:
     config:
       - name: template_101
       - name: template_102
       - name: template_103
       - name: template_104
-
-  register: result
+  register: init_result
   tags: sanity
 
-- name: Assert
+- name: SANITY - Assert initialization
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+    loop: '{{ init_result.response }}'
   tags: sanity
 
 - block:
-
-##############################################
-##                MERGE                     ##
-##############################################
-
-    - name: SANITY- Create templates
-      cisco.dcnm.dcnm_template: &temp_merge
+    - name: SANITY - Create templates
+      cisco.dcnm.dcnm_template: &sanity_create_set
+        state: merged
         config:
           - name: template_101
             description: "Template_101"
             tags: "internal policy 101"
             content: |
-                certificate /bootflash/telegraf.crt telegraf
-                destination-profile
-                  use-vrf management
-                destination-group 1
-                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
-                sensor-group 1
-                  data-source DME
-                  path sys/ch depth unbounded
-                subscription 1
-                  dst-grp 1
-                  snsr-grp 1 sample-interval 10000
-
+              certificate /bootflash/telegraf.crt telegraf
+              destination-profile
+                use-vrf management
+              destination-group 1
+                ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+              sensor-group 1
+                data-source DME
+                path sys/ch depth unbounded
+              subscription 1
+                dst-grp 1
+                snsr-grp 1 sample-interval 10000
           - name: template_102
-        description: "Template_102"
-        tags: "internal policy 102"
-        content: |
+            description: "Template_102"
+            tags: "internal policy 102"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -61,11 +55,10 @@
                 subscription 2
                   dst-grp 2
                   snsr-grp 2 sample-interval 20000
-
           - name: template_103
-        description: "Template_103"
-        tags: "internal policy 103"
-        content: |
+            description: "Template_103"
+            tags: "internal policy 103"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -78,11 +71,10 @@
                 subscription 3
                   dst-grp 3
                   snsr-grp 2 sample-interval 30000
-
           - name: template_104
-        description: "Template_104"
-        tags: "internal policy 104"
-        content: |
+            description: "Template_104"
+            tags: "internal policy 104"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -95,65 +87,66 @@
                 subscription 4
                   dst-grp 4
                   snsr-grp 4 sample-interval 40000
-      register: result
-    - name: ASSERT - Check condition
+      register: sanity_create_result
+
+    - name: SANITY - Assert create diff
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 4'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - 'sanity_create_result.changed == true'
+          - '(sanity_create_result.diff[0].merged | length) == 4'
+          - '(sanity_create_result.diff[0].deleted | length) == 0'
+          - '(sanity_create_result.diff[0].query | length) == 0'
 
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Template Created" in item["DATA"]["status"]'
-      loop: '{{ result.response }}'
+    - name: SANITY - Assert create responses
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Template Created" in item["DATA"]["status"]'
+        loop: '{{ sanity_create_result.response }}'
 
-    - name: Cleanup - sleep for 100 seconds for DCNM to completely update the state
+    - name: SANITY - Wait for controller state sync
       ansible.builtin.wait_for:
-      timeout: 100
+        timeout: 100
 
-    - name: Create templates again - Idempotence
-      cisco.dcnm.dcnm_template: *temp_merge
+    - name: SANITY - Idempotence create
+      cisco.dcnm.dcnm_template: *sanity_create_set
+      register: sanity_create_idem
 
-    - name: ASSERT - Check condition
+    - name: SANITY - Assert idempotence create
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-
+        that:
+          - 'sanity_create_idem.changed == false'
+          - '(sanity_create_idem.diff[0].merged | length) == 0'
+          - '(sanity_create_idem.diff[0].deleted | length) == 0'
+          - '(sanity_create_idem.diff[0].query | length) == 0'
 
 ##############################################
 ##            MODIFY PROPERTIES             ##
 ##############################################
 
-
-    - name: SANITY- Modifying existing templates
-      cisco.dcnm.dcnm_template: &temp_repl
+    - name: SANITY - Modify templates
+      cisco.dcnm.dcnm_template: &sanity_modify_set
+        state: merged
         config:
           - name: template_101
             description: "Template_101 - added this description"
             tags: "internal policy 101"
             content: |
-                certificate /bootflash/telegraf.crt telegraf
-                destination-profile
-                  use-vrf management
-                destination-group 1
-                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
-                sensor-group 1
-                  data-source DME
-                  path sys/ch depth unbounded
-                subscription 1
-                  dst-grp 1
-                  snsr-grp 1 sample-interval 10000
-
+              certificate /bootflash/telegraf.crt telegraf
+              destination-profile
+                use-vrf management
+              destination-group 1
+                ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+              sensor-group 1
+                data-source DME
+                path sys/ch depth unbounded
+              subscription 1
+                dst-grp 1
+                snsr-grp 1 sample-interval 10000
           - name: template_102
-        description: "Template_102 - added this"
-        tags: "internal policy 102 - added this"
-        content: |
+            description: "Template_102 - added this"
+            tags: "internal policy 102 - added this"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -166,11 +159,10 @@
                 subscription 2
                   dst-grp 2
                   snsr-grp 2 sample-interval 20000
-
           - name: template_103
-        description: "Template_103 - added this"
-        tags: "internal policy 103 - added this"
-        content: |                                          # Content modified
+            description: "Template_103 - added this"
+            tags: "internal policy 103 - added this"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -183,11 +175,10 @@
                 subscription 10
                   dst-grp 10
                   snsr-grp 10 sample-interval 30010
-
-          - name: template_104                                   # No modifications
-        description: "Template_104"
-        tags: "internal policy 104"
-        content: |
+          - name: template_104
+            description: "Template_104"
+            tags: "internal policy 104"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -200,157 +191,100 @@
                 subscription 4
                   dst-grp 4
                   snsr-grp 4 sample-interval 40000
+      register: sanity_modify_result
 
-      register: result
-
-    - name: ASSERT - Check condition
+    - name: SANITY - Assert modify diff
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 3'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - 'sanity_modify_result.changed == true'
+          - '(sanity_modify_result.diff[0].merged | length) == 3'
+          - '(sanity_modify_result.diff[0].deleted | length) == 0'
+          - '(sanity_modify_result.diff[0].query | length) == 0'
 
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Template Created" in item["DATA"]["status"]'
-      loop: '{{ result.response }}'
-
-    - name: Modifying existing templates - Idempotence
-      cisco.dcnm.dcnm_template: *temp_repl
-
-    - name: ASSERT - Check condition
+    - name: SANITY - Assert modify responses
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Template Created" in item["DATA"]["status"]'
+        loop: '{{ sanity_modify_result.response }}'
 
+    - name: SANITY - Idempotence modify
+      cisco.dcnm.dcnm_template: *sanity_modify_set
+      register: sanity_modify_idem
+
+    - name: SANITY - Assert idempotence modify
+      ansible.builtin.assert:
+        that:
+          - 'sanity_modify_idem.changed == false'
+          - '(sanity_modify_idem.diff[0].merged | length) == 0'
+          - '(sanity_modify_idem.diff[0].deleted | length) == 0'
+          - '(sanity_modify_idem.diff[0].query | length) == 0'
 
 ##############################################
-##                CLEANUP                   ##
+##                NO DELETE TEST            ##
 ##############################################
 
-
-    - name: SANITY- Initialize the setup
+    - name: SANITY - Delete templates including in-use
       cisco.dcnm.dcnm_template:
-        state: deleted       # only choose form [merged, deleted, query]
-        config:
-          - name: template_101
-          - name: template_102
-          - name: template_103
-          - name: template_104
-
-##############################################
-##               NO DELETE                  ##
-##############################################
-
-    - name: SANITY- Create a template
-      cisco.dcnm.dcnm_template: &temp_merge2
-        config:
-          - name: template_101
-            description: "Template_101"
-            tags: "internal policy 101"
-            content: |
-                certificate /bootflash/telegraf.crt telegraf
-                destination-profile
-                  use-vrf management
-                destination-group 1
-                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
-                sensor-group 1
-                  data-source DME
-                  path sys/ch depth unbounded
-                subscription 1
-                  dst-grp 1
-                  snsr-grp 1 sample-interval 10000
-
-      register: result
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 1'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Template Created" in item["DATA"]["status"]'
-      loop: '{{ result.response }}'
-
-    - name: SANITY- Delete templates along with the template which is already installed on a switch
-      cisco.dcnm.dcnm_template:
-        state: deleted       # only choose form [merged, deleted, query]
+        state: deleted
         config:
           - name: template_inuse_1
           - name: template_inuse_2
           - name: template_101
+      register: delete_inuse_result
 
-      register: result
-
-    - name: ASSERT - Check condition
+    - name: SANITY - Assert in-use deletion responses
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_1" in item["DATA"])'
-        - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_2" in item["DATA"])'
-        - '(result["template-policy-map"] | length == 2)'
-        - '"template_inuse_1" in result["template-policy-map"].keys()'
-        - '"template_inuse_2" in result["template-policy-map"].keys()'
-      loop: '{{ result.response }}'
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Templates in use, not deleted" in item["DATA"]'
+        loop: '{{ delete_inuse_result.response }}'
 
-    - name: SANITY- Delete a template which is not existing
+    - name: SANITY - Assert policy map
+      ansible.builtin.assert:
+        that:
+          - '(delete_inuse_result["template-policy-map"] | length) == 2'
+          - '"template_inuse_1" in delete_inuse_result["template-policy-map"].keys()'
+          - '"template_inuse_2" in delete_inuse_result["template-policy-map"].keys()'
+
+    - name: SANITY - Delete non-existent template
       cisco.dcnm.dcnm_template:
-        state: deleted       # only choose form [merged, deleted, query]
+        state: deleted
         config:
           - name: template_1000
-      register: result
+      register: delete_missing_result
 
-    - name: ASSERT - Check condition
+    - name: SANITY - Assert delete missing response codes
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+        that:
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ delete_missing_result.response }}'
 
 ##############################################
-##                 QUERY                    ##
+##                QUERY INUSE               ##
 ##############################################
 
-    - name: SANITY- Query a template
+    - name: SANITY - Query in-use template only
       cisco.dcnm.dcnm_template:
-        state: query       # only choose form [merged, deleted, query]
+        state: query
         config:
-          - name: template_101
-          - name: template_102
-
-          - name: template_103
-
-          - name: template_104
-
           - name: template_inuse_1
+      register: query_inuse_result
 
-      register: result
-
-    - name: ASSERT - Check condition
+    - name: SANITY - Assert query in-use
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 1'
-        - '"template_inuse_1" in result["template-policy-map"].keys()'
+        that:
+          - 'query_inuse_result.changed == false'
+          - '(query_inuse_result.diff[0].query | length) == 1'
+          - '"template_inuse_1" in query_inuse_result["template-policy-map"].keys()'
 
 ##############################################
-##        TEMPLATE VALIDATION FAIL          ##
+##          TEMPLATE VALIDATION FAIL        ##
 ##############################################
 
-
-    - name: SANITY- Create templates
-      cisco.dcnm.dcnm_template: &temp_merge3
+    - name: SANITY - Attempt invalid template creation
+      cisco.dcnm.dcnm_template:
+        state: merged
         config:
           - name: test_fail
             description: "test_fail"
@@ -368,82 +302,78 @@
               };
               aaa group server radius $$AAA_GROUP$$
               server $$AAA_SERVER$$
-      register: result
+      register: validation_fail_result
 
-    - name: ASSERT - Check condition
+    - name: SANITY - Assert validation failure diff
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["failed"] | length) == 1'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - 'validation_fail_result.changed == false'
+          - '(validation_fail_result.diff[0].failed | length) == 1'
+          - '(validation_fail_result.diff[0].merged | length) == 0'
+          - '(validation_fail_result.diff[0].deleted | length) == 0'
+          - '(validation_fail_result.diff[0].query | length) == 0'
 
-    - name: SANITY- set_fact when error found
+    - name: SANITY - Flag error_exists
       ansible.builtin.set_fact:
-      error_exists: true
-      loop: "{{ lookup('list', result['response'][0]['DATA']) }}"
-      when: '"ERROR" == item.get("reportItemType")'
+        error_exists: true
+      when: '"ERROR" in (validation_fail_result.response[0].DATA | string)'
 
-    - name: ASSERT - Check condition
+    - name: SANITY - Assert error flag
       ansible.builtin.assert:
-      that:
-        - 'error_exists == true'
+        that:
+          - 'error_exists == true'
 
 ##############################################
-##                WRONG STATE               ##
+##             WRONG STATE TEST             ##
 ##############################################
 
-
-    - name: SANITY- Create templates
-      cisco.dcnm.dcnm_template: &temp_merge4
+    - name: SANITY - Wrong state invocation
+      cisco.dcnm.dcnm_template:
+        state: replaced  # invalid on purpose
         config:
           - name: template_101
             description: "Template_101"
             tags: "internal policy 101"
             content: |
-                certificate /bootflash/telegraf.crt telegraf
-                destination-profile
-                  use-vrf management
-                destination-group 1
-                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
-                sensor-group 1
-                  data-source DME
-                  path sys/ch depth unbounded
-                subscription 1
-                  dst-grp 1
-                  snsr-grp 1 sample-interval 10000
-
-      register: result
+              certificate /bootflash/telegraf.crt telegraf
+              destination-profile
+                use-vrf management
+              destination-group 1
+                ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+              sensor-group 1
+                data-source DME
+                path sys/ch depth unbounded
+              subscription 1
+                dst-grp 1
+                snsr-grp 1 sample-interval 10000
+      register: wrong_state_result
       ignore_errors: true
 
-    - name: ASSERT - Check condition
+    - name: SANITY - Assert wrong state message
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - 'result["msg"] == "value of state must be one of: merged, deleted, query, got: replaced"'
+        that:
+          - 'wrong_state_result.changed == false'
+          - 'wrong_state_result.msg == "value of state must be one of: merged, deleted, query, got: replaced"'
 
 ##############################################
-##                DELETED                   ##
+##                DELETE ALL                ##
 ##############################################
 
-
-    - name: SANITY- Delete all templates created
-      cisco.dcnm.dcnm_template: &temp_delete
+    - name: SANITY - Delete all templates
+      cisco.dcnm.dcnm_template:
+        state: deleted
         config:
           - name: template_101
           - name: template_102
-
           - name: template_103
-
           - name: template_104
+      register: delete_all_result
 
-      register: result
-
-    - ansible.builtin.assert:        that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-
+    - name: SANITY - Assert delete all outcome
+      ansible.builtin.assert:
+        that:
+          - 'delete_all_result.changed == false'  # already deleted during previous steps
+          - '(delete_all_result.diff[0].merged | length) == 0'
+          - '(delete_all_result.diff[0].deleted | length) == 0'
+          - '(delete_all_result.diff[0].query | length) == 0'
   tags: sanity

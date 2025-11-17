@@ -42,7 +42,7 @@
   ##############################################
   ## BASELINE VRF (merged, deploy false)      ##
   ##############################################
-  - name: CREATE baseline VRF ansible-vrf-int1 (deploy:false)
+    - name: CREATE baseline VRF ansible-vrf-int1 (deploy:false)
     cisco.dcnm.dcnm_vrf: &baseline_vrf
       fabric: "{{ fabric_1 }}"
       state: merged

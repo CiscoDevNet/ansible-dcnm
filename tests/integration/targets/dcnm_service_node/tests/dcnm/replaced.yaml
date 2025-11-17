@@ -66,8 +66,8 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -104,8 +104,8 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -151,8 +151,8 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -212,7 +212,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch4 }}"
   register: result
 
 - name: Assert
@@ -245,7 +245,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch4 }}"
   register: result
 
 - name: Assert
@@ -291,7 +291,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch4 }}"
   register: result
 
 - name: Assert
@@ -324,7 +324,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch4 }}"
   register: result
 
 - name: Assert
@@ -357,7 +357,7 @@
         svc_int_name: svc11
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch4 }}"
   register: result
   ignore_errors: true
 
@@ -387,7 +387,7 @@
         svc_int_name: svc111111111
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch4 }}"
   register: result
   ignore_errors: true
 
@@ -408,7 +408,7 @@
         svc_int_name: svc11
         attach_interface: "{{ ansible_int2 }}"
         switches:
-        - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch4 }}"
   register: result
   ignore_errors: true
 
@@ -429,7 +429,7 @@
         svc_int_name: svc11
         attach_interface: "{{ ansible_int2 }}"
         switches:
-        - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch5 }}"
   register: result
   ignore_errors: true
 

@@ -42,7 +42,7 @@
     that:
       - 'result.response.DATA != None'
 
-      - name: REPLACED_ALL - Clean up any existing vrfs
+- name: REPLACED_ALL - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -77,8 +77,8 @@
         bgp_password: "74657374"
         bgp_passwd_encrypt: 7
         attach:
-        - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result
 
@@ -107,7 +107,7 @@
       - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
       - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-      - name: REPLACED_ALL - conf - Idempotence
+- name: REPLACED_ALL - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf
   register: result
 
@@ -143,7 +143,7 @@
         bgp_password: "74657374"
         bgp_passwd_encrypt: 7
         attach:
-        - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result

@@ -1,439 +1,294 @@
 ##############################################
-##            REQUIRED VARS                 ##
-##############################################
-# fabric_1
-# A VXLAN_EVPN fabric
-#
-# switch_1
-#
-# - A vrf-lite capable switch
-#
-# switch_2
-#
-# - A vrf-lite capable switch
-#
-# switch_3
-#
-# - A vrf capable switch
-# - switch_3 does not require any interfaces
-#
-# interface_1a
-#
-# - 1st interface on switch_1
-#
-# interface_2a
-#
-# - 1st interface on switch_2
-#
-# interface_2b
-#
-# - 2nd interface on switch_2
-#
+## vrf_lite.yaml (Refactored)               ##
+## Multi-interface & multi-switch VRF Lite  ##
 ##############################################
 
-##############################################
-##                 SETUP                    ##
-##############################################
-
-- name: Set fact
+- name: FACT rest_path (11.x)
   ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
-  when: controller_version == "11"
+  when: controller_version == '11'
 
-- name: Set fact
+- name: FACT rest_path (12.x+)
   ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
-  when: controller_version >= "12"
+  when: controller_version >= '12'
 
-- name: MERGED - Verify if fabric is deployed.
+- name: QUERY fabric
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_path }}"
-  register: result
+  register: fabric_query
 
-- name: Assert
+- name: ASSERT fabric
   ansible.builtin.assert:
     that:
-      - 'result.response.DATA != None'
+      - 'fabric_query.response.DATA != None'
 
-      - name: MERGED - Clean up any existing vrfs
+- name: PURGE any existing VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
+  register: initial_purge
 
-- name: VRF LITE - sleep for 40 seconds for DCNM to completely update the state
-  # The vrf lite profile removal returns ok for deployment, but the switch takes time to remove
-  # the profile so wait for some time before creating a new vrf, else the switch goes into
-  # OUT-OF-SYNC state
+- name: WAIT after purge
   ansible.builtin.wait_for:
     timeout: 40
+  when: initial_purge.changed
 
-###############################################
-###                TESTS                     ##
-###############################################
-
-- name: VRF LITE- Create, Attach and Deploy new VRF - VLAN/VRF LITE EXTENSION Provided by the User in one switch
-  cisco.dcnm.dcnm_vrf: &conf1
-    fabric: "{{ fabric_1 }}"
-    state: merged
-    config:
-      - vrf_name: ansible-vrf-int1
-        vrf_id: 9008011
-        vrf_template: Default_VRF_Universal
-        vrf_extension_template: Default_VRF_Extension_Universal
-        vlan_id: 500
-        attach:
-        - ip_address: "{{ switch_2 }}"
-        vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # optional
-        interface: "{{ interface_2a }}" # mandatory
-            ipv4_addr: 10.33.0.2/24 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: "2010::10:34:0:7/64 # optional"
-            neighbor_ipv6: "2010::10:34:0:3 # optional"
-            dot1q: 2 # dot1q can be got from dcnm
-              - ip_address: "{{ switch_3 }}"
-        deploy: true
-  register: result
-
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
-  cisco.dcnm.dcnm_vrf:
-    fabric: "{{ fabric_1 }}"
-    state: query
-  register: query_result
-  until:
-    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
-
-- name: Assert
-  ansible.builtin.assert:
-    that:
-      - 'result.changed == true'
-      - 'result.response[0].RETURN_CODE == 200'
-      - 'result.response[1].RETURN_CODE == 200'
-      - 'result.response[2].RETURN_CODE == 200'
-      - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-      - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-      - 'result.diff[0].attach[0].deploy == true'
-      - 'result.diff[0].attach[1].deploy == true'
-      - '"{{ switch_3 }}" in result.diff[0].attach[0].ip_address'
-      - '"{{ switch_2 }}" in result.diff[0].attach[1].ip_address'
-      - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
-      - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-
-      - name: MERGED - conf1 - Idempotence
-  cisco.dcnm.dcnm_vrf: *conf1
-  register: result
-
-- name: Assert
-  ansible.builtin.assert:
-    that:
-      - 'result.changed == false'
-      - 'result.response|length == 0'
-
-      - name: VRF LITE- Attach and Deploy second VRF LITE EXTENSION Provided by the User in one switch
-  cisco.dcnm.dcnm_vrf: &conf2
-    fabric: "{{ fabric_1 }}"
-    state: merged
-    config:
-      - vrf_name: ansible-vrf-int1
-        vrf_id: 9008011
-        vrf_template: Default_VRF_Universal
-        vrf_extension_template: Default_VRF_Extension_Universal
-        vlan_id: 500
-        attach:
-        - ip_address: "{{ switch_2 }}"
-        vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # optional
-        interface: "{{ interface_2a }}" # mandatory
-            ipv4_addr: 10.33.0.2/24 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: "2010::10:34:0:7/64 # optional"
-            neighbor_ipv6: "2010::10:34:0:3 # optional"
-            dot1q: 2 # dot1q can be got from dcnm
-              - peer_vrf: ansible-vrf-int1 # optional
-        interface: "{{ interface_2b }}" # mandatory
-            ipv4_addr: 20.33.0.2/24 # optional
-            neighbor_ipv4: 20.33.0.1 # optional
-            ipv6_addr: "3010::10:34:0:7/64 # optional"
-            neighbor_ipv6: "3010::10:34:0:3 # optional"
-            dot1q: 21 # dot1q can be got from dcnm
-              - ip_address: "{{ switch_3 }}"
-        deploy: true
-  register: result
-
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
-  cisco.dcnm.dcnm_vrf:
-    fabric: "{{ fabric_1 }}"
-    state: query
-  register: query_result
-  until:
-    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
-
-- name: Assert
-  ansible.builtin.assert:
-    that:
-      - 'result.changed == true'
-      - 'result.response[0].RETURN_CODE == 200'
-      - 'result.response[1].RETURN_CODE == 200'
-      - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-      - 'result.diff[0].attach[0].deploy == true'
-      - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-      - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
-      - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"{{ interface_2b }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"20.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-
-      - name: VRF LITE - conf2 - Idempotence
-  cisco.dcnm.dcnm_vrf: *conf2
-  register: result
-
-- name: Assert
-  ansible.builtin.assert:
-    that:
-      - 'result.changed == false'
-      - 'result.response|length == 0'
-
-      - name: VRF LITE- Replace VRF LITE Attachment and Deploy by the User in one switch
-  cisco.dcnm.dcnm_vrf: &conf3
-    fabric: "{{ fabric_1 }}"
-    state: replaced
-    config:
-      - vrf_name: ansible-vrf-int1
-        vrf_id: 9008011
-        vrf_template: Default_VRF_Universal
-        vrf_extension_template: Default_VRF_Extension_Universal
-        vlan_id: 500
-        attach:
-        - ip_address: "{{ switch_2 }}"
-        vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # optional
-        interface: "{{ interface_2a }}" # mandatory
-            ipv4_addr: 10.33.0.2/24 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: "2010::10:34:0:7/64 # optional"
-            neighbor_ipv6: "2010::10:34:0:3 # optional"
-            dot1q: 2 # dot1q can be got from dcnm
-              - ip_address: "{{ switch_3 }}"
-        deploy: true
-  register: result
-
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
-  cisco.dcnm.dcnm_vrf:
-    fabric: "{{ fabric_1 }}"
-    state: query
-  register: query_result
-  until:
-    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
-
-- name: Assert
-  ansible.builtin.assert:
-    that:
-      - 'result.changed == true'
-      - 'result.response[0].RETURN_CODE == 200'
-      - 'result.response[1].RETURN_CODE == 200'
-      - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-      - 'result.diff[0].attach[0].deploy == true'
-      - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-      - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
-      - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-
-      - name: MERGED - conf3 - Idempotence
-  cisco.dcnm.dcnm_vrf: *conf3
-  register: result
-
-- name: Assert
-  ansible.builtin.assert:
-    that:
-      - 'result.changed == false'
-      - 'result.response|length == 0'
-
-      - name: VRF LITE- Override VRF and VRF LITE EXTENSION Provided by the User
-  cisco.dcnm.dcnm_vrf: &conf4
-    fabric: "{{ fabric_1 }}"
-    state: overridden
-    config:
-      - vrf_name: ansible-vrf-int2
-        vrf_id: 9008013
-        vrf_template: Default_VRF_Universal
-        vrf_extension_template: Default_VRF_Extension_Universal
-        vlan_id: 400
-        attach:
-        - ip_address: "{{ switch_2 }}"
-        vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # optional
-        interface: "{{ interface_2a }}" # mandatory
-            ipv4_addr: 10.33.0.2/24 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: "2010::10:34:0:7/64 # optional"
-            neighbor_ipv6: "2010::10:34:0:3 # optional"
-            dot1q: 2 # dot1q can be got from dcnm
-              - peer_vrf: ansible-vrf-int1 # optional
-        interface: "{{ interface_2b }}" # mandatory
-            ipv4_addr: 20.33.0.2/24 # optional
-            neighbor_ipv4: 20.33.0.1 # optional
-            ipv6_addr: "3010::10:34:0:7/64 # optional"
-            neighbor_ipv6: "3010::10:34:0:3 # optional"
-            dot1q: 21 # dot1q can be got from dcnm
-        deploy: true
-  register: result
-
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
-  cisco.dcnm.dcnm_vrf:
-    fabric: "{{ fabric_1 }}"
-    state: query
-  register: query_result
-  until:
-    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
-
-- name: Assert
-  ansible.builtin.assert:
-    that:
-      - 'result.changed == true'
-      - 'result.response[0].RETURN_CODE == 200'
-      - 'result.response[1].RETURN_CODE == 200'
-      - 'result.response[2].RETURN_CODE == 200'
-      - 'result.response[3].RETURN_CODE == 200'
-      - 'result.response[4].RETURN_CODE == 200'
-      - 'result.response[5].RETURN_CODE == 200'
-      - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-      - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-      - 'result.diff[0].attach[0].deploy == true'
-      - 'result.diff[1].attach[0].deploy == false'
-      - 'result.diff[1].attach[1].deploy == false'
-      - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-      - '"{{ switch_3 }}" in result.diff[1].attach[0].ip_address'
-      - '"{{ switch_2 }}" in result.diff[1].attach[1].ip_address'
-      - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
-      - 'result.diff[1].vrf_name == "ansible-vrf-int1"'
-      - '"{{ interface_2a }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-      - '"ansible-vrf-int1" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-      - '"10.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-      - '"{{ interface_2b }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-      - '"20.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-
-      - name: VRF LITE - conf4 - Idempotence
-  cisco.dcnm.dcnm_vrf: *conf4
-  register: result
-
-- name: Assert
-  ansible.builtin.assert:
-    that:
-      - 'result.changed == false'
-      - 'result.response|length == 0'
-
-      - name: VRF LITE - Clean up any existing vrfs
-  cisco.dcnm.dcnm_vrf:
-    fabric: "{{ fabric_1 }}"
-    state: deleted
-
-- name: VRF LITE - sleep for 40 seconds for DCNM to completely update the state
-  # The vrf lite profile removal returns ok for deployment, but the switch takes time to remove
-  # the profile so wait for some time before creating a new vrf, else the switch goes into
-  # OUT-OF-SYNC state
-  ansible.builtin.wait_for:
-    timeout: 40
-
-- name: VRF LITE- Create, Attach and Deploy new VRF - VLAN/VRF LITE EXTENSION Provided by the User in multiple switch
-  cisco.dcnm.dcnm_vrf: &conf5
-    fabric: "{{ fabric_1 }}"
-    state: merged
-    config:
-      - vrf_name: ansible-vrf-int2
-        vrf_id: 9008015
-        vrf_template: Default_VRF_Universal
-        vrf_extension_template: Default_VRF_Extension_Universal
-        vlan_id: 400
-        attach:
-        - ip_address: "{{ switch_1 }}"
-        vrf_lite:
-          - peer_vrf: ansible-vrf-int3 # optional
-        interface: "{{ interface_1a }}" # mandatory
-            ipv4_addr: 40.33.0.2/24 # optional
-            neighbor_ipv4: 40.33.0.1 # optional
-            ipv6_addr: "5010::10:34:0:7/64 # optional"
-            neighbor_ipv6: "5010::10:34:0:3 # optional"
-            dot1q: 4 # dot1q can be got from dcnm
+- block:
+    ##############################################
+    ## 1. MERGE single VRF Lite interface       ##
+    ##############################################
+    - name: MERGE vrf ansible-vrf-int1 + lite iface2a
+      cisco.dcnm.dcnm_vrf: &merge_single
+        fabric: "{{ fabric_1 }}"
+        state: merged
+        config:
+          - vrf_name: ansible-vrf-int1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 500
+            attach:
               - ip_address: "{{ switch_2 }}"
-        vrf_lite:
-          - peer_vrf: ansible-vrf-int1 # optional
-        interface: "{{ interface_2a }}" # mandatory
-            ipv4_addr: 10.33.0.2/24 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: "2010::10:34:0:7/64 # optional"
-            neighbor_ipv6: "2010::10:34:0:3 # optional"
-            dot1q: 2 # dot1q can be got from dcnm
-              - peer_vrf: ansible-vrf-int1 # optional
-        interface: "{{ interface_2b }}" # mandatory
-            ipv4_addr: 20.33.0.2/24 # optional
-            neighbor_ipv4: 20.33.0.1 # optional
-            ipv6_addr: "3010::10:34:0:7/64 # optional"
-            neighbor_ipv6: "3010::10:34:0:3 # optional"
-            dot1q: 21 # dot1q can be got from dcnm
-        deploy: true
-  register: result
+              - ip_address: "{{ switch_3 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int1
+                interface: "{{ interface_2a }}"
+                ipv4_addr: 10.33.0.2/24
+                neighbor_ipv4: 10.33.0.1
+                dot1q: 2
+            deploy: true
+      register: merge_single_result
+    - name: WAIT merge_single DEPLOYED
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: query
+      register: merge_single_wait
+      until:
+        - "merge_single_wait.response[0].parent.vrfStatus is search('DEPLOYED')"
+      retries: 30
+      delay: 2
+    - name: ASSERT merge_single
+      ansible.builtin.assert:
+        that:
+          - 'merge_single_result.changed'
+    - name: MERGE single idempotence
+      cisco.dcnm.dcnm_vrf: *merge_single
+      register: merge_single_idem
+    - name: ASSERT single idempotence
+      ansible.builtin.assert:
+        that:
+          - 'merge_single_idem.changed == false'
 
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
-  cisco.dcnm.dcnm_vrf:
-    fabric: "{{ fabric_1 }}"
-    state: query
-  register: query_result
-  until:
-    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
+    ##############################################
+    ## 2. MERGE add second VRF Lite interface   ##
+    ##############################################
+    - name: MERGE add iface2b
+      cisco.dcnm.dcnm_vrf: &merge_second
+        fabric: "{{ fabric_1 }}"
+        state: merged
+        config:
+          - vrf_name: ansible-vrf-int1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 500
+            attach:
+              - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int1
+                interface: "{{ interface_2a }}"
+                ipv4_addr: 10.33.0.2/24
+                neighbor_ipv4: 10.33.0.1
+                dot1q: 2
+              - peer_vrf: ansible-vrf-int1
+                interface: "{{ interface_2b }}"
+                ipv4_addr: 20.33.0.2/24
+                neighbor_ipv4: 20.33.0.1
+                dot1q: 21
+            deploy: true
+      register: merge_second_result
+    - name: WAIT merge_second DEPLOYED
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: query
+      register: merge_second_wait
+      until:
+        - "merge_second_wait.response[0].parent.vrfStatus is search('DEPLOYED')"
+      retries: 30
+      delay: 2
+    - name: ASSERT merge_second
+      ansible.builtin.assert:
+        that:
+          - 'merge_second_result.changed'
+    - name: MERGE second idempotence
+      cisco.dcnm.dcnm_vrf: *merge_second
+      register: merge_second_idem
+    - name: ASSERT second idempotence
+      ansible.builtin.assert:
+        that:
+          - 'merge_second_idem.changed == false'
 
-- name: Assert
-  ansible.builtin.assert:
-    that:
-      - 'result.changed == true'
-      - 'result.response[0].RETURN_CODE == 200'
-      - 'result.response[1].RETURN_CODE == 200'
-      - 'result.response[2].RETURN_CODE == 200'
-      - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-      - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-      - 'result.diff[0].attach[0].deploy == true'
-      - 'result.diff[0].attach[1].deploy == true'
-      - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-      - '"{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
-      - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
-      - '"{{ interface_1a }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-      - '"ansible-vrf-int3" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-      - '"40.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-      - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"{{ interface_2b }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"20.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+    ##############################################
+    ## 3. REPLACED remove second interface      ##
+    ##############################################
+    - name: REPLACE drop iface2b keep iface2a
+      cisco.dcnm.dcnm_vrf: &replace_drop
+        fabric: "{{ fabric_1 }}"
+        state: replaced
+        config:
+          - vrf_name: ansible-vrf-int1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 500
+            attach:
+              - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int1
+                interface: "{{ interface_2a }}"
+                ipv4_addr: 10.33.0.2/24
+                neighbor_ipv4: 10.33.0.1
+                dot1q: 2
+            deploy: true
+      register: replace_drop_result
+    - name: WAIT replace_drop DEPLOYED
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: query
+      register: replace_drop_wait
+      until:
+        - "replace_drop_wait.response[0].parent.vrfStatus is search('DEPLOYED')"
+      retries: 30
+      delay: 2
+    - name: ASSERT replace_drop
+      ansible.builtin.assert:
+        that:
+          - 'replace_drop_result.changed'
+    - name: REPLACE drop idempotence
+      cisco.dcnm.dcnm_vrf: *replace_drop
+      register: replace_drop_idem
+    - name: ASSERT drop idempotence
+      ansible.builtin.assert:
+        that:
+          - 'replace_drop_idem.changed == false'
 
-      - name: VRF LITE - conf5 - Idempotence
-  cisco.dcnm.dcnm_vrf: *conf5
-  register: result
+    ##############################################
+    ## 4. OVERRIDDEN new VRF with two ifaces    ##
+    ##############################################
+    - name: OVERRIDE to ansible-vrf-int2 two ifaces
+      cisco.dcnm.dcnm_vrf: &override_two
+        fabric: "{{ fabric_1 }}"
+        state: overridden
+        config:
+          - vrf_name: ansible-vrf-int2
+            vrf_id: 9008013
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 400
+            attach:
+              - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int1
+                interface: "{{ interface_2a }}"
+                ipv4_addr: 10.33.0.2/24
+                neighbor_ipv4: 10.33.0.1
+                dot1q: 2
+              - peer_vrf: ansible-vrf-int1
+                interface: "{{ interface_2b }}"
+                ipv4_addr: 20.33.0.2/24
+                neighbor_ipv4: 20.33.0.1
+                dot1q: 21
+            deploy: true
+      register: override_two_result
+    - name: WAIT override_two DEPLOYED
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: query
+      register: override_two_wait
+      until:
+        - "override_two_wait.response[0].parent.vrfStatus is search('DEPLOYED')"
+      retries: 30
+      delay: 2
+    - name: ASSERT override_two
+      ansible.builtin.assert:
+        that:
+          - 'override_two_result.changed'
+    - name: OVERRIDE two idempotence
+      cisco.dcnm.dcnm_vrf: *override_two
+      register: override_two_idem
+    - name: ASSERT override two idempotence
+      ansible.builtin.assert:
+        that:
+          - 'override_two_idem.changed == false'
 
-- name: Assert
-  ansible.builtin.assert:
-    that:
-      - 'result.changed == false'
-      - 'result.response|length == 0'
+    ##############################################
+    ## 5. MERGE multi-switch & multi-ifaces     ##
+    ##############################################
+    - name: PURGE before multi-switch case
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: deleted
+    - name: MERGE ansible-vrf-int2 across switch_1 & switch_2
+      cisco.dcnm.dcnm_vrf: &merge_multi
+        fabric: "{{ fabric_1 }}"
+        state: merged
+        config:
+          - vrf_name: ansible-vrf-int2
+            vrf_id: 9008015
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 400
+            attach:
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int3
+                interface: "{{ interface_1a }}"
+                ipv4_addr: 40.33.0.2/24
+                neighbor_ipv4: 40.33.0.1
+                dot1q: 4
+              - peer_vrf: ansible-vrf-int1
+                interface: "{{ interface_2a }}"
+                ipv4_addr: 10.33.0.2/24
+                neighbor_ipv4: 10.33.0.1
+                dot1q: 2
+              - peer_vrf: ansible-vrf-int1
+                interface: "{{ interface_2b }}"
+                ipv4_addr: 20.33.0.2/24
+                neighbor_ipv4: 20.33.0.1
+                dot1q: 21
+            deploy: true
+      register: merge_multi_result
+    - name: WAIT merge_multi DEPLOYED
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: query
+      register: merge_multi_wait
+      until:
+        - "merge_multi_wait.response[0].parent.vrfStatus is search('DEPLOYED')"
+      retries: 30
+      delay: 2
+    - name: ASSERT merge_multi
+      ansible.builtin.assert:
+        that:
+          - 'merge_multi_result.changed'
+    - name: MERGE multi idempotence
+      cisco.dcnm.dcnm_vrf: *merge_multi
+      register: merge_multi_idem
+    - name: ASSERT multi idempotence
+      ansible.builtin.assert:
+        that:
+          - 'merge_multi_idem.changed == false'
 
-###############################################
-###                 CLEAN-UP                 ##
-###############################################
-
-- name: VRF LITE - Clean up any existing vrfs
-  cisco.dcnm.dcnm_vrf:
-    fabric: "{{ fabric_1 }}"
-    state: deleted
+  always:
+    - name: ALWAYS cleanup VRFs
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: deleted
+      register: final_cleanup
+    - name: ASSERT cleanup
+      ansible.builtin.assert:
+        that:
+          - 'final_cleanup.changed in [true,false]'

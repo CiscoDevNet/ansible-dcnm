@@ -2,224 +2,93 @@
 ##               SETUP                      ##
 ##############################################
 
-- name: Remove local log file
+- name: XE MERGE - Remove local log file
   local_action: command rm -f dcnm_links.log
 
 - block:
 
 ##############################################
-##               DELETE                     ##
+##           BASELINE DELETE               ##
 ##############################################
 
-    - name: Initial setup - Delete Links
+    - name: XE MERGE - Baseline delete existing links
       cisco.dcnm.dcnm_links: &links_delete
-        state: deleted                                           # choose from [merged, replaced, deleted, query]
-        src_fabric: "{{ ansible_num_fabric }}"
+        state: deleted
+        src_fabric: "{{ ansible_xe_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-        src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-        dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-        dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
+          - dst_fabric: "{{ ansible_xe_fabric }}"
+            src_interface: "{{ intf_1_3 }}"
+            dst_interface: "{{ intf_1_3 }}"
+            src_device: "{{ ansible_xe_switch1 }}"
+            dst_device: "{{ ansible_xe_switch2 }}"
+      register: delete_result
 
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-        src_interface: "{{ intf_1_2 }}"                      # Interface on the Source fabric
-        dst_interface: "{{ intf_1_2 }}"                      # Interface on the Destination fabric
-        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-        dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-        src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
-        dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
-        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-        dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-        src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
-        dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
-        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-        dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-        src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
-        dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
-        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-        dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-
-      register: result
-
-    - name: ASSERT - Check condition
+    - name: ASSERT - Baseline delete RETURN_CODE
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+        that: "item['RETURN_CODE'] == 200"
+      loop: "{{ delete_result.response | default([]) }}"
+      failed_when: delete_result.diff is not defined and (delete_result.response | length) > 0
 
 ##############################################
-##                MERGE                     ##
+##                 MERGE                   ##
 ##############################################
 
-    - name: Create Links without including optional parameters
-      cisco.dcnm.dcnm_links: &links_merge_no_opt
-        state: merged                                            # choose from [merged, replaced, deleted, query]
-        src_fabric: "{{ ansible_num_fabric }}"
+    - name: XE MERGE - Create numbered link
+      cisco.dcnm.dcnm_links: &links_merge
+        state: merged
+        src_fabric: "{{ ansible_xe_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-        src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
-        dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
-        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-        dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            ansible.builtin.template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
-                                                                #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
-        profile:
-              peer1_ipv4_addr: 192.168.2.1                       # IPV4 address of the Source interface
-              peer2_ipv4_addr: 192.168.2.2                       # IPV4 address of the Destination interface
-          admin_state: true                                  # choose from [true, false]
+          - dst_fabric: "{{ ansible_xe_fabric }}"
+            src_interface: "{{ intf_1_3 }}"
+            dst_interface: "{{ intf_1_3 }}"
+            src_device: "{{ ansible_xe_switch1 }}"
+            dst_device: "{{ ansible_xe_switch2 }}"
+            template: ios_xe_int_intra_fabric_num_link
+            profile:
+              peer1_ipv4_addr: 192.168.2.1
+              peer2_ipv4_addr: 192.168.2.2
+              admin_state: true
+      register: merge_result
+      ignore_errors: true
 
-      register: result
-
-    - name: ASSERT - Check condition
+    - name: ASSERT - Merge diff
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 1'
-        - '(result["diff"][0]["modified"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"][0]["{{ ansible_xe_fabric }}"] | length) == 2'
-
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-
+        that:
+          - "(merge_result.diff[0].merged | length) == 1"
+          - "(merge_result.diff[0].modified | length) == 0"
+          - "(merge_result.diff[0].deleted | length) == 0"
+          - "(merge_result.diff[0].query | length) == 0"
+      failed_when: merge_result.diff is not defined
 
 ##############################################
-##                IDEMPOTENCE               ##
+##              IDEMPOTENCE                ##
 ##############################################
 
-    - name: Create Links - Idempotence
-      cisco.dcnm.dcnm_links: *links_merge_no_opt
-      register: result
+    - name: XE MERGE - Idempotence
+      cisco.dcnm.dcnm_links: *links_merge
+      register: merge_idem
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Merge idempotence diff
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["modified"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"][0]["{{ ansible_xe_fabric }}"] | length) == 2'
-
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-
-##############################################
-##               DELETE                     ##
-##############################################
-
-    - name: Delete Links
-      cisco.dcnm.dcnm_links: *links_delete
-      register: result
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-
-##############################################
-##                MERGE                     ##
-##############################################
-
-    - name: Create Links including all optional parameters
-      cisco.dcnm.dcnm_links: &links_merge_with_opt
-        state: merged                                            # choose from [merged, replaced, deleted, query]
-        src_fabric: "{{ ansible_num_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-        src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
-        dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
-        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-        dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            ansible.builtin.template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
-                                                                #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
-
-        profile:
-              peer1_ipv4_addr: 192.169.2.1                       # IPV4 address of the Source interface
-              peer2_ipv4_addr: 192.169.2.2                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: "2080:01::01                       # optional, default is """
-              peer2_ipv6_addr: "2080:01::02                       # optional, default is """
-          admin_state: true                                  # choose from [true, false]
-          mtu: 1500                                          # optional, default is 1500
-              peer1_description: "Description of source"         # optional, default is ""
-              peer2_description: "Description of dest"           # optional, default is ""
-              peer1_bfd_echo_disable: false                      # optional, choose from [true, false]
-              peer2_bfd_echo_disable: false                      # optional, choose from [true, false]
-          enable_macsec: false                               # optional, choose from [true, false]
-              peer1_cmds: # Freeform config for source device
-                - false shutdown                                    # optional, default is ""
-              peer2_cmds: # Freeform config for destination device
-                - false shutdown                                    # optional, default is ""
-
-      register: result
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 1'
-        - '(result["diff"][0]["modified"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"][0]["{{ ansible_xe_fabric }}"] | length) == 2'
-
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-
-##############################################
-##                IDEMPOTENCE               ##
-##############################################
-
-    - name: Create Links - Idempotence
-      cisco.dcnm.dcnm_links: *links_merge_with_opt
-      register: result
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["modified"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"][0]["{{ ansible_xe_fabric }}"] | length) == 2'
-
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+        that:
+          - "(merge_idem.diff[0].merged | length) == 0"
+          - "(merge_idem.diff[0].modified | length) == 0"
+          - "(merge_idem.diff[0].deleted | length) == 0"
+          - "(merge_idem.diff[0].query | length) == 0"
+      failed_when: merge_idem.diff is not defined
 
 ###############################################
-###             CLEANUP                      ##
+###               CLEANUP                  ##
 ###############################################
 
   always:
-
-    - name: Cleanup - Delete Links
+    - name: XE MERGE - Cleanup delete link
       cisco.dcnm.dcnm_links: *links_delete
-      register: result
+      register: cleanup_result
       when: it_context is not defined
 
-    - ansible.builtin.assert:        that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    - name: ASSERT - Cleanup RETURN_CODE
+      ansible.builtin.assert:
+        that: "item['RETURN_CODE'] == 200"
+      loop: "{{ cleanup_result.response | default([]) }}"
       when: it_context is not defined

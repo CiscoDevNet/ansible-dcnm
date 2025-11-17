@@ -63,14 +63,14 @@
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_deploy_merge1_conf }}"
-      register: result
+        register: result
 
     - name: QUERY - Get interface state in NDFC (deploy merge 1)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_merge1_conf }}"
-      register: verify_result
+        register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC (deploy merge 1)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
@@ -85,18 +85,18 @@
 
     - name: Delete interfaces with global deploy as false
       cisco.dcnm.dcnm_interface:
-      check_deploy: true
+        check_deploy: true
         deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
-      register: result
+        register: result
 
     - name: QUERY - Get interface state in NDFC (delete 1)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_merge1_conf }}"
-      register: verify_result
+        register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
       ansible.builtin.assert:
@@ -109,18 +109,18 @@
 
           - name: Delete interfaces again, global deploy as true
       cisco.dcnm.dcnm_interface:
-      check_deploy: true
+        check_deploy: true
         deploy: true
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
-      register: result
+        register: result
 
     - name: QUERY - Get interface state in NDFC (delete 2)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_merge1_conf }}"
-      register: verify_result
+        register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
       ansible.builtin.assert:
@@ -133,11 +133,11 @@
 
           - name: Delete interfaces - Idempotence
       cisco.dcnm.dcnm_interface:
-      check_deploy: true
+        check_deploy: true
         deploy: true
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
-      register: result
+        register: result
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
@@ -161,14 +161,14 @@
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_deploy_merge2_conf }}"
-      register: result
+        register: result
 
     - name: QUERY - Get interface state in NDFC (deploy merge 2)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_merge2_conf }}"
-      register: verify_result
+        register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC (deploy merge 2)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
@@ -188,19 +188,19 @@
 
     - name: Delete interfaces - global deploy as true and deploy in config block as false
       cisco.dcnm.dcnm_interface:
-      check_deploy: true
+        check_deploy: true
         deploy: true
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
         config: "{{ dcnm_interface_deploy_delete1_conf }}"
-      register: result
+        register: result
 
     - name: QUERY - Get interface state in NDFC (delete 4)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_delete1_conf }}"
-      register: verify_result
+        register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
       ansible.builtin.assert:
@@ -218,19 +218,19 @@
 
     - name: Delete interfaces - global deploy as false and deploy in config block as true
       cisco.dcnm.dcnm_interface:
-      check_deploy: true
+        check_deploy: true
         deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
         config: "{{ dcnm_interface_deploy_delete2_conf }}"
-      register: result
+        register: result
 
     - name: QUERY - Get interface state in NDFC (delete 5)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_delete2_conf }}"
-      register: verify_result
+        register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
       ansible.builtin.assert:
@@ -245,11 +245,11 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-      register: result
-      when: it_context is not defined
+        register: result
+        when: it_context is not defined
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:

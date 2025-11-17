@@ -109,8 +109,8 @@
       register: result
       tags: sanity
 
-    - name: Assert
-    - ansible.builtin.assert:
+    - name: Asserting results
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 1'
@@ -119,7 +119,7 @@
       tags: sanity
 
     - name: Assert
-    - ansible.builtin.assert:
+      ansible.builtin.assert:
       that:
         - 'item["RETURN_CODE"] == 200'
         - '"Template Created" in item["DATA"]["status"]'

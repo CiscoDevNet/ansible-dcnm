@@ -2,48 +2,51 @@
 ##               SETUP                      ##
 ##############################################
 
-- name: Initialize the setup
+- name: Initialize templates (ensure clean slate)
   cisco.dcnm.dcnm_template:
     config:
       - name: template_101
       - name: template_102
       - name: template_103
       - name: template_104
+  register: init_result
 
-  register: result
-
-- name: Assert
+- name: Assert initialization responses
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+    loop: '{{ init_result.response }}'
 
 - block:
 
 ##############################################
-##                MERGE                     ##
+##                CREATE                    ##
 ##############################################
 
     - name: Create all templates
       cisco.dcnm.dcnm_template:
-        state: merged        # only choose form [merged, deleted, query]
+        state: merged
         config:
           - name: template_101
+            description: "Template_101"
+            tags: "internal policy 101"
             content: |
-                certificate /bootflash/telegraf.crt telegraf
-                destination-profile
-                  use-vrf management
-                destination-group 1
-                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
-                sensor-group 1
-                  data-source DME
-                  path sys/ch depth unbounded
-                subscription 1
-                  dst-grp 1
-                  snsr-grp 1 sample-interval 10000
+              certificate /bootflash/telegraf.crt telegraf
+              destination-profile
+                use-vrf management
+              destination-group 1
+                ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+              sensor-group 1
+                data-source DME
+                path sys/ch depth unbounded
+              subscription 1
+                dst-grp 1
+                snsr-grp 1 sample-interval 10000
 
           - name: template_102
-        content: |
+            description: "Template_102"
+            tags: "internal policy 102"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -58,7 +61,9 @@
                   snsr-grp 2 sample-interval 20000
 
           - name: template_103
-        content: |
+            description: "Template_103"
+            tags: "internal policy 103"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -73,9 +78,9 @@
                   snsr-grp 2 sample-interval 30000
 
           - name: template_104
-        description: "Template_104"
-        tags: "internal policy 104"
-        content: |
+            description: "Template_104"
+            tags: "internal policy 104"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -88,44 +93,51 @@
                 subscription 4
                   dst-grp 4
                   snsr-grp 4 sample-interval 40000
+      register: create_result
 
-      register: result
-    - name: ASSERT - Check condition
+    - name: Assert create diff and responses
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 4'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - 'create_result.changed == true'
+          - '(create_result.diff[0].merged | length) == 4'
+          - '(create_result.diff[0].deleted | length) == 0'
+          - '(create_result.diff[0].query | length) == 0'
 
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Template Created" in item["DATA"]["status"]'
-      loop: '{{ result.response }}'
+    - name: Assert create RETURN_CODE and status
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Template Created" in item["DATA"]["status"]'
+        loop: '{{ create_result.response }}'
 
-    - name: Modifying existing templates
-      cisco.dcnm.dcnm_template: &temp_repl
+##############################################
+##           MODIFY PROPERTIES              ##
+##############################################
+
+    - name: Modify selected templates
+      cisco.dcnm.dcnm_template: &modify_set
+        state: merged
         config:
           - name: template_101
             description: "Template_101 - added this description"
+            tags: "internal policy 101"
             content: |
-                certificate /bootflash/telegraf.crt telegraf
-                destination-profile
-                  use-vrf management
-                destination-group 1
-                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
-                sensor-group 1
-                  data-source DME
-                  path sys/ch depth unbounded
-                subscription 1
-                  dst-grp 1
-                  snsr-grp 1 sample-interval 10000
+              certificate /bootflash/telegraf.crt telegraf
+              destination-profile
+                use-vrf management
+              destination-group 1
+                ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+              sensor-group 1
+                data-source DME
+                path sys/ch depth unbounded
+              subscription 1
+                dst-grp 1
+                snsr-grp 1 sample-interval 10000
 
           - name: template_102
-        description: "Template_102 - added this"
-        tags: "internal policy 102 - added this"
-        content: |
+            description: "Template_102 - added this"
+            tags: "internal policy 102 - added this"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -140,9 +152,9 @@
                   snsr-grp 2 sample-interval 20000
 
           - name: template_103
-        description: "Template_103 - added this"
-        tags: "internal policy 103 - added this"
-        content: |                                          # Content modified
+            description: "Template_103 - added this"
+            tags: "internal policy 103 - added this"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -156,10 +168,10 @@
                   dst-grp 10
                   snsr-grp 10 sample-interval 30010
 
-          - name: template_104                                   # No modifications
-        description: "Template_104"
-        tags: "internal policy 104"
-        content: |
+          - name: template_104
+            description: "Template_104"
+            tags: "internal policy 104"
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -172,92 +184,90 @@
                 subscription 4
                   dst-grp 4
                   snsr-grp 4 sample-interval 40000
+      register: modify_result
 
-      register: result
-
-    - name: ASSERT - Check condition
+    - name: Assert modify diff
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 3'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - 'modify_result.changed == true'
+          - '(modify_result.diff[0].merged | length) == 3'
+          - '(modify_result.diff[0].deleted | length) == 0'
+          - '(modify_result.diff[0].query | length) == 0'
 
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Template Created" in item["DATA"]["status"]'
-      loop: '{{ result.response }}'
-
-    - name: Modifying existing templates - Idempotence
-      cisco.dcnm.dcnm_template: *temp_repl
-
-    - name: ASSERT - Check condition
+    - name: Assert modify RESULT codes
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Template Created" in item["DATA"]["status"]'
+        loop: '{{ modify_result.response }}'
+
+    - name: Idempotence check for modify
+      cisco.dcnm.dcnm_template: *modify_set
+      register: modify_idem_result
+
+    - name: Assert idempotence modify
+      ansible.builtin.assert:
+        that:
+          - 'modify_idem_result.changed == false'
+          - '(modify_idem_result.diff[0].merged | length) == 0'
+          - '(modify_idem_result.diff[0].deleted | length) == 0'
+          - '(modify_idem_result.diff[0].query | length) == 0'
+
+##############################################
+##                 QUERY                     ##
+##############################################
 
     - name: Query modified templates
       cisco.dcnm.dcnm_template:
-        state: query       # only choose form [merged, deleted, query]
+        state: query
         config:
           - name: template_101
           - name: template_102
-
           - name: template_103
-
           - name: template_104
+      register: query_result
 
-      register: result
-
-    - name: ASSERT - Check condition
+    - name: Assert query results
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 4'
-        - '("Template_101 - added this description" in result["response"][0]["description"])'
-        - '("Template_102 - added this" in result["response"][1]["description"])'
-        - '("internal policy 102 - added this" in result["response"][1]["tags"])'
-        - '("Template_103 - added this" in result["response"][2]["description"])'
-        - '("internal policy 103 - added this" in result["response"][2]["tags"])'
-        - '("Template_104" in result["response"][3]["description"])'
-        - '("internal policy 104" in result["response"][3]["tags"])'
-        - '("port 54000" in result["response"][3]["content"])'
-        - '("sample-interval 40000" in result["response"][3]["content"])'
+        that:
+          - 'query_result.changed == false'
+          - '(query_result.diff[0].query | length) == 4'
+          - '("Template_101 - added this description" in query_result.response[0].description)'
+          - '("Template_102 - added this" in query_result.response[1].description)'
+          - '("internal policy 102 - added this" in query_result.response[1].tags)'
+          - '("Template_103 - added this" in query_result.response[2].description)'
+          - '("internal policy 103 - added this" in query_result.response[2].tags)'
+          - '("Template_104" in query_result.response[3].description)'
+          - '("internal policy 104" in query_result.response[3].tags)'
+          - '("port 54000" in query_result.response[3].content)'
+          - '("sample-interval 40000" in query_result.response[3].content)'
 
 ##############################################
-##             CLEANUP                      ##
+##               CLEANUP                    ##
 ##############################################
 
   always:
-
     - name: Delete all templates created
       cisco.dcnm.dcnm_template:
-        state: deleted       # only choose form [merged, deleted, query]
+        state: deleted
         config:
           - name: template_101
           - name: template_102
-
           - name: template_103
-
           - name: template_104
+      register: delete_result
 
-      register: result
-
-    - name: ASSERT - Check condition
+    - name: Assert deletion responses
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Template deletion successful" in item["DATA"]'
-      loop: '{{ result.response }}'
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Template deletion successful" in item["DATA"]'
+        loop: '{{ delete_result.response }}'
 
-        - ansible.builtin.assert:        that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 4'
-        - '(result["diff"][0]["query"] | length) == 0'
+    - name: Assert deletion diff
+      ansible.builtin.assert:
+        that:
+          - 'delete_result.changed == true'
+          - '(delete_result.diff[0].deleted | length) == 4'
+          - '(delete_result.diff[0].merged | length) == 0'
+          - '(delete_result.diff[0].query | length) == 0'

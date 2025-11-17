@@ -63,7 +63,7 @@
 
 - name: REPLACED - TC1 - Load VPC Pair Initial Config File
   ansible.builtin.set_fact:
-    dcnm_vpc_pair_initial_conf: "{{ lookup('file', '{{ test_data_replaced.vpc_pair_initial_file }}') | from_yaml }}"
+    dcnm_vpc_pair_initial_conf: "{{ lookup('file', test_data_replaced.vpc_pair_initial_file) | from_yaml }}"
   delegate_to: localhost
   tags: replaced
 
@@ -110,7 +110,7 @@
 # TC2 - Replace VPC Pair configuration
 - name: REPLACED - TC2 - Load VPC Pair Replaced Config File
   ansible.builtin.set_fact:
-    dcnm_vpc_pair_replaced_conf: "{{ lookup('file', '{{ test_data_replaced.vpc_pair_replaced_file }}') | from_yaml }}"
+    dcnm_vpc_pair_replaced_conf: "{{ lookup('file', test_data_replaced.vpc_pair_replaced_file) | from_yaml }}"
   delegate_to: localhost
   tags: replaced
 

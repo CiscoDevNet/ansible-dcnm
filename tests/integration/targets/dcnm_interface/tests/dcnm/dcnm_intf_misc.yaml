@@ -62,11 +62,11 @@
 
     - name: Create interfaces to check delete with deploy and no deploy
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_merge_conf }}"
-      register: result
+        register: result
 
     - name: ASSERT - Check changed flag is true and return codes
       ansible.builtin.assert:
@@ -77,10 +77,10 @@
 
           - name: QUERY - Get interface state in NDFC
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_misc_merge_conf }}"
-      register: verify_result
+        register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC
       cisco.dcnm.tests.integration.ndfc_interface_validate:
@@ -100,10 +100,10 @@
 
     - name: Delete interface with deploy set to False
       cisco.dcnm.dcnm_interface:
-      fabric: "{{ test_data_common.fabric }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_delete_no_deploy_conf }}"
-      register: result
+        register: result
 
     - name: ASSERT - Check changed flag is true and return codes
       ansible.builtin.assert:
@@ -123,11 +123,11 @@
 
     - name: Delete interface (already marked deleted) with deploy set to True
       cisco.dcnm.dcnm_interface:
-      fabric: "{{ test_data_common.fabric }}"
+        fabric: "{{ test_data_common.fabric }}"
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_delete_conf }}"
-      register: result
+        register: result
 
     - name: ASSERT - Check changed flag is true and return codes
       ansible.builtin.assert:
@@ -142,11 +142,11 @@
 
     - name: Delete interface again (already deployed) with deploy set to True
       cisco.dcnm.dcnm_interface:
-      fabric: "{{ test_data_common.fabric }}"
+        fabric: "{{ test_data_common.fabric }}"
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_delete_conf }}"
-      register: result
+        register: result
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence
       ansible.builtin.assert:
@@ -167,12 +167,12 @@
 
     - name: Create interfaces with src fabric in monitoring mode
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.ext_fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_monitoring_mode_conf }}"
-      register: result
-      ignore_errors: true
+        register: result
+        ignore_errors: true
 
     # - assert:
     #     that:
@@ -191,12 +191,12 @@
 
     - name: Create interface on a switch that is not 'managable'.
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "mmudigon-unnumbered"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_non_manageable_conf }}"
-      register: result
-      ignore_errors: true
+        register: result
+        ignore_errors: true
 
     # - assert:
     #     that:
@@ -212,11 +212,11 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-      register: result
-      when: it_context is not defined
+        register: result
+        when: it_context is not defined
 
     - name: ASSERT - Check return codes for cleanup
       ansible.builtin.assert:

@@ -523,82 +523,82 @@ EXAMPLES = """
           peer2_cmds:                                        # Freeform config for destination interface
             - no shutdown                                    # optional, default is ""
 
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_multisite_underlay_setup               # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
-            profile:
-              ipv4_subnet: 193.168.2.1/24                        # IP address of interface in src fabric with mask
-              neighbor_ip: 193.168.2.2                           # IP address of the interface in dst fabric
-              src_asn: 1200                                      # BGP ASN in source fabric
-              dst_asn: 1201                                      # BGP ASN in destination fabric
-              mtu: 9216                                          #
-              deploy_dci_tracking: false                         # optional, default is false
-              max_paths: 1                                       # optional, default is 1
-              route_tag: 12345                                   # optional, optional is ""
-              ebgp_password_enable: true                         # optional, default is true
-              ebgp_password: "0102030405"                        # optional, required only if ebgp_password_enable flag is true, and inherit_from_msd
-                                                                 # is false.
-              inherit_from_msd: true # optional, required only if ebgp_password_enable flag is true, default is false
-              ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true, and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco ]
-              peer1_description: "Description of source"         # optional, default is ""
-              peer2_description: "Description of dest"           # optional, default is ""
-              peer1_cmds:                                        # Freeform config for source interface
-                - no shutdown                                    # optional, default is ""
-              peer2_cmds:                                        # Freeform config for destination interface
-                - no shutdown                                    # optional, default is ""
+      - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+        src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+        dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+        template: ext_multisite_underlay_setup               # template to be applied, choose from
+                                                             #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                             #     ext_evpn_multisite_overlay_setup ]
+        profile:
+          ipv4_subnet: 193.168.2.1/24                        # IP address of interface in src fabric with mask
+          neighbor_ip: 193.168.2.2                           # IP address of the interface in dst fabric
+          src_asn: 1200                                      # BGP ASN in source fabric
+          dst_asn: 1201                                      # BGP ASN in destination fabric
+          mtu: 9216                                          #
+          deploy_dci_tracking: false                         # optional, default is false
+          max_paths: 1                                       # optional, default is 1
+          route_tag: 12345                                   # optional, optional is ""
+          ebgp_password_enable: true                         # optional, default is true
+          ebgp_password: "0102030405"                        # optional, required only if ebgp_password_enable flag is true, and inherit_from_msd
+                                                             # is false.
+          inherit_from_msd: true # optional, required only if ebgp_password_enable flag is true, default is false
+          ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true, and inherit_from_msd
+                                                             # is false. Default is 3
+                                                             # choose from [3 - 3DES, 7 - Cisco ]
+          peer1_description: "Description of source"         # optional, default is ""
+          peer2_description: "Description of dest"           # optional, default is ""
+          peer1_cmds:                                        # Freeform config for source interface
+            - no shutdown                                    # optional, default is ""
+          peer2_cmds:                                        # Freeform config for destination interface
+            - no shutdown                                    # optional, default is ""
 
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
-            profile:
-              ipv4_addr: 193.168.3.1                             # IP address of interface in src fabric
-              neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
-              src_asn: 1300                                      # BGP ASN in source fabric
-              dst_asn: 1301                                      # BGP ASN in destination fabric
-              trm_enabled: false                                 # optional, default is false
-              bgp_multihop: 5                                    # optional, default is 5
-              ebgp_password_enable: true                         # optional, default is true
-              ebgp_password: "0102030405"                        # optional, required only if ebgp_password_enable flag is true, and inherit_from_msd
-                                                                 # is false. Default is 3
-              inherit_from_msd: false                            # optional, required only if ebgp_password_enable flag is true, default is false
-              ebpg_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true, and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco ]
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_vxlan_mpls_underlay_setup              # Template of MPLS handoff underlay link
-            profile:
-              ipv4_subnet: 193.168.3.1/30                        # IP address of interface in src fabric with the mask
-              neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
-              mpls_fabric: LDP                                   # MPLS handoff protocol, choose from [LDP, SR]
-              dci_routing_proto: isis                            # Routing protocol used on the DCI MPLS link, choose from [is-is, ospf]
+      - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+        src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
+        dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
+        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+        template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
+                                                             #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                             #     ext_evpn_multisite_overlay_setup ]
+        profile:
+          ipv4_addr: 193.168.3.1                             # IP address of interface in src fabric
+          neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
+          src_asn: 1300                                      # BGP ASN in source fabric
+          dst_asn: 1301                                      # BGP ASN in destination fabric
+          trm_enabled: false                                 # optional, default is false
+          bgp_multihop: 5                                    # optional, default is 5
+          ebgp_password_enable: true                         # optional, default is true
+          ebgp_password: "0102030405"                        # optional, required only if ebgp_password_enable flag is true, and inherit_from_msd
+                                                             # is false. Default is 3
+          inherit_from_msd: false                            # optional, required only if ebgp_password_enable flag is true, default is false
+          ebpg_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true, and inherit_from_msd
+                                                             # is false. Default is 3
+                                                             # choose from [3 - 3DES, 7 - Cisco ]
 
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: Loopback101                          # Loopback interface on the Source fabric
-            dst_interface: Loopback1                            # Loopback interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_vxlan_mpls_overlay_setup               # Template of MPLS handoff overlay link
-            profile:
-              neighbor_ip: 2.2.2.2 .                             # IP address of the loopback interface of destination device
-              src_asn: 498278384                                 # BGP ASN in source fabric
-              dst_asn: 498278384                                 # BGP ASN in destination fabric
+      - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+        src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
+        dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
+        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+        template: ext_vxlan_mpls_underlay_setup              # Template of MPLS handoff underlay link
+        profile:
+          ipv4_subnet: 193.168.3.1/30                        # IP address of interface in src fabric with the mask
+          neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
+          mpls_fabric: LDP                                   # MPLS handoff protocol, choose from [LDP, SR]
+          dci_routing_proto: isis                            # Routing protocol used on the DCI MPLS link, choose from [is-is, ospf]
 
+      - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+        src_interface: Loopback101                          # Loopback interface on the Source fabric
+        dst_interface: Loopback1                            # Loopback interface on the Destination fabric
+        src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+        template: ext_vxlan_mpls_overlay_setup               # Template of MPLS handoff overlay link
+        profile:
+          neighbor_ip: 2.2.2.2 .                             # IP address of the loopback interface of destination device
+          src_asn: 498278384                                 # BGP ASN in source fabric
+          dst_asn: 498278384                                 # BGP ASN in destination fabric
 
 # FABRIC WITH VPC PAIRED SWITCHES
 

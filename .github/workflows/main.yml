@@ -48,7 +48,7 @@ jobs:
   sanity:
     name: Run ansible-sanity tests
     needs:
-    - build
+      - build
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -89,7 +89,7 @@ jobs:
   unit-tests:
     name: Run DCNM Unit Tests
     needs:
-    - build
+      - build
     runs-on: ubuntu-latest
     strategy:
       matrix:

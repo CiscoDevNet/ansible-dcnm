@@ -20,13 +20,13 @@
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-      test_data_interfaces:
+        test_data_interfaces:
           diff_options_merge1_conf_template: "templates/dcnm_delete/diff_options_merge1_conf.j2"
           diff_options_merge1_conf_file: "{{ role_path }}/files/dcnm_interface_delete_diff_options_merge1_conf.yaml"
           diff_options_merge2_conf_template: "templates/dcnm_delete/diff_options_merge2_conf.j2"
@@ -41,7 +41,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - diff_options_merge1
@@ -51,9 +51,9 @@
         - diff_options_delete3
       delegate_to: localhost
 
-##############################################
-##                MERGE 1                   ##
-##############################################
+    ##############################################
+    ##                MERGE 1                   ##
+    ##############################################
 
     - name: Load Interface Config File - Merge 1
       ansible.builtin.set_fact:
@@ -62,66 +62,65 @@
 
     - name: Put Parent Interface for Sub-Interface into routed mode
       cisco.dcnm.dcnm_interface:
-      check_deploy: false
+        check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config:
           - name: "{{ test_data_common.parent_intf1 }}"
-        type: eth
-        switch:
+            type: eth
+            switch:
               - "{{ test_data_common.switch1 }}"
-        deploy: false
-        profile:
-          admin_state: true
-          mode: routed
-          description: "Parent Interface for Sub-Interface test"
+            deploy: false
+            profile:
+              admin_state: true
+              mode: routed
+              description: "Parent Interface for Sub-Interface test"
 
     - name: Create interfaces to check various delete form 1
       cisco.dcnm.dcnm_interface: &delete_diff_merge1
         check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_diff_options_merge1_conf }}"
       register: result
 
     - name: QUERY - Get interface state in NDFC (diff options merge 1)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_diff_options_merge1_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC (diff options merge 1)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.diff_options_merge1_conf_file }}"
+        config_path: "{{ test_data_interfaces.diff_options_merge1_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              DELETE 1                    ##
-##############################################
+    ##############################################
+    ##              DELETE 1                    ##
+    ##############################################
 
     - name: Delete all interfaces form 1
       cisco.dcnm.dcnm_interface:
-      check_deploy: false
+        check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
-        state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
+        state: deleted
       register: result
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Verify diff stats (form 1)
       ansible.builtin.assert:
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 4'
-          - '(result["diff"][0]["replaced"] | length) != 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) != 0'
+        that:
+          - "(result['diff'][0]['merged'] | length) == 0"
+          - "(result['diff'][0]['deleted'] | length) == 4"
+          - "(result['diff'][0]['replaced'] | length) != 0"
+          - "(result['diff'][0]['overridden'] | length) == 0"
+          - "(result['diff'][0]['deploy'] | length) != 0"
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Check response codes (form 1)
       ansible.builtin.assert:
-          - ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -172,9 +171,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              DELETE 2                    ##
-##############################################
+    ##############################################
+    ##              DELETE 2                    ##
+    ##############################################
 
     - name: Load Interface Config File - Delete 2
       ansible.builtin.set_fact:
@@ -183,21 +182,20 @@
 
     - name: Delete all interfaces form 2
       cisco.dcnm.dcnm_interface:
-      check_deploy: false
+        check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
-        state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
+        state: deleted
         config: "{{ dcnm_interface_diff_options_delete2_conf }}"
       register: result
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Verify diff stats (form 2)
       ansible.builtin.assert:
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 4'
-          - '(result["diff"][0]["replaced"] | length) != 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+        that:
+          - "(result['diff'][0]['merged'] | length) == 0"
+          - "(result['diff'][0]['deleted'] | length) == 4"
+          - "(result['diff'][0]['replaced'] | length) != 0"
+          - "(result['diff'][0]['overridden'] | length) == 0"
+          - "(result['diff'][0]['deploy'] | length) == 0"
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:

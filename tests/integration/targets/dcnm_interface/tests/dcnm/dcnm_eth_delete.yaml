@@ -11,235 +11,233 @@
       - "----------------------------------------------------------------"
 
 - name: Remove local log file
-  local_action: command rm -f dcnm_intf.log
+  ansible.builtin.command: rm -f dcnm_intf.log
+  delegate_to: localhost
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
-    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result
+    state: overridden
+  register: setup_result
 
 - name: ASSERT - Check return codes for setup
   ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      - item.RETURN_CODE == 200
+  loop: "{{ setup_result.response }}"
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-      test_data_interfaces:
+        test_data_interfaces:
           delete_conf_template: "templates/dcnm_eth/delete_conf.j2"
           delete_conf_file: "{{ role_path }}/files/dcnm_interface_eth_delete_conf.yaml"
       delegate_to: localhost
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - delete
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
-      dcnm_interface_delete_conf: "{{ lookup('file', test_data_interfaces.delete_conf_file) | from_yaml }}"
+        dcnm_interface_delete_conf: "{{ lookup('file', test_data_interfaces.delete_conf_file) | from_yaml }}"
       delegate_to: localhost
 
-    - name: Create ethernet interfaces
+    - name: Create ethernet interfaces (initial setup)
       cisco.dcnm.dcnm_interface: &eth_merge
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_delete_conf }}"
+      register: merge_result
 
-      register: result
-
-    - name: ASSERT - Check changed flag is true and return codes
+    - name: ASSERT - Merge changed & return codes
       ansible.builtin.assert:
-      that:
-          - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'
-        loop: '{{ result.response }}'
+        that:
+          - merge_result.changed | bool
+          - item.RETURN_CODE == 200
+      loop: "{{ merge_result.response }}"
 
     - name: QUERY - Get interface state in NDFC
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_delete_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.delete_conf_file }}"
+        config_path: "{{ test_data_interfaces.delete_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              DELETE                      ##
-##############################################
+    ##############################################
+    ##              DELETE (BULK)              ##
+    ##############################################
 
-    - name: Delete ethernet interfaces
+    - name: Delete ethernet interfaces (bulk)
       cisco.dcnm.dcnm_interface: &eth_delete
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+        state: deleted
         config: "{{ dcnm_interface_delete_conf }}"
-      register: result
+      register: delete_result
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Bulk delete diff counts
       ansible.builtin.assert:
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 5'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+        that:
+          - delete_result.changed | bool
+          - (delete_result.diff[0].merged | length) == 0
+          - (delete_result.diff[0].deleted | length) == 0
+          - (delete_result.diff[0].replaced | length) == 5
+          - (delete_result.diff[0].overridden | length) == 0
+          - (delete_result.diff[0].deploy | length) == 0
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Bulk delete return codes
       ansible.builtin.assert:
-          - ansible.builtin.assert:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+        that:
+          - item.RETURN_CODE == 200
+      loop: "{{ delete_result.response }}"
 
     - name: Delete ethernet interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *eth_delete
-      register: result
+      register: delete_idem_result
 
-    - name: ASSERT - Check changed flag is false and return codes for idempotence
+    - name: ASSERT - Bulk delete idempotence
       ansible.builtin.assert:
-      that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+        that:
+          - not delete_idem_result.changed
+          - (delete_idem_result.diff[0].merged | length) == 0
+          - (delete_idem_result.diff[0].deleted | length) == 0
+          - (delete_idem_result.diff[0].replaced | length) == 0
+          - (delete_idem_result.diff[0].overridden | length) == 0
+          - (delete_idem_result.diff[0].deploy | length) == 0
 
-    - name: ASSERT - Check response codes
+    - name: ASSERT - Bulk delete idempotence return codes
       ansible.builtin.assert:
-      that:
-          - 'item["RETURN_CODE"] == 200'
-        loop: '{{ result.response }}'
+        that:
+          - item.RETURN_CODE == 200
+      loop: "{{ delete_idem_result.response }}"
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##          CREATE SINGLE INTERFACE        ##
+    ##############################################
 
-    - name: Create ethernet interfaces
+    - name: Create single ethernet interface
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config:
-          - name: "{{ test_data_common.eth_intf7 }}"   # should be of the form eth<port-id>
-        type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-        switch:
-              - "{{ test_data_common.switch1 }}"       # provide the switch information where the config is to be deployed
-        deploy: true                      # choose from [true, false]
-        profile:
-          admin_state: true               # choose from [true, false]
-          mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
-          speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb']
-          bpdu_guard: true                # choose from [true, false, 'no']
-          port_type_fast: true            # choose from [true, false]
-          mtu: jumbo                      # choose from [default, jumbo]
-          allowed_vlans: none             # choose from [none, all, vlan range]
-          cmds: # Freeform config
+          - name: "{{ test_data_common.eth_intf7 }}"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: true
+            profile:
+              admin_state: true
+              mode: trunk
+              speed: 'Auto'
+              bpdu_guard: true
+              port_type_fast: true
+              mtu: jumbo
+              allowed_vlans: none
+              cmds:
                 - false shutdown
-          description: "eth interface  acting as trunk"
-      register: result
+              description: "eth interface acting as trunk"
+      register: single_merge_result
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Single merge diff counts
       ansible.builtin.assert:
-    - name: ASSERT - Check condition
+        that:
+          - single_merge_result.changed | bool
+          - (single_merge_result.diff[0].merged | length) == 1
+          - (single_merge_result.diff[0].deploy | length) == 1
+          - (single_merge_result.diff[0].deleted | length) == 0
+          - (single_merge_result.diff[0].replaced | length) == 0
+          - (single_merge_result.diff[0].overridden | length) == 0
+
+    - name: ASSERT - Single merge return codes
       ansible.builtin.assert:
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
+        that:
+          - item.RETURN_CODE == 200
+      loop: "{{ single_merge_result.response }}"
 
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-          - ansible.builtin.assert:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    ##############################################
+    ##        DELETE SINGLE INTERFACE          ##
+    ##############################################
 
-##############################################
-##              DELETE                      ##
-##############################################
-
-    - name: Delete a single ethernet interface
+    - name: Delete single ethernet interface
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+        state: deleted
         config:
-          - name: "{{ test_data_common.eth_intf7 }}"   # should be of the form eth<port-id>
-        type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-        switch:
-              - "{{ test_data_common.switch1 }}"       # provide the switch information where the config is to be deployed
-        deploy: true                      # choose from [true, false]
-        profile:
-          admin_state: true               # choose from [true, false]
-          mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
-          speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb']
-          bpdu_guard: true                # choose from [true, false, no]
-          port_type_fast: true            # choose from [true, false]
-          mtu: jumbo                      # choose from [default, jumbo]
-          allowed_vlans: none             # choose from [none, all, vlan range]
-          cmds: # Freeform config
+          - name: "{{ test_data_common.eth_intf7 }}"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: true
+            profile:
+              admin_state: true
+              mode: trunk
+              speed: 'Auto'
+              bpdu_guard: true
+              port_type_fast: true
+              mtu: jumbo
+              allowed_vlans: none
+              cmds:
                 - false shutdown
-          description: "eth interface  acting as trunk"
-      register: result
+              description: "eth interface acting as trunk"
+      register: single_delete_result
 
-
-    - name: ASSERT - Check condition
+    - name: ASSERT - Single delete diff counts
       ansible.builtin.assert:
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 1'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+        that:
+          - single_delete_result.changed | bool
+          - (single_delete_result.diff[0].merged | length) == 0
+          - (single_delete_result.diff[0].deleted | length) == 0
+          - (single_delete_result.diff[0].replaced | length) == 1
+          - (single_delete_result.diff[0].overridden | length) == 0
+          - (single_delete_result.diff[0].deploy | length) == 0
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Single delete return codes
       ansible.builtin.assert:
-          - ansible.builtin.assert:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-
-##############################################
-##             CLEANUP                      ##
-##############################################
+        that:
+          - item.RETURN_CODE == 200
+      loop: "{{ single_delete_result.response }}"
 
   always:
+    ##############################################
+    ##             CLEANUP                      ##
+    ##############################################
 
-    - name: Put fabric to default state
+    - name: Put fabric to default state (cleanup)
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-      register: result
+        state: overridden
+      register: cleanup_result
       when: it_context is not defined
 
     - name: ASSERT - Check return codes for cleanup
       ansible.builtin.assert:
-      that:
-          - 'item["RETURN_CODE"] == 200'
-        loop: '{{ result.response }}'
-        when: it_context is not defined
+        that:
+          - item.RETURN_CODE == 200
+      loop: "{{ cleanup_result.response }}"
+      when: it_context is not defined

@@ -3686,8 +3686,8 @@ EXAMPLES = """
     state: deleted
     config:
       - FABRIC_NAME: VXLAN_Fabric
-    - FABRIC_NAME: MSD_Fabric
-    - FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: MSD_Fabric
+      - FABRIC_NAME: LAN_Fabric
   register: result
 - debug:
     var: result
@@ -3701,15 +3701,15 @@ EXAMPLES = """
 # ENABLE_PVLAN in the playbook will generate an error.
 
 - name: merge fabric MyFabric
-    cisco.dcnm.dcnm_fabric:
-      state: merged
-        skip_validation: false
-        config:
-          - FABRIC_NAME: MyFabric
-            FABRIC_TYPE: VXLAN_EVPN
-            BGP_AS: 65001
-            ENABLE_SGT: true
-            ENABLE_PVLAN: false
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    skip_validation: false
+    config:
+      - FABRIC_NAME: MyFabric
+        FABRIC_TYPE: VXLAN_EVPN
+        BGP_AS: 65001
+        ENABLE_SGT: true
+        ENABLE_PVLAN: false
 
 # Resulting error message (edited for brevity)
 """

@@ -1,5 +1,5 @@
 ##############################################
-##               SETUP                      ##
+## SVI REPLACE TEST                         ##
 ##############################################
 
 - name: Skip SVI tests if svi_fabric is not defined
@@ -13,24 +13,20 @@
   cisco.dcnm.dcnm_interface:
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.svi_fabric }}"
-    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result
+    state: overridden
+  register: fabric_reset
 
-- name: Assert
+- name: Assert initial state reset succeeded
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+  loop: '{{ fabric_reset.response }}'
 
-- block:
-
-##############################################
-##             SETUP VARS                   ##
-##############################################
-
+- name: SVI replace test workflow
+  block:
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-      test_data_interfaces:
+        test_data_interfaces:
           merged_conf_template: "templates/dcnm_svi/merged_conf.j2"
           merged_conf_file: "{{ role_path }}/files/dcnm_interface_svi_merged_conf.yaml"
           replace_conf_template: "templates/dcnm_svi/replace_conf.j2"
@@ -39,130 +35,109 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - merged
         - replace
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
-
-    - name: Load Interface Config File
+    - name: Load Interface Config File (merged)
       ansible.builtin.set_fact:
-      dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
+        dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
       delegate_to: localhost
 
-    - name: Create SVI interfaces
+    - name: Create SVI interfaces (merged)
       cisco.dcnm.dcnm_interface: &svi_merge
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.svi_fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_merged_conf }}"
-      register: result
+      register: merge_result
 
     - name: ASSERT - Verify SVI interface creation results
       ansible.builtin.assert:
-      that:
-          - 'result.changed == true'
+        that:
+          - 'merge_result.changed == true'
           - 'item["RETURN_CODE"] == 200'
-        fail_msg: "Creation of SVI interfaces failed - {{ result }}"
+        fail_msg: "Creation of SVI interfaces failed - {{ merge_result }}"
         success_msg: "Creation of SVI interfaces succeeded"
-      loop: '{{ result.response }}'
+      loop: '{{ merge_result.response }}'
 
     - name: QUERY - Get SVI interface state in NDFC (merge)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.svi_fabric }}"
         config: "{{ dcnm_interface_merged_conf }}"
-      register: verify_result
+      register: verify_merge
 
     - name: VALIDITY CHECK - Verify SVI interface state in NDFC (merge)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.merged_conf_file }}"
-        ndfc_data: "{{ verify_result }}"
+        config_path: "{{ test_data_interfaces.merged_conf_file }}"
+        ndfc_data: "{{ verify_merge }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              REPLACE                     ##
-##############################################
-
     - name: Load Replace Interface Config File
       ansible.builtin.set_fact:
-      dcnm_interface_replace_conf: "{{ lookup('file', test_data_interfaces.replace_conf_file) | from_yaml }}"
+        dcnm_interface_replace_conf: "{{ lookup('file', test_data_interfaces.replace_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Replace SVI interfaces
       cisco.dcnm.dcnm_interface: &svi_replace
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.svi_fabric }}"
-        state: replaced                       # only choose form [merged, replaced, deleted, overridden, query]
+        state: replaced
         config: "{{ dcnm_interface_replace_conf }}"
-      register: result
+      register: replace_result
 
     - name: ASSERT - Verify SVI interface replace results
       ansible.builtin.assert:
-      that:
-          - 'result.changed == true'
+        that:
+          - 'replace_result.changed == true'
           - 'item["RETURN_CODE"] == 200'
-        fail_msg: "Replace of SVI interfaces failed - {{ result }}"
+        fail_msg: "Replace of SVI interfaces failed - {{ replace_result }}"
         success_msg: "Replace of SVI interfaces succeeded"
-      loop: '{{ result.response }}'
+      loop: '{{ replace_result.response }}'
 
     - name: QUERY - Get SVI interface state in NDFC (replace)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.svi_fabric }}"
         config: "{{ dcnm_interface_replace_conf }}"
-      register: verify_result
+      register: verify_replace
 
     - name: VALIDITY CHECK - Verify SVI interface state in NDFC (replace)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.replace_conf_file }}"
-        ndfc_data: "{{ verify_result }}"
+        config_path: "{{ test_data_interfaces.replace_conf_file }}"
+        ndfc_data: "{{ verify_replace }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
     - name: Replace SVI interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *svi_replace
-      register: result
+      register: replace_idem
 
     - name: ASSERT - Verify SVI interface idempotence results
       ansible.builtin.assert:
-      that:
-          - 'result.changed == false'
-          - 'result.response|length == 0'
-        fail_msg: "Idempotence test failed for SVI interfaces - {{ result }}"
+        that:
+          - 'replace_idem.changed == false'
+          - '(replace_idem.response | length) == 0'
+        fail_msg: "Idempotence test failed for SVI interfaces - {{ replace_idem }}"
         success_msg: "Idempotence test passed for SVI interfaces"
-    #       - '(result["diff"][0]["replaced"] | length) == 0'
-    #       - '(result["diff"][0]["overridden"] | length) == 0'
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-
-##############################################
-##             CLEANUP                      ##
-##############################################
-
+      loop: '{{ replace_idem.response }}'
   always:
-
-    - name: Put fabric to default state
+    - name: Put fabric to default state (cleanup)
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.svi_fabric }}"
-        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-      register: result
+        state: overridden
+      register: cleanup_result
       when: it_context is not defined
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Cleanup condition
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ cleanup_result.response }}'
       when: it_context is not defined

@@ -168,18 +168,18 @@
   cisco.dcnm.dcnm_image_policy:
     state: merged
     config:
-    - name: "{{ image_policy_1 }}"
-      agnostic: false
-      description: "{{ image_policy_1 }}"
-      epld_image: "{{ epld_image_1 }}"
-      platform: N9K
-      release: "{{ nxos_release_1 }}"
-      type: PLATFORM
-    - name: "{{ image_policy_2 }}"
-      description: "{{ image_policy_2 }}"
-      platform: N9K
-      epld_image: "{{ epld_image_2 }}"
-      release: "{{ nxos_release_2 }}"
+      - name: "{{ image_policy_1 }}"
+        agnostic: false
+        description: "{{ image_policy_1 }}"
+        epld_image: "{{ epld_image_1 }}"
+        platform: N9K
+        release: "{{ nxos_release_1 }}"
+        type: PLATFORM
+      - name: "{{ image_policy_2 }}"
+        description: "{{ image_policy_2 }}"
+        platform: N9K
+        epld_image: "{{ epld_image_2 }}"
+        release: "{{ nxos_release_2 }}"
   register: result
 
 - name: Debug
@@ -261,7 +261,7 @@
 # }
 - name: DELETED - TEST - Delete all image policies and verify the result
   cisco.dcnm.dcnm_image_policy:
-      state: deleted
+  state: deleted
   register: result
 
 - name: Debug

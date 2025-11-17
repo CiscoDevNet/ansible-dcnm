@@ -296,14 +296,14 @@ EXAMPLES = """
         attach_interface: Ethernet1/1
         switches:
           - 192.168.1.224
-    - name: SN-12
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc1
-      attach_interface: vPC1
-      switches:  # up to two switches, if two switches are provided, vpc is only option
-        - 192.168.1.224
-      - 192.168.1.225
+      - name: SN-12
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc1
+        attach_interface: vPC1
+        switches:  # up to two switches, if two switches are provided, vpc is only option
+          - 192.168.1.224
+          - 192.168.1.225
 
 - name: Query all the Service Nodes
   cisco.dcnm.dcnm_service_node:

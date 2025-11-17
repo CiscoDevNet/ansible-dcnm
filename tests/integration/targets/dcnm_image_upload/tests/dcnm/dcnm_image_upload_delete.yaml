@@ -7,14 +7,14 @@
 
 - name: Delete all images from controller
   cisco.dcnm.dcnm_image_upload:
-    state: deleted                                # choose form [merged, deleted, overridden, query], default is merged
+    state: deleted                                # choose from [merged, deleted, overridden, query]; default is merged
   register: result
 
-- name: Assert
+- name: ASSERT - Initial delete all images
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+  loop: '{{ result.response }}'
 
 - block:
 
@@ -24,25 +24,25 @@
 
     - name: Upload images to controller
       cisco.dcnm.dcnm_image_upload:
-        state: merged                             # choose form [merged, deleted, overridden, query], default is merged
+        state: merged                             # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
-            source: local                         # choose from [local, scp, sftp], default is local
+          - path: "{{ IMAGE_3_PATH }}"
+            source: local
       register: result
 
-    - name: Assert upload result
+    - name: ASSERT - Upload result structure
       ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["deleted"] | length) == 0'
 
-    - name: Assert upload response
+    - name: ASSERT - Upload responses
       ansible.builtin.assert:
-      that:
+        that:
           - 'item["RETURN_CODE"] == 200'
           - '"Successfully uploaded selected image file(s)." in item["DATA"]'
-        loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
 ##############################################
 ##               DELETE                     ##
@@ -50,24 +50,24 @@
 
     - name: Delete an image
       cisco.dcnm.dcnm_image_upload:
-      state: deleted                            # choose form [merged, deleted, overridden, query], default is merged
+        state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - name: "{{ IMAGE_3_NAME }}"            # Name of the image on the controller
+          - name: "{{ IMAGE_3_NAME }}"
       register: result
 
-    - name: Assert result 1
+    - name: ASSERT - Delete result structure
       ansible.builtin.assert:
-      that:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 1'
 
-    - name: Assert result 2
+    - name: ASSERT - Delete responses
       ansible.builtin.assert:
-      that:
+        that:
           - 'item["RETURN_CODE"] == 200'
           - '"Image(s) Deleted Successfully" in item["DATA"]'
-        loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
 ##############################################
 ##            IDEMPOTENCE                   ##
@@ -75,40 +75,39 @@
 
     - name: Delete Image - Idempotence
       cisco.dcnm.dcnm_image_upload:
-      state: deleted                            # choose form [merged, deleted, overridden, query], default is merged
+        state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
       register: result
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Idempotence result
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
 
 ##############################################
 ##                MERGE                     ##
 ##############################################
 
-    - name: Upload images to controller
+    - name: Upload images to controller (re-upload)
       cisco.dcnm.dcnm_image_upload:
-      files:
-          - path: "{{ IMAGE_3_PATH }}"            # Name of the image on local server
-        source: local                         # choose from [local, scp, sftp], default is local
+        files:
+          - path: "{{ IMAGE_3_PATH }}"
+            source: local
       register: result
 
-    - name: Assert result 3
-    - name: ASSERT - Check condition
+    - name: ASSERT - Re-upload result structure
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 1'
-        - '(result["diff"][0]["deleted"] | length) == 0'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
 
-    - name: Assert result 4
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Successfully uploaded selected image file(s)." in item["DATA"]'
+    - name: ASSERT - Re-upload responses
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Successfully uploaded selected image file(s)." in item["DATA"]'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -117,22 +116,21 @@
 
     - name: Delete an image - without explicitly including any config
       cisco.dcnm.dcnm_image_upload:
-      state: deleted                            # choose form [merged, deleted, overridden, query], default is merged
+        state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
       register: result
 
-    - name: Assert result 5
-    - name: ASSERT - Check condition
+    - name: ASSERT - Delete (no config) structure
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 1'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 1'
 
-    - name: Assert result 6
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Image(s) Deleted Successfully" in item["DATA"]'
+    - name: ASSERT - Delete (no config) responses
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Image(s) Deleted Successfully" in item["DATA"]'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -141,49 +139,47 @@
 
     - name: Delete an image that does not exist
       cisco.dcnm.dcnm_image_upload:
-      state: deleted                            # choose form [merged, deleted, overridden, query], default is merged
+        state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - name: no-such-image.bin               # Name of an image that does not exist on controller
+          - name: no-such-image.bin
       register: result
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Delete non-existing image
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result.response | length) == 0'
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result.response | length) == 0'
 
 ##############################################
 ##                MERGE                     ##
 ##############################################
 
-    - name: Upload images to controller
+    - name: Upload images to controller (multiple)
       cisco.dcnm.dcnm_image_upload:
-      files:
-          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
-        source: local                         # choose from [local, scp, sftp], default is local
-
-          - path: "{{ IMAGE_2_PATH }}"            # Full path to the image on the server
-        source: sftp                          # choose from [local, scp, sftp], default is local
-        remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
-        username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
-        password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
+        files:
+          - path: "{{ IMAGE_3_PATH }}"
+            source: local
+          - path: "{{ IMAGE_2_PATH }}"
+            source: sftp
+            remote_server: "{{ SERVER_IP }}"
+            username: "{{ USERNAME }}"
+            password: "{{ PASSWORD }}"
       register: result
 
-    - name: Assert result 7
-    - name: ASSERT - Check condition
+    - name: ASSERT - Upload multiple result structure
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 2'
-        - '(result["diff"][0]["deleted"] | length) == 0'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 0'
 
-    - name: Assert result 8
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Successfully uploaded selected image file(s)." in item["DATA"]'
+    - name: ASSERT - Upload multiple responses
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Successfully uploaded selected image file(s)." in item["DATA"]'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -192,24 +188,23 @@
 
     - name: Delete one image from existing list
       cisco.dcnm.dcnm_image_upload:
-      state: deleted                            # choose form [merged, deleted, overridden, query], default is merged
+        state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - name: "{{ IMAGE_3_NAME }}"            # Name of the image on the controller
+          - name: "{{ IMAGE_3_NAME }}"
       register: result
 
-    - name: Assert result 9
-    - name: ASSERT - Check condition
+    - name: ASSERT - Delete one image structure
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 1'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 1'
 
-    - name: Assert result 10
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Image(s) Deleted Successfully" in item["DATA"]'
+    - name: ASSERT - Delete one image responses
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Image(s) Deleted Successfully" in item["DATA"]'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -218,16 +213,16 @@
 
     - name: Query and check if one image is still present
       cisco.dcnm.dcnm_image_upload:
-      state: query                              # choose form [merged, deleted, overridden, query], default is merged
+        state: query                              # choose from [merged, deleted, overridden, query]; default is merged
       register: result
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Query one image present
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result.response | length) == 1'
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result.response | length) == 1'
 
 ##############################################
 ##               DELETE                     ##
@@ -235,24 +230,24 @@
 
     - name: Delete one existing image and one non-existing image
       cisco.dcnm.dcnm_image_upload:
-      state: deleted                            # choose form [merged, deleted, overridden, query], default is merged
+        state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - name: "{{ IMAGE_2_NAME }}"            # Name of the image on the controller
-          - name: no-such-image.bin               # Name of an image that does not exist on controller
+          - name: "{{ IMAGE_2_NAME }}"
+          - name: no-such-image.bin
       register: result
 
-    - name: Assert result 11
-    - name: ASSERT - Check condition
+    - name: ASSERT - Delete existing + non-existing structure
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 1'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 1'
 
-    - name: Assert result 12
-        - ansible.built      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Image(s) Deleted Successfully" in item["DATA"]'
+    - name: ASSERT - Delete existing + non-existing responses
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Image(s) Deleted Successfully" in item["DATA"]'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -263,13 +258,13 @@
 
     - name: Delete all images from controller
       cisco.dcnm.dcnm_image_upload:
-      state: deleted                            # choose form [merged, deleted, overridden, query], default is merged
+        state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
       register: result
       when: it_context is not defined
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Cleanup delete all images
       ansible.builtin.assert:
-      that:
+        that:
           - 'item["RETURN_CODE"] == 200'
-        loop: '{{ result.response }}'
-        when: it_context is not defined
+      loop: '{{ result.response }}'
+      when: it_context is not defined

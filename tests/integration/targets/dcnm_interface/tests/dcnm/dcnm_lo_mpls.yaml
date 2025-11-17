@@ -47,191 +47,190 @@
   when: run_test
 
 - block:
-
-##############################################
-##             SETUP VARS                   ##
-##############################################
+  ##############################################
+  ##             SETUP VARS                   ##
+  ##############################################
 
     - name: Setup Internal TestCase Variables
-      ansible.builtin.set_fact:
+    ansible.builtin.set_fact:
       test_data_interfaces:
-          mpls_lo101_replace_conf_template: "templates/dcnm_lo/mpls_lo101_replace_conf.j2"
-          mpls_lo101_replace_conf_file: "{{ role_path }}/files/dcnm_interface_lo_mpls_lo101_replace_conf.yaml"
-          mpls_lo201_merge_conf_template: "templates/dcnm_lo/mpls_lo201_merge_conf.j2"
-          mpls_lo201_merge_conf_file: "{{ role_path }}/files/dcnm_interface_lo_mpls_lo201_merge_conf.yaml"
-      delegate_to: localhost
+        mpls_lo101_replace_conf_template: "templates/dcnm_lo/mpls_lo101_replace_conf.j2"
+        mpls_lo101_replace_conf_file: "{{ role_path }}/files/dcnm_interface_lo_mpls_lo101_replace_conf.yaml"
+        mpls_lo201_merge_conf_template: "templates/dcnm_lo/mpls_lo201_merge_conf.j2"
+        mpls_lo201_merge_conf_file: "{{ role_path }}/files/dcnm_interface_lo_mpls_lo201_merge_conf.yaml"
+    delegate_to: localhost
 
-    - name: Create Interface Config Files using J2 Templates
-      ansible.builtin.template:
+  - name: Create Interface Config Files using J2 Templates
+    ansible.builtin.template:
       src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
-        dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
-        - mpls_lo101_replace
-        - mpls_lo201_merge
-      delegate_to: localhost
+      dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
+    with_items:
+      - mpls_lo101_replace
+      - mpls_lo201_merge
+    delegate_to: localhost
 
-##############################################
-##                REPLACE                   ##
-##############################################
+  ##############################################
+  ##                REPLACE                   ##
+  ##############################################
 
-    # Note: MPLS fabric loopback interfaces are created at fabric creation time
-    # This test validates that we can modify them with the replace state
+  # Note: MPLS fabric loopback interfaces are created at fabric creation time
+  # This test validates that we can modify them with the replace state
 
-    - name: Load Replace Interface Config File
-      ansible.builtin.set_fact:
-        dcnm_interface_mpls_lo101_replace_conf: "{{ lookup('file', test_data_interfaces.mpls_lo101_replace_conf_file) | from_yaml }}"
-      delegate_to: localhost
+  - name: Load Replace Interface Config File
+    ansible.builtin.set_fact:
+      dcnm_interface_mpls_lo101_replace_conf: "{{ lookup('file', test_data_interfaces.mpls_lo101_replace_conf_file) | from_yaml }}"
+    delegate_to: localhost
 
-    - name: Replace MPLS fabric loopback interface (loopback101)
-      cisco.dcnm.dcnm_interface: &lo_replace_lo101
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
-        fabric: "{{ test_data_common.fabric }}"
-        state: replaced
-        config: "{{ dcnm_interface_mpls_lo101_replace_conf }}"
-      register: result
+  - name: Replace MPLS fabric loopback interface (loopback101)
+    cisco.dcnm.dcnm_interface: &lo_replace_lo101
+      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+      fabric: "{{ test_data_common.fabric }}"
+      state: replaced
+      config: "{{ dcnm_interface_mpls_lo101_replace_conf }}"
+    register: result
 
-    - name: ASSERT - Verify MPLS fabric loopback interface (loopback101) replace results
-      ansible.builtin.assert:
+  - name: ASSERT - Verify MPLS fabric loopback interface (loopback101) replace results
+    ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'
-        fail_msg: "Replace operation for loopback101 failed - {{ result }}"
-        success_msg: "Replace operation for loopback101 succeeded"
-      loop: '{{ result.response }}'
+        - 'result.changed == true'
+        - 'item["RETURN_CODE"] == 200'
+      fail_msg: "Replace operation for loopback101 failed - {{ result }}"
+      success_msg: "Replace operation for loopback101 succeeded"
+    loop: '{{ result.response }}'
 
-    - name: QUERY - Get MPLS fabric loopback interface (loopback101) state in NDFC
-      cisco.dcnm.dcnm_interface:
+  - name: QUERY - Get MPLS fabric loopback interface (loopback101) state in NDFC
+    cisco.dcnm.dcnm_interface:
       state: query
-        fabric: "{{ test_data_common.fabric }}"
-        config: "{{ dcnm_interface_mpls_lo101_replace_conf }}"
-      register: verify_result
+      fabric: "{{ test_data_common.fabric }}"
+      config: "{{ dcnm_interface_mpls_lo101_replace_conf }}"
+    register: verify_result
 
-    - name: VALIDITY CHECK - Verify MPLS fabric loopback interface (loopback101) state in NDFC
-      cisco.dcnm.tests.integration.ndfc_interface_validate:
+  - name: VALIDITY CHECK - Verify MPLS fabric loopback interface (loopback101) state in NDFC
+    cisco.dcnm.tests.integration.ndfc_interface_validate:
       config_path: "{{ test_data_interfaces.mpls_lo101_replace_conf_file }}"
-        ndfc_data: "{{ verify_result }}"
-        test_data: "{{ test_data_common }}"
-      delegate_to: localhost
+      ndfc_data: "{{ verify_result }}"
+      test_data: "{{ test_data_common }}"
+    delegate_to: localhost
 
-    - name: Replace MPLS fabric loopback interface (loopback101) - Idempotence
-      cisco.dcnm.dcnm_interface: *lo_replace_lo101
-      register: result
+  - name: Replace MPLS fabric loopback interface (loopback101) - Idempotence
+    cisco.dcnm.dcnm_interface: *lo_replace_lo101
+    register: result
 
-    - name: ASSERT - Verify MPLS fabric loopback interface (loopback101) idempotence results
-      ansible.builtin.assert:
+  - name: ASSERT - Verify MPLS fabric loopback interface (loopback101) idempotence results
+    ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - 'result.response is defined'
-          - 'result.response | length >= 0'  # Allow empty response for idempotence
-        fail_msg: "Idempotence check for loopback101 failed - {{ result }}"
-        success_msg: "Idempotence check for loopback101 succeeded"
-      # Don't loop over response items for idempotence check as they may be empty
+        - 'result.changed == false'
+        - 'result.response is defined'
+        - 'result.response | length >= 0'  # Allow empty response for idempotence
+      fail_msg: "Idempotence check for loopback101 failed - {{ result }}"
+      success_msg: "Idempotence check for loopback101 succeeded"
+    # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##                MERGE                     ##
-##############################################
+  ##############################################
+  ##                MERGE                     ##
+  ##############################################
 
-    # Test that we can also create new MPLS loopback interfaces
+  # Test that we can also create new MPLS loopback interfaces
 
-    - name: Load Merge Interface Config File
-      ansible.builtin.set_fact:
-        dcnm_interface_mpls_lo201_merge_conf: "{{ lookup('file', test_data_interfaces.mpls_lo201_merge_conf_file) | from_yaml }}"
-      delegate_to: localhost
+  - name: Load Merge Interface Config File
+    ansible.builtin.set_fact:
+      dcnm_interface_mpls_lo201_merge_conf: "{{ lookup('file', test_data_interfaces.mpls_lo201_merge_conf_file) | from_yaml }}"
+    delegate_to: localhost
 
-    - name: Create new MPLS loopback interface (loopback201)
-      cisco.dcnm.dcnm_interface: &lo_merge_lo201
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
-        fabric: "{{ test_data_common.fabric }}"
-        state: merged
-        config: "{{ dcnm_interface_mpls_lo201_merge_conf }}"
-      register: result
+  - name: Create new MPLS loopback interface (loopback201)
+    cisco.dcnm.dcnm_interface: &lo_merge_lo201
+      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+      fabric: "{{ test_data_common.fabric }}"
+      state: merged
+      config: "{{ dcnm_interface_mpls_lo201_merge_conf }}"
+    register: result
 
-    - name: ASSERT - Verify MPLS loopback interface (loopback201) creation results
-      ansible.builtin.assert:
+  - name: ASSERT - Verify MPLS loopback interface (loopback201) creation results
+    ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'
-        fail_msg: "Creation of loopback201 failed - {{ result }}"
-        success_msg: "Creation of loopback201 succeeded"
-      loop: '{{ result.response }}'
+        - 'result.changed == true'
+        - 'item["RETURN_CODE"] == 200'
+      fail_msg: "Creation of loopback201 failed - {{ result }}"
+      success_msg: "Creation of loopback201 succeeded"
+    loop: '{{ result.response }}'
 
-    - name: QUERY - Get MPLS loopback interface (loopback201) state in NDFC
-      cisco.dcnm.dcnm_interface:
+  - name: QUERY - Get MPLS loopback interface (loopback201) state in NDFC
+    cisco.dcnm.dcnm_interface:
       state: query
-        fabric: "{{ test_data_common.fabric }}"
-        config: "{{ dcnm_interface_mpls_lo201_merge_conf }}"
-      register: verify_result
+      fabric: "{{ test_data_common.fabric }}"
+      config: "{{ dcnm_interface_mpls_lo201_merge_conf }}"
+    register: verify_result
 
-    - name: VALIDITY CHECK - Verify MPLS loopback interface (loopback201) state in NDFC
-      cisco.dcnm.tests.integration.ndfc_interface_validate:
+  - name: VALIDITY CHECK - Verify MPLS loopback interface (loopback201) state in NDFC
+    cisco.dcnm.tests.integration.ndfc_interface_validate:
       config_path: "{{ test_data_interfaces.mpls_lo201_merge_conf_file }}"
-        ndfc_data: "{{ verify_result }}"
-        test_data: "{{ test_data_common }}"
-      delegate_to: localhost
+      ndfc_data: "{{ verify_result }}"
+      test_data: "{{ test_data_common }}"
+    delegate_to: localhost
 
-    - name: Create new MPLS loopback interface (loopback201) - Idempotence
-      cisco.dcnm.dcnm_interface: *lo_merge_lo201
-      register: result
+  - name: Create new MPLS loopback interface (loopback201) - Idempotence
+    cisco.dcnm.dcnm_interface: *lo_merge_lo201
+    register: result
 
-    - name: ASSERT - Verify MPLS loopback interface (loopback201) idempotence results
-      ansible.builtin.assert:
+  - name: ASSERT - Verify MPLS loopback interface (loopback201) idempotence results
+    ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - 'result.response is defined'
-          - 'result.response | length >= 0'  # Allow empty response for idempotence
-        fail_msg: "Idempotence check for loopback201 failed - {{ result }}"
-        success_msg: "Idempotence check for loopback201 succeeded"
-      # Don't loop over response items for idempotence check as they may be empty
+        - 'result.changed == false'
+        - 'result.response is defined'
+        - 'result.response | length >= 0'  # Allow empty response for idempotence
+      fail_msg: "Idempotence check for loopback201 failed - {{ result }}"
+      success_msg: "Idempotence check for loopback201 succeeded"
+    # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             DELETE                       ##
-##############################################
+  ##############################################
+  ##             DELETE                       ##
+  ##############################################
 
-    - name: Delete MPLS loopback interface (loopback201)
-      cisco.dcnm.dcnm_interface: &lo_delete_lo201
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
-        fabric: "{{ test_data_common.fabric }}"
-        state: deleted
-        config: "{{ dcnm_interface_mpls_lo201_merge_conf }}"
-      register: result
+  - name: Delete MPLS loopback interface (loopback201)
+    cisco.dcnm.dcnm_interface: &lo_delete_lo201
+      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+      fabric: "{{ test_data_common.fabric }}"
+      state: deleted
+      config: "{{ dcnm_interface_mpls_lo201_merge_conf }}"
+    register: result
 
-    - name: ASSERT - Verify MPLS loopback interface (loopback201) deletion results
-      ansible.builtin.assert:
+  - name: ASSERT - Verify MPLS loopback interface (loopback201) deletion results
+    ansible.builtin.assert:
       that:
-          - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'
-        fail_msg: "Deletion of loopback201 failed - {{ result }}"
-        success_msg: "Deletion of loopback201 succeeded"
-      loop: '{{ result.response }}'
+        - 'result.changed == true'
+        - 'item["RETURN_CODE"] == 200'
+      fail_msg: "Deletion of loopback201 failed - {{ result }}"
+      success_msg: "Deletion of loopback201 succeeded"
+    loop: '{{ result.response }}'
 
-    - name: QUERY - Get MPLS loopback interface (loopback201) state in NDFC (delete)
-      cisco.dcnm.dcnm_interface:
+  - name: QUERY - Get MPLS loopback interface (loopback201) state in NDFC (delete)
+    cisco.dcnm.dcnm_interface:
       state: query
-        fabric: "{{ test_data_common.fabric }}"
-        config: "{{ dcnm_interface_mpls_lo201_merge_conf }}"
-      register: verify_result
+      fabric: "{{ test_data_common.fabric }}"
+      config: "{{ dcnm_interface_mpls_lo201_merge_conf }}"
+    register: verify_result
 
-    - name: VALIDITY CHECK - Verify MPLS loopback interface (loopback201) is deleted
-      cisco.dcnm.tests.integration.ndfc_interface_validate:
+  - name: VALIDITY CHECK - Verify MPLS loopback interface (loopback201) is deleted
+    cisco.dcnm.tests.integration.ndfc_interface_validate:
       config_path: "{{ test_data_interfaces.mpls_lo201_merge_conf_file }}"
-        ndfc_data: "{{ verify_result }}"
-        test_data: "{{ test_data_common }}"
-        check_deleted: true
-      delegate_to: localhost
+      ndfc_data: "{{ verify_result }}"
+      test_data: "{{ test_data_common }}"
+      check_deleted: true
+    delegate_to: localhost
 
-    - name: Delete MPLS loopback interface (loopback201) - Idempotence
-      cisco.dcnm.dcnm_interface: *lo_delete_lo201
-      register: result
+  - name: Delete MPLS loopback interface (loopback201) - Idempotence
+    cisco.dcnm.dcnm_interface: *lo_delete_lo201
+    register: result
 
-    - name: ASSERT - Verify MPLS loopback interface (loopback201) deletion idempotence results
-      ansible.builtin.assert:
+  - name: ASSERT - Verify MPLS loopback interface (loopback201) deletion idempotence results
+    ansible.builtin.assert:
       that:
-          - 'result.changed == false'
-          - 'result.response is defined'
-          - 'result.response | length >= 0'  # Allow empty response for idempotence
-        fail_msg: "Deletion idempotence check for loopback201 failed - {{ result }}"
-        success_msg: "Deletion idempotence check for loopback201 succeeded"
-      # Don't loop over response items for idempotence check as they may be empty
+        - 'result.changed == false'
+        - 'result.response is defined'
+        - 'result.response | length >= 0'  # Allow empty response for idempotence
+      fail_msg: "Deletion idempotence check for loopback201 failed - {{ result }}"
+      success_msg: "Deletion idempotence check for loopback201 succeeded"
+    # Don't loop over response items for idempotence check as they may be empty
 
 ##############################################
 ##             CLEANUP                      ##
@@ -243,7 +242,7 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden
       register: result
@@ -251,7 +250,7 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
+        that:
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

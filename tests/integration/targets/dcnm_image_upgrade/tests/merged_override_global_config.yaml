@@ -85,10 +85,10 @@
       stage: true
       validate: true
       upgrade:
-      nxos: true
+        nxos: true
         epld: false
       options:
-      nxos:
+        nxos:
           mode: disruptive
           bios_force: false
         epld:
@@ -122,9 +122,9 @@
     state: query
     config:
       switches:
-          - ip_address: "{{ ansible_switch_1 }}"
-          - ip_address: "{{ ansible_switch_2 }}"
-          - ip_address: "{{ ansible_switch_3 }}"
+        - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
   register: result
   until:
     - ansible_switch_1 in result.diff[0]
@@ -163,10 +163,10 @@
       stage: true
       validate: true
       upgrade:
-      nxos: true
+        nxos: true
         epld: false
       options:
-      nxos:
+        nxos:
           mode: disruptive
           bios_force: false
         epld:
@@ -210,10 +210,10 @@
       stage: true
       validate: true
       upgrade:
-      nxos: true
+        nxos: true
         epld: false
       options:
-      nxos:
+        nxos:
           mode: disruptive
           bios_force: false
         epld:
@@ -247,9 +247,9 @@
     state: query
     config:
       switches:
-          - ip_address: "{{ ansible_switch_1 }}"
-          - ip_address: "{{ ansible_switch_2 }}"
-          - ip_address: "{{ ansible_switch_3 }}"
+        - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
   register: result
   until:
     - ansible_switch_1 in result.diff[0]
@@ -286,10 +286,10 @@
       stage: true
       validate: true
       upgrade:
-      nxos: true
+        nxos: true
         epld: false
       options:
-      nxos:
+        nxos:
           mode: disruptive
           bios_force: false
         epld:

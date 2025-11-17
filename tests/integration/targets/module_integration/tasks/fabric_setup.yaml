@@ -10,7 +10,7 @@
   register: purge_result
 
 - block:
-  - name: MERGE add spine & leaf devices
+    - name: MERGE add spine & leaf devices
     cisco.dcnm.dcnm_inventory: &spine_leaf_merged
       fabric: "{{ fabric_name }}"
       state: merged

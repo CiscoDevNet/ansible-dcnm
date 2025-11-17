@@ -146,7 +146,8 @@
 #                     },
 #                     "MESSAGE": "OK",
 #                     "METHOD": "GET",
-#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/",
+#                     "REQUEST_PATH_CONT": "bootflash-info?serialNumber=FOX2109PGCS",
 #                     "RETURN_CODE": 200
 #                 },
 #                 "172.22.150.113": {
@@ -183,7 +184,8 @@
 #                     },
 #                     "MESSAGE": "OK",
 #                     "METHOD": "GET",
-#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGD0",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/",
+#                     "REQUEST_PATH_CONT": "bootflash-info?serialNumber=FOX2109PGD0",
 #                     "RETURN_CODE": 200
 #                 },
 #                 "sequence_number": 1
@@ -206,14 +208,14 @@
 
 - name: QUERY - TEST - Query {{ wildcard_filepath }} on active supervisor of switches.
   cisco.dcnm.dcnm_bootflash:
-      state: query
-      config:
+    state: query
+    config:
       targets:
-          - filepath: "{{ wildcard_filepath }}"
-        supervisor: active
-        switches:
-          - ip_address: "{{ switch1 }}"
-          - ip_address: "{{ switch2 }}"
+        - filepath: "{{ wildcard_filepath }}"
+          supervisor: active
+      switches:
+        - ip_address: "{{ switch1 }}"
+        - ip_address: "{{ switch2 }}"
   register: result
 
 - name: Debug
@@ -241,7 +243,7 @@
       - result.changed == false
       - result.failed == false
       - (result.diff | length) == 1
-      - result.diff[0] | length) == 3
+      - (result.diff[0] | length) == 3
       - (result.response | length) == 1
       - result.response[0][switch1].RETURN_CODE == 200
       - result.response[0][switch2].RETURN_CODE == 200

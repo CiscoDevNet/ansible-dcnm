@@ -55,9 +55,19 @@
   ansible.builtin.set_fact:
     leaf_vrf_attach: []
 
-- name: SETUP.5 - SCALE - [set_fact] Build list of VRFs to be deployed
+- name: SETUP.5 - SCALE - [set_fact] Build single VRF dict per item
   ansible.builtin.set_fact:
-    vrfs_list: "{{ vrfs_list|default([]) + [{ 'vrf_name': 'TEST_VRF%03d' | format(item), 'deploy': 'no', 'vrf_id': (item | int + 60000) | int, 'vlan_id': (item | int + 2000) | int, 'attach': leaf_vrf_attach }] }}"
+    new_vrf:
+      vrf_name: "{{ 'TEST_VRF%03d' | format(item) }}"
+      deploy: "no"
+      vrf_id: "{{ (item | int + 60000) | int }}"
+      vlan_id: "{{ (item | int + 2000) | int }}"
+      attach: "{{ leaf_vrf_attach }}"
+  loop: '{{ range(0, 800) | list }}'
+
+- name: SETUP.5b - SCALE - [set_fact] Append VRF dict to list
+  ansible.builtin.set_fact:
+    vrfs_list: "{{ (vrfs_list | default([])) + [ new_vrf ] }}"
   loop: '{{ range(0, 800) | list }}'
 
 - name: TEST.1 - SCALE - [merged] Push all VRFs to the controller

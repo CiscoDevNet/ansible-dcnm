@@ -20,13 +20,13 @@
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+  ##############################################
+  ##             SETUP VARS                   ##
+  ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-      test_data_interfaces:
+        test_data_interfaces:
           merged_conf_template: "templates/dcnm_aa_fex/merged_conf.j2"
           merged_conf_file: "{{ role_path }}/files/dcnm_interface_aa_fex_merged_conf.yaml"
           query_merge_conf_template: "templates/dcnm_aa_fex/query_merge_conf.j2"
@@ -43,7 +43,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - merged
@@ -54,13 +54,13 @@
         - query_nonexist
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+  ##############################################
+  ##                MERGE                     ##
+  ##############################################
 
-    - name: Load Interface Config File
+    - name: Load Interface Config Files
       ansible.builtin.set_fact:
-      dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
+        dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
         dcnm_interface_query_merge_conf: "{{ lookup('file', test_data_interfaces.query_merge_conf_file) | from_yaml }}"
       delegate_to: localhost
 
@@ -68,7 +68,7 @@
       cisco.dcnm.dcnm_interface: &fex_merge
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged                                     # only choose from [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_query_merge_conf }}"
       register: result
 
@@ -81,74 +81,79 @@
     #       - '(result["diff"][0]["overridden"] | length) == 0'
     #       - '(result["diff"][0]["deploy"] | length) == 3'
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Merge result structure
       ansible.builtin.assert:
-    - name: ASSERT - Check condition
+        that:
+          - 'result.changed == true'
+          - '(result.diff[0].merged | length) == 3'
+          - '(result.diff[0].deleted | length) == 0'
+          - '(result.diff[0].replaced | length) == 0'
+          - '(result.diff[0].overridden | length) == 0'
+          - '(result.diff[0].deploy | length) == 3'
+    - name: ASSERT - Merge response codes
       ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##               QUERY                      ##
-##############################################
+  ##############################################
+  ##               QUERY                      ##
+  ##############################################
 
     - name: Load Query Interface Config File
       ansible.builtin.set_fact:
-      dcnm_interface_query_conf: "{{ lookup('file', test_data_interfaces.query_conf_file) | from_yaml }}"
+        dcnm_interface_query_conf: "{{ lookup('file', test_data_interfaces.query_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Query interface details - Existing
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: query                        # only choose form [merged, replaced, deleted, overridden, query]
+        state: query                        # only choose from [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_query_conf }}"
       register: result
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Query existing result structure
       ansible.builtin.assert:
-    - name: ASSERT - Check condition
+        that:
+          - '(result.diff[0].merged | length) == 0'
+          - '(result.diff[0].deleted | length) == 0'
+          - '(result.diff[0].replaced | length) == 0'
+          - '(result.diff[0].overridden | length) == 0'
+          - '(result.diff[0].deploy | length) == 0'
+          - '(result.diff[0].query | length) == 3'
+    - name: ASSERT - Query existing response
       ansible.builtin.assert:
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 3'
+        that:
+          - '(result.response | length) != 0'
 
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-          - ansible.builtin.assert:
-          - '(result["response"] | length) != 0'
-
-          - name: Query interface details - Subset of Existing
+    - name: Query interface details - Subset of Existing
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: query                        # only choose form [merged, replaced, deleted, overridden, query]
+        state: query
         config: "{{ lookup('file', test_data_interfaces.query_subset_conf_file) | from_yaml }}"
       register: result
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Query subset result structure
       ansible.builtin.assert:
-    - name: ASSERT - Check condition
+        that:
+          - '(result.diff[0].merged | length) == 0'
+          - '(result.diff[0].deleted | length) == 0'
+          - '(result.diff[0].replaced | length) == 0'
+          - '(result.diff[0].overridden | length) == 0'
+          - '(result.diff[0].deploy | length) == 0'
+          - '(result.diff[0].query | length) == 2'
+    - name: ASSERT - Query subset response
       ansible.builtin.assert:
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 2'
+        that:
+          - '(result.response | length) != 0'
 
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-          - ansible.builtin.assert:
-          - '(result["response"] | length) != 0'
-
-          - name: Query interface details - Existing and Non-Existing
+    - name: Query interface details - Existing and Non-Existing
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: query                        # only choose form [merged, replaced, deleted, overridden, query]
+        state: query
         config: "{{ lookup('file', test_data_interfaces.query_mixed_conf_file) | from_yaml }}"
       register: result
 
@@ -162,34 +167,46 @@
     #       - '(result["diff"][0]["deploy"] | length) == 0'
     #       - '(result["diff"][0]["query"] | length) == 1'
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Query mixed result structure
       ansible.builtin.assert:
-    - name: ASSERT - Check condition
+        that:
+          - '(result.diff[0].merged | length) == 0'
+          - '(result.diff[0].deleted | length) == 0'
+          - '(result.diff[0].replaced | length) == 0'
+          - '(result.diff[0].overridden | length) == 0'
+          - '(result.diff[0].deploy | length) == 0'
+          - '(result.diff[0].query | length) == 1'
+    - name: ASSERT - Query mixed response
       ansible.builtin.assert:
+        that:
+          - '(result.response | length) != 0'
 
     - name: Query interface details - Non-Existing
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: query                        # only choose form [merged, replaced, deleted, overridden, query]
+        state: query
         config: "{{ lookup('file', test_data_interfaces.query_nonexist_conf_file) | from_yaml }}"
       register: result
 
-    - name: ASSERT - Check condition
+    - name: ASSERT - Query non-existent result structure
       ansible.builtin.assert:
-    - name: ASSERT - Check condition
+        that:
+          - '(result.diff[0].merged | length) == 0'
+          - '(result.diff[0].deleted | length) == 0'
+          - '(result.diff[0].replaced | length) == 0'
+          - '(result.diff[0].overridden | length) == 0'
+          - '(result.diff[0].deploy | length) == 0'
+          - '(result.diff[0].query | length) == 0'
+    - name: ASSERT - Query non-existent response
       ansible.builtin.assert:
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - '(result.response | length) == 0'
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-          - ansible.builtin.assert:
-          - '(result["response"] | length) == 0'
+        that:
+          - '(result.response | length) == 0'
 
 ##############################################
 ##             CLEANUP                      ##
@@ -199,15 +216,15 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+        state: overridden
       register: result
       when: it_context is not defined
 
     - name: ASSERT - Check response codes
       ansible.builtin.assert:
-      that:
+        that:
           - 'item["RETURN_CODE"] == 200'
-        loop: '{{ result.response }}'
-        when: it_context is not defined
+      loop: '{{ result.response }}'
+      when: it_context is not defined

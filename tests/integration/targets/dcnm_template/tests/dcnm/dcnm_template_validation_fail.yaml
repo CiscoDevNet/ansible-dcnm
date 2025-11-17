@@ -2,34 +2,31 @@
 ##               SETUP                      ##
 ##############################################
 
-- name: Initialize the setup
+- name: Initialize template test context
   cisco.dcnm.dcnm_template:
     config:
       - name: template_101
-      - name: template_102
-      - name: template_103
-      - name: template_104
+  register: init_result
 
-  register: result
-
-- name: Assert
+- name: Assert initialization responses
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+    loop: '{{ init_result.response }}'
 
-      - name: set_fact when error found
+- name: Initialize error flag
   ansible.builtin.set_fact:
     error_exists: false
 
 - block:
 
 ##############################################
-##                MERGE                     ##
+##           VALIDATION FAILURE TEST        ##
 ##############################################
 
-    - name: Create templates
-      cisco.dcnm.dcnm_template: &temp_merge
+    - name: Attempt to create invalid template
+      cisco.dcnm.dcnm_template:
+        state: merged
         config:
           - name: test_fail
             description: "test_fail"
@@ -47,27 +44,26 @@
               };
               aaa group server radius $$AAA_GROUP$$
               server $$AAA_SERVER$$
-      register: result
+      register: fail_result
 
-    - name: ASSERT - Check condition
+    - name: Assert template validation failure diff
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["failed"] | length) == 1'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - 'fail_result.changed == false'
+          - '(fail_result.diff[0].failed | length) == 1'
+          - '(fail_result.diff[0].merged | length) == 0'
+          - '(fail_result.diff[0].deleted | length) == 0'
+          - '(fail_result.diff[0].query | length) == 0'
 
-    - name: set_fact when error found
+    - name: Flag error_exists when ERROR present
       ansible.builtin.set_fact:
-      error_exists: true
-      loop: "{{ lookup('list', result['response'][0]['DATA']) }}"
-      when: '"ERROR" == item.get("reportItemType")'
+        error_exists: true
+      when: '"ERROR" in (fail_result.response[0].DATA | string)'
 
-    - name: ASSERT - Check condition
+    - name: Assert error flag
       ansible.builtin.assert:
-      that:
-        - 'error_exists == true'
+        that:
+          - 'error_exists == true'
 
 ##############################################
 ##             CLEANUP                      ##

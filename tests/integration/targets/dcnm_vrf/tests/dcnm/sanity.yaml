@@ -82,7 +82,7 @@
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
         attach:
-        - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_1
@@ -159,7 +159,7 @@
         vrf_extension_template: Default_VRF_Extension_Universal
         l3vni_wo_vlan: true
         attach:
-        - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         deploy: false
   register: result_1g
@@ -229,7 +229,7 @@
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
         attach:
-        - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_2
@@ -339,7 +339,7 @@
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
         attach:
-        - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_2i
@@ -423,7 +423,7 @@
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
         attach:
-        - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_3
@@ -472,7 +472,7 @@
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
         attach:
-        - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_3c
@@ -559,7 +559,7 @@
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
         attach:
-        - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_4
@@ -660,7 +660,7 @@
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
         attach:
-        - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_5

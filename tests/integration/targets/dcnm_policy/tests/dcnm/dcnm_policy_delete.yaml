@@ -31,28 +31,22 @@
 ##                DELETE                    ##
 ##############################################
 
-    - name: Create policies
-      cisco.dcnm.dcnm_policy: &create_pol
+  - name: Create policies
+    cisco.dcnm.dcnm_policy: &create_pol
       fabric: "{{ ansible_it_fabric }}"
-        state: merged
-        config:
-          - name: template_101  # name is mandatory
+      state: merged
+      config:
+        - name: template_101  # name is mandatory
+        - name: template_102  # name is mandatory
+        - name: template_103  # name is mandatory
+        - name: template_104  # name is mandatory
+        - name: template_105  # name is mandatory
+        - switch:
+            - ip: "{{ ansible_switch1 }}"
+    register: result
 
-          - name: template_102  # name is mandatory
-
-          - name: template_103  # name is mandatory
-
-          - name: template_104  # name is mandatory
-
-          - name: template_105  # name is mandatory
-
-          - switch:
-              - ip: "{{ ansible_switch1 }}"
-
-      register: result
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
+  - name: ASSERT - Check condition
+    ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 5'
@@ -61,13 +55,14 @@
         - '(result["diff"][0]["deploy"] | length) == 5'
 
     # Assert for Create responses
-        - ansible.builtin.assert:
+  - name: ASSERT create responses
+    ansible.builtin.assert:
       that:
         - 'item["RETURN_CODE"] == 200'
         - '"Success" in item["DATA"]["successList"][0]["status"]'
-      when: (my_idx < (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
-      loop_control:
+    when: (my_idx < (result["diff"][0]["merged"] | length))
+    loop: '{{ result.response }}'
+    loop_control:
       index_var: my_idx
 
     # Assert for deploy responses
