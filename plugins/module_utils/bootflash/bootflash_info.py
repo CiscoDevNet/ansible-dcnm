@@ -20,19 +20,18 @@ import copy
 import inspect
 import logging
 from pathlib import PurePosixPath
+from typing import Literal
 
 from ..common.api.v1.imagemanagement.rest.discovery.discovery import \
     EpBootflashDiscovery
 from ..common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import \
     EpBootflashInfo
 from ..common.conversion import ConversionUtils
-from ..common.properties import Properties
+from ..common.rest_send_v2 import RestSend
 from ..common.results import Results
 from .convert_file_info_to_target import ConvertFileInfoToTarget
 
 
-@Properties.add_rest_send
-@Properties.add_results
 class BootflashInfo:
     """
     ### Summary
@@ -189,8 +188,8 @@ class BootflashInfo:
         self.response_dict = {}
         self.result_dict = {}
 
-        self._rest_send = None
-        self._results = None
+        self._rest_send: RestSend = RestSend({})
+        self._results: Results = Results()
         self._switch_details = None
         self._switches = None
 
@@ -535,9 +534,87 @@ class BootflashInfo:
         self.build_matches()
         return self._matches
 
-    # @matches.setter
-    # def matches(self, value):
-    #     self._matches = value
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        # Summary
+
+        An instance of the RestSend class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of RestSend.
+        -   setter: `ValueError` if RestSend.params is not set.
+
+        ## getter
+
+        Return an instance of the RestSend class.
+
+        ## setter
+
+        Set an instance of the RestSend class.
+        """
+        method_name: str = inspect.stack()[0][3]
+        if not self._rest_send.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set before accessing."
+            raise ValueError(msg)
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["RestSend"] = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        # Summary
+
+        An instance of the Results class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of Results.
+
+        ## getter
+
+        Return an instance of the Results class.
+
+        ## setter
+
+        Set an instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["Results"] = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._results = value
 
     @property
     def switch_details(self):

@@ -78,8 +78,9 @@ def test_bootflash_info_00000() -> None:
     assert instance.response_dict == {}
     assert instance.result_dict == {}
 
-    assert instance._rest_send is None
-    assert instance._results is None
+    assert instance._rest_send.params == {}
+    assert instance._rest_send.class_name == "RestSend"
+    assert instance._results.class_name == "Results"
     assert instance.switch_details is None
     assert instance.switches is None
 
@@ -182,33 +183,8 @@ def test_bootflash_info_00110() -> None:
         instance.switch_details = SwitchDetails()
         instance.switches = ["192.168.1.1"]
 
-    match = r"BootflashInfo\.validate_refresh_parameters: "
-    match += r"rest_send must be set prior to calling refresh\."
-    with pytest.raises(ValueError, match=match):
-        instance.refresh()
-
-
-def test_bootflash_info_00120() -> None:
-    """
-    ### Classes and Methods
-    - BootflashInfo()
-        - refresh()
-        - validate_refresh_parameters()
-
-    ### Summary
-    - Verify exception is raised if ``results`` is not set.
-
-    ### Test
-    -   ValueError is raised when ``results`` is not set.
-    """
-    with does_not_raise():
-        instance = BootflashInfo()
-        instance.rest_send = RestSend({})
-        instance.switch_details = SwitchDetails()
-        instance.switches = ["192.168.1.1"]
-
-    match = r"BootflashInfo\.validate_refresh_parameters: "
-    match += r"results must be set prior to calling refresh\."
+    match = r"BootflashInfo\.rest_send: "
+    match += r"RestSend.params must be set before accessing\."
     with pytest.raises(ValueError, match=match):
         instance.refresh()
 
@@ -228,7 +204,7 @@ def test_bootflash_info_00130() -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
         instance.switches = ["192.168.1.1"]
 
@@ -253,7 +229,7 @@ def test_bootflash_info_00140() -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
         instance.switch_details = SwitchDetails()
 
