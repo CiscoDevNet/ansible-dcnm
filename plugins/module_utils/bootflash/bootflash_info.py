@@ -13,7 +13,7 @@
 # limitations under the License.
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import copy
@@ -22,10 +22,8 @@ import logging
 from pathlib import PurePosixPath
 from typing import Literal
 
-from ..common.api.v1.imagemanagement.rest.discovery.discovery import \
-    EpBootflashDiscovery
-from ..common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import \
-    EpBootflashInfo
+from ..common.api.v1.imagemanagement.rest.discovery.discovery import EpBootflashDiscovery
+from ..common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import EpBootflashInfo
 from ..common.conversion import ConversionUtils
 from ..common.rest_send_v2 import RestSend
 from ..common.results import Results
@@ -297,9 +295,7 @@ class BootflashInfo:
             self.rest_send.verb = self.ep_bootflash_info.verb
             self.rest_send.commit()
 
-            self.info_dict[switch] = copy.deepcopy(
-                self.rest_send.response_current.get("DATA", {})
-            )
+            self.info_dict[switch] = copy.deepcopy(self.rest_send.response_current.get("DATA", {}))
             self.response_dict[switch] = copy.deepcopy(self.rest_send.response_current)
             self.result_dict[switch] = copy.deepcopy(self.rest_send.result_current)
 

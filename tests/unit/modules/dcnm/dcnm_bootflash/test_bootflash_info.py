@@ -20,34 +20,31 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
-    BootflashInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-    SwitchDetails
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import BootflashInfo
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import SwitchDetails
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-    MockAnsibleModule, configs_query, does_not_raise, params_query,
-    responses_ep_all_switches, responses_ep_bootflash_discovery,
-    responses_ep_bootflash_info)
+    MockAnsibleModule,
+    configs_query,
+    does_not_raise,
+    params_query,
+    responses_ep_all_switches,
+    responses_ep_bootflash_discovery,
+    responses_ep_bootflash_info,
+)
 
 
 def test_bootflash_info_00000() -> None:
