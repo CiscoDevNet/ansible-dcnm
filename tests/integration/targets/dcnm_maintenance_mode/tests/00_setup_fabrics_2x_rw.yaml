@@ -73,11 +73,11 @@
     that:
       - result.failed == false
 
-- name: Assert
+- name: Assert response codes
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 ################################################################################
 # 00_SETUP - Add one leaf switch to fabric_1
 ################################################################################

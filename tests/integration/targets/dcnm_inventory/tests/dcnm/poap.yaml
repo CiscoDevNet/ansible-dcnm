@@ -129,12 +129,12 @@
         role: border
         poap:
           - preprovision_serial: "{{ test_data.sw2_serial }}"
-            model: "{{ test_data.poap_model }}"
-            version: "{{ test_data.poap_version }}"
-            hostname: "{{ test_data.poap_hostname }}"
-            config_data:
+        model: "{{ test_data.poap_model }}"
+        version: "{{ test_data.poap_version }}"
+        hostname: "{{ test_data.poap_hostname }}"
+        config_data:
               modulesModel: ["N9K-C9300v"]
-              gateway: "10.15.15.1/24"
+          gateway: "10.15.15.1/24"
   when: poap_enabled == True
   delegate_to: localhost
   tags: poap
@@ -185,7 +185,7 @@
     that:
       - 'merged_result.changed == false'
       - 'merged_result.response == "The switch provided is already part of the fabric and cannot be created again"'
-  when: poap_enabled == True
+    when: poap_enabled == True
   tags: poap
 
 # TC - 3
@@ -202,7 +202,7 @@
   ansible.builtin.assert:
     that:
       - 'query_result.response != None'
-  when: poap_enabled == True
+    when: poap_enabled == True
   tags: poap
 
 - name: Poap TC3 - Check Query for POAP enabled swicthes
@@ -221,12 +221,12 @@
         role: border_gateway
         poap:
           - serial_number: "{{ test_data.sw1_serial }}"
-            model: "{{ test_data.poap_model }}"
-            version: "{{ test_data.poap_version }}"
-            hostname: "{{ test_data.poap_hostname }}"
-            config_data:
+        model: "{{ test_data.poap_model }}"
+        version: "{{ test_data.poap_version }}"
+        hostname: "{{ test_data.poap_hostname }}"
+        config_data:
               modulesModel: "{{ test_data.poap_modulesModel }}"
-              gateway: "{{ test_data.poap_gateway }}"
+          gateway: "{{ test_data.poap_gateway }}"
       - seed_ip: "{{ test_data.sw3 }}"
         auth_proto: MD5
         role: spine
@@ -234,12 +234,12 @@
         role: border
         poap:
           - preprovision_serial: "{{ test_data.sw2_serial }}"
-            model: "{{ test_data.poap_model }}"
-            version: "{{ test_data.poap_version }}"
-            hostname: "{{ test_data.poap_hostname }}"
-            config_data:
+        model: "{{ test_data.poap_model }}"
+        version: "{{ test_data.poap_version }}"
+        hostname: "{{ test_data.poap_hostname }}"
+        config_data:
               modulesModel: "{{ test_data.poap_modulesModel }}"
-              gateway: "{{ test_data.poap_gateway }}"
+          gateway: "{{ test_data.poap_gateway }}"
   when: (poap_enabled == True and poap_switch_present == True)
   delegate_to: localhost
   tags: poap
@@ -290,7 +290,7 @@
     that:
       - 'result.changed == false'
       - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
-  when: (poap_enabled == True and poap_switch_present == True)
+    when: (poap_enabled == True and poap_switch_present == True)
   tags: poap
 
 # ----------------------------------------------

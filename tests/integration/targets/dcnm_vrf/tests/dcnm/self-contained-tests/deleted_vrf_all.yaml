@@ -42,7 +42,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: DELETE_ALL - Clean up any existing vrfs
+      - name: DELETE_ALL - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -107,7 +107,7 @@
       - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
       - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: DELETE_ALL - Clean existing vrfs
+      - name: DELETE_ALL - Clean existing vrfs
   cisco.dcnm.dcnm_vrf: &conf
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -126,7 +126,7 @@
       - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
       - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: DELETE_ALL - conf - Idempotence
+      - name: DELETE_ALL - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf
   register: result
 

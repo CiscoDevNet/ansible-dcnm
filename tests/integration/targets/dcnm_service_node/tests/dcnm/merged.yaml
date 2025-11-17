@@ -25,7 +25,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: MERGED - Verify if service fabric is deployed.
+      - name: MERGED - Verify if service fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_ext_path }}"
@@ -36,7 +36,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: MERGED - Clean up any existing service node
+      - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -87,7 +87,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: MERGED - conf - Idempotence
+      - name: MERGED - conf - Idempotence
   cisco.dcnm.dcnm_service_node: *conf
   register: result
 
@@ -97,7 +97,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: MERGED - Clean up any existing service node
+      - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -144,7 +144,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: MERGED - conf1 - Idempotence
+      - name: MERGED - conf1 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf1
   register: result
 
@@ -154,7 +154,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: MERGED - Clean up any existing service node
+      - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -201,7 +201,7 @@
       - 'result.response[0].DATA.type == "ADC"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: MERGED - conf2 - Idempotence
+      - name: MERGED - conf2 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf2
   register: result
 
@@ -211,7 +211,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: MERGED - Clean up any existing service node
+      - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -258,7 +258,7 @@
       - 'result.response[0].DATA.type == "VNF"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: MERGED - conf3 - Idempotence
+      - name: MERGED - conf3 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf3
   register: result
 
@@ -268,7 +268,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: MERGED - Clean up any existing service node
+      - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -316,7 +316,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: MERGED - conf - Idempotence
+      - name: MERGED - conf - Idempotence
   cisco.dcnm.dcnm_service_node: *conf4
   register: result
 
@@ -326,7 +326,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: MERGED - Clean up any existing service node
+      - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -362,7 +362,7 @@
       - 'result.response[0].DATA.type == "ADC"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: MERGED - conf5 - Idempotence
+      - name: MERGED - conf5 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf5
   register: result
 
@@ -372,7 +372,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: MERGED - Clean up any existing service node
+      - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -408,7 +408,7 @@
       - 'result.response[0].DATA.type == "VNF"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: MERGED - conf - Idempotence
+      - name: MERGED - conf - Idempotence
   cisco.dcnm.dcnm_service_node: *conf6
   register: result
 
@@ -418,7 +418,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: MERGED - Clean up any existing service node
+      - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -453,7 +453,7 @@
       - 'result.response[0].DATA.type == "VNF"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: MERGED - Clean up any existing service node
+      - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -523,7 +523,7 @@
       - 'result.response[2].DATA.type == "ADC"'
       - 'result.response[2].DATA.name == "SN-13"'
 
-- name: MERGED - Clean up any existing service node
+      - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -593,7 +593,7 @@
       - 'result.response[2].DATA.type == "ADC"'
       - 'result.response[2].DATA.name == "SN-13"'
 
-- name: MERGED - Clean up any existing service node
+      - name: MERGED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -621,9 +621,9 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-  when: controller_version == "11"
+    when: controller_version == "11"
 
-- name: MERGED - Create Service Node with 2 switches and invalid vpc name
+      - name: MERGED - Create Service Node with 2 switches and invalid vpc name
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -646,7 +646,7 @@
       - 'result.changed == false'
       - '"if two switches are provided, vpc is only interface option" in result.msg'
 
-- name: MERGED - Create Service Node with 1 switch and valid vpc name
+      - name: MERGED - Create Service Node with 1 switch and valid vpc name
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -668,7 +668,7 @@
       - 'result.changed == false'
       - '"For 1 switch, vpc is not the interface option" in result.msg'
 
-- name: MERGED - Create Service Node with more than 2 switch and valid vpc name
+      - name: MERGED - Create Service Node with more than 2 switch and valid vpc name
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -692,7 +692,7 @@
       - 'result.changed == false'
       - '"Upto 2 switches only allowed" in result.msg'
 
-- name: MERGED - Create Service Node without required parameter
+      - name: MERGED - Create Service Node without required parameter
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -700,7 +700,7 @@
     config:
       - name: SN-11
         type:
-        form_factor: virtual
+      form_factor: virtual
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
@@ -714,7 +714,7 @@
       - 'result.changed == false'
       - '"Required parameter not found" in result.msg'
 
-- name: MERGED - Create Service Node with wrong type
+      - name: MERGED - Create Service Node with wrong type
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -736,7 +736,7 @@
       - 'result.changed == false'
       - '"Invalid choice provided" in result.msg'
 
-- name: MERGED - Create Service Node with wrong formfactor
+      - name: MERGED - Create Service Node with wrong formfactor
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"

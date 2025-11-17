@@ -4,7 +4,6 @@
 
 - name: Initialize the setup
   cisco.dcnm.dcnm_template:
-    state: deleted       # only choose form [merged, deleted, query]
     config:
       - name: template_101
       - name: template_102
@@ -17,7 +16,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 - block:
 
@@ -33,7 +32,6 @@
             description: "Template_101"
             tags: "internal policy 101"
             content: |
-              telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
                   use-vrf management
@@ -47,9 +45,9 @@
                   snsr-grp 1 sample-interval 10000
 
           - name: template_102
-            description: "Template_102"
-            tags: "internal policy 102"
-            content: |
+        description: "Template_102"
+        tags: "internal policy 102"
+        content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -64,9 +62,9 @@
                   snsr-grp 2 sample-interval 20000
 
           - name: template_103
-            description: "Template_103"
-            tags: "internal policy 103"
-            content: |
+        description: "Template_103"
+        tags: "internal policy 103"
+        content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -81,9 +79,9 @@
                   snsr-grp 2 sample-interval 30000
 
           - name: template_104
-            description: "Template_104"
-            tags: "internal policy 104"
-            content: |
+        description: "Template_104"
+        tags: "internal policy 104"
+        content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -98,13 +96,16 @@
                   snsr-grp 4 sample-interval 40000
 
       register: result
-    - ansible.builtin.assert:
+    - name: Assert result 1
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 4'
         - '(result["diff"][0]["deleted"] | length) == 0'
         - '(result["diff"][0]["query"] | length) == 0'
 
+    - name: Assert result 2
         - ansible.builtin.assert:
       that:
         - 'item["RETURN_CODE"] == 200'
@@ -113,10 +114,8 @@
 
     - name: Delete all templates created
       cisco.dcnm.dcnm_template: &temp_delete
-        state: deleted       # only choose form [merged, deleted, query]
         config:
           - name: template_101
-
           - name: template_102
 
           - name: template_103
@@ -125,24 +124,25 @@
 
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'item["RETURN_CODE"] == 200'
         - '"Template deletion successful" in item["DATA"]'
       loop: '{{ result.response }}'
 
-    - ansible.builtin.assert:
+        - ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 0'
         - '(result["diff"][0]["deleted"] | length) == 4'
         - '(result["diff"][0]["query"] | length) == 0'
 
-        - name: Delete all templates created - Idempotence
+    - name: Delete all templates created - Idempotence
       cisco.dcnm.dcnm_template: *temp_delete
-      register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == false'
         - '(result["diff"][0]["merged"] | length) == 0'

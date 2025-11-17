@@ -26,21 +26,23 @@
       config: "{{ vrfs }}"
       register: result
 
-  - ansible.builtin.assert:
-    that:
+  - name: Assert
+    ansible.builtin.assert:
+      that:
       - 'result.changed == true'
       - 'result.response|length == 3'
 
-      - name: Add Tenant VRF Objects - Idempotence
-    cisco.dcnm.dcnm_vrf: *add_vrfs
+  - name: Add Tenant VRF Objects - Idempotence
+      cisco.dcnm.dcnm_vrf: *add_vrfs
     register: result
 
-  - ansible.builtin.assert:
-    that:
+  - name: Assert
+    ansible.builtin.assert:
+      that:
       - 'result.changed == false'
 
-      - name: Query VRF State
-    cisco.dcnm.dcnm_vrf:
+  - name: Query VRF State
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: query
     register: result
@@ -72,8 +74,8 @@
         - 'result.response[2].attach[2].switchDetailsList[0].islanAttached == false'
         - 'result.response[2].attach[3].switchDetailsList[0].islanAttached == false'
 
-        - name: Specify attachments to switches with global deploy flag set to false
-    cisco.dcnm.dcnm_vrf:
+    - name: Specify attachments to switches with global deploy flag set to false
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: replaced
       config:
@@ -107,7 +109,7 @@
     register: result
 
   - name: Query VRF State
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: query
     register: result
@@ -115,7 +117,7 @@
   - ansible.builtin.assert: *vrf_created_no_attach_deploy
 
   - name: Specify attachments to switches with global deploy flag set to true
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: replaced
       config:
@@ -148,12 +150,13 @@
           deploy: true
     register: result
 
-  - ansible.builtin.assert:
-    that:
+  - name: Assert
+    ansible.builtin.assert:
+      that:
       - 'result.changed == true'
 
-      - name: Query fabric state until vrfStatus transitions to DEPLOYED state
-    cisco.dcnm.dcnm_vrf:
+  - name: Query fabric state until vrfStatus transitions to DEPLOYED state
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: query
     register: result
@@ -165,13 +168,14 @@
     delay: 5
 
   - name: Query VRF State
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: query
     register: result
 
-  - ansible.builtin.assert:
-    that:
+  - name: Assert
+    ansible.builtin.assert:
+      that:
       - 'result.response[0].parent.vrfName == "green_red"'
       - 'result.response[0].parent.vrfId == 470000'
       - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
@@ -197,13 +201,13 @@
       - 'result.response[2].attach[2].switchDetailsList[0].islanAttached == true'
       - 'result.response[2].attach[3].switchDetailsList[0].islanAttached == true'
 
-      - name: Cleanup - Delete Tenant VRFs
-    cisco.dcnm.dcnm_vrf:
+  - name: Cleanup - Delete Tenant VRFs
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: deleted
 
   - name: Add vrfs with global and per attach deploy override
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: replaced
       config:
@@ -212,9 +216,9 @@
           vlan_id: 201
           attach:
             - ip_address: "{{ leaf1 }}"
-              deploy: true
+          deploy: true
                 - ip_address: "{{ leaf2 }}"
-              deploy: true
+          deploy: true
                 - ip_address: "{{ leaf3 }}"
             - ip_address: "{{ leaf4 }}"
           deploy: false
@@ -225,9 +229,9 @@
           vlan_id: 401
           attach:
             - ip_address: "{{ leaf1 }}"
-              deploy: false
+          deploy: false
                 - ip_address: "{{ leaf2 }}"
-              deploy: false
+          deploy: false
                 - ip_address: "{{ leaf3 }}"
             - ip_address: "{{ leaf4 }}"
           deploy: true
@@ -235,7 +239,7 @@
           # vrf engineering should not be deployed on leaf1, leaf2
 
   - name: Query fabric state until vrfStatus transitions to DEPLOYED state
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: query
     register: result
@@ -246,13 +250,14 @@
     delay: 5
 
   - name: Query VRF State
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: query
     register: result
 
-  - ansible.builtin.assert:
-    that:
+  - name: Assert
+    ansible.builtin.assert:
+      that:
       - 'result.response[0].parent.vrfName == "green_red"'
       - 'result.response[0].parent.vrfId == 470000'
       - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
@@ -260,13 +265,13 @@
       - 'result.response[1].parent.vrfId == 480000'
       - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
 
-      - name: Cleanup - Delete Tenant VRFs
-    cisco.dcnm.dcnm_vrf:
+  - name: Cleanup - Delete Tenant VRFs
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: deleted
 
   - name: Add VRFs with vrf_id and vlan_id autoselection by DCNM
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: replaced
       config:
@@ -300,7 +305,7 @@
     register: result
 
   - name: Query fabric state until vrfStatus transitions to DEPLOYED state
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: query
     register: result
@@ -312,13 +317,14 @@
     delay: 5
 
   - name: Query VRF State
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: query
     register: result
 
-  - ansible.builtin.assert:
-    that:
+  - name: Assert
+    ansible.builtin.assert:
+      that:
       - 'result.response[0].parent.vrfName == "green_red"'
       - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
       - 'result.response[0].attach|length == 4'

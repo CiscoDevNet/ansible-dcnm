@@ -56,7 +56,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: MERGED - Clean up any existing vrfs
+      - name: MERGED - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -86,7 +86,7 @@
         - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/24 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -124,7 +124,7 @@
       - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
       - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
 
-- name: MERGED - conf1 - Idempotence
+      - name: MERGED - conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
   register: result
 
@@ -134,7 +134,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: VRF LITE- Attach and Deploy second VRF LITE EXTENSION Provided by the User in one switch
+      - name: VRF LITE- Attach and Deploy second VRF LITE EXTENSION Provided by the User in one switch
   cisco.dcnm.dcnm_vrf: &conf2
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -148,14 +148,14 @@
         - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/24 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
             neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
               - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2b }}" # mandatory
+        interface: "{{ interface_2b }}" # mandatory
             ipv4_addr: 20.33.0.2/24 # optional
             neighbor_ipv4: 20.33.0.1 # optional
             ipv6_addr: "3010::10:34:0:7/64 # optional"
@@ -191,7 +191,7 @@
       - '"{{ interface_2b }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
       - '"20.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
 
-- name: VRF LITE - conf2 - Idempotence
+      - name: VRF LITE - conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
   register: result
 
@@ -201,7 +201,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: VRF LITE- Replace VRF LITE Attachment and Deploy by the User in one switch
+      - name: VRF LITE- Replace VRF LITE Attachment and Deploy by the User in one switch
   cisco.dcnm.dcnm_vrf: &conf3
     fabric: "{{ fabric_1 }}"
     state: replaced
@@ -215,7 +215,7 @@
         - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/24 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -249,7 +249,7 @@
       - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
       - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
 
-- name: MERGED - conf3 - Idempotence
+      - name: MERGED - conf3 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf3
   register: result
 
@@ -259,7 +259,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: VRF LITE- Override VRF and VRF LITE EXTENSION Provided by the User
+      - name: VRF LITE- Override VRF and VRF LITE EXTENSION Provided by the User
   cisco.dcnm.dcnm_vrf: &conf4
     fabric: "{{ fabric_1 }}"
     state: overridden
@@ -273,14 +273,14 @@
         - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/24 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
             neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
               - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2b }}" # mandatory
+        interface: "{{ interface_2b }}" # mandatory
             ipv4_addr: 20.33.0.2/24 # optional
             neighbor_ipv4: 20.33.0.1 # optional
             ipv6_addr: "3010::10:34:0:7/64 # optional"
@@ -325,7 +325,7 @@
       - '"{{ interface_2b }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
       - '"20.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
 
-- name: VRF LITE - conf4 - Idempotence
+      - name: VRF LITE - conf4 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf4
   register: result
 
@@ -335,7 +335,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: VRF LITE - Clean up any existing vrfs
+      - name: VRF LITE - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -361,7 +361,7 @@
         - ip_address: "{{ switch_1 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int3 # optional
-            interface: "{{ interface_1a }}" # mandatory
+        interface: "{{ interface_1a }}" # mandatory
             ipv4_addr: 40.33.0.2/24 # optional
             neighbor_ipv4: 40.33.0.1 # optional
             ipv6_addr: "5010::10:34:0:7/64 # optional"
@@ -370,14 +370,14 @@
               - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/24 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
             neighbor_ipv6: "2010::10:34:0:3 # optional"
             dot1q: 2 # dot1q can be got from dcnm
               - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2b }}" # mandatory
+        interface: "{{ interface_2b }}" # mandatory
             ipv4_addr: 20.33.0.2/24 # optional
             neighbor_ipv4: 20.33.0.1 # optional
             ipv6_addr: "3010::10:34:0:7/64 # optional"
@@ -419,7 +419,7 @@
       - '"{{ interface_2b }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
       - '"20.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
 
-- name: VRF LITE - conf5 - Idempotence
+      - name: VRF LITE - conf5 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf5
   register: result
 

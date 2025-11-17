@@ -192,26 +192,26 @@
     state: deleted
     config:
       switches:
-          - ip_address: "{{ switch1 }}"
-            targets:
-              - filepath: "bootflash:/{{ switch1_file1 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch1_file2 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch1_file3 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch1_file4 }}"
-                supervisor: active
-          - ip_address: "{{ switch2 }}"
-            targets:
-              - filepath: "bootflash:/{{ switch2_file1 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch2_file2 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch2_file3 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch2_file4 }}"
-                supervisor: active
+        - ip_address: "{{ switch1 }}"
+          targets:
+            - filepath: "bootflash:/{{ switch1_file1 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch1_file2 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch1_file3 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch1_file4 }}"
+              supervisor: active
+        - ip_address: "{{ switch2 }}"
+          targets:
+            - filepath: "bootflash:/{{ switch2_file1 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch2_file2 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch2_file3 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch2_file4 }}"
+              supervisor: active
   register: result
 
 - name: Debug

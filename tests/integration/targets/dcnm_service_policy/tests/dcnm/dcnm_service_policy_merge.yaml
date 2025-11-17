@@ -31,7 +31,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 - block:
 
@@ -41,7 +41,7 @@
 
     - name: Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy: &dcnm_sp_create_all
-        fabric: "{{ ansible_it_fabric }}"                     # mandatory
+      fabric: "{{ ansible_it_fabric }}"                     # mandatory
         service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
         attach: true                                          # optional, default true
         deploy: true                                          # optional, default true
@@ -58,99 +58,99 @@
             reverse_next_hop: 192.161.2.100                   # mandatory
             reverse: false                                    # optional, default true
             policy:
-              proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
-              src_port: any                                   # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 22                                   # mandatory, choices=[any, Min:1, Max:65535)]
-              action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option: none                          # optional, default=none, choices=[none, drop_on_fail, drop]
-              acl_name: fwd_acl_10                            # optional, default value will be auto-generated
-              reverse_acl_name: rev_acl_10                    # optional, default value will be auto-generated
-              route_map_num: 101                              # optional, default value will be auto-generated
-              reverse_route_map_num: 102                      # optional, default value will be auto-generated
+          src_port: any                                   # mandatory, choices=[any, Min:1, Max:65535)]
+          dest_port: 22                                   # mandatory, choices=[any, Min:1, Max:65535)]
+          action: permit                                  # optional, default=permit, choices=[permit, deny]
+          next_hop_option: none                          # optional, default=none, choices=[none, drop_on_fail, drop]
+          acl_name: fwd_acl_10                            # optional, default value will be auto-generated
+          reverse_acl_name: rev_acl_10                    # optional, default value will be auto-generated
+          route_map_num: 101                              # optional, default value will be auto-generated
+          reverse_route_map_num: 102                      # optional, default value will be auto-generated
 
           - name: service_policy_2                            # mandatory
-            node_name: "{{ ansible_snode_2 }}"                # mandatory
-            rp_name: "{{ ansible_adc_rp4 }}"                  # mandatory
-            src_vrf: "{{ ansible_vrf_21 }}"                   # mandatory
-            dest_vrf: "{{ ansible_vrf_21 }}"                  # mandatory
-            src_network: "{{ ansible_net_21 }}"               # mandatory
-            dest_network: "{{ ansible_net_22 }}"              # mandatory
-            next_hop: ""                                      # mandatory
-            reverse_next_hop: 192.164.1.100                   # mandatory
-            policy:
-              proto: udp                                      # mandatory, choices=[tcp, udp, icmp, ip]
-              src_port: 2000                                  # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 2001                                 # mandatory, choices=[any, Min:1, Max:65535)]
-              action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option: drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
-              acl_name: fwd_acl_20                            # optional, default value will be auto-generated
-              reverse_acl_name: rev_acl_20                    # optional, default value will be auto-generated
-              route_map_num: 201                              # optional, default value will be auto-generated
-              reverse_route_map_num: 202                      # optional, default value will be auto-generated
+        node_name: "{{ ansible_snode_2 }}"                # mandatory
+        rp_name: "{{ ansible_adc_rp4 }}"                  # mandatory
+        src_vrf: "{{ ansible_vrf_21 }}"                   # mandatory
+        dest_vrf: "{{ ansible_vrf_21 }}"                  # mandatory
+        src_network: "{{ ansible_net_21 }}"               # mandatory
+        dest_network: "{{ ansible_net_22 }}"              # mandatory
+        next_hop: ""                                      # mandatory
+        reverse_next_hop: 192.164.1.100                   # mandatory
+        policy:
+          proto: udp                                      # mandatory, choices=[tcp, udp, icmp, ip]
+          src_port: 2000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+          dest_port: 2001                                 # mandatory, choices=[any, Min:1, Max:65535)]
+          action: permit                                  # optional, default=permit, choices=[permit, deny]
+          next_hop_option: drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
+          acl_name: fwd_acl_20                            # optional, default value will be auto-generated
+          reverse_acl_name: rev_acl_20                    # optional, default value will be auto-generated
+          route_map_num: 201                              # optional, default value will be auto-generated
+          reverse_route_map_num: 202                      # optional, default value will be auto-generated
 
           - name: service_policy_3                            # mandatory
-            node_name: "{{ ansible_snode_2 }}"                # mandatory
-            rp_name: "{{ ansible_adc_rp5 }}"                  # mandatory
-            src_vrf: "{{ ansible_vrf_31 }}"                   # mandatory
-            dest_vrf: "{{ ansible_vrf_31 }}"                  # mandatory
-            src_network: "{{ ansible_net_31 }}"               # mandatory
-            dest_network: "{{ ansible_net_32 }}"              # mandatory
-            next_hop: ""                                      # mandatory
-            reverse_next_hop: 192.165.2.100                   # mandatory
-            reverse: true                                     # optional, default true
-            policy:
-              proto: ip                                       # mandatory, choices=[tcp, udp, icmp, ip]
-              src_port: 3000                                  # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 3001                                 # mandatory, choices=[any, Min:1, Max:65535)]
-              action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
-              acl_name: fwd_acl_30                            # optional, default value will be auto-generated
-              reverse_acl_name: rev_acl_30                    # optional, default value will be auto-generated
-              route_map_num: 301                              # optional, default value will be auto-generated
-              reverse_route_map_num: 302                      # optional, default value will be auto-generated
+        node_name: "{{ ansible_snode_2 }}"                # mandatory
+        rp_name: "{{ ansible_adc_rp5 }}"                  # mandatory
+        src_vrf: "{{ ansible_vrf_31 }}"                   # mandatory
+        dest_vrf: "{{ ansible_vrf_31 }}"                  # mandatory
+        src_network: "{{ ansible_net_31 }}"               # mandatory
+        dest_network: "{{ ansible_net_32 }}"              # mandatory
+        next_hop: ""                                      # mandatory
+        reverse_next_hop: 192.165.2.100                   # mandatory
+        reverse: true                                     # optional, default true
+        policy:
+          proto: ip                                       # mandatory, choices=[tcp, udp, icmp, ip]
+          src_port: 3000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+          dest_port: 3001                                 # mandatory, choices=[any, Min:1, Max:65535)]
+          action: permit                                  # optional, default=permit, choices=[permit, deny]
+          next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+          acl_name: fwd_acl_30                            # optional, default value will be auto-generated
+          reverse_acl_name: rev_acl_30                    # optional, default value will be auto-generated
+          route_map_num: 301                              # optional, default value will be auto-generated
+          reverse_route_map_num: 302                      # optional, default value will be auto-generated
 
           - name: service_policy_4                            # mandatory
-            node_name: "{{ ansible_snode_2 }}"                # mandatory
-            rp_name: "{{ ansible_adc_rp6 }}"                  # mandatory
-            src_vrf: "{{ ansible_vrf_41 }}"                   # mandatory
-            dest_vrf: "{{ ansible_vrf_41 }}"                  # mandatory
-            src_network: "{{ ansible_net_41 }}"               # mandatory
-            dest_network: "{{ ansible_net_42 }}"              # mandatory
-            next_hop: ""                                      # mandatory
-            reverse_next_hop: 192.166.2.100                   # mandatory
-            policy:
-              proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
-              src_port: 4000                                  # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 4001                                 # mandatory, choices=[any, Min:1, Max:65535)]
-              action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
-              acl_name: fwd_acl_40                            # optional, default value will be auto-generated
-              reverse_acl_name: rev_acl_40                    # optional, default value will be auto-generated
-              route_map_num: 401                              # optional, default value will be auto-generated
-              reverse_route_map_num: 402                      # optional, default value will be auto-generated
+        node_name: "{{ ansible_snode_2 }}"                # mandatory
+        rp_name: "{{ ansible_adc_rp6 }}"                  # mandatory
+        src_vrf: "{{ ansible_vrf_41 }}"                   # mandatory
+        dest_vrf: "{{ ansible_vrf_41 }}"                  # mandatory
+        src_network: "{{ ansible_net_41 }}"               # mandatory
+        dest_network: "{{ ansible_net_42 }}"              # mandatory
+        next_hop: ""                                      # mandatory
+        reverse_next_hop: 192.166.2.100                   # mandatory
+        policy:
+          proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
+          src_port: 4000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+          dest_port: 4001                                 # mandatory, choices=[any, Min:1, Max:65535)]
+          action: permit                                  # optional, default=permit, choices=[permit, deny]
+          next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+          acl_name: fwd_acl_40                            # optional, default value will be auto-generated
+          reverse_acl_name: rev_acl_40                    # optional, default value will be auto-generated
+          route_map_num: 401                              # optional, default value will be auto-generated
+          reverse_route_map_num: 402                      # optional, default value will be auto-generated
 
           - name: service_policy_5                            # mandatory
-            node_name: "{{ ansible_snode_2 }}"                # mandatory
-            rp_name: "{{ ansible_adc_rp6 }}"                  # mandatory
-            src_vrf: "{{ ansible_vrf_41 }}"                   # mandatory
-            dest_vrf: "{{ ansible_vrf_41 }}"                  # mandatory
-            src_network: "{{ ansible_net_41 }}"               # mandatory
-            dest_network: "{{ ansible_net_42 }}"              # mandatory
-            next_hop: ""                                      # mandatory
-            reverse_next_hop: 192.166.2.100                   # mandatory
-            policy:
-              proto: icmp                                     # mandatory, choices=[tcp, udp, icmp, ip]
-              src_port: 5000                                  # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 5001                                 # mandatory, choices=[any, Min:1, Max:65535)]
-              action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
-              acl_name: fwd_acl_50                            # optional, default value will be auto-generated
-              reverse_acl_name: rev_acl_50                    # optional, default value will be auto-generated
-              route_map_num: 501                              # optional, default value will be auto-generated
-              reverse_route_map_num: 502                      # optional, default value will be auto-generated
+        node_name: "{{ ansible_snode_2 }}"                # mandatory
+        rp_name: "{{ ansible_adc_rp6 }}"                  # mandatory
+        src_vrf: "{{ ansible_vrf_41 }}"                   # mandatory
+        dest_vrf: "{{ ansible_vrf_41 }}"                  # mandatory
+        src_network: "{{ ansible_net_41 }}"               # mandatory
+        dest_network: "{{ ansible_net_42 }}"              # mandatory
+        next_hop: ""                                      # mandatory
+        reverse_next_hop: 192.166.2.100                   # mandatory
+        policy:
+          proto: icmp                                     # mandatory, choices=[tcp, udp, icmp, ip]
+          src_port: 5000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+          dest_port: 5001                                 # mandatory, choices=[any, Min:1, Max:65535)]
+          action: permit                                  # optional, default=permit, choices=[permit, deny]
+          next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+          acl_name: fwd_acl_50                            # optional, default value will be auto-generated
+          reverse_acl_name: rev_acl_50                    # optional, default value will be auto-generated
+          route_map_num: 501                              # optional, default value will be auto-generated
+          reverse_route_map_num: 502                      # optional, default value will be auto-generated
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 5'
@@ -168,7 +168,8 @@
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_create_all
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == false'
         - '(result["diff"][0]["merged"] | length) == 0'
@@ -177,7 +178,7 @@
         - '(result["diff"][0]["query"] | length) == 0'
         - '(result["diff"][0]["deploy"] | length) == 0'
 
-        - name: Delete a couple of service policies
+    - name: Delete a couple of service policies
       cisco.dcnm.dcnm_service_policy:
         fabric: "{{ ansible_it_fabric }}"                     # mandatory
         service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
@@ -185,15 +186,15 @@
         config:
           - name: service_policy_1                            # mandatory
             node_name: "{{ ansible_snode_1 }}"                # mandatory
-
           - name: service_policy_2                            # mandatory
-            node_name: "{{ ansible_snode_2 }}"                # mandatory
+        node_name: "{{ ansible_snode_2 }}"                # mandatory
 
           - name: service_policy_3                            # mandatory
-            node_name: "{{ ansible_snode_2 }}"                # mandatory
+        node_name: "{{ ansible_snode_2 }}"                # mandatory
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 0'
@@ -225,28 +226,28 @@
             next_hop: 192.161.1.100                           # mandatory
             reverse_next_hop: 192.161.2.100                   # mandatory
             policy:
-              proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
-              src_port: any                                   # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 22                                   # mandatory, choices=[any, Min:1, Max:65535)]
+          src_port: any                                   # mandatory, choices=[any, Min:1, Max:65535)]
+          dest_port: 22                                   # mandatory, choices=[any, Min:1, Max:65535)]
 
           - name: service_policy_2                            # mandatory
-            node_name: "{{ ansible_snode_2 }}"                # mandatory
-            rp_name: "{{ ansible_adc_rp4 }}"                  # mandatory
-            src_vrf: "{{ ansible_vrf_21 }}"                   # mandatory
-            dest_vrf: "{{ ansible_vrf_21 }}"                  # mandatory
-            src_network: "{{ ansible_net_21 }}"               # mandatory
-            dest_network: "{{ ansible_net_22 }}"              # mandatory
-            next_hop: ""                                      # mandatory
-            reverse_next_hop: 192.164.1.100                   # mandatory
-            policy:
-              proto: udp                                      # mandatory, choices=[tcp, udp, icmp, ip]
-              src_port: 2000                                  # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 2001                                 # mandatory, choices=[any, Min:1, Max:65535)]
-              action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+        node_name: "{{ ansible_snode_2 }}"                # mandatory
+        rp_name: "{{ ansible_adc_rp4 }}"                  # mandatory
+        src_vrf: "{{ ansible_vrf_21 }}"                   # mandatory
+        dest_vrf: "{{ ansible_vrf_21 }}"                  # mandatory
+        src_network: "{{ ansible_net_21 }}"               # mandatory
+        dest_network: "{{ ansible_net_22 }}"              # mandatory
+        next_hop: ""                                      # mandatory
+        reverse_next_hop: 192.164.1.100                   # mandatory
+        policy:
+          proto: udp                                      # mandatory, choices=[tcp, udp, icmp, ip]
+          src_port: 2000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+          dest_port: 2001                                 # mandatory, choices=[any, Min:1, Max:65535)]
+          action: permit                                  # optional, default=permit, choices=[permit, deny]
+          next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 2'
@@ -278,18 +279,18 @@
             next_hop: ""                                      # mandatory
             reverse_next_hop: 192.165.2.100                   # mandatory
             policy:
-              proto: ip                                       # mandatory, choices=[tcp, udp, icmp, ip]
-              src_port: 3000                                  # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 3001                                 # mandatory, choices=[any, Min:1, Max:65535)]
-              action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
-              acl_name: fwd_acl_30                            # optional, default value will be auto-generated
-              reverse_acl_name: rev_acl_30                    # optional, default value will be auto-generated
-              route_map_num: 301                              # optional, default value will be auto-generated
-              reverse_route_map_num: 302                      # optional, default value will be auto-generated
+          src_port: 3000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+          dest_port: 3001                                 # mandatory, choices=[any, Min:1, Max:65535)]
+          action: permit                                  # optional, default=permit, choices=[permit, deny]
+          next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+          acl_name: fwd_acl_30                            # optional, default value will be auto-generated
+          reverse_acl_name: rev_acl_30                    # optional, default value will be auto-generated
+          route_map_num: 301                              # optional, default value will be auto-generated
+          reverse_route_map_num: 302                      # optional, default value will be auto-generated
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 1'
@@ -321,18 +322,18 @@
             next_hop: ""                                      # mandatory
             reverse_next_hop: 192.165.2.100                   # mandatory
             policy:
-              proto: ip                                       # mandatory, choices=[tcp, udp, icmp, ip]
-              src_port: 3000                                  # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 3001                                 # mandatory, choices=[any, Min:1, Max:65535)]
-              action: permit                                  # optional, default=permit, choices=[permit, deny]
-              next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
-              acl_name: fwd_acl_30                            # optional, default value will be auto-generated
-              reverse_acl_name: rev_acl_30                    # optional, default value will be auto-generated
-              route_map_num: 301                              # optional, default value will be auto-generated
-              reverse_route_map_num: 302                      # optional, default value will be auto-generated
+          src_port: 3000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+          dest_port: 3001                                 # mandatory, choices=[any, Min:1, Max:65535)]
+          action: permit                                  # optional, default=permit, choices=[permit, deny]
+          next_hop_option: drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+          acl_name: fwd_acl_30                            # optional, default value will be auto-generated
+          reverse_acl_name: rev_acl_30                    # optional, default value will be auto-generated
+          route_map_num: 301                              # optional, default value will be auto-generated
+          reverse_route_map_num: 302                      # optional, default value will be auto-generated
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 0'
@@ -364,12 +365,12 @@
             next_hop: ""                                      # mandatory
             reverse_next_hop: 192.166.2.100                   # mandatory
             policy:
-              proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
-              src_port: 4400                                  # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 4401                                 # mandatory, choices=[any, Min:1, Max:65535)]
+          src_port: 4400                                  # mandatory, choices=[any, Min:1, Max:65535)]
+          dest_port: 4401                                 # mandatory, choices=[any, Min:1, Max:65535)]
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 0'

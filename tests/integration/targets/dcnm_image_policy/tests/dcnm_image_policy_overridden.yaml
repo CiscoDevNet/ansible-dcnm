@@ -179,7 +179,7 @@
       description: "{{ image_policy_1 }}"
       epld_image: "{{ epld_image_1 }}"
       packages:
-        install:
+      install:
         - "{{ install_package_1 }}"
         uninstall:
         - "{{ uninstall_package_1 }}"

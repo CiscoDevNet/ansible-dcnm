@@ -17,39 +17,41 @@
         src_fabric: "{{ ansible_vpc_fabric }}"
         config:
           - dst_fabric: "{{ ansible_vpc_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
+        src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
+        dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
+        src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
 
           - dst_fabric: "{{ ansible_vpc_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_2 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_2 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
+        src_interface: "{{ intf_1_2 }}"                      # Interface on the Source fabric
+        dst_interface: "{{ intf_1_2 }}"                      # Interface on the Destination fabric
+        src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
 
           - dst_fabric: "{{ ansible_vpc_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
+        src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+        dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+        src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
 
           - dst_fabric: "{{ ansible_vpc_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
+        src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+        dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+        src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
 
           - dst_fabric: "{{ ansible_vpc_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
+        src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
+        dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
+        src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
 
       register: result
 
-    - ansible.builtin.assert:
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       loop: '{{ result.response }}'
 
 ##############################################
@@ -62,32 +64,35 @@
         src_fabric: "{{ ansible_vpc_fabric }}"
         config:
           - dst_fabric: "{{ ansible_vpc_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
+        src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+        dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+        src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
             ansible.builtin.template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from
                                                                 #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
 
-            profile:
+        profile:
               peer1_ipv4_addr: 192.168.1.1                       # IPV4 address of the Source interface
               peer2_ipv4_addr: 192.168.1.2                       # IPV4 address of the Destination interface
-              admin_state: true                                  # choose from [true, false]
-              mtu: 9216                                          #
+          admin_state: true                                  # choose from [true, false]
+          mtu: 9216                                          #
 
       register: result
 
-    - ansible.builtin.assert:
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_vpc_fabric }}"] | length) == 2'
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - ansible.builtin.assert:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -101,15 +106,18 @@
       cisco.dcnm.dcnm_links: *links_merge_no_opt
       register: result
 
-    - ansible.builtin.assert:
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_vpc_fabric }}"] | length) == 2'
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - ansible.builtin.assert:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -122,8 +130,10 @@
       cisco.dcnm.dcnm_links: *links_delete
       register: result
 
-    - ansible.builtin.assert:
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       loop: '{{ result.response }}'
 
 ##############################################
@@ -136,42 +146,45 @@
         src_fabric: "{{ ansible_vpc_fabric }}"
         config:
           - dst_fabric: "{{ ansible_vpc_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
+        src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+        dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+        src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
+        dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
             ansible.builtin.template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from
                                                                 #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
 
-            profile:
+        profile:
               peer1_ipv4_addr: 192.170.1.1                       # IPV4 address of the Source interface
               peer2_ipv4_addr: 192.170.1.2                       # IPV4 address of the Destination interface
               peer1_ipv6_addr: "2080:2a::01                       # optional, default is """
               peer2_ipv6_addr: "2080:2a::02                       # optional, default is """
-              admin_state: true                                  # choose from [true, false]
-              mtu: 9216                                          #
+          admin_state: true                                  # choose from [true, false]
+          mtu: 9216                                          #
               peer1_description: "Description of source"         # optional, default is ""
               peer2_description: "Description of dest"           # optional, default is ""
-              enable_macsec: false                               # optional, choose from [true, false]
+          enable_macsec: false                               # optional, choose from [true, false]
               peer1_cmds: # Freeform config for source device
                 - false shutdown                                    # optional, default is ""
               peer2_cmds: # Freeform config for destination device
                 - false shutdown                                    # optional, default is ""
-              intf_vrf: "test_vrf"                               # optional, default is ""
+          intf_vrf: "test_vrf"                               # optional, default is ""
 
       register: result
 
-    - ansible.builtin.assert:
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_vpc_fabric }}"] | length) == 2'
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - ansible.builtin.assert:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -184,15 +197,18 @@
       cisco.dcnm.dcnm_links: *links_merge_with_opt
       register: result
 
-    - ansible.builtin.assert:
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0]["{{ ansible_vpc_fabric }}"] | length) == 2'
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - ansible.builtin.assert:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -208,7 +224,9 @@
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert:        that:
-      - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-      when: it_context is not defined
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+      that:
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ result.response }}'
+        when: it_context is not defined

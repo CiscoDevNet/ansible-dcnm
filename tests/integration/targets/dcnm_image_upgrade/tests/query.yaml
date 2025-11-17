@@ -77,10 +77,10 @@
       stage: true
       validate: true
       upgrade:
-        nxos: true
+      nxos: true
         epld: false
       options:
-        nxos:
+      nxos:
           mode: disruptive
           bios_force: false
         epld:
@@ -214,10 +214,10 @@
 
 - name: QUERY - TEST - Detach policies from two switches and verify.
   cisco.dcnm.dcnm_image_upgrade:
-        state: deleted
+      state: deleted
         config:
-            policy: "{{ image_policy_1 }}"
-            switches:
+        policy: "{{ image_policy_1 }}"
+        switches:
             - ip_address: "{{ ansible_switch_1 }}"
             - ip_address: "{{ ansible_switch_2 }}"
   register: result
@@ -303,9 +303,9 @@
 
 - name: QUERY - TEST - Verify image_policy_1 was removed from two switches.
   cisco.dcnm.dcnm_image_upgrade:
-        state: query
+      state: query
         config:
-            switches:
+        switches:
             - ip_address: "{{ ansible_switch_1 }}"
             - ip_address: "{{ ansible_switch_2 }}"
             - ip_address: "{{ ansible_switch_3 }}"
@@ -397,10 +397,10 @@
 
 - name: QUERY - TEST - Detach policies from remaining switch and verify.
   cisco.dcnm.dcnm_image_upgrade:
-        state: deleted
+      state: deleted
         config:
-            policy: "{{ image_policy_1 }}"
-            switches:
+        policy: "{{ image_policy_1 }}"
+        switches:
             - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
@@ -495,9 +495,9 @@
 
 - name: QUERY - TEST - Verify image_policy_1 was removed from all switches.
   cisco.dcnm.dcnm_image_upgrade:
-        state: query
+      state: query
         config:
-            switches:
+        switches:
             - ip_address: "{{ ansible_switch_1 }}"
             - ip_address: "{{ ansible_switch_2 }}"
             - ip_address: "{{ ansible_switch_3 }}"

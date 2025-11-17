@@ -53,7 +53,7 @@
       - 'result_1.failed == false'
 
 
-- name: TEST.2 - Verify ERROR severity.
+      - name: TEST.2 - Verify ERROR severity.
   cisco.dcnm.dcnm_log:
     msg: Testing ERROR severity
     severity: ERROR
@@ -69,7 +69,7 @@
       - 'result_2.changed == false'
       - 'result_2.failed == false'
 
-- name: TEST.3 - Verify INFO severity.
+      - name: TEST.3 - Verify INFO severity.
   cisco.dcnm.dcnm_log:
     msg: Testing INFO severity
     severity: INFO
@@ -85,7 +85,7 @@
       - 'result_3.changed == false'
       - 'result_3.failed == false'
 
-- name: TEST.4 - Verify WARNING severity.
+      - name: TEST.4 - Verify WARNING severity.
   cisco.dcnm.dcnm_log:
     msg: Testing WARNING severity
     severity: WARNING
@@ -101,7 +101,7 @@
       - 'result_4.changed == false'
       - 'result_4.failed == false'
 
-- name: TEST.5 - Verify missing severity uses default (DEBUG).
+      - name: TEST.5 - Verify missing severity uses default (DEBUG).
   cisco.dcnm.dcnm_log:
     msg: Testing missing severity
   register: result_5
@@ -117,7 +117,7 @@
       - 'result_5.changed == false'
       - 'result_5.failed == false'
 
-- name: TEST.6 - Negative. Verify invalid severity (FOO).
+      - name: TEST.6 - Negative. Verify invalid severity (FOO).
   cisco.dcnm.dcnm_log:
     msg: Testing FOO severity
     severity: FOO
@@ -139,7 +139,7 @@
       - 'result_6.failed == true'
       - error_message in result_6.msg
 
-- name: TEST.7 - Negative. Missing msg.
+      - name: TEST.7 - Negative. Missing msg.
   cisco.dcnm.dcnm_log:
     severity: DEBUG
   register: result_7

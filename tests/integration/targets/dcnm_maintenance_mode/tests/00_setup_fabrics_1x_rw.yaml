@@ -61,11 +61,11 @@
     that:
       - result.failed == false
 
-- name: Assert
+- name: Assert response codes
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 ################################################################################
 # 00_SETUP - Merge leaf_1 and leaf_2 into fabric_1
 ################################################################################

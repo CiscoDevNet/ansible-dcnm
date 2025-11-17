@@ -60,7 +60,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 - block:
 
@@ -74,59 +74,60 @@
         fabric: "{{ ansible_it_fabric }}"
         config:
           - entity_name: "l3_vni_fabric"           # A unique name to identify the resource
-            pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "L3_VNI"                    # Based on the 'poolType', select appropriate name
-            scope_type: "fabric"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            resource: "101"                        # The value of the resource being created
+        pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "L3_VNI"                    # Based on the 'poolType', select appropriate name
+        scope_type: "fabric"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        resource: "101"                        # The value of the resource being created
 
           - entity_name: "l2_vni_fabric"           # A unique name to identify the resource
-            pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "L2_VNI"                    # Based on the 'poolType', select appropriate name
-            scope_type: "fabric"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            resource: "102"                        # The value of the resource being created
+        pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "L2_VNI"                    # Based on the 'poolType', select appropriate name
+        scope_type: "fabric"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        resource: "102"                        # The value of the resource being created
 
           - entity_name: "loopback_dev"            # A unique name to identify the resource
-            pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "LOOPBACK_ID"               # Based on the 'poolType', select appropriate name
-            scope_type: "device"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            switch: # provide the switch information to which the given resource is to be attached
+        pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "LOOPBACK_ID"               # Based on the 'poolType', select appropriate name
+        scope_type: "device"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch: # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch1 }}"            # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch2 }}"            # provide the switch information to which the given resource is to be attached
-            resource: "200"                        # The value of the resource being created
+        resource: "200"                        # The value of the resource being created
 
           - entity_name: "{{ ansible_sno_1 }}~{{ ansible_sno_2 }}"  # A unique name to identify the resource
-            pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "VPC_ID"                    # Based on the 'poolType', select appropriate name
-            scope_type: "device_pair"              # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            switch: # provide the switch information to which the given resource is to be attached
+        pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "VPC_ID"                    # Based on the 'poolType', select appropriate name
+        scope_type: "device_pair"              # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch: # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch1 }}"            # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch2 }}"            # provide the switch information to which the given resource is to be attached
-            resource: "500"                        # The value of the resource being created
+        resource: "500"                        # The value of the resource being created
 
           - entity_name: "mmudigon-2"              # A unique name to identify the resource
-            pool_type: "IP"                        # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "LOOPBACK0_IP_POOL"         # Based on the 'poolType', select appropriate name
-            scope_type: "fabric"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            resource: "110.1.1.1"                  # The value of the resource being created
+        pool_type: "IP"                        # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "LOOPBACK0_IP_POOL"         # Based on the 'poolType', select appropriate name
+        scope_type: "fabric"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        resource: "110.1.1.1"                  # The value of the resource being created
 
           - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_10 }}"  # A unique name to identify the resource
-            pool_type: "IP"                        # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "LOOPBACK1_IP_POOL"         # Based on the 'poolType', select appropriate name
-            scope_type: "device_interface"         # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            switch: # provide the switch information to which the given resource is to be attached
+        pool_type: "IP"                        # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "LOOPBACK1_IP_POOL"         # Based on the 'poolType', select appropriate name
+        scope_type: "device_interface"         # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch: # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch1 }}"            # provide the switch information to which the given resource is to be attached
-            resource: "fe:80::04"                  # The value of the resource being created
+        resource: "fe:80::04"                  # The value of the resource being created
 
           - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_3 }}~{{ ansible_sno_2 }}~{{ intf_1_3 }}"  # A unique name to identify the resource
-            pool_type: "SUBNET"                    # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "SUBNET"                    # Based on the 'poolType', select appropriate name
-            scope_type: "link"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            switch: # provide the switch information to which the given resource is to be attached
+        pool_type: "SUBNET"                    # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "SUBNET"                    # Based on the 'poolType', select appropriate name
+        scope_type: "link"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch: # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch1 }}"
-            resource: "fe:80:0505::05/64"          # The value of the resource being created
+        resource: "fe:80:0505::05/64"          # The value of the resource being created
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 9'
@@ -146,7 +147,8 @@
       cisco.dcnm.dcnm_resource_manager: *rm_delete
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 0'
@@ -166,7 +168,8 @@
       cisco.dcnm.dcnm_resource_manager: *rm_delete
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == false'
         - '(result["diff"][0]["merged"] | length) == 0'
@@ -183,14 +186,15 @@
 
     - name: Delete Resources - scope_type missing
       cisco.dcnm.dcnm_resource_manager:
-        state: deleted                                 # choose form [merged, deleted, query]
+      state: deleted                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - entity_name: "l3_vni_fabric"               # A unique name to identify the resource
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result["msg"] == "Mandatory parameter ''scope_type'' missing"'
 
@@ -198,16 +202,17 @@
 ##        MISSING PARAMS IN DELETE          ##
 ##############################################
 
-        - name: Delete Resources - pool_type missing
+    - name: Delete Resources - pool_type missing
       cisco.dcnm.dcnm_resource_manager:
-        state: deleted                                 # choose form [merged, deleted, query]
+      state: deleted                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - scope_type: "fabric"
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result["msg"] == "Mandatory parameter ''pool_type'' missing"'
 
@@ -215,18 +220,19 @@
 ##        MISSING PARAMS IN DELETE          ##
 ##############################################
 
-        - name: Delete Resources - entity_name missing
+    - name: Delete Resources - entity_name missing
       cisco.dcnm.dcnm_resource_manager:
-        state: deleted                                 # choose form [merged, deleted, query]
+      state: deleted                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - pool_type: "ID"                            # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "VPC_ID"                        # Based on the 'poolType', select appropriate name
-            scope_type: "fabric"
+        pool_name: "VPC_ID"                        # Based on the 'poolType', select appropriate name
+        scope_type: "fabric"
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result["msg"] == "Mandatory parameter ''entity_name'' missing"'
 
@@ -234,18 +240,19 @@
 ##        MISSING PARAMS IN DELETE          ##
 ##############################################
 
-        - name: Delete Resources - pool_name missing
+    - name: Delete Resources - pool_name missing
       cisco.dcnm.dcnm_resource_manager:
-        state: deleted                                 # choose form [merged, deleted, query]
+      state: deleted                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - entity_name: "l3_vni_fabric"               # A unique name to identify the resource
-            pool_type: "ID"                            # choose from ['ID', 'IP', 'SUBNET']
-            scope_type: "fabric"
+        pool_type: "ID"                            # choose from ['ID', 'IP', 'SUBNET']
+        scope_type: "fabric"
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result["msg"] == "Mandatory parameter ''pool_name'' missing"'
 
@@ -253,15 +260,15 @@
 ##        MISSING PARAMS IN DELETE          ##
 ##############################################
 
-        - name: Delete Resources - switch info missing
+    - name: Delete Resources - switch info missing
       cisco.dcnm.dcnm_resource_manager:
-        state: deleted                                 # choose form [merged, deleted, query]
+      state: deleted                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - entity_name: "{{ ansible_sno_1 }}~{{ ansible_sno_2 }}" # A unique name to identify the resource
-            pool_type: "ID"                            # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "VPC_ID"                        # Based on the 'poolType', select appropriate name
-            scope_type: "device_pair"                  # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        pool_type: "ID"                            # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "VPC_ID"                        # Based on the 'poolType', select appropriate name
+        scope_type: "device_pair"                  # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
 
       register: result
       ignore_errors: true

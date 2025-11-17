@@ -132,7 +132,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
+      - name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
   tags: sanity
@@ -251,7 +251,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11111111111"'
 
-- name: SANITY- REPLACED - Clean up any existing service node
+      - name: SANITY- REPLACED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -287,7 +287,7 @@
         svc_int_name: svc11
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
     - name: SN-12
       type: load_balancer
       form_factor: virtual

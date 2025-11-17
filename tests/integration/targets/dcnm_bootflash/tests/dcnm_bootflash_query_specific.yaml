@@ -208,23 +208,23 @@
   cisco.dcnm.dcnm_bootflash:
       state: query
       config:
-        switches:
+      switches:
           - ip_address: "{{ switch1 }}"
-            targets:
+        targets:
               - filepath: "bootflash:/{{ switch1_file2 }}"
-                supervisor: active
+          supervisor: active
               - filepath: "bootflash:/{{ switch1_file3 }}"
-                supervisor: active
+          supervisor: active
               - filepath: "bootflash:/{{ switch1_file4 }}"
-                supervisor: active
+          supervisor: active
           - ip_address: "{{ switch2 }}"
-            targets:
+        targets:
               - filepath: "bootflash:/{{ switch2_file2 }}"
-                supervisor: active
+          supervisor: active
               - filepath: "bootflash:/{{ switch2_file3 }}"
-                supervisor: active
+          supervisor: active
               - filepath: "bootflash:/{{ switch2_file4 }}"
-                supervisor: active
+          supervisor: active
   register: result
 
 - name: Debug

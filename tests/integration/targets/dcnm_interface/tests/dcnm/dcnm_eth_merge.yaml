@@ -24,7 +24,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 - block:
 
@@ -34,14 +34,14 @@
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-        test_data_interfaces:
+      test_data_interfaces:
           merge_conf_template: "templates/dcnm_eth/merge_conf.j2"
           merge_conf_file: "{{ role_path }}/files/dcnm_interface_eth_merge_conf.yaml"
       delegate_to: localhost
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - merge
@@ -53,7 +53,7 @@
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
-        dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
+      dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Create ethernet interfaces
@@ -67,21 +67,21 @@
 
     - name: ASSERT - Check changed flag is true and return codes
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+        loop: '{{ result.response }}'
 
-    - name: QUERY - Get interface state in NDFC
+          - name: QUERY - Get interface state in NDFC
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_merge_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.merge_conf_file }}"
+      config_path: "{{ test_data_interfaces.merge_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -92,7 +92,7 @@
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
@@ -106,7 +106,7 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+      check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
@@ -114,7 +114,7 @@
 
     - name: ASSERT - Check return codes for cleanup
       ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-      when: it_context is not defined
+        loop: '{{ result.response }}'
+        when: it_context is not defined

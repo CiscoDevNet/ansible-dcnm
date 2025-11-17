@@ -16,7 +16,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 - block:
 
@@ -26,7 +26,7 @@
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-        test_data_interfaces:
+      test_data_interfaces:
           override_merge_conf_template: "templates/dcnm_pc/override_merge_conf.j2"
           override_merge_conf_file: "{{ role_path }}/files/dcnm_interface_pc_override_merge_conf.yaml"
           override_conf_template: "templates/dcnm_pc/override_conf.j2"
@@ -35,7 +35,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - override_merge
@@ -48,7 +48,7 @@
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
-        dcnm_interface_override_merge_conf: "{{ lookup('file', test_data_interfaces.override_merge_conf_file) | from_yaml }}"
+      dcnm_interface_override_merge_conf: "{{ lookup('file', test_data_interfaces.override_merge_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Create port channel interfaces
@@ -61,7 +61,7 @@
 
     - name: ASSERT - Verify port channel interface creation results
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Creation of port channel interfaces failed - {{ result }}"
@@ -70,14 +70,14 @@
 
     - name: QUERY - Get port channel interface state in NDFC (merge)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_override_merge_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify port channel interface state in NDFC (merge)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.override_merge_conf_file }}"
+      config_path: "{{ test_data_interfaces.override_merge_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -88,7 +88,7 @@
 
     - name: Load Override Interface Config File
       ansible.builtin.set_fact:
-        dcnm_interface_override_conf: "{{ lookup('file', test_data_interfaces.override_conf_file) | from_yaml }}"
+      dcnm_interface_override_conf: "{{ lookup('file', test_data_interfaces.override_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Override port channel interfaces
@@ -101,7 +101,7 @@
 
     - name: ASSERT - Verify port channel interface override results
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Override of port channel interfaces failed - {{ result }}"
@@ -110,14 +110,14 @@
 
     - name: QUERY - Get port channel interface state in NDFC (override)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_override_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify port channel interface state in NDFC (override)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.override_conf_file }}"
+      config_path: "{{ test_data_interfaces.override_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -128,7 +128,7 @@
 
     - name: ASSERT - Verify port channel interface override idempotence results
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == false'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Idempotence check for port channel interface override failed - {{ result }}"
@@ -143,13 +143,14 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+      check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

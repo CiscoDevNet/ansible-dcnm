@@ -20,7 +20,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 - block:
 
@@ -30,14 +30,14 @@
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-        test_data_interfaces:
+      test_data_interfaces:
           merge_conf_template: "templates/dcnm_svi/merge_conf.j2"
           merge_conf_file: "{{ role_path }}/files/dcnm_interface_svi_merge_conf.yaml"
       delegate_to: localhost
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - merge
@@ -49,7 +49,7 @@
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
-        dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
+      dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Create SVI interfaces
@@ -62,7 +62,7 @@
 
     - name: ASSERT - Verify SVI interface creation results
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Creation of SVI interfaces failed - {{ result }}"
@@ -71,14 +71,14 @@
 
     - name: QUERY - Get SVI interface state in NDFC (setup)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.svi_fabric }}"
         config: "{{ dcnm_interface_merge_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify SVI interface state in NDFC (setup)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.merge_conf_file }}"
+      config_path: "{{ test_data_interfaces.merge_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -92,13 +92,14 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+      check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.svi_fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

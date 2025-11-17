@@ -63,7 +63,8 @@
 
 - name: RMA Base Task - Assert Fabric Existence
   ansible.builtin.assert:
-  ansible.builtin.assert:
+    that:
+      - 'fabric_data is defined'
     fail_msg: "Fabric '{{ test_data.test_fabric }}' not found."
   tags: rma
 
@@ -162,8 +163,9 @@
 
 - name: Assert
   ansible.builtin.assert:
-  ansible.builtin.assert:
-  when: rma_enabled == True
+    that:
+      - 'query_result.response is defined'
+    when: rma_enabled == True
   tags: rma
 
 - name: RMA TC2 - Check Query for POAP enabled swicthes
@@ -199,27 +201,30 @@
 - block:
     - name: RMA TC3 - RMA the Existing Switch
       cisco.dcnm.dcnm_inventory:
-        fabric: '{{ test_data.test_fabric }}'
+      fabric: '{{ test_data.test_fabric }}'
         state: merged
         config:
           - seed_ip: '{{ test_data.sw1 }}'
-            user_name: '{{ switch_username }}'
-            password: '{{ switch_password }}'
-            rma:
+        user_name: '{{ switch_username }}'
+        password: '{{ switch_password }}'
+        rma:
               - serial_number: '{{ test_data.sw1_rma_serial }}'
-                old_serial: '{{ test_data.sw1_serial }}'
-                model: '{{ test_data.rma_model }}'
-                version: '{{ test_data.rma_model }}'
-                hostname: '{{ test_data.rma_hostname }}'
-                config_data:
+          old_serial: '{{ test_data.sw1_serial }}'
+          model: '{{ test_data.rma_model }}'
+          version: '{{ test_data.rma_model }}'
+          hostname: '{{ test_data.rma_hostname }}'
+          config_data:
                   modulesModel: '{{ test_data.rma_modulesModel }}'
                   gateway: '{{ test_data.rma_gateway }}'
       register: result
 
-    - ansible.builtin.assert:
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         - ansible.builtin.assert:
               - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

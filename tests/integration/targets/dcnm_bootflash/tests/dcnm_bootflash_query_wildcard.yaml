@@ -208,9 +208,9 @@
   cisco.dcnm.dcnm_bootflash:
       state: query
       config:
-        targets:
+      targets:
           - filepath: "{{ wildcard_filepath }}"
-            supervisor: active
+        supervisor: active
         switches:
           - ip_address: "{{ switch1 }}"
           - ip_address: "{{ switch2 }}"

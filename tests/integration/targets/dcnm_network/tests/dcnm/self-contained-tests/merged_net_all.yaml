@@ -54,7 +54,7 @@
     that:
       - result.changed == true
 
-- name: MERGED_ALL - Query fabric for creation of Network Object
+      - name: MERGED_ALL - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: query

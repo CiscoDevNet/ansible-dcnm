@@ -25,7 +25,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: OVERRIDDEN - Verify if service fabric is deployed.
+      - name: OVERRIDDEN - Verify if service fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_ext_path }}"
@@ -36,7 +36,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: OVERRIDDEN - Clean up any existing service node
+      - name: OVERRIDDEN - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -84,7 +84,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
+      - name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -124,7 +124,7 @@
       - 'result.response[1].DATA.type == "ADC"'
       - 'result.response[1].DATA.name == "SN-12"'
 
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
+      - name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 40
 
@@ -138,7 +138,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
+      - name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -205,7 +205,7 @@
       - 'result.response[1].DATA.type == "ADC"'
       - 'result.response[1].DATA.name == "SN-12"'
 
-- name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
+      - name: OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -258,7 +258,7 @@
       - 'result.response[3].DATA.type == "Firewall"'
       - 'result.response[3].DATA.name == "SN-14"'
 
-- name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
+      - name: OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 40
 
@@ -272,7 +272,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: OVERRIDDEN - Clean up any existing service node
+      - name: OVERRIDDEN - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"

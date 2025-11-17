@@ -55,7 +55,7 @@
     that:
       - result.changed == true
 
-- name: SM_MCAST_PARAMS - Query fabric for creation of Network Object
+      - name: SM_MCAST_PARAMS - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: query

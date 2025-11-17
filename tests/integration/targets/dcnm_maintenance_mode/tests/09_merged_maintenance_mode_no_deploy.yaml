@@ -86,9 +86,9 @@
 # ],
 - name: MERGED - SETUP - ensure switches are in normal mode
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
+      state: query
         config:
-              switches:
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                     - ip_address: "{{ leaf_2 }}"
   register: result
@@ -103,17 +103,17 @@
 ################################################################################
 - name: MERGED - TEST - Change switch mode to maintenance (global config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: merged
+      state: merged
         config:
-              deploy: false
-              mode: maintenance
-              switches:
+          deploy: false
+          mode: maintenance
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                     - ip_address: "{{ leaf_2 }}"
   register: result_maintenance_mode
 - name: Debug
   ansible.builtin.debug:
-        var: result_maintenance_mode
+      var: result_maintenance_mode
 
 ################################################################################
 # 3. MERGED - TEST - Verify switch mode is inconsistent (global config)
@@ -142,9 +142,9 @@
 # ],
 - name: MERGED - TEST - Verify switch mode is inconsistent (global config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
+      state: query
         config:
-              switches:
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                     - ip_address: "{{ leaf_2 }}"
   register: result
@@ -159,17 +159,17 @@
 ################################################################################
 - name: MERGED - TEST - Change switch mode to normal (global config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: merged
+      state: merged
         config:
-              deploy: false
-              mode: normal
-              switches:
+          deploy: false
+          mode: normal
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                     - ip_address: "{{ leaf_2 }}"
   register: result_normal_mode
 - name: Debug
   ansible.builtin.debug:
-        var: result_normal_mode
+      var: result_normal_mode
 
 ################################################################################
 # 5. MERGED - TEST - Verify switch mode is normal (global config)
@@ -198,9 +198,9 @@
 # ],
 - name: MERGED - TEST - Verify switch mode is normal (global config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
+      state: query
         config:
-              switches:
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                     - ip_address: "{{ leaf_2 }}"
   register: result
@@ -212,15 +212,15 @@
 
 - name: Debug
   ansible.builtin.debug:
-        var: result_maintenance_mode
+      var: result_maintenance_mode
 
 - name: Debug
   ansible.builtin.debug:
-        var: result_normal_mode
+      var: result_normal_mode
 
 - name: Assert
   ansible.builtin.assert:
-        that:
+      that:
           - result_maintenance_mode.failed == false
           - result_maintenance_mode.metadata[2].action == "change_sytem_mode"
           - result_maintenance_mode.metadata[3].action == "change_sytem_mode"
@@ -253,10 +253,10 @@
 ################################################################################
 - name: MERGED - TEST - Change switch mode to maintenance (switch config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: merged
+      state: merged
         config:
-              deploy: false
-              switches:
+          deploy: false
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                       mode: maintenance
                     - ip_address: "{{ leaf_2 }}"
@@ -264,7 +264,7 @@
   register: result_maintenance_mode
 - name: Debug
   ansible.builtin.debug:
-        var: result_maintenance_mode
+      var: result_maintenance_mode
 
 ################################################################################
 # 7. MERGED - TEST - Verify switch mode is inconsistent (switch config)
@@ -293,9 +293,9 @@
 # ],
 - name: MERGED - TEST - Verify switch mode is inconsistent (switch config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
+      state: query
         config:
-              switches:
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                     - ip_address: "{{ leaf_2 }}"
   register: result
@@ -310,11 +310,11 @@
 ################################################################################
 - name: MERGED - TEST - Change switch mode to normal (switch config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: merged
+      state: merged
         config:
-              deploy: false
-              mode: normal
-              switches:
+          deploy: false
+          mode: normal
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                       mode: normal
                     - ip_address: "{{ leaf_2 }}"
@@ -322,7 +322,7 @@
   register: result_normal_mode
 - name: Debug
   ansible.builtin.debug:
-        var: result_normal_mode
+      var: result_normal_mode
 
 ################################################################################
 # 9. MERGED - TEST - Verify switch mode is normal (switch config)
@@ -351,9 +351,9 @@
 # ],
 - name: MERGED - TEST - Verify switch mode is normal (switch config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
+      state: query
         config:
-              switches:
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                     - ip_address: "{{ leaf_2 }}"
   register: result
@@ -365,15 +365,15 @@
 
 - name: Debug
   ansible.builtin.debug:
-        var: result_maintenance_mode
+      var: result_maintenance_mode
 
 - name: Debug
   ansible.builtin.debug:
-        var: result_normal_mode
+      var: result_normal_mode
 
 - name: Assert
   ansible.builtin.assert:
-        that:
+      that:
           - result_maintenance_mode.failed == false
           - result_maintenance_mode.metadata[2].action == "change_sytem_mode"
           - result_maintenance_mode.metadata[3].action == "change_sytem_mode"

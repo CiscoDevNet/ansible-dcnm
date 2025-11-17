@@ -42,7 +42,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: MERGED_ALL - Clean up any existing vrfs
+      - name: MERGED_ALL - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -107,7 +107,7 @@
       - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
       - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: MERGED_ALL - conf - Idempotence
+      - name: MERGED_ALL - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf
   register: result
 

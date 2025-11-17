@@ -66,7 +66,7 @@
     that:
       - result.response.DATA != None
 
-- name: SETUP.2 - MERGED - [deleted] Delete all VRFs
+      - name: SETUP.2 - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -129,7 +129,7 @@
       - switch_2 in result_1.diff[0].attach[1].ip_address
       - result_1.diff[0].vrf_name == "ansible-vrf-int1"
 
-- name: TEST.1c - MERGED - [merged] conf1 - Idempotence
+      - name: TEST.1c - MERGED - [merged] conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
   register: result_1c
 
@@ -143,7 +143,7 @@
       - result_1c.changed == false
       - result_1c.response|length == 0
 
-- name: TEST.1e - MERGED - [deleted] Delete all VRFs
+      - name: TEST.1e - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -196,7 +196,7 @@
       - result_2.diff[0].vrf_name == "ansible-vrf-int1"
       - '"enableL3VniNoVlan\": \"true\"" in result_2a.response[0].parent.vrfTemplateConfig'
 
-- name: TEST.2c - MERGED - [merged] conf2 - Idempotence
+      - name: TEST.2c - MERGED - [merged] conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
   register: result_2c
 
@@ -210,7 +210,7 @@
       - result_2c.changed == false
       - result_2c.response|length == 0
 
-- name: TEST.2e - MERGED - [deleted] Delete all VRFs
+      - name: TEST.2e - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -259,7 +259,7 @@
       - switch_2 in result_3.diff[0].attach[1].ip_address
       - result_3.diff[0].vrf_name == "ansible-vrf-int1"
 
-- name: TEST.3c - MERGED - [merged] conf3 - Idempotence
+      - name: TEST.3c - MERGED - [merged] conf3 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf3
   register: result_3c
 
@@ -273,7 +273,7 @@
       - result_3c.changed == false
       - result_3c.response|length == 0
 
-- name: TEST.3e - MERGED - [deleted] Delete all VRFs
+      - name: TEST.3e - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -299,7 +299,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -337,7 +337,7 @@
       - switch_2 in result_4.diff[0].attach[1].ip_address
       - result_4.diff[0].vrf_name == "ansible-vrf-int1"
 
-- name: TEST.4c - MERGED - [merged] conf4 - Idempotence
+      - name: TEST.4c - MERGED - [merged] conf4 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf4
   register: result_4c
 
@@ -351,7 +351,7 @@
       - result_4c.changed == false
       - result_4c.response|length == 0
 
-- name: TEST.4e - MERGED - [deleted] Delete all VRFs
+      - name: TEST.4e - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -404,7 +404,7 @@
       - result_5.diff[0].vrf_name == "ansible-vrf-int1"
       - '"enableL3VniNoVlan\": \"true\"" in result_5a.response[0].parent.vrfTemplateConfig'
 
-- name: TEST.5c - MERGED - [merged] conf5 - Idempotence
+      - name: TEST.5c - MERGED - [merged] conf5 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf5
   register: result_5c
 
@@ -418,7 +418,7 @@
       - result_5c.changed == false
       - result_5c.response|length == 0
 
-- name: TEST.5e - MERGED - [deleted] Delete all VRFs
+      - name: TEST.5e - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -475,7 +475,7 @@
       - switch_2 in result_6.diff[0].attach[1].ip_address
       - result_6.diff[0].vrf_name == "ansible-vrf-int1"
 
-- name: TEST.7 - MERGED - [merged] Create, Attach, Deploy VRF - Update with incorrect VRF ID.
+      - name: TEST.7 - MERGED - [merged] Create, Attach, Deploy VRF - Update with incorrect VRF ID.
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -505,7 +505,7 @@
       - result_7.changed == false
       - TEST_PHRASE in result_7.msg
 
-- name: TEST.8 - MERGED - [merged] Create, Attach, Deploy VRF - Update with Out of Range VRF ID.
+      - name: TEST.8 - MERGED - [merged] Create, Attach, Deploy VRF - Update with Out of Range VRF ID.
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -535,7 +535,7 @@
       - result_8.changed == false
       - TEST_PHRASE in result_8.msg
 
-- name: TEST.9 - MERGED - [merged] Create, Attach, Deploy VRF - VRF LITE missing required parameter
+      - name: TEST.9 - MERGED - [merged] Create, Attach, Deploy VRF - VRF LITE missing required parameter
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -568,7 +568,7 @@
       - result_9.changed == false
       - TEST_PHRASE in result_9.msg
 
-- name: TEST.10 - MERGED - [merged] Create, Attach and Deploy VRF - configure VRF LITE on non border switch
+      - name: TEST.10 - MERGED - [merged] Create, Attach and Deploy VRF - configure VRF LITE on non border switch
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -582,7 +582,7 @@
         - ip_address: "{{ switch_3 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_3a }}" # mandatory
+        interface: "{{ interface_3a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"

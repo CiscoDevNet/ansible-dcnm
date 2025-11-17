@@ -175,7 +175,7 @@
       - '(result["diff"][0]["deleted"] | length) == 0'
       - '(result["diff"][0]["query"] | length) == 0'
       - '(result["diff"][0]["deploy"] | length) == 1'
-  when: (fabric_type == "LANClassic")
+    when: (fabric_type == "LANClassic")
   tags: merged
 
 - name: MERGED - TC2 - QUERY - Get VPC pair state in NDFC
@@ -215,7 +215,7 @@
       - '(result["diff"][0]["deleted"] | length) == 0'
       - '(result["diff"][0]["query"] | length) == 0'
       - '(result["diff"][0]["deploy"] | length) == 0'
-  when: (fabric_type == "VXLANFabric")
+    when: (fabric_type == "VXLANFabric")
   tags: merged
 
 - name: MERGED - TC2b - QUERY - Get VPC pair state in NDFC
@@ -288,7 +288,7 @@
       - '(result["diff"][0]["deleted"] | length) == 0'
       - '(result["diff"][0]["query"] | length) == 0'
       - '(result["diff"][0]["deploy"] | length) == 1'
-  when: (fabric_type == "LANClassic")
+    when: (fabric_type == "LANClassic")
   tags: merged
 
 - name: MERGED - TC4 - QUERY - Get VPC pair state in NDFC
@@ -328,7 +328,7 @@
       - '(result["diff"][0]["deleted"] | length) == 1'
       - '(result["diff"][0]["query"] | length) == 0'
       - '(result["diff"][0]["deploy"] | length) == 0'
-  when: (fabric_type == "LANClassic")
+    when: (fabric_type == "LANClassic")
   tags: merged
 
 # TC5 - Create VPC Pair without state and deploy flag (defaults)

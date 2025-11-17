@@ -111,10 +111,10 @@
       stage: true
       validate: true
       upgrade:
-        nxos: true
+      nxos: true
         epld: false
       options:
-        nxos:
+      nxos:
           mode: disruptive
           bios_force: false
         epld:
@@ -237,10 +237,10 @@
       stage: true
       validate: true
       upgrade:
-        nxos: true
+      nxos: true
         epld: false
       options:
-        nxos:
+      nxos:
           mode: disruptive
           bios_force: false
         epld:

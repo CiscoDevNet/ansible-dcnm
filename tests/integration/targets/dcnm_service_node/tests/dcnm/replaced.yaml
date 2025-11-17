@@ -25,7 +25,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: REPLACED - Verify if service fabric is deployed.
+      - name: REPLACED - Verify if service fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_ext_path }}"
@@ -36,7 +36,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: REPLACED - Clean up any existing service node
+      - name: REPLACED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -84,7 +84,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
+      - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -122,7 +122,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: REPLACED - sleep for 40 seconds for DCNM to completely update the state
+      - name: REPLACED - sleep for 40 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 40
 
@@ -135,7 +135,7 @@
     that:
       - 'result.changed == false'
 
-- name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
+      - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -169,7 +169,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: REPLACED - sleep for 40 seconds for DCNM to completely update the state
+      - name: REPLACED - sleep for 40 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 40
 
@@ -182,7 +182,7 @@
     that:
       - 'result.changed == false'
 
-- name: REPLACED - Clean up any existing service node
+      - name: REPLACED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -229,7 +229,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
+      - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -262,7 +262,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
+      - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -275,7 +275,7 @@
     that:
       - 'result.changed == false'
 
-- name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
+      - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -308,7 +308,7 @@
       - 'result.response[0].DATA.type == "ADC"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
+      - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -341,7 +341,7 @@
       - 'result.response[0].DATA.type == "VNF"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
+      - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -375,7 +375,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11111111111"'
 
-- name: REPLACED - Replace Service Node with not supported change of already created svc int name
+      - name: REPLACED - Replace Service Node with not supported change of already created svc int name
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -396,7 +396,7 @@
     that:
       - 'result.changed == false'
 
-- name: REPLACED - Replace Service Node with not supported change of already created attach interface
+      - name: REPLACED - Replace Service Node with not supported change of already created attach interface
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -417,7 +417,7 @@
     that:
       - 'result.changed == false'
 
-- name: REPLACED - Replace Service Node with not supported change of already created attached switch
+      - name: REPLACED - Replace Service Node with not supported change of already created attached switch
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"

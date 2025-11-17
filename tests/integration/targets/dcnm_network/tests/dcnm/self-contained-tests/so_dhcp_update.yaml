@@ -62,7 +62,7 @@
     that:
       - result.changed == true
 
-- name: SO_DHCP_UPDATE - Query fabric for creation of Network Object
+      - name: SO_DHCP_UPDATE - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: query
@@ -92,7 +92,7 @@
     that:
       - result.changed == true
 
-- name: SO_DHCP_UPDATE - Query fabric for creation of Network Object
+      - name: SO_DHCP_UPDATE - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: query

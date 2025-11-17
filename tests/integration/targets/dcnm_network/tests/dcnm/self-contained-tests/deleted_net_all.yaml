@@ -54,7 +54,7 @@
     that:
       - result.changed == true
 
-- name: DELETED_ALL - Query fabric for creation of Network Object
+      - name: DELETED_ALL - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: query
@@ -76,7 +76,7 @@
     that:
       - 'result.changed == false'
 
-- name: DELETED_ALL - Delete any existing networks
+      - name: DELETED_ALL - Delete any existing networks
   cisco.dcnm.dcnm_network: &conf1
     fabric: "{{ test_data_common.fabric }}"
     state: deleted

@@ -43,30 +43,31 @@
             port_type_fast: true
             mtu: default
             access_vlan: 55
-            cmds:
+        cmds:
               - false shutdown
-            description: "Access interface for vlan55"
-        - name: "Ethernet1/4"
+        description: "Access interface for vlan55"
+    - name: "Ethernet1/4"
           type: eth
           switch:
             - "{{ leaf1 }}"
             - "{{ leaf3 }}"
           deploy: true
           profile:
-            admin_state: true
-            mode: access
-            speed: 'Auto'
-            bpdu_guard: true
-            port_type_fast: true
-            mtu: default
-            access_vlan: 65
-            cmds:
+        admin_state: true
+        mode: access
+        speed: 'Auto'
+        bpdu_guard: true
+        port_type_fast: true
+        mtu: default
+        access_vlan: 65
+        cmds:
               - false shutdown
-            description: "Access interface for vlan65"
+        description: "Access interface for vlan65"
       register: result
 
-    - ansible.builtin.assert:
-        that:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - 'result.response[0].RETURN_CODE == 200'
           - 'result.response[1].RETURN_CODE == 200'
@@ -75,8 +76,9 @@
       cisco.dcnm.dcnm_interface: *config_interfaces
       register: result
 
-    - ansible.builtin.assert:
-        that:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+      that:
           - 'result.changed == false'
           - 'result.response|length == 0'
 
@@ -94,8 +96,9 @@
           deploy: true
       register: result
 
-    - ansible.builtin.assert:
-        that:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - 'result.response[0].RETURN_CODE == 200'
           - 'result.response[1].RETURN_CODE == 200'
@@ -105,8 +108,9 @@
       cisco.dcnm.dcnm_vrf: *add_vrf
       register: result
 
-    - ansible.builtin.assert:
-        that:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+      that:
           - 'result.changed == false'
           - 'result.response|length == 0'
 
@@ -122,11 +126,11 @@
           gw_ip_subnet: '192.168.1.1/24'
           attach:
             - ip_address: "{{ leaf1 }}"
-              ports: [Ethernet1/3]
-              deploy: true
+          ports: [Ethernet1/3]
+          deploy: true
             - ip_address: "{{ leaf3 }}"
-              ports: [Ethernet1/3]
-              deploy: true
+          ports: [Ethernet1/3]
+          deploy: true
         - net_name: l2vni_7000
           vrf_name: green_red
           net_id: 7000
@@ -134,15 +138,16 @@
           gw_ip_subnet: '192.168.2.1/24'
           attach:
             - ip_address: "{{ leaf1 }}"
-              ports: []
-              deploy: true
+          ports: []
+          deploy: true
             - ip_address: "{{ leaf3 }}"
-              ports: []
-              deploy: true
+          ports: []
+          deploy: true
       register: result
 
-    - ansible.builtin.assert:
-        that:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+      that:
           - 'result.changed == true'
           - 'result.response[0].RETURN_CODE == 200'
           - 'result.response[1].RETURN_CODE == 200'
@@ -151,14 +156,15 @@
 
           - name: Sleep for 30 seconds before checking idempotence state
       ansible.builtin.wait_for:
-        timeout: 30
+      timeout: 30
 
     - name: Add Networks - Idempotence
       cisco.dcnm.dcnm_network: *add_networks
       register: result
 
-    - ansible.builtin.assert:
-        that:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+      that:
           - 'result.changed == false'
           - 'result.response|length == 0'
 

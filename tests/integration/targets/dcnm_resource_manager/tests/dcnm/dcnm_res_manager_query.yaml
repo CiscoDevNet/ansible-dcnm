@@ -60,7 +60,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 - block:
 
@@ -74,59 +74,60 @@
         fabric: "{{ ansible_it_fabric }}"
         config:
           - entity_name: "l3_vni_fabric"             # A unique name to identify the resource
-            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "L3_VNI"                      # Based on the 'poolType', select appropriate name
-            scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            resource: "101"                          # The value of the resource being created
+        pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "L3_VNI"                      # Based on the 'poolType', select appropriate name
+        scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        resource: "101"                          # The value of the resource being created
 
           - entity_name: "l2_vni_fabric"             # A unique name to identify the resource
-            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "L2_VNI"                      # Based on the 'poolType', select appropriate name
-            scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            resource: "102"                          # The value of the resource being created
+        pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "L2_VNI"                      # Based on the 'poolType', select appropriate name
+        scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        resource: "102"                          # The value of the resource being created
 
           - entity_name: "loopback_dev"              # A unique name to identify the resource
-            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "LOOPBACK_ID"                 # Based on the 'poolType', select appropriate name
-            scope_type: "device"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            switch: # provide the switch information to which the given resource is to be attached
+        pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "LOOPBACK_ID"                 # Based on the 'poolType', select appropriate name
+        scope_type: "device"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch: # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch1 }}"
               - "{{ ansible_switch2 }}"
-            resource: "200"                          # The value of the resource being created
+        resource: "200"                          # The value of the resource being created
 
           - entity_name: "{{ ansible_sno_1 }}~{{ ansible_sno_2 }}"  # A unique name to identify the resource
-            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "VPC_ID"                      # Based on the 'poolType', select appropriate name
-            scope_type: "device_pair"                # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            switch: # provide the switch information to which the given resource is to be attached
+        pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "VPC_ID"                      # Based on the 'poolType', select appropriate name
+        scope_type: "device_pair"                # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch: # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch1 }}"
               - "{{ ansible_switch2 }}"
-            resource: "500"                          # The value of the resource being created
+        resource: "500"                          # The value of the resource being created
 
           - entity_name: "mmudigon-2"                # A unique name to identify the resource
-            pool_type: "IP"                          # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "LOOPBACK0_IP_POOL"           # Based on the 'poolType', select appropriate name
-            scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            resource: "110.1.1.1"                    # The value of the resource being created
+        pool_type: "IP"                          # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "LOOPBACK0_IP_POOL"           # Based on the 'poolType', select appropriate name
+        scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        resource: "110.1.1.1"                    # The value of the resource being created
 
           - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_10 }}"  # A unique name to identify the resource
-            pool_type: "IP"                          # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "LOOPBACK1_IP_POOL"           # Based on the 'poolType', select appropriate name
-            scope_type: "device_interface"           # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            switch: # provide the switch information to which the given resource is to be attached
+        pool_type: "IP"                          # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "LOOPBACK1_IP_POOL"           # Based on the 'poolType', select appropriate name
+        scope_type: "device_interface"           # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch: # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch1 }}"
-            resource: "fe:80::04"                    # The value of the resource being created
+        resource: "fe:80::04"                    # The value of the resource being created
 
           - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_3 }}~{{ ansible_sno_2 }}~{{ intf_1_3 }}"  # A unique name to identify the resource
-            pool_type: "SUBNET"                      # choose from ['ID', 'IP', 'SUBNET']
-            pool_name: "SUBNET"                      # Based on the 'poolType', select appropriate name
-            scope_type: "link"                       # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-            switch: # provide the switch information to which the given resource is to be attached
+        pool_type: "SUBNET"                      # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "SUBNET"                      # Based on the 'poolType', select appropriate name
+        scope_type: "link"                       # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch: # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch1 }}"
-            resource: "fe:80:0505::05/64"            # The value of the resource being created
+        resource: "fe:80:0505::05/64"            # The value of the resource being created
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 9'
@@ -144,17 +145,18 @@
 
     - name: Query all Resources - false filters
       cisco.dcnm.dcnm_resource_manager:
-        state: query                                 # choose form [merged, deleted, query]
+      state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - '(result["response"] | length) != 0'
 
         - name: Creating entity_names
       ansible.builtin.set_fact:
-        entity_names:
+      entity_names:
           - "l3_vni_fabric"
           - "l2_vni_fabric"
           - "loopback_dev"
@@ -167,7 +169,7 @@
 
     - name: Query Resources - filter by entity name
       cisco.dcnm.dcnm_resource_manager:
-        state: query                                 # choose form [merged, deleted, query]
+      state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - entity_name: "l3_vni_fabric"             # A unique name to identify the resource
@@ -182,42 +184,45 @@
 
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'item["entityName"] in {{ entity_names }}'
       loop: '{{ result.response }}'
 
     - name: Query Resources - filter by switch 1
       cisco.dcnm.dcnm_resource_manager:
-        state: query                                 # choose form [merged, deleted, query]
+      state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch1 }}"
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'item["ipAddress"] == "{{ ansible_switch1 }}"'
       loop: '{{ result.response }}'
 
     - name: Query Resources - filter by switch 2
       cisco.dcnm.dcnm_resource_manager:
-        state: query                                 # choose form [merged, deleted, query]
+      state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch2 }}"
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'item["ipAddress"] == "{{ ansible_switch2 }}"'
       loop: '{{ result.response }}'
 
     - name: Query Resources - filter by fabric and pool name
       cisco.dcnm.dcnm_resource_manager:
-        state: query                                 # choose form [merged, deleted, query]
+      state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - pool_name: "BGP_ASN_ID"                  # Based on the 'poolType', select appropriate name
@@ -231,7 +236,8 @@
           - pool_name: "SUBNET"                      # Based on the 'poolType', select appropriate name
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'item["resourcePool"]["fabricName"] == "{{ ansible_it_fabric }}"'
         - 'item["resourcePool"]["poolName"] in ["BGP_ASN_ID",
@@ -247,46 +253,47 @@
 
     - name: Query Resources - filter by switch and pool name
       cisco.dcnm.dcnm_resource_manager:
-        state: query                                 # choose form [merged, deleted, query]
+      state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - pool_name: "BGP_ASN_ID"                  # Based on the 'poolType', select appropriate name
-            switch: # provide the switch information to which the given resource is attached
+        switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch1 }}"
           - pool_name: "L3_VNI"                      # Based on the 'poolType', select appropriate name
-            switch: # provide the switch information to which the given resource is attached
+        switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch1 }}"
           - pool_name: "L2_VNI"                      # Based on the 'poolType', select appropriate name
-            switch: # provide the switch information to which the given resource is attached
+        switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch1 }}"
           - pool_name: "LOOPBACK_ID"                 # Based on the 'poolType', select appropriate name
-            switch: # provide the switch information to which the given resource is attached
+        switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch1 }}"
           - pool_name: "VPC_PEER_LINK_VLAN"          # Based on the 'poolType', select appropriate name
-            switch: # provide the switch information to which the given resource is attached
+        switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch1 }}"
           - pool_name: "VPC_ID"                      # Based on the 'poolType', select appropriate name
-            switch: # provide the switch information to which the given resource is attached
+        switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch1 }}"
           - pool_name: "LOOPBACK0_IP_POOL"           # Based on the 'poolType', select appropriate name
-            switch: # provide the switch information to which the given resource is attached
+        switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch1 }}"
           - pool_name: "LOOPBACK1_IP_POOL"           # Based on the 'poolType', select appropriate name
-            switch: # provide the switch information to which the given resource is attached
+        switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch1 }}"
           - pool_name: "SUBNET"                      # Based on the 'poolType', select appropriate name
-            switch: # provide the switch information to which the given resource is attached
+        switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch1 }}"
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'item["ipAddress"] == "{{ ansible_switch1 }}"'
       loop: '{{ result.response }}'
 
     - name: Query Resources - mixed query
       cisco.dcnm.dcnm_resource_manager:
-        state: query                                 # choose form [merged, deleted, query]
+      state: query                                 # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - entity_name: "l2_vni_fabric"             # A unique name to identify the resource
@@ -296,11 +303,12 @@
               - "{{ ansible_switch2 }}"
           - pool_name: "LOOPBACK_ID"                 # Based on the 'poolType', select appropriate name
           - pool_name: "VPC_ID"                      # Based on the 'poolType', select appropriate name
-            switch: # provide the switch information to which the given resource is attached
+        switch: # provide the switch information to which the given resource is attached
               - "{{ ansible_switch1 }}"
       register: result
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - '(result["response"] | length) != 0'
 
@@ -315,7 +323,8 @@
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 0'
@@ -323,7 +332,7 @@
         - '(result["response"][0]["DATA"]["successList"] | length) == 9'
       when: it_context is not defined
 
-    - ansible.builtin.assert:        that:
-          - 'item["RETURN_CODE"] == 200'
+        - ansible.builtin.assert:        that:
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

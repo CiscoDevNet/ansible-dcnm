@@ -38,7 +38,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 - block:
 
@@ -48,7 +48,7 @@
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-        test_data_interfaces:
+      test_data_interfaces:
           merge_conf_template: "templates/dcnm_st_fex/merge_conf.j2"
           merge_conf_file: "{{ role_path }}/files/dcnm_interface_st_fex_merge_conf.yaml"
           merge_po150_conf_template: "templates/dcnm_st_fex/merge_po150_conf.j2"
@@ -63,7 +63,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - merge
@@ -79,7 +79,7 @@
 
     - name: Load Interface Config Files
       ansible.builtin.set_fact:
-        dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
+      dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
         dcnm_interface_merge_po150_conf: "{{ lookup('file', test_data_interfaces.merge_po150_conf_file) | from_yaml }}"
         dcnm_interface_merge_po151_conf: "{{ lookup('file', test_data_interfaces.merge_po151_conf_file) | from_yaml }}"
         dcnm_interface_merge_po155_conf: "{{ lookup('file', test_data_interfaces.merge_po155_conf_file) | from_yaml }}"
@@ -97,7 +97,7 @@
 
     - name: ASSERT - Verify ST FEX interface creation results (po150)
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Creation of ST FEX interface po150 failed - {{ result }}"
@@ -106,14 +106,14 @@
 
     - name: QUERY - Get ST FEX interface state in NDFC (po150)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_merge_po150_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify ST FEX interface state in NDFC (po150)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.merge_po150_conf_file }}"
+      config_path: "{{ test_data_interfaces.merge_po150_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -124,7 +124,7 @@
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
@@ -144,7 +144,7 @@
 
     - name: ASSERT - Verify ST FEX interface creation results (po151)
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Creation of ST FEX interface po151 failed - {{ result }}"
@@ -153,14 +153,14 @@
 
     - name: QUERY - Get ST FEX interface state in NDFC (po151)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_merge_po151_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify ST FEX interface state in NDFC (po151)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.merge_po151_conf_file }}"
+      config_path: "{{ test_data_interfaces.merge_po151_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -171,7 +171,7 @@
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
@@ -191,7 +191,7 @@
 
     - name: ASSERT - Verify ST FEX interface merge results (po151 update)
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Merge of ST FEX interface po151 failed - {{ result }}"
@@ -200,14 +200,14 @@
 
     - name: QUERY - Get ST FEX interface state in NDFC (po151 update)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_merge_po151_update_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify ST FEX interface state in NDFC (po151 update)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.merge_po151_update_conf_file }}"
+      config_path: "{{ test_data_interfaces.merge_po151_update_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -226,7 +226,7 @@
 
     - name: ASSERT - Verify ST FEX interface creation results (po155)
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Creation of ST FEX interface po155 failed - {{ result }}"
@@ -235,14 +235,14 @@
 
     - name: QUERY - Get ST FEX interface state in NDFC (po155)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_merge_po155_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify ST FEX interface state in NDFC (po155)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.merge_po155_conf_file }}"
+      config_path: "{{ test_data_interfaces.merge_po155_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -255,13 +255,14 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+      check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

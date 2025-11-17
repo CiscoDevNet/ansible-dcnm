@@ -53,7 +53,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: SETUP.2 - QUERY - [deleted] Delete all VRFs
+      - name: SETUP.2 - QUERY - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -150,7 +150,7 @@
       - 'result_1.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
       - 'result_1.response[0].attach[1].switchDetailsList[0].vlan == 500'
 
-- name: TEST.2 - QUERY - [deleted] Delete all VRFs
+      - name: TEST.2 - QUERY - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -175,7 +175,7 @@
       - 'result_2.diff[0].attach[1].deploy == false'
       - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.2b - QUERY - [wait_for] Wait 60 seconds for controller and switch to sync
+      - name: TEST.2b - QUERY - [wait_for] Wait 60 seconds for controller and switch to sync
   ansible.builtin.wait_for:
     timeout: 60
 
@@ -222,7 +222,7 @@
       - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
       - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
 
-- name: TEST.4 - QUERY - [merged] Create, Attach, Deploy VRF+LITE EXTENSION ansible-vrf-int2 on switch_2
+      - name: TEST.4 - QUERY - [merged] Create, Attach, Deploy VRF+LITE EXTENSION ansible-vrf-int2 on switch_2
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -237,7 +237,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -271,7 +271,7 @@
       - '"{{ switch_2 }}" in result_4.diff[0].attach[0].ip_address'
       - 'result_4.diff[0].vrf_name == "ansible-vrf-int2"'
 
-- name: TEST.5 - QUERY - [query] Query VRF+LITE EXTENSION ansible-vrf-int2 switch_2
+      - name: TEST.5 - QUERY - [query] Query VRF+LITE EXTENSION ansible-vrf-int2 switch_2
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -286,7 +286,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -313,7 +313,7 @@
       - 'result_5.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
       - 'result_5.response[0].attach[1].switchDetailsList[0].vlan == 1500'
 
-- name: TEST.6 - QUERY - [query] Query without the config element
+      - name: TEST.6 - QUERY - [query] Query without the config element
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -337,7 +337,7 @@
       - 'result_6.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
       - 'result_6.response[0].attach[1].switchDetailsList[0].vlan == 1500'
 
-- name: TEST.7 - QUERY - [query] Query non-existent VRF ansible-vrf-int1
+      - name: TEST.7 - QUERY - [query] Query non-existent VRF ansible-vrf-int1
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -363,7 +363,7 @@
       - 'result_7.changed == false'
       - 'result_7.response|length == 0'
 
-- name: TEST.7b - QUERY - [deleted] Delete all VRFs
+      - name: TEST.7b - QUERY - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -387,7 +387,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -420,7 +420,7 @@
       - 'result_8.diff[0].vrf_name == "ansible-vrf-int2"'
       - '"enableL3VniNoVlan\": \"true\"" in result_8a.response[0].parent.vrfTemplateConfig'
 
-- name: TEST.9 - QUERY - [query] Query VRF+LITE EXTENSION ansible-vrf-int2 switch_2
+      - name: TEST.9 - QUERY - [query] Query VRF+LITE EXTENSION ansible-vrf-int2 switch_2
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -435,7 +435,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"

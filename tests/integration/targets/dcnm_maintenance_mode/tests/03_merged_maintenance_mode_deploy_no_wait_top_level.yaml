@@ -76,9 +76,9 @@
 # ],
 - name: MERGED - SETUP - Ensure switch mode is normal
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
+      state: query
         config:
-              switches:
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                     - ip_address: "{{ leaf_2 }}"
   register: result
@@ -93,18 +93,18 @@
 ################################################################################
 - name: MERGED - TEST - Change switch mode to maintenance (top-level)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: merged
+      state: merged
         config:
-              deploy: true
-              mode: maintenance
-              wait_for_mode_change: false
-              switches:
+          deploy: true
+          mode: maintenance
+          wait_for_mode_change: false
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                     - ip_address: "{{ leaf_2 }}"
   register: result_maintenance_mode
 - name: Debug
   ansible.builtin.debug:
-        var: result_maintenance_mode
+      var: result_maintenance_mode
 
 ################################################################################
 # 3. MERGED - TEST - Verify switch mode is maintenance (top-level)
@@ -133,9 +133,9 @@
 # ],
 - name: MERGED - TEST - Verify switch mode is maintenance (top-level)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
+      state: query
         config:
-              switches:
+          switches:
                     - ip_address: "{{ leaf_1 }}"
                     - ip_address: "{{ leaf_2 }}"
   register: result
@@ -147,7 +147,7 @@
 
 - name: Assert
   ansible.builtin.assert:
-        that:
+      that:
           - result_maintenance_mode.failed == false
           - result_maintenance_mode.metadata[2].action == "change_sytem_mode"
           - result_maintenance_mode.metadata[3].action == "change_sytem_mode"

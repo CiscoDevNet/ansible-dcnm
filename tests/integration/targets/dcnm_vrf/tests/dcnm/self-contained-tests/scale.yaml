@@ -38,7 +38,7 @@
     that:
       - 'setup_result_1.response.DATA != None'
 
-- name: SETUP.2 - SCALE - [deleted] Delete all VRFs
+      - name: SETUP.2 - SCALE - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -87,7 +87,7 @@
     that:
       - 'result_2.changed == true'
 
-- name: TEST.2b - SCALE - [deleted] conf2 - Idempotence
+      - name: TEST.2b - SCALE - [deleted] conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
   register: result_2b
 

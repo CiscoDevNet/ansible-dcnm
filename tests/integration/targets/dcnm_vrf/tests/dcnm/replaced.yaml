@@ -55,7 +55,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: SETUP.2 - REPLACED - [deleted] Delete all VRFs
+      - name: SETUP.2 - REPLACED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -153,7 +153,7 @@
       - 'result_1.diff[0].attach[1].deploy == false'
       - 'result_1.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.1c - REPLACED - conf1 - Idempotence
+      - name: TEST.1c - REPLACED - conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
   register: result_1c
 
@@ -166,7 +166,7 @@
     that:
       - 'result_1c.changed == false'
 
-- name: TEST.2 - REPLACED - [replaced] Update existing VRF using replace - create attachments
+      - name: TEST.2 - REPLACED - [replaced] Update existing VRF using replace - create attachments
   cisco.dcnm.dcnm_vrf: &conf2
     fabric: "{{ fabric_1 }}"
     state: replaced
@@ -210,7 +210,7 @@
       - 'result_2.diff[0].attach[0].vlan_id == 500'
       - 'result_2.diff[0].attach[1].vlan_id == 500'
 
-- name: TEST.2c - REPLACED - [replaced] conf2 - Idempotence
+      - name: TEST.2c - REPLACED - [replaced] conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
   register: result_2c
 
@@ -223,7 +223,7 @@
     that:
       - 'result_2c.changed == false'
 
-- name: TEST.2e - REPLACED - [deleted] Delete all VRFs
+      - name: TEST.2e - REPLACED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -247,7 +247,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -285,7 +285,7 @@
       - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
       - 'result_3.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.4 - REPLACED - [replaced] Update existing VRF - Delete VRF LITE Attachment
+      - name: TEST.4 - REPLACED - [replaced] Update existing VRF - Delete VRF LITE Attachment
   cisco.dcnm.dcnm_vrf: &conf4
     fabric: "{{ fabric_1 }}"
     state: replaced
@@ -328,7 +328,7 @@
       - 'result_4.diff[0].attach[0].deploy == false'
       - 'result_4.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.4d - REPLACED - conf4 - Idempotence
+      - name: TEST.4d - REPLACED - conf4 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf4
   register: result_4d
 
@@ -341,7 +341,7 @@
     that:
       - 'result_4d.changed == false'
 
-- name: TEST.5 - REPLACED - [replaced] Update existing VRF - Create VRF LITE Attachment
+      - name: TEST.5 - REPLACED - [replaced] Update existing VRF - Create VRF LITE Attachment
   cisco.dcnm.dcnm_vrf: &conf5
     fabric: "{{ fabric_1 }}"
     state: replaced
@@ -356,7 +356,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -390,7 +390,7 @@
       - 'result_5.diff[0].vrf_name == "ansible-vrf-int1"'
       - 'result_5.diff[0].attach[0].vlan_id == 500'
 
-- name: TEST.5c - REPLACED - conf5 - Idempotence
+      - name: TEST.5c - REPLACED - conf5 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf5
   register: result_5c
 
@@ -403,7 +403,7 @@
     that:
       - 'result_5c.changed == false'
 
-- name: TEST.5e - REPLACED - [deleted] Delete all VRFs
+      - name: TEST.5e - REPLACED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -427,7 +427,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -460,7 +460,7 @@
       - 'result_6.diff[0].vrf_name == "ansible-vrf-int1"'
       - '"enableL3VniNoVlan\": \"true\"" in result_6a.response[0].parent.vrfTemplateConfig'
 
-- name: TEST.7 - REPLACED - [replaced] Update existing VRF - Delete VRF LITE Attachment
+      - name: TEST.7 - REPLACED - [replaced] Update existing VRF - Delete VRF LITE Attachment
   cisco.dcnm.dcnm_vrf: &conf7
     fabric: "{{ fabric_1 }}"
     state: replaced
@@ -496,7 +496,7 @@
       - 'result_7.diff[0].vrf_name == "ansible-vrf-int1"'
       - '"enableL3VniNoVlan\": \"true\"" in result_7b.response[0].parent.vrfTemplateConfig'
 
-- name: TEST.7d - REPLACED - conf7 - Idempotence
+      - name: TEST.7d - REPLACED - conf7 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf7
   register: result_7d
 
@@ -509,7 +509,7 @@
     that:
       - 'result_7d.changed == false'
 
-- name: TEST.8 - REPLACED - [replaced] Update existing VRF - Create VRF LITE Attachment
+      - name: TEST.8 - REPLACED - [replaced] Update existing VRF - Create VRF LITE Attachment
   cisco.dcnm.dcnm_vrf: &conf8
     fabric: "{{ fabric_1 }}"
     state: replaced
@@ -524,7 +524,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -553,7 +553,7 @@
       - 'result_8.diff[0].vrf_name == "ansible-vrf-int1"'
       - '"enableL3VniNoVlan\": \"true\"" in result_8a.response[0].parent.vrfTemplateConfig'
 
-- name: TEST.8c - REPLACED - conf8 - Idempotence
+      - name: TEST.8c - REPLACED - conf8 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf8
   register: result_8c
 

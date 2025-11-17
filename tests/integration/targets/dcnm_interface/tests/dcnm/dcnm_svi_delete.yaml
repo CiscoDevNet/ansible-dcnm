@@ -20,7 +20,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 - block:
 
@@ -30,7 +30,7 @@
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-        test_data_interfaces:
+      test_data_interfaces:
           merged_conf_template: "templates/dcnm_svi/merged_conf.j2"
           merged_conf_file: "{{ role_path }}/files/dcnm_interface_svi_merged_conf.yaml"
           delete_conf_template: "templates/dcnm_svi/delete_conf.j2"
@@ -39,7 +39,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - merged
@@ -52,12 +52,12 @@
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
-        dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
+      dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Create SVI interfaces w/o optional parameters
       cisco.dcnm.dcnm_interface:
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+      check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_merged_conf }}"
@@ -65,14 +65,14 @@
 
     - name: QUERY - Get SVI interface state in NDFC (merge)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.svi_fabric }}"
         config: "{{ dcnm_interface_merged_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify SVI interface state in NDFC (merge)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.merged_conf_file }}"
+      config_path: "{{ test_data_interfaces.merged_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -83,7 +83,7 @@
 
     - name: Load Delete Interface Config File
       ansible.builtin.set_fact:
-        dcnm_interface_delete_conf: "{{ lookup('file', test_data_interfaces.delete_conf_file) | from_yaml }}"
+      dcnm_interface_delete_conf: "{{ lookup('file', test_data_interfaces.delete_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Delete SVI interfaces
@@ -96,19 +96,19 @@
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence (delete)
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == True'
 
           - name: QUERY - Get interface state in NDFC (delete)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.svi_fabric }}"
         config: "{{ dcnm_interface_delete_conf }}"
       register: result
 
     - name: ASSERT RESPONSE IS EMPTY
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.response is defined'
           - 'result.response | length == 0'
 
@@ -118,7 +118,7 @@
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence (delete)
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'
@@ -131,13 +131,14 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+      check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.svi_fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
       when: it_context is not defined
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
       that:
         - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

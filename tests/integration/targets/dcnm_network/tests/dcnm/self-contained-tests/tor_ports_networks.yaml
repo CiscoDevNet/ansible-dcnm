@@ -45,7 +45,7 @@
           ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
           tor_ports:
             - ip_address: "{{ ansible_tor_switch1 }}"
-              ports: ["{{ ansible_tor_int1 }}", "{{ ansible_tor_int2 }}"]
+          ports: ["{{ ansible_tor_int1 }}", "{{ ansible_tor_int2 }}"]
         - ip_address: "{{ ansible_switch2 }}"
           ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
         deploy: true
@@ -105,7 +105,7 @@
           ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
           tor_ports:
             - ip_address: "{{ ansible_tor_switch1 }}"
-              ports: ["{{ ansible_tor_int3 }}"]
+          ports: ["{{ ansible_tor_int3 }}"]
           - ip_address: "{{ ansible_switch2 }}"
           ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
         deploy: true
@@ -211,7 +211,7 @@
           ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
           tor_ports:
             - ip_address: "{{ ansible_tor_switch1 }}"
-              ports: ["{{ ansible_tor_int3 }}"]
+          ports: ["{{ ansible_tor_int3 }}"]
         - ip_address: "{{ ansible_switch2 }}"
           ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
         deploy: true
@@ -264,7 +264,7 @@
           ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
           tor_ports:
             - ip_address: "{{ ansible_tor_switch1 }}"
-              ports: ["{{ ansible_tor_int1 }}", "{{ ansible_tor_int2 }}"]
+          ports: ["{{ ansible_tor_int1 }}", "{{ ansible_tor_int2 }}"]
         - ip_address: "{{ ansible_switch2 }}"
           ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
         deploy: true
@@ -318,7 +318,7 @@
           ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
           tor_ports:
             - ip_address: "{{ ansible_tor_switch1 }}"
-              ports: ["{{ ansible_tor_int3 }}", "{{ ansible_tor_int4 }}"]
+          ports: ["{{ ansible_tor_int3 }}", "{{ ansible_tor_int4 }}"]
         deploy: true
     register: result
 

@@ -227,7 +227,7 @@
       - result.result[1].sequence_number == 2
 
 
-- name: MERGED - TEST - Edit the two image policies
+      - name: MERGED - TEST - Edit the two image policies
   cisco.dcnm.dcnm_image_policy:
     state: merged
     config:

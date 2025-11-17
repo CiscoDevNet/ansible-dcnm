@@ -42,7 +42,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: OVERRIDDEN_ALL - Clean up any existing vrfs
+      - name: OVERRIDDEN_ALL - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -107,7 +107,7 @@
       - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
       - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: OVERRIDDEN_ALL - conf - Idempotence
+      - name: OVERRIDDEN_ALL - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf
   register: result
 
@@ -117,7 +117,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: OVERRIDDEN_ALL - Override a existing VRF with a new one
+      - name: OVERRIDDEN_ALL - Override a existing VRF with a new one
   cisco.dcnm.dcnm_vrf: &conf1
     fabric: "{{ fabric_1 }}"
     state: overridden

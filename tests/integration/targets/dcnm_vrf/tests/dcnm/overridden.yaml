@@ -66,7 +66,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: SETUP.2 - OVERRIDDEN - [deleted] Delete all VRFs
+      - name: SETUP.2 - OVERRIDDEN - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -170,7 +170,7 @@
       - '"enableL3VniNoVlan\": \"true\"" in result_1a.response[0].parent.vrfTemplateConfig'
       - 'result_1a.response[0].parent.vrfStatus == "PENDING"'
 
-- name: TEST.1c - OVERRIDDEN - [overridden] conf1 - Idempotence
+      - name: TEST.1c - OVERRIDDEN - [overridden] conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
   register: result_1c
 
@@ -184,7 +184,7 @@
       - 'result_1c.changed == false'
       - 'result_1c.response|length == 0'
 
-- name: TEST.1f - OVERRIDDEN - [deleted] Delete all VRFs
+      - name: TEST.1f - OVERRIDDEN - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -235,7 +235,7 @@
       - '"{{ switch_2 }}" in result_2.diff[0].attach[1].ip_address'
       - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.2c - OVERRIDDEN - [overridden] Override existing VRF ansible-vrf-int1 to create new VRF ansible-vrf-int2
+      - name: TEST.2c - OVERRIDDEN - [overridden] Override existing VRF ansible-vrf-int1 to create new VRF ansible-vrf-int2
   cisco.dcnm.dcnm_vrf: &conf2
     fabric: "{{ fabric_1 }}"
     state: overridden
@@ -287,7 +287,7 @@
       - 'result_2c.diff[1].attach[1].deploy == false'
       - 'result_2c.diff[1].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.2f - OVERRIDDEN - [overridden] conf2 - Idempotence
+      - name: TEST.2f - OVERRIDDEN - [overridden] conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
   register: result_2f
 
@@ -301,7 +301,7 @@
       - 'result_2f.changed == false'
       - 'result_2f.response|length == 0'
 
-- name: TEST.3 - OVERRIDDEN - [merged] ansible-vrf-int2 to add vrf_lite extension to switch_2
+      - name: TEST.3 - OVERRIDDEN - [merged] ansible-vrf-int2 to add vrf_lite extension to switch_2
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -316,7 +316,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.1/24 # optional
             neighbor_ipv4: 10.33.0.0 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -362,7 +362,7 @@
       - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
       - 'result_3.diff[0].vrf_name == "ansible-vrf-int2"'
 
-- name: TEST.4 - OVERRIDDEN - [overridden] Override vrf_lite extension with new dot1q value
+      - name: TEST.4 - OVERRIDDEN - [overridden] Override vrf_lite extension with new dot1q value
   cisco.dcnm.dcnm_vrf: &conf4
     fabric: "{{ fabric_1 }}"
     state: overridden
@@ -377,7 +377,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.1/24 # optional
             neighbor_ipv4: 10.33.0.0 # optional
             ipv6_addr: "2010::10:34:0:7/64 # optional"
@@ -437,7 +437,7 @@
       - 'result_4.diff[0].attach[0].deploy == true'
       - 'result_4.diff[0].vrf_name == "ansible-vrf-int2"'
 
-- name: TEST.4f - OVERRIDDEN - [overridden] conf4 - Idempotence
+      - name: TEST.4f - OVERRIDDEN - [overridden] conf4 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf4
   register: result_4f
 
@@ -451,7 +451,7 @@
       - 'result_4f.changed == false'
       - 'result_4f.response|length == 0'
 
-- name: TEST.5 - OVERRIDDEN - [overridden] Override ansible-vrf-int2 to create ansible-vrf-int1 with LITE Extension
+      - name: TEST.5 - OVERRIDDEN - [overridden] Override ansible-vrf-int2 to create ansible-vrf-int1 with LITE Extension
   cisco.dcnm.dcnm_vrf: &conf5
     fabric: "{{ fabric_1 }}"
     state: overridden
@@ -466,7 +466,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2a }}" # mandatory
+        interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.1/24 # optional
             neighbor_ipv4: 10.33.0.0 # optional
             ipv6_addr: "2010::10:34:0:1/64 # optional"
@@ -520,7 +520,7 @@
       - 'result_5.diff[1].attach[1].deploy == false'
       - 'result_5.diff[1].vrf_name == "ansible-vrf-int2"'
 
-- name: TEST.5d - OVERRIDDEN - [overridden] conf5 - Idempotence
+      - name: TEST.5d - OVERRIDDEN - [overridden] conf5 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf5
   register: result_5d
 

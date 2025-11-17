@@ -78,7 +78,7 @@
     method: GET
     path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}/inventory/switchesByFabric
   register: switch_inventory_result
-  ignore_errors: true
+  failed_when: false
 
 # Fallback for older NDFC versions or different API paths
 - name: Get switch inventory from fabric (fallback)
@@ -87,14 +87,14 @@
     path: /rest/control/fabrics/{{ test_data_common.fabric }}/inventory/switchesByFabric
   register: switch_inventory_result_fallback
   when: switch_inventory_result.failed | default(false)
-  ignore_errors: true
+  failed_when: false
 
 # Use fallback result if primary failed
 - name: Set switch inventory result
   ansible.builtin.set_fact:
     switch_inventory_result: "{{ switch_inventory_result_fallback }}"
   when: switch_inventory_result.failed | default(false) and not switch_inventory_result_fallback.failed | default(false)
-  ignore_errors: true
+  failed_when: false
 
 # Create IP to serial number mapping from switch inventory
 - name: Create IP to serial number mapping
@@ -108,7 +108,7 @@
     - switch_inventory_result.response.DATA is defined
     - item.ipAddress is defined
     - item.serialNumber is defined
-  ignore_errors: true
+  failed_when: false
 
 # Show the created mapping for debugging
 - name: Show IP to Serial Number mapping
@@ -121,14 +121,14 @@
   ansible.builtin.set_fact:
     test_data_common: "{{ test_data_common | combine({'sw_sn': sw_sn_mapping}) }}"
   when: sw_sn_mapping is defined
-  ignore_errors: true
+  failed_when: false
 
 # Also set as a global fact for cross-play access
 - name: Set dynamic sw_sn as global fact
   ansible.builtin.set_fact:
     global_sw_sn_mapping: "{{ sw_sn_mapping }}"
   when: sw_sn_mapping is defined
-  ignore_errors: true
+  failed_when: false
 
 # Determine the version of Controller
 - name: Determine version of DCNM or NDFC
@@ -136,39 +136,39 @@
     method: GET
     path: /appcenter/cisco/ndfc/api/about/version
   register: result
-  ignore_errors: true
+  failed_when: false
 
 - name: Set fact
   ansible.builtin.set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: true
+  failed_when: false
 
 - name: Determine version of DCNM or NDFC
   cisco.dcnm.dcnm_rest:
     method: GET
     path: /fm/fmrest/about/version
   register: result
-  ignore_errors: true
+  failed_when: false
 
 - name: Set fact
   ansible.builtin.set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: true
+  failed_when: false
 
 - name: Determine version of DCNM or NDFC
   cisco.dcnm.dcnm_rest:
     method: GET
     path: /fm/fmrest/about/version
   register: result
-  ignore_errors: true
+  failed_when: false
 
 - name: Set fact
   ansible.builtin.set_fact:
     controller_version: '11'
   when: ( result.response['DATA']['version'] == 'DEVEL' )
-  ignore_errors: true
+  failed_when: false
 
 ###############################################
 ##                FACTS                      ##
@@ -303,7 +303,7 @@
       "{{ vpc_vxlan_data | to_json }}"
   register: result
   when: (vxlan_vpc_create | bool)
-  ignore_errors: true
+  failed_when: false
 
 - name: Wait for 10 secs
   ansible.builtin.wait_for:
@@ -320,7 +320,7 @@
     path: "{{ vxlan_config_save_path[controller_version] }}"
   register: result
   when: (vxlan_vpc_create | bool)
-  ignore_errors: true
+  failed_when: false
 
 ##############################################
 ##          DEPLOY VXLAN VPC PAIR           ##
@@ -335,7 +335,7 @@
   loop_control:
     pause: 5
   when: (vxlan_vpc_deploy | bool)
-  ignore_errors: true
+  failed_when: false
 
 - name: Wait for 30 secs
   ansible.builtin.wait_for:
@@ -354,7 +354,7 @@
       "{{ vpc_cxt_data | to_json }}"
   register: result
   when: (cxt_vpc_create | bool)
-  ignore_errors: true
+  failed_when: false
 
 - name: Wait for 20 secs
   ansible.builtin.wait_for:
@@ -371,7 +371,7 @@
     path: "{{ cxt_config_save_path[controller_version] }}"
   register: result
   when: (cxt_vpc_create | bool)
-  ignore_errors: true
+  failed_when: false
 
 ##############################################
 ##          DEPLOY CXT VPC PAIR             ##
@@ -386,7 +386,7 @@
   loop_control:
     pause: 5
   when: (cxt_vpc_deploy | bool)
-  ignore_errors: true
+  failed_when: false
 
 - name: Wait for 30 secs
   ansible.builtin.wait_for:

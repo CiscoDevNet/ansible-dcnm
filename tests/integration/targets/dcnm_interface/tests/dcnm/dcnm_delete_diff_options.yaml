@@ -12,10 +12,11 @@
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result
 
-- name: Assert
+- name: Assert response codes
   ansible.builtin.assert:
-  ansible.builtin.assert:
-  loop: '{{ result.response }}'
+    that:
+      - 'item["RETURN_CODE"] == 200'
+    loop: '{{ result.response }}'
 
 - block:
 
@@ -25,7 +26,7 @@
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-        test_data_interfaces:
+      test_data_interfaces:
           diff_options_merge1_conf_template: "templates/dcnm_delete/diff_options_merge1_conf.j2"
           diff_options_merge1_conf_file: "{{ role_path }}/files/dcnm_interface_delete_diff_options_merge1_conf.yaml"
           diff_options_merge2_conf_template: "templates/dcnm_delete/diff_options_merge2_conf.j2"
@@ -40,7 +41,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - diff_options_merge1
@@ -61,19 +62,19 @@
 
     - name: Put Parent Interface for Sub-Interface into routed mode
       cisco.dcnm.dcnm_interface:
-        check_deploy: false
+      check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: "{{ test_data_common.parent_intf1 }}"
-            type: eth
-            switch:
+        type: eth
+        switch:
               - "{{ test_data_common.switch1 }}"
-            deploy: false
-            profile:
-              admin_state: true
-              mode: routed
-              description: "Parent Interface for Sub-Interface test"
+        deploy: false
+        profile:
+          admin_state: true
+          mode: routed
+          description: "Parent Interface for Sub-Interface test"
 
     - name: Create interfaces to check various delete form 1
       cisco.dcnm.dcnm_interface: &delete_diff_merge1
@@ -85,14 +86,14 @@
 
     - name: QUERY - Get interface state in NDFC (diff options merge 1)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_diff_options_merge1_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC (diff options merge 1)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.diff_options_merge1_conf_file }}"
+      config_path: "{{ test_data_interfaces.diff_options_merge1_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -103,20 +104,23 @@
 
     - name: Delete all interfaces form 1
       cisco.dcnm.dcnm_interface:
-        check_deploy: false
+      check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
       register: result
 
-    - ansible.builtin.assert:
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 4'
           - '(result["diff"][0]["replaced"] | length) != 0'
           - '(result["diff"][0]["overridden"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) != 0'
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - ansible.builtin.assert:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -132,19 +136,19 @@
 
     - name: Put Parent Interface for Sub-Interface into routed mode
       cisco.dcnm.dcnm_interface:
-        check_deploy: false
+      check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: "{{ test_data_common.parent_intf1 }}"
-            type: eth
-            switch:
+        type: eth
+        switch:
               - "{{ test_data_common.switch1 }}"
-            deploy: false
-            profile:
-              admin_state: true
-              mode: routed
-              description: "Parent Interface for Sub-Interface test"
+        deploy: false
+        profile:
+          admin_state: true
+          mode: routed
+          description: "Parent Interface for Sub-Interface test"
 
     - name: Create all interfaces to check delete form 2
       cisco.dcnm.dcnm_interface: &delete_diff_merge2
@@ -156,14 +160,14 @@
 
     - name: QUERY - Get interface state in NDFC (diff options merge 2)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_diff_options_merge2_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC (diff options merge 2)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.diff_options_merge2_conf_file }}"
+      config_path: "{{ test_data_interfaces.diff_options_merge2_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -179,21 +183,24 @@
 
     - name: Delete all interfaces form 2
       cisco.dcnm.dcnm_interface:
-        check_deploy: false
+      check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
         config: "{{ dcnm_interface_diff_options_delete2_conf }}"
       register: result
 
-    - ansible.builtin.assert:
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 4'
           - '(result["diff"][0]["replaced"] | length) != 0'
           - '(result["diff"][0]["overridden"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - ansible.builtin.assert:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -209,19 +216,19 @@
 
     - name: Put Parent Interface for Sub-Interface into routed mode
       cisco.dcnm.dcnm_interface:
-        check_deploy: false
+      check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: "{{ test_data_common.parent_intf1 }}"
-            type: eth
-            switch:
+        type: eth
+        switch:
               - "{{ test_data_common.switch1 }}"
-            deploy: false
-            profile:
-              admin_state: true
-              mode: routed
-              description: "Parent Interface for Sub-Interface test"
+        deploy: false
+        profile:
+          admin_state: true
+          mode: routed
+          description: "Parent Interface for Sub-Interface test"
 
     - name: Create all interfaces to check delete form 3
       cisco.dcnm.dcnm_interface: &delete_diff_merge3
@@ -233,14 +240,14 @@
 
     - name: QUERY - Get interface state in NDFC (diff options merge 3)
       cisco.dcnm.dcnm_interface:
-        state: query
+      state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_diff_options_merge3_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC (diff options merge 3)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.diff_options_merge3_conf_file }}"
+      config_path: "{{ test_data_interfaces.diff_options_merge3_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -256,21 +263,24 @@
 
     - name: Delete all interfaces form 3
       cisco.dcnm.dcnm_interface:
-        check_deploy: false
+      check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
         config: "{{ dcnm_interface_diff_options_delete3_conf }}"
       register: result
 
-    - ansible.builtin.assert:
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 4'
           - '(result["diff"][0]["replaced"] | length) == 0'
           - '(result["diff"][0]["overridden"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - ansible.builtin.assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
           - ansible.builtin.assert:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -283,13 +293,15 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+      check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
       when: it_context is not defined
 
-- ansible.builtin.assert:    that:
-  - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-      when: it_context is not defined
+- name: ASSERT - Check condition
+  ansible.builtin.assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+    loop: '{{ result.response }}'
+    when: it_context is not defined

@@ -25,7 +25,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: QUERY - Verify if service fabric is deployed.
+      - name: QUERY - Verify if service fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_ext_path }}"
@@ -36,7 +36,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: QUERY - Clean up any existing service node
+      - name: QUERY - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -84,7 +84,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+      - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -121,7 +121,7 @@
       - 'result.response[0].type == "Firewall"'
       - 'result.response[0].name == "SN-11"'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+      - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -138,19 +138,19 @@
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
 
-- name: Assert
+      - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == ""'
-  when: controller_version == "11"
+    when: controller_version == "11"
 
-- name: Assert
+      - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == "OK"'
-  when: controller_version >= "12"
+    when: controller_version >= "12"
 
-- name: QUERY -  Query fabric state before proceeding
+      - name: QUERY -  Query fabric state before proceeding
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -191,7 +191,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+      - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -223,7 +223,7 @@
       - 'result.response[0].type == "Firewall"'
       - 'result.response[0].name == "SN-11"'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+      - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -246,7 +246,7 @@
       - 'result.response[0].type == "Firewall"'
       - 'result.response[0].name == "SN-11"'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+      - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -314,7 +314,7 @@
       - 'result.response[1].DATA.type == "Firewall"'
       - 'result.response[1].DATA.name == "SN-12"'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+      - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -362,7 +362,7 @@
       - 'result.response[1].type == "Firewall"'
       - 'result.response[1].name == "SN-12"'
 
-- name: QUERY - sleep for 20 seconds for DCNM to completely update the state
+      - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -393,7 +393,7 @@
       - 'result.response[1].type == "Firewall"'
       - 'result.response[1].name == "SN-12"'
 
-- name: QUERY - Clean up any existing service node
+      - name: QUERY - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"

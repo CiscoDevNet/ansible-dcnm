@@ -48,7 +48,7 @@
       register: result
 
   - name: Query fabric state until vrfStatus transitions to DEPLOYED state
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: query
     register: result
@@ -60,7 +60,7 @@
     delay: 5
 
   - name: Replace engineering VRF to remove attachments
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: replaced
       config:
@@ -71,7 +71,7 @@
     register: result
 
   - name: Query VRF State
-    cisco.dcnm.dcnm_vrf:
+      cisco.dcnm.dcnm_vrf:
       fabric: "{{ fabric_name }}"
       state: query
     register: result
