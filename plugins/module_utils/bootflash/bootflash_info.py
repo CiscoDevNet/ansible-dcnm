@@ -34,10 +34,12 @@ from .convert_file_info_to_target import ConvertFileInfoToTarget
 
 class BootflashInfo:
     """
-    ### Summary
+    # Summary
+
     Retrieve and filter bootflash contents.
 
-    ### Raises
+    ## Raises
+
     -   ``ValueError`` if:
             -   params is not set.
             -   switches is not set.
@@ -45,7 +47,8 @@ class BootflashInfo:
             -   switches is not a list.
             -   switches contains anything other than strings.
 
-    ### Usage
+    ## Usage
+
     We start with list of targets, where target is a dictionary containing
     a filepath and a supervisor key:
 
@@ -129,7 +132,7 @@ class BootflashInfo:
 
     ```
 
-    ### instance.info_dict Structure
+    ## instance.info_dict Structure
     ```json
     {
         "172.22.150.112": {
@@ -166,7 +169,8 @@ class BootflashInfo:
         }
     }
     ```
-    ### instance.results.diff Structure
+
+    ## instance.results.diff Structure
 
     ```json
         "diff": [
@@ -198,7 +202,7 @@ class BootflashInfo:
         ]
     ```
 
-    ### bootflash_data_map Structure
+    ## bootflash_data_map Structure
 
     ```json
     {
@@ -255,11 +259,13 @@ class BootflashInfo:
 
     def validate_refresh_parameters(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Verify that mandatory prerequisites are met before calling refresh.
 
-        ### Raises
-        -   ``ValueError`` if:
+        ## Raises
+
+        -   `ValueError` if:
                 -   rest_send is not set.
                 -   results is not set.
                 -   switch_details is not set.
@@ -281,19 +287,18 @@ class BootflashInfo:
     # pylint: disable=no-member
     def refresh(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Retrieve switch details for each of the switches in self.switches.
 
         This is used to convert switch ip address to serial_number, which is
         required by EpBootflashInfo().
 
-        ### Raises
-        -   ``ValueError`` if:
+        ## Raises
+
+        -   `ValueError` if:
                 -   switches is not set.
 
-        ### Notes
-        -   pylint: disable=no-member is needed due to the results property
-            being dynamically created by the @Properties.add_results decorator.
         """
         # pylint: disable=no-member
         self.validate_refresh_parameters()
@@ -311,11 +316,14 @@ class BootflashInfo:
 
     def refresh_bootflash_info(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Retrieve bootflash information for each switch in self.switches.
 
-        ### Raises
-        None
+        ## Raises
+
+        -   `ValueError` if:
+                -   serial_number cannot be found for a switch.
         """
         method_name: str = inspect.stack()[0][3]
         self.info_dict = {}
@@ -349,15 +357,15 @@ class BootflashInfo:
 
     def validate_prerequisites_for_build_matches(self) -> None:
         """
-        ### Summary
-        Verify that mandatory prerequisites are met before calling
-        ``build_matches()``.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``refresh`` has not been called.
-                -   ``filter_switch`` is not set.
-                -   ``filter_file`` is not set.
+        Verify that mandatory prerequisites are met before calling
+        `build_matches()`.
+
+        ## Raises
+
+        -   `ValueError` if:
+                -   info_dict is empty i.e. `refresh` has not been called.
         """
         method_name: str = inspect.stack()[0][3]
 
@@ -369,12 +377,13 @@ class BootflashInfo:
 
     def match_filter_filepath(self, target: dict[str, str]) -> bool:
         """
-        ### Summary
-        -   Return True if the target's ``filepath`` matches
-            ``filter_filepath``.
+        ## Summary
+
+        -   Return True if the target's `filepath` matches `filter_filepath`.
         -   Return False otherwise.
 
-        ### Raises
+        ## Raises
+
         None
         """
         if not self.filter_filepath:
@@ -387,12 +396,13 @@ class BootflashInfo:
 
     def match_filter_supervisor(self, target: dict[str, str]) -> bool:
         """
-        ### Summary
-        -   Return True if the target's ``bootflash_type`` matches
-            ``filter_supervisor``.
+        # Summary
+
+        -   Return True if the target's `bootflash_type` matches `filter_supervisor`.
         -   Return False otherwise.
 
-        ### Raises
+        ## Raises
+
         None
         """
         if not self.filter_supervisor:
@@ -403,12 +413,13 @@ class BootflashInfo:
 
     def match_filter_switch(self, target: dict[str, str]) -> bool:
         """
-        ### Summary
-        -   Return True if the target's ``ip_address`` matches
-            ``filter_switch``.
+        # Summary
+
+        -   Return True if the target's `ip_address` matches `filter_switch`.
         -   Return False otherwise.
 
-        ### Raises
+        ## Raises
+
         None
         """
         if not self.filter_switch:
@@ -419,10 +430,12 @@ class BootflashInfo:
 
     def build_matches(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Build a list of matches from the info_dict.
 
-        ### Raises
+        ## Raises
+
         None
         """
         method_name: str = inspect.stack()[0][3]
@@ -465,16 +478,18 @@ class BootflashInfo:
     @property
     def filter_filepath(self) -> str:
         """
-        ### Summary
-        Return the current ``filter_filepath``.
+        # Summary
 
-        ``filter_filepath`` is a file path used to filter the results
-        of the query.  This can include file globbing.
+        Return the current `filter_filepath`.
 
-        ### Raises
+        `filter_filepath` is a file path used to filter the results
+        of the query.  It can include file globbing.
+
+        ## Raises
+
         None
 
-        ### Examples
+        ## Examples
 
         -   All txt files in the bootflash directory
             -   instance.filter_filepath = "bootflash:/*.txt"
@@ -493,18 +508,21 @@ class BootflashInfo:
     @property
     def filter_supervisor(self) -> str:
         """
-        ### Summary
-        Return the current ``filter_supervisor``.
+        # Summary
 
-        ``filter_supervisor`` is either "active" or "standby" and represents
-         the state of the supervisor which hosts ``filepath``.
+        Return the current `filter_supervisor`.
 
-        ### Raises
-        -   ``ValueError`` if:
+        `filter_supervisor` is either "active" or "standby" and represents
+         the state of the supervisor which hosts `filepath`.
+
+        ## Raises
+
+        -   `ValueError` if:
             -   value is not one of the valid_supervisor values
                 "active" or "standby".
 
-        ### Example
+        ## Example
+
         instance.filter_supervisor = "active"
         """
         return self._filter_supervisor
@@ -521,13 +539,14 @@ class BootflashInfo:
     @property
     def filter_switch(self) -> str:
         """
-        ### Summary
-        Return the current ``filter_switch``.
+        # Summary
 
-        ``filter_switch`` is a switch ipv4 address used to filter the results
-        of the query.
+        Return the current `filter_switch`.
 
-        ### Raises
+        `filter_switch` is a switch ipv4 address used to filter the results of the query.
+
+        ## Raises
+
         None
         """
         return self._filter_switch
@@ -539,24 +558,29 @@ class BootflashInfo:
     @property
     def info(self) -> dict[str, Any]:
         """
-        ### Summary
-        Return the info_dict instance
+        # Summary
+
+        Return the info_dict dictionary.
         """
         return self.info_dict
 
     @property
     def matches(self) -> list[dict[str, str]]:
         """
-        ### Summary
+        # Summary
+
         Return a list of file_info dicts that match the query filters.
 
-        ### Raises
+        ## Raises
+
         None
 
-        ### Associated key
+        ## Associated key
+
         None
 
-        ### Example value
+        ## Example value
+
         The leading space with ipAddr's value in pre-3.2.1e Nexus Dashboard responses
         is stripped in build_matches() so you won't have to worry about it.
 
@@ -589,7 +613,7 @@ class BootflashInfo:
         ## Raises
 
         -   setter: `TypeError` if the value is not an instance of RestSend.
-        -   setter: `ValueError` if RestSend.params is not set.
+        -   getter: `ValueError` if RestSend.params is not set.
 
         ## getter
 
@@ -664,12 +688,13 @@ class BootflashInfo:
     @property
     def switch_details(self) -> SwitchDetails:
         """
-        ### Summary
+        # Summary
+
         Return the switch_details instance
 
-        ### Raises
-        -   ``TypeError`` if ``switch_details`` is not an instance of
-            ``SwitchDetails()``.
+        ## Raises
+
+        -   `TypeError` if `switch_details` is not an instance of `SwitchDetails()`.
         """
         return self._switch_details
 
@@ -693,17 +718,21 @@ class BootflashInfo:
     @property
     def switches(self) -> list[str]:
         """
-        ### Summary
+        # Summary
+
         A list of switch ip addresses.
 
-        ### Raises
-        - ``TypeError`` if:
+        ## Raises
+
+        - getter: None
+        - setter:
+          - `TypeError` if:
             - switches is not a list.
             - switches contains anything other than strings.
-        -  ``ValueError`` if:
+          - `ValueError` if:
             - switches list is empty.
 
-        ### Example
+        ## Example
 
         ```python
 
