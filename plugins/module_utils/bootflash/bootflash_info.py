@@ -271,7 +271,6 @@ class BootflashInfo:
                 -   switch_details is not set.
                 -   switches is not set.
         """
-        # pylint: disable=no-member
         method_name: str = inspect.stack()[0][3]
 
         def raise_value_error_if_not_set(property_name: str) -> None:
@@ -284,7 +283,6 @@ class BootflashInfo:
         if not self.switches:
             raise_value_error_if_not_set("switches")
 
-    # pylint: disable=no-member
     def refresh(self) -> None:
         """
         # Summary
@@ -300,7 +298,6 @@ class BootflashInfo:
                 -   switches is not set.
 
         """
-        # pylint: disable=no-member
         self.validate_refresh_parameters()
 
         self.results.action = self.action
