@@ -16,7 +16,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+  loop: '{{ result.response }}'
 
 - block:
 
@@ -26,7 +26,7 @@
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-      test_data_interfaces:
+        test_data_interfaces:
           deploy_merge1_conf_template: "templates/dcnm_delete/deploy_merge1_conf.j2"
           deploy_merge1_conf_file: "{{ role_path }}/files/dcnm_interface_delete_deploy_merge1_conf.yaml"
           deploy_merge2_conf_template: "templates/dcnm_delete/deploy_merge2_conf.j2"
@@ -39,7 +39,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - deploy_merge1
@@ -63,18 +63,18 @@
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_deploy_merge1_conf }}"
-        register: result
+      register: result
 
     - name: QUERY - Get interface state in NDFC (deploy merge 1)
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_merge1_conf }}"
-        register: verify_result
+      register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC (deploy merge 1)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.deploy_merge1_conf_file }}"
+        config_path: "{{ test_data_interfaces.deploy_merge1_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -89,62 +89,62 @@
         deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
-        register: result
+      register: result
 
     - name: QUERY - Get interface state in NDFC (delete 1)
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_merge1_conf }}"
-        register: verify_result
+      register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
       ansible.builtin.assert:
-      that:
+        that:
           - 'verify_result.response | length == 0'
 
 ##############################################
 ##              DELETE 2                    ##
 ##############################################
 
-          - name: Delete interfaces again, global deploy as true
+    - name: Delete interfaces again, global deploy as true
       cisco.dcnm.dcnm_interface:
         check_deploy: true
         deploy: true
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
-        register: result
+      register: result
 
     - name: QUERY - Get interface state in NDFC (delete 2)
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_merge1_conf }}"
-        register: verify_result
+      register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
       ansible.builtin.assert:
-      that:
+        that:
           - 'verify_result.response | length == 0'
 
 ##############################################
 ##              DELETE 3                    ##
 ##############################################
 
-          - name: Delete interfaces - Idempotence
+    - name: Delete interfaces - Idempotence
       cisco.dcnm.dcnm_interface:
         check_deploy: true
         deploy: true
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
-        register: result
+      register: result
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - 'result.response is defined'
-        - 'result.response | length >= 0'
+        that:
+          - 'result.changed == false'
+          - 'result.response is defined'
+          - 'result.response | length >= 0'
 
 ##############################################
 ##                MERGE 2                   ##
@@ -161,18 +161,18 @@
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_deploy_merge2_conf }}"
-        register: result
+      register: result
 
     - name: QUERY - Get interface state in NDFC (deploy merge 2)
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_merge2_conf }}"
-        register: verify_result
+      register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC (deploy merge 2)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.deploy_merge2_conf_file }}"
+        config_path: "{{ test_data_interfaces.deploy_merge2_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -193,25 +193,25 @@
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
         config: "{{ dcnm_interface_deploy_delete1_conf }}"
-        register: result
+      register: result
 
     - name: QUERY - Get interface state in NDFC (delete 4)
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_delete1_conf }}"
-        register: verify_result
+      register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
       ansible.builtin.assert:
-      that:
+        that:
           - 'verify_result.response | length == 0'
 
 ##############################################
 ##              DELETE 5                    ##
 ##############################################
 
-          - name: Load Interface Config File - Deploy Delete 2
+    - name: Load Interface Config File - Deploy Delete 2
       ansible.builtin.set_fact:
         dcnm_interface_deploy_delete2_conf: "{{ lookup('file', test_data_interfaces.deploy_delete2_conf_file) | from_yaml }}"
       delegate_to: localhost
@@ -223,18 +223,18 @@
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
         config: "{{ dcnm_interface_deploy_delete2_conf }}"
-        register: result
+      register: result
 
     - name: QUERY - Get interface state in NDFC (delete 5)
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_deploy_delete2_conf }}"
-        register: verify_result
+      register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
       ansible.builtin.assert:
-      that:
+        that:
           - 'verify_result.response | length == 0'
 
 ##############################################
@@ -242,18 +242,17 @@
 ##############################################
 
   always:
-
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-        register: result
-        when: it_context is not defined
+      register: result
+      when: it_context is not defined
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
+        that:
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

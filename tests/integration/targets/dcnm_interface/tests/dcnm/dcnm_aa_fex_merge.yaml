@@ -24,7 +24,7 @@
   ##             SETUP VARS                   ##
   ##############################################
 
-  - name: Setup Internal TestCase Variables
+    - name: Setup Internal TestCase Variables
     ansible.builtin.set_fact:
       test_data_interfaces:
         merge_basic_conf_template: "templates/dcnm_aa_fex/merge_basic_conf.j2"

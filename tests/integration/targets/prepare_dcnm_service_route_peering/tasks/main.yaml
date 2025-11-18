@@ -123,7 +123,8 @@
     timeout: 10
   tags: sanity
 
-- tags: sanity test
+- name: MERGE VRF and Service Node setup
+  tags: sanity test
   block:
 
 ##############################################

@@ -342,8 +342,12 @@ EXAMPLES = """
   cisco.dcnm.dcnm_rest:
     method: PUT
     path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/vxlan-fabric
-    json_data: '{"fabricId": "FABRIC-7","fabricName": "vxlan-fabric","id": 7,"nvPairs":{...,"BOOTSTRAP_ENABLE": true,"DHCP_ENABLE": true,'
-    json_data: '"DHCP_IPV6_ENABLE": "DHCPv4","DHCP_START": "192.168.1.10", "DHCP_END": "192.168.1.20","MGMT_GW": "192.168.123.1","MGMT_PREFIX": "24",...},"templateName": "Easy_Fabric"}' # noqa
+    json_data: >
+      {"fabricId":"FABRIC-7","fabricName":"vxlan-fabric","id":7,
+      "nvPairs":{...,"BOOTSTRAP_ENABLE":true,"DHCP_ENABLE":true,
+      "DHCP_IPV6_ENABLE":"DHCPv4","DHCP_START":"192.168.1.10",
+      "DHCP_END":"192.168.1.20","MGMT_GW":"192.168.123.1",
+      "MGMT_PREFIX":"24",...},"templateName":"Easy_Fabric"}
 
 # The following switch will be Bootstrapped and merged into the existing fabric
 - name: Poap switch Configuration

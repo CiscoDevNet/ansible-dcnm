@@ -18,127 +18,126 @@
     loop: '{{ result.response }}'
 
 - block:
-
     - name: Create templates
-    cisco.dcnm.dcnm_template:
-      state: merged        # only choose from [merged, deleted, query]
-      config:
-        - name: template_101
-          description: "Template_101"
-          tags: "internal policy 101"
-          content: |
-            certificate /bootflash/telegraf.crt telegraf
-            destination-profile
-              use-vrf management
-            destination-group 1
-              ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
-            sensor-group 1
-              data-source DME
-              path sys/ch depth unbounded
-            subscription 1
-              dst-grp 1
-              snsr-grp 1 sample-interval 10000
-
-        - name: template_102
-          description: "Template_102"
-          tags: "internal policy 102"
-          content: |
-            telemetry
+      cisco.dcnm.dcnm_template:
+        state: merged        # only choose from [merged, deleted, query]
+        config:
+          - name: template_101
+            description: "Template_101"
+            tags: "internal policy 101"
+            content: |
               certificate /bootflash/telegraf.crt telegraf
               destination-profile
                 use-vrf management
-              destination-group 2
-                ip address 10.195.224.176 port 52000 protocol gRPC encoding GPB
-              sensor-group 2
+              destination-group 1
+                ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+              sensor-group 1
                 data-source DME
                 path sys/ch depth unbounded
-              subscription 2
-                dst-grp 2
-                snsr-grp 2 sample-interval 20000
+              subscription 1
+                dst-grp 1
+                snsr-grp 1 sample-interval 10000
 
-        - name: template_103
-          description: "Template_103"
-          tags: "internal policy 103"
-          content: |
-            telemetry
-              certificate /bootflash/telegraf.crt telegraf
-              destination-profile
-                use-vrf management
-              destination-group 3
-                ip address 10.195.225.176 port 53000 protocol gRPC encoding GPB
-              sensor-group 3
-                data-source DME
-                path sys/ch depth unbounded
-              subscription 3
-                dst-grp 3
-                snsr-grp 2 sample-interval 30000
+          - name: template_102
+            description: "Template_102"
+            tags: "internal policy 102"
+            content: |
+              telemetry
+                certificate /bootflash/telegraf.crt telegraf
+                destination-profile
+                  use-vrf management
+                destination-group 2
+                  ip address 10.195.224.176 port 52000 protocol gRPC encoding GPB
+                sensor-group 2
+                  data-source DME
+                  path sys/ch depth unbounded
+                subscription 2
+                  dst-grp 2
+                  snsr-grp 2 sample-interval 20000
 
-        - name: template_104
-          description: "Template_104"
-          tags: "internal policy 104"
-          content: |
-            telemetry
-              certificate /bootflash/telegraf.crt telegraf
-              destination-profile
-                use-vrf management
-              destination-group 4
-                ip address 10.195.224.176 port 54000 protocol gRPC encoding GPB
-              sensor-group 4
-                data-source DME
-                path sys/ch depth unbounded
-              subscription 4
-                dst-grp 4
-                snsr-grp 4 sample-interval 40000
-    register: result
+          - name: template_103
+            description: "Template_103"
+            tags: "internal policy 103"
+            content: |
+              telemetry
+                certificate /bootflash/telegraf.crt telegraf
+                destination-profile
+                  use-vrf management
+                destination-group 3
+                  ip address 10.195.225.176 port 53000 protocol gRPC encoding GPB
+                sensor-group 3
+                  data-source DME
+                  path sys/ch depth unbounded
+                subscription 3
+                  dst-grp 3
+                  snsr-grp 2 sample-interval 30000
 
-  - name: ASSERT - Creation diff
-    ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 4'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
+          - name: template_104
+            description: "Template_104"
+            tags: "internal policy 104"
+            content: |
+              telemetry
+                certificate /bootflash/telegraf.crt telegraf
+                destination-profile
+                  use-vrf management
+                destination-group 4
+                  ip address 10.195.224.176 port 54000 protocol gRPC encoding GPB
+                sensor-group 4
+                  data-source DME
+                  path sys/ch depth unbounded
+                subscription 4
+                  dst-grp 4
+                  snsr-grp 4 sample-interval 40000
+      register: result
 
-  - name: ASSERT - Creation response codes
-    ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Template Created" in item["DATA"]["status"]'
-    loop: '{{ result.response }}'
+- name: ASSERT - Creation diff
+  ansible.builtin.assert:
+    that:
+      - 'result.changed == true'
+      - '(result["diff"][0]["merged"] | length) == 4'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'
 
-  - name: Delete all templates created
-    cisco.dcnm.dcnm_template: &temp_delete
-      state: deleted
-      config:
-        - name: template_101
-        - name: template_102
-        - name: template_103
-        - name: template_104
-    register: result
+- name: ASSERT - Creation response codes
+  ansible.builtin.assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+      - '"Template Created" in item["DATA"]["status"]'
+  loop: '{{ result.response }}'
 
-  - name: ASSERT - Deletion response codes
-    ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Template deletion successful" in item["DATA"]'
-    loop: '{{ result.response }}'
+- name: Delete all templates created
+  cisco.dcnm.dcnm_template: &temp_delete
+    state: deleted
+    config:
+      - name: template_101
+      - name: template_102
+      - name: template_103
+      - name: template_104
+  register: result
 
-  - name: ASSERT - Deletion diff
-    ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 4'
-        - '(result["diff"][0]["query"] | length) == 0'
+- name: ASSERT - Deletion response codes
+  ansible.builtin.assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+      - '"Template deletion successful" in item["DATA"]'
+  loop: '{{ result.response }}'
 
-  - name: Delete all templates created - Idempotence
-    cisco.dcnm.dcnm_template: *temp_delete
-    register: result
+- name: ASSERT - Deletion diff
+  ansible.builtin.assert:
+    that:
+      - 'result.changed == true'
+      - '(result["diff"][0]["merged"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 4'
+      - '(result["diff"][0]["query"] | length) == 0'
 
-  - name: ASSERT - Idempotence diff
-    ansible.builtin.assert:
-      that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
+- name: Delete all templates created - Idempotence
+  cisco.dcnm.dcnm_template: *temp_delete
+  register: result
+
+- name: ASSERT - Idempotence diff
+  ansible.builtin.assert:
+    that:
+      - 'result.changed == false'
+      - '(result["diff"][0]["merged"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'

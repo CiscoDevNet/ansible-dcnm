@@ -77,17 +77,17 @@
 # ],
 - name: MERGED - SETUP - Ensure switch mode is normal
   cisco.dcnm.dcnm_maintenance_mode:
-      state: query
-        config:
-          switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: query
+    config:
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result
   retries: 40
   delay: 10
   until:
-        - result.diff[2][leaf_1].mode == "normal"
-        - result.diff[2][leaf_2].mode == "normal"
+    - result.diff[2][leaf_1].mode == "normal"
+    - result.diff[2][leaf_2].mode == "normal"
 
 ################################################################################
 # 2. MERGED - TEST - Change switch mode to maintenance (switch-level)
@@ -96,23 +96,23 @@
 ################################################################################
 - name: MERGED - TEST - Change switch mode to maintenance (switch-level)
   cisco.dcnm.dcnm_maintenance_mode:
-      state: merged
-        config:
-          deploy: false
-          mode: normal
-          switches:
-                    - ip_address: "{{ leaf_1 }}"
-                      deploy: true
-                      mode: maintenance
-                      wait_for_mode_change: false
-                    - ip_address: "{{ leaf_2 }}"
-                      deploy: true
-                      mode: maintenance
-                      wait_for_mode_change: false
+    state: merged
+    config:
+      - deploy: false
+      - mode: normal
+      - switches:
+          - ip_address: "{{ leaf_1 }}"
+            deploy: true
+            mode: maintenance
+            wait_for_mode_change: false
+          - ip_address: "{{ leaf_2 }}"
+            deploy: true
+            mode: maintenance
+            wait_for_mode_change: false
   register: result_maintenance_mode
 - name: Debug
   ansible.builtin.debug:
-      var: result_maintenance_mode
+    var: result_maintenance_mode
 
 ################################################################################
 # 7. MERGED - TEST - Verify switch mode is maintenance (switch-level)
@@ -141,33 +141,33 @@
 # ],
 - name: MERGED - TEST - Verify switch mode is maintenance (switch-level)
   cisco.dcnm.dcnm_maintenance_mode:
-      state: query
-        config:
-          switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: query
+    config:
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result
   retries: 60
   delay: 10
   until:
-        - result.diff[2][leaf_1].mode == "maintenance"
-        - result.diff[2][leaf_2].mode == "maintenance"
+    - result.diff[2][leaf_1].mode == "maintenance"
+    - result.diff[2][leaf_2].mode == "maintenance"
 
 - name: Assert
   ansible.builtin.assert:
-      that:
-          - result_maintenance_mode.failed == false
-          - result_maintenance_mode.metadata[2].action == "change_sytem_mode"
-          - result_maintenance_mode.metadata[3].action == "change_sytem_mode"
-          - result_maintenance_mode.metadata[2].check_mode == False
-          - result_maintenance_mode.metadata[3].check_mode == False
-          - result_maintenance_mode.metadata[2].state == "merged"
-          - result_maintenance_mode.metadata[3].state == "merged"
-          - result_maintenance_mode.response[2].DATA.status == "Success"
-          - result_maintenance_mode.response[3].DATA.status == "Success"
-          - result_maintenance_mode.response[2].METHOD == "POST"
-          - result_maintenance_mode.response[3].METHOD == "POST"
-          - result_maintenance_mode.response[2].RETURN_CODE == 200
-          - result_maintenance_mode.response[3].RETURN_CODE == 200
-          - result_maintenance_mode.response[4].DATA.status is match 'Success'
-          - result_maintenance_mode.response[5].DATA.status is match 'Success'
+    that:
+      - result_maintenance_mode.failed == false
+      - result_maintenance_mode.metadata[2].action == "change_sytem_mode"
+      - result_maintenance_mode.metadata[3].action == "change_sytem_mode"
+      - result_maintenance_mode.metadata[2].check_mode == False
+      - result_maintenance_mode.metadata[3].check_mode == False
+      - result_maintenance_mode.metadata[2].state == "merged"
+      - result_maintenance_mode.metadata[3].state == "merged"
+      - result_maintenance_mode.response[2].DATA.status == "Success"
+      - result_maintenance_mode.response[3].DATA.status == "Success"
+      - result_maintenance_mode.response[2].METHOD == "POST"
+      - result_maintenance_mode.response[3].METHOD == "POST"
+      - result_maintenance_mode.response[2].RETURN_CODE == 200
+      - result_maintenance_mode.response[3].RETURN_CODE == 200
+      - result_maintenance_mode.response[4].DATA.status is match 'Success'
+      - result_maintenance_mode.response[5].DATA.status is match 'Success'

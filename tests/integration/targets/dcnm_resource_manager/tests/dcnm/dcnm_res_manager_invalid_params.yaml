@@ -13,27 +13,27 @@
 
     - name: Create Resources - Invalid Pool type
       cisco.dcnm.dcnm_resource_manager:
-      state: merged                                # choose form [merged, deleted, query]
+        state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - entity_name: "l3_vni_fabric"             # A unique name to identify the resource
-        pool_type: "IDLE"                          # choose from ['ID', 'IP', 'SUBNET']
-        pool_name: "L3_VNI"                  # Based on the 'poolType', select appropriate name
-        scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-        resource: "101"                          # The value of the resource being created
-      ignore_errors: true
+            pool_type: "IDLE"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "L3_VNI"                  # Based on the 'poolType', select appropriate name
+            scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            resource: "101"                          # The value of the resource being created
+        ignore_errors: true
 
     - name: Create Resources - Invalid Pool Name
       cisco.dcnm.dcnm_resource_manager:
-      state: merged                                # choose form [merged, deleted, query]
+        state: merged                                # choose form [merged, deleted, query]
         fabric: "{{ ansible_it_fabric }}"
         config:
           - entity_name: "l3_vni_fabric"             # A unique name to identify the resource
-        pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
-        pool_name: "WRONG_POOL"                  # Based on the 'poolType', select appropriate name
-        scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-        resource: "101"                          # The value of the resource being created
-      ignore_errors: true
+            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "WRONG_POOL"                  # Based on the 'poolType', select appropriate name
+            scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            resource: "101"                          # The value of the resource being created
+        ignore_errors: true
 
     - name: Create Resources - L3 VNI wrong scope type
       cisco.dcnm.dcnm_resource_manager:

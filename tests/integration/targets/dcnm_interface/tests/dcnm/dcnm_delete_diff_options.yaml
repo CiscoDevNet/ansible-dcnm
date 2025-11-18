@@ -140,14 +140,14 @@
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: "{{ test_data_common.parent_intf1 }}"
-        type: eth
-        switch:
+            type: eth
+            switch:
               - "{{ test_data_common.switch1 }}"
-        deploy: false
-        profile:
-          admin_state: true
-          mode: routed
-          description: "Parent Interface for Sub-Interface test"
+            deploy: false
+            profile:
+              admin_state: true
+              mode: routed
+              description: "Parent Interface for Sub-Interface test"
 
     - name: Create all interfaces to check delete form 2
       cisco.dcnm.dcnm_interface: &delete_diff_merge2
@@ -159,14 +159,14 @@
 
     - name: QUERY - Get interface state in NDFC (diff options merge 2)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_diff_options_merge2_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC (diff options merge 2)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.diff_options_merge2_conf_file }}"
+        config_path: "{{ test_data_interfaces.diff_options_merge2_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost

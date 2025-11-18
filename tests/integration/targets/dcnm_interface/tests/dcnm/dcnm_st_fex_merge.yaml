@@ -63,7 +63,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - merge
@@ -79,7 +79,7 @@
 
     - name: Load Interface Config Files
       ansible.builtin.set_fact:
-      dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
+        dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
         dcnm_interface_merge_po150_conf: "{{ lookup('file', test_data_interfaces.merge_po150_conf_file) | from_yaml }}"
         dcnm_interface_merge_po151_conf: "{{ lookup('file', test_data_interfaces.merge_po151_conf_file) | from_yaml }}"
         dcnm_interface_merge_po155_conf: "{{ lookup('file', test_data_interfaces.merge_po155_conf_file) | from_yaml }}"

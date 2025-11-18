@@ -96,20 +96,19 @@
 ################################################################################
 - name: MERGED - TEST - Change switch mode to normal (switch-level)
   cisco.dcnm.dcnm_maintenance_mode:
-      state: merged
-        config:
-          deploy: false
-          mode: maintenance
-          wait_for_mode_change: false
-          switches:
-                    - ip_address: "{{ leaf_1 }}"
-                      deploy: true
-                      mode: normal
-                      wait_for_mode_change: true
-                    - ip_address: "{{ leaf_2 }}"
-                      deploy: true
-                      mode: normal
-                      wait_for_mode_change: true
+    state: merged
+    config:
+      deploy: false
+      mode: maintenance
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+          deploy: true
+          mode: normal
+          wait_for_mode_change: true
+        - ip_address: "{{ leaf_2 }}"
+          deploy: true
+          mode: normal
+          wait_for_mode_change: true
   register: result_normal_mode
 - name: Debug
   ansible.builtin.debug:
@@ -142,17 +141,17 @@
 # ],
 - name: MERGED - TEST - Verify switch mode is normal (switch-level)
   cisco.dcnm.dcnm_maintenance_mode:
-      state: query
-        config:
-          switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: query
+    config:
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result
   retries: 60
   delay: 10
   until:
-        - result.diff[2][leaf_1].mode == "normal"
-        - result.diff[2][leaf_2].mode == "normal"
+    - result.diff[2][leaf_1].mode == "normal"
+    - result.diff[2][leaf_2].mode == "normal"
 
 - name: Assert
   ansible.builtin.assert:

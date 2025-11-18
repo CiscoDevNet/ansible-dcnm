@@ -26,13 +26,13 @@
       - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
- - block:
+- block:
 
-  ##############################################
-  ##             SETUP VARS                   ##
-  ##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
-  - name: Setup Internal TestCase Variables
+    - name: Setup Internal TestCase Variables
     ansible.builtin.set_fact:
       test_data_interfaces:
         merged_conf_template: "templates/dcnm_vpc/merged_conf.j2"
@@ -137,7 +137,7 @@
 ##############################################
 
   always:
-  
+
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"

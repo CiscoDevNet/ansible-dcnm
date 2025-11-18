@@ -80,28 +80,28 @@
         resource: "101"                        # The value of the resource being created
 
           - entity_name: "l2_vni_fabric"           # A unique name to identify the resource
-        pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
-        pool_name: "L2_VNI"                    # Based on the 'poolType', select appropriate name
-        scope_type: "fabric"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-        resource: "102"                        # The value of the resource being created
+            pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "L2_VNI"                    # Based on the 'poolType', select appropriate name
+            scope_type: "fabric"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            resource: "102"                        # The value of the resource being created
 
           - entity_name: "loopback_dev"            # A unique name to identify the resource
-        pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
-        pool_name: "LOOPBACK_ID"               # Based on the 'poolType', select appropriate name
-        scope_type: "device"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-        switch: # provide the switch information to which the given resource is to be attached
+            pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "LOOPBACK_ID"               # Based on the 'poolType', select appropriate name
+            scope_type: "device"                   # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            switch: # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch1 }}"            # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch2 }}"            # provide the switch information to which the given resource is to be attached
-        resource: "200"                        # The value of the resource being created
+            resource: "200"                        # The value of the resource being created
 
           - entity_name: "{{ ansible_sno_1 }}~{{ ansible_sno_2 }}"  # A unique name to identify the resource
-        pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
-        pool_name: "VPC_ID"                    # Based on the 'poolType', select appropriate name
-        scope_type: "device_pair"              # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
-        switch: # provide the switch information to which the given resource is to be attached
+            pool_type: "ID"                        # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "VPC_ID"                    # Based on the 'poolType', select appropriate name
+            scope_type: "device_pair"              # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            switch: # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch1 }}"            # provide the switch information to which the given resource is to be attached
               - "{{ ansible_switch2 }}"            # provide the switch information to which the given resource is to be attached
-        resource: "500"                        # The value of the resource being created
+            resource: "500"                        # The value of the resource being created
 
           - entity_name: "mmudigon-2"              # A unique name to identify the resource
         pool_type: "IP"                        # choose from ['ID', 'IP', 'SUBNET']

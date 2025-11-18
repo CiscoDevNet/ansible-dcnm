@@ -441,9 +441,9 @@ EXAMPLES = """
         gw_ip_subnet: '192.168.30.1/24'
         attach:
           - ip_address: 192.168.1.224
-        # Replace the ports with new ports
-        # ports: [Ethernet1/13, Ethernet1/14]
-          ports: [Ethernet1/16, Ethernet1/17]
+            # Replace the ports with new ports
+            # ports: [Ethernet1/13, Ethernet1/14]
+            ports: [Ethernet1/16, Ethernet1/17]
         # Delete this attachment
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
@@ -475,14 +475,14 @@ EXAMPLES = """
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 150
         gw_ip_subnet: '192.168.30.1/24'
-    - net_name: ansible-net12
-      vrf_name: Tenant-2
-      net_id: 7002
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 151
-      gw_ip_subnet: '192.168.40.1/24'
-      deploy: false
+      - net_name: ansible-net12
+        vrf_name: Tenant-2
+        net_id: 7002
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 151
+        gw_ip_subnet: '192.168.40.1/24'
+        deploy: false
 
 - name: Delete all the networkss
   cisco.dcnm.dcnm_network:
@@ -495,7 +495,7 @@ EXAMPLES = """
     state: query
     config:
       - net_name: ansible-net13
-    - net_name: ansible-net12
+      - net_name: ansible-net12
 """
 
 import copy

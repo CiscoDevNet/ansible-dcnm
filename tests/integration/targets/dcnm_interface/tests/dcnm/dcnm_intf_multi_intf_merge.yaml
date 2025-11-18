@@ -37,7 +37,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - multi_intf_merge
@@ -56,7 +56,7 @@
 
     - name: Create eth/sub/lo interfaces
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_multi_intf_merge_conf }}"
@@ -64,7 +64,7 @@
 
     - name: ASSERT - Check changed flag is true and return codes
       ansible.builtin.assert:
-      that:
+        that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ result.response }}'

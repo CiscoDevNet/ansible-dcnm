@@ -132,7 +132,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
+- name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
   tags: sanity
@@ -340,12 +340,12 @@
         attach_interface: "{{ ansible_int1 }}"
         switches:
         - "{{ ansible_switch1 }}"
-    - name: SN-14
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc14
-      attach_interface: "{{ ansible_int1 }}"
-      switches:
+      - name: SN-14
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc14
+        attach_interface: "{{ ansible_int1 }}"
+        switches:
         - "{{ ansible_switch2 }}"
   register: result
   tags: sanity

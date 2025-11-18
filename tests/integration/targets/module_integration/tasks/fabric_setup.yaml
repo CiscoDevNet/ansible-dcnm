@@ -11,83 +11,85 @@
 
 - block:
     - name: MERGE add spine & leaf devices
-    cisco.dcnm.dcnm_inventory: &spine_leaf_merged
-      fabric: "{{ fabric_name }}"
-      state: merged
-      config:
-        - seed_ip: "{{ spine1 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: spine
-          preserve_config: false
-        - seed_ip: "{{ spine2 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: spine
-          preserve_config: false
-        - seed_ip: "{{ leaf1 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: leaf
-          preserve_config: false
-        - seed_ip: "{{ leaf2 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: leaf
-          preserve_config: false
-        - seed_ip: "{{ leaf3 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: leaf
-          preserve_config: false
-        - seed_ip: "{{ leaf4 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: leaf
-          preserve_config: false
-    vars:
-      ansible_command_timeout: 1000
-      ansible_connect_timeout: 1000
-    register: merge_result
+      cisco.dcnm.dcnm_inventory: &spine_leaf_merged
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - seed_ip: "{{ spine1 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: spine
+            preserve_config: false
+          - seed_ip: "{{ spine2 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: spine
+            preserve_config: false
+          - seed_ip: "{{ leaf1 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: leaf
+            preserve_config: false
+          - seed_ip: "{{ leaf2 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: leaf
+            preserve_config: false
+          - seed_ip: "{{ leaf3 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: leaf
+            preserve_config: false
+          - seed_ip: "{{ leaf4 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: leaf
+            preserve_config: false
+      vars:
+        ansible_command_timeout: 1000
+        ansible_connect_timeout: 1000
+      register: merge_result
 
-  - name: ASSERT merge_result
-    ansible.builtin.assert:
-      that: ['merge_result.changed']
+    - name: ASSERT merge_result
+      ansible.builtin.assert:
+        that:
+          - merge_result.changed
 
-  - name: MERGE idempotence
-    cisco.dcnm.dcnm_inventory: *spine_leaf_merged
-    vars:
-      ansible_command_timeout: 1000
-      ansible_connect_timeout: 1000
-    register: merge_idem
+    - name: MERGE idempotence
+      cisco.dcnm.dcnm_inventory: *spine_leaf_merged
+      vars:
+        ansible_command_timeout: 1000
+        ansible_connect_timeout: 1000
+      register: merge_idem
 
-  - name: ASSERT idempotence
-    ansible.builtin.assert:
-      that: ['merge_idem.changed == false']
+    - name: ASSERT idempotence
+      ansible.builtin.assert:
+        that:
+          - merge_idem.changed == false
 
-  - name: QUERY inventory
-    cisco.dcnm.dcnm_inventory:
-      fabric: "{{ fabric_name }}"
-      state: query
-    register: query_result
+    - name: QUERY inventory
+      cisco.dcnm.dcnm_inventory:
+        fabric: "{{ fabric_name }}"
+        state: query
+      register: query_result
 
-  - name: ASSERT query inventory count
-    ansible.builtin.assert:
-      that:
-        - 'query_result.response is defined'
-        - 'query_result.response | length >= 1'
+    - name: ASSERT query inventory count
+      ansible.builtin.assert:
+        that:
+          - query_result.response is defined
+          - query_result.response | length >= 1
 
   always:
     - name: DEBUG end fabric setup

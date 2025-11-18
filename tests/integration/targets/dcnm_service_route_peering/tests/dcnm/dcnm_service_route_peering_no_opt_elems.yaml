@@ -34,7 +34,7 @@
             node_name: "{{ ansible_snode_1 }}"               # mandatory
             deploy_mode: intra_tenant_fw                     # mandatory, choices=[intra_tenant_fw, inter_tenant_fw]
             inside_network: #
-          name: Rp1-sn1-inside-net                       # mandatory
+              - name: Rp1-sn1-inside-net                       # mandatory
           profile:
                 ipv4_gw: 192.161.1.1/24                      # mandatory
         next_hop: 192.161.1.100                          # mandatory

@@ -16,7 +16,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+  loop: '{{ result.response }}'
 
 - block:
 
@@ -26,7 +26,7 @@
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-      test_data_interfaces:
+        test_data_interfaces:
           merge_conf_template: "templates/dcnm_intf/merge_conf.j2"
           merge_conf_file: "{{ role_path }}/files/dcnm_interface_intf_merge_conf.yaml"
           query_existing_conf_template: "templates/dcnm_intf/query_existing_conf.j2"
@@ -37,7 +37,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - merge
@@ -51,7 +51,7 @@
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
-      dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
+        dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Create a mixture of interfaces
@@ -64,21 +64,21 @@
 
     - name: ASSERT - Check changed flag is true and return codes
       ansible.builtin.assert:
-      that:
+        that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
-        loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
-          - name: QUERY - Get interface state in NDFC
+    - name: QUERY - Get interface state in NDFC
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_merge_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.merge_conf_file }}"
+        config_path: "{{ test_data_interfaces.merge_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -89,12 +89,12 @@
 
     - name: Load Query Existing Interface Config File
       ansible.builtin.set_fact:
-      dcnm_interface_query_existing_conf: "{{ lookup('file', test_data_interfaces.query_existing_conf_file) | from_yaml }}"
+        dcnm_interface_query_existing_conf: "{{ lookup('file', test_data_interfaces.query_existing_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Query interface details - Existing
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_query_existing_conf }}"
@@ -102,7 +102,7 @@
 
     - name: ASSERT - Check query result for existing interfaces
       ansible.builtin.assert:
-      that:
+        that:
           - 'result.changed == false'
           - '(result["response"] | length) != 0'
 
@@ -110,14 +110,14 @@
 ##               QUERY                      ##
 ##############################################
 
-          - name: Load Query Non-Existing Interface Config File
+    - name: Load Query Non-Existing Interface Config File
       ansible.builtin.set_fact:
-      dcnm_interface_query_non_existing_conf: "{{ lookup('file', test_data_interfaces.query_non_existing_conf_file) | from_yaml }}"
+        dcnm_interface_query_non_existing_conf: "{{ lookup('file', test_data_interfaces.query_non_existing_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Query interface details - Non-Existing
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_query_non_existing_conf }}"
@@ -125,7 +125,7 @@
 
     - name: ASSERT - Check query result for non-existing interfaces
       ansible.builtin.assert:
-      that:
+        that:
           - 'result.changed == false'
           - '(result["response"] | length) == 0'
 
@@ -134,10 +134,9 @@
 ##############################################
 
   always:
-
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
@@ -145,7 +144,7 @@
 
     - name: ASSERT - Check return codes for cleanup
       ansible.builtin.assert:
-      that:
+        that:
           - 'item["RETURN_CODE"] == 200'
-        loop: '{{ result.response }}'
-        when: it_context is not defined
+      loop: '{{ result.response }}'
+      when: it_context is not defined

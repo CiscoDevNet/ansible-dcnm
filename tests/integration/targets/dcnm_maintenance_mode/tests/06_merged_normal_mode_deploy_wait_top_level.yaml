@@ -95,14 +95,14 @@
 ################################################################################
 - name: MERGED - TEST - Change switch mode to normal (top-level)
   cisco.dcnm.dcnm_maintenance_mode:
-      state: merged
-        config:
-          deploy: true
-          mode: normal
-          wait_for_mode_change: true
-          switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: merged
+    config:
+      deploy: true
+      mode: normal
+      wait_for_mode_change: true
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result_normal_mode
 - name: Debug
   ansible.builtin.debug:

@@ -38,176 +38,177 @@
     timeout: 40
   when: purge_result.changed
 
-- block:
-  ##############################################
-  ## CREATE base VRF and delete               ##
-  ##############################################
+- name: DELETE scenarios block
+  block:
+    ##############################################
+    ## CREATE base VRF and delete               ##
+    ##############################################
     - name: MERGE create VRF ansible-vrf-int1 (vlan+attach deploy)
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: merged
-      config:
-        - vrf_name: ansible-vrf-int1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 500
-          attach:
-            - ip_address: "{{ switch_1 }}"
-            - ip_address: "{{ switch_2 }}"
-          deploy: true
-    register: create_vrf_result
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: merged
+        config:
+          - vrf_name: ansible-vrf-int1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 500
+            attach:
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            deploy: true
+      register: create_vrf_result
 
-  - name: ASSERT create_vrf_result
-    ansible.builtin.assert:
-      that:
+    - name: ASSERT create_vrf_result
+      ansible.builtin.assert:
+        that:
           - create_vrf_result.changed
           - create_vrf_result.response[0].RETURN_CODE == 200
           - create_vrf_result.diff[0].vrf_name == 'ansible-vrf-int1'
 
-  - name: QUERY wait for DEPLOYED
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: query
-    register: wait_deployed
-    until: "wait_deployed.response[0].parent.vrfStatus is search('DEPLOYED')"
-    retries: 30
-    delay: 2
+    - name: QUERY wait for DEPLOYED
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: query
+      register: wait_deployed
+      until: "wait_deployed.response[0].parent.vrfStatus is search('DEPLOYED')"
+      retries: 30
+      delay: 2
 
-  - name: DELETE VRF ansible-vrf-int1
-    cisco.dcnm.dcnm_vrf: &delete_one
-      fabric: "{{ fabric_1 }}"
-      state: deleted
-      config:
-        - vrf_name: ansible-vrf-int1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-    register: delete_vrf_result
+    - name: DELETE VRF ansible-vrf-int1
+      cisco.dcnm.dcnm_vrf: &delete_one
+        fabric: "{{ fabric_1 }}"
+        state: deleted
+        config:
+          - vrf_name: ansible-vrf-int1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+      register: delete_vrf_result
 
-  - name: ASSERT delete_vrf_result
-    ansible.builtin.assert:
-      that:
-        - delete_vrf_result.changed
-        - delete_vrf_result.response[0].RETURN_CODE == 200
-        - delete_vrf_result.response[1].RETURN_CODE == 200
-        - delete_vrf_result.response[2].METHOD == 'DELETE'
+    - name: ASSERT delete_vrf_result
+      ansible.builtin.assert:
+        that:
+          - delete_vrf_result.changed
+          - delete_vrf_result.response[0].RETURN_CODE == 200
+          - delete_vrf_result.response[1].RETURN_CODE == 200
+          - delete_vrf_result.response[2].METHOD == 'DELETE'
 
-  - name: DELETE idempotence
-    cisco.dcnm.dcnm_vrf: *delete_one
-    register: delete_vrf_idem
-  - name: ASSERT delete idempotence
-    ansible.builtin.assert:
-      that:
-        - delete_vrf_idem.changed == false
-        - delete_vrf_idem.response | length == 0
+    - name: DELETE idempotence
+      cisco.dcnm.dcnm_vrf: *delete_one
+      register: delete_vrf_idem
+    - name: ASSERT delete idempotence
+      ansible.builtin.assert:
+        that:
+          - delete_vrf_idem.changed == false
+          - delete_vrf_idem.response | length == 0
 
-  ##############################################
-  ## CREATE L3VNI without VLAN then delete     ##
-  ##############################################
-  - name: MERGE create L3VNI w/o VLAN
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: merged
-      config:
-        - vrf_name: ansible-vrf-int1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          l3vni_wo_vlan: true
-          attach:
-            - ip_address: "{{ switch_1 }}"
-            - ip_address: "{{ switch_2 }}"
-          deploy: false
-    register: create_l3vni_result
-  - name: ASSERT create L3VNI
-    ansible.builtin.assert:
-      that:
-        - create_l3vni_result.changed
-        - create_l3vni_result.response[0].RETURN_CODE == 200
-  - name: DELETE L3VNI w/o VLAN
-    cisco.dcnm.dcnm_vrf: *delete_one
-    register: delete_l3vni_result
-  - name: ASSERT delete L3VNI
-    ansible.builtin.assert:
-      that:
-        - delete_l3vni_result.changed
-  - name: DELETE L3VNI idempotence
-    cisco.dcnm.dcnm_vrf: *delete_one
-    register: delete_l3vni_idem
-  - name: ASSERT delete L3VNI idempotence
-    ansible.builtin.assert:
+    ##############################################
+    ## CREATE L3VNI without VLAN then delete     ##
+    ##############################################
+    - name: MERGE create L3VNI w/o VLAN
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: merged
+        config:
+          - vrf_name: ansible-vrf-int1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            l3vni_wo_vlan: true
+            attach:
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            deploy: false
+      register: create_l3vni_result
+    - name: ASSERT create L3VNI
+      ansible.builtin.assert:
+        that:
+          - create_l3vni_result.changed
+          - create_l3vni_result.response[0].RETURN_CODE == 200
+    - name: DELETE L3VNI w/o VLAN
+      cisco.dcnm.dcnm_vrf: *delete_one
+      register: delete_l3vni_result
+    - name: ASSERT delete L3VNI
+      ansible.builtin.assert:
+        that:
+          - delete_l3vni_result.changed
+    - name: DELETE L3VNI idempotence
+      cisco.dcnm.dcnm_vrf: *delete_one
+      register: delete_l3vni_idem
+    - name: ASSERT delete L3VNI idempotence
+      ansible.builtin.assert:
         that: ['delete_l3vni_idem.changed == false']
 
-  ##############################################
-  ## CREATE VRF LITE variant then delete      ##
-  ##############################################
-  - name: MERGE create VRF LITE
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: merged
-      config:
-        - vrf_name: ansible-vrf-int1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 500
-          attach:
-            - ip_address: "{{ switch_1 }}"
-            - ip_address: "{{ switch_2 }}"
-          vrf_lite:
-            - peer_vrf: ansible-vrf-int1
-              interface: "{{ interface_2a }}"
-          deploy: true
-    register: create_vrf_lite_result
-  - name: ASSERT create VRF LITE
-    ansible.builtin.assert:
-      that:
-        - create_vrf_lite_result.changed
-        - create_vrf_lite_result.response[0].RETURN_CODE == 200
-  - name: DELETE VRF LITE
-    cisco.dcnm.dcnm_vrf: *delete_one
-    register: delete_vrf_lite_result
-  - name: ASSERT delete VRF LITE
-    ansible.builtin.assert:
-      that:
-        - delete_vrf_lite_result.changed
-  - name: DELETE VRF LITE idempotence
-    cisco.dcnm.dcnm_vrf: *delete_one
-    register: delete_vrf_lite_idem
-  - name: ASSERT delete VRF LITE idempotence
-    ansible.builtin.assert:
-      that: ['delete_vrf_lite_idem.changed == false']
+    ##############################################
+    ## CREATE VRF LITE variant then delete      ##
+    ##############################################
+    - name: MERGE create VRF LITE
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: merged
+        config:
+          - vrf_name: ansible-vrf-int1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 500
+            attach:
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int1
+                interface: "{{ interface_2a }}"
+            deploy: true
+      register: create_vrf_lite_result
+    - name: ASSERT create VRF LITE
+      ansible.builtin.assert:
+        that:
+          - create_vrf_lite_result.changed
+          - create_vrf_lite_result.response[0].RETURN_CODE == 200
+    - name: DELETE VRF LITE
+      cisco.dcnm.dcnm_vrf: *delete_one
+      register: delete_vrf_lite_result
+    - name: ASSERT delete VRF LITE
+      ansible.builtin.assert:
+        that:
+          - delete_vrf_lite_result.changed
+    - name: DELETE VRF LITE idempotence
+      cisco.dcnm.dcnm_vrf: *delete_one
+      register: delete_vrf_lite_idem
+    - name: ASSERT delete VRF LITE idempotence
+      ansible.builtin.assert:
+        that: ['delete_vrf_lite_idem.changed == false']
 
-  ##############################################
-  ## DELETE with empty config element         ##
-  ##############################################
-  - name: MERGE recreate base VRF for empty config test
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: merged
-      config:
-        - vrf_name: ansible-vrf-int1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 500
-          attach:
-            - ip_address: "{{ switch_1 }}"
-            - ip_address: "{{ switch_2 }}"
-          deploy: true
-    register: recreate_base_result
-  - name: DELETE using empty config list
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: deleted
-      config: []
-    register: delete_empty_result
-  - name: ASSERT delete empty config
-    ansible.builtin.assert:
-      that:
-        - delete_empty_result.changed
-        - delete_empty_result.response[0].RETURN_CODE == 200
+    ##############################################
+    ## DELETE with empty config element         ##
+    ##############################################
+    - name: MERGE recreate base VRF for empty config test
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: merged
+        config:
+          - vrf_name: ansible-vrf-int1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 500
+            attach:
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            deploy: true
+      register: recreate_base_result
+    - name: DELETE using empty config list
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: deleted
+        config: []
+      register: delete_empty_result
+    - name: ASSERT delete empty config
+      ansible.builtin.assert:
+        that:
+          - delete_empty_result.changed
+          - delete_empty_result.response[0].RETURN_CODE == 200
 
   always:
     - name: ALWAYS final purge

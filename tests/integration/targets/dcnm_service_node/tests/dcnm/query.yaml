@@ -281,14 +281,14 @@
         attach_interface: "{{ ansible_int1 }}"
         switches:
         - "{{ ansible_switch1 }}"
-    - name: SN-12
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc2
-      attach_interface: "{{ ansible_vpc1 }}"
-      switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+      - name: SN-12
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc2
+        attach_interface: "{{ ansible_vpc1 }}"
+        switches:
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -331,14 +331,14 @@
         attach_interface: Ethernet1/1
         switches:
         - "{{ ansible_switch1 }}"
-    - name: SN-12
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc2
-      attach_interface: "{{ ansible_vpc1 }}"
-      switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+      - name: SN-12
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc2
+        attach_interface: "{{ ansible_vpc1 }}"
+        switches:
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -377,7 +377,7 @@
     that:
       - 'result.changed == false'
       - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
-      - 'result.response[0].attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
       - 'result.response[0].fabricName == "{{ ansible_ext_fabric }}"'
       - 'result.response[0].formFactor == "Virtual"'
       - 'result.response[0].interfaceName == "svc1"'

@@ -557,12 +557,12 @@ EXAMPLES = """
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 2000
         service_vrf_template: null
-    - vrf_name: ansible-vrf-r2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
+      - vrf_name: ansible-vrf-r2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
 
 - name: Delete all the vrfs
   cisco.dcnm.dcnm_vrf:
@@ -575,7 +575,7 @@ EXAMPLES = """
     state: query
     config:
       - vrf_name: ansible-vrf-r1
-    - vrf_name: ansible-vrf-r2
+      - vrf_name: ansible-vrf-r2
 """
 import ast
 import copy

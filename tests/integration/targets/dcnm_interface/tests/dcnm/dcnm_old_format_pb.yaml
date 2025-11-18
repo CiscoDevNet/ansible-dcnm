@@ -44,7 +44,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - old_format1
@@ -75,7 +75,7 @@
 
     - name: ASSERT - Verify old format 1 interface creation results
       ansible.builtin.assert:
-      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Creation with old format 1 failed - {{ result }}"
@@ -84,7 +84,7 @@
 
     - name: QUERY - Get old format 1 interface state in NDFC
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_old_format1_conf }}"
       register: verify_result

@@ -96,19 +96,19 @@
 ################################################################################
 - name: MERGED - TEST - Change switch mode to maintenance (switch-level)
   cisco.dcnm.dcnm_maintenance_mode:
-      state: merged
-        config:
-          deploy: false
-          mode: normal
-          switches:
-                    - ip_address: "{{ leaf_1 }}"
-                      deploy: true
-                      mode: maintenance
-                      wait_for_mode_change: true
-                    - ip_address: "{{ leaf_2 }}"
-                      deploy: true
-                      mode: maintenance
-                      wait_for_mode_change: true
+    state: merged
+    config:
+      deploy: false
+      mode: normal
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+          deploy: true
+          mode: maintenance
+          wait_for_mode_change: true
+        - ip_address: "{{ leaf_2 }}"
+          deploy: true
+          mode: maintenance
+          wait_for_mode_change: true
   register: result_maintenance_mode
 - name: Debug
   ansible.builtin.debug:

@@ -103,13 +103,13 @@
 ################################################################################
 - name: MERGED - TEST - Change switch mode to maintenance (global config)
   cisco.dcnm.dcnm_maintenance_mode:
-      state: merged
-        config:
-          deploy: false
-          mode: maintenance
-          switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: merged
+    config:
+      deploy: false
+      mode: maintenance
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result_maintenance_mode
 - name: Debug
   ansible.builtin.debug:

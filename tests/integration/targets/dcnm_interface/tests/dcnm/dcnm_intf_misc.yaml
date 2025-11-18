@@ -41,7 +41,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - misc_merge
@@ -70,17 +70,17 @@
 
     - name: ASSERT - Check changed flag is true and return codes
       ansible.builtin.assert:
-      that:
+        that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ result.response }}'
 
-          - name: QUERY - Get interface state in NDFC
+    - name: QUERY - Get interface state in NDFC
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_misc_merge_conf }}"
-        register: verify_result
+      register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC
       cisco.dcnm.tests.integration.ndfc_interface_validate:

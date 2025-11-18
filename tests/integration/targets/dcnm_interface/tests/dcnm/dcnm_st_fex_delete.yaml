@@ -51,7 +51,7 @@
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       with_items:
         - delete
@@ -77,14 +77,14 @@
 
     - name: QUERY - Get ST FEX interface state in NDFC (merge)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_delete_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify ST FEX interface state in NDFC (merge)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.delete_conf_file }}"
+        config_path: "{{ test_data_interfaces.delete_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost

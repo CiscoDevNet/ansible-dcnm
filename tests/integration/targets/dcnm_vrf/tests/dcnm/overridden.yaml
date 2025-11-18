@@ -39,68 +39,68 @@
   when: purge_initial.changed
 
 - block:
-  ##############################################
-  ## BASELINE VRF (merged, deploy false)      ##
-  ##############################################
+    ##############################################
+    ## BASELINE VRF (merged, deploy false)      ##
+    ##############################################
     - name: CREATE baseline VRF ansible-vrf-int1 (deploy:false)
-    cisco.dcnm.dcnm_vrf: &baseline_vrf
-      fabric: "{{ fabric_1 }}"
-      state: merged
-      config:
-        - vrf_name: ansible-vrf-int1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 500
-          attach:
-            - ip_address: "{{ switch_1 }}"
-            - ip_address: "{{ switch_2 }}"
-          deploy: false
-    register: baseline_result
-  - name: ASSERT baseline
-    ansible.builtin.assert:
-      that: ['baseline_result.changed']
+      cisco.dcnm.dcnm_vrf: &baseline_vrf
+        fabric: "{{ fabric_1 }}"
+        state: merged
+        config:
+          - vrf_name: ansible-vrf-int1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 500
+            attach:
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            deploy: false
+      register: baseline_result
+    - name: ASSERT baseline
+      ansible.builtin.assert:
+        that: ['baseline_result.changed']
 
-  ##############################################
-  ## OVERRIDE to new VRF (ansible-vrf-int2)   ##
-  ##############################################
-  - name: OVERRIDE to ansible-vrf-int2 L3VNI no VLAN
-    cisco.dcnm.dcnm_vrf: &override_l3vni
-      fabric: "{{ fabric_1 }}"
-      state: overridden
-      config:
-        - vrf_name: ansible-vrf-int2
-          vrf_id: 9008012
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          l3vni_wo_vlan: true
-          attach:
-            - ip_address: "{{ switch_1 }}"
-            - ip_address: "{{ switch_2 }}"
-          deploy: false
-    register: override_l3vni_result
-  - name: ASSERT override_l3vni_result
-    ansible.builtin.assert:
-      that: ['override_l3vni_result.changed == true']
-  - name: OVERRIDE idempotence L3VNI
-    cisco.dcnm.dcnm_vrf: *override_l3vni
-    register: override_l3vni_idem
-  - name: ASSERT idempotence L3VNI
-    ansible.builtin.assert:
-      that: ['override_l3vni_idem.changed == false']
+    ##############################################
+    ## OVERRIDE to new VRF (ansible-vrf-int2)   ##
+    ##############################################
+    - name: OVERRIDE to ansible-vrf-int2 L3VNI no VLAN
+      cisco.dcnm.dcnm_vrf: &override_l3vni
+        fabric: "{{ fabric_1 }}"
+        state: overridden
+        config:
+          - vrf_name: ansible-vrf-int2
+            vrf_id: 9008012
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            l3vni_wo_vlan: true
+            attach:
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            deploy: false
+      register: override_l3vni_result
+    - name: ASSERT override_l3vni_result
+      ansible.builtin.assert:
+        that: ['override_l3vni_result.changed == true']
+    - name: OVERRIDE idempotence L3VNI
+      cisco.dcnm.dcnm_vrf: *override_l3vni
+      register: override_l3vni_idem
+    - name: ASSERT idempotence L3VNI
+      ansible.builtin.assert:
+        that: ['override_l3vni_idem.changed == false']
 
-  ##############################################
-  ## RESET before deploy scenario             ##
-  ##############################################
-  - name: PURGE before deploy scenario
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: deleted
-  - name: CREATE ansible-vrf-int1 deployed
-    cisco.dcnm.dcnm_vrf: &deployed_vrf
-      fabric: "{{ fabric_1 }}"
-      state: merged
-      config:
+    ##############################################
+    ## RESET before deploy scenario             ##
+    ##############################################
+    - name: PURGE before deploy scenario
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: deleted
+    - name: CREATE ansible-vrf-int1 deployed
+      cisco.dcnm.dcnm_vrf: &deployed_vrf
+        fabric: "{{ fabric_1 }}"
+        state: merged
+        config:
         - vrf_name: ansible-vrf-int1
           vrf_id: 9008011
           vrf_template: Default_VRF_Universal
@@ -110,27 +110,27 @@
             - ip_address: "{{ switch_1 }}"
             - ip_address: "{{ switch_2 }}"
           deploy: true
-    register: deployed_vrf_result
-  - name: ASSERT deployed_vrf_result
-    ansible.builtin.assert:
-      that: ['deployed_vrf_result.changed']
-  - name: WAIT status DEPLOYED (ansible-vrf-int1)
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: query
-    register: wait_deployed_int1
-    until: ["wait_deployed_int1.response[0].parent.vrfStatus is search('DEPLOYED')"]
-    retries: 30
-    delay: 2
+      register: deployed_vrf_result
+    - name: ASSERT deployed_vrf_result
+      ansible.builtin.assert:
+        that: ['deployed_vrf_result.changed']
+    - name: WAIT status DEPLOYED (ansible-vrf-int1)
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: query
+      register: wait_deployed_int1
+      until: ["wait_deployed_int1.response[0].parent.vrfStatus is search('DEPLOYED')"]
+      retries: 30
+      delay: 2
 
   ##############################################
   ## OVERRIDE deployed VRF to ansible-vrf-int2 ##
   ##############################################
-  - name: OVERRIDE to ansible-vrf-int2 deployed
-    cisco.dcnm.dcnm_vrf: &override_deployed
-      fabric: "{{ fabric_1 }}"
-      state: overridden
-      config:
+    - name: OVERRIDE to ansible-vrf-int2 deployed
+      cisco.dcnm.dcnm_vrf: &override_deployed
+        fabric: "{{ fabric_1 }}"
+        state: overridden
+        config:
         - vrf_name: ansible-vrf-int2
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
@@ -140,33 +140,33 @@
             - ip_address: "{{ switch_1 }}"
             - ip_address: "{{ switch_2 }}"
           deploy: true
-    register: override_deployed_result
-  - name: ASSERT override_deployed_result
-    ansible.builtin.assert:
-      that: ['override_deployed_result.changed']
-  - name: WAIT status DEPLOYED (ansible-vrf-int2)
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: query
-    register: wait_deployed_int2
-    until: ["wait_deployed_int2.response[0].parent.vrfStatus is search('DEPLOYED')"]
-    retries: 30
-    delay: 2
-  - name: OVERRIDE idempotence deployed
-    cisco.dcnm.dcnm_vrf: *override_deployed
-    register: override_deployed_idem
-  - name: ASSERT override deployed idempotence
-    ansible.builtin.assert:
-      that: ['override_deployed_idem.changed == false']
+      register: override_deployed_result
+    - name: ASSERT override_deployed_result
+      ansible.builtin.assert:
+        that: ['override_deployed_result.changed']
+    - name: WAIT status DEPLOYED (ansible-vrf-int2)
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: query
+      register: wait_deployed_int2
+      until: ["wait_deployed_int2.response[0].parent.vrfStatus is search('DEPLOYED')"]
+      retries: 30
+      delay: 2
+    - name: OVERRIDE idempotence deployed
+      cisco.dcnm.dcnm_vrf: *override_deployed
+      register: override_deployed_idem
+    - name: ASSERT override deployed idempotence
+      ansible.builtin.assert:
+        that: ['override_deployed_idem.changed == false']
 
   ##############################################
   ## MERGED add VRF LITE extension            ##
   ##############################################
-  - name: MERGED add VRF LITE extension (dot1q 2)
-    cisco.dcnm.dcnm_vrf: &merged_lite
-      fabric: "{{ fabric_1 }}"
-      state: merged
-      config:
+    - name: MERGED add VRF LITE extension (dot1q 2)
+      cisco.dcnm.dcnm_vrf: &merged_lite
+        fabric: "{{ fabric_1 }}"
+        state: merged
+        config:
         - vrf_name: ansible-vrf-int2
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
@@ -180,27 +180,27 @@
               interface: "{{ interface_2a }}"
               dot1q: 2
           deploy: true
-    register: merged_lite_result
-  - name: ASSERT merged_lite_result
-    ansible.builtin.assert:
-      that: ['merged_lite_result.changed']
-  - name: WAIT VRF LITE DEPLOYED
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: query
-    register: wait_lite
-    until: ["wait_lite.response[0].parent.vrfStatus is search('DEPLOYED')"]
-    retries: 30
-    delay: 2
+      register: merged_lite_result
+    - name: ASSERT merged_lite_result
+      ansible.builtin.assert:
+        that: ['merged_lite_result.changed']
+    - name: WAIT VRF LITE DEPLOYED
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: query
+      register: wait_lite
+      until: ["wait_lite.response[0].parent.vrfStatus is search('DEPLOYED')"]
+      retries: 30
+      delay: 2
 
   ##############################################
   ## OVERRIDE VRF LITE dot1q change (21)      ##
   ##############################################
-  - name: OVERRIDE VRF LITE dot1q update
-    cisco.dcnm.dcnm_vrf: &override_lite
-      fabric: "{{ fabric_1 }}"
-      state: overridden
-      config:
+    - name: OVERRIDE VRF LITE dot1q update
+      cisco.dcnm.dcnm_vrf: &override_lite
+        fabric: "{{ fabric_1 }}"
+        state: overridden
+        config:
         - vrf_name: ansible-vrf-int2
           vrf_id: 9008012
           vrf_template: Default_VRF_Universal
@@ -214,41 +214,41 @@
               interface: "{{ interface_2a }}"
               dot1q: 21
           deploy: true
-    register: override_lite_result
-  - name: CONFIG-DEPLOY to resolve potential OUT-OF-SYNC
-    cisco.dcnm.dcnm_rest:
-      method: POST
-      path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}/config-deploy?forceShowRun=false"
-    when: override_lite_result.changed
-  - name: WAIT override_lite DEPLOYED
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: query
-    register: wait_override_lite
-    until: ["wait_override_lite.response[0].parent.vrfStatus is search('DEPLOYED')"]
-    retries: 30
-    delay: 2
-  - name: OVERRIDE lite idempotence
-    cisco.dcnm.dcnm_vrf: *override_lite
-    register: override_lite_idem
-  - name: ASSERT lite idempotence
-    ansible.builtin.assert:
-      that: ['override_lite_idem.changed == false']
+      register: override_lite_result
+    - name: CONFIG-DEPLOY to resolve potential OUT-OF-SYNC
+      cisco.dcnm.dcnm_rest:
+        method: POST
+        path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}/config-deploy?forceShowRun=false"
+      when: override_lite_result.changed
+    - name: WAIT override_lite DEPLOYED
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: query
+      register: wait_override_lite
+      until: ["wait_override_lite.response[0].parent.vrfStatus is search('DEPLOYED')"]
+      retries: 30
+      delay: 2
+    - name: OVERRIDE lite idempotence
+      cisco.dcnm.dcnm_vrf: *override_lite
+      register: override_lite_idem
+    - name: ASSERT lite idempotence
+      ansible.builtin.assert:
+        that: ['override_lite_idem.changed == false']
 
   ##############################################
   ## OVERRIDE back to ansible-vrf-int1 LITE   ##
   ##############################################
-  - name: OVERRIDE back to ansible-vrf-int1 (dot1q 31)
-    cisco.dcnm.dcnm_vrf: &override_back
-      fabric: "{{ fabric_1 }}"
-      state: overridden
-      config:
-        - vrf_name: ansible-vrf-int1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 500
-          attach:
+    - name: OVERRIDE back to ansible-vrf-int1 (dot1q 31)
+      cisco.dcnm.dcnm_vrf: &override_back
+        fabric: "{{ fabric_1 }}"
+        state: overridden
+        config:
+          - vrf_name: ansible-vrf-int1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 500
+            attach:
             - ip_address: "{{ switch_1 }}"
             - ip_address: "{{ switch_2 }}"
           vrf_lite:
@@ -256,21 +256,21 @@
               interface: "{{ interface_2a }}"
               dot1q: 31
           deploy: true
-    register: override_back_result
-  - name: WAIT override_back DEPLOYED
-    cisco.dcnm.dcnm_vrf:
-      fabric: "{{ fabric_1 }}"
-      state: query
-    register: wait_override_back
-    until: ["wait_override_back.response[0].parent.vrfStatus is search('DEPLOYED')"]
-    retries: 30
-    delay: 2
-  - name: OVERRIDE back idempotence
-    cisco.dcnm.dcnm_vrf: *override_back
-    register: override_back_idem
-  - name: ASSERT back idempotence
-    ansible.builtin.assert:
-      that: ['override_back_idem.changed == false']
+      register: override_back_result
+    - name: WAIT override_back DEPLOYED
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_1 }}"
+        state: query
+      register: wait_override_back
+      until: ["wait_override_back.response[0].parent.vrfStatus is search('DEPLOYED')"]
+      retries: 30
+      delay: 2
+    - name: OVERRIDE back idempotence
+      cisco.dcnm.dcnm_vrf: *override_back
+      register: override_back_idem
+    - name: ASSERT back idempotence
+      ansible.builtin.assert:
+        that: ['override_back_idem.changed == false']
 
   always:
     - name: ALWAYS cleanup VRFs

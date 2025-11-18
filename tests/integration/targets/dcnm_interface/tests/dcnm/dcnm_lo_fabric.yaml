@@ -23,8 +23,8 @@
       - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
-      - name: Save Data For Loopback0
-  cisco.dcnm.dcnm_interface:
+  - name: Save Data For Loopback0
+    cisco.dcnm.dcnm_interface:
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
     state: query

@@ -30,8 +30,8 @@
   ##############################################
   ## MERGE - create 5 policies
   ##############################################
-  - name: MERGE create five policies
-    cisco.dcnm.dcnm_service_policy:
+    - name: MERGE create five policies
+      cisco.dcnm.dcnm_service_policy:
       fabric: "{{ ansible_it_fabric }}"
       service_fabric: "{{ ansible_it_service_fabric }}"
       attach: true
