@@ -709,7 +709,7 @@ def test_bootflash_info_00600() -> None:
     match = r"BootflashInfo\.switches:\s+"
     match += r"switches must be a list\. got str for value foo\."
     with pytest.raises(TypeError, match=match):
-        instance.switches = "foo"
+        instance.switches = "foo"  # type: ignore
 
 
 def test_bootflash_info_00610() -> None:
@@ -759,4 +759,4 @@ def test_bootflash_info_00620() -> None:
     match += r"switches must be a list of ip addresses\.\s+"
     match += r"got type int for value 10\."
     with pytest.raises(TypeError, match=match):
-        instance.switches = ["192.168.1.1", 10]
+        instance.switches = ["192.168.1.1", 10]  # type: ignore
