@@ -129,6 +129,43 @@ class BootflashInfo:
 
     ```
 
+    ### instance.info_dict Structure
+    ```json
+    {
+        "172.22.150.112": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:37 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1211-spine",
+                    "freeSpace": 12995166208,
+                    "ipAddr": " 172.22.150.112",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGCS",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 8689987584
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        }
+    }
+    ```
     ### instance.results.diff Structure
 
     ```json
@@ -160,13 +197,32 @@ class BootflashInfo:
             }
         ]
     ```
+
+    ### bootflash_data_map Structure
+
+    ```json
+    {
+        "bootflash:": [
+            {
+                "bootflash_type": "active",
+                "date": "Aug 08 22:50:37 2024",
+                "deviceName": "cvd-1211-spine",
+                "fileName": "air.txt",
+                "filePath": "bootflash:",
+                "name": "bootflash:",
+                "serialNumber": "FOX2109PGCS",
+                "size": "2"
+            }
+        ]
+    }
+    ```
     """
 
     def __init__(self) -> None:
         self.class_name: str = self.__class__.__name__
 
         self.action: str = "bootflash_info"
-        self.bootflash_data_map: dict = {}
+        self.bootflash_data_map: dict[str, list[dict[str, str]]] = {}
         self.conversion: ConversionUtils = ConversionUtils()
         self.convert_file_info_to_target: ConvertFileInfoToTarget = ConvertFileInfoToTarget()
         self.ep_bootflash_discovery: EpBootflashDiscovery = EpBootflashDiscovery()
@@ -178,8 +234,8 @@ class BootflashInfo:
         # switch in self.switches.  Keyed on switch ip_address.
         # Updated in refresh_bootflash_info().
         self.diff_dict: dict[str, list[dict[str, str]]] = {}
-        self.response_dict: dict[str, dict] = {}
-        self.result_dict: dict[str, dict] = {}
+        self.response_dict: dict[str, dict[str, Any]] = {}
+        self.result_dict: dict[str, dict[str, bool]] = {}
 
         self._rest_send: RestSend = RestSend({})
         self._results: Results = Results()
@@ -190,9 +246,9 @@ class BootflashInfo:
         self._filter_supervisor: str = ""
         self._filter_switch: str = ""
 
-        self.valid_supervisor = ["active", "standby"]
+        self.valid_supervisor: list[str] = ["active", "standby"]
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
         msg = "ENTERED BootflashQuery(): "
         msg += f"action {self.action}, "
         self.log.debug(msg)
@@ -210,9 +266,9 @@ class BootflashInfo:
                 -   switches is not set.
         """
         # pylint: disable=no-member
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        def raise_value_error_if_not_set(property_name):
+        def raise_value_error_if_not_set(property_name: str) -> None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{property_name} must be set prior to calling refresh."
             raise ValueError(msg)
@@ -223,7 +279,7 @@ class BootflashInfo:
             raise_value_error_if_not_set("switches")
 
     # pylint: disable=no-member
-    def refresh(self):
+    def refresh(self) -> None:
         """
         ### Summary
         Retrieve switch details for each of the switches in self.switches.
@@ -246,13 +302,14 @@ class BootflashInfo:
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
 
-        self.switch_details.rest_send = self.rest_send
-        self.switch_details.results = Results()
+        # TODO: remove type: ignore[attr-defined] after refactoring SwitchDetails
+        self.switch_details.rest_send = self.rest_send  # type: ignore[attr-defined]
+        self.switch_details.results = Results()  # type: ignore[attr-defined]
         self.switch_details.refresh()
 
         self.refresh_bootflash_info()
 
-    def refresh_bootflash_info(self):
+    def refresh_bootflash_info(self) -> None:
         """
         ### Summary
         Retrieve bootflash information for each switch in self.switches.
@@ -260,14 +317,14 @@ class BootflashInfo:
         ### Raises
         None
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.info_dict = {}
         self.response_dict = {}
         self.result_dict = {}
         for switch in self.switches:
             self.switch_details.filter = switch
             try:
-                serial_number = self.switch_details.serial_number
+                serial_number: str = self.switch_details.serial_number
             except ValueError as error:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"serial_number not found for switch {switch}. "
@@ -290,7 +347,7 @@ class BootflashInfo:
             self.response_dict[switch] = copy.deepcopy(self.rest_send.response_current)
             self.result_dict[switch] = copy.deepcopy(self.rest_send.result_current)
 
-    def validate_prerequisites_for_build_matches(self):
+    def validate_prerequisites_for_build_matches(self) -> None:
         """
         ### Summary
         Verify that mandatory prerequisites are met before calling
@@ -302,7 +359,7 @@ class BootflashInfo:
                 -   ``filter_switch`` is not set.
                 -   ``filter_file`` is not set.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         if not self.info:
             msg = f"{self.class_name}.{method_name}: "
@@ -310,7 +367,7 @@ class BootflashInfo:
             msg += "properties."
             raise ValueError(msg)
 
-    def match_filter_filepath(self, target):
+    def match_filter_filepath(self, target: dict[str, str]) -> bool:
         """
         ### Summary
         -   Return True if the target's ``filepath`` matches
@@ -322,12 +379,13 @@ class BootflashInfo:
         """
         if not self.filter_filepath:
             return False
-        posix = PurePosixPath(target.get("filepath"))
+        filepath: str = target.get("filepath") or ""
+        posix: PurePosixPath = PurePosixPath(filepath)
         if not posix.match(self.filter_filepath):
             return False
         return True
 
-    def match_filter_supervisor(self, target):
+    def match_filter_supervisor(self, target: dict[str, str]) -> bool:
         """
         ### Summary
         -   Return True if the target's ``bootflash_type`` matches
@@ -343,7 +401,7 @@ class BootflashInfo:
             return False
         return True
 
-    def match_filter_switch(self, target):
+    def match_filter_switch(self, target: dict[str, str]) -> bool:
         """
         ### Summary
         -   Return True if the target's ``ip_address`` matches
@@ -367,7 +425,7 @@ class BootflashInfo:
         ### Raises
         None
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         self.validate_prerequisites_for_build_matches()
         self._matches = []
@@ -378,7 +436,7 @@ class BootflashInfo:
             self.log.debug(msg)
             return
 
-        data = self.info.get(self.filter_switch, {})
+        data: dict[str, Any] = self.info.get(self.filter_switch, {})
         self.bootflash_data_map = data.get("bootFlashDataMap", {})
 
         for partition in self.bootflash_data_map:
@@ -394,18 +452,18 @@ class BootflashInfo:
                     continue
                 self._matches.append(target)
 
-        diff = {}
+        diff: dict[str, list[dict[str, str]]] = {}
         for match in self._matches:
-            # convert_file_info_to_target() ensures that match contains
-            # ip_address.
             ip_address = match.get("ip_address", None)
+            if ip_address is None:
+                continue
             if ip_address not in diff:
                 diff[ip_address] = []
             diff[ip_address].append(match)
-        self.diff_dict = diff
+        self.diff_dict = copy.deepcopy(diff)
 
     @property
-    def filter_filepath(self):
+    def filter_filepath(self) -> str:
         """
         ### Summary
         Return the current ``filter_filepath``.
@@ -426,14 +484,14 @@ class BootflashInfo:
         return self._filter_filepath
 
     @filter_filepath.setter
-    def filter_filepath(self, value):
-        msg = "ENTERED BootflashQuery.filter_filepath.setter: "
+    def filter_filepath(self, value: str) -> None:
+        msg = f"{self.class_name}.filter_filepath.setter: "
         msg += f"value {value}"
         self.log.debug(msg)
         self._filter_filepath = value
 
     @property
-    def filter_supervisor(self):
+    def filter_supervisor(self) -> str:
         """
         ### Summary
         Return the current ``filter_supervisor``.
@@ -452,7 +510,7 @@ class BootflashInfo:
         return self._filter_supervisor
 
     @filter_supervisor.setter
-    def filter_supervisor(self, value):
+    def filter_supervisor(self, value: str) -> None:
         if value not in self.valid_supervisor:
             msg = f"{self.class_name}.filter_supervisor.setter: "
             msg += f"value {value} is not a valid value for supervisor. "
@@ -461,7 +519,7 @@ class BootflashInfo:
         self._filter_supervisor = value
 
     @property
-    def filter_switch(self):
+    def filter_switch(self) -> str:
         """
         ### Summary
         Return the current ``filter_switch``.
@@ -475,11 +533,11 @@ class BootflashInfo:
         return self._filter_switch
 
     @filter_switch.setter
-    def filter_switch(self, value):
+    def filter_switch(self, value: str) -> None:
         self._filter_switch = value
 
     @property
-    def info(self):
+    def info(self) -> dict[str, Any]:
         """
         ### Summary
         Return the info_dict instance
@@ -487,7 +545,7 @@ class BootflashInfo:
         return self.info_dict
 
     @property
-    def matches(self):
+    def matches(self) -> list[dict[str, str]]:
         """
         ### Summary
         Return a list of file_info dicts that match the query filters.
@@ -604,7 +662,7 @@ class BootflashInfo:
         self._results = value
 
     @property
-    def switch_details(self):
+    def switch_details(self) -> SwitchDetails:
         """
         ### Summary
         Return the switch_details instance
@@ -616,10 +674,10 @@ class BootflashInfo:
         return self._switch_details
 
     @switch_details.setter
-    def switch_details(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_have = None
-        _class_need = "SwitchDetails"
+    def switch_details(self, value: SwitchDetails) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["SwitchDetails"] = "SwitchDetails"
         msg = f"{self.class_name}.{method_name}: "
         msg += f"value must be an instance of {_class_need}. "
         msg += f"Got value {value} of type {type(value).__name__}."
@@ -633,7 +691,7 @@ class BootflashInfo:
         self._switch_details = value
 
     @property
-    def switches(self):
+    def switches(self) -> list[str]:
         """
         ### Summary
         A list of switch ip addresses.
@@ -657,8 +715,8 @@ class BootflashInfo:
         return self._switches
 
     @switches.setter
-    def switches(self, value):
-        method_name = inspect.stack()[0][3]
+    def switches(self, value: list[str]) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
             msg += "switches must be a list. "
