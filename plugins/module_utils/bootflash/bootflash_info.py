@@ -266,9 +266,8 @@ class BootflashInfo:
         ## Raises
 
         -   `ValueError` if:
-                -   rest_send is not set.
-                -   results is not set.
-                -   switch_details is not set.
+                -   self.rest_send.params is not set.
+                -   self.switches is not set.
                 -   switches is not set.
         """
         method_name: str = inspect.stack()[0][3]
@@ -470,7 +469,7 @@ class BootflashInfo:
             if ip_address not in diff:
                 diff[ip_address] = []
             diff[ip_address].append(match)
-        self.diff_dict = copy.deepcopy(diff)
+        self.diff_dict = diff
 
     @property
     def filter_filepath(self) -> str:
