@@ -542,16 +542,15 @@ options:
         - In case of Multisite fabrics, deploy flag on parent will be inherited by the specified child fabrics.
         type: bool
         default: true
-  _fabric_type:
+  fabric_details:
     description:
     - INTERNAL PARAMETER - DO NOT USE
-    - Fabric type is determined by the module's action plugin
+    - Fabric details are constructured by the module's action plugin
     - This parameter is used internally by the module for multisite fabric processing
-    - Valid values are 'multisite_child', 'multisite_parent' and 'standalone'
-    type: str
+    - It will consist of the ND controller version, fabric type, members (if applicable)
+      and cluster name (if applicable)
+    type: dict
     required: false
-    choices: ['multisite_child', 'multisite_parent', 'standalone']
-    default: 'standalone'
 """
 
 EXAMPLES = """
@@ -979,7 +978,7 @@ import time
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
-    get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
+    get_nd_fabric_details, get_nd_fabric_inventory_details, get_ip_sn_dict,
     get_sn_fabric_dict, validate_list_of_dicts, search_nested_json,
     find_dict_in_list_by_key_value)
 
@@ -1001,7 +1000,13 @@ dcnm_vrf_paths = {
         "GET_VRF_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfinfo",
         "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
         "GET_NET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
+        "RESERVE_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/reserve-id",
     },
+}
+
+dcnm_resource_paths = {
+    "RELEASE_RESOURCES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/resources?id={}",
+    "GET_RESOURCE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabric/{}/",
 }
 
 
@@ -1052,6 +1057,7 @@ class DcnmVrf:
         # variable. The content stored here will be helpful for cases like
         # "check_mode" and to print diffs[] in the output of each task.
         self.diff_create_quick = []
+        self.vrf_sn_attach_map = {}
         self.have_attach = []
         self.want_attach = []
         self.diff_attach = []
@@ -1072,12 +1078,25 @@ class DcnmVrf:
         self.diff_delete = {}
         self.diff_input_format = []
         self.query = []
-        self.dcnm_version = dcnm_version_supported(self.module)
+
+        self.action_fabric_details = self.params.get("fabric_details")
+
+        self.action_nd_version = self.action_fabric_details.get("nd_version")
+        if not self.action_nd_version:
+            self.dcnm_version = dcnm_version_supported(self.module)
+        else:
+            self.dcnm_version = self.action_nd_version
 
         msg = f"self.dcnm_version: {self.dcnm_version}"
         self.log.debug(msg)
 
-        self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
+        self.action_fabric_type = self.action_fabric_details.get("fabric_type")
+        self.action_fabric_cluster = self.action_fabric_details.get("cluster_name")
+        self.fabric_members = []
+        if self.action_fabric_type in ["multicluster_parent", "multisite_parent"]:
+            self.fabric_members = self.action_fabric_details.get("members", [])
+
+        self.inventory_data = get_nd_fabric_inventory_details(self.module, self.dcnm_version, self.fabric, self.action_fabric_details)
 
         msg = "self.inventory_data: "
         msg += f"{json.dumps(self.inventory_data, indent=4, sort_keys=True)}"
@@ -1085,13 +1104,12 @@ class DcnmVrf:
 
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
         self.sn_ip = {value: key for (key, value) in self.ip_sn.items()}
-        self.fabric_data = get_fabric_details(self.module, self.fabric)
+        self.fabric_data = get_nd_fabric_details(self.module, self.dcnm_version, self.fabric, self.action_fabric_details)
 
         msg = "self.fabric_data: "
         msg += f"{json.dumps(self.fabric_data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        self.action_fabric_type = self.params.get("_fabric_type")
         self.fabric_type = self.fabric_data.get("fabricType")
         self.fabric_nvpairs = self.fabric_data.get("nvPairs")
         self.fabric_l3vni_wo_vlan = False
@@ -1105,10 +1123,36 @@ class DcnmVrf:
             msg += f"{self.class_name}.__init__(): {error}"
             module.fail_json(msg=msg)
 
+        self.resource_paths = dcnm_resource_paths
+
         if self.dcnm_version > 12:
             self.paths = dcnm_vrf_paths[12]
         else:
             self.paths = dcnm_vrf_paths[self.dcnm_version]
+
+        proxy = ""
+        if self.action_fabric_type == "multicluster_child":
+            if self.dcnm_version >= 12.4:
+                proxy = "/fedproxy/"
+            else:
+                proxy = "/onepath/"
+            for path in self.paths:
+                self.paths[path] = proxy + self.action_fabric_cluster + self.paths[path]
+            for path in self.resource_paths:
+                self.resource_paths[path] = proxy + self.action_fabric_cluster + self.resource_paths[path]
+        elif self.action_fabric_type == "multicluster_parent":
+            # onemanage proxy path
+            if self.dcnm_version >= 12.4:
+                proxy = "/onemanage"
+            for path in self.paths:
+                self.paths[path] = proxy + self.paths[path].replace("lan-fabric/rest", "onemanage")
+            # onepath proxy paths
+            if self.dcnm_version >= 12.4:
+                proxy = "/fedproxy/"
+            else:
+                proxy = "/onepath/"
+            for path in self.resource_paths:
+                self.resource_paths[path] = path + "{}" + self.resource_paths[path]
 
         self.result = {"changed": False, "diff": [], "response": []}
 
@@ -1809,7 +1853,7 @@ class DcnmVrf:
         vrfSegmentId_want = json_to_dict_want.get("vrfSegmentId")
 
         skip_keys = []
-        if vlan_id_want == "0":
+        if vlan_id_want == "0" or vlan_id_want == "":
             skip_keys = ["vrfVlanId"]
         if vrfSegmentId_want is None:
             skip_keys.append("vrfSegmentId")
@@ -1996,6 +2040,7 @@ class DcnmVrf:
         have_create = []
         have_deploy = {}
         chg_deploy = {}
+        vrf_sn_attach_map = self.vrf_sn_attach_map
 
         curr_vrfs = ""
 
@@ -2107,11 +2152,16 @@ class DcnmVrf:
                 if deployed:
                     deploy_vrf = attach["vrfName"]
 
+                sn = attach["switchSerialNo"]
+
+                if attach["vrfName"] not in vrf_sn_attach_map:
+                    vrf_sn_attach_map[attach["vrfName"]] = set()
+                vrf_sn_attach_map[attach["vrfName"]].add(sn)
+
                 if attach["lanAttachState"] in ("OUT-OF-SYNC", "PENDING"):
                     change_vrf = attach["vrfName"]
 
-                sn = attach["switchSerialNo"]
-                vlan = attach["vlanId"]
+                vlan = attach.get("vlanId", None)
                 inst_values = attach.get("instanceValues", None)
 
                 # The deletes and updates below are done to update the incoming
@@ -2119,7 +2169,8 @@ class DcnmVrf:
                 # Ex: 'vlanId' in the attach section of the incoming payload needs to
                 # be changed to 'vlan' on the attach section of outgoing payload.
 
-                del attach["vlanId"]
+                if attach.get("vlanId"):
+                    del attach["vlanId"]
                 del attach["switchSerialNo"]
                 del attach["switchName"]
                 del attach["switchRole"]
@@ -2211,6 +2262,7 @@ class DcnmVrf:
         self.have_attach = have_attach
         self.have_deploy = have_deploy
         self.chg_deploy = chg_deploy
+        self.vrf_sn_attach_map = vrf_sn_attach_map
 
         msg = "self.have_create: "
         msg += f"{json.dumps(self.have_create, indent=4)}"
@@ -2241,6 +2293,7 @@ class DcnmVrf:
         want_create = []
         want_attach = []
         want_deploy = {}
+        vrf_sn_attach_map = self.vrf_sn_attach_map
 
         msg = "self.config "
         msg += f"{json.dumps(self.config, indent=4)}"
@@ -2285,9 +2338,11 @@ class DcnmVrf:
                 continue
             for attach in vrf["attach"]:
                 deploy = vrf_deploy
-                vrfs.append(
-                    self.update_attach_params(attach, vrf_name, deploy, vlan_id)
-                )
+                vrf_attach_obj = self.update_attach_params(attach, vrf_name, deploy, vlan_id)
+                vrfs.append(vrf_attach_obj)
+                if vrf_sn_attach_map.get(vrf_name) is None:
+                    vrf_sn_attach_map[vrf_name] = set()
+                vrf_sn_attach_map[vrf_name].add(vrf_attach_obj["serialNumber"])
 
             if vrfs:
                 vrf_attach.update({"vrfName": vrf_name})
@@ -2301,6 +2356,7 @@ class DcnmVrf:
         self.want_create = copy.deepcopy(want_create)
         self.want_attach = copy.deepcopy(want_attach)
         self.want_deploy = copy.deepcopy(want_deploy)
+        self.vrf_sn_attach_map = vrf_sn_attach_map
 
         msg = "self.want_create: "
         msg += f"{json.dumps(self.want_create, indent=4)}"
@@ -2325,7 +2381,7 @@ class DcnmVrf:
         # If fabric type is multisite_child, no attachments
         # are present in want. So copy have_attach to want_attach for
         # processing deployments.
-        if self.action_fabric_type == "multisite_child":
+        if self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
             self.want_attach = copy.deepcopy(self.have_attach)
 
             msg = "self.want_attach: "
@@ -2367,7 +2423,7 @@ class DcnmVrf:
 
                 diff_delete.update({want_c["vrfName"]: "DEPLOYED"})
 
-                if self.action_fabric_type != "multisite_child":
+                if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
                     have_a = self.find_dict_in_list_by_key_value(
                         search=self.have_attach, key="vrfName", value=want_c["vrfName"]
                     )
@@ -2381,11 +2437,11 @@ class DcnmVrf:
                         diff_detach.append(have_a)
                         all_vrfs.append(have_a["vrfName"])
 
-            if len(all_vrfs) != 0 and self.action_fabric_type != "multisite_child":
+            if len(all_vrfs) != 0 and self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
                 diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         else:
-            if self.action_fabric_type != "multisite_child":
+            if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
                 for have_a in self.have_attach:
                     detach_items = get_items_to_detach(have_a["lanAttachList"])
                     if detach_items:
@@ -2435,7 +2491,7 @@ class DcnmVrf:
 
             detach_list = []
             if not found:
-                if self.action_fabric_type != "multisite_child":
+                if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
                     for item in have_a["lanAttachList"]:
                         if "isAttached" in item:
                             if item["isAttached"]:
@@ -2450,7 +2506,7 @@ class DcnmVrf:
 
                 diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
 
-        if len(all_vrfs) != 0 and self.action_fabric_type != "multisite_child":
+        if len(all_vrfs) != 0 and self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
             diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_delete = diff_delete
@@ -3321,7 +3377,7 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_detach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_detach or self.action_fabric_type == "multisite_child":
+        if not self.diff_detach or self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
             msg = f"Early return. Fabric Type:{self.action_fabric_type}"
             msg += f"diff_detach: {json.dumps(self.diff_detach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -3342,6 +3398,8 @@ class DcnmVrf:
         action = "attach"
         path = self.paths["GET_VRF"].format(self.fabric)
         detach_path = path + "/attachments"
+        if self.action_fabric_type == "multicluster_parent":
+            detach_path = detach_path + "?quick-Attach=true"
         verb = "POST"
 
         self.send_to_controller(
@@ -3367,7 +3425,7 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_undeploy, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_undeploy or self.action_fabric_type == "multisite_child":
+        if not self.diff_undeploy or self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
             msg = f"Early return. Fabric Type:{self.action_fabric_type}"
             msg += f"diff_deploy: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -3375,14 +3433,20 @@ class DcnmVrf:
 
         action = "deploy"
         path = self.paths["GET_VRF"].format(self.fabric)
-        deploy_path = path + "/deployments"
         verb = "POST"
+        diff_undeploy = self.diff_undeploy
+
+        if self.action_fabric_type == "multicluster_parent":
+            deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
+            diff_undeploy = self.vrf_serial_payload_transform(self.diff_undeploy)
+        else:
+            deploy_path = path + "/deployments"
 
         self.send_to_controller(
             action,
             verb,
             deploy_path,
-            self.diff_undeploy,
+            diff_undeploy,
             log_response=True,
             is_rollback=is_rollback,
         )
@@ -3401,7 +3465,7 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_delete, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_delete or self.action_fabric_type == "multisite_child":
+        if not self.diff_delete or self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
             msg = f"Early return. Fabric Type:{self.action_fabric_type}"
             msg += f"diff_delete: {json.dumps(self.diff_delete, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -3614,8 +3678,7 @@ class DcnmVrf:
         self.log.debug(msg)
 
         dot1q_id = None
-        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
-        path += "/rest/resource-manager/reserve-id"
+        path = self.resource_paths["RESERVE_ID"]
         verb = "POST"
         payload = {"scopeType": "DeviceInterface",
                    "usageType": "TOP_DOWN_L3_DOT1Q",
@@ -4042,7 +4105,7 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_attach or self.action_fabric_type == "multisite_child":
+        if not self.diff_attach or self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
             msg = f"Early return. Fabric Type:{self.action_fabric_type}"
             msg += f"diff_attach: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -4150,6 +4213,8 @@ class DcnmVrf:
         verb = "POST"
         path = self.paths["GET_VRF"].format(self.fabric)
         attach_path = path + "/attachments"
+        if self.action_fabric_type == "multicluster_parent":
+            attach_path = attach_path + "?quick-Attach=true"
 
         self.send_to_controller(
             action,
@@ -4159,6 +4224,49 @@ class DcnmVrf:
             log_response=True,
             is_rollback=is_rollback,
         )
+
+    def vrf_serial_payload_transform(self, payload: dict) -> dict:
+        """
+        # Summary
+
+        Transform vrf_deploy payload for multicluster_parent fabric type.
+
+        ## Description
+
+        The multicluster_parent fabric type requires a different
+        payload format for vrf_deploy operations.  This method
+        transforms the standard payload into the required format.
+
+        Returns a dictionary mapping serial numbers to comma-separated VRF names.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        new_payload = {}
+        vrf_to_serial_attach = self.vrf_sn_attach_map
+        payload_list = payload["vrfNames"].split(",")
+
+        for vrf in payload_list:
+            # vrf_sn_attach_map stores sets of serial numbers per VRF
+            vrf_serial_set = vrf_to_serial_attach.get(vrf, set())
+
+            for serial in vrf_serial_set:
+                if serial not in new_payload:
+                    new_payload[serial] = []
+                new_payload[serial].append(vrf)
+
+        # Convert lists to comma-separated strings
+        for serial, vrf_list in new_payload.items():
+            new_payload[serial] = ','.join(vrf_list)
+
+        msg = "Returning new_payload: "
+        msg += f"{json.dumps(new_payload, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        return new_payload
 
     def push_diff_deploy(self, is_rollback=False):
         """
@@ -4181,18 +4289,24 @@ class DcnmVrf:
         action = "deploy"
         verb = "POST"
         path = self.paths["GET_VRF"].format(self.fabric)
-        deploy_path = path + "/deployments"
+        diff_deploy = self.diff_deploy
+
+        if self.action_fabric_type == "multicluster_parent":
+            deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
+            diff_deploy = self.vrf_serial_payload_transform(diff_deploy)
+        else:
+            deploy_path = path + "/deployments"
 
         self.send_to_controller(
             action,
             verb,
             deploy_path,
-            self.diff_deploy,
+            diff_deploy,
             log_response=True,
             is_rollback=is_rollback,
         )
 
-    def release_resources_by_id(self, id_list=None):
+    def release_resources_by_id(self, id_list=None, cluster=None):
         """
         # Summary
 
@@ -4241,13 +4355,14 @@ class DcnmVrf:
             self.log.debug(msg)
 
             action = "deploy"
-            path = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
-            path += "/rest/resource-manager/resources"
-            path += f"?id={','.join(item)}"
+            if self.action_fabric_type == "multicluster_parent":
+                path = self.resource_paths["RELEASE_RESOURCES"].format(cluster, ','.join(item))
+            else:
+                path = self.resource_paths["RELEASE_RESOURCES"].format(','.join(item))
             verb = "DELETE"
             self.send_to_controller(action, verb, path, None, log_response=False)
 
-    def release_orphaned_resources(self, vrf_del_list, is_rollback=False):
+    def release_orphaned_resources(self, vrf_del_list, fabric, cluster, is_rollback=False):
         """
         # Summary
 
@@ -4296,8 +4411,10 @@ class DcnmVrf:
         """
         self.log.debug("ENTERED")
 
-        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/"
-        path += f"resource-manager/fabric/{self.fabric}/"
+        if self.action_fabric_type == "multicluster_parent":
+            path = self.resource_paths["GET_RESOURCE"].format(cluster, fabric)
+        else:
+            path = self.resource_paths["GET_RESOURCE"].format(fabric)
         resource_pool = ["TOP_DOWN_VRF_VLAN", "TOP_DOWN_L3_DOT1Q"]
         for pool in resource_pool:
             msg = f"Processing orphaned resources in pool:{pool}"
@@ -4339,7 +4456,61 @@ class DcnmVrf:
             if len(delete_ids) != 0:
                 msg = f"Releasing orphaned resources with IDs:{delete_ids}"
                 self.log.debug(msg)
-                self.release_resources_by_id(delete_ids)
+                self.release_resources_by_id(delete_ids, cluster)
+
+    def release_resource_invoker(self, vrf_del_list, is_rollback=False):
+        """
+        # Summary
+
+        Invoker method to release orphaned resources.
+
+        ## params
+
+        -   `vrf_del_list`: List of VRF names that were deleted.
+        -   `is_rollback`: If True, attempt to rollback on failure
+        """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"vrf_del_list: {vrf_del_list}"
+        self.log.debug(msg)
+
+        cluster = None
+
+        if self.action_fabric_type == "multicluster_parent":
+            for fabric_details in self.fabric_members:
+                fabric = fabric_details.get("fabricName")
+                cluster = fabric_details.get("clusterName")
+                msg = f"Releasing orphaned resources in fabric:{fabric}, cluster:{cluster}"
+                self.log.debug(msg)
+                self.release_orphaned_resources(
+                    vrf_del_list,
+                    fabric,
+                    cluster,
+                    is_rollback
+                )
+        elif self.action_fabric_type == "multisite_parent":
+            for fabric_details in self.fabric_members:
+                fabric = fabric_details.get("fabricName")
+                cluster = fabric_details.get("clusterName")
+                msg = f"Releasing orphaned resources in fabric:{fabric}"
+                self.log.debug(msg)
+                self.release_orphaned_resources(
+                    vrf_del_list,
+                    fabric,
+                    cluster,
+                    is_rollback
+                )
+        else:
+            fabric = self.fabric
+            msg = f"Releasing orphaned resources in fabric:{fabric}"
+            self.log.debug(msg)
+            self.release_orphaned_resources(
+                vrf_del_list,
+                fabric,
+                cluster,
+                is_rollback
+            )
 
     def push_to_remote(self, is_rollback=False):
         """
@@ -4385,7 +4556,8 @@ class DcnmVrf:
             vrf_del_list.append(vrf_name)
         if vrf_del_list:
             msg += f"VRF(s) to be deleted: {vrf_del_list}."
-            self.release_orphaned_resources(vrf_del_list, is_rollback)
+            self.log.debug(msg)
+            self.release_resource_invoker(vrf_del_list, is_rollback)
 
         self.push_diff_create(is_rollback)
         self.push_diff_attach(is_rollback)
@@ -4497,9 +4669,9 @@ class DcnmVrf:
             base_spec["deploy"] = {"type": "bool"}
 
         # Add specs based on fabric type
-        if self.action_fabric_type == 'multisite_parent':
+        if self.action_fabric_type == 'multisite_parent' or self.action_fabric_type == 'multicluster_parent':
             base_spec.update(self.get_parent_msd_specs())
-        elif self.action_fabric_type == 'multisite_child':
+        elif self.action_fabric_type == 'multisite_child' or self.action_fabric_type == 'multicluster_child':
             base_spec.update(self.get_child_msd_specs())
         else:  # standalone
             base_spec.update(self.get_standalone_specs())
@@ -4661,9 +4833,9 @@ class DcnmVrf:
     def get_template_skip_keys(self):
         """Return template configuration keys to skip comparison based on fabric type"""
 
-        if self.action_fabric_type == "multisite_parent":
+        if self.action_fabric_type == "multisite_parent" or self.action_fabric_type == "multicluster_parent":
             return self.get_child_msd_template_keys()
-        elif self.action_fabric_type == "multisite_child":
+        elif self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
             return self.get_parent_msd_template_keys()
         else:  # standalone
             return None
@@ -4996,11 +5168,9 @@ def main():
             default="merged",
             choices=["merged", "replaced", "deleted", "overridden", "query"],
         ),
-        _fabric_type=dict(
-            default="standalone",
-            choices=['multisite_child', 'multisite_parent', 'standalone'],
+        fabric_details=dict(
             required=False,
-            type="str")
+            type="dict")
     )
 
     module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)

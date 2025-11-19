@@ -262,6 +262,67 @@ def get_fabric_inventory_details(module, fabric):
     return inventory_data
 
 
+def get_nd_fabric_inventory_details(module, nd_version, fabric, fabric_details):
+
+    inventory_data = {}
+    rc = False
+    method = "GET"
+    path = "/rest/control/fabrics/{0}/inventory".format(fabric)
+
+    conn = Connection(module._socket_path)
+    if conn.get_version() == 12:
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric" + path
+        path += "/switchesByFabric"
+        proxy = ""
+        if fabric_details.get("fabric_type") == "multicluster_parent":
+            if nd_version >= 12.4:
+                proxy = "/onemanage"
+            path = proxy + path.replace("lan-fabric/rest/control", "onemanage")
+        elif fabric_details.get("fabric_type") == "multicluster_child":
+            if nd_version >= 12.4:
+                proxy = "/fedproxy/"
+            else:
+                proxy = "/onepath/"
+            path = proxy + fabric_details.get("cluster_name") + path
+    count = 1
+    while rc is False:
+
+        response = dcnm_send(module, method, path)
+
+        if not response.get("RETURN_CODE"):
+            rc = True
+            module.fail_json(msg=response)
+
+        if response.get("RETURN_CODE") == 404:
+            # RC 404 - Object not found
+            rc = True
+            return inventory_data
+
+        if response.get("RETURN_CODE") == 401:
+            # RC 401: Server not reachable. Retry a few times
+            if count <= 20:
+                count = count + 1
+                rc = False
+                time.sleep(0.1)
+                continue
+
+            raise Exception(response)
+        elif response.get("RETURN_CODE") >= 400:
+            # Handle additional return codes as needed but for now raise
+            # for any error other then 404.
+            raise Exception(response)
+
+        for device_data in response.get("DATA"):
+
+            if device_data.get("ipAddress", "") != "":
+                key = device_data.get("ipAddress")
+            else:
+                key = device_data.get("logicalName")
+            inventory_data[key] = device_data
+        rc = True
+    return inventory_data
+
+
 def get_ip_sn_dict(inventory_data):
 
     ip_sn = {}
@@ -459,6 +520,71 @@ def get_fabric_details(module, fabric):
     conn = Connection(module._socket_path)
     if conn.get_version() == 12:
         path = "/appcenter/cisco/ndfc/api/v1/lan-fabric" + path
+
+    count = 1
+    while rc is False:
+
+        response = dcnm_send(module, method, path)
+
+        if not response.get("RETURN_CODE"):
+            rc = True
+            module.fail_json(msg=response)
+
+        if response.get("RETURN_CODE") == 404:
+            # RC 404 - Object not found
+            rc = True
+            return fabric_data
+
+        if response.get("RETURN_CODE") == 401:
+            # RC 401: Server not reachable. Retry a few times
+            if count <= 20:
+                count = count + 1
+                rc = False
+                time.sleep(0.1)
+                continue
+
+            raise Exception(response)
+        elif response.get("RETURN_CODE") >= 400:
+            # Handle additional return codes as needed but for now raise
+            # for any error other then 404.
+            raise Exception(response)
+
+        fabric_data = response.get("DATA")
+        rc = True
+
+    return fabric_data
+
+
+def get_nd_fabric_details(module, nd_version, fabric, fabric_details):
+    """
+    Used to get the details of the given fabric from the ND
+
+    Parameters:
+        module: Data for module under execution
+        fabric: Fabric name
+
+    Returns:
+        dict: Fabric details
+    """
+    fabric_data = {}
+    rc = False
+    method = "GET"
+    path = "/rest/control/fabrics/{0}".format(fabric)
+
+    conn = Connection(module._socket_path)
+    if conn.get_version() == 12:
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric" + path
+        proxy = ""
+        if fabric_details.get("fabric_type") == "multicluster_parent":
+            if nd_version >= 12.4:
+                proxy = "/onemanage"
+            path = proxy + path.replace("lan-fabric/rest/control", "onemanage")
+        elif fabric_details.get("fabric_type") == "multicluster_child":
+            if nd_version >= 12.4:
+                proxy = "/fedproxy/"
+            else:
+                proxy = "/onepath/"
+            path = proxy + fabric_details.get("cluster_name") + path
 
     count = 1
     while rc is False:
@@ -1003,3 +1129,65 @@ def has_partial_dhcp_config(server):
     ip = server.get("srvr_ip")
     vrf = server.get("srvr_vrf")
     return bool(ip) != bool(vrf)
+
+
+# Action plugin utilities
+
+def get_nd_version(action_module, task_vars, tmp):
+    """
+    Query NDFC and return the exact software version
+
+    Parameters:
+        module: String representing the module
+
+    Returns:
+        float: Major software version for NDFC
+    """
+
+    method = "GET"
+    supported = None
+    data = None
+
+    paths = [
+        "/fm/fmrest/about/version",
+        "/appcenter/cisco/ndfc/api/about/version",
+    ]
+    for path in paths:
+        response = action_module._execute_module(
+            module_name="cisco.dcnm.dcnm_rest",
+            module_args={
+                "method": "GET",
+                "path": path
+            },
+            task_vars=task_vars,
+            tmp=tmp
+        )
+        if not response.get("failed"):
+            # Extract response data section
+            resp = response.get("response")
+            if isinstance(resp, dict):
+                return_code = resp.get("RETURN_CODE")
+                if return_code == 200:
+                    data = resp.get("DATA")
+                    break
+    if data:
+        # Parse version information
+        # Examples:
+        #   11.5(1), 12.0.1a, 12.4.1.321
+        # For these examples 11.5, 12.0, or 12.4 would be returned
+        raw_version = data["version"]
+
+        if raw_version == "DEVEL":
+            raw_version = "11.5(1)"
+
+        # Capture major.minor version (first two digits with dot)
+        regex = r"^(\d+\.\d+)"
+        mo = re.search(regex, raw_version)
+        if mo:
+            supported = float(mo.group(1))
+
+    if supported is None:
+        error_msg = "Failed to retrieve NDFC version from API responses."
+        return action_module.error_handler.handle_failure(error_msg)
+
+    return supported

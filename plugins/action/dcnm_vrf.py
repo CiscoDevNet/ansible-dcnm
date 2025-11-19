@@ -18,318 +18,27 @@ __metaclass__ = type
 
 # Standard Library Imports
 import copy
-import json
 import time
-import traceback
-from datetime import datetime
 
 # Ansible Imports
 from ansible_collections.ansible.netcommon.plugins.action.network import (
     ActionModule as ActionNetworkModule,
 )
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.action_error_handler import (
+    ActionErrorHandler as ErrorHandler,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.action_logger import (
+    ActionLogger as Logger,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    get_nd_version,
+)
 from ansible.utils.display import Display
-from ansible.errors import AnsibleError
 
 # Module Constants
 WAIT_TIME_FOR_DELETE_LOOP = 5
 VALID_VRF_STATES = ["DEPLOYED", "PENDING", "NA"]
 MAX_RETRY_COUNT = 50
-
-display = Display()
-
-
-class Logger:
-    """
-    Centralized logging system for NDFC VRF action plugin operations.
-
-    This class provides structured logging with context awareness for fabric operations.
-    It formats log messages with timestamps, fabric context, and operation context to
-    facilitate debugging and monitoring of VRF operations across different fabric types.
-
-    Features:
-    - Contextual logging with fabric and operation information
-    - Multiple log levels mapped to Ansible display verbosity
-    - Consistent message formatting across all operations
-    - Timestamp tracking for performance analysis
-
-    Args:
-        name (str): Logger instance name for identification
-
-    Attributes:
-        name (str): Logger identifier used in message formatting
-        start_time (datetime): Initialization timestamp for duration calculations
-    """
-
-    def __init__(self, name="NDFC_VRF_ActionPlugin"):
-        # Set logger identification name
-        self.name = name
-        # Record initialization time for performance tracking
-        self.start_time = datetime.now()
-
-    def log(self, level, message, fabric=None, operation=None):
-        """
-        Core logging method that formats and outputs messages with context.
-
-        This method creates structured log messages with timestamps and contextual
-        information, then routes them to appropriate Ansible display methods based
-        on log level severity.
-
-        Message Format:
-        - YYYY-MM-DD HH:MM:SS [Logger][Fabric][Operation] LEVEL: message
-
-        Args:
-            level (str): Log level (debug, info, warning, error)
-            message (str): Log message content
-            fabric (str, optional): Fabric context for the log message
-            operation (str, optional): Operation context for the log message
-
-        Display Routing:
-        - debug: display.vvv() - Most verbose, debug information
-        - info: display.vv() - Informational messages
-        - warning: display.warning() - Warning messages
-        - error: display.error() - Error messages
-        - default: display.v() - Standard verbosity
-        """
-        # Generate timestamp for log entry
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # Build context string starting with logger name
-        context = f"[{self.name}]"
-
-        # Add fabric context if provided
-        if fabric:
-            context += f"[{fabric}]"
-        # Add operation context if provided
-        if operation:
-            context += f"[{operation}]"
-
-        # Format complete log message
-        log_msg = f"{timestamp} {context} {level.upper()}: {message}"
-
-        # Route to appropriate Ansible display method based on level
-        if level == "debug":
-            display.vvv(log_msg)  # Highest verbosity for debugging
-        elif level == "info":
-            display.vv(log_msg)   # Medium verbosity for information
-        elif level == "warning":
-            display.warning(log_msg)  # Warning level
-        elif level == "error":
-            display.error(log_msg)    # Error level
-        else:
-            display.v(log_msg)    # Default verbosity
-
-    def debug(self, message, fabric=None, operation=None):
-        """Log debug level message with optional context."""
-        self.log("debug", message, fabric, operation)
-
-    def info(self, message, fabric=None, operation=None):
-        """Log info level message with optional context."""
-        self.log("info", message, fabric, operation)
-
-    def warning(self, message, fabric=None, operation=None):
-        """Log warning level message with optional context."""
-        self.log("warning", message, fabric, operation)
-
-    def error(self, message, fabric=None, operation=None):
-        """Log error level message with optional context."""
-        self.log("error", message, fabric, operation)
-
-
-class ErrorHandler:
-    """
-    Centralized error handling and API response validation for NDFC operations.
-
-    This class provides standardized error handling, exception management, and API
-    response validation for all NDFC VRF operations. It ensures consistent error
-    reporting and helps maintain robust operation flows across fabric types.
-
-    Features:
-    - Structured exception handling with context preservation
-    - API response validation with detailed error reporting
-    - Traceback management for debugging complex failures
-    - Integration with logging system for error tracking
-    - Consistent error response formatting for Ansible
-
-    Args:
-        logger (Logger): Logger instance for error reporting
-
-    Attributes:
-        logger (Logger): Associated logger for error message output
-    """
-
-    def __init__(self, logger):
-        # Store logger reference for error reporting
-        self.logger = logger
-
-    def handle_failure(
-        self, msg, changed=False
-    ):
-        """
-        Handle failure scenarios with error logging and structured error responses.
-
-        This method processes failure conditions by logging the error with message context,
-        creating structured error responses suitable for Ansible module returns
-
-        Failure Processing:
-        - Logs error
-        - Creates structured error response dictionary
-
-        Args:
-            msg (str): Failure message to report
-            changed (bool): Whether any changes were made before failure
-
-        Returns:
-            dict: Structured error response with failed=True and error details
-
-        """
-
-        # Log the failure with full context
-        self.logger.error(msg)
-
-        # Create structured error response
-        error_response = {
-            "failed": True,
-            "changed": changed,
-            "msg": msg,
-        }
-
-        return error_response
-
-    def handle_exception(
-        self, e, operation="unknown", fabric=None, include_traceback=False
-    ):
-        """
-        Handle exceptions with comprehensive logging and structured error responses.
-
-        This method processes exceptions by extracting relevant information, logging
-        the error with context, and creating structured error responses suitable for
-        Ansible module returns. It supports optional traceback inclusion for debugging.
-
-        Exception Processing:
-        - Extracts exception type and message
-        - Logs error with operation and fabric context
-        - Creates structured error response dictionary
-        - Optionally includes Python traceback for debugging
-        - Raises AnsibleError with structured information
-
-        Args:
-            e (Exception): Exception object to handle
-            operation (str): Operation context where exception occurred
-            fabric (str, optional): Fabric context for the exception
-            include_traceback (bool): Whether to include Python traceback
-
-        Returns:
-            dict: Structured error response with failed=True and error details
-
-        Raises:
-            AnsibleError: Always raises with structured error information
-        """
-        # Extract exception type and message for structured reporting
-        error_type = type(e).__name__
-        error_msg = str(e)
-
-        # Build context string for error reporting
-        context = f"Operation: {operation}"
-        if fabric:
-            context += f", Fabric: {fabric}"
-
-        # Log the error with full context
-        self.logger.error(f"{error_type} in {context}: {error_msg}")
-
-        # Create structured error response for Ansible
-        error_response = {
-            "failed": True,
-            "msg": error_msg,
-            "error_type": error_type,
-            "operation": operation
-        }
-
-        # Add fabric context if provided
-        if fabric:
-            error_response["fabric"] = fabric
-
-        # Include traceback for debugging if requested
-        if include_traceback:
-            error_response["traceback"] = traceback.format_exc()
-            self.logger.debug(f"Traceback: {traceback.format_exc()}")
-
-        # Raise structured Ansible error
-        raise AnsibleError(error_response)
-
-    def validate_api_response(
-        self, response, operation="API call", fabric=None
-    ):
-        """
-        Validate NDFC API responses and handle various error conditions.
-
-        This method performs comprehensive validation of NDFC API responses,
-        checking for proper structure, success indicators, and data presence.
-        It handles the common NDFC API response format and provides detailed
-        error reporting for debugging failed API calls.
-
-        Validation Checks:
-        - Response existence and basic structure
-        - Response format validation (dict expected)
-        - Failed flag checking for operation failures
-        - Response data structure validation
-        - HTTP return code validation (expects 200)
-        - Data payload presence validation
-
-        NDFC API Response Format:
-        {
-            "failed": false,
-            "response": {
-                "RETURN_CODE": 200,
-                "MESSAGE": "OK",
-                "DATA": [...]
-            }
-        }
-
-        Args:
-            response (dict): NDFC API response to validate
-            operation (str): Operation description for error reporting
-            fabric (str, optional): Fabric context for error reporting
-
-        Returns:
-            dict: Validated response['response'] section with DATA
-        """
-        # Check for response existence
-        if not response:
-            raise AnsibleError(f"No response received for {operation}")
-
-        # Validate response format
-        if not isinstance(response, dict):
-            raise AnsibleError(f"Invalid response format for {operation}: {response}")
-
-        # Check for operation failure flag
-        if response.get("failed"):
-            error_msg = response.get("msg", "Unknown error")
-            self.logger.error(f"API failure for {operation}: {json.dumps(response, indent=2)}")
-            raise AnsibleError(f"{operation} failed: {error_msg}")
-
-        # Validate response structure
-        if not response.get("response"):
-            self.logger.error(f"Empty response msg for {operation}: {json.dumps(response, indent=2)}")
-            raise AnsibleError(f"Empty response msg received for {operation}")
-
-        # Extract response data section
-        resp = response.get("response")
-        if not isinstance(resp, dict):
-            raise AnsibleError(f"Invalid response format for {operation}: {resp}")
-
-        # Validate HTTP return code
-        return_code = resp.get("RETURN_CODE")
-        if not return_code or return_code != 200:
-            error_msg = response.get("MESSAGE", f"HTTP {return_code} error")
-            self.logger.error(f"API error for {operation}: {json.dumps(resp, indent=2)}")
-            raise AnsibleError(f"{operation} failed: {error_msg}")
-
-        # Validate data payload presence
-        if not resp.get("DATA"):
-            self.logger.error(f"Empty response DATA for {operation}: {json.dumps(resp, indent=2)}")
-            raise AnsibleError(f"Empty response DATA received for {operation}")
-
-        # Return validated response data
-        return resp
 
 
 class ActionModule(ActionNetworkModule):
@@ -342,9 +51,12 @@ class ActionModule(ActionNetworkModule):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.logger = Logger("NDFC_VRF_ActionPlugin")
+        self.display = Display()
+        self.logger = Logger("NDFC_VRF_ActionPlugin", self.display)
         self.error_handler = ErrorHandler(self.logger)
         self.logger.info("NDFC VRF Action Plugin initialized")
+        # Default NDFC version
+        self.ndfc_version = 12.2
 
     # =========================================================================
     # MAIN ENTRY POINT
@@ -396,11 +108,16 @@ class ActionModule(ActionNetworkModule):
         if result is False:
             return self.error_handler.handle_failure("Pre-validation failed")
 
-        # Discover fabric associations from NDFC
-        fabric_data = self.obtain_fabric_associations(task_vars, tmp)
         # Extract module arguments and fabric name
         module_args = self._task.args.copy()
         fabric_name = module_args.get("fabric")
+
+        self.ndfc_version = get_nd_version(self, task_vars, tmp)
+
+        self.logger.info(f"ND version: {self.ndfc_version}", fabric=fabric_name)
+
+        # Discover fabric associations from NDFC
+        fabric_association_data = self.obtain_federated_fabric_associations(task_vars, tmp)
 
         # Validate required fabric parameter
         if not fabric_name:
@@ -408,18 +125,22 @@ class ActionModule(ActionNetworkModule):
 
         # Log fabric processing initiation
         self.logger.info(f"Processing fabric: {fabric_name}", fabric=fabric_name)
+
         # Detect fabric type for workflow routing
-        fabric_type = self.detect_fabric_type(fabric_name, fabric_data)
+        fabric_type, fabric_data = self.detect_fabric_type(fabric_name, fabric_association_data, "mcfg")
         if not fabric_type:
-            return self.error_handler.handle_failure(f"Fabric '{fabric_name}' not found in NDFC.")
+            fabric_association_data = self.obtain_fabric_associations(task_vars, tmp)
+            fabric_type, fabric_data = self.detect_fabric_type(fabric_name, fabric_association_data, "msd")
+            if not fabric_type:
+                return self.error_handler.handle_failure(f"Fabric '{fabric_name}' not found in NDFC.")
 
         self.logger.info(f"Detected fabric type: {fabric_type}", fabric=fabric_name)
 
         # Route to appropriate workflow based on fabric type
-        if fabric_type == "multisite_parent":
-            result = self.handle_parent_msd_workflow(module_args, fabric_data, task_vars, tmp)
-        elif fabric_type == "multisite_child":
-            result = self.handle_child_msd_workflow(module_args, task_vars, tmp)
+        if fabric_type in ["multisite_parent", "multicluster_parent"]:
+            result = self.handle_parent_msd_workflow(module_args, fabric_data, fabric_type, task_vars, tmp)
+        elif fabric_type in ["multisite_child", "multicluster_child"]:
+            result = self.handle_child_msd_workflow(module_args, fabric_data, task_vars, tmp)
         else:
             result = self.handle_standalone_workflow(module_args, task_vars, tmp)
 
@@ -511,6 +232,110 @@ class ActionModule(ActionNetworkModule):
     # FABRIC DISCOVERY & TYPE DETECTION
     # =========================================================================
 
+    def obtain_federated_fabric_associations(self, task_vars, tmp):
+        """
+        Retrieve federated fabric associations from NDFC controller.
+
+        This method queries the NDFC controller to obtain federated fabric association data,
+        which includes fabric types, relationships (parent-child), and states.
+        This information is essential for fabric type detection and Multisite workflow
+        routing decisions.
+
+        API Endpoint:
+        - GET /onemanage/appcenter/cisco/ndfc/api/v1/onemanage/fabrics
+
+        Response Processing:
+        - Validates API response structure and success
+        - Extracts fabric data and builds lookup dictionary
+        - Indexes fabrics by name for efficient access
+        - Handles empty responses and API errors
+
+        Fabric Data Structure:
+        Each fabric entry contains:
+        - fabricName: Fabric identifier
+        - fabricType: Type (Federated, VXLAN, etc.)
+        - fabricState: State (member, parent, standalone)
+        - fabricParent: Parent fabric name (for child fabrics)
+
+        Args:
+            task_vars (dict): Ansible task variables for module execution
+            tmp (str): Temporary directory path for module operations
+        Returns:
+            dict: Fabric associations indexed by fabric name:
+                {
+                    "fabric_name": {
+                        "fabricName": "fabric_name",
+                        "fabricType": "Federated",
+                        "fabricState": "parent",
+                        "fabricParent": null
+                    }
+                }
+        Raises:
+            AnsibleError: On API failure or invalid response structure
+        """
+        # Log fabric discovery initiation
+        self.logger.debug(
+            "Fetching federated fabric associations from NDFC", operation="fabric_discovery"
+        )
+
+        proxy = ""
+        if self.ndfc_version >= 12.4:
+            proxy = "/onemanage"
+
+        try:
+            path = f"{proxy}/appcenter/cisco/ndfc/api/v1/onemanage/fabrics"
+            # Execute NDFC REST API call to get federated fabric associations
+            federated_fabric_associations = self._execute_module(
+                module_name="cisco.dcnm.dcnm_rest",
+                module_args={
+                    "method": "GET",
+                    "path": path
+                },
+                task_vars=task_vars,
+                tmp=tmp
+            )
+
+            # Validate API response structure and extract data
+            response_data = self.error_handler.validate_api_response(
+                federated_fabric_associations,
+                "federated fabric associations retrieval"
+            )
+
+            # Build fabric data lookup dictionary
+            fabric_associations = {}
+            for fabric in response_data.get("DATA", []):
+                parent_fabric_name = fabric.get("fabricName")
+                if parent_fabric_name:
+                    if parent_fabric_name not in fabric_associations:
+                        fabric_associations[parent_fabric_name] = {}
+                    parent_fabric_data = {
+                        "fabricName": parent_fabric_name,
+                        "fabricType": fabric.get("fabricType"),
+                        "fabricState": fabric.get("fabricState")
+                    }
+                    fabric_associations[parent_fabric_name].update(parent_fabric_data)
+                    for child_fabric in fabric.get("members", []):
+                        child_fabric_name = child_fabric.get("fabricName")
+                        if child_fabric_name:
+                            child_fabric_data = {
+                                "fabricName": child_fabric_name,
+                                "clusterName": child_fabric.get("clusterName"),
+                                "fabricType": child_fabric.get("fabricType"),
+                                "fabricState": child_fabric.get("fabricState")
+                            }
+                            fabric_associations[child_fabric_name] = child_fabric_data
+                            if "members" not in fabric_associations[parent_fabric_name]:
+                                fabric_associations[parent_fabric_name]["members"] = []
+                            fabric_associations[parent_fabric_name]["members"].append(child_fabric_data)
+
+            # Log successful fabric data retrieval
+            self.logger.info(f"Retrieved {len(fabric_associations)} federated fabric associations", operation="fabric_discovery")
+            return fabric_associations
+
+        except Exception as e:
+            # Handle fabric discovery failures
+            return self.error_handler.handle_exception(e, "fabric_discovery")
+
     def obtain_fabric_associations(self, task_vars, tmp):
         """
         Retrieve fabric associations and relationships from NDFC controller.
@@ -581,22 +406,37 @@ class ActionModule(ActionNetworkModule):
             )
 
             # Build fabric data lookup dictionary
-            fabric_data = {}
+            fabric_associations = {}
             for fabric in response_data.get("DATA", []):
                 fabric_name = fabric.get("fabricName")
                 if fabric_name:
+                    if fabric_name not in fabric_associations:
+                        fabric_associations[fabric_name] = {}
                     # Index fabric data by fabric name for efficient lookups
-                    fabric_data[fabric_name] = fabric
+                    fabric_data = {
+                        "fabricName": fabric_name,
+                        "fabricType": fabric.get("fabricType"),
+                        "fabricState": fabric.get("fabricState")
+                    }
+                    fabric_associations[fabric_name].update(fabric_data)
+                    if fabric.get("fabricState") == "member":
+                        fabric_parent = fabric.get("fabricParent")
+                        if fabric_parent:
+                            if fabric_parent not in fabric_associations:
+                                fabric_associations[fabric_parent] = {}
+                            if "members" not in fabric_associations[fabric_parent]:
+                                fabric_associations[fabric_parent]["members"] = []
+                            fabric_associations[fabric_parent]["members"].append(fabric_data)
 
             # Log successful fabric data retrieval
-            self.logger.info(f"Retrieved {len(fabric_data)} fabric associations", operation="fabric_discovery")
-            return fabric_data
+            self.logger.info(f"Retrieved {len(fabric_associations)} fabric associations", operation="fabric_discovery")
+            return fabric_associations
 
         except Exception as e:
             # Handle fabric discovery failures
             return self.error_handler.handle_exception(e, "fabric_discovery")
 
-    def detect_fabric_type(self, fabric_name, fabric_data):
+    def detect_fabric_type(self, fabric_name, fabric_associations, fabric_data_type):
         """
         Analyze fabric data to determine fabric type for workflow routing.
 
@@ -618,13 +458,17 @@ class ActionModule(ActionNetworkModule):
         Args:
             fabric_name (str): Name of fabric to classify
             fabric_data (dict): Fabric associations data from NDFC
+            fabric_data_type (str): Type of fabric data (e.g., "mcfg", "msd")
 
         Returns:
             None|str: Detected fabric type:
+                - "multicluster_parent"
+                - "multicluster_child"
                 - "multisite_parent"
                 - "multisite_child"
                 - "standalone"
                 - None if fabric not found
+            None|dict: Fabric data for the specified fabric
         """
         # Log fabric type detection initiation
         self.logger.debug(
@@ -634,24 +478,35 @@ class ActionModule(ActionNetworkModule):
         )
 
         # Validate fabric exists in NDFC associations
-        if fabric_name not in fabric_data:
-            return None
+        if fabric_name not in fabric_associations:
+            return None, None
 
+        fabric_data = fabric_associations.get(fabric_name)
+        detected_type = None
         # Extract fabric properties for classification
-        fabric_info = fabric_data.get(fabric_name)
-        fabric_type = fabric_info.get("fabricType")
-        fabric_state = fabric_info.get("fabricState")
+        fabric_type = fabric_data.get("fabricType")
+        fabric_state = fabric_data.get("fabricState")
 
-        # Classify fabric based on properties
-        if fabric_type == "MSD":
-            # Multisite type indicates parent fabric
-            detected_type = "multisite_parent"
-        elif fabric_state == "member":
-            # Member state indicates child fabric
-            detected_type = "multisite_child"
-        else:
-            # All others are standalone fabrics
-            detected_type = "standalone"
+        if fabric_data_type == "mcfg":
+            # Classify fabric based on properties for multicluster fabric data
+            if fabric_type == "MFD":
+                # Multicluster type indicates parent fabric
+                detected_type = "multicluster_parent"
+            elif fabric_state == "member":
+                # Member state indicates child fabric
+                detected_type = "multicluster_child"
+
+        elif fabric_data_type == "msd":
+            # Classify fabric based on msd properties
+            if fabric_type == "MSD":
+                # Multisite type indicates parent fabric
+                detected_type = "multisite_parent"
+            elif fabric_state == "member":
+                # Member state indicates child fabric
+                detected_type = "multisite_child"
+            else:
+                # All others are standalone fabrics
+                detected_type = "standalone"
 
         # Log classification result with details
         self.logger.debug(
@@ -660,9 +515,9 @@ class ActionModule(ActionNetworkModule):
             fabric=fabric_name,
             operation="type_detection"
         )
-        return detected_type
+        return detected_type, fabric_data
 
-    def validate_child_parent_fabric(self, child_fabric, parent_fabric, fabric_data):
+    def validate_child_parent_fabric(self, child_fabric, parent_fabric, fabric_associations):
         """
         Validate the relationship between child and Multisite Parent fabrics.
 
@@ -672,62 +527,38 @@ class ActionModule(ActionNetworkModule):
         multi-site domain environments.
 
         Validation Checks:
-        - Child fabric exists in NDFC fabric associations
-        - Parent fabric exists in NDFC fabric associations
-        - Child fabric has fabricState="member" (indicating child status)
-        - Child fabric's fabricParent matches specified parent fabric
-        - Proper Multisite hierarchy enforcement
-
-        Multisite Hierarchy Rules:
-        - Child fabrics must be in "member" state
-        - Child fabrics must reference correct parent fabric
-        - Parent-child relationships must be properly established in NDFC
+        - Child fabric exists in Parent Fabric's NDFC fabric associations
 
         Args:
             child_fabric (str): Name of child fabric to validate
             parent_fabric (str): Name of expected parent fabric
-            fabric_data (dict): Fabric associations data from NDFC
+            fabric_associations (list): Child fabric associations data from NDFC
 
         Returns:
             bool: True if child-parent relationship is valid, False otherwise
         """
         # Log validation initiation with context
         self.logger.debug(
-            f"Validating child-parent fabric relationship: {child_fabric} <-> {parent_fabric}",
+            f"Validating child-parent fabric relationship: {child_fabric} <-> {parent_fabric}, {fabric_associations}",
             fabric=child_fabric,
             operation="child_parent_validation"
         )
 
-        # Validate both fabrics exist in NDFC
-        if child_fabric not in fabric_data:
-            available_fabrics = list(fabric_data.keys())
+        if fabric_associations is None:
             error_msg = (
-                f"Fabric '{child_fabric}' and not found in NDFC. "
-                f"Available fabrics: {available_fabrics}"
+                f"Fabric associations data is None while validating child-parent "
+                f"relationship: {child_fabric} -> {parent_fabric}"
             )
             self.logger.error(
                 error_msg, fabric=child_fabric, operation="child_parent_validation"
             )
             return False
 
-        # Extract child fabric properties
-        fabric_info = fabric_data.get(child_fabric)
-        fabric_state = fabric_info.get("fabricState")
-        fabric_parent = fabric_info.get("fabricParent")
-
-        # Validate child fabric is in member state
-        if fabric_state != "member":
-            error_msg = f"Fabric '{child_fabric}' is not a Child fabric (fabricState={fabric_state})"
-            self.logger.error(
-                error_msg, fabric=child_fabric, operation="child_parent_validation"
-            )
-            return False
-
-        # Validate parent-child relationship
-        if fabric_parent != parent_fabric:
+        # Validate child fabrics present in parent hierarchy
+        if child_fabric not in fabric_associations:
             error_msg = (
-                f"Fabric '{child_fabric}' is not associated with Multisite Parent fabric '{parent_fabric}' "
-                f"(detected parent: '{fabric_parent}')"
+                f"Fabric '{child_fabric}' not associated with {parent_fabric}. "
+                f"Associated child fabrics: {fabric_associations}"
             )
             self.logger.error(
                 error_msg, fabric=child_fabric, operation="child_parent_validation"
@@ -741,7 +572,7 @@ class ActionModule(ActionNetworkModule):
     # WORKFLOW HANDLERS
     # =========================================================================
 
-    def handle_parent_msd_workflow(self, module_args, fabric_data, task_vars, tmp):
+    def handle_parent_msd_workflow(self, module_args, fabric_data, fabric_type, task_vars, tmp):
         """
         Execute comprehensive Multisite Parent fabric workflow with child fabric orchestration.
         This method implements the complete Multisite Parent workflow that coordinates VRF
@@ -782,6 +613,7 @@ class ActionModule(ActionNetworkModule):
         Args:
             module_args (dict): Original module arguments from playbook
             fabric_data (dict): Fabric associations data from NDFC
+            fabric_type (str): Detected fabric type ("multisite_parent, multicluster_parent")
             task_vars (dict): Ansible task variables for execution context
             tmp (str): Temporary directory path for operations
 
@@ -810,6 +642,9 @@ class ActionModule(ActionNetworkModule):
             state = module_args.get("state")
             parent_config = []
             child_tasks_dict = {}
+            # Extract associated child fabrics from NDFC data
+            child_fabric_associations = [
+                child_fabric.get("fabricName") for child_fabric in fabric_data.get("members", [])]
 
             if config:
                 # Process each VRF configuration for parent/child splitting
@@ -837,7 +672,7 @@ class ActionModule(ActionNetworkModule):
                                     return self.error_handler.handle_failure(error_msg)
                                 # Validate child fabric type and child-parent relationship
                                 if not self.validate_child_parent_fabric(
-                                    fabric_name, parent_fabric, fabric_data
+                                    fabric_name, parent_fabric, child_fabric_associations
                                 ):
                                     error_msg = (
                                         f"Multisite Child-Parent fabric validation failed: {fabric_name} -> {parent_fabric}"
@@ -846,7 +681,7 @@ class ActionModule(ActionNetworkModule):
 
                                 # Create child tasks and group by child fabric name
                                 child_tasks_dict = self.create_child_task(
-                                    vrf, child_config, module_args, child_tasks_dict
+                                    vrf, child_config, child_tasks_dict, fabric_name, module_args
                                 )
 
                         # Create parent VRF without child_fabric_config
@@ -866,7 +701,11 @@ class ActionModule(ActionNetworkModule):
             )
             parent_module_args = copy.deepcopy(module_args)
             parent_module_args["config"] = parent_config
-            parent_module_args["_fabric_type"] = "multisite_parent"
+            fabric_details = {}
+            fabric_details["nd_version"] = self.ndfc_version
+            fabric_details["fabric_type"] = fabric_type
+            fabric_details["members"] = fabric_data.get("members", [])
+            parent_module_args["fabric_details"] = fabric_details
 
             # Execute parent fabric VRF operations
             parent_result = self.execute_module_with_args(parent_module_args, task_vars, tmp)
@@ -883,6 +722,7 @@ class ActionModule(ActionNetworkModule):
                         all_vrf_ready, vrf_not_ready = self.wait_for_vrf_ready(
                             child_task["vrf_list"],
                             child_task["fabric"],
+                            child_task["fabric_details"],
                             task_vars,
                             tmp
                         )
@@ -914,7 +754,7 @@ class ActionModule(ActionNetworkModule):
             # Handle workflow-level exceptions
             return self.error_handler.handle_exception(e, "parent_multisite_workflow", parent_fabric)
 
-    def handle_child_msd_workflow(self, module_args, task_vars, tmp):
+    def handle_child_msd_workflow(self, module_args, fabric_type, task_vars, tmp):
         """
         Handle restricted access attempts to Child Multisite fabrics.
         This method enforces the Multisite operational model by preventing direct
@@ -935,6 +775,7 @@ class ActionModule(ActionNetworkModule):
 
         Args:
             module_args (dict): Original module arguments from playbook
+            fabric_type (str): Detected fabric type ("multisite_child", "multicluster_child")
             task_vars (dict): Ansible task variables for module execution
 
         Returns:
@@ -962,7 +803,7 @@ class ActionModule(ActionNetworkModule):
 
             # Add workflow identification to result if not present
             if "fabric_type" not in result:
-                result["fabric_type"] = "multisite_child"
+                result["fabric_type"] = fabric_type
                 result["workflow"] = "Multisite Child VRF Processing"
 
             # Log successful completion
@@ -1008,10 +849,14 @@ class ActionModule(ActionNetworkModule):
         # Log standalone workflow initiation
         self.logger.info("Starting standalone Non-Multisite workflow", operation="standalone_workflow")
 
+        fabric_details = {}
+        fabric_details["nd_version"] = self.ndfc_version
+        fabric_details["fabric_type"] = "standalone"
+
         parent_module_args = {
             "fabric": module_args["fabric"],
             "config": module_args.get("config"),
-            "_fabric_type": "standalone"
+            "fabric_details": fabric_details
         }
 
         if module_args.get("state"):
@@ -1033,7 +878,7 @@ class ActionModule(ActionNetworkModule):
     # CHILD FABRIC TASK MANAGEMENT
     # =========================================================================
 
-    def create_child_task(self, parent_vrf, child_config, parent_module_args, child_tasks_dict):
+    def create_child_task(self, parent_vrf, child_config, child_tasks_dict, child_fabric_data, parent_module_args):
         """
         Create and organize child fabric tasks from parent VRF and child configurations.
 
@@ -1064,8 +909,9 @@ class ActionModule(ActionNetworkModule):
         Args:
             parent_vrf (dict): Parent VRF configuration containing VRF name and settings
             child_config (dict): Child fabric configuration with fabric name and parameters
-            parent_module_args (dict): Original module arguments for state inheritance
             child_tasks_dict (dict): Existing child tasks dictionary for accumulation
+            child_fabric_data (dict): Child fabric properties from NDFC
+            parent_module_args (dict): Original module arguments for state inheritance
 
         Returns:
             dict: Updated child tasks dictionary with structure:
@@ -1110,6 +956,15 @@ class ActionModule(ActionNetworkModule):
                     "vrf_list": [child_config["vrf_name"]]
                 }
                 child_tasks_dict[child_fabric_name] = child_task
+
+            fabric_details = {}
+            fabric_details["nd_version"] = self.ndfc_version
+            if "clusterName" in child_fabric_data:
+                fabric_details["fabric_type"] = "multicluster_child"
+                fabric_details["cluster_name"] = child_fabric_data.get("clusterName")
+            else:
+                fabric_details["fabric_type"] = "multisite_child"
+            child_tasks_dict[child_fabric_name]["fabric_details"] = fabric_details
 
             # Log task creation progress
             self.logger.debug(f"Created child task for VRF: {child_config['vrf_name']}", fabric=child_fabric_name,
@@ -1175,7 +1030,6 @@ class ActionModule(ActionNetworkModule):
         child_module_args = {
             "fabric": fabric_name,
             "config": child_task["config"],
-            "_fabric_type": "multisite_child"
         }
 
         # Handle state transformations for child fabric compatibility
@@ -1187,6 +1041,8 @@ class ActionModule(ActionNetworkModule):
             else:
                 # Pass through other states unchanged
                 child_module_args["state"] = state
+
+        child_module_args["fabric_details"] = child_task.get("fabric_details")
 
         # Execute child fabric operations using base module
         child_result = self.execute_module_with_args(child_module_args, task_vars, tmp)
@@ -1273,7 +1129,7 @@ class ActionModule(ActionNetworkModule):
             # Always restore original task arguments
             self._task.args = original_args
 
-    def wait_for_vrf_ready(self, vrf_list, fabric_name, task_vars, tmp):
+    def wait_for_vrf_ready(self, vrf_list, fabric_name, fabric_details, task_vars, tmp):
         """
         Wait for VRFs to reach a deployable state on the specified fabric.
 
@@ -1331,6 +1187,14 @@ class ActionModule(ActionNetworkModule):
         self.logger.info(f"Waiting for VRF(s) to be ready: {', '.join(vrf_list)}",
                          fabric=fabric_name, operation="wait_for_vrf_ready")
 
+        path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs"
+        proxy = ""
+        if fabric_details.get("fabric_type") == "multicluster_child":
+            if self.ndfc_version >= 12.4:
+                proxy = "/fedproxy"
+            else:
+                proxy = "/onepath"
+            path = proxy + fabric_details.get("cluster_name") + path
         # Continue polling while VRFs remain and retries available
         while retry_count > 0 and vrf_list:
             try:
@@ -1339,7 +1203,7 @@ class ActionModule(ActionNetworkModule):
                     module_name="cisco.dcnm.dcnm_rest",
                     module_args={
                         "method": "GET",
-                        "path": f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs",
+                        "path": path,
                     },
                     task_vars=task_vars,
                     tmp=tmp
