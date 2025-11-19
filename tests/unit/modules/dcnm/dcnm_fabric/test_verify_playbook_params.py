@@ -1,3 +1,6 @@
+"""
+Unit tests for VerifyPlaybookParams()
+"""
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +24,7 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
+# pylint: disable=too-many-lines
 
 from __future__ import absolute_import, division, print_function
 
@@ -71,13 +75,13 @@ def test_verify_playbook_params_00010() -> None:
     assert isinstance(instance._param_info, ParamInfo)
     assert isinstance(instance._ruleset, RuleSet)
     assert not instance.bad_params
-    assert instance.fabric_name is None
+    assert instance.fabric_name == ""
     assert instance.local_params == {"DEPLOY"}
-    assert instance.parameter is None
+    assert instance.parameter == ""
     assert instance.params_are_valid == set()
-    assert instance.properties["config_playbook"] is None
-    assert instance.properties["config_controller"] is None
-    assert instance.properties["template"] is None
+    assert instance._config_playbook == {}
+    assert instance._config_controller is None
+    assert instance._template == {}
 
 
 MATCH_OOO20 = r"VerifyPlaybookParams\.config_controller: "
@@ -235,8 +239,8 @@ def test_verify_playbook_params_00051() -> None:
         instance = VerifyPlaybookParams()
         instance.template = templates_verify_playbook_params(template_key)
         instance.config_playbook = payloads_verify_playbook_params(key)
-    match = r"VerifyPlaybookParams\.validate_commit_parameters:\s+"
-    match += r"instance\.config_controller must be set prior to calling commit\."
+    match = r"VerifyPlaybookParams\.config_controller:\s+"
+    match += r"config_controller must be set prior to accessing\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -931,7 +935,6 @@ def test_verify_playbook_params_00720(monkeypatch) -> None:
 
     with does_not_raise():
         instance = VerifyPlaybookParams()
-        instance.param_info = ParamInfo()
         instance.config_playbook = {"PARAM_2": "foo"}
         instance.config_controller = None
 
@@ -961,7 +964,6 @@ def test_verify_playbook_params_00800(monkeypatch) -> None:
 
     with does_not_raise():
         instance = VerifyPlaybookParams()
-        instance.param_info = ParamInfo()
         instance.config_playbook = {"PARAM_2": "foo"}
         instance.config_controller = None
 
@@ -972,3 +974,77 @@ def test_verify_playbook_params_00800(monkeypatch) -> None:
     with does_not_raise():
         value = instance.default_param_is_valid(item)
     assert value is None
+
+@pytest.mark.parametrize(
+    "key",
+    ["test_verify_playbook_params_00900a", "test_verify_playbook_params_00900b"],
+)
+def test_verify_playbook_params_00900(key) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - update_decision_set_for_multi_rules() happy path
+        - commit()
+
+    Template
+    -   Easy_Fabric_eBGP
+
+    Rule type
+    -   Multi
+
+    Summary
+    - Verify Exception is not raised for Multi rule, when:
+        -   Playbook contains all requisite parameters and values to satisfy the rule.
+    - User parameter: L3VNI_MCAST_GROUP == "239.1.1.1"
+    - Dependent parameters (these are OR'ed):
+        - ENABLE_TRM == true and UNDERLAY_IS_V6 != true
+        - ENABLE_TRMv6 == true and UNDERLAY_IS_V6 != true
+    """
+    template_key = "easy_fabric_ebgp"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+@pytest.mark.parametrize(
+    "key",
+    ["test_verify_playbook_params_00910a", "test_verify_playbook_params_00910b"],
+)
+def test_verify_playbook_params_00910(key) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - update_decision_set_for_multi_rules() sad path
+        - commit()
+
+    Template
+    -   Easy_Fabric_eBGP
+
+    Rule type
+    -   Multi
+
+    Summary
+    - Verify Exception is raised for Multi rule, when:
+        -   Playbook does not contain all requisite parameters and values to satisfy the rule.
+    - User parameter: L3VNI_MCAST_GROUP == "239.1.1.1"
+    - Dependent parameters (these are OR'ed):
+        - ENABLE_TRM == true and UNDERLAY_IS_V6 != true
+        - ENABLE_TRMv6 == true and UNDERLAY_IS_V6 != true
+    """
+    template_key = "easy_fabric_ebgp"
+    match = r"The following parameter\(value\) combination\(s\) are invalid and need to be reviewed:"
+    with pytest.raises(ValueError, match=match):
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()

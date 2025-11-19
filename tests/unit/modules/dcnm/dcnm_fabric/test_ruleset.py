@@ -60,8 +60,8 @@ def test_ruleset_00010() -> None:
         instance = RuleSet()
     assert instance.class_name == "RuleSet"
     assert isinstance(instance.conversion, ConversionUtils)
-    assert instance.properties["template"] is None
-    assert instance.properties["ruleset"] == {}
+    assert instance._template == {}
+    assert instance._ruleset == {}
     assert instance.re_multi_rule == re.compile(r"^\s*(\(.*\))(.*)(\(.*\))\s*$")
 
 
