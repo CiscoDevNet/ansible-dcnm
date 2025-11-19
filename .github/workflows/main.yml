@@ -130,3 +130,21 @@ jobs:
       - name: Generate coverage report
         run: coverage report
         working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/dcnm
+
+  lint:
+    name: Run Ansible lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Python "3.11"
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.11"
+
+      - name: Install ansible-lint (25.9.2)
+        run: pip install ansible-lint==25.9.2
+
+      - name: Run ansible-lint
+        run: ansible-lint --profile=production --force-color --strict -v
