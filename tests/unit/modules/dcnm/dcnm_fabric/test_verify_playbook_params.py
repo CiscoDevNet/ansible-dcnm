@@ -1,6 +1,7 @@
 """
 Unit tests for VerifyPlaybookParams()
 """
+
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,17 +38,16 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import \
-    ParamInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
-    RuleSet
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import \
-    VerifyPlaybookParams
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import ParamInfo
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import RuleSet
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    does_not_raise, nv_pairs_verify_playbook_params,
-    payloads_verify_playbook_params, templates_verify_playbook_params)
+    does_not_raise,
+    nv_pairs_verify_playbook_params,
+    payloads_verify_playbook_params,
+    templates_verify_playbook_params,
+)
 
 
 def test_verify_playbook_params_00010() -> None:
@@ -738,9 +738,7 @@ def test_verify_playbook_params_00500(monkeypatch) -> None:
     with does_not_raise():
         instance = VerifyPlaybookParams()
 
-    monkeypatch.setattr(
-        instance, "controller_param_is_valid", mock_controller_param_is_valid
-    )
+    monkeypatch.setattr(instance, "controller_param_is_valid", mock_controller_param_is_valid)
     item = {"operator": "==", "parameter": "STP_ROOT_OPTION", "value": "rpvst+"}
     match = r"controller_param_is_valid: KeyError"
     with pytest.raises(KeyError, match=match):
@@ -766,9 +764,7 @@ def test_verify_playbook_params_00510(monkeypatch) -> None:
         instance = VerifyPlaybookParams()
         instance.config_controller = None
 
-    monkeypatch.setattr(
-        instance, "playbook_param_is_valid", mock_playbook_param_is_valid
-    )
+    monkeypatch.setattr(instance, "playbook_param_is_valid", mock_playbook_param_is_valid)
     item = {"operator": "==", "parameter": "STP_ROOT_OPTION", "value": "rpvst+"}
     match = r"playbook_param_is_valid: KeyError"
     with pytest.raises(KeyError, match=match):
@@ -798,9 +794,7 @@ def test_verify_playbook_params_00520(monkeypatch) -> None:
         instance.config_controller = None
 
     monkeypatch.setattr(instance, "default_param_is_valid", mock_default_param_is_valid)
-    monkeypatch.setattr(
-        instance, "playbook_param_is_valid", mock_playbook_param_is_valid
-    )
+    monkeypatch.setattr(instance, "playbook_param_is_valid", mock_playbook_param_is_valid)
 
     item = {"operator": "==", "parameter": "STP_ROOT_OPTION", "value": "rpvst+"}
     match = r"default_param_is_valid: KeyError"
@@ -840,9 +834,7 @@ def test_verify_playbook_params_00600(monkeypatch) -> None:
         instance.config_controller = None
 
     monkeypatch.setattr(instance, "default_param_is_valid", mock_default_param_is_valid)
-    monkeypatch.setattr(
-        instance, "playbook_param_is_valid", mock_playbook_param_is_valid
-    )
+    monkeypatch.setattr(instance, "playbook_param_is_valid", mock_playbook_param_is_valid)
 
     param_rule = {
         "terms": {
@@ -974,6 +966,7 @@ def test_verify_playbook_params_00800(monkeypatch) -> None:
     with does_not_raise():
         value = instance.default_param_is_valid(item)
     assert value is None
+
 
 @pytest.mark.parametrize(
     "key",
