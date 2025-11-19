@@ -1,6 +1,7 @@
 """
 Verify playbook parameters for a controller fabric.
 """
+
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -123,7 +124,6 @@ class VerifyPlaybookParams:
         self._template: dict[str, Any] = {}
         msg = "ENTERED VerifyPlaybookParams(): "
         self.log.debug(msg)
-
 
     @property
     def config_controller(self) -> dict[str, Any]:
@@ -681,7 +681,7 @@ class VerifyPlaybookParams:
 
         -   ``KeyError`` if an error is encountered while updating the decision set.
         -   ``ValueError`` if an unsupported rules_operator is encountered.
-        
+
         """
         method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
@@ -814,7 +814,7 @@ class VerifyPlaybookParams:
         -   Add the parameter to the bad_params dict if the controller
             would return an error for the parameter (i.e. the updated
             decision set does not contain True).
-        
+
         ## Raises
         -   `KeyError` if an error is encountered while updating the decision set.
         -   `ValueError` if an unexpected number of dependent parameters are found in param_rule.
@@ -1018,7 +1018,7 @@ class VerifyPlaybookParams:
         Validate that required parameters are set prior to calling commit()
 
         ## Raises
-        
+
         - `ValueError` if required parameters are not set
         """
         method_name: str = inspect.stack()[0][3]
