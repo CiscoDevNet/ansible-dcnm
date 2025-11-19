@@ -36,8 +36,9 @@
 
 - name: RMA - Setup Rest Variables
   ansible.builtin.set_fact:
-    mode_maintenance: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ test_data.sw1_serial }}/maintenance-mode"
-    mode_deploy: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ test_data.sw1_serial }}/deploy-maintenance-mode"
+    ndfc_switch_base: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ test_data.sw1_serial }}"
+    mode_maintenance: "{{ ndfc_switch_base }}/maintenance-mode"
+    mode_deploy: "{{ ndfc_switch_base }}/deploy-maintenance-mode"
   tags: rma
 #  when: controller_version >= "12"
 
@@ -201,21 +202,21 @@
 - block:
     - name: RMA TC3 - RMA the Existing Switch
       cisco.dcnm.dcnm_inventory:
-      fabric: '{{ test_data.test_fabric }}'
+        fabric: '{{ test_data.test_fabric }}'
         state: merged
         config:
           - seed_ip: '{{ test_data.sw1 }}'
         user_name: '{{ switch_username }}'
         password: '{{ switch_password }}'
         rma:
-              - serial_number: '{{ test_data.sw1_rma_serial }}'
-          old_serial: '{{ test_data.sw1_serial }}'
-          model: '{{ test_data.rma_model }}'
-          version: '{{ test_data.rma_model }}'
-          hostname: '{{ test_data.rma_hostname }}'
-          config_data:
-                  modulesModel: '{{ test_data.rma_modulesModel }}'
-                  gateway: '{{ test_data.rma_gateway }}'
+          - serial_number: '{{ test_data.sw1_rma_serial }}'
+            old_serial: '{{ test_data.sw1_serial }}'
+            model: '{{ test_data.rma_model }}'
+            version: '{{ test_data.rma_model }}'
+            hostname: '{{ test_data.rma_hostname }}'
+            config_data:
+            modulesModel: '{{ test_data.rma_modulesModel }}'
+            gateway: '{{ test_data.rma_gateway }}'
       register: result
 
     - name: ASSERT - Check condition
@@ -226,7 +227,7 @@
     - name: ASSERT - Check condition
       ansible.builtin.assert:
         - ansible.builtin.assert:
-              - 'item["RETURN_CODE"] == 200'
+            - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
   when: (rma_enabled == True and rma_switch_present == True)
   tags: rma

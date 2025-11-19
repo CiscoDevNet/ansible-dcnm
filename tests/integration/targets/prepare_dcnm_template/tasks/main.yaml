@@ -44,7 +44,8 @@
   loop: '{{ result.response }}'
   tags: sanity
 
-- block:
+- name: Prepare DCNM templates and policies
+  block:
 
 ##############################################
 ##                MERGE                     ##

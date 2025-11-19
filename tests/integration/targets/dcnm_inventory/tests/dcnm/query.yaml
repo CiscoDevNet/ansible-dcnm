@@ -191,10 +191,10 @@
         max_hops: 0
         auth_proto: MD5
         role: border_gateway
-    - seed_ip: "{{ test_data.sw2 }}"
-      max_hops: 0
-      auth_proto: MD5
-      role: border_gateway
+      - seed_ip: "{{ test_data.sw2 }}"
+        max_hops: 0
+        auth_proto: MD5
+        role: border_gateway
   delegate_to: localhost
   tags: query
 

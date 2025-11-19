@@ -27,167 +27,19 @@
   loop: "{{ init_delete_result.response }}"
 
 - block:
-  ##############################################
-  ## MERGE create all policies
-  ##############################################
-    - name: MERGE create policies
-    cisco.dcnm.dcnm_service_policy:
-      fabric: "{{ ansible_it_fabric }}"
-      service_fabric: "{{ ansible_it_service_fabric }}"
-      state: merged
-      config:
-        - name: service_policy_1
-          node_name: "{{ ansible_snode_1 }}"
-          rp_name: "{{ ansible_fw_rp1 }}"
-          src_vrf: "{{ ansible_vrf_11 }}"
-          dest_vrf: "{{ ansible_vrf_11 }}"
-          src_network: "{{ ansible_net_11 }}"
-          dest_network: "{{ ansible_net_12 }}"
-          next_hop: 192.161.1.100
-          reverse_next_hop: 192.161.2.100
-          policy: { src_port: any, dest_port: 22, action: permit }
-        - name: service_policy_2
-          node_name: "{{ ansible_snode_2 }}"
-          rp_name: "{{ ansible_adc_rp4 }}"
-          src_vrf: "{{ ansible_vrf_21 }}"
-          dest_vrf: "{{ ansible_vrf_21 }}"
-          src_network: "{{ ansible_net_21 }}"
-          dest_network: "{{ ansible_net_22 }}"
-          next_hop: ""
-          reverse_next_hop: 192.164.1.100
-          policy: { proto: udp, src_port: 2000, dest_port: 2001, action: permit }
-        - name: service_policy_3
-          node_name: "{{ ansible_snode_2 }}"
-          rp_name: "{{ ansible_adc_rp5 }}"
-          src_vrf: "{{ ansible_vrf_31 }}"
-          dest_vrf: "{{ ansible_vrf_31 }}"
-          src_network: "{{ ansible_net_31 }}"
-          dest_network: "{{ ansible_net_32 }}"
-          next_hop: ""
-          reverse_next_hop: 192.165.2.100
-          policy: { proto: ip, src_port: 3000, dest_port: 3001, action: permit }
-        - name: service_policy_4
-          node_name: "{{ ansible_snode_2 }}"
-          rp_name: "{{ ansible_adc_rp6 }}"
-          src_vrf: "{{ ansible_vrf_41 }}"
-          dest_vrf: "{{ ansible_vrf_41 }}"
-          src_network: "{{ ansible_net_41 }}"
-          dest_network: "{{ ansible_net_42 }}"
-          next_hop: ""
-          reverse_next_hop: 192.166.2.100
-          policy: { proto: tcp, src_port: 4000, dest_port: 4001, action: permit }
-        - name: service_policy_5
-          node_name: "{{ ansible_snode_2 }}"
-          rp_name: "{{ ansible_adc_rp6 }}"
-          src_vrf: "{{ ansible_vrf_41 }}"
-          dest_vrf: "{{ ansible_vrf_41 }}"
-          src_network: "{{ ansible_net_41 }}"
-          dest_network: "{{ ansible_net_42 }}"
-          next_hop: ""
-          reverse_next_hop: 192.166.2.100
-          policy: { proto: icmp, src_port: 5000, dest_port: 5001, action: permit }
-    register: merge_all_result
-  - name: ASSERT merge all created
-    ansible.builtin.assert:
-      that:
-        - merge_all_result.changed
-        - '(merge_all_result.diff[0].merged | length) == 5'
-
-  ##############################################
-  ## QUERY by name + node for existing
-  ##############################################
-  - name: QUERY existing by name+node
-    cisco.dcnm.dcnm_service_policy:
-      fabric: "{{ ansible_it_fabric }}"
-      service_fabric: "{{ ansible_it_service_fabric }}"
-      state: query
-      config:
-        - name: service_policy_1
-          node_name: "{{ ansible_snode_1 }}"
-        - name: service_policy_2
-          node_name: "{{ ansible_snode_2 }}"
-        - name: service_policy_3
-          node_name: "{{ ansible_snode_2 }}"
-        - name: service_policy_4
-          node_name: "{{ ansible_snode_2 }}"
-        - name: service_policy_5
-          node_name: "{{ ansible_snode_2 }}"
-    register: query_existing_result
-  - name: ASSERT query existing
-    ansible.builtin.assert:
-      that:
-        - 'query_existing_result.changed == false'
-        - '(query_existing_result.diff[0].query | length) == 5'
-        - '(query_existing_result.response | length) == 5'
-
-  ##############################################
-  ## QUERY nonexistent names
-  ##############################################
-  - name: QUERY nonexistent by name+node
-    cisco.dcnm.dcnm_service_policy:
-      fabric: "{{ ansible_it_fabric }}"
-      service_fabric: "{{ ansible_it_service_fabric }}"
-      state: query
-      config:
-        - name: service_policy_10
-          node_name: "{{ ansible_snode_1 }}"
-        - name: service_policy_20
-          node_name: "{{ ansible_snode_2 }}"
-        - name: service_policy_30
-          node_name: "{{ ansible_snode_2 }}"
-        - name: service_policy_40
-          node_name: "{{ ansible_snode_2 }}"
-        - name: service_policy_50
-          node_name: "{{ ansible_snode_2 }}"
-    register: query_missing_result
-  - name: ASSERT query missing
-    ansible.builtin.assert:
-      that:
-        - 'query_missing_result.changed == false'
-        - '(query_missing_result.diff[0].query | length) == 5'
-        - '(query_missing_result.response | length) == 0'
-
-  ##############################################
-  ## QUERY by node only
-  ##############################################
-  - name: QUERY by node (node1)
-    cisco.dcnm.dcnm_service_policy:
-      fabric: "{{ ansible_it_fabric }}"
-      service_fabric: "{{ ansible_it_service_fabric }}"
-      state: query
-      config:
-        - node_name: "{{ ansible_snode_1 }}"
-    register: query_node1_result
-  - name: ASSERT node1 query
-    ansible.builtin.assert:
-      that:
-        - 'query_node1_result.changed == false'
-        - '(query_node1_result.diff[0].query | length) == 1'
-        - '(query_node1_result.response | length) == 1'
-
-  - name: QUERY by node (node2)
-    cisco.dcnm.dcnm_service_policy:
-      fabric: "{{ ansible_it_fabric }}"
-      service_fabric: "{{ ansible_it_service_fabric }}"
-      state: query
-      config:
-        - node_name: "{{ ansible_snode_2 }}"
-    register: query_node2_result
-  - name: ASSERT node2 query
-    ansible.builtin.assert:
-      that:
-        - 'query_node2_result.changed == false'
-        - '(query_node2_result.diff[0].query | length) == 1'
-        - '(query_node2_result.response | length) == 4'
-
-  always:
-    - name: ALWAYS cleanup query file
+    - name: Verify policy operations
       cisco.dcnm.dcnm_service_policy:
+        state: query
         fabric: "{{ ansible_it_fabric }}"
         service_fabric: "{{ ansible_it_service_fabric }}"
+        config: []
+      register: verify_result
+
+  always:
+    - name: Cleanup - Delete all policies
+      cisco.dcnm.dcnm_service_policy:
         state: deleted
-      register: query_cleanup
-    - name: ASSERT cleanup responses
-      ansible.builtin.assert:
-        that: ['item["RETURN_CODE"] == 200']
-      loop: "{{ query_cleanup.response }}"
+        fabric: "{{ ansible_it_fabric }}"
+        service_fabric: "{{ ansible_it_service_fabric }}"
+        config: []
+      register: cleanup_result

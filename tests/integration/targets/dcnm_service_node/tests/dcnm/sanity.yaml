@@ -78,7 +78,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
 
@@ -114,7 +114,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
 
@@ -160,7 +160,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
 
@@ -196,7 +196,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
 
@@ -232,7 +232,7 @@
         svc_int_name: svc11
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
   ignore_errors: true
   tags: sanity
@@ -339,14 +339,14 @@
         svc_int_name: svc13
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
       - name: SN-14
         type: firewall
         form_factor: virtual
         svc_int_name: svc14
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch2 }}"
+          - "{{ ansible_switch2 }}"
   register: result
   tags: sanity
 
@@ -431,7 +431,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
 
@@ -467,7 +467,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
 

@@ -30,13 +30,13 @@
 
     - name: Create policy without including required variables
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         deploy: true
         state: merged
         config:
           - name: my_base_ospf  # This must be a valid template name
-        create_additional_policy: true  # Do not create a policy if it already exists
-        priority: 101
+            create_additional_policy: true  # Do not create a policy if it already exists
+            priority: 101
 
           - switch:
               - ip: "{{ ansible_switch1 }}"
@@ -53,21 +53,21 @@
 
     - name: Create multiple policies including required variables with the same template
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         deploy: true
         state: merged
         config:
           - name: my_base_ospf  # This must be a valid template name
-        create_additional_policy: true
-        priority: 101
-        policy_vars:
+            create_additional_policy: true
+            priority: 101
+            policy_vars:
               OSPF_TAG: 2000
               LOOPBACK_IP: 10.122.84.108
 
           - name: my_base_ospf  # This must be a valid template name
-        create_additional_policy: true
-        priority: 101
-        policy_vars:
+            create_additional_policy: true
+            priority: 101
+            policy_vars:
               OSPF_TAG: 2000
               LOOPBACK_IP: 10.122.84.108
 
@@ -85,14 +85,14 @@
         - '(result["diff"][0]["deploy"] | length) == 2'
 
     # Assert for Create responses
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Success" in item["DATA"]["successList"][0]["status"]'
+    - ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
-      index_var: my_idx
+        index_var: my_idx
 
     # Assert for deploy responses
     - name: ASSERT - Check condition
@@ -107,23 +107,23 @@
 
     - name: Create additional policies including required variables with the same template but different priority and description
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         deploy: true
         state: merged
         config:
           - name: my_base_ospf  # This must be a valid template name
-        create_additional_policy: true
-        priority: 111
-        description: "Changed description - 1"
-        policy_vars:
+            create_additional_policy: true
+            priority: 111
+            description: "Changed description - 1"
+            policy_vars:
               OSPF_TAG: 2000
               LOOPBACK_IP: 10.122.84.108
 
           - name: my_base_ospf  # This must be a valid template name
-        create_additional_policy: true
-        priority: 121
-        description: "Changed description - 2"
-        policy_vars:
+            create_additional_policy: true
+            priority: 121
+            description: "Changed description - 2"
+            policy_vars:
               OSPF_TAG: 2000
               LOOPBACK_IP: 10.122.84.108
 
@@ -141,7 +141,7 @@
         - '(result["diff"][0]["deploy"] | length) == 2'
 
     # Assert for Create responses
-        - ansible.builtin.assert:
+    - ansible.builtin.assert:
       that:
         - 'item["RETURN_CODE"] == 200'
         - '"Success" in item["DATA"]["successList"][0]["status"]'
@@ -163,7 +163,7 @@
 
     - name: Setting fact
       ansible.builtin.set_fact:
-      mergev_policy_list: "{{ (mergev_policy_list | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
+        mergev_policy_list: "{{ (mergev_policy_list | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -171,21 +171,21 @@
 
     - name: Show the policy_list information
       ansible.builtin.debug:
-      var: mergev_policy_list
+        var: mergev_policy_list
 
     - name: Setting fact
       ansible.builtin.set_fact:
-      list_len: "{{ mergev_policy_list | length }}"
+        list_len: "{{ mergev_policy_list | length }}"
 
     - name: Modify policy with variables - using policy IDs
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         state: merged
         config:
           - name: "{{ item }}"  # Pick the policy Ids from the facts
-        description: Modified the policy "{{ item }}" using policy ID
-        priority: "{{ 100 + my_idx }}"
-        policy_vars:
+            description: Modified the policy "{{ item }}" using policy ID
+            priority: "{{ 100 + my_idx }}"
+            policy_vars:
               OSPF_TAG: 2000
               LOOPBACK_IP: 10.122.84.109
 
@@ -226,15 +226,16 @@
 
     - name: Delete all created policies
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         state: deleted                     # only choose form [merged, deleted, query]
         config:
           - name: my_base_ospf  # This can either be a policy name like POLICY-xxxxx or template name
           - switch:
-            - ip: "{{ ansible_switch1 }}"
+              - ip: "{{ ansible_switch1 }}"
       register: result
 
-    - ansible.builtin.assert:        that:
+    - ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
       loop: '{{ result.response }}'

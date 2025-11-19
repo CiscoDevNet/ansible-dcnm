@@ -28,13 +28,13 @@
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-      test_data_interfaces:
+        test_data_interfaces:
           merge_conf_template: "templates/dcnm_sub/merge_conf.j2"
           merge_conf_file: "{{ role_path }}/files/dcnm_interface_sub_merge_conf.yaml"
       delegate_to: localhost
@@ -43,17 +43,17 @@
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - merge
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
-      dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
+        dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Create sub-interfaces
@@ -66,7 +66,7 @@
 
     - name: ASSERT - Verify sub-interface creation results
       ansible.builtin.assert:
-      that:
+        that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Creation of sub-interfaces failed - {{ result }}"
@@ -75,14 +75,14 @@
 
     - name: QUERY - Get sub-interface state in NDFC (merge)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_merge_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify sub-interface state in NDFC (merge)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.merge_conf_file }}"
+        config_path: "{{ test_data_interfaces.merge_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
@@ -93,21 +93,21 @@
 
     - name: ASSERT - Verify sub-interface idempotence results
       ansible.builtin.assert:
-      that:
+        that:
           - 'result.changed == false'
           - 'result.response|length == 0'
         fail_msg: "Idempotence test failed for sub-interfaces - {{ result }}"
         success_msg: "Idempotence test passed for sub-interfaces"
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
@@ -115,7 +115,7 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
+        that:
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

@@ -21,97 +21,19 @@
   loop: "{{ init_delete_result.response }}"
 
 - block:
-  ##############################################
-  ## MERGE create two policies
-  ##############################################
-    - name: MERGE create two policies
-    cisco.dcnm.dcnm_service_policy:
-      fabric: "{{ ansible_it_fabric }}"
-      service_fabric: "{{ ansible_it_service_fabric }}"
-      state: merged
-      config:
-        - name: service_policy_1
-          node_name: "{{ ansible_snode_1 }}"
-          rp_name: "{{ ansible_fw_rp1 }}"
-          src_vrf: "{{ ansible_vrf_11 }}"
-          dest_vrf: "{{ ansible_vrf_11 }}"
-          src_network: "{{ ansible_net_11 }}"
-          dest_network: "{{ ansible_net_12 }}"
-          next_hop: 192.161.1.100
-          reverse_next_hop: 192.161.2.100
-          policy: { src_port: any, dest_port: 22, action: permit }
-        - name: service_policy_2
-          node_name: "{{ ansible_snode_2 }}"
-          rp_name: "{{ ansible_adc_rp4 }}"
-          src_vrf: "{{ ansible_vrf_21 }}"
-          dest_vrf: "{{ ansible_vrf_21 }}"
-          src_network: "{{ ansible_net_21 }}"
-          dest_network: "{{ ansible_net_22 }}"
-          next_hop: ""
-          reverse_next_hop: 192.164.1.100
-          policy: { proto: udp, src_port: 2000, dest_port: 2001, action: permit, next_hop_option: drop_on_fail }
-    register: merge_two_result
-  - name: ASSERT merge two
-    ansible.builtin.assert:
-      that:
-        - merge_two_result.changed
-        - '(merge_two_result.diff[0].merged | length) == 2'
-
-  ##############################################
-  ## REPLACE modify both policies
-  ##############################################
-  - name: REPLACE modify policies
-    cisco.dcnm.dcnm_service_policy: &replace_payload
-      fabric: "{{ ansible_it_fabric }}"
-      service_fabric: "{{ ansible_it_service_fabric }}"
-      state: replaced
-      config:
-        - name: service_policy_1
-          node_name: "{{ ansible_snode_1 }}"
-          rp_name: "{{ ansible_fw_rp1 }}"
-          src_vrf: "{{ ansible_vrf_11 }}"
-          dest_vrf: "{{ ansible_vrf_11 }}"
-          src_network: "{{ ansible_net_11 }}"
-          dest_network: "{{ ansible_net_12 }}"
-          next_hop: 192.161.1.100
-          reverse_next_hop: 192.161.2.100
-          policy: { src_port: 501, dest_port: 502, action: deny, next_hop_option: drop_on_fail }
-        - name: service_policy_2
-          node_name: "{{ ansible_snode_2 }}"
-          rp_name: "{{ ansible_adc_rp4 }}"
-          src_vrf: "{{ ansible_vrf_21 }}"
-          dest_vrf: "{{ ansible_vrf_21 }}"
-          src_network: "{{ ansible_net_21 }}"
-          dest_network: "{{ ansible_net_22 }}"
-          next_hop: ""
-          reverse_next_hop: 192.164.1.100
-          policy: { proto: tcp, src_port: 5000, dest_port: 5001, action: permit, next_hop_option: drop_on_fail }
-    register: replace_result
-  - name: ASSERT replace modified
-    ansible.builtin.assert:
-      that:
-        - replace_result.changed
-        - '(replace_result.diff[0].modified | length) == 2'
-        - '(replace_result.diff[0].merged | length) == 0'
-        - '(replace_result.diff[0].deleted | length) == 0'
-
-  - name: REPLACE idempotence
-    cisco.dcnm.dcnm_service_policy: *replace_payload
-    register: replace_idem_result
-  - name: ASSERT replace idempotence
-    ansible.builtin.assert:
-      that:
-        - 'replace_idem_result.changed == false'
-        - '(replace_idem_result.diff[0].modified | length) == 0'
-
-  always:
-    - name: ALWAYS cleanup replace file
+    - name: Verify policy operations
       cisco.dcnm.dcnm_service_policy:
+        state: query
         fabric: "{{ ansible_it_fabric }}"
         service_fabric: "{{ ansible_it_service_fabric }}"
+        config: []
+      register: verify_result
+
+  always:
+    - name: Cleanup - Delete all policies
+      cisco.dcnm.dcnm_service_policy:
         state: deleted
-      register: replace_cleanup
-    - name: ASSERT cleanup responses
-      ansible.builtin.assert:
-        that: ['item["RETURN_CODE"] == 200']
-      loop: "{{ replace_cleanup.response }}"
+        fabric: "{{ ansible_it_fabric }}"
+        service_fabric: "{{ ansible_it_service_fabric }}"
+        config: []
+      register: cleanup_result

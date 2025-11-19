@@ -34,52 +34,52 @@
 
     - name: Create different non-existing policies
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         deploy: true
         state: merged
         config:
           - name: template_101  # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        priority: 101
+            create_additional_policy: false  # Do not create a policy if it already exists
+            priority: 101
 
           - name: template_102  # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        description: 102 - false piority given
+            create_additional_policy: false  # Do not create a policy if it already exists
+            description: 102 - false priority given
 
           - name: template_103  # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        description: Both description and priority given
-        priority: 500
+            create_additional_policy: false  # Do not create a policy if it already exists
+            description: Both description and priority given
+            priority: 500
 
           - switch:
               - ip: "{{ ansible_switch1 }}"
-          policies:
-                  - name: template_104  # This must be a valid template name
-                    create_additional_policy: false  # Do not create a policy if it already exists
+            policies:
+              - name: template_104  # This must be a valid template name
+                create_additional_policy: false  # Do not create a policy if it already exists
 
-                  - name: template_105  # This must be a valid template name
-                    create_additional_policy: false  # Do not create a policy if it already exists
+              - name: template_105  # This must be a valid template name
+                create_additional_policy: false  # Do not create a policy if it already exists
               - ip: "{{ ansible_switch1 }}"
       register: result
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 5'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"] | length) == 5'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 5'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 5'
 
     # Assert for Create responses
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Success" in item["DATA"]["successList"][0]["status"]'
+    - ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
-      index_var: my_idx
+        index_var: my_idx
 
     # Assert for deploy responses
     - name: ASSERT - Check condition
@@ -94,7 +94,7 @@
 
     - name: Setting fact
       ansible.builtin.set_fact:
-      query_policy_list: "{{ (query_policy_list | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
+        query_policy_list: "{{ (query_policy_list | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -102,18 +102,18 @@
 
     - name: Show the policy_list information
       ansible.builtin.debug:
-      var: query_policy_list
+        var: query_policy_list
 
     - name: Setting fact
       ansible.builtin.set_fact:
-      list_len: "{{ query_policy_list | length }}"
+        list_len: "{{ query_policy_list | length }}"
 
 ##############################################
 ##                QUERY                     ##
 ##############################################
     - name: Query all policies from the specified switches
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         state: query
         config:
           - switch:
@@ -132,7 +132,7 @@
 
     - name: Query specific policies
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         state: query
         config:
           - name: template_101
@@ -154,24 +154,24 @@
 
     - name: Create additional policies same as  existing policies
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         state: merged
         config:
           - name: template_101  # This must be a valid template name
-        create_additional_policy: true  # Create a policy if it already exists
-        priority: 101
+            create_additional_policy: true  # Create a policy if it already exists
+            priority: 101
 
           - name: template_101  # This must be a valid template name
-        create_additional_policy: true  # Create a policy if it already exists
-        priority: 101
+            create_additional_policy: true  # Create a policy if it already exists
+            priority: 101
 
           - name: template_102  # This must be a valid template name
-        create_additional_policy: true  # Create a policy if it already exists
-        description: 102 - false piority given
+            create_additional_policy: true  # Create a policy if it already exists
+            description: 102 - false piority given
 
           - name: template_102  # This must be a valid template name
-        create_additional_policy: true  # Create a policy if it already exists
-        description: 102 - false piority given
+            create_additional_policy: true  # Create a policy if it already exists
+            description: 102 - false piority given
 
           - switch:
               - ip: "{{ ansible_switch1 }}"
@@ -187,7 +187,7 @@
         - '(result["diff"][0]["deploy"] | length) == 4'
 
     # Assert for Create responses
-        - ansible.builtin.assert:
+    - ansible.builtin.assert:
       that:
         - 'item["RETURN_CODE"] == 200'
         - '"Success" in item["DATA"]["successList"][0]["status"]'
@@ -209,7 +209,7 @@
 
     - name: Query with template names matching multiple policies
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         config:
           - name: template_101
           - name: template_102
@@ -231,7 +231,7 @@
 
     - name: Query policies with policy ID
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         state: query
         config:
           - name: "{{ item }}"  # Pick the policy Ids from the facts
@@ -259,7 +259,7 @@
 
     - name: Delete all created policies
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         state: deleted                     # only choose form [merged, deleted, query]
         config:
           - name: template_101  # This can either be a policy name like POLICY-xxxxx or template name
@@ -268,10 +268,11 @@
           - name: template_104  # This can either be a policy name like POLICY-xxxxx or template name
           - name: template_105  # This can either be a policy name like POLICY-xxxxx or template name
           - switch:
-            - ip: "{{ ansible_switch1 }}"
+              - ip: "{{ ansible_switch1 }}"
       register: result
 
-    - ansible.builtin.assert:        that:
+    - ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
       loop: '{{ result.response }}'

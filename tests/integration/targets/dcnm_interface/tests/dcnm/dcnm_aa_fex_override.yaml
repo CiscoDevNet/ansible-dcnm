@@ -25,118 +25,118 @@
   ##############################################
 
     - name: Setup Internal TestCase Variables
-    ansible.builtin.set_fact:
-      test_data_interfaces:
-        merged_conf_template: "templates/dcnm_aa_fex/merged_conf.j2"
-        merged_conf_file: "{{ role_path }}/files/dcnm_interface_aa_fex_merged_conf.yaml"
-        override_conf_template: "templates/dcnm_aa_fex/override_conf.j2"
-        override_conf_file: "{{ role_path }}/files/dcnm_interface_aa_fex_override_conf.yaml"
-        override_modify_conf_template: "templates/dcnm_aa_fex/override_modify_conf.j2"
-        override_modify_conf_file: "{{ role_path }}/files/dcnm_interface_aa_fex_override_modify_conf.yaml"
-    delegate_to: localhost
+      ansible.builtin.set_fact:
+        test_data_interfaces:
+          merged_conf_template: "templates/dcnm_aa_fex/merged_conf.j2"
+          merged_conf_file: "{{ role_path }}/files/dcnm_interface_aa_fex_merged_conf.yaml"
+          override_conf_template: "templates/dcnm_aa_fex/override_conf.j2"
+          override_conf_file: "{{ role_path }}/files/dcnm_interface_aa_fex_override_conf.yaml"
+          override_modify_conf_template: "templates/dcnm_aa_fex/override_modify_conf.j2"
+          override_modify_conf_file: "{{ role_path }}/files/dcnm_interface_aa_fex_override_modify_conf.yaml"
+      delegate_to: localhost
 
-  - name: Create Interface Config Files using J2 Templates
-    ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
-      dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-    loop:
-      - merged
-      - override
-      - override_modify
-    delegate_to: localhost
+    - name: Create Interface Config Files using J2 Templates
+      ansible.builtin.template:
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
+      loop:
+        - merged
+        - override
+        - override_modify
+      delegate_to: localhost
 
-  ##############################################
-  ##                MERGE                     ##
-  ##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
-  - name: Load Interface Config File (merged)
-    ansible.builtin.set_fact:
-      dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
-    delegate_to: localhost
+    - name: Load Interface Config File (merged)
+      ansible.builtin.set_fact:
+        dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
+      delegate_to: localhost
 
-  - name: Create AA FEX interfaces (merged)
-    cisco.dcnm.dcnm_interface: &fex_merge
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
-      fabric: "{{ test_data_common.fabric }}"
-      state: merged
-      config: "{{ dcnm_interface_merged_conf }}"
-    register: result_merge
+    - name: Create AA FEX interfaces (merged)
+      cisco.dcnm.dcnm_interface: &fex_merge
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config: "{{ dcnm_interface_merged_conf }}"
+      register: result_merge
 
-  - name: ASSERT - Creation return codes (merged)
-    ansible.builtin.assert:
-      that:
-        - 'item.RETURN_CODE == 200'
-    loop: "{{ result_merge.response }}"
+    - name: ASSERT - Creation return codes (merged)
+      ansible.builtin.assert:
+        that:
+          - 'item.RETURN_CODE == 200'
+      loop: "{{ result_merge.response }}"
 
-  - name: QUERY - Get AA FEX interface state in NDFC (merged)
-    cisco.dcnm.dcnm_interface:
-      state: query
-      fabric: "{{ test_data_common.fabric }}"
-      config: "{{ dcnm_interface_merged_conf }}"
-    register: result_merge_query
+    - name: QUERY - Get AA FEX interface state in NDFC (merged)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_merged_conf }}"
+      register: result_merge_query
 
-  - name: VALIDITY CHECK - Verify AA FEX interface state in NDFC (merged)
-    cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.merged_conf_file }}"
-      ndfc_data: "{{ result_merge_query }}"
-      test_data: "{{ test_data_common }}"
-    delegate_to: localhost
+    - name: VALIDITY CHECK - Verify AA FEX interface state in NDFC (merged)
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.merged_conf_file }}"
+        ndfc_data: "{{ result_merge_query }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
 
-  ##############################################
-  ##              OVERRIDE                    ##
-  ##############################################
+    ##############################################
+    ##              OVERRIDE                    ##
+    ##############################################
 
-  - name: Load Override Interface Config File
-    ansible.builtin.set_fact:
-      dcnm_interface_override_conf: "{{ lookup('file', test_data_interfaces.override_conf_file) | from_yaml }}"
-    delegate_to: localhost
+    - name: Load Override Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_override_conf: "{{ lookup('file', test_data_interfaces.override_conf_file) | from_yaml }}"
+      delegate_to: localhost
 
-  - name: Override AA FEX interface with a new one
-    cisco.dcnm.dcnm_interface: &fex_override
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
-      fabric: "{{ test_data_common.fabric }}"
-      state: overridden
-      config: "{{ dcnm_interface_override_conf }}"
-    register: result_override
+    - name: Override AA FEX interface with a new one
+      cisco.dcnm.dcnm_interface: &fex_override
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden
+        config: "{{ dcnm_interface_override_conf }}"
+      register: result_override
 
-  - name: ASSERT - Creation return codes (override)
-    ansible.builtin.assert:
-      that:
-        - 'item.RETURN_CODE == 200'
-    loop: "{{ result_override.response }}"
+    - name: ASSERT - Creation return codes (override)
+      ansible.builtin.assert:
+        that:
+          - 'item.RETURN_CODE == 200'
+      loop: "{{ result_override.response }}"
 
-  - name: QUERY - Get AA FEX interface state in NDFC (override)
-    cisco.dcnm.dcnm_interface:
-      state: query
-      fabric: "{{ test_data_common.fabric }}"
-      config: "{{ dcnm_interface_override_conf }}"
-    register: result_override_query
+    - name: QUERY - Get AA FEX interface state in NDFC (override)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_override_conf }}"
+      register: result_override_query
 
-  - name: VALIDITY CHECK - Verify AA FEX interface state in NDFC (override)
-    cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.override_conf_file }}"
-      ndfc_data: "{{ result_override_query }}"
-      test_data: "{{ test_data_common }}"
-    delegate_to: localhost
+    - name: VALIDITY CHECK - Verify AA FEX interface state in NDFC (override)
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.override_conf_file }}"
+        ndfc_data: "{{ result_override_query }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
 
-  - name: Override AA FEX interfaces - Idempotence
-    cisco.dcnm.dcnm_interface: *fex_override
-    register: result_override_idem
+    - name: Override AA FEX interfaces - Idempotence
+      cisco.dcnm.dcnm_interface: *fex_override
+      register: result_override_idem
 
-  - name: ASSERT - Idempotence checks (override)
-    ansible.builtin.assert:
-      that:
-        - 'result_override_idem.changed == false'
-        - 'result_override_idem.response is defined'
-        - 'result_override_idem.response | length >= 0'
+    - name: ASSERT - Idempotence checks (override)
+      ansible.builtin.assert:
+        that:
+          - 'result_override_idem.changed == false'
+          - 'result_override_idem.response is defined'
+          - 'result_override_idem.response | length >= 0'
 
-  ##############################################
-  ##         OVERRIDE MODIFY (SKIPPED)       ##
-  ##############################################
+    ##############################################
+    ##         OVERRIDE MODIFY (SKIPPED)       ##
+    ##############################################
 
-  - name: NOTE - Override modify scenario skipped due to known internal server error
-    ansible.builtin.debug:
-      msg: "Override modify play skipped (known server error); template and variable scaffolding retained for future enablement."
+    - name: NOTE - Override modify scenario skipped due to known internal server error
+      ansible.builtin.debug:
+        msg: "Override modify play skipped (known server error); template and variable scaffolding retained for future enablement."
 
   ##############################################
   ##             CLEANUP                      ##

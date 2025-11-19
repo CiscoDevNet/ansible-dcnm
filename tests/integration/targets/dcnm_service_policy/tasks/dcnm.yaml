@@ -183,19 +183,19 @@
       - vrf_name: "{{ ansible_vrf_11 }}"
         attach:
           - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_21 }}"
         attach:
           - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_31 }}"
         attach:
           - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_41 }}"
         attach:
           - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch2 }}"
   register: result
 
 - name: Assert

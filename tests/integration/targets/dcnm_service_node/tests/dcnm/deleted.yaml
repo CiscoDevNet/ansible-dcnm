@@ -25,7 +25,7 @@
     that:
       - 'result.response.DATA != None'
 
-      - name: DELETED - Verify if service fabric is deployed.
+- name: DELETED - Verify if service fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_ext_path }}"
@@ -36,7 +36,7 @@
     that:
       - 'result.response.DATA != None'
 
-      - name: DELETED - Clean up any existing service node
+- name: DELETED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -66,8 +66,8 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -84,7 +84,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
+- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -104,8 +104,8 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -114,19 +114,19 @@
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
 
-      - name: Assert
+- name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == ""'
     when: controller_version == "11"
 
-      - name: Assert
+- name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == "OK"'
     when: controller_version == "12"
 
-      - name: DELETED - sleep for 40 seconds for DCNM to completely update the state
+- name: DELETED - sleep for 40 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 40
 
@@ -141,7 +141,7 @@
       - 'result.response|length == 0'
       - 'result.diff|length == 0'
 
-      - name: DELETED -  Query fabric state before proceeding
+- name: DELETED -  Query fabric state before proceeding
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -165,7 +165,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
@@ -182,7 +182,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
+- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -198,7 +198,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
@@ -207,19 +207,19 @@
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
 
-      - name: Assert
+- name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == ""'
     when: controller_version == "11"
 
-      - name: Assert
+- name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == "OK"'
     when: controller_version >= "12"
 
-      - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
+- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -234,7 +234,7 @@
       - 'result.response|length == 0'
       - 'result.diff|length == 0'
 
-      - name: DELETED -  Query fabric state before proceeding
+- name: DELETED -  Query fabric state before proceeding
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -258,8 +258,8 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -276,7 +276,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
+- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -292,19 +292,19 @@
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
 
-      - name: Assert
+- name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == ""'
     when: controller_version == "11"
 
-      - name: Assert
+- name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == "OK"'
     when: controller_version >= "12"
 
-      - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
+- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -319,7 +319,7 @@
       - 'result.response|length == 0'
       - 'result.diff|length == 0'
 
-      - name: DELETED -  Query fabric state before proceeding
+- name: DELETED -  Query fabric state before proceeding
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -343,7 +343,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
@@ -360,7 +360,7 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
+- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 
@@ -376,19 +376,19 @@
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
 
-      - name: Assert
+- name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == ""'
     when: controller_version == "11"
 
-      - name: Assert
+- name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == "OK"'
     when: controller_version >= "12"
 
-      - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
+- name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
     timeout: 20
 

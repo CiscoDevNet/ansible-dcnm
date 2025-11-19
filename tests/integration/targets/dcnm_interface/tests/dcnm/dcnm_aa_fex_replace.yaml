@@ -25,89 +25,89 @@
   ##############################################
 
     - name: Setup Internal TestCase Variables
-    ansible.builtin.set_fact:
-      test_data_interfaces:
-        merged_conf_template: "templates/dcnm_aa_fex/merged_replace_conf.j2"
-        merged_conf_file: "{{ role_path }}/files/dcnm_interface_aa_fex_merged_conf.yaml"
-        replace_conf_template: "templates/dcnm_aa_fex/replace_conf.j2"
-        replace_conf_file: "{{ role_path }}/files/dcnm_interface_aa_fex_replace_conf.yaml"
-    delegate_to: localhost
+      ansible.builtin.set_fact:
+        test_data_interfaces:
+          merged_conf_template: "templates/dcnm_aa_fex/merged_replace_conf.j2"
+          merged_conf_file: "{{ role_path }}/files/dcnm_interface_aa_fex_merged_conf.yaml"
+          replace_conf_template: "templates/dcnm_aa_fex/replace_conf.j2"
+          replace_conf_file: "{{ role_path }}/files/dcnm_interface_aa_fex_replace_conf.yaml"
+      delegate_to: localhost
 
-  - name: Create Interface Config Files using J2 Templates
-    ansible.builtin.template:
-      src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
-      dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-    loop:
-      - merged
-      - replace
-    delegate_to: localhost
+    - name: Create Interface Config Files using J2 Templates
+      ansible.builtin.template:
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
+      loop:
+        - merged
+        - replace
+      delegate_to: localhost
 
-  ##############################################
-  ##                MERGE                     ##
-  ##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
-  - name: Load Interface Config File (merged)
-    ansible.builtin.set_fact:
-      dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
-    delegate_to: localhost
+    - name: Load Interface Config File (merged)
+      ansible.builtin.set_fact:
+        dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
+      delegate_to: localhost
 
-  - name: Create AA FEX interfaces (merged)
-    cisco.dcnm.dcnm_interface: &fex_merge
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
-      fabric: "{{ test_data_common.fabric }}"
-      state: merged
-      config: "{{ dcnm_interface_merged_conf }}"
-    register: result_merge
+    - name: Create AA FEX interfaces (merged)
+      cisco.dcnm.dcnm_interface: &fex_merge
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config: "{{ dcnm_interface_merged_conf }}"
+      register: result_merge
 
-  - name: ASSERT - Creation return codes (merged)
-    ansible.builtin.assert:
-      that:
-        - 'item.RETURN_CODE == 200'
-    loop: "{{ result_merge.response }}"
+    - name: ASSERT - Creation return codes (merged)
+      ansible.builtin.assert:
+        that:
+          - 'item.RETURN_CODE == 200'
+      loop: "{{ result_merge.response }}"
 
-  ##############################################
-  ##                REPLACE                   ##
-  ##############################################
+    ##############################################
+    ##                REPLACE                   ##
+    ##############################################
 
-  - name: Load Replace Interface Config File
-    ansible.builtin.set_fact:
-      dcnm_interface_replace_conf: "{{ lookup('file', test_data_interfaces.replace_conf_file) | from_yaml }}"
-    delegate_to: localhost
+    - name: Load Replace Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_replace_conf: "{{ lookup('file', test_data_interfaces.replace_conf_file) | from_yaml }}"
+      delegate_to: localhost
 
-  - name: Replace AA FEX interface
-    cisco.dcnm.dcnm_interface: &fex_replace
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
-      fabric: "{{ test_data_common.fabric }}"
-      state: replaced
-      config: "{{ dcnm_interface_replace_conf }}"
-    register: result_replace
+    - name: Replace AA FEX interface
+      cisco.dcnm.dcnm_interface: &fex_replace
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced
+        config: "{{ dcnm_interface_replace_conf }}"
+      register: result_replace
 
-  - name: ASSERT - Creation return codes (replace)
-    ansible.builtin.assert:
-      that:
-        - 'item.RETURN_CODE == 200'
-    loop: "{{ result_replace.response }}"
+    - name: ASSERT - Creation return codes (replace)
+      ansible.builtin.assert:
+        that:
+          - 'item.RETURN_CODE == 200'
+      loop: "{{ result_replace.response }}"
 
-  - name: QUERY - Get AA FEX interface state in NDFC (replace)
-    cisco.dcnm.dcnm_interface:
-      state: query
-      fabric: "{{ test_data_common.fabric }}"
-      config: "{{ dcnm_interface_replace_conf }}"
-    register: result_replace_query
+    - name: QUERY - Get AA FEX interface state in NDFC (replace)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_replace_conf }}"
+      register: result_replace_query
 
-  - name: VALIDITY CHECK - Verify AA FEX interface state in NDFC (replace)
-    cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.replace_conf_file }}"
-      ndfc_data: "{{ result_replace_query }}"
-      test_data: "{{ test_data_common }}"
-    delegate_to: localhost
+    - name: VALIDITY CHECK - Verify AA FEX interface state in NDFC (replace)
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.replace_conf_file }}"
+        ndfc_data: "{{ result_replace_query }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
 
-  - name: Replace AA FEX interface - Idempotence
-    cisco.dcnm.dcnm_interface: *fex_replace
-    register: result_replace_idem
+    - name: Replace AA FEX interface - Idempotence
+      cisco.dcnm.dcnm_interface: *fex_replace
+      register: result_replace_idem
 
-  - name: ASSERT - Idempotence checks (replace)
-    ansible.builtin.assert:
+    - name: ASSERT - Idempotence checks (replace)
+      ansible.builtin.assert:
       that:
         - 'result_replace_idem.changed == false'
         - 'result_replace_idem.response is defined'

@@ -78,16 +78,16 @@
 # ],
 - name: MERGED - SETUP - Ensure switch mode is maintenance
   cisco.dcnm.dcnm_maintenance_mode:
-      state: query
-        config:
-          switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: query
+    config:
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result
   retries: 40
   delay: 10
   until:
-        - result.diff[2][leaf_1].mode == "maintenance"
+    - result.diff[2][leaf_1].mode == "maintenance"
         - result.diff[2][leaf_2].mode == "maintenance"
 
 ################################################################################
@@ -106,7 +106,7 @@
   register: result_normal_mode
 - name: Debug
   ansible.builtin.debug:
-      var: result_normal_mode
+    var: result_normal_mode
 
 
 ################################################################################
@@ -136,33 +136,33 @@
 # ],
 - name: MERGED - TEST - Verify switch mode is normal (top-level)
   cisco.dcnm.dcnm_maintenance_mode:
-      state: query
-        config:
-          switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: query
+    config:
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result
   retries: 60
   delay: 10
   until:
-        - result.diff[2][leaf_1].mode == "normal"
+    - result.diff[2][leaf_1].mode == "normal"
         - result.diff[2][leaf_2].mode == "normal"
 
 - name: Assert
   ansible.builtin.assert:
-      that:
-          - result_normal_mode.failed == false
-          - result_normal_mode.metadata[2].action == "change_sytem_mode"
-          - result_normal_mode.metadata[3].action == "change_sytem_mode"
-          - result_normal_mode.metadata[2].check_mode == False
-          - result_normal_mode.metadata[3].check_mode == False
-          - result_normal_mode.metadata[2].state == "merged"
-          - result_normal_mode.metadata[3].state == "merged"
-          - result_normal_mode.response[2].DATA.status == "Success"
-          - result_normal_mode.response[3].DATA.status == "Success"
-          - result_normal_mode.response[2].METHOD == "DELETE"
-          - result_normal_mode.response[3].METHOD == "DELETE"
-          - result_normal_mode.response[2].RETURN_CODE == 200
-          - result_normal_mode.response[3].RETURN_CODE == 200
-          - result_normal_mode.response[4].DATA.status is match 'Success'
-          - result_normal_mode.response[5].DATA.status is match 'Success'
+    that:
+      - result_normal_mode.failed == false
+      - result_normal_mode.metadata[2].action == "change_sytem_mode"
+      - result_normal_mode.metadata[3].action == "change_sytem_mode"
+      - result_normal_mode.metadata[2].check_mode == False
+      - result_normal_mode.metadata[3].check_mode == False
+      - result_normal_mode.metadata[2].state == "merged"
+      - result_normal_mode.metadata[3].state == "merged"
+      - result_normal_mode.response[2].DATA.status == "Success"
+      - result_normal_mode.response[3].DATA.status == "Success"
+      - result_normal_mode.response[2].METHOD == "DELETE"
+      - result_normal_mode.response[3].METHOD == "DELETE"
+      - result_normal_mode.response[2].RETURN_CODE == 200
+      - result_normal_mode.response[3].RETURN_CODE == 200
+      - result_normal_mode.response[4].DATA.status is match 'Success'
+      - result_normal_mode.response[5].DATA.status is match 'Success'

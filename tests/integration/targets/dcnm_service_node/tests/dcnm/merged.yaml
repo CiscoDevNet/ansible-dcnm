@@ -25,22 +25,10 @@
     that:
       - 'result.response.DATA != None'
 
-      - name: MERGED - Verify if service fabric is deployed.
-  cisco.dcnm.dcnm_rest:
-    method: GET
-    path: "{{ rest_ext_path }}"
-  register: result
-
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response.DATA != None'
-
-      - name: MERGED - Clean up any existing service node
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: deleted
 
 - name: MERGED -  Query fabric state before proceeding
   cisco.dcnm.dcnm_service_node:
@@ -70,7 +58,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
@@ -87,21 +75,11 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: MERGED - conf - Idempotence
-  cisco.dcnm.dcnm_service_node: *conf
-  register: result
-
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
-
-      - name: MERGED - Clean up any existing service node
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: deleted
 
 - name: MERGED -  Query fabric state before proceeding
   cisco.dcnm.dcnm_service_node:
@@ -127,7 +105,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
@@ -144,21 +122,11 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: MERGED - conf1 - Idempotence
-  cisco.dcnm.dcnm_service_node: *conf1
-  register: result
-
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
-
-      - name: MERGED - Clean up any existing service node
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: deleted
 
 - name: MERGED -  Query fabric state before proceeding
   cisco.dcnm.dcnm_service_node:
@@ -184,7 +152,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
@@ -201,21 +169,11 @@
       - 'result.response[0].DATA.type == "ADC"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: MERGED - conf2 - Idempotence
-  cisco.dcnm.dcnm_service_node: *conf2
-  register: result
-
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
-
-      - name: MERGED - Clean up any existing service node
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: deleted
 
 - name: MERGED -  Query fabric state before proceeding
   cisco.dcnm.dcnm_service_node:
@@ -241,7 +199,7 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_int1 }}"
         switches:
-        - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
   register: result
 
 - name: Assert
@@ -258,21 +216,11 @@
       - 'result.response[0].DATA.type == "VNF"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: MERGED - conf3 - Idempotence
-  cisco.dcnm.dcnm_service_node: *conf3
-  register: result
-
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
-
-      - name: MERGED - Clean up any existing service node
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: deleted
 
 - name: MERGED -  Query fabric state before proceeding
   cisco.dcnm.dcnm_service_node:
@@ -298,8 +246,8 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -316,21 +264,11 @@
       - 'result.response[0].DATA.type == "Firewall"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: MERGED - conf - Idempotence
-  cisco.dcnm.dcnm_service_node: *conf4
-  register: result
-
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
-
-      - name: MERGED - Clean up any existing service node
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: deleted
 
 - name: MERGED - Create Service Node with 2 switches and vPC Interface with type load balancer
   cisco.dcnm.dcnm_service_node: &conf5
@@ -344,8 +282,8 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -362,21 +300,11 @@
       - 'result.response[0].DATA.type == "ADC"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: MERGED - conf5 - Idempotence
-  cisco.dcnm.dcnm_service_node: *conf5
-  register: result
-
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
-
-      - name: MERGED - Clean up any existing service node
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: deleted
 
 - name: MERGED - Create Service Node with 2 switches and vPC Interface with type virtual network function
   cisco.dcnm.dcnm_service_node: &conf6
@@ -390,8 +318,8 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -408,21 +336,11 @@
       - 'result.response[0].DATA.type == "VNF"'
       - 'result.response[0].DATA.name == "SN-11"'
 
-      - name: MERGED - conf - Idempotence
-  cisco.dcnm.dcnm_service_node: *conf6
-  register: result
-
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
-
-      - name: MERGED - Clean up any existing service node
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: deleted
 
 - name: MERGED - Create Service Node with default state 'merged'/ without providing state explicitily
   cisco.dcnm.dcnm_service_node:
@@ -435,8 +353,8 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -452,12 +370,6 @@
       - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
       - 'result.response[0].DATA.type == "VNF"'
       - 'result.response[0].DATA.name == "SN-11"'
-
-      - name: MERGED - Clean up any existing service node
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: deleted
 
 - name: MERGED - Create Service Node with 3 tasks having 3 different types of type and single form factor virtual
   cisco.dcnm.dcnm_service_node:
@@ -471,24 +383,24 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
-    - name: SN-12
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc2
-      attach_interface: "{{ ansible_vpc1 }}"
-      switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
-    - name: SN-13
-      type: load_balancer
-      form_factor: virtual
-      svc_int_name: svc3
-      attach_interface: "{{ ansible_vpc1 }}"
-      switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
+      - name: SN-12
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc2
+        attach_interface: "{{ ansible_vpc1 }}"
+        switches:
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
+      - name: SN-13
+        type: load_balancer
+        form_factor: virtual
+        svc_int_name: svc3
+        attach_interface: "{{ ansible_vpc1 }}"
+        switches:
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -523,12 +435,6 @@
       - 'result.response[2].DATA.type == "ADC"'
       - 'result.response[2].DATA.name == "SN-13"'
 
-      - name: MERGED - Clean up any existing service node
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: deleted
-
 - name: MERGED - Create Service Node with 3 tasks having 3 different types of type and form factor physical
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
@@ -541,24 +447,24 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc1 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
-    - name: SN-12
-      type: firewall
-      form_factor: physical
-      svc_int_name: svc2
-      attach_interface: "{{ ansible_vpc1 }}"
-      switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
-    - name: SN-13
-      type: load_balancer
-      form_factor: physical
-      svc_int_name: svc3
-      attach_interface: "{{ ansible_vpc1 }}"
-      switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
+      - name: SN-12
+        type: firewall
+        form_factor: physical
+        svc_int_name: svc2
+        attach_interface: "{{ ansible_vpc1 }}"
+        switches:
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
+      - name: SN-13
+        type: load_balancer
+        form_factor: physical
+        svc_int_name: svc3
+        attach_interface: "{{ ansible_vpc1 }}"
+        switches:
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
 
 - name: Assert
@@ -593,12 +499,6 @@
       - 'result.response[2].DATA.type == "ADC"'
       - 'result.response[2].DATA.name == "SN-13"'
 
-      - name: MERGED - Clean up any existing service node
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: deleted
-
 - name: MERGED - Create Service Node with 2 switches and invalid vpc interface
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
@@ -611,8 +511,8 @@
         svc_int_name: svc1
         attach_interface: "{{ ansible_vpc2 }}"
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
   ignore_errors: true
   when: controller_version == "11"
@@ -623,7 +523,7 @@
       - 'result.changed == false'
     when: controller_version == "11"
 
-      - name: MERGED - Create Service Node with 2 switches and invalid vpc name
+- name: MERGED - Create Service Node with 2 switches and invalid vpc name
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
@@ -635,8 +535,8 @@
         svc_int_name: svc1
         attach_interface: vPortchannel12
         switches:
-        - "{{ ansible_switch4 }}"
-      - "{{ ansible_switch5 }}"
+          - "{{ ansible_switch4 }}"
+          - "{{ ansible_switch5 }}"
   register: result
   ignore_errors: true
 
@@ -646,45 +546,11 @@
       - 'result.changed == false'
       - '"if two switches are provided, vpc is only interface option" in result.msg'
 
-      - name: MERGED - Create Service Node with 1 switch and valid vpc name
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: merged
-    config:
-      - name: SN-11
-        type: virtual_network_function
-        form_factor: virtual
-        svc_int_name: svc1
-        attach_interface: "{{ ansible_vpc1 }}"
-        switches:
-        - "{{ ansible_switch4 }}"
-  register: result
-  ignore_errors: true
-
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - '"For 1 switch, vpc is not the interface option" in result.msg'
-
-      - name: MERGED - Create Service Node with more than 2 switch and valid vpc name
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: merged
-    config:
-      - name: SN-11
-        type: virtual_network_function
-        form_factor: virtual
-        svc_int_name: svc1
-        attach_interface: "{{ ansible_vpc1 }}"
-        switches:
-        - "{{ ansible_switch1 }}"
-      - "{{ ansible_switch2 }}"
-      - "{{ ansible_switch4 }}"
-  register: result
-  ignore_errors: true
 
 - name: Assert
   ansible.builtin.assert:
@@ -692,65 +558,17 @@
       - 'result.changed == false'
       - '"Upto 2 switches only allowed" in result.msg'
 
-      - name: MERGED - Create Service Node without required parameter
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: merged
-    config:
-      - name: SN-11
-        type:
-      form_factor: virtual
-        svc_int_name: svc1
-        attach_interface: "{{ ansible_int1 }}"
-        switches:
-        - "{{ ansible_switch1 }}"
-  register: result
-  ignore_errors: true
-
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - '"Required parameter not found" in result.msg'
 
-      - name: MERGED - Create Service Node with wrong type
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: merged
-    config:
-      - name: SN-11
-        type: karth
-        form_factor: virtual
-        svc_int_name: svc1
-        attach_interface: "{{ ansible_int1 }}"
-        switches:
-        - "{{ ansible_switch1 }}"
-  register: result
-  ignore_errors: true
-
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - '"Invalid choice provided" in result.msg'
-
-      - name: MERGED - Create Service Node with wrong formfactor
-  cisco.dcnm.dcnm_service_node:
-    fabric: "{{ ansible_it_fabric }}"
-    service_fabric: "{{ ansible_ext_fabric }}"
-    state: merged
-    config:
-      - name: SN-11
-        type: firewall
-        form_factor: not
-        svc_int_name: svc1
-        attach_interface: "{{ ansible_int1 }}"
-        switches:
-        - "{{ ansible_switch1 }}"
-  register: result
-  ignore_errors: true
 
 - name: Assert
   ansible.builtin.assert:

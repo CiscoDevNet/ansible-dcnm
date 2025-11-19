@@ -101,15 +101,15 @@
         fabric: "{{ fabric_1 }}"
         state: merged
         config:
-        - vrf_name: ansible-vrf-int1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 500
-          attach:
-            - ip_address: "{{ switch_1 }}"
-            - ip_address: "{{ switch_2 }}"
-          deploy: true
+          - vrf_name: ansible-vrf-int1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 500
+            attach:
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            deploy: true
       register: deployed_vrf_result
     - name: ASSERT deployed_vrf_result
       ansible.builtin.assert:
@@ -131,15 +131,15 @@
         fabric: "{{ fabric_1 }}"
         state: overridden
         config:
-        - vrf_name: ansible-vrf-int2
-          vrf_id: 9008012
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 500
-          attach:
-            - ip_address: "{{ switch_1 }}"
-            - ip_address: "{{ switch_2 }}"
-          deploy: true
+          - vrf_name: ansible-vrf-int2
+            vrf_id: 9008012
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 500
+            attach:
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            deploy: true
       register: override_deployed_result
     - name: ASSERT override_deployed_result
       ansible.builtin.assert:
@@ -167,19 +167,19 @@
         fabric: "{{ fabric_1 }}"
         state: merged
         config:
-        - vrf_name: ansible-vrf-int2
-          vrf_id: 9008012
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 1500
-          attach:
-            - ip_address: "{{ switch_1 }}"
-            - ip_address: "{{ switch_2 }}"
-          vrf_lite:
-            - peer_vrf: ansible-vrf-int2
-              interface: "{{ interface_2a }}"
-              dot1q: 2
-          deploy: true
+          - vrf_name: ansible-vrf-int2
+            vrf_id: 9008012
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 1500
+            attach:
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int2
+                interface: "{{ interface_2a }}"
+                dot1q: 2
+            deploy: true
       register: merged_lite_result
     - name: ASSERT merged_lite_result
       ansible.builtin.assert:
@@ -201,19 +201,19 @@
         fabric: "{{ fabric_1 }}"
         state: overridden
         config:
-        - vrf_name: ansible-vrf-int2
-          vrf_id: 9008012
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 1500
-          attach:
-            - ip_address: "{{ switch_1 }}"
-            - ip_address: "{{ switch_2 }}"
-          vrf_lite:
-            - peer_vrf: ansible-vrf-int2
-              interface: "{{ interface_2a }}"
-              dot1q: 21
-          deploy: true
+          - vrf_name: ansible-vrf-int2
+            vrf_id: 9008012
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 1500
+            attach:
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int2
+                interface: "{{ interface_2a }}"
+                dot1q: 21
+            deploy: true
       register: override_lite_result
     - name: CONFIG-DEPLOY to resolve potential OUT-OF-SYNC
       cisco.dcnm.dcnm_rest:
@@ -249,13 +249,13 @@
             vrf_extension_template: Default_VRF_Extension_Universal
             vlan_id: 500
             attach:
-            - ip_address: "{{ switch_1 }}"
-            - ip_address: "{{ switch_2 }}"
-          vrf_lite:
-            - peer_vrf: ansible-vrf-int1
-              interface: "{{ interface_2a }}"
-              dot1q: 31
-          deploy: true
+              - ip_address: "{{ switch_1 }}"
+              - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int1
+                interface: "{{ interface_2a }}"
+                dot1q: 31
+            deploy: true
       register: override_back_result
     - name: WAIT override_back DEPLOYED
       cisco.dcnm.dcnm_vrf:

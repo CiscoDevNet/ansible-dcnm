@@ -38,13 +38,13 @@
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
-      test_data_interfaces:
+        test_data_interfaces:
           delete_conf_template: "templates/dcnm_st_fex/delete_conf.j2"
           delete_conf_file: "{{ role_path }}/files/dcnm_interface_st_fex_delete_conf.yaml"
       delegate_to: localhost
@@ -53,17 +53,17 @@
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - delete
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
-      dcnm_interface_delete_conf: "{{ lookup('file', test_data_interfaces.delete_conf_file) | from_yaml }}"
+        dcnm_interface_delete_conf: "{{ lookup('file', test_data_interfaces.delete_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Create ST FEX interfaces
@@ -72,7 +72,6 @@
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_delete_conf }}"
-
       register: result
 
     - name: QUERY - Get ST FEX interface state in NDFC (merge)
@@ -89,9 +88,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##             DELETE                       ##
-##############################################
+    ##############################################
+    ##             DELETE                       ##
+    ##############################################
 
     - name: Delete ST FEX interfaces
       cisco.dcnm.dcnm_interface: &fex_del
@@ -103,14 +102,14 @@
 
     - name: QUERY - Get interface state in NDFC (delete)
       cisco.dcnm.dcnm_interface:
-      state: query
+        state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_delete_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify ST FEX interfaces are deleted
       cisco.dcnm.tests.integration.ndfc_interface_validate:
-      config_path: "{{ test_data_interfaces.delete_conf_file }}"
+        config_path: "{{ test_data_interfaces.delete_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
         check_deleted: true
@@ -122,20 +121,20 @@
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence (delete)
       ansible.builtin.assert:
-      that:
+        that:
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-      check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
@@ -143,7 +142,7 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
+        that:
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: it_context is not defined

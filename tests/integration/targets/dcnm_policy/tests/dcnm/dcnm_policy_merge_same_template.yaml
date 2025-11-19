@@ -29,13 +29,13 @@
 
     - name: Create policy with template name
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         deploy: true
         state: merged
         config:
           - name: template_101   # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        priority: 101
+            create_additional_policy: false  # Do not create a policy if it already exists
+            priority: 101
 
           - switch:
               - ip: "{{ ansible_switch2 }}"
@@ -52,24 +52,23 @@
 
     - name: Create more policies with the same template name but with some changes
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         deploy: true
         state: merged
         config:
           - name: template_101   # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        priority: 101
-        description: "Added to check if merge works for existing policies"
+            create_additional_policy: false  # Do not create a policy if it already exists
+            priority: 101
 
           - name: template_101   # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        priority: 111
-        description: "Check if merge works for existing policies"
+            create_additional_policy: false  # Do not create a policy if it already exists
+            priority: 111
+            description: "Check if merge works for existing policies"
 
           - name: template_101   # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        priority: 112
-        description: "Both description and priority changed"
+            create_additional_policy: false  # Do not create a policy if it already exists
+            priority: 112
+            description: "Both description and priority changed"
 
           - switch:
               - ip: "{{ ansible_switch2 }}"
@@ -89,15 +88,14 @@
 ##############################################
 
   always:
-
     - name: Delete all created policies
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
-        state: deleted                     # only choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}"
+        state: deleted                     # only choose from [merged, deleted, query]
         config:
           - name: template_101   # This must be a valid template name
           - switch:
-            - ip: "{{ ansible_switch2 }}"
+              - ip: "{{ ansible_switch2 }}"
       register: result
 
     - name: ASSERT - Check condition

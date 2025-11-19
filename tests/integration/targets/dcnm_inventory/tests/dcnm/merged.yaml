@@ -335,7 +335,7 @@
   ansible.builtin.set_fact:
     switch_conf:
       - seed_ip:
-      max_hops: 0
+        max_hops: 0
         role: leaf
         auth_proto: MD5
   delegate_to: localhost

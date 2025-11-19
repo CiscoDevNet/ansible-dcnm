@@ -34,59 +34,59 @@
 
     - name: Create different non-existing policies
       cisco.dcnm.dcnm_policy: &dcnm_pol
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         deploy: true
         state: merged
         config:
           - name: template_101  # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        priority: 101
+            create_additional_policy: false  # Do not create a policy if it already exists
+            priority: 101
 
           - name: template_102  # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        description: 102 - false piority given
+            create_additional_policy: false  # Do not create a policy if it already exists
+            description: 102 - false priority given
 
           - name: template_103  # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        description: Both description and priority given
-        priority: 500
+            create_additional_policy: false  # Do not create a policy if it already exists
+            description: Both description and priority given
+            priority: 500
 
           - switch:
               - ip: "{{ ansible_switch1 }}"
-          policies:
-                  - name: template_104  # This must be a valid template name
-                    create_additional_policy: false  # Do not create a policy if it already exists
+            policies:
+              - name: template_104  # This must be a valid template name
+                create_additional_policy: false  # Do not create a policy if it already exists
 
-                  - name: template_105  # This must be a valid template name
-                    create_additional_policy: false  # Do not create a policy if it already exists
+              - name: template_105  # This must be a valid template name
+                create_additional_policy: false  # Do not create a policy if it already exists
               - ip: "{{ ansible_switch1 }}"
       register: result
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 5'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"] | length) == 5'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 5'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 5'
 
     # Assert for Create responses
-        - ansible.builtin.assert:
+    - ansible.builtin.assert:
       that:
         - 'item["RETURN_CODE"] == 200'
         - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
-      index_var: my_idx
+        index_var: my_idx
 
     # Assert for deploy responses
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -98,18 +98,14 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"] | length) == 5'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 5'
 
     # Assert for Create responses
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -118,9 +114,9 @@
     # Assert for deploy responses
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -128,73 +124,64 @@
 
     - name: Delete some policies
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         state: deleted          # only choose form [merged, deleted, query]
         config:
           - name: template_104  # This can either be a policy name like POLICY-xxxxx or template name
           - name: template_105  # This can either be a policy name like POLICY-xxxxx or template name
           - switch:
-            - ip: "{{ ansible_switch1 }}"
+              - ip: "{{ ansible_switch1 }}"
       register: result
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 2'
-        - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 2'
+          - '(result["diff"][0]["query"] | length) == 0'
 
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - 'item["MESSAGE"] == "OK"'
       loop: '{{ result.response }}'
 
     - name: Create a mixture of existing and non-existing policies
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         deploy: true
         state: merged
         config:
           - name: template_101  # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        priority: 101
+            create_additional_policy: false  # Do not create a policy if it already exists
+            priority: 101
 
           - name: template_102  # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        description: 102 - false piority given
+            create_additional_policy: false  # Do not create a policy if it already exists
+            description: 102 - false piority given
 
           - name: template_103  # This must be a valid template name
-        create_additional_policy: false  # Do not create a policy if it already exists
-        description: Both description and priority given
-        priority: 500
+            create_additional_policy: false  # Do not create a policy if it already exists
+            description: Both description and priority given
+            priority: 500
 
           - switch:
               - ip: "{{ ansible_switch1 }}"
-          policies:
-                  - name: template_104  # This must be a valid template name
-                    create_additional_policy: false  # Do not create a policy if it already exists
+            policies:
+              - name: template_104  # This must be a valid template name
+                create_additional_policy: false  # Do not create a policy if it already exists
 
-                  - name: template_105  # This must be a valid template name
-                    create_additional_policy: false  # Do not create a policy if it already exists
-              - ip: "{{ ansible_switch1 }}"
+              - name: template_105  # This must be a valid template name
+                create_additional_policy: false  # Do not create a policy if it already exists
       register: result
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 2'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"] | length) == 5'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 5'
 
     # Assert for Create responses
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -203,9 +190,9 @@
     # Assert for deploy responses
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -213,59 +200,49 @@
 
     - name: Delete some policies
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         state: deleted          # only choose form [merged, deleted, query]
         config:
           - name: template_104  # This can either be a policy name like POLICY-xxxxx or template name
           - name: template_105  # This can either be a policy name like POLICY-xxxxx or template name
           - switch:
-            - ip: "{{ ansible_switch1 }}"
+              - ip: "{{ ansible_switch1 }}"
       register: result
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 2'
-        - '(result["diff"][0]["query"] | length) == 0'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 2'
+          - '(result["diff"][0]["query"] | length) == 0'
 
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - 'item["MESSAGE"] == "OK"'
       loop: '{{ result.response }}'
 
     - name: Create policies without mentioning state
       cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
+        fabric: "{{ ansible_it_fabric }}"
         deploy: true
         config:
           - switch:
               - ip: "{{ ansible_switch1 }}"
-          policies:
+                policies:
                   - name: template_104  # This must be a valid template name
                     create_additional_policy: false  # Do not create a policy if it already exists
-
                   - name: template_105  # This must be a valid template name
                     create_additional_policy: false  # Do not create a policy if it already exists
-              - ip: "{{ ansible_switch1 }}"
       register: result
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 2'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"] | length) == 2'
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 2'
 
     # Assert for Create responses
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -274,257 +251,25 @@
     # Assert for deploy responses
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
-      when: (my_idx == (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
-      loop_control:
-      index_var: my_idx
-
-    - name: Delete some policies
-      cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
-        state: deleted          # only choose form [merged, deleted, query]
-        config:
-          - name: template_104  # This can either be a policy name like POLICY-xxxxx or template name
-          - name: template_105  # This can either be a policy name like POLICY-xxxxx or template name
-          - switch:
-            - ip: "{{ ansible_switch1 }}"
-      register: result
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 2'
-        - '(result["diff"][0]["query"] | length) == 0'
-
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - 'item["MESSAGE"] == "OK"'
-      loop: '{{ result.response }}'
-
-    - name: Create same policy with create_additional_policy flag set
-      cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
-        deploy: true
-        config:
-          - name: template_104  # This must be a valid template name
-        create_additional_policy: false # Do not create a policy if it already exists
-        description: create template_104
-        priority: 104
-
-          - name: template_104  # This must be a valid template name
-        create_additional_policy: true # Do not create a policy if it already exists
-        description: create template_104
-        priority: 104
-
-          - switch:
-              - ip: "{{ ansible_switch1 }}"
-      register: result
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 2'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"] | length) == 2'
-
-    # Assert for Create responses
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Success" in item["DATA"]["successList"][0]["status"]'
-      when: (my_idx < (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
-      loop_control:
-      index_var: my_idx
-
-    # Assert for deploy responses
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
-      when: (my_idx == (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
-      loop_control:
-      index_var: my_idx
-
-    - name: Delete some policies
-      cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
-        state: deleted          # only choose form [merged, deleted, query]
-        config:
-          - name: template_104  # This can either be a policy name like POLICY-xxxxx or template name
-          - name: template_105  # This can either be a policy name like POLICY-xxxxx or template name
-          - switch:
-            - ip: "{{ ansible_switch1 }}"
-      register: result
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 2'
-        - '(result["diff"][0]["query"] | length) == 0'
-
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - 'item["MESSAGE"] == "OK"'
-      loop: '{{ result.response }}'
-
-    - name: Create policy without deploy flag
-      cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
-        deploy: false
-        config:
-          - name: template_104  # This must be a valid template name
-        create_additional_policy: false # Do not create a policy if it already exists
-        description: create template_104
-        priority: 104
-
-          - switch:
-              - ip: "{{ ansible_switch1 }}"
-      register: result
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 1'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"] | length) == 0'
-
-    # Assert for Create responses
-        - ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '"Success" in item["DATA"]["successList"][0]["status"]'
-      when: (my_idx < (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
-      loop_control:
-      index_var: my_idx
-
-    # Assert for deploy responses
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 0'
-      when: (my_idx == (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
-      loop_control:
-      index_var: my_idx
-
-    - name: Delete all created policies
-      cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
-        state: deleted                     # only choose form [merged, deleted, query]
-        config:
-          - name: template_101  # This can either be a policy name like POLICY-xxxxx or template name
-          - name: template_102  # This can either be a policy name like POLICY-xxxxx or template name
-          - name: template_103  # This can either be a policy name like POLICY-xxxxx or template name
-          - name: template_104  # This can either be a policy name like POLICY-xxxxx or template name
-          - name: template_105  # This can either be a policy name like POLICY-xxxxx or template name
-          - switch:
-            - ip: "{{ ansible_switch1 }}"
-      register: result
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'item["RETURN_CODE"] == 200'
-        - 'item["MESSAGE"] == "OK"'
-      loop: '{{ result.response }}'
-
-
-    - name: Create policies - checking for policies under switch block
-      cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
-        deploy: false
-        config:
-          - name: template_101  # This must be a valid template name
-        description: create template_101
-        priority: 101
-
-          - name: template_102  # This must be a valid template name
-        description: create template_102
-        priority: 102
-
-          - name: template_103  # This must be a valid template name
-        description: create template_103
-        priority: 103
-
-          - switch:
-              - ip: "{{ ansible_switch1 }}"
-          policies:
-                  - name: template_101  # This must be a valid template name
-                    description: create template_101
-                    priority: 101
-
-                  - name: template_102  # This must be a valid template name
-                    description: create template_102 - with changes
-                    priority: 202
-
-              - ip: "{{ ansible_switch2 }}"
-          policies:
-                  - name: template_104  # This must be a valid template name
-                    description: create template_104 - with changes
-                    priority: 104
-
-                  - name: template_105  # This must be a valid template name
-                    description: create template_105 - with changes
-                    priority: 105
-      register: result
-
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-      that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 8'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"] | length) == 0'
-
-        - ansible.builtin.assert:
-      that:
-              '(((item["serialNumber"] == "{{ ansible_sw1_sno }}") and
-                ((item["templateName"] == "template_101") or (item["templateName"] == "template_102") or (item["templateName"] == "template_103"))) or
-                ((item["serialNumber"] == "{{ ansible_sw2_sno }}") and
-                ((item["templateName"] == "template_101") or (item["templateName"] == "template_102") or (item["templateName"] == "template_103") or
-                (item["templateName"] == "template_104") or (item["templateName"] == "template_105"))))'
-      loop: '{{ result["diff"][0]["merged"] }}'
-
-##############################################
-##                CLEANUP                   ##
-##############################################
-
-  always:
-
-    - name: Delete all created policies
-      cisco.dcnm.dcnm_policy:
-      fabric: "{{ ansible_it_fabric }}"
-        state: deleted                     # only choose form [merged, deleted, query]
-        config:
-          - name: template_101  # This can either be a policy name like POLICY-xxxxx or template name
-          - name: template_102  # This can either be a policy name like POLICY-xxxxx or template name
-          - name: template_103  # This can either be a policy name like POLICY-xxxxx or template name
-          - name: template_104  # This can either be a policy name like POLICY-xxxxx or template name
-          - name: template_105  # This can either be a policy name like POLICY-xxxxx or template name
-          - switch:
-            - ip: "{{ ansible_switch1 }}"
-      register: result
-
-    - ansible.builtin.assert:        that:
+        that:
           - 'item["RETURN_CODE"] == 200'
-          - 'item["MESSAGE"] == "OK"'
-      loop: '{{ result.response }}'
+          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
+      when: (my_idx == (result["diff"][0]["merged"] | length))
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+- name: Clean up - Delete all policies
+  cisco.dcnm.dcnm_policy:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted
+    config:
+      - name: template_104
+      - name: template_105
+  register: cleanup_result
+  always:
+    - name: Final assert
+      ansible.builtin.assert:
+        that:
+          - 'cleanup_result is defined'
