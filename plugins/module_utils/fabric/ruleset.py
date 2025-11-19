@@ -1,6 +1,7 @@
 """
 Generate a ruleset from a controller template
 """
+
 # Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -148,7 +149,7 @@ class RuleSetCommon:
             return True
         if annotations["IsShow"] in ("false", "False", False):
             return False
-        return annotations['IsShow']
+        return annotations["IsShow"]
 
     def is_internal(self, parameter: dict[str, Any]) -> bool:
         """
@@ -289,7 +290,7 @@ class RuleSet(RuleSetCommon):
         Ruleset Structure:
 
         ( STATIC_UNDERLAY_IP_ALLOC == 'False' and UNDERLAY_IS_V6 == 'False' and REPLICATION_MODE == 'Multicast' )
-        or 
+        or
         ( STATIC_UNDERLAY_IP_ALLOC == 'True' and UNDERLAY_IS_V6 == 'False' and REPLICATION_MODE == 'Multicast' and RP_MODE == 'bidir' )
         ```python
         ANYCAST_RP_IP_RANGE: {
@@ -374,7 +375,7 @@ class RuleSet(RuleSetCommon):
         self.ruleset[self.param_name]["operator"] = rule_operator
         rules: list[str] = [rule1, rule2]
         for rule in rules:
-            rule: str = rule.strip()
+            rule = rule.strip()
             group: str = rule.strip("(").strip(")")
             rule_list: list[str] = group.split(" and ")
             if len(rule_list) == 1:
@@ -529,6 +530,9 @@ class RuleSet(RuleSetCommon):
         if self.rule in ("true", "True", True):
             return
         if self.rule in ("false", "False", False):
+            return
+        # needed for mypy type disambiguation
+        if isinstance(self.rule, bool):
             return
         self.clean_rule()
 
