@@ -1,12 +1,3 @@
-plugins/action/tests/integration/ndfc_interface_validate.py action-plugin-docs
-plugins/action/tests/integration/ndfc_inventory_validate.py action-plugin-docs
-plugins/action/tests/integration/ndfc_network_validate.py action-plugin-docs
-plugins/action/tests/integration/ndfc_pc_members_validate.py action-plugin-docs
-plugins/action/tests/integration/ndfc_vpc_pair_validate.py action-plugin-docs
-plugins/action/tests/plugin_utils/pydantic_schemas/dcnm_interface/schemas.py action-plugin-docs
-plugins/action/tests/plugin_utils/pydantic_schemas/dcnm_network/schemas.py action-plugin-docs
-plugins/action/tests/plugin_utils/pydantic_schemas/dcnm_vpc_pair/schemas.py action-plugin-docs
-plugins/action/tests/plugin_utils/tools.py action-plugin-docs
 plugins/httpapi/dcnm.py validate-modules:missing-gplv3-license
 plugins/modules/dcnm_bootflash.py validate-modules:missing-gplv3-license
 plugins/modules/dcnm_fabric.py validate-modules:missing-gplv3-license
