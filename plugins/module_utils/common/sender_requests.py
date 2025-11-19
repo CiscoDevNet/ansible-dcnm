@@ -31,6 +31,7 @@ try:
     HAS_REQUESTS = True
 except ImportError:
     HAS_REQUESTS = False
+    requests = None
 
 try:
     import urllib3
@@ -38,16 +39,9 @@ try:
     HAS_URLLIB3 = True
 except ImportError:
     HAS_URLLIB3 = False
+    urllib3 = None
 
-if HAS_REQUESTS is False:
-    msg = "requests is not installed. "
-    msg += "install with e.g. pip install requests"
-    raise ImportError(msg)
-
-if HAS_URLLIB3 is False:
-    msg = "urllib3 is not installed. "
-    msg += "install with e.g. pip install urllib3"
-    raise ImportError(msg)
+# These will be checked at runtime rather than import time
 
 
 class Sender:
@@ -118,7 +112,8 @@ class Sender:
         self.class_name = self.__class__.__name__
         self._implements = "sender_v1"
 
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        if HAS_URLLIB3:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self._domain = environ.get("ND_DOMAIN", "local")
@@ -183,6 +178,13 @@ class Sender:
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
+
+        # Check for required dependencies at runtime
+        if not HAS_REQUESTS:
+            msg = "requests is not installed. "
+            msg += "install with e.g. pip install requests"
+            raise ImportError(msg)
+
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Caller: {caller}, ENTERED"
         self.log.debug(msg)
