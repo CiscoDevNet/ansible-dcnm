@@ -1152,7 +1152,7 @@ class DcnmVrf:
             else:
                 proxy = "/onepath/"
             for path in self.resource_paths:
-                self.resource_paths[path] = path + "{}" + self.resource_paths[path]
+                self.resource_paths[path] = proxy + "{}" + self.resource_paths[path]
 
         self.result = {"changed": False, "diff": [], "response": []}
 

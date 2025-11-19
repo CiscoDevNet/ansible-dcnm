@@ -1191,3 +1191,209 @@ def get_nd_version(action_module, task_vars, tmp):
         return action_module.error_handler.handle_failure(error_msg)
 
     return supported
+
+
+def obtain_federated_fabric_associations(action_module, task_vars, tmp):
+    """
+    Retrieve federated fabric associations from ND controller.
+
+    This method queries the ND controller to obtain federated fabric association data,
+    which includes fabric types, relationships (parent-child), and states.
+    This information is essential for fabric type detection and Multisite workflow
+    routing decisions.
+
+    API Endpoint:
+    - GET /onemanage/appcenter/cisco/ndfc/api/v1/onemanage/fabrics
+
+    Response Processing:
+    - Validates API response structure and success
+    - Extracts fabric data and builds lookup dictionary
+    - Indexes fabrics by name for efficient access
+    - Handles empty responses and API errors
+
+    Fabric Data Structure:
+    Each fabric entry contains:
+    - fabricName: Fabric identifier
+    - fabricType: Type (Federated, VXLAN, etc.)
+    - fabricState: State (member, parent, standalone)
+    - fabricParent: Parent fabric name (for child fabrics)
+
+    Args:
+        task_vars (dict): Ansible task variables for module execution
+        tmp (str): Temporary directory path for module operations
+    Returns:
+        dict: Fabric associations indexed by fabric name:
+            {
+                "fabric_name": {
+                    "fabricName": "fabric_name",
+                    "fabricType": "Federated",
+                    "fabricState": "parent",
+                    "fabricParent": null
+                }
+            }
+    Raises:
+        ActionError: On API failure or invalid response structure
+    """
+    # Log fabric discovery initiation
+    action_module.logger.debug(
+        "Fetching federated fabric associations from NDFC", operation="fabric_discovery"
+    )
+
+    proxy = ""
+    if action_module.ndfc_version >= 12.4:
+        proxy = "/onemanage"
+
+    try:
+        path = f"{proxy}/appcenter/cisco/ndfc/api/v1/onemanage/fabrics"
+        # Execute NDFC REST API call to get federated fabric associations
+        federated_fabric_associations = action_module._execute_module(
+            module_name="cisco.dcnm.dcnm_rest",
+            module_args={
+                "method": "GET",
+                "path": path
+            },
+            task_vars=task_vars,
+            tmp=tmp
+        )
+
+        # Validate API response structure and extract data
+        response_data = action_module.error_handler.validate_api_response(
+            federated_fabric_associations,
+            "federated fabric associations retrieval"
+        )
+
+        # Build fabric data lookup dictionary
+        fabric_associations = {}
+        for fabric in response_data.get("DATA", []):
+            parent_fabric_name = fabric.get("fabricName")
+            if parent_fabric_name:
+                if parent_fabric_name not in fabric_associations:
+                    fabric_associations[parent_fabric_name] = {}
+                parent_fabric_data = {
+                    "fabricName": parent_fabric_name,
+                    "fabricType": fabric.get("fabricType"),
+                    "fabricState": fabric.get("fabricState")
+                }
+                fabric_associations[parent_fabric_name].update(parent_fabric_data)
+                for child_fabric in fabric.get("members", []):
+                    child_fabric_name = child_fabric.get("fabricName")
+                    if child_fabric_name:
+                        child_fabric_data = {
+                            "fabricName": child_fabric_name,
+                            "clusterName": child_fabric.get("clusterName"),
+                            "fabricType": child_fabric.get("fabricType"),
+                            "fabricState": child_fabric.get("fabricState")
+                        }
+                        fabric_associations[child_fabric_name] = child_fabric_data
+                        if "members" not in fabric_associations[parent_fabric_name]:
+                            fabric_associations[parent_fabric_name]["members"] = []
+                        fabric_associations[parent_fabric_name]["members"].append(child_fabric_data)
+
+        # Log successful fabric data retrieval
+        action_module.logger.info(f"Retrieved {len(fabric_associations)} federated fabric associations", operation="fabric_discovery")
+        return fabric_associations
+
+    except Exception as e:
+        # Handle fabric discovery failures
+        return action_module.error_handler.handle_exception(e, "fabric_discovery")
+
+
+def obtain_fabric_associations(action_module, task_vars, tmp):
+    """
+    Retrieve fabric associations and relationships from ND controller.
+
+    This method queries the ND controller to obtain fabric association data,
+    which includes fabric types, relationships (parent-child), and states.
+    This information is essential for fabric type detection and Multisite workflow
+    routing decisions.
+
+    API Endpoint:
+    - GET /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations
+
+    Response Processing:
+    - Validates API response structure and success
+    - Extracts fabric data and builds lookup dictionary
+    - Indexes fabrics by name for efficient access
+    - Handles empty responses and API errors
+
+    Fabric Data Structure:
+    Each fabric entry contains:
+    - fabricName: Fabric identifier
+    - fabricType: Type (MSD, VXLAN, etc.)
+    - fabricState: State (member, parent, standalone)
+    - fabricParent: Parent fabric name (for child fabrics)
+
+    Args:
+        task_vars (dict): Ansible task variables for module execution
+        tmp (str): Temporary directory path for module operations
+
+    Returns:
+        dict: Fabric associations indexed by fabric name:
+            {
+                "fabric_name": {
+                    "fabricName": "fabric_name",
+                    "fabricType": "MSD",
+                    "fabricState": "parent",
+                    "fabricParent": null
+                }
+            }
+
+    Raises:
+        ActionError: On API failure or invalid response structure
+    """
+    # Log fabric discovery initiation
+    action_module.logger.debug(
+        "Fetching fabric associations from NDFC", operation="fabric_discovery"
+    )
+
+    try:
+        # Execute NDFC REST API call to get fabric associations
+        msd_fabric_associations = action_module._execute_module(
+            module_name="cisco.dcnm.dcnm_rest",
+            module_args={
+                "method": "GET",
+                "path": (
+                    "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/"
+                    "fabrics/msd/fabric-associations"
+                ),
+            },
+            task_vars=task_vars,
+            tmp=tmp
+        )
+
+        # Validate API response structure and extract data
+        response_data = action_module.error_handler.validate_api_response(
+            msd_fabric_associations,
+            "fabric associations retrieval"
+        )
+
+        # Build fabric data lookup dictionary
+        fabric_associations = {}
+        for fabric in response_data.get("DATA", []):
+            fabric_name = fabric.get("fabricName")
+            if fabric_name:
+                if fabric_name not in fabric_associations:
+                    fabric_associations[fabric_name] = {}
+                # Index fabric data by fabric name for efficient lookups
+                fabric_data = {
+                    "fabricName": fabric_name,
+                    "fabricType": fabric.get("fabricType"),
+                    "fabricState": fabric.get("fabricState")
+                }
+                fabric_associations[fabric_name].update(fabric_data)
+                if fabric.get("fabricState") == "member":
+                    fabric_parent = fabric.get("fabricParent")
+                    if fabric_parent:
+                        if fabric_parent not in fabric_associations:
+                            fabric_associations[fabric_parent] = {}
+                        if "members" not in fabric_associations[fabric_parent]:
+                            fabric_associations[fabric_parent]["members"] = []
+                        fabric_associations[fabric_parent]["members"].append(fabric_data)
+
+        # Log successful fabric data retrieval
+        action_module.logger.info(f"Retrieved {len(fabric_associations)} fabric associations", operation="fabric_discovery")
+        return fabric_associations
+
+    except Exception as e:
+        # Handle fabric discovery failures
+        return action_module.error_handler.handle_exception(e, "fabric_discovery")
