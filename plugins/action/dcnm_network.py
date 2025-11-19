@@ -34,9 +34,11 @@ Workflow Overview:
 5. Aggregate results into structured format for MSD operations
 
 Supported Fabric Types:
-- standalone: Regular fabric not part of MSD hierarchy
-- multisite_parent: Parent fabric in MSD domain (fabricState='msd', fabricParent='None')
-- multisite_child: Child/member fabric in MSD domain (fabricState='member')
+- standalone: Regular fabric not part of MSD/MFD hierarchy
+- multicluster_parent: Parent fabric in MFD domain (from OneManage API, fabricType='MFD')
+- multicluster_child: Child/member fabric in MFD domain (from OneManage API)
+- multisite_parent: Parent fabric in MSD domain (from fabric associations API, fabricState='msd', fabricParent='None')
+- multisite_child: Child/member fabric in MSD domain (from fabric associations API, fabricState='member')
 
 Author: Neil John
 """
@@ -62,8 +64,8 @@ class ActionModule(ActionBase):
     parent and child fabrics.
 
     Core Responsibilities:
-    1. Fabric Type Detection: Uses NDFC fabric associations API to automatically
-       classify fabrics as standalone, multisite_parent, or multisite_child
+    1. Fabric Type Detection: Uses NDFC OneManage API (preferred) and fabric associations API
+       to classify fabrics as standalone, multicluster_parent/child (MFD), or multisite_parent/child (MSD)
 
     2. Configuration Validation: Enforces MSD hierarchy rules and validates
        child_fabric_config parameters for correctness
@@ -96,10 +98,18 @@ class ActionModule(ActionBase):
         Main entry point for the action plugin.
 
         This method orchestrates the MSD fabric detection and processing workflow:
-        1. Validates required parameters
-        2. Detects fabric type using NDFC fabric associations API
-        3. Validates and splits MSD parent/child configurations
-        4. Executes network operations on parent and child fabrics
+        1. Validates required parameters (fabric, state, config)
+        2. Collects all fabrics needed from user config (parent + child fabrics)
+        3. Attempts to get fabric info from OneManage API first (preferred)
+        4. Falls back to fabric associations API for any missing fabrics
+        5. Builds unified fabric info dictionary with only needed fabrics
+        6. Validates and splits MSD parent/child configurations
+        7. Executes network operations on parent and child fabrics
+
+        Fabric Detection Strategy:
+        - OneManage API is checked first for all fabrics (handles MFD parent/child)
+        - Fabric associations API is only called if fabrics are missing from OneManage
+        - Both APIs are normalized to same format: {type, fabricParent, clusterName}
 
         Args:
             tmp (str, optional): Temporary directory path for file operations
@@ -130,16 +140,6 @@ class ActionModule(ActionBase):
             result['msg'] = "fabric parameter is required"
             return result
 
-        # Detect fabric type using fabric associations API
-        fabrics = self._get_fabric_associations(task_vars)
-
-        if fabrics is None:
-            result['failed'] = True
-            result['msg'] = "Failed to get fabric associations"
-            return result
-
-        # Validate fabric hierarchy before processing
-
         state = module_args.get('state')  # Get the state parameter
         if not state:
             result['failed'] = True
@@ -157,6 +157,54 @@ class ActionModule(ActionBase):
                 result['msg'] = f"The 'config' parameter must be a non-empty list for state '{state}'."
                 return result
 
+        # Collect all fabrics we need to check from the user config
+        fabrics_needed = set([fabric_name])
+        for net_config in config:
+            child_fabric_configs = net_config.get('child_fabric_config', [])
+            for child_config in child_fabric_configs:
+                child_fabric_name = child_config.get('fabric')
+                if child_fabric_name:
+                    fabrics_needed.add(child_fabric_name)
+
+        # First, try to get all fabrics from OneManage API
+        onemanage_fabrics = self._get_onemanage_fabrics(task_vars)
+        
+        if onemanage_fabrics is None:
+            result['failed'] = True
+            result['msg'] = "Failed to get OneManage fabrics"
+            return result
+
+        # Check which fabrics we need are in OneManage
+        fabrics_in_onemanage = set(onemanage_fabrics.keys())
+        missing_fabrics = fabrics_needed - fabrics_in_onemanage
+
+        # Build combined fabric info dictionary with only the fabrics we need
+        fabrics = {}
+        
+        # Add fabrics from OneManage
+        for fabric in fabrics_needed:
+            if fabric in onemanage_fabrics:
+                fabrics[fabric] = onemanage_fabrics[fabric]
+
+        # If any fabrics are missing, check fabric associations API
+        if missing_fabrics:
+            fabric_associations = self._get_fabric_associations(task_vars)
+            
+            if fabric_associations is None:
+                result['failed'] = True
+                result['msg'] = f"Failed to get fabric associations for missing fabrics: {missing_fabrics}"
+                return result
+
+            # Add missing fabrics from fabric associations
+            for fabric in missing_fabrics:
+                if fabric in fabric_associations:
+                    fabrics[fabric] = fabric_associations[fabric]
+                else:
+                    result['failed'] = True
+                    result['msg'] = f"Fabric '{fabric}' not found in OneManage or fabric associations"
+                    return result
+
+        # Validate fabric hierarchy before processing
         configs, error_msg = self._split_config(fabrics, fabric_name, config, state, result)
 
         if configs is None:
@@ -170,6 +218,83 @@ class ActionModule(ActionBase):
             return execution_result
 
         return result
+
+    def _get_onemanage_fabrics(self, task_vars):
+        """
+        Retrieve fabric information from NDFC using the OneManage fabrics API.
+
+        This method calls the NDFC OneManage API to get information about all fabrics including
+        Multi-Site Domain (MSD/MFD) parent and member relationships. The API returns comprehensive
+        fabric details including type, parent, and cluster information.
+
+        Args:
+            task_vars (dict): Ansible task variables for API authentication and context
+
+        Returns:
+            dict or None: Dictionary mapping fabric names to their info:
+                {
+                    'fabric_name': {
+                        'type': 'multicluster_parent'|'multicluster_child'|'standalone',
+                        'fabricParent': 'parent_name' or 'None',
+                        'clusterName': 'cluster_name'
+                    }
+                }
+                Note: MFD fabrics use 'multicluster_*' prefix (not 'multisite_*')
+                Returns None if API call fails.
+
+        API Endpoint:
+            GET /onemanage/appcenter/cisco/ndfc/api/v1/onemanage/fabrics
+        """
+
+        # Get fabric information from OneManage API
+        onemanage_response = self._execute_module(
+            module_name="cisco.dcnm.dcnm_rest",
+            module_args={
+                "method": "GET",
+                "path": "/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+            },
+            task_vars=task_vars
+        )
+        
+        # Check if the API call was successful
+        if onemanage_response.get('failed'):
+            display.error("OneManage fabrics API call failed")
+            return None
+
+        # Build fabric mapping dictionary
+        fabric_mapping = {}
+        onemanage_data = onemanage_response.get('response', {}).get('DATA', [])
+        
+        for fabric in onemanage_data:
+            fabric_name = fabric.get('fabricName')
+            fabric_type = fabric.get('fabricType')
+            
+            # Process parent MFD fabrics (use multicluster_ prefix for MFD)
+            if fabric_type == 'MFD':
+                fabric_mapping[fabric_name] = {
+                    'type': 'multicluster_parent',
+                    'fabricParent': 'None',
+                    'clusterName': fabric.get('clusterName', '')
+                }
+                
+                # Process member fabrics (use multicluster_ prefix for MFD members)
+                members = fabric.get('members', [])
+                for member in members:
+                    member_name = member.get('fabricName')
+                    fabric_mapping[member_name] = {
+                        'type': 'multicluster_child',
+                        'fabricParent': fabric_name,
+                        'clusterName': member.get('clusterName', '')
+                    }
+            else:
+                # Handle other fabric types (standalone, etc.)
+                fabric_mapping[fabric_name] = {
+                    'type': 'standalone',
+                    'fabricParent': 'None',
+                    'clusterName': fabric.get('clusterName', '')
+                }
+        
+        return fabric_mapping
 
     def _get_fabric_associations(self, task_vars):
         """
@@ -186,7 +311,7 @@ class ActionModule(ActionBase):
             dict or None: Dictionary mapping fabric names to their association info:
                 {
                     'fabric_name': {
-                        'fabricState': 'msd'|'member'|'standalone',
+                        'type': 'multisite_parent'|'multisite_child'|'standalone',
                         'fabricParent': 'parent_name' or 'None'
                     }
                 }
@@ -208,57 +333,69 @@ class ActionModule(ActionBase):
         # Check if the API call was successful
         if msd_fabric_associations.get('failed'):
             display.error("Fabric associations API call failed")
-            return
+            return None
 
         msd_fabric_associations = msd_fabric_associations.get('response', {}).get('DATA', {})
         fabrics = {}
         for fabric in msd_fabric_associations:
-            fabrics[fabric['fabricName']] = {
-                'fabricState': fabric['fabricState'],
-                'fabricParent': fabric['fabricParent']
+            fabric_name = fabric['fabricName']
+            fabric_state = fabric['fabricState']
+            fabric_parent = fabric['fabricParent']
+            
+            # Classify fabric type based on fabricState and fabricParent
+            if fabric_state == 'member':
+                fabric_type = 'multisite_child'
+            elif fabric_state == 'msd' and fabric_parent == 'None':
+                fabric_type = 'multisite_parent'
+            elif fabric_state == 'standalone':
+                fabric_type = 'standalone'
+            else:
+                fabric_type = 'unknown'
+            
+            fabrics[fabric_name] = {
+                'type': fabric_type,
+                'fabricParent': fabric_parent
             }
 
         return fabrics
 
-    def _get_fabric_type(self, fabric_name, fabrics):
+    def _get_fabric_details(self, fabric_name, fabrics):
         """
-        Classify fabric type based on MSD fabric association information.
+        Get fabric details from the unified fabric information dictionary.
 
-        This method analyzes the fabric state and parent relationship to determine
-        the correct fabric classification for MSD processing logic.
+        This method retrieves the fabric details (type and clusterName) from the combined 
+        fabric info dictionary which may contain data from OneManage API or fabric associations API.
 
-        Classification Rules:
-        - multisite_child: fabricState='member' (child fabric in MSD)
-        - multisite_parent: fabricState='msd' AND fabricParent='None' (parent fabric in MSD)
-        - standalone: fabricState='standalone' (not part of MSD)
-        - unknown: fabric not found or unrecognized state
+        Classification Types:
+        - multicluster_parent: MFD parent fabric (from OneManage API)
+        - multicluster_child: MFD child/member fabric (from OneManage API)
+        - multisite_parent: MSD parent fabric (from fabric associations API)
+        - multisite_child: MSD child/member fabric (from fabric associations API)
+        - standalone: Standalone fabric (not part of MSD/MFD)
+        - unknown: Fabric not found or unrecognized type
 
         Args:
-            fabric_name (str): Name of the fabric to classify
-            fabrics (dict): Fabric association information from _get_fabric_associations
+            fabric_name (str): Name of the fabric to get details for
+            fabrics (dict): Combined fabric information dictionary
 
         Returns:
-            str: Fabric type classification:
-                - 'multisite_parent': MSD parent fabric
-                - 'multisite_child': MSD child/member fabric
-                - 'standalone': Standalone fabric (not MSD)
-                - 'unknown': Fabric not found or unrecognized state
+            dict: Fabric details dictionary containing:
+                {
+                    'fabric_type': 'multicluster_parent'|'multicluster_child'|'multisite_parent'|'multisite_child'|'standalone'|'unknown',
+                    'clusterName': 'cluster_name' or ''
+                }
         """
         fabric_info = fabrics.get(fabric_name)
         if not fabric_info:
-            return 'unknown'
+            return {
+                'fabric_type': 'unknown',
+                'clusterName': ''
+            }
 
-        fabric_state = fabric_info.get('fabricState')
-        fabric_parent = fabric_info.get('fabricParent')
-
-        if fabric_state == 'member':
-            return 'multisite_child'
-        elif fabric_state == 'msd' and fabric_parent == 'None':
-            return 'multisite_parent'
-        elif fabric_state == 'standalone':
-            return 'standalone'
-        else:
-            return 'unknown'
+        return {
+            'fabric_type': fabric_info.get('type', 'unknown'),
+            'clusterName': fabric_info.get('clusterName', '')
+        }
 
     def _split_config(self, fabrics, fabric_name, config, state, result):
         """
@@ -300,7 +437,10 @@ class ActionModule(ActionBase):
                 Each fabric config has structure:
                 {
                     'fabric': fabric_name,
-                    '_fabric_type': fabric_type,  # 'multisite_parent', 'multisite_child', 'standalone', or 'unknown'
+                    '_fabric_details': {
+                        'fabric_type': 'multisite_parent'|'multisite_child'|'standalone'|'unknown',
+                        'clusterName': 'cluster_name' or ''
+                    },
                     'state': state,  # For parent: original state; For child: 'replaced' if parent state is 'overridden', otherwise original state
                     'config': [network_configs...]  # deploy defaults to True, child always inherits from parent
                 }
@@ -362,10 +502,10 @@ class ActionModule(ActionBase):
 
                 child_fabric = fabrics[child_fabric_name]
 
-                # Child fabric must be in 'member' state
-                if child_fabric['fabricState'] != 'member':
-                    return None, f"Child fabric '{child_fabric_name}' must have fabricState 'member' " \
-                        f"but has '{child_fabric['fabricState']}'"
+                # Child fabric must be of type 'multisite_child' or 'multicluster_child'
+                if child_fabric['type'] not in ['multisite_child', 'multicluster_child']:
+                    return None, f"Child fabric '{child_fabric_name}' must be of type 'multisite_child' or 'multicluster_child' " \
+                        f"but has type '{child_fabric['type']}'"
 
                 # Child fabric's parent must be the top-level fabric
                 if child_fabric['fabricParent'] != fabric_name:
@@ -398,6 +538,9 @@ class ActionModule(ActionBase):
                     if key not in ['fabric', 'deploy']:
                         child_net_config[key] = value
 
+                # Log the child network config with deploy attribute
+                display.vvv(f"Child network config for '{child_fabric_name}' - Network '{net_config['net_name']}': deploy={child_net_config.get('deploy', 'NOT SET')}")
+
                 child_fabric_configs_by_fabric[child_fabric_name].append(child_net_config)
 
         # Set default workflow to standalone
@@ -419,22 +562,22 @@ class ActionModule(ActionBase):
                 del parent_net['child_fabric_config']
             parent_config.append(parent_net)
 
-        parent_fabric_type = self._get_fabric_type(fabric_name, fabrics)
+        parent_fabric_details = self._get_fabric_details(fabric_name, fabrics)
         parent_fabric_config = {
             'fabric': fabric_name,
-            '_fabric_type': parent_fabric_type,
+            '_fabric_details': parent_fabric_details,
             'state': state,
             'config': parent_config
         }
         fabric_configs.append(parent_fabric_config)
 
-        # Update workflow if parent is MSD
-        if parent_fabric_type == 'multisite_parent':
+        # Update workflow if parent is MSD or MFD
+        if parent_fabric_details['fabric_type'] in ['multisite_parent', 'multicluster_parent']:
             result['workflow'] = 'Parent MSD Processing without child fabric'
 
         # 2. Create fabric config for each child fabric
         for child_fabric_name, child_net_configs in child_fabric_configs_by_fabric.items():
-            child_fabric_type = self._get_fabric_type(child_fabric_name, fabrics)
+            child_fabric_details = self._get_fabric_details(child_fabric_name, fabrics)
 
             # Determine child fabric state: if parent state is 'overridden', child state should be 'replaced'
             # Child state should never be 'overridden'
@@ -445,14 +588,14 @@ class ActionModule(ActionBase):
 
             child_fabric_config = {
                 'fabric': child_fabric_name,
-                '_fabric_type': child_fabric_type,
+                '_fabric_details': child_fabric_details,
                 'state': child_state,
                 'config': child_net_configs
             }
             fabric_configs.append(child_fabric_config)
 
             # Update workflow when child is detected
-            if parent_fabric_type == 'multisite_parent':
+            if parent_fabric_details['fabric_type'] in ['multisite_parent', 'multicluster_parent']:
                 result['workflow'] = 'Parent MSD with Child Fabric Processing'
             else:
                 result['workflow'] = 'Child Fabric Processing'
@@ -480,7 +623,7 @@ class ActionModule(ActionBase):
 
         Args:
             configs (list): List of fabric configurations from _split_config
-                Each config dict contains: fabric, _fabric_type, state, config
+                Each config dict contains: fabric, _fabric_details (with fabric_type and clusterName), state, config
             module_args (dict): Original Ansible module arguments from playbook
             result (dict): Base result dictionary to update with execution results
             task_vars (dict): Ansible task variables for module execution context
@@ -504,12 +647,15 @@ class ActionModule(ActionBase):
 
         # Process each fabric config by calling the dcnm_network module
         for fabric_config in configs:
+            fabric_details = fabric_config['_fabric_details']
+            fabric_type = fabric_details['fabric_type']
+            
             # Prepare module arguments for this fabric
             fabric_module_args = module_args.copy()
             fabric_module_args['fabric'] = fabric_config['fabric']
             fabric_module_args['state'] = fabric_config['state']
             fabric_module_args['config'] = fabric_config['config']
-            fabric_module_args['_fabric_type'] = fabric_config['_fabric_type']
+            fabric_module_args['_fabric_details'] = fabric_details  # Pass full fabric_details to module
 
             # Call the dcnm_network module for this fabric
             display.vvv(f"Processing fabric '{fabric_config['fabric']}' with {len(fabric_config['config'])} network(s)")
@@ -517,7 +663,8 @@ class ActionModule(ActionBase):
             # In vvv mode, display fabric and key attributes being pushed to module
             if display.verbosity >= 3:
                 display.vvv(f"Fabric: {fabric_module_args['fabric']}")
-                display.vvv(f"Fabric Type: {fabric_module_args['_fabric_type']}")
+                display.vvv(f"Fabric Type: {fabric_type}")
+                display.vvv(f"Cluster Name: {fabric_details['clusterName']}")
                 display.vvv(f"State: {fabric_module_args['state']}")
                 display.vvv("Networks being processed:")
                 for i, net_config in enumerate(fabric_module_args['config'], 1):
@@ -541,7 +688,7 @@ class ActionModule(ActionBase):
                 display.vvv(json.dumps(fabric_result, indent=2))
 
             # For standalone fabrics, return the module result exactly as-is
-            if fabric_config['_fabric_type'] == 'standalone':
+            if fabric_type == 'standalone':
                 return fabric_result
 
             # FAIL FAST on first error
@@ -549,7 +696,7 @@ class ActionModule(ActionBase):
                 result['failed'] = True
                 result['msg'] = (
                     f"Failed processing fabric '{fabric_config['fabric']}' "
-                    f"({fabric_config['_fabric_type']}): {fabric_result.get('msg', 'Unknown error')}"
+                    f"({fabric_type}): {fabric_result.get('msg', 'Unknown error')}"
                 )
                 return result
 
@@ -559,7 +706,7 @@ class ActionModule(ActionBase):
                 display.vvv(f"Fabric '{fabric_config['fabric']}' execution resulted in changes")
 
             # Store results based on fabric type for new output structure
-            if fabric_config['_fabric_type'] == 'multisite_parent':
+            if fabric_type in ['multisite_parent', 'multicluster_parent']:
                 parent_fabric_result = {
                     'fabric_name': fabric_config['fabric'],
                     'changed': fabric_result.get('changed', False),
@@ -567,7 +714,7 @@ class ActionModule(ActionBase):
                     'response': fabric_result.get('response', []),
                     'diff': fabric_result.get('diff', [])
                 }
-            elif fabric_config['_fabric_type'] == 'multisite_child':
+            elif fabric_type in ['multisite_child', 'multicluster_child']:
                 child_fabric_results.append({
                     'fabric_name': fabric_config['fabric'],
                     'changed': fabric_result.get('changed', False),
