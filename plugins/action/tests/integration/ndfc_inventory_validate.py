@@ -10,7 +10,7 @@ try:
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
-    from module_utils.common.third_party.pydantic import BaseModel, model_validator, validator, ValidationError
+    from ....module_utils.common.third_party.pydantic import BaseModel, model_validator, validator, ValidationError
     # # Create dummy classes to allow import without pydantic
     # BaseModel = object
 
