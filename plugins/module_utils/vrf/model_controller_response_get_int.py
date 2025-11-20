@@ -3,16 +3,13 @@ import traceback
 from typing import Optional
 
 try:
-    from pydantic import BaseModel, ConfigDict, Field
+    from pydantic import ConfigDict, Field
 
     HAS_PYDANTIC = True
     PYDANTIC_IMPORT_ERROR = None
 except ImportError:
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment]
 
     # Fallback: Field that does nothing
     def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
