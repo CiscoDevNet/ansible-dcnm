@@ -216,10 +216,5 @@ class ActionErrorHandler:
             self.logger.error(f"API error for {operation}: {json.dumps(resp, indent=2)}")
             raise ActionError(f"{operation} failed: {error_msg}")
 
-        # Validate data payload presence
-        if not resp.get("DATA"):
-            self.logger.error(f"Empty response DATA for {operation}: {json.dumps(resp, indent=2)}")
-            raise ActionError(f"Empty response DATA received for {operation}")
-
         # Return validated response data
         return resp

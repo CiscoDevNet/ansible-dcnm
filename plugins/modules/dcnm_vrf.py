@@ -1123,12 +1123,12 @@ class DcnmVrf:
             msg += f"{self.class_name}.__init__(): {error}"
             module.fail_json(msg=msg)
 
-        self.resource_paths = dcnm_resource_paths
+        self.resource_paths = copy.deepcopy(dcnm_resource_paths)
 
         if self.dcnm_version > 12:
-            self.paths = dcnm_vrf_paths[12]
+            self.paths = copy.deepcopy(dcnm_vrf_paths[12])
         else:
-            self.paths = dcnm_vrf_paths[self.dcnm_version]
+            self.paths = copy.deepcopy(dcnm_vrf_paths[11])
 
         proxy = ""
         if self.action_fabric_type == "multicluster_child":
@@ -4362,7 +4362,7 @@ class DcnmVrf:
             verb = "DELETE"
             self.send_to_controller(action, verb, path, None, log_response=False)
 
-    def release_orphaned_resources(self, vrf_del_list, fabric, cluster, is_rollback=False):
+    def release_orphaned_resources(self, vrf_del_list, fabric, cluster=None, is_rollback=False):
         """
         # Summary
 
@@ -4411,10 +4411,11 @@ class DcnmVrf:
         """
         self.log.debug("ENTERED")
 
-        if self.action_fabric_type == "multicluster_parent":
+        if cluster is not None:
             path = self.resource_paths["GET_RESOURCE"].format(cluster, fabric)
         else:
             path = self.resource_paths["GET_RESOURCE"].format(fabric)
+
         resource_pool = ["TOP_DOWN_VRF_VLAN", "TOP_DOWN_L3_DOT1Q"]
         for pool in resource_pool:
             msg = f"Processing orphaned resources in pool:{pool}"
@@ -4492,7 +4493,6 @@ class DcnmVrf:
         elif self.action_fabric_type == "multisite_parent":
             for fabric_details in self.fabric_members:
                 fabric = fabric_details.get("fabricName")
-                cluster = fabric_details.get("clusterName")
                 msg = f"Releasing orphaned resources in fabric:{fabric}"
                 self.log.debug(msg)
                 self.release_orphaned_resources(

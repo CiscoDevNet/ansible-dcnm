@@ -1186,6 +1186,10 @@ def get_nd_version(action_module, task_vars, tmp):
         if mo:
             supported = float(mo.group(1))
 
+        if supported >= 11.0 and supported < 12.0:
+            # For versions 11.x, return only 11.0
+            supported = 11.0
+
     if supported is None:
         error_msg = "Failed to retrieve NDFC version from API responses."
         return action_module.error_handler.handle_failure(error_msg)
