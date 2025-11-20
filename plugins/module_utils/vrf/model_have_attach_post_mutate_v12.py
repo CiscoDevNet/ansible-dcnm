@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import traceback
-from typing import List, Optional, Union
+from typing import List, Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field
@@ -41,7 +43,7 @@ class HaveLanAttachItem(BaseModel):
     - is_attached: bool, alias: isAttached
     - is_deploy: bool, alias: is_deploy
     - serial_number: str, alias: serialNumber
-    - vlan: Union(int | None), alias: vlanId
+    - vlan: int | None, alias: vlanId
     - vrf_name: str (min_length=1, max_length=32), alias: vrfName
     """
 
@@ -53,7 +55,7 @@ class HaveLanAttachItem(BaseModel):
     is_attached: bool = Field(alias="isAttached")
     is_deploy: bool = Field(alias="is_deploy")
     serial_number: str = Field(alias="serialNumber")
-    vlan: Union[int | None] = Field(alias="vlanId")
+    vlan: int | None = Field(alias="vlanId")
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
 
 

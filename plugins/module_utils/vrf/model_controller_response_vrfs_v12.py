@@ -6,6 +6,8 @@ Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name
 Verb: POST
 """
 
+from __future__ import annotations
+
 import traceback
 import warnings
 from typing import Optional, Union
