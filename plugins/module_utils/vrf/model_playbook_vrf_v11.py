@@ -18,10 +18,40 @@
 """
 Validation model for dcnm_vrf playbooks.
 """
+import traceback
 from typing import Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
-from typing_extensions import Self
+try:
+    from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
+
+    # Fallback: object base class
+    BaseModel = object  # type: ignore[assignment]
+
+    # Fallback: ConfigDict that does nothing
+    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic ConfigDict fallback when pydantic is not available."""
+        return {}
+
+    # Fallback: Field that does nothing
+    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic Field fallback when pydantic is not available."""
+        return None
+
+    # Fallback: model_validator decorator that does nothing
+    def model_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic model_validator fallback when pydantic is not available."""
+
+        def decorator(func):
+            return func
+
+        return decorator
+
 
 from ..common.enums.bgp import BgpPasswordEncrypt
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
@@ -82,7 +112,7 @@ class VrfLiteModel(BaseModel):
     peer_vrf: Optional[str] = Field(default="")
 
     @model_validator(mode="after")
-    def validate_ipv4_host(self) -> Self:
+    def validate_ipv4_host(self) -> "VrfLiteModel":
         """
         Validate neighbor_ipv4 is an IPv4 host address without prefix.
         """
@@ -91,7 +121,7 @@ class VrfLiteModel(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def validate_ipv6_host(self) -> Self:
+    def validate_ipv6_host(self) -> "VrfLiteModel":
         """
         Validate neighbor_ipv6 is an IPv6 host address without prefix.
         """
@@ -100,7 +130,7 @@ class VrfLiteModel(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def validate_ipv4_cidr_host(self) -> Self:
+    def validate_ipv4_cidr_host(self) -> "VrfLiteModel":
         """
         Validate ipv4_addr is a CIDR-format IPv4 host address.
         """
@@ -109,7 +139,7 @@ class VrfLiteModel(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def validate_ipv6_cidr_host(self) -> Self:
+    def validate_ipv6_cidr_host(self) -> "VrfLiteModel":
         """
         Validate ipv6_addr is a CIDR-format IPv6 host address.
         """
@@ -166,7 +196,7 @@ class VrfAttachModel(BaseModel):
     vrf_lite: Optional[list[VrfLiteModel]] = Field(default=None)
 
     @model_validator(mode="after")
-    def validate_ipv4_host(self) -> Self:
+    def validate_ipv4_host(self) -> "VrfAttachModel":
         """
         Validate ip_address is an IPv4 host address without prefix.
         """
@@ -175,7 +205,7 @@ class VrfAttachModel(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def vrf_lite_set_to_none_if_empty_list(self) -> Self:
+    def vrf_lite_set_to_none_if_empty_list(self) -> "VrfAttachModel":
         """
         Set vrf_lite to None if it is an empty list.
         This mimics the behavior of the original code.
@@ -267,7 +297,7 @@ class VrfPlaybookModelV11(BaseModel):
     vrf_vlan_name: str = Field(default="", alias="vrfVlanName")
 
     @model_validator(mode="after")
-    def hardcode_source_to_none(self) -> Self:
+    def hardcode_source_to_none(self) -> "VrfPlaybookModelV11":
         """
         To mimic original code, hardcode source to None.
         """
@@ -276,7 +306,7 @@ class VrfPlaybookModelV11(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def validate_rp_address(self) -> Self:
+    def validate_rp_address(self) -> "VrfPlaybookModelV11":
         """
         Validate rp_address is an IPv4 host address without prefix.
         """

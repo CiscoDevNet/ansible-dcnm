@@ -18,9 +18,31 @@
 """
 Serialize NDFC version 12 controller payload fields to fields used in a dcnm_vrf playbook.
 """
+
+import traceback
 from typing import Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+try:
+    from pydantic import BaseModel, ConfigDict, Field
+
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
+
+    # Fallback: object base class
+    BaseModel = object  # type: ignore[assignment]
+
+    # Fallback: ConfigDict that does nothing
+    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic ConfigDict fallback when pydantic is not available."""
+        return {}
+
+    # Fallback: Field that does nothing
+    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic Field fallback when pydantic is not available."""
+        return None
 
 
 class VrfControllerToPlaybookV12Model(BaseModel):

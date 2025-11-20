@@ -6,11 +6,42 @@ Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name
 Verb: POST
 """
 
+import traceback
 import warnings
 from typing import Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, model_validator
-from typing_extensions import Self
+try:
+    from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, model_validator
+
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
+
+    # Fallback: object base class
+    BaseModel = object  # type: ignore[assignment]
+
+    # Fallback: Field that does nothing
+    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic Field fallback when pydantic is not available."""
+        return None
+
+    # Fallback: ConfigDict that does nothing
+    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic ConfigDict fallback when pydantic is not available."""
+        return {}
+
+    # Fallback: model_validator decorator that does nothing
+    def model_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic model_validator fallback when pydantic is not available."""
+
+        def decorator(func):
+            return func
+
+        return decorator
+
+    PydanticExperimentalWarning = Warning  # type: ignore[assignment,misc]
 
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 from .vrf_template_config_v12 import VrfTemplateConfigV12
@@ -128,7 +159,7 @@ class VrfObjectV12(BaseModel):
     vrfTemplateConfig: VrfTemplateConfigV12
 
     @model_validator(mode="after")
-    def validate_hierarchical_key(self) -> Self:
+    def validate_hierarchical_key(self) -> "VrfObjectV12":
         """
         If hierarchicalKey is "", set it to the fabric name.
         """

@@ -29,11 +29,35 @@ import json
 import logging
 import re
 import time
+import traceback
 from dataclasses import asdict, dataclass
 from typing import Any, Final, Optional, Union
 
 from ansible.module_utils.basic import AnsibleModule
-from pydantic import ValidationError
+
+# from pydantic import ValidationError
+
+try:
+    from pydantic import ValidationError
+
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
+
+    class ValidationError(Exception):
+        """
+        For ansible-sanity checks when pydantic is not installed.
+        """
+
+        def __init__(self, message="A custom error occurred."):
+            self.message = message
+            super().__init__(self.message)
+
+        def __str__(self):
+            return f"ValidationError: {self.message}"
+
 
 from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet, EpVrfPost
 from ...module_utils.common.enums.http_requests import RequestVerb
@@ -49,6 +73,7 @@ from .inventory_ipv4_to_serial_number import InventoryIpv4ToSerialNumber
 from .inventory_ipv4_to_switch_role import InventoryIpv4ToSwitchRole
 from .inventory_serial_number_to_ipv4 import InventorySerialNumberToIpv4
 from .inventory_serial_number_to_switch_role import InventorySerialNumberToSwitchRole
+
 # from .model_controller_response_fabrics_easy_fabric_get import ControllerResponseFabricsEasyFabricGet
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 from .model_controller_response_get_fabrics_vrfinfo import ControllerResponseGetFabricsVrfinfoV12

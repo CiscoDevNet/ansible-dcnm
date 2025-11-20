@@ -19,9 +19,49 @@
 Validation model for VRF attachment payload.
 """
 import json
+import traceback
 from typing import Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+try:
+    from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
+
+    # Fallback: object base class
+    BaseModel = object  # type: ignore[assignment]
+
+    # Fallback: Field that does nothing
+    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic Field fallback when pydantic is not available."""
+        return None
+
+    # Fallback: ConfigDict that does nothing
+    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic ConfigDict fallback when pydantic is not available."""
+        return {}
+
+    # Fallback: field_serializer decorator that does nothing
+    def field_serializer(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic field_serializer fallback when pydantic is not available."""
+
+        def decorator(func):
+            return func
+
+        return decorator
+
+    # Fallback: field_validator decorator that does nothing
+    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic field_validator fallback when pydantic is not available."""
+
+        def decorator(func):
+            return func
+
+        return decorator
+
 
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
 from ..common.models.ipv4_host import IPv4HostModel
@@ -269,6 +309,14 @@ class PayloadVrfsAttachmentsLanAttachListExtensionValues(BaseModel):
                 return ""
             return json.loads(value)
         return value
+
+    @classmethod
+    def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
+        """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
+        if HAS_PYDANTIC:
+            return super().model_construct(*args, **kwargs)
+        # Fallback: return self when pydantic is not available
+        return cls()
 
 
 class PayloadVrfsAttachmentsLanAttachListInstanceValues(BaseModel):

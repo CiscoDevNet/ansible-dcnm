@@ -7,10 +7,51 @@ Verb: GET
 """
 
 import json
+import traceback
 import warnings
 from typing import Any, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, field_validator, model_validator
+try:
+    from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, field_validator, model_validator
+
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
+
+    # Fallback: object base class
+    BaseModel = object  # type: ignore[assignment]
+
+    # Fallback: Field that does nothing
+    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic Field fallback when pydantic is not available."""
+        return None
+
+    # Fallback: ConfigDict that does nothing
+    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic ConfigDict fallback when pydantic is not available."""
+        return {}
+
+    # Fallback: field_validator decorator that does nothing
+    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic field_validator fallback when pydantic is not available."""
+
+        def decorator(func):
+            return func
+
+        return decorator
+
+    # Fallback: model_validator decorator that does nothing
+    def model_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic model_validator fallback when pydantic is not available."""
+
+        def decorator(func):
+            return func
+
+        return decorator
+
+    PydanticExperimentalWarning = Warning  # type: ignore[assignment,misc]
 
 from ..common.enums.bgp import BgpPasswordEncrypt
 

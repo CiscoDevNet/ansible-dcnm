@@ -1,7 +1,37 @@
 # -*- coding: utf-8 -*-
+import traceback
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+try:
+    from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
+
+    # Fallback: object base class
+    BaseModel = object  # type: ignore[assignment]
+
+    # Fallback: Field that does nothing
+    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic Field fallback when pydantic is not available."""
+        return None
+
+    # Fallback: ConfigDict that does nothing
+    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic ConfigDict fallback when pydantic is not available."""
+        return {}
+
+    # Fallback: field_validator decorator that does nothing
+    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic field_validator fallback when pydantic is not available."""
+
+        def decorator(func):
+            return func
+
+        return decorator
 
 
 class LanDetachListItemV12(BaseModel):

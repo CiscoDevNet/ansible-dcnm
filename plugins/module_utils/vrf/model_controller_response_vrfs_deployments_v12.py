@@ -6,10 +6,34 @@ Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name
 Verb: POST
 """
 
+# from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning
+import traceback
 import warnings
 from typing import Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning
+try:
+    from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning
+
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
+
+    # Fallback: object base class
+    BaseModel = object  # type: ignore[assignment]
+
+    # Fallback: Field that does nothing
+    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic Field fallback when pydantic is not available."""
+        return None
+
+    # Fallback: ConfigDict that does nothing
+    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic ConfigDict fallback when pydantic is not available."""
+        return {}
+
+    PydanticExperimentalWarning = Warning  # type: ignore[assignment,misc]
 
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 
