@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,19 +12,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+Fabric type definitions for the dcnm_fabric and dcnm_fabric_group modules.
+"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import copy
 import logging
+from typing import Any
 
 
 class FabricTypes:
     """
-    Fabric type definitions for the dcnm_fabric module.
+    Fabric type definitions for the dcnm_fabric and dcnm_fabric_group modules.
 
     Usage
 
@@ -77,6 +80,7 @@ class FabricTypes:
         self._fabric_type_to_template_name_map["IPFM"] = "Easy_Fabric_IPFM"
         self._fabric_type_to_template_name_map["ISN"] = "External_Fabric"
         self._fabric_type_to_template_name_map["LAN_CLASSIC"] = "LAN_Classic"
+        self._fabric_type_to_template_name_map["MCFG"] = "MSD_Fabric"
         self._fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
         self._fabric_type_to_template_name_map["VXLAN_EVPN_MSD"] = "MSD_Fabric"
 
@@ -87,6 +91,7 @@ class FabricTypes:
         self._fabric_type_to_feature_name_map["IPFM"] = "pmn"
         self._fabric_type_to_feature_name_map["ISN"] = "vxlan"
         self._fabric_type_to_feature_name_map["LAN_CLASSIC"] = "lan"
+        self._fabric_type_to_feature_name_map["MCFG"] = "vxlan"
         self._fabric_type_to_feature_name_map["VXLAN_EVPN"] = "vxlan"
         self._fabric_type_to_feature_name_map["VXLAN_EVPN_MSD"] = "vxlan"
 
@@ -102,6 +107,7 @@ class FabricTypes:
         self._fabric_type_to_ext_fabric_type_map["ISN"] = "Multi-Site External Network"
 
         self._valid_fabric_types = sorted(self._fabric_type_to_template_name_map.keys())
+        self._valid_fabric_group_types = {"MCFG"}
 
         # self._external_fabric_types is used in conjunction with
         # self._fabric_type_to_ext_fabric_type_map.  This is used in (at least)
@@ -129,6 +135,9 @@ class FabricTypes:
         self._mandatory_parameters["LAN_CLASSIC"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
+        self._mandatory_parameters["MCFG"] = copy.copy(
+            self._mandatory_parameters_all_fabrics
+        )
         self._mandatory_parameters["VXLAN_EVPN"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
@@ -143,6 +152,7 @@ class FabricTypes:
         self._mandatory_parameters["IPFM"].sort()
         self._mandatory_parameters["ISN"].sort()
         self._mandatory_parameters["LAN_CLASSIC"].sort()
+        self._mandatory_parameters["MCFG"].sort()
         self._mandatory_parameters["VXLAN_EVPN"].sort()
         self._mandatory_parameters["VXLAN_EVPN_MSD"].sort()
 
@@ -150,7 +160,7 @@ class FabricTypes:
         """
         Initialize properties specific to this class
         """
-        self._properties = {}
+        self._properties: dict[str, Any] = {}
         self._properties["fabric_type"] = None
         self._properties["template_name"] = None
         self._properties["valid_fabric_types"] = self._valid_fabric_types
@@ -251,6 +261,13 @@ class FabricTypes:
         Return a sorted list() of valid fabric types.
         """
         return self._properties["valid_fabric_types"]
+
+    @property
+    def valid_fabric_group_types(self) -> set:
+        """
+        Return a set() of valid fabric group types.
+        """
+        return self._valid_fabric_group_types
 
     @property
     def valid_fabric_template_names(self):
