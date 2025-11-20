@@ -406,7 +406,7 @@ EXAMPLES = """
 # "The following parameter(value) combination(s) are invalid and need to be reviewed: Fabric: f3, ENABLE_PVLAN(False) requires ENABLE_SGT != True."
 
 """
-# pylint: disable=wrong-import-position, too-many-lines, too-many-instance-attributes
+# pylint: disable=wrong-import-position, too-many-lines, too-many-instance-attributes, too-many-statements
 import copy
 import inspect
 import json
@@ -422,22 +422,7 @@ except ImportError:
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR: Union[str, None] = traceback.format_exc()  # pylint: disable=invalid-name
 
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment,misc]
-
-    # Fallback: Field that does nothing
-    def Field(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
-
-    # Fallback: field_validator decorator that does nothing
-    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic field_validator fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
+    from ..module_utils.common.pydantic_mocks import BaseModel, Field, field_validator  # type: ignore[assignment, no-redef]
 
 else:
     HAS_PYDANTIC = True
