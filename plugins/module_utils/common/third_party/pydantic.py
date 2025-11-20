@@ -1,5 +1,5 @@
 # coding: utf-8
-# @file: plugins/module_utils/pydantic_mocks.py
+# @file: plugins/module_utils/common/3rd_party/pydantic_mocks.py
 # Copyright (c) 2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
