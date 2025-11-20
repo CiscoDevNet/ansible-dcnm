@@ -328,7 +328,7 @@ class VerifyPlaybookParams:
             return None
 
         msg = f"{self.class_name}.{method_name}: "
-        msg = f"rule_parameter: {rule_parameter}, "
+        msg += f"rule_parameter: {rule_parameter}, "
         msg += f"rule_operator: {rule_operator}, "
         msg += f"rule_value: {rule_value}, "
         self.log.debug(msg)
