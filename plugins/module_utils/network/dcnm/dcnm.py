@@ -613,14 +613,14 @@ def dcnm_get_url(module, fabric, path, items, module_name):
         elif iter != (send_count - 1):
             itemstr = ",".join(
                 itemlist[
-                    (iter * (len(itemlist) // send_count)) : (
+                    (iter * (len(itemlist) // send_count)): (
                         (iter + 1) * (len(itemlist) // send_count)
                     )
                 ]
             )
             url = path.format(fabric, itemstr)
         else:
-            itemstr = ",".join(itemlist[iter * (len(itemlist) // send_count) :])
+            itemstr = ",".join(itemlist[iter * (len(itemlist) // send_count):])
             url = path.format(fabric, itemstr)
 
         att_objects = dcnm_send(module, method, url)

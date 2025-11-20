@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -762,7 +763,7 @@ class DcnmVrf:
             msg = "size must be an integer. "
             msg += f"Got {type(size)}."
             raise ValueError(msg)
-        return [lst[x : x + size] for x in range(0, len(lst), size)]
+        return [lst[x: x + size] for x in range(0, len(lst), size)]
 
     @staticmethod
     def find_dict_in_list_by_key_value(search: list, key: str, value: str):
