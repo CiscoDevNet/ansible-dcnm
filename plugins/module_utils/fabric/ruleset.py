@@ -229,17 +229,28 @@ class RuleSet(RuleSetCommon):
 
     def _update_ruleset_no_boolean(self) -> None:
         """
-        - Process rules that contain no boolean terms
-        - Raise ``ValueError`` for unhandled case if rule is a list.
+        # Summary
 
-        ```python
+        Process rules that contain no boolean terms and generate the structure below.
+        
+        ## Raises
+
+        - `ValueError` for unhandled case if rule is a list.
+
+        ## Example
+ 
+        Parameter `AUTO_VRFLITE_IFC_DEFAULT_VRF`
+
+        ### Incoming Ruleset Structure
+
+        ```
         "VRF_LITE_AUTOCONFIG != Manual"
         ```
 
-        - Ruleset Structure (no boolean):
+        ### Generated Ruleset Structure
 
-        ```python
-        AUTO_VRFLITE_IFC_DEFAULT_VRF: {
+        ```json
+        {
             "terms": {
                 "na": [
                     {
@@ -285,15 +296,26 @@ class RuleSet(RuleSetCommon):
 
     def _update_ruleset_multi_rule(self) -> None:
         """
-        - Process rules that contain multiple rules.
+        # Summary
 
-        Ruleset Structure:
+        Process rules that contain multiple rules and generate the structure below.
 
-        ( STATIC_UNDERLAY_IP_ALLOC == 'False' and UNDERLAY_IS_V6 == 'False' and REPLICATION_MODE == 'Multicast' )
-        or
-        ( STATIC_UNDERLAY_IP_ALLOC == 'True' and UNDERLAY_IS_V6 == 'False' and REPLICATION_MODE == 'Multicast' and RP_MODE == 'bidir' )
-        ```python
-        ANYCAST_RP_IP_RANGE: {
+        ## Raises
+
+        - `ValueError` for unhandled case if rule operator is not "and" or "or".
+
+        ## Example
+
+        Parameter `L3VNI_MCAST_GROUP`
+
+        ### Incoming Ruleset Structure (parameter L3VNI_MCAST_GROUP)
+
+        `\"($$ENABLE_TRM$$==true && $$UNDERLAY_IS_V6$$!=true) || ($$ENABLE_TRMv6$$==true && $$UNDERLAY_IS_V6$$!=true)\""`
+
+        ### Generated Ruleset Structure
+
+        ```json
+        {
             "operator": "or",
             "rules": [
                 {
@@ -301,18 +323,13 @@ class RuleSet(RuleSetCommon):
                         "and": [
                             {
                                 "operator": "==",
-                                "parameter": "STATIC_UNDERLAY_IP_ALLOC",
-                                "value": false
+                                "parameter": "ENABLE_TRM",
+                                "value": true
                             },
                             {
-                                "operator": "==",
+                                "operator": "!=",
                                 "parameter": "UNDERLAY_IS_V6",
-                                "value": false
-                            },
-                            {
-                                "operator": "==",
-                                "parameter": "REPLICATION_MODE",
-                                "value": "Multicast"
+                                "value": true
                             }
                         ]
                     }
@@ -322,23 +339,13 @@ class RuleSet(RuleSetCommon):
                         "and": [
                             {
                                 "operator": "==",
-                                "parameter": "STATIC_UNDERLAY_IP_ALLOC",
+                                "parameter": "ENABLE_TRMv6",
                                 "value": true
                             },
                             {
-                                "operator": "==",
+                                "operator": "!=",
                                 "parameter": "UNDERLAY_IS_V6",
-                                "value": false
-                            },
-                            {
-                                "operator": "==",
-                                "parameter": "REPLICATION_MODE",
-                                "value": "Multicast"
-                            },
-                            {
-                                "operator": "==",
-                                "parameter": "RP_MODE",
-                                "value": "bidir"
+                                "value": true
                             }
                         ]
                     }
@@ -423,54 +430,44 @@ class RuleSet(RuleSetCommon):
 
     def _update_ruleset_boolean(self) -> None:
         """
-        - Process rules that contain only boolean "and" or "or" terms
+        # Summary
 
-        NOTES:
-            - ``&&`` is replaced with `` and `` in ``clean_rule()``
-            - ``||`` is replaced with `` or `` in ``clean_rule()``
+        Process rules that contain only boolean "and" or "or" terms and generate the structure below.
 
+        ## Raises
 
-        ```python
-        PARAM = INBAND_MGMT
+        - `ValueError` for unhandled case if rule is a list.
+
+        ## Example
+
+        Parameter `INBAND_MGMT`
+
+        ### NOTES
+
+        - `&&` is replaced with ` and ` in `clean_rule()`
+        - `||` is replaced with ` or ` in `clean_rule()`
+
+        ### Incoming Ruleset Structure
+
+        ```
         "IsShow": "\"LINK_STATE_ROUTING==ospf && UNDERLAY_IS_V6==false\""
         ```
 
-        - Ruleset Structure (AND):
+        ### Generated Ruleset Structure
 
-        ```python
-        SUBNET_RANGE: {
+        ```json
+        {
             "terms": {
                 "and": [
                     {
                         "operator": "==",
+                        "parameter": "LINK_STATE_ROUTING",
+                        "value": "ospf"
+                    },
+                    {
+                        "operator": "==",
                         "parameter": "UNDERLAY_IS_V6",
-                        "value": false
-                    },
-                    {
-                        "operator": "==",
-                        "parameter": "STATIC_UNDERLAY_IP_ALLOC",
-                        "value": false
-                    }
-                ]
-            }
-        }
-        ```
-
-        - Ruleset Structure (OR):
-
-        ```python
-        STP_BRIDGE_PRIORITY: {
-            "terms": {
-                "or": [
-                    {
-                        "operator": "==",
-                        "parameter": "STP_ROOT_OPTION",
-                        "value": "rpvst+"
-                    },
-                    {
-                        "operator": "==",
-                        "parameter": "STP_ROOT_OPTION",
-                        "value": "mst"
+                        "value": "false"
                     }
                 ]
             }
