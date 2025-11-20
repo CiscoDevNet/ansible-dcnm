@@ -232,13 +232,13 @@ class RuleSet(RuleSetCommon):
         # Summary
 
         Process rules that contain no boolean terms and generate the structure below.
-        
+
         ## Raises
 
         - `ValueError` for unhandled case if rule is a list.
 
         ## Example
- 
+
         Parameter `AUTO_VRFLITE_IFC_DEFAULT_VRF`
 
         ### Incoming Ruleset Structure
