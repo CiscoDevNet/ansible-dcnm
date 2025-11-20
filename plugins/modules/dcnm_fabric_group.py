@@ -449,14 +449,14 @@ def json_pretty(msg):
 
 
 # Use conditional base class to support import without pydantic
-CommonBase: Type
-if HAS_PYDANTIC:
-    CommonBase = FabricGroupCommon
-else:
-    CommonBase = object
+# CommonBase: Type
+# if HAS_PYDANTIC:
+#     CommonBase = FabricGroupCommon
+# else:
+#     CommonBase = object
 
 
-class Common(CommonBase):
+class Common(FabricGroupCommon):
     """
     # Summary
 
