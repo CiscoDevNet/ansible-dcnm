@@ -416,18 +416,6 @@ from typing import Type, Union
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore[import-untyped]
 
-try:
-    from pydantic import BaseModel, Field, field_validator  # pylint: disable=unused-import
-except ImportError:
-    HAS_PYDANTIC = False
-    PYDANTIC_IMPORT_ERROR: Union[str, None] = traceback.format_exc()  # pylint: disable=invalid-name
-
-    from ..module_utils.common.third_party.pydantic import BaseModel, Field, field_validator  # type: ignore[assignment, no-redef]
-
-else:
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None  # pylint: disable=invalid-name
-
 from ..module_utils.common.controller_features_v2 import ControllerFeatures
 from ..module_utils.common.controller_version_v2 import ControllerVersion
 from ..module_utils.common.exceptions import ControllerResponseError
