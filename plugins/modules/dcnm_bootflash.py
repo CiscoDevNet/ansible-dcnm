@@ -561,6 +561,8 @@ class Deleted(Common):
         self.bootflash_info.results = Results()
         self.bootflash_info.rest_send = self.rest_send  # pylint: disable=no-member
         self.bootflash_info.switch_details = SwitchDetails()
+        self.bootflash_info.switch_details.rest_send = self.rest_send
+        self.bootflash_info.switch_details.results = Results()
 
         # Retrieve bootflash contents for the user's switches.
         switch_list: list[str] = []
@@ -576,6 +578,7 @@ class Deleted(Common):
         self.bootflash_files.rest_send = self.rest_send
         self.bootflash_files.switch_details = SwitchDetails()
         self.bootflash_files.switch_details.results = Results()
+        self.bootflash_files.switch_details.rest_send = self.rest_send
 
         # Update BootflashFiles() with the files to delete
         self.files_to_delete = {}
