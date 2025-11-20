@@ -16,14 +16,13 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import html
-import json
-import os
-import re
 import socket
-import sys
+import json
 import time
-
+import html
+import re
+import os
+import sys
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
@@ -37,7 +36,9 @@ except ImportError:
 
 dcnm_paths = {
     11: {"TEMPLATE_WITH_NAME": "/rest/config/templates/{}"},
-    12: {"TEMPLATE_WITH_NAME": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/{}"},
+    12: {
+        "TEMPLATE_WITH_NAME": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/{}"
+    },
 }
 
 dcnm_template_type_xlations = {
@@ -73,13 +74,19 @@ def validate_ip_address_format(type, item, invalid_params):
             if "/" in item:
                 subnet = item.split("/")[1]
                 if not subnet or int(subnet) > mask_len:
-                    invalid_params.append("{0} : Invalid {1} gw/subnet syntax".format(item, addr_type))
+                    invalid_params.append(
+                        "{0} : Invalid {1} gw/subnet syntax".format(item, addr_type)
+                    )
             else:
-                invalid_params.append("{0} : Invalid {1} gw/subnet syntax".format(item, addr_type))
+                invalid_params.append(
+                    "{0} : Invalid {1} gw/subnet syntax".format(item, addr_type)
+                )
         try:
             socket.inet_pton(addr_family, address)
         except socket.error:
-            invalid_params.append("{0} : Invalid {1} address syntax".format(item, addr_type))
+            invalid_params.append(
+                "{0} : Invalid {1} address syntax".format(item, addr_type)
+            )
 
 
 def find_extra_params(param_list, spec):
@@ -127,7 +134,9 @@ def validate_list_of_dicts(param_list, spec, module=None, check_extra_params=Fal
             item = list_entry.get(param)
             if item is None:
                 if spec[param].get("required"):
-                    invalid_params.append("{0} : Required parameter not found".format(param))
+                    invalid_params.append(
+                        "{0} : Required parameter not found".format(param)
+                    )
                 else:
                     item = spec[param].get("default")
             else:
@@ -137,11 +146,16 @@ def validate_list_of_dicts(param_list, spec, module=None, check_extra_params=Fal
                     if spec[param].get("length_max"):
                         if 1 <= len(item) <= spec[param].get("length_max"):
                             pass
-                        elif param == "vrf_name" and (len(item) <= spec[param].get("length_max")):
+                        elif param == "vrf_name" and (
+                            len(item) <= spec[param].get("length_max")
+                        ):
                             pass
                         else:
                             invalid_params.append(
-                                "{0}:{1} : The string exceeds the allowed " "range of max {2} char".format(param, item, spec[param].get("length_max"))
+                                "{0}:{1} : The string exceeds the allowed "
+                                "range of max {2} char".format(
+                                    param, item, spec[param].get("length_max")
+                                )
                             )
                 elif type == "int":
                     item = v.check_type_int(item)
@@ -153,7 +167,10 @@ def validate_list_of_dicts(param_list, spec, module=None, check_extra_params=Fal
                             pass
                         else:
                             invalid_params.append(
-                                "{0}:{1} : The item exceeds the allowed " "range of max {2}".format(param, item, spec[param].get("range_max"))
+                                "{0}:{1} : The item exceeds the allowed "
+                                "range of max {2}".format(
+                                    param, item, spec[param].get("range_max")
+                                )
                             )
                 elif type == "bool":
                     item = v.check_type_bool(item)
@@ -161,13 +178,22 @@ def validate_list_of_dicts(param_list, spec, module=None, check_extra_params=Fal
                     item = v.check_type_list(item)
                 elif type == "dict":
                     item = v.check_type_dict(item)
-                elif (type == "ipv4_subnet") or (type == "ipv4") or (type == "ipv6_subnet") or (type == "ipv6"):
+                elif (
+                    (type == "ipv4_subnet")
+                    or (type == "ipv4")
+                    or (type == "ipv6_subnet")
+                    or (type == "ipv6")
+                ):
                     validate_ip_address_format(type, item, invalid_params)
 
                 choice = spec[param].get("choices")
                 if choice:
                     if item not in choice:
-                        invalid_params.append("{0} : Invalid choice [ {0} ] provided for param [ {1} ]".format(item, param))
+                        invalid_params.append(
+                            "{0} : Invalid choice [ {0} ] provided for param [ {1} ]".format(
+                                item, param
+                            )
+                        )
 
                 no_log = spec[param].get("no_log")
                 if no_log:
@@ -352,7 +378,9 @@ def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
 
     msg_dict = {"Error": ""}
     msg = 'Given switch elem = "{}" is not a valid one for this fabric\n'
-    msg1 = 'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
+    msg1 = (
+        'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
+    )
 
     # Check if the given sw_elem is a v4 ip_addr
     try:
@@ -526,7 +554,11 @@ def dcnm_version_supported(module):
             supported = int(mo.group(1))
 
     if supported is None:
-        msg = "Unable to determine the DCNM/NDFC Software Version, " + "RESP = " + str(response)
+        msg = (
+            "Unable to determine the DCNM/NDFC Software Version, "
+            + "RESP = "
+            + str(response)
+        )
         module.fail_json(msg=msg)
 
     return supported
@@ -579,10 +611,16 @@ def dcnm_get_url(module, fabric, path, items, module_name):
         if send_count == 1:
             url = path.format(fabric, items)
         elif iter != (send_count - 1):
-            itemstr = ",".join(itemlist[(iter * (len(itemlist) // send_count)) : ((iter + 1) * (len(itemlist) // send_count))])
+            itemstr = ",".join(
+                itemlist[
+                    (iter * (len(itemlist) // send_count)): (
+                        (iter + 1) * (len(itemlist) // send_count)
+                    )
+                ]
+            )
             url = path.format(fabric, itemstr)
         else:
-            itemstr = ",".join(itemlist[iter * (len(itemlist) // send_count) :])
+            itemstr = ",".join(itemlist[iter * (len(itemlist) // send_count):])
             url = path.format(fabric, itemstr)
 
         att_objects = dcnm_send(module, method, url)
@@ -591,7 +629,9 @@ def dcnm_get_url(module, fabric, path, items, module_name):
 
         if missing_fabric or not_ok:
             msg1 = "Fabric {0} not present on DCNM".format(fabric)
-            msg2 = "Unable to find " "{0}: {1} under fabric: {2}".format(module_name, items[:-1], fabric)
+            msg2 = "Unable to find " "{0}: {1} under fabric: {2}".format(
+                module_name, items[:-1], fabric
+            )
 
             module.fail_json(msg=msg1 if missing_fabric else msg2)
             return
@@ -623,7 +663,9 @@ def dcnm_load_mapping_data():
 
 def dcnm_get_template_details(module, version, name):
 
-    resp = dcnm_send(module, "GET", dcnm_paths[version]["TEMPLATE_WITH_NAME"].format(name))
+    resp = dcnm_send(
+        module, "GET", dcnm_paths[version]["TEMPLATE_WITH_NAME"].format(name)
+    )
 
     if resp and resp["RETURN_CODE"] == 200 and resp["MESSAGE"] == "OK" and resp["DATA"]:
         if resp["DATA"]["name"] == name:
@@ -679,52 +721,98 @@ def dcnm_get_template_specs(module, name, version):
             pb_template[name + "_spec"][p["name"]] = {}
             pname_len = len(p["name"])
 
-            pb_template[name][p["name"]] += html.unescape(" " * (40 - pname_len) + "# Description: " + p["annotations"].get("Description", "NA"))
+            pb_template[name][p["name"]] += html.unescape(
+                " " * (40 - pname_len)
+                + "# Description: "
+                + p["annotations"].get("Description", "NA")
+            )
 
             if "IsShow" in p["annotations"]:
-                pb_template[name][p["name"]] += ", Mandatory: " + p["annotations"]["IsShow"].replace('"', "")
-                pb_template[name + "_spec"][p["name"]]["required"] = p["annotations"]["IsShow"].replace('"', "")
+                pb_template[name][p["name"]] += ", Mandatory: " + p["annotations"][
+                    "IsShow"
+                ].replace('"', "")
+                pb_template[name + "_spec"][p["name"]]["required"] = p["annotations"][
+                    "IsShow"
+                ].replace('"', "")
             else:
                 # If 'defaultValue' is included, then the object can be marked as optional.
                 if p["metaProperties"].get("defaultValue", None) is not None:
                     pb_template[name][p["name"]] += ", Mandatory: False"
                     pb_template[name + "_spec"][p["name"]]["required"] = False
                 else:
-                    pb_template[name][p["name"]] += ", Mandatory: " + str(not (p["optional"]))
-                    pb_template[name + "_spec"][p["name"]]["required"] = bool(not (p["optional"]))
+                    pb_template[name][p["name"]] += ", Mandatory: " + str(
+                        not (p["optional"])
+                    )
+                    pb_template[name + "_spec"][p["name"]]["required"] = bool(
+                        not (p["optional"])
+                    )
 
             if p["metaProperties"].get("min", None) is not None:
-                pb_template[name][p["name"]] += ", Min: " + str(p["metaProperties"]["min"])
-                pb_template[name + "_spec"][p["name"]]["range_min"] = int(p["metaProperties"]["min"])
+                pb_template[name][p["name"]] += ", Min: " + str(
+                    p["metaProperties"]["min"]
+                )
+                pb_template[name + "_spec"][p["name"]]["range_min"] = int(
+                    p["metaProperties"]["min"]
+                )
             if p["metaProperties"].get("max", None) is not None:
-                pb_template[name][p["name"]] += ", Max: " + str(p["metaProperties"]["max"])
-                pb_template[name + "_spec"][p["name"]]["range_max"] = int(p["metaProperties"]["max"])
+                pb_template[name][p["name"]] += ", Max: " + str(
+                    p["metaProperties"]["max"]
+                )
+                pb_template[name + "_spec"][p["name"]]["range_max"] = int(
+                    p["metaProperties"]["max"]
+                )
             if p["metaProperties"].get("minLength", None) is not None:
-                pb_template[name][p["name"]] += ", MinLen: " + str(p["metaProperties"]["minLength"])
-                pb_template[name + "_spec"][p["name"]]["range_min"] = int(p["metaProperties"]["minLength"])
+                pb_template[name][p["name"]] += ", MinLen: " + str(
+                    p["metaProperties"]["minLength"]
+                )
+                pb_template[name + "_spec"][p["name"]]["range_min"] = int(
+                    p["metaProperties"]["minLength"]
+                )
             if p["metaProperties"].get("maxLength", None) is not None:
-                pb_template[name][p["name"]] += ", MaxLen: " + str(p["metaProperties"]["maxLength"])
-                pb_template[name + "_spec"][p["name"]]["range_max"] = int(p["metaProperties"]["maxLength"])
+                pb_template[name][p["name"]] += ", MaxLen: " + str(
+                    p["metaProperties"]["maxLength"]
+                )
+                pb_template[name + "_spec"][p["name"]]["range_max"] = int(
+                    p["metaProperties"]["maxLength"]
+                )
             if p["metaProperties"].get("validValues", None) is not None:
-                pb_template[name][p["name"]] += ", ValidValues: " + str(str(p["metaProperties"]["validValues"]).split(","))
-                pb_template[name + "_spec"][p["name"]]["choices"] = str(p["metaProperties"]["validValues"]).split(",")
+                pb_template[name][p["name"]] += ", ValidValues: " + str(
+                    str(p["metaProperties"]["validValues"]).split(",")
+                )
+                pb_template[name + "_spec"][p["name"]]["choices"] = str(
+                    p["metaProperties"]["validValues"]
+                ).split(",")
             if p.get("parameterType", None) is not None:
-                pb_template[name][p["name"]] += ", Type: " + dcnm_template_type_xlations[str(p["parameterType"])]
-                pb_template[name + "_spec"][p["name"]]["type"] = dcnm_template_type_xlations[p["parameterType"]]
+                pb_template[name][p["name"]] += (
+                    ", Type: " + dcnm_template_type_xlations[str(p["parameterType"])]
+                )
+                pb_template[name + "_spec"][p["name"]]["type"] = (
+                    dcnm_template_type_xlations[p["parameterType"]]
+                )
                 if p.get("parameterType") == "string[]":
                     pb_template[name][p["name"]] += ", elements: " + "str"
-                    pb_template[name + "_spec"][p["name"]]["type"] = dcnm_template_type_xlations[p["parameterType"]]
+                    pb_template[name + "_spec"][p["name"]]["type"] = (
+                        dcnm_template_type_xlations[p["parameterType"]]
+                    )
                     pb_template[name + "_spec"][p["name"]]["elements"] = "str"
 
             if p["metaProperties"].get("defaultValue", None) is not None:
-                pb_template[name][p["name"]] += ", Default: " + str(p["metaProperties"]["defaultValue"].replace('""', ""))
+                pb_template[name][p["name"]] += ", Default: " + str(
+                    p["metaProperties"]["defaultValue"].replace('""', "")
+                )
                 if pb_template[name + "_spec"][p["name"]]["type"] == "int":
                     if p["metaProperties"]["defaultValue"] == "":
-                        pb_template[name + "_spec"][p["name"]]["default"] = p["metaProperties"]["defaultValue"].replace('""', "")
+                        pb_template[name + "_spec"][p["name"]]["default"] = p[
+                            "metaProperties"
+                        ]["defaultValue"].replace('""', "")
                     else:
-                        pb_template[name + "_spec"][p["name"]]["default"] = int(p["metaProperties"]["defaultValue"])
+                        pb_template[name + "_spec"][p["name"]]["default"] = int(
+                            p["metaProperties"]["defaultValue"]
+                        )
                 else:
-                    pb_template[name + "_spec"][p["name"]]["default"] = p["metaProperties"]["defaultValue"].replace('""', "")
+                    pb_template[name + "_spec"][p["name"]]["default"] = p[
+                        "metaProperties"
+                    ]["defaultValue"].replace('""', "")
             else:
                 pb_template[name][p["name"]] += ", Default: ''"
                 pb_template[name + "_spec"][p["name"]]["default"] = ""

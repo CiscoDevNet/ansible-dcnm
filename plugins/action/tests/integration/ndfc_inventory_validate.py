@@ -2,9 +2,31 @@ from __future__ import absolute_import, division, print_function
 from ansible.utils.display import Display
 from ansible.plugins.action import ActionBase
 from typing import List, Dict, Optional, Union
-from pydantic import BaseModel, model_validator, validator, ValidationError
 import re
 import json
+
+try:
+    from pydantic import BaseModel, model_validator, validator, ValidationError
+    HAS_PYDANTIC = True
+except ImportError:
+    HAS_PYDANTIC = False
+    # Create dummy classes to allow import without pydantic
+    BaseModel = object
+
+    def model_validator(**kwargs):
+        """Dummy model_validator decorator that accepts any arguments"""
+        def decorator(func):
+            return func
+        return decorator
+
+    def validator(*args, **kwargs):
+        """Dummy validator decorator that accepts any arguments"""
+        def decorator(func):
+            return func
+        return decorator
+
+    ValidationError = Exception
+
 __metaclass__ = type
 
 display = Display()
@@ -128,7 +150,7 @@ class InventoryValidate(BaseModel):
                 if ((seed_ip_one is not None and ip_address_two is not None and ip_address_two == seed_ip_one) or (ignore_fields['seed_ip'])):
                     seed_ip_match = True
 
-                if ((role_one is not None and switch_role_two is not None and switch_role_two == role_one) or (ignore_fields['role'])) :
+                if ((role_one is not None and switch_role_two is not None and switch_role_two == role_one) or (ignore_fields['role'])):
                     role_match = True
 
                 if seed_ip_match and role_match:
