@@ -83,3 +83,12 @@ def model_validator(*args, **kwargs):  # pylint: disable=unused-argument
         return func
 
     return decorator
+
+
+def validator(*args, **kwargs):  # pylint: disable=unused-argument
+    """Pydantic validator fallback when pydantic is not available."""
+
+    def decorator(func):
+        return func
+
+    return decorator
