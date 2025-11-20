@@ -25,11 +25,11 @@
 
 - name: Set Test Control Flag
   ansible.builtin.set_fact:
-    run_test: True
+    run_test: true
 
 - name: Test will not be run since Loopback101 does not appear to exist
   ansible.builtin.set_fact:
-    run_test: False
+    run_test: false
   when: lpk101_data.response == []
 
 - name: Access Policy Data If Loopack101 Data Is Available
@@ -39,17 +39,17 @@
 
 - name: Test will not be run since Loopback101 is not an MPLS Fabric Loopback
   ansible.builtin.set_fact:
-    run_test: False
+    run_test: false
   when: (loopback_policy is defined) and (loopback_policy != 'int_mpls_loopback')
 
-- debug: msg="Loopback 101 Data - {{ lpk101_data.response[0]['interfaces'][0]['nvPairs'] }}"
+- name: Debug
+  ansible.builtin.debug: msg="Loopback 101 Data - {{ lpk101_data.response[0]['interfaces'][0]['nvPairs'] }}"
   when: run_test
 
 - block:
-
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -69,9 +69,9 @@
         - mpls_lo201_merge
       delegate_to: localhost
 
-##############################################
-##                REPLACE                   ##
-##############################################
+    ##############################################
+    ##                REPLACE                   ##
+    ##############################################
 
     # Note: MPLS fabric loopback interfaces are created at fabric creation time
     # This test validates that we can modify them with the replace state
@@ -90,7 +90,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS fabric loopback interface (loopback101) replace results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -117,7 +117,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS fabric loopback interface (loopback101) idempotence results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
@@ -126,9 +126,9 @@
         success_msg: "Idempotence check for loopback101 succeeded"
       # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     # Test that we can also create new MPLS loopback interfaces
 
@@ -146,7 +146,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS loopback interface (loopback201) creation results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -173,7 +173,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS loopback interface (loopback201) idempotence results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
@@ -182,9 +182,9 @@
         success_msg: "Idempotence check for loopback201 succeeded"
       # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             DELETE                       ##
-##############################################
+    ##############################################
+    ##             DELETE                       ##
+    ##############################################
 
     - name: Delete MPLS loopback interface (loopback201)
       cisco.dcnm.dcnm_interface: &lo_delete_lo201
@@ -195,7 +195,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS loopback interface (loopback201) deletion results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -223,7 +223,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS loopback interface (loopback201) deletion idempotence results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
@@ -232,24 +232,22 @@
         success_msg: "Deletion idempotence check for loopback201 succeeded"
       # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
-
+    ##############################################
+    ##             CLEANUP                      ##
+    ##############################################
   when: run_test
-
   always:
-
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

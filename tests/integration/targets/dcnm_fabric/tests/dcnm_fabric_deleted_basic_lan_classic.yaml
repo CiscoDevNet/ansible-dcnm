@@ -5,7 +5,7 @@
 # 00:49.83
 ################################################################################
 # DESCRIPTION - BASIC FABRIC DELETED STATE TEST
-# 
+#
 # Test basic deletion of fabrics verify results.
 # - Deletion of populated fabrics not tested here.
 ################################################################################
@@ -49,7 +49,8 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # DELETED - TEST - Create fabric_name_3 and verify
@@ -60,25 +61,22 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "BOOTSTRAP_ENABLE": false,
 #                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "IS_READ_ONLY": false,
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "AAA_REMOTE_IP_ENABLED": "false",
@@ -157,14 +155,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -178,9 +175,11 @@
         IS_READ_ONLY: false
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -199,23 +198,20 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": "Invalid JSON response: Fabric 'LAN_CLASSIC_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -223,14 +219,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ###############################################################################################
@@ -240,9 +235,11 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -269,43 +266,41 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "MESSAGE": "No fabrics to delete",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
 - name: DELETED - TEST - Delete fabric_name_3 idempotence
   cisco.dcnm.dcnm_fabric: *fabric_deleted
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false

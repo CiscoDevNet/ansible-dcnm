@@ -75,10 +75,8 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
-#                 "172.22.150.112": [
-#                     {
+#         "diff": [#             {
+#                 "172.22.150.112": [#                     {
 #                         "bootflash_type": "active",
 #                         "date": "Aug 03 01:37:06 2024",
 #                         "deviceName": "cvd-1211-spine",
@@ -89,9 +87,8 @@
 #                         "serialNumber": "FOX2109PGCS",
 #                         "size": "4"
 #                     }
-#                 ],
-#                 "172.22.150.113": [
-#                     {
+# ],
+#                 "172.22.150.113": [#                     {
 #                         "bootflash_type": "active",
 #                         "date": "Aug 03 01:38:10 2024",
 #                         "deviceName": "cvd-1212-spine",
@@ -102,26 +99,23 @@
 #                         "serialNumber": "FOX2109PGD0",
 #                         "size": "4"
 #                     }
-#                 ],
+# ],
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "bootflash_info",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "query"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "172.22.150.112": {
 #                     "DATA": {
 #                         "bootFlashDataMap": {
-#                             "bootflash:": [
-#                                {
+#                             "bootflash:": [#                                {
 #                                    "bootflash_type": "active",
 #                                    "date": "Aug 12 23:17:57 2024",
 #                                    "deviceName": "cvd-1211-spine",
@@ -132,7 +126,7 @@
 #                                    "serialNumber": "FOX2109PGCS",
 #                                    "size": "2"
 #                                }
-#                             ]
+# ]
 #                         },
 #                         "bootFlashSpaceMap": {
 #                             "bootflash:": {
@@ -146,21 +140,20 @@
 #                                 "usedSpace": 8690008064
 #                             }
 #                         },
-#                         "partitions": [
-#                             "bootflash:"
-#                         ],
+#                         "partitions": [#                             "bootflash:"
+# ],
 #                         "requiredSpace": "NA"
 #                     },
 #                     "MESSAGE": "OK",
 #                     "METHOD": "GET",
-#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/",
+#                     "REQUEST_PATH_CONT": "bootflash-info?serialNumber=FOX2109PGCS",
 #                     "RETURN_CODE": 200
 #                 },
 #                 "172.22.150.113": {
 #                     "DATA": {
 #                         "bootFlashDataMap": {
-#                             "bootflash:": [
-#                                 {
+#                             "bootflash:": [#                                 {
 #                                     "bootflash_type": "active",
 #                                     "date": "Jul 07 01:20:21 2024",
 #                                     "deviceName": "cvd-1212-spine",
@@ -171,7 +164,7 @@
 #                                     "serialNumber": "FOX2109PGD0",
 #                                     "size": "2"
 #                                 }
-#                             ]
+# ]
 #                         },
 #                         "bootFlashSpaceMap": {
 #                             "bootflash:": {
@@ -185,21 +178,20 @@
 #                                 "usedSpace": 11054571520
 #                             }
 #                         },
-#                         "partitions": [
-#                             "bootflash:"
-#                         ],
+#                         "partitions": [#                             "bootflash:"
+# ],
 #                         "requiredSpace": "NA"
 #                     },
 #                     "MESSAGE": "OK",
 #                     "METHOD": "GET",
-#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGD0",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/",
+#                     "REQUEST_PATH_CONT": "bootflash-info?serialNumber=FOX2109PGD0",
 #                     "RETURN_CODE": 200
 #                 },
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "172.22.150.112": {
 #                     "found": true,
 #                     "success": true
@@ -210,27 +202,28 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-#         ]
+# ]
 #     }
 # }
 
 - name: QUERY - TEST - Query {{ wildcard_filepath }} on active supervisor of switches.
   cisco.dcnm.dcnm_bootflash:
-      state: query
-      config:
-        targets:
-          - filepath: "{{ wildcard_filepath }}"
-            supervisor: active
-        switches:
-          - ip_address: "{{ switch1 }}"
-          - ip_address: "{{ switch2 }}"
+    state: query
+    config:
+      targets:
+        - filepath: "{{ wildcard_filepath }}"
+          supervisor: active
+      switches:
+        - ip_address: "{{ switch1 }}"
+        - ip_address: "{{ switch2 }}"
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 - name: Prepare assert values for wildcard query
-  set_fact:
+  ansible.builtin.set_fact:
     switch1_filepath1: "bootflash:/{{ switch1_file1 }}"
     switch1_filepath2: "bootflash:/{{ switch1_file2 }}"
     switch1_filepath3: "bootflash:/{{ switch1_file3 }}"
@@ -238,32 +231,33 @@
     switch2_filepath2: "bootflash:/{{ switch2_file2 }}"
     switch2_filepath3: "bootflash:/{{ switch2_file3 }}"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - result.diff[0][switch1][0].filepath == switch1_filepath1
-    - result.diff[0][switch1][1].filepath == switch1_filepath2
-    - result.diff[0][switch1][2].filepath == switch1_filepath3
-    - result.diff[0][switch2][0].filepath == switch2_filepath1
-    - result.diff[0][switch2][1].filepath == switch2_filepath2
-    - result.diff[0][switch2][2].filepath == switch2_filepath3
-    - result.changed == false
-    - result.failed == false
-    - (result.diff | length) == 1
-    - (result.diff[0] | length) == 3
-    - (result.response | length) == 1
-    - result.response[0][switch1].RETURN_CODE == 200
-    - result.response[0][switch2].RETURN_CODE == 200
-    - result.response[0][switch1].MESSAGE == "OK"
-    - result.response[0][switch2].MESSAGE == "OK"
-    - result.response[0][switch1].METHOD == "GET"
-    - result.response[0][switch2].METHOD == "GET"
-    - (result.metadata | length) == 1
-    - result.metadata[0].action == "bootflash_info"
-    - result.metadata[0].check_mode == false
-    - result.metadata[0].sequence_number == 1
-    - result.metadata[0].state == "query"
-    - (result.result | length) == 1
-    - result.result[0][switch1].found == true
-    - result.result[0][switch2].found == true
-    - result.result[0][switch1].success == true
-    - result.result[0][switch2].success == true
+      - result.diff[0][switch1][0].filepath == switch1_filepath1
+      - result.diff[0][switch1][1].filepath == switch1_filepath2
+      - result.diff[0][switch1][2].filepath == switch1_filepath3
+      - result.diff[0][switch2][0].filepath == switch2_filepath1
+      - result.diff[0][switch2][1].filepath == switch2_filepath2
+      - result.diff[0][switch2][2].filepath == switch2_filepath3
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - (result.diff[0] | length) == 3
+      - (result.response | length) == 1
+      - result.response[0][switch1].RETURN_CODE == 200
+      - result.response[0][switch2].RETURN_CODE == 200
+      - result.response[0][switch1].MESSAGE == "OK"
+      - result.response[0][switch2].MESSAGE == "OK"
+      - result.response[0][switch1].METHOD == "GET"
+      - result.response[0][switch2].METHOD == "GET"
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "bootflash_info"
+      - result.metadata[0].check_mode == false
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "query"
+      - (result.result | length) == 1
+      - result.result[0][switch1].found == true
+      - result.result[0][switch2].found == true
+      - result.result[0][switch1].success == true
+      - result.result[0][switch2].success == true

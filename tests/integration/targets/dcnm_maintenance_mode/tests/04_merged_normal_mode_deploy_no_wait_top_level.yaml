@@ -58,8 +58,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             },
 #             {
@@ -76,37 +75,38 @@
 #                 },
 #                 "sequence_number": 3
 #             }
-#         ],
 - name: MERGED - SETUP - Ensure switch mode is maintenance
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
-        config:
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: query
+    config:
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result
   retries: 40
   delay: 10
   until:
-        - result.diff[2][leaf_1].mode == "maintenance"
-        - result.diff[2][leaf_2].mode == "maintenance"
+    - result.diff[2][leaf_1].mode == "maintenance"
+    - result.diff[2][leaf_2].mode == "maintenance"
 
 ################################################################################
 # 2. MERGED - TEST - Change switch mode to normal (top-level)
 ################################################################################
 - name: MERGED - TEST - Change switch mode to normal (top-level)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: merged
-        config:
-              deploy: true
-              mode: normal
-              wait_for_mode_change: false
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: merged
+    config:
+      deploy: true
+      mode: normal
+      wait_for_mode_change: false
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result_normal_mode
-- debug:
-        var: result_normal_mode
+
+- name: Debug
+  ansible.builtin.debug:
+    var: result_normal_mode
 
 ################################################################################
 # 3. MERGED - TEST - Verify switch mode is normal (top-level)
@@ -115,8 +115,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             },
 #             {
@@ -132,36 +131,35 @@
 #                     "mode": "normal",
 #                 },
 #                 "sequence_number": 3
-#             }
-#         ],
 - name: MERGED - TEST - Verify switch mode is normal (top-level)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
-        config:
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: query
+    config:
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result
   retries: 60
   delay: 10
   until:
-        - result.diff[2][leaf_1].mode == "normal"
-        - result.diff[2][leaf_2].mode == "normal"
+    - result.diff[2][leaf_1].mode == "normal"
+    - result.diff[2][leaf_2].mode == "normal"
 
-- assert:
-        that:
-              - result_normal_mode.failed == false
-              - result_normal_mode.metadata[2].action == "change_sytem_mode"
-              - result_normal_mode.metadata[3].action == "change_sytem_mode"
-              - result_normal_mode.metadata[2].check_mode == False
-              - result_normal_mode.metadata[3].check_mode == False
-              - result_normal_mode.metadata[2].state == "merged"
-              - result_normal_mode.metadata[3].state == "merged"
-              - result_normal_mode.response[2].DATA.status == "Success"
-              - result_normal_mode.response[3].DATA.status == "Success"
-              - result_normal_mode.response[2].METHOD == "DELETE"
-              - result_normal_mode.response[3].METHOD == "DELETE"
-              - result_normal_mode.response[2].RETURN_CODE == 200
-              - result_normal_mode.response[3].RETURN_CODE == 200
-              - result_normal_mode.response[4].DATA.status is match 'Success'
-              - result_normal_mode.response[5].DATA.status is match 'Success'
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - result_normal_mode.failed == false
+      - result_normal_mode.metadata[2].action == "change_sytem_mode"
+      - result_normal_mode.metadata[3].action == "change_sytem_mode"
+      - result_normal_mode.metadata[2].check_mode == False
+      - result_normal_mode.metadata[3].check_mode == False
+      - result_normal_mode.metadata[2].state == "merged"
+      - result_normal_mode.metadata[3].state == "merged"
+      - result_normal_mode.response[2].DATA.status == "Success"
+      - result_normal_mode.response[3].DATA.status == "Success"
+      - result_normal_mode.response[2].METHOD == "DELETE"
+      - result_normal_mode.response[3].METHOD == "DELETE"
+      - result_normal_mode.response[2].RETURN_CODE == 200
+      - result_normal_mode.response[3].RETURN_CODE == 200
+      - result_normal_mode.response[4].DATA.status is match 'Success'
+      - result_normal_mode.response[5].DATA.status is match 'Success'

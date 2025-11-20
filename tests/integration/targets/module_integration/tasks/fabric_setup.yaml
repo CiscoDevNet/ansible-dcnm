@@ -1,86 +1,98 @@
 ---
-- debug: msg="Start adding spine and leaf devices to fabric {{ fabric_name }}"
+- name: DEBUG start fabric setup
+  ansible.builtin.debug:
+    msg: "Begin spine/leaf add for fabric {{ fabric_name }}"
 
-- name: PreTest Cleanup - Remove all spine and leaf devices from fabric
+- name: PURGE existing inventory (spine/leaf)
   cisco.dcnm.dcnm_inventory:
-    fabric: cisco-live-virtual
+    fabric: "{{ fabric_name }}"
     state: deleted
+  register: purge_result
 
-- block:
-  - name: Test Case Setup - Add Spine and Leaf devices to fabric
-    cisco.dcnm.dcnm_inventory: &spine_leaf_merged
-      fabric: "{{ fabric_name }}"
-      state: merged
-      config:
-        - seed_ip: "{{ spine1 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: spine
-          preserve_config: false
-        - seed_ip: "{{ spine2 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: spine
-          preserve_config: false
-        - seed_ip: "{{ leaf1 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: leaf
-          preserve_config: false
-        - seed_ip: "{{ leaf2 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: leaf
-          preserve_config: false
-        - seed_ip: "{{ leaf3 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: leaf
-          preserve_config: false
-        - seed_ip: "{{ leaf4 }}"
-          auth_proto: MD5
-          user_name: "{{ username }}"
-          password: "{{ password }}"
-          max_hops: 0
-          role: leaf
-          preserve_config: false
-    vars:
+- name: Add spine & leaf devices with checks
+  block:
+    - name: MERGE add spine & leaf devices
+      cisco.dcnm.dcnm_inventory: &spine_leaf_merged
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - seed_ip: "{{ spine1 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: spine
+            preserve_config: false
+          - seed_ip: "{{ spine2 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: spine
+            preserve_config: false
+          - seed_ip: "{{ leaf1 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: leaf
+            preserve_config: false
+          - seed_ip: "{{ leaf2 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: leaf
+            preserve_config: false
+          - seed_ip: "{{ leaf3 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: leaf
+            preserve_config: false
+          - seed_ip: "{{ leaf4 }}"
+            auth_proto: MD5
+            user_name: "{{ username }}"
+            password: "{{ password }}"
+            max_hops: 0
+            role: leaf
+            preserve_config: false
+      vars:
         ansible_command_timeout: 1000
         ansible_connect_timeout: 1000
-    register: result
+      register: merge_result
 
-  - assert:
-      that:
-      - 'result.changed == true'
+    - name: ASSERT merge_result
+      ansible.builtin.assert:
+        that:
+          - merge_result.changed
 
-  - name: Add spine and leaf devices to fabric - idempotence check
-    cisco.dcnm.dcnm_inventory: *spine_leaf_merged
-    vars:
+    - name: MERGE idempotence
+      cisco.dcnm.dcnm_inventory: *spine_leaf_merged
+      vars:
         ansible_command_timeout: 1000
         ansible_connect_timeout: 1000
-    register: result
+      register: merge_idem
 
-  - assert:
-      that:
-      - 'result.changed == false'
+    - name: ASSERT idempotence
+      ansible.builtin.assert:
+        that:
+          - merge_idem.changed == false
 
-  - name: Query Spine Leaf Fabric
-    cisco.dcnm.dcnm_inventory:
-      fabric: "{{ fabric_name }}"
-      state: query
-    register: result
+    - name: QUERY inventory
+      cisco.dcnm.dcnm_inventory:
+        fabric: "{{ fabric_name }}"
+        state: query
+      register: query_result
 
-  - meta: end_play
+    - name: ASSERT query inventory count
+      ansible.builtin.assert:
+        that:
+          - query_result.response is defined
+          - query_result.response | length >= 1
 
   always:
-    - debug: msg="Finished adding spine and leaf devices to fabirc {{ fabric_name }}"
+    - name: DEBUG end fabric setup
+      ansible.builtin.debug:
+        msg: "Finished spine/leaf add for fabric {{ fabric_name }}"

@@ -53,16 +53,19 @@
         BGP_AS: "65535.65534"
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.failed == false
 
-- assert:
+- name: Assert response codes
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 ################################################################################
 # 00_SETUP - Merge leaf_1 and leaf_2 into fabric_1
 ################################################################################
@@ -86,9 +89,11 @@
         role: leaf
         preserve_config: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'result.failed == false'

@@ -7,10 +7,11 @@
 
 - name: Delete all images from controller
   cisco.dcnm.dcnm_image_upload:
-    state: deleted                                # choose form [merged, deleted, overridden, query], default is merged
+    state: deleted                                # choose from [merged, deleted, overridden, query]; default is merged
   register: result
 
-- assert:
+- name: ASSERT - Initial delete all images
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -24,31 +25,31 @@
 
     - name: Upload images to controller
       cisco.dcnm.dcnm_image_upload:
-        state: merged                             # choose form [merged, deleted, overridden, query], default is merged
+        state: merged                             # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - path: "{{ IMAGE_2_PATH }}"            # Full path to the image on the server
-            source: sftp                          # choose from [local, scp, sftp], default is local
-            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
-            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
-            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
-
-          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
-            source: local                         # choose from [local, scp, sftp], default is local
-
-          - path: "{{ IMAGE_1_PATH }}"            # Full path to the image on the server
-            source: scp                           # choose from [local, scp, sftp], default is local
-            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
-            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
-            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
+          - path: "{{ IMAGE_2_PATH }}"
+            source: sftp
+            remote_server: "{{ SERVER_IP }}"
+            username: "{{ USERNAME }}"
+            password: "{{ PASSWORD }}"
+          - path: "{{ IMAGE_3_PATH }}"
+            source: local
+          - path: "{{ IMAGE_1_PATH }}"
+            source: scp
+            remote_server: "{{ SERVER_IP }}"
+            username: "{{ USERNAME }}"
+            password: "{{ PASSWORD }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Upload result structure
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 3'
           - '(result["diff"][0]["deleted"] | length) == 0'
 
-    - assert:
+    - name: ASSERT - Upload responses
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Successfully uploaded selected image file(s)." in item["DATA"]'
@@ -60,16 +61,18 @@
 
     - name: Override without any config
       cisco.dcnm.dcnm_image_upload:
-        state: overridden                         # choose form [merged, deleted, overridden, query], default is merged
+        state: overridden                         # choose from [merged, deleted, overridden, query]; default is merged
       register: result
 
-    - assert:
+    - name: ASSERT - Override (empty) structure
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 3'
 
-    - assert:
+    - name: ASSERT - Override (empty) responses
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Image(s) Deleted Successfully" in item["DATA"]'
@@ -81,19 +84,21 @@
 
     - name: Override with a new config
       cisco.dcnm.dcnm_image_upload: &image_override
-        state: overridden                         # choose form [merged, deleted, overridden, query], default is merged
+        state: overridden                         # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
-            source: local                         # choose from [local, scp, sftp], default is local
+          - path: "{{ IMAGE_3_PATH }}"
+            source: local
       register: result
 
-    - assert:
+    - name: ASSERT - Override new config structure
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["deleted"] | length) == 0'
 
-    - assert:
+    - name: ASSERT - Override new config responses
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Successfully uploaded selected image file(s)." in item["DATA"]'
@@ -107,7 +112,8 @@
       cisco.dcnm.dcnm_image_upload: *image_override
       register: result
 
-    - assert:
+    - name: ASSERT - Override idempotence
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
@@ -119,28 +125,29 @@
 
     - name: Override with new images
       cisco.dcnm.dcnm_image_upload:
-        state: overridden                         # choose form [merged, deleted, overridden, query], default is merged
+        state: overridden                         # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - path: "{{ IMAGE_2_PATH }}"            # Full path to the image on the server
-            source: sftp                          # choose from [local, scp, sftp], default is local
-            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
-            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
-            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
-
-          - path: "{{ IMAGE_1_PATH }}"            # Full path to the image on the server
-            source: scp                           # choose from [local, scp, sftp], default is local
-            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
-            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
-            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
+          - path: "{{ IMAGE_2_PATH }}"
+            source: sftp
+            remote_server: "{{ SERVER_IP }}"
+            username: "{{ USERNAME }}"
+            password: "{{ PASSWORD }}"
+          - path: "{{ IMAGE_1_PATH }}"
+            source: scp
+            remote_server: "{{ SERVER_IP }}"
+            username: "{{ USERNAME }}"
+            password: "{{ PASSWORD }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Override new images structure
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["deleted"] | length) == 1'
 
-    - assert:
+    - name: ASSERT - Override new images responses
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -151,31 +158,31 @@
 
     - name: Override with new images including existing images
       cisco.dcnm.dcnm_image_upload:
-        state: overridden                         # choose form [merged, deleted, overridden, query], default is merged
+        state: overridden                         # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - path: "{{ IMAGE_2_PATH }}"            # Full path to the image on the server
-            source: sftp                          # choose from [local, scp, sftp], default is local
-            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
-            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
-            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
-
-          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
-            source: local                         # choose from [local, scp, sftp], default is local
-
-          - path: "{{ IMAGE_1_PATH }}"            # Full path to the image on the server
-            source: scp                           # choose from [local, scp, sftp], default is local
-            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
-            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
-            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
+          - path: "{{ IMAGE_2_PATH }}"
+            source: sftp
+            remote_server: "{{ SERVER_IP }}"
+            username: "{{ USERNAME }}"
+            password: "{{ PASSWORD }}"
+          - path: "{{ IMAGE_3_PATH }}"
+            source: local
+          - path: "{{ IMAGE_1_PATH }}"
+            source: scp
+            remote_server: "{{ SERVER_IP }}"
+            username: "{{ USERNAME }}"
+            password: "{{ PASSWORD }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Override mixed images structure
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["deleted"] | length) == 0'
 
-    - assert:
+    - name: ASSERT - Override mixed images responses
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -188,12 +195,13 @@
 
     - name: Delete all images from controller
       cisco.dcnm.dcnm_image_upload:
-        state: deleted                            # choose form [merged, deleted, overridden, query], default is merged
+        state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
+    - name: ASSERT - Cleanup delete all images
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

@@ -6,361 +6,304 @@
   local_action: command rm -f dcnm_links.log
 
 - block:
-
-##############################################
-##                MERGE                     ##
-##############################################
+  ##############################################
+  ##      NEGATIVE MERGE (INTRA FABRIC NUM)    ##
+  ##############################################
 
     - name: Create Links with invalid template name
       cisco.dcnm.dcnm_links:
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
-        state: merged                                            # choose from [merged, replaced, deleted, query]
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_fabric_invalid_temp              # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: int_intra_fabric_invalid_temp
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IP address of the Source interface
-              peer2_ipv4_addr: 192.168.1.2                       # IP address of the Destination interface
-              admin_state: true                                  # optional, choose from [true, false], default is true
-              mtu: 9216                                          #
-      ignore_errors: yes          
-      register: result
+              peer1_ipv4_addr: 192.168.1.1
+              peer2_ipv4_addr: 192.168.1.2
+              admin_state: true
+              mtu: 9216
+      ignore_errors: true
+      register: invalid_template
 
     - name: Create Links without source fabric
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_fabric_num_link                  # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: int_intra_fabric_num_link
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IP address of the Source interface
-              peer2_ipv4_addr: 192.168.1.2                       # IP address of the Destination interface
-              admin_state: true                                  # optional, choose from [true, false], default is true
-              mtu: 9216                                          #
-      ignore_errors: yes          
-      register: result
+              peer1_ipv4_addr: 192.168.1.1
+              peer2_ipv4_addr: 192.168.1.2
+              admin_state: true
+              mtu: 9216
+      ignore_errors: true
+      register: no_src_fabric
 
-    - name: Create Links without destination fabric
+    - name: Create Links without destination fabric (intra case not needed but test omission)
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_fabric_num_link                  # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: int_intra_fabric_num_link
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IP address of the Source interface
-              peer2_ipv4_addr: 192.168.1.2                       # IP address of the Destination interface
-              admin_state: true                                  # optional, choose from [true, false], default is true
-              mtu: 9216                                          #
-      ignore_errors: yes          
-      register: result
+              peer1_ipv4_addr: 192.168.1.1
+              peer2_ipv4_addr: 192.168.1.2
+              admin_state: true
+              mtu: 9216
+      ignore_errors: true
+      register: no_dst_fabric
 
     - name: Create Links without source interface
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_fabric_num_link                  # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: int_intra_fabric_num_link
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IP address of the Source interface
-              peer2_ipv4_addr: 192.168.1.2                       # IP address of the Destination interface
-              admin_state: true                                  # optional, choose from [true, false], default is true
-              mtu: 9216                                          #
-      ignore_errors: yes          
-      register: result
+              peer1_ipv4_addr: 192.168.1.1
+              peer2_ipv4_addr: 192.168.1.2
+              admin_state: true
+              mtu: 9216
+      ignore_errors: true
+      register: no_src_interface
 
     - name: Create Links without destination interface
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-      ignore_errors: yes          
-      register: result
+          - src_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: int_pre_provision_intra_fabric_link
+      ignore_errors: true
+      register: no_dst_interface
 
     - name: Create Links without source device
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: ios_xe_int_intra_fabric_num_link
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IPV4 address of the Source interface
-              peer2_ipv4_addr: 192.168.1.2                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: 2080:21::01                       # optional, default is ""
-              peer2_ipv6_addr: 2080:21::02                       # optional, default is ""
-              admin_state: true                                  # optional, choose from [true, false], default is true
-              mtu: 1500                                          # optional, default is 1500
-      ignore_errors: yes          
-      register: result
+              peer1_ipv4_addr: 192.168.1.1
+              peer2_ipv4_addr: 192.168.1.2
+              admin_state: true
+              mtu: 1500
+      ignore_errors: true
+      register: no_src_device
 
     - name: Create Links without destination device
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            template: int_intra_vpc_peer_keep_alive_link
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IPV4 address of the Source interface
-              peer2_ipv4_addr: 192.168.1.2                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: 2080:11::01                       # optional, default is ""
-              peer2_ipv6_addr: 2080:11::02                       # optional, default is ""
-              admin_state: true                                  # optional, choose from [true, false], default is true
-              mtu: 9216                                          #
-      ignore_errors: yes          
-      register: result
+              peer1_ipv4_addr: 192.168.1.1
+              peer2_ipv4_addr: 192.168.1.2
+              admin_state: true
+              mtu: 9216
+      ignore_errors: true
+      register: no_dst_device
 
     - name: Create Links without template
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IPV4 address of the Source interface
-              peer2_ipv4_addr: 192.168.1.2                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: 2080:11::01                       # optional, default is ""
-              peer2_ipv6_addr: 2080:11::02                       # optional, default is ""
-              admin_state: true                                  # optional, choose from [true, false], default is true
-              mtu: 9216                                          #
-      ignore_errors: yes          
-      register: result
+              peer1_ipv4_addr: 192.168.1.1
+              peer2_ipv4_addr: 192.168.1.2
+              admin_state: true
+              mtu: 9216
+      ignore_errors: true
+      register: no_template
 
-    - name: Create Links without peer1 IPV6
+    - name: Create Links without peer1 IPv6 (optional field)
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_ipv6_switch2 }}"
+            template: int_intra_vpc_peer_keep_alive_link
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IPV4 address of the Source interface
-              peer2_ipv4_addr: 192.168.1.2                       # IPV4 address of the Destination interface
-              peer2_ipv6_addr: 2080:11::02                       # optional, default is ""
-              admin_state: true                                  # optional, choose from [true, false], default is true
+              peer1_ipv4_addr: 192.168.1.1
+              peer2_ipv4_addr: 192.168.1.2
+              admin_state: true
               mtu: 9216
-      ignore_errors: yes
-      register: result
+      ignore_errors: true
+      register: no_peer1_ipv6
 
-    - name: Create Links without peer2 IPV6
+    - name: Create Links without peer2 IPv6 (optional field)
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_ipv6_switch2 }}"
+            template: int_intra_vpc_peer_keep_alive_link
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IPV4 address of the Source interface
-              peer2_ipv4_addr: 192.168.1.2                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: 2080:11::01                       # optional, default is ""
-              admin_state: true                                  # optional, choose from [true, false], default is true
+              peer1_ipv4_addr: 192.168.1.1
+              peer2_ipv4_addr: 192.168.1.2
+              admin_state: true
               mtu: 9216
-      ignore_errors: yes
-      register: result
+      ignore_errors: true
+      register: no_peer2_ipv6
 
     - name: Create Links without MTU
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: int_intra_vpc_peer_keep_alive_link
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IPV4 address of the Source interface
-              peer2_ipv4_addr: 192.168.1.2                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: 2080:11::01                       # optional, default is ""
-              peer2_ipv6_addr: 2080:11::02                       # optional, default is ""
-              admin_state: true                                  # optional, choose from [true, false], default is true
-      ignore_errors: yes
-      register: result
+              peer1_ipv4_addr: 192.168.1.1
+              peer2_ipv4_addr: 192.168.1.2
+              admin_state: true
+      ignore_errors: true
+      register: no_mtu
 
-    - name: Create Links without peer1 IPV4
+    - name: Create Links without peer1 IPv4
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: int_intra_vpc_peer_keep_alive_link
             profile:
-              peer2_ipv4_addr: 192.168.1.2                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: 2080:11::01                       # optional, default is ""
-              peer2_ipv6_addr: 2080:11::02                       # optional, default is ""
-              admin_state: true                                  # optional, choose from [true, false], default is true
-              mtu: 9216                                          #
-      ignore_errors: yes          
-      register: result
+              peer2_ipv4_addr: 192.168.1.2
+              admin_state: true
+              mtu: 9216
+      ignore_errors: true
+      register: no_peer1_ipv4
 
-    - name: Create Links without peer2 IPV4
+    - name: Create Links without peer2 IPv4
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: int_intra_vpc_peer_keep_alive_link
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: 2080:11::01                       # optional, default is ""
-              peer2_ipv6_addr: 2080:11::02                       # optional, default is ""
-              admin_state: true                                  # optional, choose from [true, false], default is true
-              mtu: 9216                                          #
-      ignore_errors: yes          
-      register: result
+              peer1_ipv4_addr: 192.168.1.1
+              admin_state: true
+              mtu: 9216
+      ignore_errors: true
+      register: no_peer2_ipv4
 
-    - name: Create Links without Admin State
+    - name: Create Links without admin_state (implicit default)
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: int_intra_vpc_peer_keep_alive_link
             profile:
-              peer1_ipv4_addr: 192.168.1.1                       # IPV4 address of the Destination interface
-              peer2_ipv4_addr: 192.168.1.2                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: 2080:11::01                       # optional, default is ""
-              peer2_ipv6_addr: 2080:11::02                       # optional, default is ""
-              mtu: 9216                                          #
-      ignore_errors: yes          
-      register: result
+              peer1_ipv4_addr: 192.168.1.1
+              peer2_ipv4_addr: 192.168.1.2
+              mtu: 9216
+      ignore_errors: true
+      register: no_admin_state
 
     - name: Create Links without profile
       cisco.dcnm.dcnm_links:
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-      ignore_errors: yes          
-      register: result
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: int_intra_vpc_peer_keep_alive_link
+      ignore_errors: true
+      register: no_profile
 
-    - name: Create Links with profile parameters
+    - name: Create Links with invalid profile parameter
       cisco.dcnm.dcnm_links:
+        state: merged
         src_fabric: "{{ ansible_num_fabric }}"
-        state: merged                                            # choose from [merged, replaced, deleted, query]
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_num_switch1 }}"
+            dst_device: "{{ ansible_num_switch2 }}"
+            template: int_intra_vpc_peer_keep_alive_link
             profile:
               dummy: 11
-      ignore_errors: yes          
-      register: result
+      ignore_errors: true
+      register: bad_profile
+
+  ##############################################
+  ##               ASSERTIONS                 ##
+  ##############################################
+
+    - name: ASSERT negative intra tests produced errors
+      ansible.builtin.assert:
+        that:
+          - invalid_template is failed or (invalid_template.msg is defined)
+          - no_src_fabric is failed or (no_src_fabric.msg is defined)
+          - no_dst_fabric is failed or (no_dst_fabric.msg is defined)
+          - no_src_interface is failed or (no_src_interface.msg is defined)
+          - no_dst_interface is failed or (no_dst_interface.msg is defined)
+          - no_src_device is failed or (no_src_device.msg is defined)
+          - no_dst_device is failed or (no_dst_device.msg is defined)
+          - no_template is failed or (no_template.msg is defined)
+          - no_peer1_ipv6 is failed or (no_peer1_ipv6.msg is defined)
+          - no_peer2_ipv6 is failed or (no_peer2_ipv6.msg is defined)
+          - no_mtu is failed or (no_mtu.msg is defined)
+          - no_peer1_ipv4 is failed or (no_peer1_ipv4.msg is defined)
+          - no_peer2_ipv4 is failed or (no_peer2_ipv4.msg is defined)
+          - no_admin_state is failed or (no_admin_state.msg is defined)
+          - no_profile is failed or (no_profile.msg is defined)
+          - bad_profile is failed or (bad_profile.msg is defined)
+
+  ##############################################
+  ##               CLEANUP                    ##
+  ##############################################
+
+  always:
+    - name: LOG - Negative intra tests complete
+      ansible.builtin.debug:
+        msg: "intra_missing_params negative validation complete"

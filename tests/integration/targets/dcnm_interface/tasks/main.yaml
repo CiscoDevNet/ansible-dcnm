@@ -1,38 +1,43 @@
 ---
-- name: collect dcnm test cases
-  find:
+- name: Collect dcnm test cases
+  ansible.builtin.find:
     paths: "{{ role_path }}/tests/dcnm"
     patterns: "{{ testcase }}.yaml"
   connection: local
   register: dcnm_cases
   tags: sanity
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     test_cases:
       files: "{{ dcnm_cases.files }}"
   tags: sanity
 
-- name: set test_items
-  set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+- name: Set test_items
+  ansible.builtin.set_fact:
+    test_items: "{{ test_cases.files | map(attribute='path') | list }}"
   tags: sanity
 
-- name: run test cases (connection=httpapi)
+- name: Run test cases (connection=httpapi)
   ansible.builtin.include_tasks: "{{ test_case_to_run }}"
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run
   tags: sanity
 
-- meta: end_play
+- name: Meta
+  ansible.builtin.meta: end_play
 
 ###############################################
 ##                FACTS                      ##
 ###############################################
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     vpc_delete_path: {}
 
-- set_fact:
-    vpc_delete_path: "{{ vpc_delete_path | combine (item) }}"
+- name: Set fact
+  ansible.builtin.set_fact:
+    vpc_delete_path: "{{ vpc_delete_path | combine(item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair?serialNumber='}
     - {'11': '/rest/vpcpair?serialNumber='}
@@ -43,13 +48,13 @@
 - name: Final Cleanup - Delete DCNM VXLAN Fabric VPC switch pair
   cisco.dcnm.dcnm_rest:
     method: DELETE
-    path: "{{ [vpc_delete_path[controller_version], test_data_common.vxlan_fabric_sno1] | join ('') }}"
+    path: "{{ [vpc_delete_path[controller_version], test_data_common.vxlan_fabric_sno1] | join('') }}"
   register: result
   ignore_errors: true
   when: (test_data_common.vxlan_fabric is defined and test_data_common.vxlan_fabric_sno1 is defined and test_data_common.vxlan_fabric_sno2 is defined)
 
 - name: Wait for 10 secs
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 10
   when: (test_data_common.vxlan_fabric is defined and test_data_common.vxlan_fabric_sno1 is defined and test_data_common.vxlan_fabric_sno2 is defined)
 
@@ -86,13 +91,13 @@
 - name: Final Cleanup - Delete DCNM CXT Fabric VPC switch pair
   cisco.dcnm.dcnm_rest:
     method: DELETE
-    path: "{{ [vpc_delete_path[controller_version], test_data_common.cxt_fabric_sno1] | join ('') }}"
+    path: "{{ [vpc_delete_path[controller_version], test_data_common.cxt_fabric_sno1] | join('') }}"
   register: result
   ignore_errors: true
   when: (test_data_common.cxt_fabric is defined and test_data_common.cxt_fabric_sno1 is defined and test_data_common.cxt_fabric_sno2 is defined)
 
 - name: Wait for 10 secs
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 10
   when: (test_data_common.cxt_fabric is defined and test_data_common.cxt_fabric_sno1 is defined and test_data_common.cxt_fabric_sno2 is defined)
 
@@ -138,7 +143,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -158,7 +164,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'

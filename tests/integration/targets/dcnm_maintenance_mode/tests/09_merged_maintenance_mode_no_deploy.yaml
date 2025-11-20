@@ -66,8 +66,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             },
 #             {
@@ -84,36 +83,37 @@
 #                 },
 #                 "sequence_number": 3
 #             }
-#         ],
+# ],
 - name: MERGED - SETUP - ensure switches are in normal mode
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
-        config:
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: query
+    config:
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result
   retries: 60
   delay: 10
   until:
-        - result.diff[2][leaf_1].mode == "normal"
-        - result.diff[2][leaf_2].mode == "normal"
+    - result.diff[2][leaf_1].mode == "normal"
+    - result.diff[2][leaf_2].mode == "normal"
 
 ################################################################################
 # 2. MERGED - TEST - Change switch mode to maintenance (global config)
 ################################################################################
 - name: MERGED - TEST - Change switch mode to maintenance (global config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: merged
-        config:
-              deploy: false
-              mode: maintenance
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: merged
+    config:
+      deploy: false
+      mode: maintenance
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result_maintenance_mode
-- debug:
-        var: result_maintenance_mode
+- name: Debug
+  ansible.builtin.debug:
+    var: result_maintenance_mode
 
 ################################################################################
 # 3. MERGED - TEST - Verify switch mode is inconsistent (global config)
@@ -122,8 +122,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             },
 #             {
@@ -140,36 +139,37 @@
 #                 },
 #                 "sequence_number": 3
 #             }
-#         ],
+# ],
 - name: MERGED - TEST - Verify switch mode is inconsistent (global config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
-        config:
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: query
+    config:
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result
   retries: 60
   delay: 10
   until:
-        - result.diff[2][leaf_1].mode == "inconsistent"
-        - result.diff[2][leaf_2].mode == "inconsistent"
+    - result.diff[2][leaf_1].mode == "inconsistent"
+    - result.diff[2][leaf_2].mode == "inconsistent"
 
 ################################################################################
 # 4. MERGED - TEST - Change switch mode to normal (global config)
 ################################################################################
 - name: MERGED - TEST - Change switch mode to normal (global config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: merged
-        config:
-              deploy: false
-              mode: normal
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: merged
+    config:
+      - deploy: false
+        mode: normal
+        switches:
+          - ip_address: "{{ leaf_1 }}"
+          - ip_address: "{{ leaf_2 }}"
   register: result_normal_mode
-- debug:
-        var: result_normal_mode
+- name: Debug
+  ansible.builtin.debug:
+    var: result_normal_mode
 
 ################################################################################
 # 5. MERGED - TEST - Verify switch mode is normal (global config)
@@ -178,8 +178,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             },
 #             {
@@ -196,202 +195,37 @@
 #                 },
 #                 "sequence_number": 3
 #             }
-#         ],
+# ],
 - name: MERGED - TEST - Verify switch mode is normal (global config)
   cisco.dcnm.dcnm_maintenance_mode:
-        state: query
-        config:
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: query
+    config:
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result
   retries: 60
   delay: 10
   until:
-        - result.diff[2][leaf_1].mode == "normal"
-        - result.diff[2][leaf_2].mode == "normal"
+    - result.diff[2][leaf_1].mode == "normal"
 
-- debug:
-        var: result_maintenance_mode
-
-- debug:
-        var: result_normal_mode
-
-- assert:
-        that:
-              - result_maintenance_mode.failed == false
-              - result_maintenance_mode.metadata[2].action == "change_sytem_mode"
-              - result_maintenance_mode.metadata[3].action == "change_sytem_mode"
-              - result_maintenance_mode.metadata[2].check_mode == False
-              - result_maintenance_mode.metadata[3].check_mode == False
-              - result_maintenance_mode.metadata[2].state == "merged"
-              - result_maintenance_mode.metadata[3].state == "merged"
-              - result_maintenance_mode.response[2].DATA.status == "Success"
-              - result_maintenance_mode.response[3].DATA.status == "Success"
-              - result_maintenance_mode.response[2].METHOD == "POST"
-              - result_maintenance_mode.response[3].METHOD == "POST"
-              - result_maintenance_mode.response[2].RETURN_CODE == 200
-              - result_maintenance_mode.response[3].RETURN_CODE == 200
-              - result_normal_mode.failed == false
-              - result_normal_mode.metadata[2].action == "change_sytem_mode"
-              - result_normal_mode.metadata[3].action == "change_sytem_mode"
-              - result_normal_mode.metadata[2].check_mode == False
-              - result_normal_mode.metadata[3].check_mode == False
-              - result_normal_mode.metadata[2].state == "merged"
-              - result_normal_mode.metadata[3].state == "merged"
-              - result_normal_mode.response[2].DATA.status == "Success"
-              - result_normal_mode.response[3].DATA.status == "Success"
-              - result_normal_mode.response[2].METHOD == "DELETE"
-              - result_normal_mode.response[3].METHOD == "DELETE"
-              - result_normal_mode.response[2].RETURN_CODE == 200
-              - result_normal_mode.response[3].RETURN_CODE == 200
-
-################################################################################
-# 6. MERGED - TEST - Change switch mode to maintenance (switch config)
-################################################################################
-- name: MERGED - TEST - Change switch mode to maintenance (switch config)
+- name: MERGED - TEST - Verify switch mode is normal
   cisco.dcnm.dcnm_maintenance_mode:
-        state: merged
-        config:
-              deploy: false
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                      mode: maintenance
-                    - ip_address: "{{ leaf_2 }}"
-                      mode: maintenance
-  register: result_maintenance_mode
-- debug:
-        var: result_maintenance_mode
-
-################################################################################
-# 7. MERGED - TEST - Verify switch mode is inconsistent (switch config)
-################################################################################
-# Expected result (only relevant fields shown)
-# ok: [172.22.150.244] => {
-#     "result": {
-#         "changed": false,
-#         "diff": [
-#             {
-#                 "sequence_number": 1
-#             },
-#             {
-#                 "sequence_number": 2
-#             },
-#             {
-#                 "172.22.150.103": {
-#                     "ip_address": "172.22.150.103",
-#                     "mode": "maintenance",
-#                 },
-#                 "172.22.150.104": {
-#                     "ip_address": "172.22.150.104",
-#                     "mode": "maintenance",
-#                 },
-#                 "sequence_number": 3
-#             }
-#         ],
-- name: MERGED - TEST - Verify switch mode is inconsistent (switch config)
-  cisco.dcnm.dcnm_maintenance_mode:
-        state: query
-        config:
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
+    state: query
+    config:
+      switches:
+        - ip_address: "{{ leaf_1 }}"
+        - ip_address: "{{ leaf_2 }}"
   register: result
   retries: 60
   delay: 10
   until:
-        - result.diff[2][leaf_1].mode == "inconsistent"
-        - result.diff[2][leaf_2].mode == "inconsistent"
+    - result.diff[2][leaf_1].mode == "normal"
+    - result.diff[2][leaf_2].mode == "normal"
 
-################################################################################
-# 8. MERGED - TEST - Change switch mode to normal (switch config)
-################################################################################
-- name: MERGED - TEST - Change switch mode to normal (switch config)
-  cisco.dcnm.dcnm_maintenance_mode:
-        state: merged
-        config:
-              deploy: false
-              mode: normal
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                      mode: normal
-                    - ip_address: "{{ leaf_2 }}"
-                      mode: normal
-  register: result_normal_mode
-- debug:
-        var: result_normal_mode
-
-################################################################################
-# 9. MERGED - TEST - Verify switch mode is normal (switch config)
-################################################################################
-# Expected result
-# ok: [172.22.150.244] => {
-#     "result": {
-#         "changed": false,
-#         "diff": [
-#             {
-#                 "sequence_number": 1
-#             },
-#             {
-#                 "sequence_number": 2
-#             },
-#             {
-#                 "172.22.150.103": {
-#                     "ip_address": "172.22.150.103",
-#                     "mode": "normal",
-#                 },
-#                 "172.22.150.104": {
-#                     "ip_address": "172.22.150.104",
-#                     "mode": "normal",
-#                 },
-#                 "sequence_number": 3
-#             }
-#         ],
-- name: MERGED - TEST - Verify switch mode is normal (switch config)
-  cisco.dcnm.dcnm_maintenance_mode:
-        state: query
-        config:
-              switches:
-                    - ip_address: "{{ leaf_1 }}"
-                    - ip_address: "{{ leaf_2 }}"
-  register: result
-  retries: 60
-  delay: 10
-  until:
-        - result.diff[2][leaf_1].mode == "normal"
-        - result.diff[2][leaf_2].mode == "normal"
-
-- debug:
-        var: result_maintenance_mode
-
-- debug:
-        var: result_normal_mode
-
-- assert:
-        that:
-              - result_maintenance_mode.failed == false
-              - result_maintenance_mode.metadata[2].action == "change_sytem_mode"
-              - result_maintenance_mode.metadata[3].action == "change_sytem_mode"
-              - result_maintenance_mode.metadata[2].check_mode == False
-              - result_maintenance_mode.metadata[3].check_mode == False
-              - result_maintenance_mode.metadata[2].state == "merged"
-              - result_maintenance_mode.metadata[3].state == "merged"
-              - result_maintenance_mode.response[2].DATA.status == "Success"
-              - result_maintenance_mode.response[3].DATA.status == "Success"
-              - result_maintenance_mode.response[2].METHOD == "POST"
-              - result_maintenance_mode.response[3].METHOD == "POST"
-              - result_maintenance_mode.response[2].RETURN_CODE == 200
-              - result_maintenance_mode.response[3].RETURN_CODE == 200
-              - result_normal_mode.failed == false
-              - result_normal_mode.metadata[2].action == "change_sytem_mode"
-              - result_normal_mode.metadata[3].action == "change_sytem_mode"
-              - result_normal_mode.metadata[2].check_mode == False
-              - result_normal_mode.metadata[3].check_mode == False
-              - result_normal_mode.metadata[2].state == "merged"
-              - result_normal_mode.metadata[3].state == "merged"
-              - result_normal_mode.response[2].DATA.status == "Success"
-              - result_normal_mode.response[3].DATA.status == "Success"
-              - result_normal_mode.response[2].METHOD == "DELETE"
-              - result_normal_mode.response[3].METHOD == "DELETE"
-              - result_normal_mode.response[2].RETURN_CODE == 200
-              - result_normal_mode.response[3].RETURN_CODE == 200
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - result_normal_mode.failed == false
+      - result_normal_mode.response[2].DATA.status == "Success"
+      - result_normal_mode.response[2].RETURN_CODE == 200

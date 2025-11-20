@@ -2,9 +2,9 @@
 # The example below demonstrates how running the dcnm_inventory module
 # will redirect to a common action plugin called cisco.dcnm.dcnm
 #
-#---
+# ---
 requires_ansible: ">=2.15.0"
-#plugin_routing:
+# plugin_routing:
 #  action:
 #    dcnm_inventory:
 #      redirect: cisco.dcnm.dcnm

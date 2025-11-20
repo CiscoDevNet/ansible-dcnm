@@ -11,26 +11,27 @@
       - "----------------------------------------------------------------"
 
 - name: Remove local log file
-  local_action: command rm -f dcnm_intf.log
+  ansible.builtin.command: rm -f dcnm_intf.log
+  delegate_to: localhost
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
-    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+    state: overridden  # only choose from [merged, replaced, deleted, overridden, query]
+  register: setup_result
 
 - name: ASSERT - Check return codes for setup
-  assert:
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
-  loop: '{{ result.response }}'
+      - item.RETURN_CODE == 200
+  loop: "{{ setup_result.response }}"
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -43,13 +44,13 @@
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - merge
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
@@ -62,15 +63,14 @@
         fabric: "{{ test_data_common.fabric }}"
         state: merged
         config: "{{ dcnm_interface_merge_conf }}"
-
-      register: result
+      register: merge_result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - merge_result.changed | bool
+          - item.RETURN_CODE == 200
+      loop: "{{ merge_result.response }}"
 
     - name: QUERY - Get interface state in NDFC
       cisco.dcnm.dcnm_interface:
@@ -88,33 +88,31 @@
 
     - name: Create ethernet interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *eth_merge
-      register: result
+      register: idem_result
 
-    - name: ASSERT - Check changed flag is false and return codes for idempotence
-      assert:
+    - name: ASSERT - Idempotence result
+      ansible.builtin.assert:
         that:
-          - 'result.changed == false'
-          - 'result.response is defined'
-          - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
-
-##############################################
-##             CLEANUP                      ##
-##############################################
+          - not idem_result.changed
+          - idem_result.response is defined
+          - idem_result.response | length >= 0
 
   always:
+    ##############################################
+    ##             CLEANUP                      ##
+    ##############################################
 
-    - name: Put fabric to default state
+    - name: Put fabric to default state (cleanup)
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-      register: result
-      when: IT_CONTEXT is not defined
+        state: overridden
+      register: cleanup_result
+      when: it_context is not defined
 
     - name: ASSERT - Check return codes for cleanup
-      assert:
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+          - item.RETURN_CODE == 200
+      loop: "{{ cleanup_result.response }}"
+      when: it_context is not defined

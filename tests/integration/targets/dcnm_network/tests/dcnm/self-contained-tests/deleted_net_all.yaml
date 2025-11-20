@@ -15,9 +15,9 @@
 - name: DELETED_ALL - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       net1_conf_template: "self-contained-tests/net1_conf.j2"
       net1_conf_file: "{{ role_path }}/files/self_contained_deleted_all_conf.yaml"
 
@@ -50,11 +50,11 @@
   register: result
 
 - name: DELETED_ALL - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
 
-- name: DELETED_ALL - Query fabric for creation of Network Object
+      - name: DELETED_ALL - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: query
@@ -72,11 +72,11 @@
   register: result
 
 - name: DELETED_ALL - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
 
-- name: DELETED_ALL - Delete any existing networks
+      - name: DELETED_ALL - Delete any existing networks
   cisco.dcnm.dcnm_network: &conf1
     fabric: "{{ test_data_common.fabric }}"
     state: deleted
@@ -87,7 +87,7 @@
     fabric: "{{ test_data_common.fabric }}"
     state: query
   register: verify_result
-  
+
 - name: DELETED_ALL - VALIDITY CHECK - Verify deleted network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
     config_path: "{{ test_data.net1_conf_file }}"
@@ -95,16 +95,16 @@
     test_data: "{{ test_data_common }}"
     check_deleted: true
   delegate_to: localhost
-  
+
 
 - name: DELETED_ALL - conf - Idempotence
   cisco.dcnm.dcnm_network: *conf1
   register: result
 
 - name: DELETED_ALL - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
 
 ##############################################
 ##                 CLEAN-UP                 ##

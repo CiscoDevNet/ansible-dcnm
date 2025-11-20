@@ -1,49 +1,52 @@
 ---
-- name: collect dcnm test cases
-  find:
+- name: Collect dcnm test cases
+  ansible.builtin.find:
     paths: "{{ role_path }}/tests/dcnm"
     patterns: "{{ testcase }}.yaml"
   connection: local
   register: dcnm_cases
   tags: sanity
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     test_cases:
       files: "{{ dcnm_cases.files }}"
   tags: sanity
 
-- name: set test_items
-  set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+- name: Set test_items
+  ansible.builtin.set_fact:
+    test_items: "{{ test_cases.files | map(attribute='path') | list }}"
   tags: sanity
 
-- name: run test cases (connection=httpapi)
-  include: "{{ test_case_to_run }}"
+- name: Run test cases (connection=httpapi)
+  ansible.builtin.include_tasks: "{{ test_case_to_run }}"
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run
   tags: sanity
 
-- name:  Final cleanup - delete all policies created during init
+- name: Final cleanup - delete all policies created during init
   cisco.dcnm.dcnm_policy:
-    fabric: "{{ ansible_it_fabric }}" 
+    fabric: "{{ ansible_it_fabric }}"
     state: deleted                     # only choose form [merged, deleted, query]
-    config: 
+    config:
       - name: template_inuse_1  # name is mandatory
       - name: template_inuse_2  # name is mandatory
       - name: my_feature_telemetry
       - switch:
           - ip: "{{ ansible_switch1 }}"
-  register: result  
+  register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
   tags: sanity
 
-- name:  Final cleanup - delete all templates created during init
-  cisco.dcnm.dcnm_template: 
+- name: Final cleanup - delete all templates created during init
+  cisco.dcnm.dcnm_template:
     state: deleted       # only choose form [merged, deleted, query]
     config:
       - name: template_inuse_1
@@ -52,8 +55,9 @@
   tags: sanity
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
   tags: sanity

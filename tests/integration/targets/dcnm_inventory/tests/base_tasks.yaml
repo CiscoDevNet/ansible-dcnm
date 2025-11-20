@@ -43,8 +43,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: base
-  import_tasks: conf_prep_tasks.yaml
+    ansible.builtin.file: base
+  ansible.builtin.import_tasks: conf_prep_tasks.yaml
 
 # ----------------------------------------------
 # Test Setup
@@ -53,10 +53,11 @@
   cisco.dcnm.dcnm_fabric:
     state: query
     config:
-    - FABRIC_NAME: "{{ test_data.test_fabric }}"
+      - FABRIC_NAME: "{{ test_data.test_fabric }}"
   register: query_result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - query_result.result[0].found == true
     fail_msg: "Fabric '{{ test_data.test_fabric }}' not found."

@@ -10,11 +10,12 @@
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+  register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - block:
@@ -98,7 +99,7 @@
       register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'verify_result.response | length == 0'
 
@@ -122,7 +123,7 @@
       register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'verify_result.response | length == 0'
 
@@ -138,7 +139,8 @@
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
       register: result
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
@@ -187,7 +189,7 @@
     - name: Delete interfaces - global deploy as true and deploy in config block as false
       cisco.dcnm.dcnm_interface:
         check_deploy: true
-        deploy: true 
+        deploy: true
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
         config: "{{ dcnm_interface_deploy_delete1_conf }}"
@@ -201,7 +203,7 @@
       register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'verify_result.response | length == 0'
 
@@ -217,7 +219,7 @@
     - name: Delete interfaces - global deploy as false and deploy in config block as true
       cisco.dcnm.dcnm_interface:
         check_deploy: true
-        deploy: false 
+        deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
         config: "{{ dcnm_interface_deploy_delete2_conf }}"
@@ -231,7 +233,7 @@
       register: verify_result
 
     - name: ASSERT - Verify interfaces are deleted (response length should be 0)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'verify_result.response | length == 0'
 
@@ -240,17 +242,17 @@
 ##############################################
 
   always:
-
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

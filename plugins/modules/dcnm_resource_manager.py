@@ -276,7 +276,6 @@ EXAMPLES = """
       - pool_name: "VPC_ID"                     # Based on the 'poolType', select appropriate name
         switch:                                 # provide the switch information to which the given resource is attached
           - 192.175.1.1
-
 """
 
 import json

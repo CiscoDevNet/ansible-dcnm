@@ -2,7 +2,8 @@
 ##               SETUP                      ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     controller_version: '12'
 
 - name: Determine version of DCNM or NDFC
@@ -10,39 +11,42 @@
     method: GET
     path: /appcenter/cisco/ndfc/api/about/version
   register: result
-  ignore_errors: yes
+  failed_when: false
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( 'response' in result and result.response['RETURN_CODE'] == 200 and result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: yes
+  failed_when: false
 
 - name: Determine version of DCNM or NDFC
   cisco.dcnm.dcnm_rest:
     method: GET
     path: /fm/fmrest/about/version
   register: result
-  ignore_errors: yes
+  failed_when: false
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( 'response' in result and result.response['RETURN_CODE'] == 200 and result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: yes
+  failed_when: false
 
 - name: Determine version of DCNM or NDFC
   cisco.dcnm.dcnm_rest:
     method: GET
     path: /fm/fmrest/about/version
   register: result
-  ignore_errors: yes
+  failed_when: false
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     controller_version: '11'
   when: ( 'response' in result and result.response['RETURN_CODE'] == 200 and result.response['DATA']['version'] == 'DEVEL' )
-  ignore_errors: yes
+  failed_when: false
 
 - name: Initialise fabric type
-  set_fact:
+  ansible.builtin.set_fact:
     fabric_type: ""
 
 - name: Get the Fabric associations
@@ -51,16 +55,16 @@
     path: "/rest/control/fabrics/{{ test_data_common.fabric }}"
   when: controller_version == '11'
   register: result
-  ignore_errors: yes
+  failed_when: false
 
 - name: Setting fact
-  set_fact:
+  ansible.builtin.set_fact:
     fabric_type: "{{ result.response['DATA']['fabricTechnology'] }}"
   when: (controller_version == '11' and 'response' in result and result.response['RETURN_CODE'] == 200)
-  ignore_errors: yes
+  failed_when: false
 
 - name: Show the Fabric Type
-  debug:
+  ansible.builtin.debug:
     var: fabric_type
 
 - name: Get the Fabric Type
@@ -69,16 +73,16 @@
     path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}"
   when: controller_version == '12'
   register: result
-  ignore_errors: yes
+  failed_when: false
 
 - name: Setting fact
-  set_fact:
+  ansible.builtin.set_fact:
     fabric_type: "{{ result.response['DATA']['fabricTechnology'] }}"
   when: (controller_version == '12' and 'response' in result and result.response['RETURN_CODE'] == 200)
-  ignore_errors: yes
+  failed_when: false
 
 - name: Show the fabric type
-  debug:
+  ansible.builtin.debug:
     var: fabric_type
 
 - name: Get switch inventory from fabric
@@ -86,13 +90,13 @@
     method: GET
     path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}/inventory/switchesByFabric"
   register: switch_inventory_result
-  ignore_errors: yes
+  failed_when: false
 
 - name: Create IP to Serial Number mapping
-  set_fact:
+  ansible.builtin.set_fact:
     ip_to_sn_mapping: "{{ ip_to_sn_mapping | default({}) | combine({item.ipAddress: item.serialNumber}) }}"
   loop: "{{ switch_inventory_result.response.DATA | default([]) }}"
-  when: 
+  when:
     - switch_inventory_result is defined
     - switch_inventory_result.response is defined
     - switch_inventory_result.response.RETURN_CODE == 200
@@ -101,11 +105,11 @@
     - item.serialNumber is defined
 
 - name: Show IP to Serial Number mapping
-  debug:
+  ansible.builtin.debug:
     var: ip_to_sn_mapping
   when: ip_to_sn_mapping is defined
 
 - name: Update test_data_common with fabric_type and ip_to_sn_mapping
-  set_fact:
+  ansible.builtin.set_fact:
     test_data_common: "{{ test_data_common | combine({'fabric_type': fabric_type, 'ip_to_sn_mapping': ip_to_sn_mapping | default({})}) }}"
   when: fabric_type is defined

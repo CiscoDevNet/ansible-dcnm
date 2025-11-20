@@ -15,9 +15,9 @@
 - name: SM_DHCP_PARAMS - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       net1_dhcp_conf_template: "self-contained-tests/net1_dhcp_conf.j2"
       net1_dhcp_conf_file: "{{ role_path }}/files/self_contained_dhcp_conf.yaml"
 
@@ -51,11 +51,11 @@
   register: result
 
 - name: SM_DHCP_PARAMS - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
 
-- name: SM_DHCP_PARAMS - Query fabric for creation of Network Object
+      - name: SM_DHCP_PARAMS - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: query

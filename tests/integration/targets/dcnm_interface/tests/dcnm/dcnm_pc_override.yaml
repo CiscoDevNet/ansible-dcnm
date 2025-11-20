@@ -10,18 +10,18 @@
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+  register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
-  loop: '{{ result.response }}'
+      - 'item["RETURN_CODE"] == 200'
+    loop: '{{ result.response }}'
 
 - block:
-
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -41,9 +41,9 @@
         - override
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
@@ -59,7 +59,7 @@
       register: result
 
     - name: ASSERT - Verify port channel interface creation results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -81,9 +81,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##           OVERRIDE                       ##
-##############################################
+    ##############################################
+    ##           OVERRIDE                       ##
+    ##############################################
 
     - name: Load Override Interface Config File
       ansible.builtin.set_fact:
@@ -99,7 +99,7 @@
       register: result
 
     - name: ASSERT - Verify port channel interface override results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -126,7 +126,7 @@
       register: result
 
     - name: ASSERT - Verify port channel interface override idempotence results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'item["RETURN_CODE"] == 200'
@@ -139,17 +139,17 @@
 ##############################################
 
   always:
-
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

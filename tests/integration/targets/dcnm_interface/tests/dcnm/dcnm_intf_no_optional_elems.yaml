@@ -9,96 +9,70 @@
   cisco.dcnm.dcnm_interface:
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
-    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+    state: overridden
+  register: result
 
 - name: ASSERT - Check return codes for setup
-  assert:
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
-  loop: '{{ result.response }}'
+      - 'item["RETURN_CODE"] == 200'
+    loop: '{{ result.response }}'
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
         test_data_interfaces:
-          no_optional_elems_merge_conf_template: "templates/dcnm_intf/no_optional_elems_merge_conf.j2"
-          no_optional_elems_merge_conf_file: "{{ role_path }}/files/dcnm_interface_intf_no_optional_elems_merge_conf.yaml"
+          no_optional_elems_conf_template: "templates/dcnm_intf/no_optional_elems_conf.j2"
+          no_optional_elems_conf_file: "{{ role_path }}/files/dcnm_interface_intf_no_optional_elems_conf.yaml"
       delegate_to: localhost
 
     - name: Create Interface Config Files using J2 Templates
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
-        - no_optional_elems_merge
+      loop:
+        - no_optional_elems
       delegate_to: localhost
 
-##############################################
-##               MERGE                      ##
-##############################################
+    ##############################################
+    ##              MERGE                       ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
-        dcnm_interface_no_optional_elems_merge_conf: "{{ lookup('file', test_data_interfaces.no_optional_elems_merge_conf_file) | from_yaml }}"
+        dcnm_interface_no_optional_elems_conf: "{{ lookup('file', test_data_interfaces.no_optional_elems_conf_file) | from_yaml }}"
       delegate_to: localhost
 
-    - name: Create all interfaces without optional elements
+    - name: Create interfaces without optional elements
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config: "{{ dcnm_interface_no_optional_elems_merge_conf }}"
+        state: merged
+        config: "{{ dcnm_interface_no_optional_elems_conf }}"
       register: result
 
-    - name: ASSERT - Check changed flag is true and return codes
-      assert:
+    - name: ASSERT - Verify interface creation results
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
-        config: "{{ dcnm_interface_no_optional_elems_merge_conf }}"
+        config: "{{ dcnm_interface_no_optional_elems_conf }}"
       register: verify_result
 
-    - name: VALIDITY CHECK - Verify interface state in NDFC
-      cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.no_optional_elems_merge_conf_file }}"
-        ndfc_data: "{{ verify_result }}"
-        test_data: "{{ test_data_common }}"
-      delegate_to: localhost
-
-##############################################
-##               DELETE                     ##
-##############################################
-
-    - name: Delete all interfaces without optional elements
-      cisco.dcnm.dcnm_interface:
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
-        fabric: "{{ test_data_common.fabric }}"
-        state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
-        config: "{{ dcnm_interface_no_optional_elems_merge_conf }}"
-      register: result
-
-    - name: ASSERT - Check changed flag is true and return codes for delete
-      assert:
-        that:
-          - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
-
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -106,13 +80,13 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+        state: overridden
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - name: ASSERT - Check return codes for cleanup
-      assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

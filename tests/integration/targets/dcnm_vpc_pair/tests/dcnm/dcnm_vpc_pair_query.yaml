@@ -17,11 +17,11 @@
   ansible.builtin.set_fact:
     # some cases are for a specific deploy state
     deploy_local: true
-    
+
     test_data_query:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       # TC1 - VPC Pair Configuration for query tests
       vpc_pair_setup_template: "merged/dcnm_vpc_pair_merged_full_conf.j2"
       vpc_pair_setup_file: "{{ role_path }}/files/dcnm_vpc_pair_query_setup_conf.yaml"
@@ -52,7 +52,7 @@
 
 - name: QUERY - TC1 - Load VPC Pair Setup Config File
   ansible.builtin.set_fact:
-    dcnm_vpc_pair_setup_conf: "{{ lookup('file', '{{ test_data_query.vpc_pair_setup_file }}') | from_yaml }}"
+    dcnm_vpc_pair_setup_conf: "{{ lookup('file', test_data_query.vpc_pair_setup_file) | from_yaml }}"
   delegate_to: localhost
   tags: query
 
@@ -65,7 +65,7 @@
   tags: query
 
 - name: QUERY - TC1 - ASSERT - Check if creation successful
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 1'
@@ -105,7 +105,7 @@
   tags: query
 
 - name: QUERY - TC2 - ASSERT - Check query results
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - '(result["response"] | length) == 1'
@@ -135,7 +135,7 @@
   tags: query
 
 - name: QUERY - TC3 - ASSERT - Check query results with both peers
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - '(result["response"] | length) == 1'
@@ -164,7 +164,7 @@
   tags: query
 
 - name: QUERY - TC4 - ASSERT - Check query results with one peer
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - '(result["response"] | length) == 1'
@@ -193,7 +193,7 @@
   tags: query
 
 - name: QUERY - TC5 - ASSERT - Check query results with second peer
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - '(result["response"] | length) == 1'
@@ -223,7 +223,7 @@
   ignore_errors: true
 
 - name: QUERY - TC6 - ASSERT - Check query results with non-existent peer
-  assert:
+  ansible.builtin.assert:
     that:
       - result.msg is search("not a valid one") or result.msg is search("Error")
   tags: query
@@ -236,5 +236,5 @@
   cisco.dcnm.dcnm_vpc_pair:
     src_fabric: "{{ test_data_common.fabric }}"
     state: deleted
-  when: IT_CONTEXT is not defined
+  when: it_context is not defined
   tags: query

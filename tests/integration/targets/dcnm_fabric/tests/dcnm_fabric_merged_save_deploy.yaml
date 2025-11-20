@@ -73,7 +73,8 @@
       - FABRIC_NAME: "{{ fabric_name_1 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # MERGED - TEST - Create fabric types that support adding switches.
@@ -87,8 +88,7 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "BGP_AS": 65535,
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
@@ -99,10 +99,9 @@
 #                 "IS_READ_ONLY": false,
 #                 "sequence_number": 2
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -114,9 +113,8 @@
 #                 "sequence_number": 2,
 #                 "state": "merged"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "BGP_AS": "65535",
@@ -143,9 +141,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -155,7 +152,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -173,9 +170,11 @@
         IS_READ_ONLY: false
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -228,7 +227,8 @@
         role: leaf
         preserve_config: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 - name: Merge leaf_2 into fabric_3
@@ -245,7 +245,8 @@
         # preserve_config must be True for LAN_CLASSIC
         preserve_config: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # MERGED - TEST - Merge additional valid configs into fabric_1 and fabric_3
@@ -257,8 +258,7 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "REPLICATION_MODE": "Ingress",
@@ -289,10 +289,9 @@
 #                 "config_deploy": "OK",
 #                 "sequence_number": 6
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -328,9 +327,8 @@
 #                 "sequence_number": 6,
 #                 "state": "merged"
 #             },
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
@@ -385,7 +383,8 @@
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/config-deploy?forceShowRun=false",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/"
+#                 "REQUEST_PATH": "config-deploy?forceShowRun=false",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 5
 #             },
@@ -395,13 +394,13 @@
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/config-deploy?forceShowRun=false",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/"
+#                 "REQUEST_PATH": "config-deploy?forceShowRun=false",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 6
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -431,7 +430,7 @@
 #                 "sequence_number": 6,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -450,9 +449,11 @@
         SUBINTERFACE_RANGE: 2-101
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -550,43 +551,41 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "MESSAGE": "No fabrics to update for merged state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
 - name: MERGED - TEST - Merge additional configs into fabric_1 and fabric_3 - idempotence
   cisco.dcnm.dcnm_fabric: *merge_fabric_1_3
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -614,9 +613,11 @@
     state: deleted
     config:
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -624,15 +625,17 @@
       - result.response[0].MESSAGE == "OK"
       - result.response[0].METHOD == "DELETE"
       - result.response[0].RETURN_CODE == 200
-- name: Delete switches from fabric_3
+      - name: Delete switches from fabric_3
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ fabric_name_3 }}"
     state: deleted
     config:
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -647,8 +650,7 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
 #             },
@@ -656,10 +658,9 @@
 #                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "sequence_number": 3
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -671,9 +672,8 @@
 #                 "sequence_number": 2,
 #                 "state": "deleted"
 #             },
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -689,9 +689,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -701,7 +700,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             },
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -712,9 +711,11 @@
       - FABRIC_NAME: "{{ fabric_name_1 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

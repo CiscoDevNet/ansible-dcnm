@@ -1375,9 +1375,9 @@ EXAMPLES = """
           peer1_description: "VPC acting as trunk peer1 - modified"
           peer2_description: "VPC acting as trunk peer2 - modified"
           peer1_cmds:                     # Freeform config
-              - no shutdown
+            - no shutdown
           peer2_cmds:                     # Freeform config
-              - no shutdown
+            - no shutdown
 
 # To delete or reset a particular interface on a specific switch in the fabric
 - name: Delete vPC interfaces
@@ -1405,7 +1405,7 @@ EXAMPLES = """
           admin_state: true               # choose from [true, false]
           mode: trunk                     # choose from [trunk, access]
           peer1_pcid: 752                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
-          #peer2_pcid: 1                  # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+          # peer2_pcid: 1                  # choose between [Min:1, Max:4096], if not given, will be VPC port-id
           peer1_members:                  # member interfaces on peer 1
             - e1/26
           peer2_members:                  # member interfaces on peer 2
@@ -1419,10 +1419,10 @@ EXAMPLES = """
           peer1_description: "VPC acting as trunk peer1"
           peer2_description: "VPC acting as trunk peer2"
           peer1_cmds:                     # Freeform config
-              - no shutdown
+            - no shutdown
               - no shutdown
           peer2_cmds:                     # Freeform config
-              - no shutdown
+            - no shutdown
               - no shutdown
 
 # SVI INTERFACES
@@ -1509,7 +1509,7 @@ EXAMPLES = """
 
 - name: Delete SVI interfaces
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
+    check_deploy: true
     fabric: "{{ ansible_svi_fabric }}"
     state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
     config:
@@ -1542,7 +1542,7 @@ EXAMPLES = """
 
 - name: Create AA FEX interfaces including optional parameters
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
+    check_deploy: true
     fabric: "{{ ansible_svi_fabric }}"
     state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
     config:
@@ -1598,7 +1598,7 @@ EXAMPLES = """
 
 - name: Delete AA FEX interfaces
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
+    check_deploy: true
     fabric: "{{ ansible_svi_fabric }}"
     state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
     config:
@@ -1685,7 +1685,7 @@ EXAMPLES = """
 
 - name: Delete ST FEX interfaces
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
+    check_deploy: true
     fabric: "{{ ansible_svi_fabric }}"
     state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
     config:
@@ -1805,8 +1805,6 @@ EXAMPLES = """
           - "192.172.1.1"
       - name: vpc750
         switch:
-          - "192.172.1.1"
-
 """
 
 import copy

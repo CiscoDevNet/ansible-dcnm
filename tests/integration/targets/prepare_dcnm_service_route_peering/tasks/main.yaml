@@ -10,7 +10,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -22,26 +23,27 @@
     service_fabric: "{{ ansible_it_service_fabric }}"
     state: deleted
     config:
-    - name: "{{ ansible_snode_1 }}"
-      type: firewall
-      form_factor: physical
-      svc_int_name: svc1
-      attach_interface: "{{ ansible_att_intf1 }}"
-      switches:
-        - "{{ ansible_switch1 }}"
-    - name: "{{ ansible_snode_2 }}"
-      type: load_balancer
-      form_factor: physical
-      svc_int_name: svc2
-      attach_interface: "{{ ansible_att_intf2 }}"
-      switches:
-        - "{{ ansible_switch1 }}"
+      - name: "{{ ansible_snode_1 }}"
+        type: firewall
+        form_factor: physical
+        svc_int_name: svc1
+        attach_interface: "{{ ansible_att_intf1 }}"
+        switches:
+          - "{{ ansible_switch1 }}"
+      - name: "{{ ansible_snode_2 }}"
+        type: load_balancer
+        form_factor: physical
+        svc_int_name: svc2
+        attach_interface: "{{ ansible_att_intf2 }}"
+        switches:
+          - "{{ ansible_switch1 }}"
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
   tags: sanity
 
@@ -52,75 +54,77 @@
     config:
       - vrf_name: "{{ ansible_vrf_11 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_12 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_21 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_22 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_31 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_32 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_41 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_42 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_51 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_52 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_61 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_62 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_71 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
       - vrf_name: "{{ ansible_vrf_72 }}"
         attach:
-            - ip_address: "{{ ansible_switch1 }}"
-            - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ ansible_switch1 }}"
+          - ip_address: "{{ ansible_switch2 }}"
   register: result
   tags: sanity
 
-- assert:
+- name: Assert response
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
   tags: sanity
 
 - name: Initialize the setup - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 10
   tags: sanity
 
-- tags: sanity
+- name: MERGE VRF and Service Node setup
+  tags: sanity test
   block:
 
 ##############################################
@@ -134,63 +138,64 @@
         config:
           - vrf_name: "{{ ansible_vrf_11 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_12 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_21 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_22 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_31 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_32 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_41 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_42 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_51 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_52 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_61 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_62 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_71 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
           - vrf_name: "{{ ansible_vrf_72 }}"
             attach:
-                - ip_address: "{{ ansible_switch1 }}"
-                - ip_address: "{{ ansible_switch2 }}"
+              - ip_address: "{{ ansible_switch1 }}"
+              - ip_address: "{{ ansible_switch2 }}"
       register: result
 
-    - assert:
+    - name: Assert
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -221,11 +226,12 @@
               - "{{ ansible_switch1 }}"
       register: result
 
-    - assert:
+    - name: Assert
+      ansible.builtin.assert:
         that:
-        - 'item["RETURN_CODE"] == 200'
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 - name: Initialize the setup - sleep for 180 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 180

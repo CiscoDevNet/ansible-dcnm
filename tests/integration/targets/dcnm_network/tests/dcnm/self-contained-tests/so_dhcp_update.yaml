@@ -15,12 +15,12 @@
 - name: SO_DHCP_UPDATE - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       double_net_dhcp_conf_template: "self-contained-tests/double_net_dhcp_conf.j2"
       double_net_dhcp_conf_file: "{{ role_path }}/files/self_contained_dhcp_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
       double_net_dhcp_changed_conf_template: "self-contained-tests/double_net_dhcp_changed_conf.j2"
       double_net_dhcp_changed_conf_file: "{{ role_path }}/files/self_contained_double_net_dhcp_changed_conf.yaml"
 
@@ -58,11 +58,11 @@
   register: result
 
 - name: SO_DHCP_UPDATE - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
 
-- name: SO_DHCP_UPDATE - Query fabric for creation of Network Object
+      - name: SO_DHCP_UPDATE - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: query
@@ -88,11 +88,11 @@
   register: result
 
 - name: SO_DHCP_UPDATE - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
 
-- name: SO_DHCP_UPDATE - Query fabric for creation of Network Object
+      - name: SO_DHCP_UPDATE - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: query

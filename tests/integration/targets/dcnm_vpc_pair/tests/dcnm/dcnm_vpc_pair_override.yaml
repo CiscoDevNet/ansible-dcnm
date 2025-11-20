@@ -17,16 +17,16 @@
   ansible.builtin.set_fact:
     # some cases are for a specific deploy state
     deploy_local: true
-    
+
     test_data_overridden:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       # TC1 - Initial VPC Pair Configuration for override
       vpc_pair_initial_template: "overridden/dcnm_vpc_pair_overridden_initial_conf.j2"
       vpc_pair_initial_file: "{{ role_path }}/files/dcnm_vpc_pair_overridden_initial_conf.yaml"
-      #----------------------------------
-      # TC2 - Overridden VPC Pair Configuration  
+      # ----------------------------------
+      # TC2 - Overridden VPC Pair Configuration
       vpc_pair_overridden_template: "overridden/dcnm_vpc_pair_overridden_conf.j2"
       vpc_pair_overridden_file: "{{ role_path }}/files/dcnm_vpc_pair_overridden_conf.yaml"
   delegate_to: localhost
@@ -63,7 +63,7 @@
 
 - name: OVERRIDDEN - TC1 - Load VPC Pair Initial Config File
   ansible.builtin.set_fact:
-    dcnm_vpc_pair_initial_conf: "{{ lookup('file', '{{ test_data_overridden.vpc_pair_initial_file }}') | from_yaml }}"
+    dcnm_vpc_pair_initial_conf: "{{ lookup('file', test_data_overridden.vpc_pair_initial_file) | from_yaml }}"
   delegate_to: localhost
   tags: overridden
 
@@ -76,7 +76,7 @@
   tags: overridden
 
 - name: OVERRIDDEN - TC1 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 1'
@@ -110,7 +110,7 @@
 # TC2 - Override with same VPC switch pair with changes
 - name: OVERRIDDEN - TC2 - Load VPC Pair Overridden Config File
   ansible.builtin.set_fact:
-    dcnm_vpc_pair_overridden_conf: "{{ lookup('file', '{{ test_data_overridden.vpc_pair_overridden_file }}') | from_yaml }}"
+    dcnm_vpc_pair_overridden_conf: "{{ lookup('file', test_data_overridden.vpc_pair_overridden_file) | from_yaml }}"
   delegate_to: localhost
   tags: overridden
 
@@ -123,7 +123,7 @@
   tags: overridden
 
 - name: OVERRIDDEN - TC2 - ASSERT - Check if changed flag is true for LANClassic
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 0'
@@ -131,11 +131,11 @@
       - '(result["diff"][0]["deleted"] | length) == 0'
       - '(result["diff"][0]["query"] | length) == 0'
       - '(result["diff"][0]["deploy"] | length) == 1'
-  when: (fabric_type == "LANClassic")
+    when: (fabric_type == "LANClassic")
   tags: overridden
 
 - name: OVERRIDDEN - TC2 - ASSERT - Check if changed flag is false for VXLANFabric
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - '(result["diff"][0]["merged"] | length) == 0'
@@ -143,7 +143,7 @@
       - '(result["diff"][0]["deleted"] | length) == 0'
       - '(result["diff"][0]["query"] | length) == 0'
       - '(result["diff"][0]["deploy"] | length) == 0'
-  when: (fabric_type == "VXLANFabric")
+    when: (fabric_type == "VXLANFabric")
   tags: overridden
 
 - name: OVERRIDDEN - TC2 - QUERY - Get VPC pair state in NDFC
@@ -175,7 +175,7 @@
   tags: overridden
 
 - name: OVERRIDDEN - TC3 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - '(result["diff"][0]["merged"] | length) == 0'
@@ -196,7 +196,7 @@
   tags: overridden
 
 - name: OVERRIDDEN - TC4 - ASSERT - Check if deletion successful
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 0'
@@ -254,7 +254,7 @@
   tags: overridden
 
 - name: OVERRIDDEN - TC6 - ASSERT - Check if no change occurred
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - '(result["diff"][0]["merged"] | length) == 0'
@@ -287,5 +287,5 @@
   cisco.dcnm.dcnm_vpc_pair:
     src_fabric: "{{ test_data_common.fabric }}"
     state: deleted
-  when: IT_CONTEXT is not defined
+  when: it_context is not defined
   tags: overridden

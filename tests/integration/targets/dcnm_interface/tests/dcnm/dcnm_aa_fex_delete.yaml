@@ -9,19 +9,21 @@
   cisco.dcnm.dcnm_interface:
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
-    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result
+    state: overridden  # only choose from [merged, replaced, deleted, overridden, query]
+  register: initial_override
 
-- assert:
+- name: Assert initial override succeeded
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+      - "item.RETURN_CODE == 200"
+  loop:
+    - "{{ initial_override.response }}"
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+  ##############################################
+  ##             SETUP VARS                   ##
+  ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -34,13 +36,13 @@
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - merged
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
@@ -48,79 +50,81 @@
       delegate_to: localhost
 
     - name: Create AA FEX interfaces including optional parameters
-      cisco.dcnm.dcnm_interface: &fex_merge2
+      cisco.dcnm.dcnm_interface: &fex_merge
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged  # only choose from [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_merged_conf }}"
-      register: result
+      register: result_create
+
+    - name: ASSERT - Check creation return codes
+      ansible.builtin.assert:
+        that:
+          - "item.RETURN_CODE == 200"
+      loop: "{{ result_create.response }}"
 
     - name: QUERY - Get AA FEX interface state in NDFC (merge)
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_merged_conf }}"
-      register: verify_result
+      register: result_query_merge
 
     - name: VALIDITY CHECK - Verify AA FEX interface state in NDFC (merge)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
         config_path: "{{ test_data_interfaces.merged_conf_file }}"
-        ndfc_data: "{{ verify_result }}"
+        ndfc_data: "{{ result_query_merge }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
 
     - name: Delete AA FEX interfaces
-      cisco.dcnm.dcnm_interface: &fex_del
+      cisco.dcnm.dcnm_interface: &fex_delete
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+        state: deleted  # only choose from [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_merged_conf }}"
-      register: result
-
+      register: result_delete
 
     - name: QUERY - Get AA FEX interface state in NDFC (delete)
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_merged_conf }}"
-      register: verify_result
+      register: result_query_delete
 
     - name: ASSERT - Verify AA FEX interfaces are deleted (response length should be 0)
-      assert:
+      ansible.builtin.assert:
         that:
-          - 'verify_result.response | length == 0'
+          - 'result_query_delete.response | length == 0'
 
     - name: Delete AA FEX interfaces - Idempotence
-      cisco.dcnm.dcnm_interface: *fex_del
-      register: result
+      cisco.dcnm.dcnm_interface: *fex_delete
+      register: result_delete_idem
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence (delete)
-      assert:
+      ansible.builtin.assert:
         that:
-          - 'result.changed == false'
-          - 'result.response is defined'
-          - 'result.response | length >= 0'
-
-##############################################
-##             CLEANUP                      ##
-##############################################
+          - 'result_delete_idem.changed == false'
+          - 'result_delete_idem.response is defined'
+          - 'result_delete_idem.response | length >= 0'
 
   always:
 
-    - name: Put fabric to default state
+    - name: Put fabric to default state (cleanup)
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-      register: result
-      when: IT_CONTEXT is not defined
+        state: overridden
+      register: cleanup_result
+      when: it_context is not defined
 
-    - assert:
+    - name: ASSERT - Cleanup override succeeded
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+          - 'item.RETURN_CODE == 200'
+      loop: "{{ cleanup_result.response }}"
+      when: it_context is not defined

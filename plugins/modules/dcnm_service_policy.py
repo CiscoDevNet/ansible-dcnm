@@ -283,7 +283,7 @@ EXAMPLES = """
           src_port: any
           dest_port: 22
           action: permit
-          next_hop_option:  none
+          next_hop_option: none
           acl_name: fwd_acl_10
           rev_acl_name: rev_acl_10
           route_map_num: 101
@@ -384,7 +384,7 @@ EXAMPLES = """
           src_port: 555
           dest_port: 22
           action: permit
-          next_hop_option:  none
+          next_hop_option: none
           acl_name: fwd_acl_555
           rev_acl_name: rev_acl_555
           route_map_num: 555
@@ -435,8 +435,6 @@ EXAMPLES = """
   service_fabric: external
   state: query
   config:
-    - node_name: it-sn-1
-
 """
 
 import time

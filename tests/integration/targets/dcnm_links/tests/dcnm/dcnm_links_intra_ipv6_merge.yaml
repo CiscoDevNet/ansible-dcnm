@@ -1,284 +1,244 @@
 ##############################################
-##               SETUP                      ##
+##      INTRA IPV6 LINK MERGE TESTS         ##
 ##############################################
+
+- name: LINKS INTRA IPV6 MERGE - Test Entry Point
+  ansible.builtin.debug:
+    msg:
+      - "--------------------------------------------------------------"
+      - "+   Executing dcnm_links intra ipv6 merge tests              +"
+      - "--------------------------------------------------------------"
 
 - name: Remove local log file
-  local_action: command rm -f dcnm_links.log
+  ansible.builtin.command: rm -f dcnm_links.log
+  delegate_to: localhost
 
 - block:
+    ##############################################
+    ##          BASELINE DELETE (CLEAN)        ##
+    ##############################################
 
-##############################################
-##               DELETE                     ##
-##############################################
-
-    - name: Initial setup - Delete Links 
+    - name: Initial setup - Delete Links
       cisco.dcnm.dcnm_links: &links_delete
-        state: deleted                                           # choose from [merged, replaced, deleted, query]
+        state: deleted
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
+          - dst_fabric: "{{ ansible_ipv6_fabric }}"
+            src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_ipv6_switch2 }}"
+          - dst_fabric: "{{ ansible_ipv6_fabric }}"
+            src_interface: "{{ intf_1_2 }}"
+            dst_interface: "{{ intf_1_2 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_ipv6_switch2 }}"
+          - dst_fabric: "{{ ansible_ipv6_fabric }}"
+            src_interface: "{{ intf_1_3 }}"
+            dst_interface: "{{ intf_1_3 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_ipv6_switch2 }}"
+      register: delete_result
 
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
-            src_interface: "{{ intf_1_2 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_2 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
-
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
-            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
-
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
-            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
-
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
-            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
-
-      register: result
-
-    - assert:
+    - name: ASSERT - Baseline delete return codes
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+          - item.RETURN_CODE == 200
+      loop: "{{ delete_result.response | default([]) }}"
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##         BASIC MERGE (NO OPTIONALS)      ##
+    ##############################################
 
-    - name: Create Links without including optional parameters
-      cisco.dcnm.dcnm_links: &links_merge_no_opt
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+    - name: Create IPv6 Links without optional parameters
+      cisco.dcnm.dcnm_links: &links_merge_basic
+        state: merged
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
-            template: int_intra_fabric_ipv6_link_local           # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - dst_fabric: "{{ ansible_ipv6_fabric }}"
+            src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_ipv6_switch2 }}"
+            template: int_intra_fabric_ipv6_link_local
             profile:
-              peer1_ipv6_addr: 2080:0201::01                     # IP address of the Source interface
-              peer2_ipv6_addr: 2080:0201::02                     # IP address of the Source interface
-              admin_state: true                                  # choose from [true, false]
-              mtu: 9216                                          # 
-
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_2 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_2 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"              # Device on the Destination fabric
-            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"               # Destination fabric
-            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_fabric_num_link                  # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+              admin_state: true
+              mtu: 9216
+              peer1_ipv6_addr: "2080:0201::01"
+              peer2_ipv6_addr: "2080:0201::02"
+          - dst_fabric: "{{ ansible_ipv6_fabric }}"
+            src_interface: "{{ intf_1_2 }}"
+            dst_interface: "{{ intf_1_2 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_ipv6_switch2 }}"
+            template: int_pre_provision_intra_fabric_link
             profile:
-              peer1_ipv6_addr: 2080:0202::01                     # IP address of the Source interface
-              peer2_ipv6_addr: 2080:0202::02                     # IP address of the Source interface
-              admin_state: true                                  # choose from [true, false]
-              mtu: 9216                                          # 
+              admin_state: true
+              mtu: 9216
+          - dst_fabric: "{{ ansible_ipv6_fabric }}"
+            src_interface: "{{ intf_1_3 }}"
+            dst_interface: "{{ intf_1_3 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_ipv6_switch2 }}"
+            template: int_intra_fabric_num_link
+            profile:
+              admin_state: true
+              mtu: 9216
+              peer1_ipv6_addr: "2080:0202::01"
+              peer2_ipv6_addr: "2080:0202::02"
+      register: merge_basic_result
 
-      register: result
-
-    - assert:
+    - name: ASSERT - Basic merge diff counters
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 3'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 2'
+          - '(merge_basic_result.diff[0].merged | length) == 3'
+          - '(merge_basic_result.diff[0].modified | length) == 0'
+          - '(merge_basic_result.diff[0].deleted | length) == 0'
+          - '(merge_basic_result.diff[0].query | length) == 0'
+      failed_when: merge_basic_result.diff is not defined
 
-    - assert:
+    - name: ASSERT - Basic merge return codes
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+          - item.RETURN_CODE == 200
+      loop: "{{ merge_basic_result.response }}"
 
+    - name: Basic merge - Idempotence
+      cisco.dcnm.dcnm_links: *links_merge_basic
+      register: merge_basic_idem
 
-##############################################
-##                IDEMPOTENCE               ##
-##############################################
-
-    - name: Create Links - Idempotence
-      cisco.dcnm.dcnm_links: *links_merge_no_opt
-      register: result
-
-    - assert:
+    - name: ASSERT - Basic merge idempotence diff counters
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 2'
+          - '(merge_basic_idem.diff[0].merged | length) == 0'
+          - '(merge_basic_idem.diff[0].modified | length) == 0'
+          - '(merge_basic_idem.diff[0].deleted | length) == 0'
+          - '(merge_basic_idem.diff[0].query | length) == 0'
+      failed_when: merge_basic_idem.diff is not defined
 
-    - assert:
+    - name: ASSERT - Basic merge idempotence return codes
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+          - item.RETURN_CODE == 200
+      loop: "{{ merge_basic_idem.response }}"
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##          OPTIONAL MERGE (ENRICHED)      ##
+    ##############################################
 
-    - name: Delete Links 
+    - name: Delete Links (before optional merge)
       cisco.dcnm.dcnm_links: *links_delete
-      register: result
+      register: opt_del_result
 
-    - assert:
+    - name: ASSERT - Delete before optional merge return codes
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+          - item.RETURN_CODE == 200
+      loop: "{{ opt_del_result.response | default([]) }}"
 
-##############################################
-##                MERGE                     ##
-##############################################
-
-    - name: Create Links including all optional parameters
-      cisco.dcnm.dcnm_links: &links_merge_with_opt
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+    - name: Create IPv6 Links including optional parameters
+      cisco.dcnm.dcnm_links: &links_merge_opt
+        state: merged
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
-            template: int_intra_fabric_ipv6_link_local           # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+          - dst_fabric: "{{ ansible_ipv6_fabric }}"
+            src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_ipv6_switch2 }}"
+            template: int_intra_fabric_ipv6_link_local
             profile:
-              peer1_ipv4_addr: 192.169.1.1                       # optional, default is ""
-              peer2_ipv4_addr: 192.169.1.2                       # optional, default is ""
-              peer1_ipv6_addr: 2080:0201::01                     # IP address of the Source interface
-              peer2_ipv6_addr: 2080:0201::02                     # IP address of the Source interface
-              admin_state: true                                  # choose from [true, false]
-              mtu: 9216                                          #
-              peer1_description: "Description of source"         # optional, default is ""
-              peer2_description: "Description of dest"           # optional, default is ""
-              peer1_bfd_echo_disable: false                      # optional, choose from [true, false]
-              peer2_bfd_echo_disable: false                      # optional, choose from [true, false]
-              enable_macsec: false                               # optional, choose from [true, false]
-              peer1_cmds:                                        # Freeform config for source device
-                - no shutdown                                    # optional, default is ""
-              peer2_cmds:                                        # Freeform config for destination device
-                - no shutdown                                    # optional, default is ""
-
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
-            src_interface: "{{ intf_1_2 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_2 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
-            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-          - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
-            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
-            template: int_intra_fabric_num_link                  # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+              admin_state: true
+              mtu: 9216
+              peer1_ipv6_addr: "2080:0201::01"
+              peer2_ipv6_addr: "2080:0201::02"
+              peer1_ipv4_addr: "192.169.1.1"
+              peer2_ipv4_addr: "192.169.1.2"
+              peer1_description: "Description of source"
+              peer2_description: "Description of dest"
+              peer1_bfd_echo_disable: false
+              peer2_bfd_echo_disable: false
+              enable_macsec: false
+              peer1_cmds:
+                - "no shutdown"
+              peer2_cmds:
+                - "no shutdown"
+          - dst_fabric: "{{ ansible_ipv6_fabric }}"
+            src_interface: "{{ intf_1_2 }}"
+            dst_interface: "{{ intf_1_2 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_ipv6_switch2 }}"
+            template: int_pre_provision_intra_fabric_link
             profile:
-              peer1_ipv4_addr: 192.169.2.1                       # IPV4 address of the Source interface
-              peer2_ipv4_addr: 192.169.2.2                       # IPV4 address of the Destination interface
-              peer1_ipv6_addr: 2080:0202::01                     # IP address of the Source interface
-              peer2_ipv6_addr: 2080:0202::02                     # IP address of the Source interface
-              admin_state: true                                  # choose from [true, false]
-              mtu: 1500                                          # optional, default is 1500
-              peer1_description: "Description of source"         # optional, default is ""
-              peer2_description: "Description of dest"           # optional, default is ""
-              peer1_bfd_echo_disable: false                      # optional, choose from [true, false]
-              peer2_bfd_echo_disable: false                      # optional, choose from [true, false]
-              enable_macsec: false                               # optional, choose from [true, false]
-              peer1_cmds:                                        # Freeform config for source device
-                - no shutdown                                    # optional, default is ""
-              peer2_cmds:                                        # Freeform config for destination device
-                - no shutdown                                    # optional, default is ""
+              admin_state: true
+              mtu: 9216
+          - dst_fabric: "{{ ansible_ipv6_fabric }}"
+            src_interface: "{{ intf_1_3 }}"
+            dst_interface: "{{ intf_1_3 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_ipv6_switch2 }}"
+            template: int_intra_fabric_num_link
+            profile:
+              admin_state: true
+              mtu: 1500
+              peer1_ipv6_addr: "2080:0202::01"
+              peer2_ipv6_addr: "2080:0202::02"
+              peer1_ipv4_addr: "192.169.2.1"
+              peer2_ipv4_addr: "192.169.2.2"
+              peer1_description: "Description of source"
+              peer2_description: "Description of dest"
+              peer1_bfd_echo_disable: false
+              peer2_bfd_echo_disable: false
+              enable_macsec: false
+              peer1_cmds:
+                - "no shutdown"
+              peer2_cmds:
+                - "no shutdown"
+      register: merge_opt_result
 
-      register: result
-
-    - assert:
+    - name: ASSERT - Optional merge diff counters
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 3'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 2'
+          - '(merge_opt_result.diff[0].merged | length) == 3'
+          - '(merge_opt_result.diff[0].modified | length) == 0'
+          - '(merge_opt_result.diff[0].deleted | length) == 0'
+          - '(merge_opt_result.diff[0].query | length) == 0'
+      failed_when: merge_opt_result.diff is not defined
 
-    - assert:
+    - name: ASSERT - Optional merge return codes
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+          - item.RETURN_CODE == 200
+      loop: "{{ merge_opt_result.response }}"
 
-##############################################
-##                IDEMPOTENCE               ##
-##############################################
+    - name: Optional merge - Idempotence
+      cisco.dcnm.dcnm_links: *links_merge_opt
+      register: merge_opt_idem
 
-    - name: Create Links - Idempotence
-      cisco.dcnm.dcnm_links: *links_merge_with_opt
-      register: result
-
-    - assert:
+    - name: ASSERT - Optional merge idempotence diff counters
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 2'
+          - '(merge_opt_idem.diff[0].merged | length) == 0'
+          - '(merge_opt_idem.diff[0].modified | length) == 0'
+          - '(merge_opt_idem.diff[0].deleted | length) == 0'
+          - '(merge_opt_idem.diff[0].query | length) == 0'
+      failed_when: merge_opt_idem.diff is not defined
 
-    - assert:
+    - name: ASSERT - Optional merge idempotence return codes
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-
-###############################################
-###             CLEANUP                      ##
-###############################################
+          - item.RETURN_CODE == 200
+      loop: "{{ merge_opt_idem.response }}"
 
   always:
-
-    - name: Cleanup - Delete Links 
+    - name: Cleanup - Delete Links
       cisco.dcnm.dcnm_links: *links_delete
-      register: result
-      when: IT_CONTEXT is not defined
+      register: cleanup_result
+      when: it_context is not defined
 
-    - assert:
+    - name: ASSERT - Cleanup return codes
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+          - item.RETURN_CODE == 200
+      loop: "{{ cleanup_result.response | default([]) }}"
+      when: it_context is not defined

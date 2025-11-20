@@ -340,35 +340,35 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged
     config:
-    - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 150
-      gw_ip_subnet: '192.168.30.1/24'
-      attach:
-      - ip_address: 192.168.1.224
-        ports: [Ethernet1/13, Ethernet1/14]
-      - ip_address: 192.168.1.225
-        ports: [Ethernet1/13, Ethernet1/14]
-      deploy: true
-    - net_name: ansible-net12
-      vrf_name: Tenant-2
-      net_id: 7002
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 151
-      gw_ip_subnet: '192.168.40.1/24'
-      attach:
-      - ip_address: 192.168.1.224
-        ports: [Ethernet1/11, Ethernet1/12]
-        tor_ports:
-        - ip_address: 192.168.1.120
-          ports: [Ethernet1/14, Ethernet1/15]
-      - ip_address: 192.168.1.225
-        ports: [Ethernet1/11, Ethernet1/12]
-      deploy: false
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 150
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+          - ip_address: 192.168.1.224
+            ports: [Ethernet1/13, Ethernet1/14]
+          - ip_address: 192.168.1.225
+            ports: [Ethernet1/13, Ethernet1/14]
+        deploy: true
+      - net_name: ansible-net12
+        vrf_name: Tenant-2
+        net_id: 7002
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 151
+        gw_ip_subnet: '192.168.40.1/24'
+        attach:
+          - ip_address: 192.168.1.224
+            ports: [Ethernet1/11, Ethernet1/12]
+            tor_ports:
+              - ip_address: 192.168.1.120
+                ports: [Ethernet1/14, Ethernet1/15]
+          - ip_address: 192.168.1.225
+            ports: [Ethernet1/11, Ethernet1/12]
+        deploy: false
 
 - name: Replace networks
   cisco.dcnm.dcnm_network:
@@ -383,31 +383,31 @@ EXAMPLES = """
         vlan_id: 150
         gw_ip_subnet: '192.168.30.1/24'
         dhcp_servers:
-        - srvr_ip: 192.168.1.1
-          srvr_vrf: vrf_01
-        - srvr_ip: 192.168.2.1
-          srvr_vrf: vrf_02
-        - srvr_ip: 192.168.3.1
-          srvr_vrf: vrf_03
-        - srvr_ip: 192.168.4.1
-          srvr_vrf: vrf_04
-        - srvr_ip: 192.168.5.1
-          srvr_vrf: vrf_05
-        - srvr_ip: 192.168.6.1
-          srvr_vrf: vrf_06
-        - srvr_ip: 192.168.7.1
-          srvr_vrf: vrf_07
-        - srvr_ip: 192.168.8.1
-          srvr_vrf: vrf_08
-        - srvr_ip: 192.168.9.1
-          srvr_vrf: vrf_09
-        - srvr_ip: 192.168.10.1
-          srvr_vrf: vrf_10
+          - srvr_ip: 192.168.1.1
+            srvr_vrf: vrf_01
+          - srvr_ip: 192.168.2.1
+            srvr_vrf: vrf_02
+          - srvr_ip: 192.168.3.1
+            srvr_vrf: vrf_03
+          - srvr_ip: 192.168.4.1
+            srvr_vrf: vrf_04
+          - srvr_ip: 192.168.5.1
+            srvr_vrf: vrf_05
+          - srvr_ip: 192.168.6.1
+            srvr_vrf: vrf_06
+          - srvr_ip: 192.168.7.1
+            srvr_vrf: vrf_07
+          - srvr_ip: 192.168.8.1
+            srvr_vrf: vrf_08
+          - srvr_ip: 192.168.9.1
+            srvr_vrf: vrf_09
+          - srvr_ip: 192.168.10.1
+            srvr_vrf: vrf_10
         attach:
-        - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.224
           # Replace the ports with new ports
           # ports: [Ethernet1/13, Ethernet1/14]
-          ports: [Ethernet1/16, Ethernet1/17]
+            ports: [Ethernet1/16, Ethernet1/17]
           # Delete this attachment
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
@@ -432,22 +432,22 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: overridden
     config:
-    - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 150
-      gw_ip_subnet: '192.168.30.1/24'
-      attach:
-      - ip_address: 192.168.1.224
-        # Replace the ports with new ports
-        # ports: [Ethernet1/13, Ethernet1/14]
-        ports: [Ethernet1/16, Ethernet1/17]
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 150
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+          - ip_address: 192.168.1.224
+            # Replace the ports with new ports
+            # ports: [Ethernet1/13, Ethernet1/14]
+            ports: [Ethernet1/16, Ethernet1/17]
         # Delete this attachment
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
-      deploy: true
+        deploy: true
       # Delete this network
       # - net_name: ansible-net12
       #   vrf_name: Tenant-2
@@ -468,21 +468,21 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: deleted
     config:
-    - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 150
-      gw_ip_subnet: '192.168.30.1/24'
-    - net_name: ansible-net12
-      vrf_name: Tenant-2
-      net_id: 7002
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 151
-      gw_ip_subnet: '192.168.40.1/24'
-      deploy: false
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 150
+        gw_ip_subnet: '192.168.30.1/24'
+      - net_name: ansible-net12
+        vrf_name: Tenant-2
+        net_id: 7002
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 151
+        gw_ip_subnet: '192.168.40.1/24'
+        deploy: false
 
 - name: Delete all the networkss
   cisco.dcnm.dcnm_network:
@@ -494,8 +494,8 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: query
     config:
-    - net_name: ansible-net13
-    - net_name: ansible-net12
+      - net_name: ansible-net13
+      - net_name: ansible-net12
 """
 
 import copy

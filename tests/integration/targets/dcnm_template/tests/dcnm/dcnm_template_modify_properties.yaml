@@ -2,48 +2,50 @@
 ##               SETUP                      ##
 ##############################################
 
-- name: Initialize the setup
-  cisco.dcnm.dcnm_template: 
-    state: deleted       # only choose form [merged, deleted, query]
+- name: Initialize templates (ensure clean slate)
+  cisco.dcnm.dcnm_template:
     config:
       - name: template_101
       - name: template_102
       - name: template_103
       - name: template_104
+  register: init_result
 
-  register: result
-
-- assert:
+- name: Assert initialization responses
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
-  loop: '{{ result.response }}'
+      - 'item["RETURN_CODE"] == 200'
+    loop: '{{ init_result.response }}'
 
 - block:
 
 ##############################################
-##                MERGE                     ##
+##                CREATE                    ##
 ##############################################
 
     - name: Create all templates
-      cisco.dcnm.dcnm_template: 
-        state: merged        # only choose form [merged, deleted, query]
+      cisco.dcnm.dcnm_template:
+        state: merged
         config:
           - name: template_101
+            description: "Template_101"
+            tags: "internal policy 101"
             content: |
-              telemetry
-                certificate /bootflash/telegraf.crt telegraf
-                destination-profile
-                  use-vrf management
-                destination-group 1
-                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
-                sensor-group 1
-                  data-source DME
-                  path sys/ch depth unbounded
-                subscription 1
-                  dst-grp 1
-                  snsr-grp 1 sample-interval 10000
+              certificate /bootflash/telegraf.crt telegraf
+              destination-profile
+                use-vrf management
+              destination-group 1
+                ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+              sensor-group 1
+                data-source DME
+                path sys/ch depth unbounded
+              subscription 1
+                dst-grp 1
+                snsr-grp 1 sample-interval 10000
 
           - name: template_102
+            description: "Template_102"
+            tags: "internal policy 102"
             content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
@@ -59,6 +61,8 @@
                   snsr-grp 2 sample-interval 20000
 
           - name: template_103
+            description: "Template_103"
+            tags: "internal policy 103"
             content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
@@ -89,40 +93,46 @@
                 subscription 4
                   dst-grp 4
                   snsr-grp 4 sample-interval 40000
+      register: create_result
 
-      register: result
-    - assert:
+    - name: Assert create diff and responses
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 4'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
+          - 'create_result.changed == true'
+          - '(create_result.diff[0].merged | length) == 4'
+          - '(create_result.diff[0].deleted | length) == 0'
+          - '(create_result.diff[0].query | length) == 0'
 
-    - assert:
+    - name: Assert create RETURN_CODE and status
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
-      loop: '{{ result.response }}'
+        loop: '{{ create_result.response }}'
 
-    - name: Modifying existing templates
-      cisco.dcnm.dcnm_template: &temp_repl
-        state: merged        # only choose form [merged, deleted, query]
+##############################################
+##           MODIFY PROPERTIES              ##
+##############################################
+
+    - name: Modify selected templates
+      cisco.dcnm.dcnm_template: &modify_set
+        state: merged
         config:
           - name: template_101
             description: "Template_101 - added this description"
+            tags: "internal policy 101"
             content: |
-              telemetry
-                certificate /bootflash/telegraf.crt telegraf
-                destination-profile
-                  use-vrf management
-                destination-group 1
-                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
-                sensor-group 1
-                  data-source DME
-                  path sys/ch depth unbounded
-                subscription 1
-                  dst-grp 1
-                  snsr-grp 1 sample-interval 10000
+              certificate /bootflash/telegraf.crt telegraf
+              destination-profile
+                use-vrf management
+              destination-group 1
+                ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+              sensor-group 1
+                data-source DME
+                path sys/ch depth unbounded
+              subscription 1
+                dst-grp 1
+                snsr-grp 1 sample-interval 10000
 
           - name: template_102
             description: "Template_102 - added this"
@@ -144,7 +154,7 @@
           - name: template_103
             description: "Template_103 - added this"
             tags: "internal policy 103 - added this"
-            content: |                                          # Content modified
+            content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -158,7 +168,7 @@
                   dst-grp 10
                   snsr-grp 10 sample-interval 30010
 
-          - name: template_104                                   # No modifications
+          - name: template_104
             description: "Template_104"
             tags: "internal policy 104"
             content: |
@@ -174,92 +184,90 @@
                 subscription 4
                   dst-grp 4
                   snsr-grp 4 sample-interval 40000
+      register: modify_result
 
-      register: result
-
-    - assert:
+    - name: Assert modify diff
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 3'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
+          - 'modify_result.changed == true'
+          - '(modify_result.diff[0].merged | length) == 3'
+          - '(modify_result.diff[0].deleted | length) == 0'
+          - '(modify_result.diff[0].query | length) == 0'
 
-    - assert:
+    - name: Assert modify RESULT codes
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
-      loop: '{{ result.response }}'
+        loop: '{{ modify_result.response }}'
 
-    - name: Modifying existing templates - Idempotence
-      cisco.dcnm.dcnm_template: *temp_repl
-      register: result
+    - name: Idempotence check for modify
+      cisco.dcnm.dcnm_template: *modify_set
+      register: modify_idem_result
 
-    - assert:
+    - name: Assert idempotence modify
+      ansible.builtin.assert:
         that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-
-    - name: Query modified templates
-      cisco.dcnm.dcnm_template: 
-        state: query       # only choose form [merged, deleted, query]
-        config:
-          - name: template_101
-
-          - name: template_102
-
-          - name: template_103
-
-          - name: template_104
-
-      register: result
-
-    - assert:
-        that:
-          - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 4'
-          - '("Template_101 - added this description" in result["response"][0]["description"])'
-          - '("Template_102 - added this" in result["response"][1]["description"])'
-          - '("internal policy 102 - added this" in result["response"][1]["tags"])'
-          - '("Template_103 - added this" in result["response"][2]["description"])'
-          - '("internal policy 103 - added this" in result["response"][2]["tags"])'
-          - '("Template_104" in result["response"][3]["description"])'
-          - '("internal policy 104" in result["response"][3]["tags"])'
-          - '("port 54000" in result["response"][3]["content"])'
-          - '("sample-interval 40000" in result["response"][3]["content"])'
+          - 'modify_idem_result.changed == false'
+          - '(modify_idem_result.diff[0].merged | length) == 0'
+          - '(modify_idem_result.diff[0].deleted | length) == 0'
+          - '(modify_idem_result.diff[0].query | length) == 0'
 
 ##############################################
-##             CLEANUP                      ##
+##                 QUERY                     ##
+##############################################
+
+    - name: Query modified templates
+      cisco.dcnm.dcnm_template:
+        state: query
+        config:
+          - name: template_101
+          - name: template_102
+          - name: template_103
+          - name: template_104
+      register: query_result
+
+    - name: Assert query results
+      ansible.builtin.assert:
+        that:
+          - 'query_result.changed == false'
+          - '(query_result.diff[0].query | length) == 4'
+          - '("Template_101 - added this description" in query_result.response[0].description)'
+          - '("Template_102 - added this" in query_result.response[1].description)'
+          - '("internal policy 102 - added this" in query_result.response[1].tags)'
+          - '("Template_103 - added this" in query_result.response[2].description)'
+          - '("internal policy 103 - added this" in query_result.response[2].tags)'
+          - '("Template_104" in query_result.response[3].description)'
+          - '("internal policy 104" in query_result.response[3].tags)'
+          - '("port 54000" in query_result.response[3].content)'
+          - '("sample-interval 40000" in query_result.response[3].content)'
+
+##############################################
+##               CLEANUP                    ##
 ##############################################
 
   always:
-
     - name: Delete all templates created
-      cisco.dcnm.dcnm_template: 
-        state: deleted       # only choose form [merged, deleted, query]
+      cisco.dcnm.dcnm_template:
+        state: deleted
         config:
           - name: template_101
-
           - name: template_102
-
           - name: template_103
-
           - name: template_104
+      register: delete_result
 
-      register: result
-
-    - assert:
+    - name: Assert deletion responses
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
           - '"Template deletion successful" in item["DATA"]'
-      loop: '{{ result.response }}'
+        loop: '{{ delete_result.response }}'
 
-    - assert:
+    - name: Assert deletion diff
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 4'
-          - '(result["diff"][0]["query"] | length) == 0'
+          - 'delete_result.changed == true'
+          - '(delete_result.diff[0].deleted | length) == 4'
+          - '(delete_result.diff[0].merged | length) == 0'
+          - '(delete_result.diff[0].query | length) == 0'

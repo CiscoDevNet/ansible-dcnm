@@ -3,7 +3,7 @@
 ##############################################
 
 - name: Initialize the setup
-  cisco.dcnm.dcnm_template: 
+  cisco.dcnm.dcnm_template:
     state: deleted       # only choose form [merged, deleted, query]
     config:
       - name: template_101
@@ -13,10 +13,11 @@
 
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
-  loop: '{{ result.response }}'
+      - 'item["RETURN_CODE"] == 200'
+    loop: '{{ result.response }}'
 
 - block:
 
@@ -29,9 +30,9 @@
         state: replaced        # only choose form [merged, deleted, query]
         config:
           - name: template_101
-            description: "Template_101"
-            tags: "internal policy 101"
-            content: |
+        description: "Template_101"
+        tags: "internal policy 101"
+        content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
                 destination-profile
@@ -46,9 +47,10 @@
                   snsr-grp 1 sample-interval 10000
 
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
-    - assert:
-        that:
-          - 'result.changed == false'
-          - 'result["msg"] == "value of state must be one of: merged, deleted, query, got: replaced"'
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+      that:
+        - 'result.changed == false'
+        - 'result["msg"] == "value of state must be one of: merged, deleted, query, got: replaced"'

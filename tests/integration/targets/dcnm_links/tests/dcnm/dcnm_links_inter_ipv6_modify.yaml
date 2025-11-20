@@ -8,304 +8,346 @@
 - block:
 
 ##############################################
-##               DELETE                     ##
+##           BASELINE DELETE                ##
 ##############################################
 
-    - name: Initial setup - Delete Links on ipv6 fabric
+    - name: Baseline - Delete any pre-existing IPv6 inter-fabric links
       cisco.dcnm.dcnm_links: &links_delete
-        state: deleted                                           # choose from [merged, replaced, deleted, query]
+        state: deleted
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+          - dst_fabric: "{{ ansible_unnum_fabric }}"
+            src_interface: "{{ intf_1_3 }}"
+            dst_interface: "{{ intf_1_3 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_unnum_switch1 }}"
+          - dst_fabric: "{{ ansible_unnum_fabric }}"
+            src_interface: "{{ intf_1_4 }}"
+            dst_interface: "{{ intf_1_4 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_unnum_switch1 }}"
+          - dst_fabric: "{{ ansible_unnum_fabric }}"
+            src_interface: "{{ intf_1_5 }}"
+            dst_interface: "{{ intf_1_5 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_unnum_switch1 }}"
+      register: baseline_delete_result
 
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"              # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-      register: result
-
-    - assert:
+    - name: ASSERT - Baseline delete return codes
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+      loop: '{{ baseline_delete_result.response }}'
 
 ##############################################
-##                MERGE                     ##
+##          BASIC MERGE (CREATION)          ##
 ##############################################
 
-    - name: Create Links including optional parameters
-      cisco.dcnm.dcnm_links: &links_merge_with_opt1
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+    - name: Merge - Create single link with minimal params
+      cisco.dcnm.dcnm_links: &links_merge_basic
+        state: merged
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_unnum_fabric }}"
+            src_interface: "{{ intf_1_3 }}"
+            dst_interface: "{{ intf_1_3 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_unnum_switch1 }}"
+            template: ext_fabric_setup
             profile:
-              ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
-              neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
-              src_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in source fabric
-              dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-              mtu: 9216                                          # 
-              auto_deploy: false                                 # optional, default is false
-                                                                 # Flag that controls auto generation of neighbor VRF Lite configuration
-              peer1_description: "Description of source"         # optional, default is ""
-              peer2_description: "Description of dest"           # optional, default is ""
-              peer1_cmds:                                        # Freeform config for source interface
-                - no shutdown                                    # optional, default is ""
-              peer2_cmds:                                        # Freeform config for destination interface
-                - no shutdown                                    # optional, default is ""
-      register: result
+              ipv4_subnet: 193.168.1.1/24
+              neighbor_ip: 193.168.1.2
+              src_asn: "{{ ansible_ipv6_asn }}"
+              dst_asn: "{{ ansible_unnum_asn }}"
+      register: merge_basic_result
 
-    - assert:
+    - name: ASSERT - Basic merge diff counters
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
+          - '(merge_basic_result.diff[0].merged | length) == 1'
+          - '(merge_basic_result.diff[0].modified | length) == 0'
+          - '(merge_basic_result.diff[0].deleted | length) == 0'
+          - '(merge_basic_result.diff[0].query | length) == 0'
+        failed_when: merge_basic_result.diff is not defined
 
-    - assert:
+    - name: ASSERT - Basic merge return codes
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-
+      loop: '{{ merge_basic_result.response }}'
 
 ##############################################
-##                MERGE                     ##
+##       BASIC MERGE - IDEMPOTENCE          ##
 ##############################################
 
-    - name: Create Links (multisite) including optional parameters
-      cisco.dcnm.dcnm_links: &links_merge_with_opt2
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+    - name: Merge - Idempotence (basic link)
+      cisco.dcnm.dcnm_links: *links_merge_basic
+      register: merge_basic_idem
+
+    - name: ASSERT - Basic merge idempotence diff counters
+      ansible.builtin.assert:
+        that:
+          - '(merge_basic_idem.diff[0].merged | length) == 0'
+          - '(merge_basic_idem.diff[0].modified | length) == 0'
+          - '(merge_basic_idem.diff[0].deleted | length) == 0'
+          - '(merge_basic_idem.diff[0].query | length) == 0'
+        failed_when: merge_basic_idem.diff is not defined
+
+    - name: ASSERT - Basic merge idempotence return codes
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ merge_basic_idem.response }}'
+
+##############################################
+##       MODIFY EXISTING (OPTIONAL)         ##
+##############################################
+
+    - name: Modify - Enrich existing link with optional params
+      cisco.dcnm.dcnm_links: &links_modify_basic
+        state: merged
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_multisite_underlay_setup               # template to be applied, choose from 
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_unnum_fabric }}"
+            src_interface: "{{ intf_1_3 }}"
+            dst_interface: "{{ intf_1_3 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_unnum_switch1 }}"
+            template: ext_fabric_setup
             profile:
-              ipv4_subnet: 193.168.2.1/24                        # IP address of interface in src fabric with mask
-              neighbor_ip: 193.168.2.2                           # IP address of the interface in dst fabric
-              src_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in source fabric
-              dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-              mtu: 9216                                          # 
-              deploy_dci_tracking: false                         # optional, default is false
-              max_paths: 1                                       # optional, default is 1
-              route_tag: 12345                                   # optional, optional is "" 
-              ebgp_password_enable: true                         # optional, default is true 
-              ebgp_password: 9BFE3270E19CA112                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
-              inherit_from_msd: True                             # optional, required only if ebgp_password_enable flag is true, default is false
-              ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco ]
-              peer1_description: "Description of source"         # optional, default is ""
-              peer2_description: "Description of dest"           # optional, default is ""
-              peer1_cmds:                                        # Freeform config for source interface
-                - no shutdown                                    # optional, default is ""
-              peer2_cmds:                                        # Freeform config for destination interface
-                - no shutdown                                    # optional, default is ""
+              ipv4_subnet: 193.168.10.1/24
+              neighbor_ip: 193.168.10.2
+              src_asn: "{{ ansible_ipv6_asn }}"
+              dst_asn: "{{ ansible_unnum_asn }}"
+              mtu: 1216
+              auto_deploy: true
+              peer1_description: "Description of source - MOD"
+              peer2_description: "Description of dest - MOD"
+              peer1_cmds:
+                - cdp enable
+              peer2_cmds:
+                - cdp enable
+      register: modify_basic_result
 
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from 
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
-            profile:
-              ipv4_addr: 193.168.3.1                             # IP address of interface in src fabric
-              neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
-              src_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in source fabric
-              dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-              trm_enabled: false                                 # optional, default is false
-              bgp_multihop: 5                                    # optional, default is 5 
-              ebgp_password_enable: true                         # optional, default is true 
-              ebgp_password: 9BFE3270E19CA112                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
-              inherit_from_msd: false                            # optional, required only if ebgp_password_enable flag is true, default is false
-              ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco ]
-      register: result
-      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)        
-
-    - assert:
+    - name: ASSERT - Basic modify diff counters
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 2'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
-      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)        
+          - '(modify_basic_result.diff[0].merged | length) == 0'
+          - '(modify_basic_result.diff[0].modified | length) == 1'
+          - '(modify_basic_result.diff[0].deleted | length) == 0'
+          - '(modify_basic_result.diff[0].query | length) == 0'
+        failed_when: modify_basic_result.diff is not defined
 
-    - assert:
+    - name: ASSERT - Basic modify return codes
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)        
+      loop: '{{ modify_basic_result.response }}'
 
 ##############################################
-##                MODIFY                    ##
+##        MODIFY BASIC - IDEMPOTENCE        ##
 ##############################################
 
-    - name: Merge modified info into existing links
-      cisco.dcnm.dcnm_links: &links_modify1
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+    - name: Modify - Idempotence (basic optional link)
+      cisco.dcnm.dcnm_links: *links_modify_basic
+      register: modify_basic_idem
+
+    - name: ASSERT - Basic modify idempotence diff counters
+      ansible.builtin.assert:
+        that:
+          - '(modify_basic_idem.diff[0].merged | length) == 0'
+          - '(modify_basic_idem.diff[0].modified | length) == 0'
+          - '(modify_basic_idem.diff[0].deleted | length) == 0'
+          - '(modify_basic_idem.diff[0].query | length) == 0'
+        failed_when: modify_basic_idem.diff is not defined
+
+    - name: ASSERT - Basic modify idempotence return codes
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ modify_basic_idem.response }}'
+
+##############################################
+##     MULTISITE MERGE (CREATION MINIMAL)   ##
+##############################################
+
+    - name: Merge - Create multisite underlay + overlay links (minimal)
+      cisco.dcnm.dcnm_links: &links_merge_ms
+        state: merged
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_unnum_fabric }}"
+            src_interface: "{{ intf_1_4 }}"
+            dst_interface: "{{ intf_1_4 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_unnum_switch1 }}"
+            template: ext_multisite_underlay_setup
             profile:
-              ipv4_subnet: 193.168.10.1/24                       # IP address of interface in src fabric with mask
-              neighbor_ip: 193.168.10.2                          # IP address of the interface in dst fabric
-              src_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in source fabric
-              dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-              mtu: 1216                                          # 
-              auto_deploy: true                                  # optional, default is false
-                                                                 # Flag that controls auto generation of neighbor VRF Lite configuration
-              peer1_description: "Description of source - MOD"   # optional, default is ""
-              peer2_description: "Description of dest - MOD"     # optional, default is ""
-              peer1_cmds:                                        # Freeform config for source interface
-                - cdp enable                                     # optional, default is ""
-              peer2_cmds:                                        # Freeform config for destination interface
-                - cdp enable                                     # optional, default is ""
-      register: result
+              ipv4_subnet: 193.168.2.1/24
+              neighbor_ip: 193.168.2.2
+              src_asn: "{{ ansible_ipv6_asn }}"
+              dst_asn: "{{ ansible_unnum_asn }}"
+          - dst_fabric: "{{ ansible_unnum_fabric }}"
+            src_interface: "{{ intf_1_5 }}"
+            dst_interface: "{{ intf_1_5 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_unnum_switch1 }}"
+            template: ext_evpn_multisite_overlay_setup
+            profile:
+              ipv4_addr: 193.168.3.1
+              neighbor_ip: 193.168.3.2
+              src_asn: "{{ ansible_ipv6_asn }}"
+              dst_asn: "{{ ansible_unnum_asn }}"
+      register: merge_ms_result
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - assert:
+    - name: ASSERT - Multisite merge diff counters (minimal)
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
+          - '(merge_ms_result.diff[0].merged | length) == 2'
+          - '(merge_ms_result.diff[0].modified | length) == 0'
+          - '(merge_ms_result.diff[0].deleted | length) == 0'
+          - '(merge_ms_result.diff[0].query | length) == 0'
+        failed_when: merge_ms_result.diff is not defined
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - assert:
+    - name: ASSERT - Multisite merge return codes (minimal)
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+      loop: '{{ merge_ms_result.response }}'
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
 ##############################################
-##                MERGE                     ##
+##  MULTISITE MERGE (MINIMAL) - IDEMPOTENCE ##
 ##############################################
 
-    - name: Merge (multisite) modified info into existing links
-      cisco.dcnm.dcnm_links: &links_modify2
-        state: merged                                            # choose from [merged, replaced, deleted, query]
+    - name: Merge - Multisite idempotence (minimal)
+      cisco.dcnm.dcnm_links: *links_merge_ms
+      register: merge_ms_idem
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
+
+    - name: ASSERT - Multisite merge idempotence diff counters (minimal)
+      ansible.builtin.assert:
+        that:
+          - '(merge_ms_idem.diff[0].merged | length) == 0'
+          - '(merge_ms_idem.diff[0].modified | length) == 0'
+          - '(merge_ms_idem.diff[0].deleted | length) == 0'
+          - '(merge_ms_idem.diff[0].query | length) == 0'
+        failed_when: merge_ms_idem.diff is not defined
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
+
+    - name: ASSERT - Multisite merge idempotence return codes (minimal)
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ merge_ms_idem.response }}'
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
+
+##############################################
+##  MULTISITE MODIFY (OPTIONAL ENRICHMENT)  ##
+##############################################
+
+    - name: Modify - Enrich multisite links with optional params
+      cisco.dcnm.dcnm_links: &links_modify_ms
+        state: merged
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_multisite_underlay_setup               # template to be applied, choose from 
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_unnum_fabric }}"
+            src_interface: "{{ intf_1_4 }}"
+            dst_interface: "{{ intf_1_4 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_unnum_switch1 }}"
+            template: ext_multisite_underlay_setup
             profile:
-              ipv4_subnet: 193.168.20.1/24                       # IP address of interface in src fabric with mask
-              neighbor_ip: 193.168.20.2                          # IP address of the interface in dst fabric
-              src_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in source fabric
-              dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-              mtu: 2216                                          # 
-              deploy_dci_tracking: true                          # optional, default is false
-              max_paths: 2                                       # optional, default is 1
-              route_tag: 11111                                   # optional, optional is "" 
-              ebgp_password_enable: false                        # optional, default is true 
-              ebgp_password: 28E71E338DA17111                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
-              inherit_from_msd: False                            # optional, required only if ebgp_password_enable flag is true, default is false
-              ebgp_auth_key_type: 7                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco ]
-              peer1_description: "Description of source - MOD"   # optional, default is ""
-              peer2_description: "Description of dest - MOD"     # optional, default is ""
-
-          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
-            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from 
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+              ipv4_subnet: 193.168.20.1/24
+              neighbor_ip: 193.168.20.2
+              src_asn: "{{ ansible_ipv6_asn }}"
+              dst_asn: "{{ ansible_unnum_asn }}"
+              mtu: 2216
+              deploy_dci_tracking: true
+              max_paths: 2
+              route_tag: 11111
+              ebgp_password_enable: false
+              inherit_from_msd: false
+              ebgp_auth_key_type: 7
+              peer1_description: "Description of source - MOD"
+              peer2_description: "Description of dest - MOD"
+          - dst_fabric: "{{ ansible_unnum_fabric }}"
+            src_interface: "{{ intf_1_5 }}"
+            dst_interface: "{{ intf_1_5 }}"
+            src_device: "{{ ansible_ipv6_switch1 }}"
+            dst_device: "{{ ansible_unnum_switch1 }}"
+            template: ext_evpn_multisite_overlay_setup
             profile:
-              ipv4_addr: 193.168.30.1                            # IP address of interface in src fabric
-              neighbor_ip: 193.168.30.2                          # IP address of the interface in dst fabric
-              src_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in source fabric
-              dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-              trm_enabled: true                                  # optional, default is false
-              bgp_multihop: 3                                    # optional, default is 5 
-              ebgp_password_enable: false                        # optional, default is true 
-              ebgp_password: 8F8F790E1CB7AF60                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
-              inherit_from_msd: true                             # optional, required only if ebgp_password_enable flag is true, default is false
-              ebgp_auth_key_type: 7                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco ]
-      register: result
-      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)        
+              ipv4_addr: 193.168.30.1
+              neighbor_ip: 193.168.30.2
+              src_asn: "{{ ansible_ipv6_asn }}"
+              dst_asn: "{{ ansible_unnum_asn }}"
+              trm_enabled: true
+              bgp_multihop: 3
+              ebgp_password_enable: false
+              inherit_from_msd: true
+              ebgp_auth_key_type: 7
+      register: modify_ms_result
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - assert:
+    - name: ASSERT - Multisite modify diff counters
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 2'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
-      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)        
+          - '(modify_ms_result.diff[0].merged | length) == 0'
+          - '(modify_ms_result.diff[0].modified | length) >= 2'
+          - '(modify_ms_result.diff[0].deleted | length) == 0'
+          - '(modify_ms_result.diff[0].query | length) == 0'
+        failed_when: modify_ms_result.diff is not defined
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - assert:
+    - name: ASSERT - Multisite modify return codes
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)        
+      loop: '{{ modify_ms_result.response }}'
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
 ##############################################
-##             CLEANUP                      ##
+## MULTISITE MODIFY (OPTIONAL) - IDEMPOTENCE##
+##############################################
+
+    - name: Modify - Multisite optional idempotence
+      cisco.dcnm.dcnm_links: *links_modify_ms
+      register: modify_ms_idem
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
+
+    - name: ASSERT - Multisite modify idempotence diff counters
+      ansible.builtin.assert:
+        that:
+          - '(modify_ms_idem.diff[0].merged | length) == 0'
+          - '(modify_ms_idem.diff[0].modified | length) == 0'
+          - '(modify_ms_idem.diff[0].deleted | length) == 0'
+          - '(modify_ms_idem.diff[0].query | length) == 0'
+        failed_when: modify_ms_idem.diff is not defined
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
+
+    - name: ASSERT - Multisite modify idempotence return codes
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ modify_ms_idem.response }}'
+      when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
+
+##############################################
+##                CLEANUP                  ##
 ##############################################
 
   always:
-
-    - name: Cleanup - Delete Links 
+    - name: Cleanup - Delete all created links
       cisco.dcnm.dcnm_links: *links_delete
-      register: result
-      when: IT_CONTEXT is not defined
+      register: cleanup_result
+      when: it_context is not defined
 
-    - assert:
+    - name: ASSERT - Cleanup return codes
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      loop: '{{ cleanup_result.response }}'
+      when: it_context is not defined

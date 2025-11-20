@@ -15,15 +15,15 @@
 - name: OVERRIDDEN_ALL - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       net1_conf_template: "self-contained-tests/net1_conf.j2"
       net1_conf_file: "{{ role_path }}/files/self_contained_overridden_all_net1_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
       net2_conf_template: "self-contained-tests/net2_conf.j2"
       net2_conf_file: "{{ role_path }}/files/self_contained_overridden_all_net2_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
 
 - name: OVERRIDDEN_ALL - Create Network Config File using J2 Template
   ansible.builtin.template:
@@ -59,11 +59,11 @@
   register: result
 
 - name: OVERRIDDEN_ALL - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
 
-- name: OVERRIDDEN_ALL - Query fabric for creation of Network Object
+      - name: OVERRIDDEN_ALL - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: query
@@ -89,11 +89,11 @@
   register: result
 
 - name: OVERRIDDEN_ALL - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
 
-- name: OVERRIDDEN_ALL - Query fabric for creation of Network Object
+      - name: OVERRIDDEN_ALL - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: query
@@ -111,9 +111,9 @@
   register: result
 
 - name: OVERRIDDEN_ALL - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
-    - 'result.changed == false'
+      - 'result.changed == false'
 
 ##############################################
 ##                 CLEAN-UP                 ##

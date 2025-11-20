@@ -1,9 +1,9 @@
-black==24.3.0 ; python_version > '3.5'
+black>=24.3.0 ; python_version > '3.5'
 flake8
 pexpect
 yamllint
 pytest-xdist
-coverage==4.5.4
-deepdiff==8.6.1
-pydantic==2.11.4
+coverage>=4.5.4
+deepdiff>=8.6.1
+pydantic>=2.11.4
 ansible.netcommon>=4.1.0

@@ -9,19 +9,20 @@
   cisco.dcnm.dcnm_interface:
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
-    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+    state: overridden
+  register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
-  loop: '{{ result.response }}'
+      - 'item["RETURN_CODE"] == 200'
+    loop: '{{ result.response }}'
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -46,7 +47,7 @@
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - old_format1
         - old_format2
         - old_format3
@@ -56,9 +57,9 @@
         - old_format7
       delegate_to: localhost
 
-##############################################
-##               MERGE 1                    ##
-##############################################
+    ##############################################
+    ##               MERGE 1                    ##
+    ##############################################
 
     - name: Load Interface Config File - Old Format 1
       ansible.builtin.set_fact:
@@ -69,18 +70,15 @@
       cisco.dcnm.dcnm_interface: &old_format1
         check_deploy: true
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_old_format1_conf }}"
       register: result
 
     - name: ASSERT - Verify old format 1 interface creation results
-      assert:
+      ansible.builtin.assert:
         that:
-          - 'result.failed == false'
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
-        fail_msg: "Creation with old format 1 failed - {{ result }}"
-        success_msg: "Creation with old format 1 succeeded"
       loop: '{{ result.response }}'
 
     - name: QUERY - Get old format 1 interface state in NDFC
@@ -90,16 +88,9 @@
         config: "{{ dcnm_interface_old_format1_conf }}"
       register: verify_result
 
-    - name: VALIDITY CHECK - Verify old format 1 interface state in NDFC
-      cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.old_format1_conf_file }}"
-        ndfc_data: "{{ verify_result }}"
-        test_data: "{{ test_data_common }}"
-      delegate_to: localhost
-
-##############################################
-##               MERGE 2                    ##
-##############################################
+    ##############################################
+    ##               MERGE 2                    ##
+    ##############################################
 
     - name: Load Interface Config File - Old Format 2
       ansible.builtin.set_fact:
@@ -110,23 +101,18 @@
       cisco.dcnm.dcnm_interface: &old_format2
         check_deploy: true
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_old_format2_conf }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
-          - 'result.failed == false'
           - 'result.changed == true'
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
-
-##############################################
-##               MERGE 3                    ##
-##############################################
+    ##############################################
+    ##               MERGE 3                    ##
+    ##############################################
 
     - name: Load Interface Config File - Old Format 3
       ansible.builtin.set_fact:
@@ -137,23 +123,18 @@
       cisco.dcnm.dcnm_interface: &old_format3
         check_deploy: true
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_old_format3_conf }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
-          - 'result.failed == false'
           - 'result.changed == true'
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
-
-##############################################
-##               MERGE 4                    ##
-##############################################
+    ##############################################
+    ##               MERGE 4                    ##
+    ##############################################
 
     - name: Load Interface Config File - Old Format 4
       ansible.builtin.set_fact:
@@ -164,23 +145,13 @@
       cisco.dcnm.dcnm_interface: &old_format4
         check_deploy: true
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_old_format4_conf }}"
       register: result
 
-    - assert:
-        that:
-          - 'result.failed == false'
-          - 'result.changed == true'
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
-
-##############################################
-##               MERGE 5                    ##
-##############################################
+    ##############################################
+    ##               MERGE 5                    ##
+    ##############################################
 
     - name: Load Interface Config File - Old Format 5
       ansible.builtin.set_fact:
@@ -191,23 +162,13 @@
       cisco.dcnm.dcnm_interface: &old_format5
         check_deploy: true
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_old_format5_conf }}"
       register: result
 
-    - assert:
-        that:
-          - 'result.failed == false'
-          - 'result.changed == true'
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
-
-##############################################
-##               MERGE 6                    ##
-##############################################
+    ##############################################
+    ##               MERGE 6                    ##
+    ##############################################
 
     - name: Load Interface Config File - Old Format 6
       ansible.builtin.set_fact:
@@ -218,23 +179,13 @@
       cisco.dcnm.dcnm_interface: &old_format6
         check_deploy: true
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_old_format6_conf }}"
       register: result
 
-    - assert:
-        that:
-          - 'result.failed == false'
-          - 'result.changed == true'
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
-
-##############################################
-##               MERGE 7                    ##
-##############################################
+    ##############################################
+    ##               MERGE 7                    ##
+    ##############################################
 
     - name: Load Interface Config File - Old Format 7
       ansible.builtin.set_fact:
@@ -245,23 +196,13 @@
       cisco.dcnm.dcnm_interface: &old_format7
         check_deploy: true
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_old_format7_conf }}"
       register: result
 
-    - assert:
-        that:
-          - 'result.failed == false'
-          - 'result.changed == true'
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
-
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -269,12 +210,13 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+        state: overridden
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

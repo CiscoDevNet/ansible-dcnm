@@ -149,107 +149,107 @@ EXAMPLES = """
 #
 # Delete two image policies from the controller.
 
-    -   name: Delete Image policies
-        cisco.dcnm.dcnm_image_policy:
-            state: deleted
-            config:
-            -   name: KR5M
-            -   name: NR3F
-        register: result
-    -   name: print result
-        ansible.builtin.debug:
-            var: result
+- name: Delete Image policies
+  cisco.dcnm.dcnm_image_policy:
+    state: deleted
+    config:
+      - name: KR5M
+      - name: NR3F
+  register: result
+- name: print result
+  ansible.builtin.debug:
+    var: result
 
 # Merge two image policies into the controller.
 
-    -   name: Merge Image policies
-        cisco.dcnm.dcnm_image_policy:
-            state: merged
-            config:
-            -   name: KR5M
-                agnostic: false
-                description: KR5M
-                epld_image: n9000-epld.10.2.5.M.img
-                packages:
-                   install:
-                   - mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm
-                   uninstall:
-                   - mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000
-                platform: N9K
-                release: 10.2.5_nxos64-cs_64bit
-                type: PLATFORM
-            -   name: NR3F
-                description: NR3F
-                platform: N9K
-                epld_image: n9000-epld.10.3.1.F.img
-                release: 10.3.1_nxos64-cs_64bit
-        register: result
-    -   name: print result
-        ansible.builtin.debug:
-            var: result
+- name: Merge Image policies
+  cisco.dcnm.dcnm_image_policy:
+    state: merged
+    config:
+      - name: KR5M
+        agnostic: false
+        description: KR5M
+        epld_image: n9000-epld.10.2.5.M.img
+        packages:
+          install:
+            - mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm
+          uninstall:
+            - mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000
+        platform: N9K
+        release: 10.2.5_nxos64-cs_64bit
+        type: PLATFORM
+      - name: NR3F
+        description: NR3F
+        platform: N9K
+        epld_image: n9000-epld.10.3.1.F.img
+        release: 10.3.1_nxos64-cs_64bit
+  register: result
+- name: print result
+  ansible.builtin.debug:
+    var: result
 
 # Override all policies on the controller and replace them with
 # the policies in the playbook task.  Any policies other than
 # KR5M and NR3F are deleted from the controller.
 
-    -   name: Override Image policies
-        cisco.dcnm.dcnm_image_policy:
-            state: overridden
-            config:
-            -   name: KR5M
-                agnostic: false
-                description: KR5M
-                epld_image: n9000-epld.10.2.5.M.img
-                platform: N9K
-                release: 10.2.5_nxos64-cs_64bit
-                type: PLATFORM
-            -   name: NR3F
-                description: NR3F
-                platform: N9K
-                epld_image: n9000-epld.10.2.5.M.img
-                release: 10.3.1_nxos64-cs_64bit
-        register: result
-    -   name: print result
-        ansible.builtin.debug:
-            var: result
+- name: Override Image policies
+  cisco.dcnm.dcnm_image_policy:
+    state: overridden
+    config:
+      - name: KR5M
+        agnostic: false
+        description: KR5M
+        epld_image: n9000-epld.10.2.5.M.img
+        platform: N9K
+        release: 10.2.5_nxos64-cs_64bit
+        type: PLATFORM
+      - name: NR3F
+        description: NR3F
+        platform: N9K
+        epld_image: n9000-epld.10.2.5.M.img
+        release: 10.3.1_nxos64-cs_64bit
+  register: result
+- name: print result
+  ansible.builtin.debug:
+    var: result
 
 # Query the controller for the policies in the playbook task.
 
-    -   name: Query Image policies
-        cisco.dcnm.dcnm_image_policy:
-            state: query
-            config:
-            -   name: NR3F
-            -   name: KR5M
-        register: result
-    -   name: print result
-        ansible.builtin.debug:
-            var: result
+- name: Query Image policies
+  cisco.dcnm.dcnm_image_policy:
+    state: query
+    config:
+      - name: NR3F
+      - name: KR5M
+  register: result
+- name: print result
+  ansible.builtin.debug:
+    var: result
 
 # Replace any policies on the controller that are in the playbook task with
 # the configuration given in the playbook task.  Policies not listed in the
 # playbook task are not modified and are not deleted.
 
-    -   name: Replace Image policies
-        cisco.dcnm.dcnm_image_policy:
-            state: replaced
-            config:
-            -   name: KR5M
-                agnostic: false
-                description: KR5M
-                epld_image: n9000-epld.10.2.5.M.img
-                platform: N9K
-                release: 10.2.5_nxos64-cs_64bit
-                type: PLATFORM
-            -   name: NR3F
-                description: Replaced NR3F
-                platform: N9K
-                epld_image: n9000-epld.10.3.1.F.img
-                release: 10.3.1_nxos64-cs_64bit
-        register: result
-    -   name: print result
-        ansible.builtin.debug:
-            var: result
+- name: Replace Image policies
+  cisco.dcnm.dcnm_image_policy:
+    state: replaced
+    config:
+      - name: KR5M
+        agnostic: false
+        description: KR5M
+        epld_image: n9000-epld.10.2.5.M.img
+        platform: N9K
+        release: 10.2.5_nxos64-cs_64bit
+        type: PLATFORM
+      - name: NR3F
+        description: Replaced NR3F
+        platform: N9K
+        epld_image: n9000-epld.10.3.1.F.img
+        release: 10.3.1_nxos64-cs_64bit
+    register: result
+- name: print result
+  ansible.builtin.debug:
+    var: result
 """
 
 import copy

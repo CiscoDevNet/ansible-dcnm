@@ -11,7 +11,7 @@
 #
 # SETUP (these should be run prior to running this playbook)
 #  1. Run 00_setup_create_fabric.yaml
-#  2. Run 01_setup_add_switches_to_fabric 
+#  2. Run 01_setup_add_switches_to_fabric
 #  3. Run 02_setup_replace_image_policies
 # PRE_TEST (this playbook)
 #  4. DELETED - PRE_TEST - Upgrade all switches using global config.
@@ -67,31 +67,32 @@
   cisco.dcnm.dcnm_image_upgrade: &global_config
     state: merged
     config:
-        policy: "{{ image_policy_1 }}"
-        reboot: false
-        stage: true
-        validate: true
-        upgrade:
-            nxos: true
-            epld: false
-        options:
-            nxos:
-                mode: disruptive
-                bios_force: false
-            epld:
-                module: ALL
-                golden: false
-            reboot:
-                config_reload: false
-                write_erase: false
-            package:
-                install: false
-                uninstall: false
-        switches:
-          - ip_address: "{{ ansible_switch_1 }}"
+      policy: "{{ image_policy_1 }}"
+      reboot: false
+      stage: true
+      validate: true
+      upgrade:
+        nxos: true
+        epld: false
+      options:
+        nxos:
+          mode: disruptive
+          bios_force: false
+        epld:
+          module: ALL
+          golden: false
+        reboot:
+          config_reload: false
+          write_erase: false
+        package:
+          install: false
+          uninstall: false
+      switches:
+        - ip_address: "{{ ansible_switch_1 }}"
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -102,14 +103,14 @@
   cisco.dcnm.dcnm_image_upgrade:
     state: query
     config:
-        switches:
+      switches:
         - ip_address: "{{ ansible_switch_1 }}"
   register: result
   until:
     - ansible_switch_1 in result.diff[0]
   retries: 60
   delay: 5
-  ignore_errors: yes
+  ignore_errors: true
 
 ################################################################################
 # DELETED - TEST - Detach policy from switch and verify.
@@ -118,8 +119,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "172.22.150.103": {
 #                     "action": "image_policy_detach",
 #                     "device_name": "cvd-1312-leaf",
@@ -130,33 +130,31 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "image_policy_detach",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": "Successfully detach the policy from device.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy?serialNumber=FDO211218GC",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/",
+#                 "REQUEST_PATH_CONT": "detach-policy?serialNumber=FDO211218GC",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -169,10 +167,12 @@
         - ip_address: "{{ ansible_switch_1 }}"
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

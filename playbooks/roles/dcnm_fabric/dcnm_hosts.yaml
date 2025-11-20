@@ -3,8 +3,8 @@ all:
     ansible_user: "admin"
     ansible_password: "password-secret"
     ansible_python_interpreter: python
-    ansible_httpapi_validate_certs: False
-    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: false
+    ansible_httpapi_use_ssl: true
   children:
     dcnm:
       vars:
@@ -15,6 +15,6 @@ all:
     nxos:
       hosts:
         n9k-hosta.example.com:
-           ansible_connection: ansible.netcommon.network_cli
-           ansible_network_os: cisco.nxos.nxos
-           ansible_ssh_port: 22
+          ansible_connection: ansible.netcommon.network_cli
+          ansible_network_os: cisco.nxos.nxos
+          ansible_ssh_port: 22

@@ -80,10 +80,8 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#            {
-#                "172.22.150.112": [
-#                    {
+#         "diff": [#            {
+#                "172.22.150.112": [#                    {
 #                        "date": "2024-08-13 01:00:25",
 #                        "device_name": "cvd-1211-spine",
 #                        "filepath": "bootflash:/air.ndfc_ut",
@@ -119,9 +117,8 @@
 #                        "size": "2",
 #                        "supervisor": "active"
 #                    }
-#                ],
-#                "172.22.150.113": [
-#                    {
+# ],
+#                "172.22.150.113": [#                    {
 #                        "date": "2024-08-13 01:01:14",
 #                        "device_name": "cvd-1212-spine",
 #                        "filepath": "bootflash:/black.ndfc_ut",
@@ -157,36 +154,35 @@
 #                        "size": "2",
 #                        "supervisor": "active"
 #                    }
-#                ],
+# ],
 #                "sequence_number": 1
 #            }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "bootflash_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#         ],
-#         "response": [
-#             {
-#                 "DATA": "File(s) Deleted Successfully. \nDeleted files:  [air.ndfc_ut, earth.ndfc_ut, water.ndfc_ut, fire.ndfc_ut][green.ndfc_ut, blue.ndfc_ut, black.ndfc_ut, red.ndfc_ut]",
+# ],
+#         "response": [#             {
+#                 "DATA": "File(s) Deleted Successfully.",
+#                 "DATA_CONT": "Deleted files: [air.ndfc_ut, earth.ndfc_ut, water.ndfc_ut, fire.ndfc_ut]",
+#                 "DATA_CONT": "[green.ndfc_ut, blue.ndfc_ut, black.ndfc_ut, red.ndfc_ut]",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
 #                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-files",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -195,36 +191,37 @@
 
 - name: DELETED - TEST - Delete specific ndfc_ut files on active supervisor bootflash.
   cisco.dcnm.dcnm_bootflash: &delete_files
-      state: deleted
-      config:
-        switches:
-          - ip_address: "{{ switch1 }}"
-            targets:
-              - filepath: "bootflash:/{{ switch1_file1 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch1_file2 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch1_file3 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch1_file4 }}"
-                supervisor: active
-          - ip_address: "{{ switch2 }}"
-            targets:
-              - filepath: "bootflash:/{{ switch2_file1 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch2_file2 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch2_file3 }}"
-                supervisor: active
-              - filepath: "bootflash:/{{ switch2_file4 }}"
-                supervisor: active
+    state: deleted
+    config:
+      switches:
+        - ip_address: "{{ switch1 }}"
+          targets:
+            - filepath: "bootflash:/{{ switch1_file1 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch1_file2 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch1_file3 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch1_file4 }}"
+              supervisor: active
+        - ip_address: "{{ switch2 }}"
+          targets:
+            - filepath: "bootflash:/{{ switch2_file1 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch2_file2 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch2_file3 }}"
+              supervisor: active
+            - filepath: "bootflash:/{{ switch2_file4 }}"
+              supervisor: active
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 - name: Prepare assert values filepath deletion
-  set_fact:
+  ansible.builtin.set_fact:
     switch1_filepath1: "bootflash:/{{ switch1_file1 }}"
     switch1_filepath2: "bootflash:/{{ switch1_file2 }}"
     switch1_filepath3: "bootflash:/{{ switch1_file3 }}"
@@ -234,33 +231,34 @@
     switch2_filepath3: "bootflash:/{{ switch2_file3 }}"
     switch2_filepath4: "bootflash:/{{ switch2_file4 }}"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - result.diff[0][switch1][0].filepath == switch1_filepath1
-    - result.diff[0][switch1][1].filepath == switch1_filepath2
-    - result.diff[0][switch1][2].filepath == switch1_filepath3
-    - result.diff[0][switch1][3].filepath == switch1_filepath4
-    - result.diff[0][switch2][0].filepath == switch2_filepath1
-    - result.diff[0][switch2][1].filepath == switch2_filepath2
-    - result.diff[0][switch2][2].filepath == switch2_filepath3
-    - result.diff[0][switch2][3].filepath == switch2_filepath4
-    - result.changed == true
-    - result.failed == false
-    - (result.diff | length) == 1
-    - (result.diff[0] | length) == 3
-    - (result.response | length) == 1
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "DELETE"
-    - result.response[0].RETURN_CODE == 200
-    - (result.metadata | length) == 1
-    - result.metadata[0].action == "bootflash_delete"
-    - result.metadata[0].check_mode == False
-    - result.metadata[0].sequence_number == 1
-    - result.metadata[0].state == "deleted"
-    - (result.result | length) == 1
-    - result.result[0].changed == true
-    - result.result[0].sequence_number == 1
-    - result.result[0].success == true
+      - result.diff[0][switch1][0].filepath == switch1_filepath1
+      - result.diff[0][switch1][1].filepath == switch1_filepath2
+      - result.diff[0][switch1][2].filepath == switch1_filepath3
+      - result.diff[0][switch1][3].filepath == switch1_filepath4
+      - result.diff[0][switch2][0].filepath == switch2_filepath1
+      - result.diff[0][switch2][1].filepath == switch2_filepath2
+      - result.diff[0][switch2][2].filepath == switch2_filepath3
+      - result.diff[0][switch2][3].filepath == switch2_filepath4
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - (result.diff[0] | length) == 3
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "bootflash_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].sequence_number == 1
+      - result.result[0].success == true
 
 ################################################################################
 # DELETED - TEST - Delete files. Idempotence.
@@ -269,34 +267,30 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "bootflash_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "MESSAGE": "No files to delete.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 #################################################################################
@@ -304,27 +298,29 @@
   cisco.dcnm.dcnm_bootflash: *delete_files
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - result.changed == false
-    - result.failed == false
-    - (result.diff | length) == 1
-    - switch1 not in result.diff[0]
-    - switch2 not in result.diff[0]
-    - result.diff[0].sequence_number == 1
-    - (result.metadata | length) == 1
-    - result.metadata[0].action == "bootflash_delete"
-    - result.metadata[0].check_mode == False
-    - result.metadata[0].sequence_number == 1
-    - result.metadata[0].state == "deleted"
-    - (result.response | length) == 1
-    - result.response[0].MESSAGE == "No files to delete."
-    - result.response[0].RETURN_CODE == 200
-    - result.response[0].sequence_number == 1
-    - (result.result | length) == 1
-    - result.result[0].changed == false
-    - result.result[0].success == true
-    - result.result[0].sequence_number == 1
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - switch1 not in result.diff[0]
+      - switch2 not in result.diff[0]
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "bootflash_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "No files to delete."
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - (result.result | length) == 1
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1

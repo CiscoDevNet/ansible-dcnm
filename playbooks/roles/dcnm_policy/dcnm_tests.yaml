@@ -6,8 +6,9 @@
 #
 # Modify the vars section with details for your testing setup.
 #
-- hosts: dcnm
-  gather_facts: no
+- name: Play for dcnm
+  hosts: dcnm
+  gather_facts: false
   connection: ansible.netcommon.httpapi
 
   vars:

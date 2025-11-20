@@ -11,7 +11,7 @@
 ##               DELETE                     ##
 ##############################################
 
-    - name: Initial setup - Delete Links 
+    - name: Initial setup - Delete Links
       cisco.dcnm.dcnm_links: &links_delete
         state: deleted                                           # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_xe_fabric }}"
@@ -48,9 +48,10 @@
 
       register: result
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+      that:
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ###############################################
@@ -67,150 +68,127 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
-            template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+            template: ios_xe_int_intra_fabric_num_link           # template to be applied
             profile:
               peer1_ipv4_addr: 192.168.2.1                       # IPV4 address of the Source interface
               peer2_ipv4_addr: 192.168.2.2                       # IPV4 address of the Destination interface
               admin_state: true                                  # choose from [true, false]
-
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_xe_fabric }}" ] | length) == 2'
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+      that:
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["modified"] | length) == 0'
+        ##############################################
+        ##               SETUP                      ##
+        ##############################################
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+        - name: XE QUERY - Remove local log file
+          local_action: command rm - f dcnm_links.log
 
-###############################################
-###             QUERY                        ##
-###############################################
+        - block:
 
-    - name: Query Links - with Src Fabric
-      cisco.dcnm.dcnm_links: 
-        state: query                                             # choose from [merged, replaced, deleted, query]
-        src_fabric: "{{ ansible_xe_fabric }}"
-      register: result
+        ##############################################
+        ##           BASELINE DELETE               ##
+        ##############################################
 
-    - assert:
-        that:
-          '(result["response"] | length) >= 1'
+            - name: XE QUERY - Baseline delete
+              cisco.dcnm.dcnm_links: &xe_links_delete
+                state: deleted
+                src_fabric: "{{ ansible_xe_fabric }}"
+                config:
+                  - dst_fabric: "{{ ansible_xe_fabric }}"
+                    src_interface: "{{ intf_1_1 }}"
+                    dst_interface: "{{ intf_1_1 }}"
+                    src_device: "{{ ansible_xe_switch1 }}"
+                    dst_device: "{{ ansible_xe_switch2 }}"
+              register: delete_result
 
-    - name: Query Links - with Src & Dst Fabric
-      cisco.dcnm.dcnm_links: 
-        state: query                                             # choose from [merged, replaced, deleted, query]
-        src_fabric: "{{ ansible_xe_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_xe_fabric }}"                # optional, Destination fabric
-      register: result
+            - name: ASSERT - Baseline delete RETURN_CODE
+              ansible.builtin.assert:
+                that: "item['RETURN_CODE'] == 200"
+              loop: "{{ delete_result.response | default([]) }}"
+              failed_when: delete_result.diff is not defined and (delete_result.response | length) > 0
 
-    - assert:
-        that:
-          '(result["response"] | length) >= 1'
+        ##############################################
+        ##                CREATE                    ##
+        ##############################################
 
-    - name: Query Links - with Src & Dst Fabric, Src Intf
-      cisco.dcnm.dcnm_links: 
-        state: query                                             # choose from [merged, replaced, deleted, query]
-        src_fabric: "{{ ansible_xe_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_xe_fabric }}"                # optional, Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Source fabric
-      register: result
+            - name: XE QUERY - Create link for query tests
+              cisco.dcnm.dcnm_links: &links_create
+                state: merged
+                src_fabric: "{{ ansible_xe_fabric }}"
+                config:
+                  - dst_fabric: "{{ ansible_xe_fabric }}"
+                    src_interface: "{{ intf_1_1 }}"
+                    dst_interface: "{{ intf_1_1 }}"
+                    src_device: "{{ ansible_xe_switch1 }}"
+                    dst_device: "{{ ansible_xe_switch2 }}"
+                    template: ios_xe_int_intra_fabric_num_link
+                    profile:
+                      peer1_ipv4_addr: 192.169.2.1
+                      peer2_ipv4_addr: 192.169.2.2
+                      admin_state: true
+              register: create_result
 
-    - assert:
-        that:
-          '(result["response"] | length) >= 1'
+            - name: ASSERT - Create diff
+              ansible.builtin.assert:
+                that:
+                  - "(create_result.diff[0].merged | length) == 1"
+                  - "(create_result.diff[0].modified | length) == 0"
+                  - "(create_result.diff[0].deleted | length) == 0"
+                  - "(create_result.diff[0].query | length) == 0"
+              failed_when: create_result.diff is not defined
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
-      cisco.dcnm.dcnm_links: 
-        state: query                                             # choose from [merged, replaced, deleted, query]
-        src_fabric: "{{ ansible_xe_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_xe_fabric }}"                # optional, Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Destination fabric
-      register: result
+        ##############################################
+        ##                  QUERY                   ##
+        ##############################################
 
-    - assert:
-        that:
-          '(result["response"] | length) >= 1'
+            - name: XE QUERY - Query single link
+              cisco.dcnm.dcnm_links:
+                state: query
+                src_fabric: "{{ ansible_xe_fabric }}"
+                config:
+                  - dst_fabric: "{{ ansible_xe_fabric }}"
+                    src_interface: "{{ intf_1_1 }}"
+                    dst_interface: "{{ intf_1_1 }}"
+                    src_device: "{{ ansible_xe_switch1 }}"
+                    dst_device: "{{ ansible_xe_switch2 }}"
+              register: query_single
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
-      cisco.dcnm.dcnm_links: 
-        state: query                                             # choose from [merged, replaced, deleted, query]
-        src_fabric: "{{ ansible_xe_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_xe_fabric }}"                # optional, Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Destination fabric
-            src_device: "{{ ansible_xe_switch1 }}"               # optional, Device on the Source fabric
-      register: result
+            - name: ASSERT - Query single link diff
+              ansible.builtin.assert:
+                that:
+                  - "(query_single.diff[0].query | length) == 1"
+              failed_when: query_single.diff is not defined
 
-    - assert:
-        that:
-          '(result["response"] | length) >= 1'
+            - name: XE QUERY - Query fabric-wide
+              cisco.dcnm.dcnm_links:
+                state: query
+                src_fabric: "{{ ansible_xe_fabric }}"
+              register: query_fabric
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
-      cisco.dcnm.dcnm_links: 
-        state: query                                             # choose from [merged, replaced, deleted, query]
-        src_fabric: "{{ ansible_xe_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_xe_fabric }}"                # optional, Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Destination fabric
-            src_device: "{{ ansible_xe_switch1 }}"               # optional, Device on the Source fabric
-            dst_device: "{{ ansible_xe_switch2 }}"               # optional, Device on the Destination fabric
-      register: result
+            - name: ASSERT - Query fabric diff
+              ansible.builtin.assert:
+                that:
+                  - "(query_fabric.diff[0].query | length) >= 1"
+              failed_when: query_fabric.diff is not defined
 
-    - assert:
-        that:
-          '(result["response"] | length) >= 1'
+        ###############################################
+        ###               CLEANUP                  ##
+        ###############################################
 
-    - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
-      cisco.dcnm.dcnm_links: 
-        state: query                                             # choose from [merged, replaced, deleted, query]
-        src_fabric: "{{ ansible_xe_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_xe_fabric }}"                # optional, Destination fabric
-            src_interface: "{{ intf_1_3 }}"                      # optional, Interface on the Source fabric
-            dst_interface: "{{ intf_1_3 }}"                      # optional, Interface on the Destination fabric
-            src_device: "{{ ansible_xe_switch1 }}"               # optional, Device on the Source fabric
-            dst_device: "{{ ansible_xe_switch2 }}"               # optional, Device on the Destination fabric
-            template: ios_xe_int_intra_fabric_num_link           # optional, template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+          always:
+            - name: XE QUERY - Cleanup delete link
+              cisco.dcnm.dcnm_links: *links_delete
+              register: cleanup_result
+              when: it_context is not defined
 
-      register: result
-
-    - assert:
-        that:
-          '(result["response"] | length) >= 1'
-
-###############################################
-###             CLEANUP                      ##
-###############################################
-
-  always:
-
-    - name: Cleanup - Delete Links 
-      cisco.dcnm.dcnm_links: *links_delete
-      register: result
-      when: IT_CONTEXT is not defined
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+            - name: ASSERT - Cleanup RETURN_CODE
+              ansible.builtin.assert:
+                that: "item['RETURN_CODE'] == 200"
+              loop: "{{ cleanup_result.response | default([]) }}"
+              when: it_context is not defined
+                                                                #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,

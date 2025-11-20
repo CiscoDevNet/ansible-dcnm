@@ -32,18 +32,19 @@
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+  register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
-  loop: '{{ result.response }}'
+      - 'item["RETURN_CODE"] == 200'
+    loop: '{{ result.response }}'
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -64,7 +65,7 @@
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - merge
         - merge_po150
         - merge_po151
@@ -72,9 +73,9 @@
         - merge_po151_update
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Interface Config Files
       ansible.builtin.set_fact:
@@ -91,11 +92,10 @@
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_merge_po150_conf }}"
-
       register: result
 
     - name: ASSERT - Verify ST FEX interface creation results (po150)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -122,16 +122,16 @@
       register: result
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
       # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create ST FEX interfaces including optional parameters
       cisco.dcnm.dcnm_interface: &fex_merge2
@@ -142,7 +142,7 @@
       register: result
 
     - name: ASSERT - Verify ST FEX interface creation results (po151)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -169,16 +169,16 @@
       register: result
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
       # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Merge ST FEX interface
       cisco.dcnm.dcnm_interface: &fex_merge3
@@ -189,7 +189,7 @@
       register: result
 
     - name: ASSERT - Verify ST FEX interface merge results (po151 update)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -211,9 +211,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create ST FEX interfaces - multiple switches
       cisco.dcnm.dcnm_interface: &fex_merge4
@@ -224,7 +224,7 @@
       register: result
 
     - name: ASSERT - Verify ST FEX interface creation results (po155)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -246,9 +246,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -258,10 +258,11 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

@@ -11,26 +11,26 @@
       - "----------------------------------------------------------------"
 
 - name: Remove local log file
-  local_action: command rm -f dcnm_intf.log
+  ansible.builtin.command: rm -f dcnm_intf.log
+  delegate_to: localhost
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
-    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+    state: overridden
+  register: setup_result
 
-- name: ASSERT - Check return codes for setup
-  assert:
+- name: ASSERT - Setup return codes
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
-  loop: '{{ result.response }}'
+      - item.RETURN_CODE == 200
+  loop: "{{ setup_result.response }}"
 
 - block:
-
-##############################################
-##             SETUP VARS                   ##
-##############################################
+  ##############################################
+  ##             SETUP VARS                   ##
+  ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -45,52 +45,52 @@
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - merged
         - replace
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+  ##############################################
+  ##                MERGE                     ##
+  ##############################################
 
-    - name: Load Interface Config File
+    - name: Load Merge Interface Config File
       ansible.builtin.set_fact:
         dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
       delegate_to: localhost
 
-    - name: Create loopback interfaces
+    - name: Merge loopback interfaces
       cisco.dcnm.dcnm_interface: &lo_merge
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_merged_conf }}"
-      register: result
+      register: merge_result
 
-    - name: ASSERT - Check changed flag is true and return codes
-      assert:
+    - name: ASSERT - Merge changed & return codes
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - merge_result.changed | bool
+          - item.RETURN_CODE == 200
+      loop: "{{ merge_result.response }}"
 
-    - name: QUERY - Get interface state in NDFC after merge
+    - name: QUERY - Get interface state after merge
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_merged_conf }}"
-      register: verify_result
+      register: merge_verify_result
 
-    - name: VALIDITY CHECK - Verify interface state in NDFC after merge
+    - name: VALIDITY CHECK - Merge state
       cisco.dcnm.tests.integration.ndfc_interface_validate:
         config_path: "{{ test_data_interfaces.merged_conf_file }}"
-        ndfc_data: "{{ verify_result }}"
+        ndfc_data: "{{ merge_verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              REPLACE                     ##
-##############################################
+  ##############################################
+  ##              REPLACE                     ##
+  ##############################################
 
     - name: Load Replace Interface Config File
       ansible.builtin.set_fact:
@@ -101,42 +101,41 @@
       cisco.dcnm.dcnm_interface: &lo_replace
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: replaced                       # only choose form [merged, replaced, deleted, overridden, query]
+        state: replaced
         config: "{{ dcnm_interface_replace_conf }}"
-      register: result
+      register: replace_result
 
-    - name: ASSERT - Check changed flag is true and return codes
-      assert:
+    - name: ASSERT - Replace changed & return codes
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - replace_result.changed | bool
+          - item.RETURN_CODE == 200
+      loop: "{{ replace_result.response }}"
 
-    - name: QUERY - Get interface state in NDFC after replace
+    - name: QUERY - Get interface state after replace
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_replace_conf }}"
-      register: verify_result
+      register: replace_verify_result
 
-    - name: VALIDITY CHECK - Verify interface state in NDFC after replace
+    - name: VALIDITY CHECK - Replace state
       cisco.dcnm.tests.integration.ndfc_interface_validate:
         config_path: "{{ test_data_interfaces.replace_conf_file }}"
-        ndfc_data: "{{ verify_result }}"
+        ndfc_data: "{{ replace_verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
     - name: Replace loopback interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *lo_replace
-      register: result
+      register: replace_idem_result
 
-    - name: ASSERT - Check changed flag is false and return codes for idempotence
-      assert:
+    - name: ASSERT - Replace idempotence
+      ansible.builtin.assert:
         that:
-          - 'result.changed == false'
-          - 'result.response is defined'
-          - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+          - not replace_idem_result.changed
+          - replace_idem_result.response is defined
+          - replace_idem_result.response | length >= 0
 
 ##############################################
 ##             CLEANUP                      ##
@@ -144,17 +143,17 @@
 
   always:
 
-    - name: Put fabric to default state
+    - name: Put fabric to default state (cleanup)
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-      register: result
-      when: IT_CONTEXT is not defined
+        state: overridden
+      register: cleanup_result
+      when: it_context is not defined
 
-    - name: ASSERT - Check return codes for cleanup
-      assert:
+    - name: ASSERT - Cleanup return codes
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+          - item.RETURN_CODE == 200
+      loop: "{{ cleanup_result.response }}"
+      when: it_context is not defined
