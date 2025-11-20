@@ -209,7 +209,7 @@ class Common:
 
     def __init__(self, params: dict[str, Any]) -> None:
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -339,7 +339,7 @@ class Common:
         ```
 
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
@@ -398,7 +398,7 @@ class Common:
 
     @rest_send.setter
     def rest_send(self, value: RestSend):
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         _class_have = None
         _class_need = "RestSend"
         msg = f"{self.class_name}.{method_name}: "
