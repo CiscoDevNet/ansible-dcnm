@@ -1186,11 +1186,11 @@ def main():
 
     ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
-    # Check for pydantic dependency before proceeding
-    if not HAS_PYDANTIC:
-        ansible_module.fail_json(
-            msg="The pydantic library is required to use this module. " "Install it with: pip install pydantic", exception=PYDANTIC_IMPORT_ERROR
-        )
+    # # Check for pydantic dependency before proceeding
+    # if not HAS_PYDANTIC:
+    #     ansible_module.fail_json(
+    #         msg="The pydantic library is required to use this module. " "Install it with: pip install pydantic", exception=PYDANTIC_IMPORT_ERROR
+    #     )
 
     params = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
