@@ -263,7 +263,8 @@ Parameters
                 </td>
                 <td>
                         <div>List of DHCP server_vrf pairs where &#x27;srvr_ip&#x27; is the IP key and &#x27;srvr_vrf&#x27; is the VRF key</div>
-                        <div>This is an alternative to dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf</div>
+                        <div>&#x27;srvr_vrf&#x27; is an optional parameter</div>
+                        <div>This replaces dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf</div>
                         <div>If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated indicating these are mutually exclusive options</div>
                 </td>
             </tr>
@@ -281,6 +282,7 @@ Parameters
                 </td>
                 <td>
                         <div>DHCP relay IP address of the first DHCP server</div>
+                        <div>Deprecated. Please use only dhcp_servers in new playbooks.</div>
                 </td>
             </tr>
             <tr>
@@ -297,6 +299,8 @@ Parameters
                 </td>
                 <td>
                         <div>VRF ID of first DHCP server</div>
+                        <div>Optional</div>
+                        <div>Deprecated. Please use only dhcp_servers in new playbooks</div>
                 </td>
             </tr>
             <tr>
@@ -313,6 +317,7 @@ Parameters
                 </td>
                 <td>
                         <div>DHCP relay IP address of the second DHCP server</div>
+                        <div>Deprecated. Please use only dhcp_servers in new playbooks</div>
                 </td>
             </tr>
             <tr>
@@ -329,6 +334,8 @@ Parameters
                 </td>
                 <td>
                         <div>VRF ID of second DHCP server</div>
+                        <div>Optional</div>
+                        <div>Deprecated. Please use only dhcp_servers in new playbooks</div>
                 </td>
             </tr>
             <tr>
@@ -345,6 +352,7 @@ Parameters
                 </td>
                 <td>
                         <div>DHCP relay IP address of the third DHCP server</div>
+                        <div>Deprecated. Please use only dhcp_servers in new playbooks</div>
                 </td>
             </tr>
             <tr>
@@ -361,6 +369,8 @@ Parameters
                 </td>
                 <td>
                         <div>VRF ID of third DHCP server</div>
+                        <div>Optional</div>
+                        <div>Deprecated. Please use only dhcp_servers in new playbooks</div>
                 </td>
             </tr>
             <tr>

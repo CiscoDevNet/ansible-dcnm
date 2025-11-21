@@ -130,41 +130,61 @@ options:
       dhcp_srvr1_ip:
         description:
         - DHCP relay IP address of the first DHCP server
+        - If dhcp_servers and dhcp_srvr1_ip are specified an error message is generated
+            indicating these are mutually exclusive options
+        - DEPRECATED
         type: str
         required: false
       dhcp_srvr1_vrf:
         description:
         - VRF ID of first DHCP server
+        - If not specified, will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 dhcp_srvr1_vrf must be specified for dhcp_srvr1_ip
+        - DEPRECATED
         type: str
         required: false
       dhcp_srvr2_ip:
         description:
         - DHCP relay IP address of the second DHCP server
+        - If dhcp_servers and dhcp_srvr2_ip are specified an error message is generated
+            indicating these are mutually exclusive options
+        - DEPRECATED
         type: str
         required: false
       dhcp_srvr2_vrf:
         description:
         - VRF ID of second DHCP server
+        - If not specified, will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 dhcp_srvr2_vrf must be specified for dhcp_srvr2_ip
+        - DEPRECATED
         type: str
         required: false
       dhcp_srvr3_ip:
         description:
         - DHCP relay IP address of the third DHCP server
+        - If dhcp_servers and dhcp_srvr3_ip are specified an error message is generated
+            indicating these are mutually exclusive options
+        - DEPRECATED
         type: str
         required: false
       dhcp_srvr3_vrf:
         description:
         - VRF ID of third DHCP server
+        - If not specified, will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 dhcp_srvr3_vrf must be specified for dhcp_srvr3_ip
+        - DEPRECATED
         type: str
         required: false
       dhcp_servers:
         description:
         - List of DHCP server_vrf pairs where 'srvr_ip' is the IP key and 'srvr_vrf' is the VRF key
-        - This is an alternative to dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
-            dhcp_srvr3_ip, dhcp_srvr3_vrf
+        - The 'srvr_vrf' key is optional, if not specified will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 'srvr_vrf' must be specified for each DHCP server
         - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
             dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated
             indicating these are mutually exclusive options
+        - This replaces dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
+            dhcp_srvr3_ip, dhcp_srvr3_vrf
         type: list
         elements: dict
         required: false
@@ -1288,7 +1308,7 @@ class DcnmNetwork:
             "vrfDhcp2": net.get("dhcp_srvr2_vrf", ""),
             "vrfDhcp3": net.get("dhcp_srvr3_vrf", ""),
             "dhcpServers": [
-                {"srvrAddr": srvr["srvr_ip"], "srvrVrf": srvr["srvr_vrf"]} for srvr in net.get("dhcp_servers", [])
+                {"srvrAddr": srvr["srvr_ip"], "srvrVrf": srvr.get("srvr_vrf", "")} for srvr in net.get("dhcp_servers", [])
             ],
             "loopbackId": net.get("dhcp_loopback_id", ""),
             "mcastGroup": net.get("multicast_group_address", ""),
@@ -1325,11 +1345,11 @@ class DcnmNetwork:
             template_conf["vrfDhcp3"] = ""
         if template_conf["dhcpServers"] == []:
             dhcp_srvr_list = []
-            if template_conf["dhcpServerAddr1"] != "" and template_conf["vrfDhcp"] != "":
+            if template_conf["dhcpServerAddr1"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr1"], "srvrVrf": template_conf["vrfDhcp"]})
-            if template_conf["dhcpServerAddr2"] != "" and template_conf["vrfDhcp2"] != "":
+            if template_conf["dhcpServerAddr2"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr2"], "srvrVrf": template_conf["vrfDhcp2"]})
-            if template_conf["dhcpServerAddr3"] != "" and template_conf["vrfDhcp3"] != "":
+            if template_conf["dhcpServerAddr3"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr3"], "srvrVrf": template_conf["vrfDhcp3"]})
             if dhcp_srvr_list != []:
                 template_conf["dhcpServers"] = json.dumps(dict(dhcpServers=dhcp_srvr_list), separators=(",", ":"))
@@ -2905,14 +2925,14 @@ class DcnmNetwork:
                             dict(srvr_ip=net.get("dhcp_srvr2_ip"), srvr_vrf=net.get("dhcp_srvr2_vrf")),
                             dict(srvr_ip=net.get("dhcp_srvr3_ip"), srvr_vrf=net.get("dhcp_srvr3_vrf")),
                         ]):
-                            invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
+                            invalid_params.append("DHCP server VRF should be specified along with DHCP server IP")
 
                         if net.get("dhcp_servers"):
                             dhcp_servers = net.get("dhcp_servers")
                             if len(dhcp_servers) > 16:
                                 invalid_params.append("A maximum of 16 DHCP servers can be specified")
                             if any(has_partial_dhcp_config(srvr) for srvr in dhcp_servers):
-                                invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
+                                invalid_params.append("DHCP server VRF should be specified along with DHCP server IP")
 
                         if self.dcnm_version == 11:
                             if net.get("netflow_enable") or net.get("intfvlan_nf_monitor") or net.get("vlan_nf_monitor"):
@@ -3089,24 +3109,31 @@ class DcnmNetwork:
             json_to_dict_want["vrfDhcp3"] = json_to_dict_have["vrfDhcp3"]
 
         if cfg.get("dhcp_servers", None) is None:
-            want_have_dhcp_servers = [None] * 3
+            want_dhcp_servers = json.loads(json_to_dict_have["dhcpServers"] or "{}").get("dhcpServers", [])
+            want_dhcp_servers += [None] * (16 - len(want_dhcp_servers))
+            if json_to_dict_have["dhcpServerAddr1"] != "":
+                want_dhcp_servers[0] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr1"], srvrVrf=json_to_dict_have["vrfDhcp"])
             if cfg.get("dhcp_srvr1_ip", None) is not None:
-                want_have_dhcp_servers[0] = dict(srvrAddr=cfg.get("dhcp_srvr1_ip"), srvrVrf=cfg.get("dhcp_srvr1_vrf"))
-            elif json_to_dict_have["dhcpServerAddr1"] != "":
-                want_have_dhcp_servers[0] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr1"], srvrVrf=json_to_dict_have["vrfDhcp"])
+                want_dhcp_servers[0] = dict(srvrAddr=cfg.get("dhcp_srvr1_ip"), srvrVrf=json_to_dict_have["vrfDhcp"])
+                if cfg.get("dhcp_srvr1_vrf", None) is not None:
+                    want_dhcp_servers[0].update({"srvrVrf": cfg.get("dhcp_srvr1_vrf")})
+            if json_to_dict_have["dhcpServerAddr2"] != "":
+                want_dhcp_servers[1] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr2"], srvrVrf=json_to_dict_have["vrfDhcp2"])
             if cfg.get("dhcp_srvr2_ip", None) is not None:
-                want_have_dhcp_servers[1] = dict(srvrAddr=cfg.get("dhcp_srvr2_ip"), srvrVrf=cfg.get("dhcp_srvr2_vrf"))
-            elif json_to_dict_have["dhcpServerAddr2"] != "":
-                want_have_dhcp_servers[1] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr2"], srvrVrf=json_to_dict_have["vrfDhcp2"])
+                want_dhcp_servers[1] = dict(srvrAddr=cfg.get("dhcp_srvr2_ip"), srvrVrf=json_to_dict_have["vrfDhcp2"])
+                if cfg.get("dhcp_srvr2_vrf", None) is not None:
+                    want_dhcp_servers[1].update({"srvrVrf": cfg.get("dhcp_srvr2_vrf")})
+            if json_to_dict_have["dhcpServerAddr3"] != "":
+                want_dhcp_servers[2] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr3"], srvrVrf=json_to_dict_have["vrfDhcp3"])
             if cfg.get("dhcp_srvr3_ip", None) is not None:
-                want_have_dhcp_servers[2] = dict(srvrAddr=cfg.get("dhcp_srvr3_ip"), srvrVrf=cfg.get("dhcp_srvr3_vrf"))
-            elif json_to_dict_have["dhcpServerAddr3"] != "":
-                want_have_dhcp_servers[2] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr3"], srvrVrf=json_to_dict_have["vrfDhcp3"])
-            want_have_dhcp_servers = [srvr for srvr in want_have_dhcp_servers[:] if srvr is not None]
-            if want_have_dhcp_servers != []:
-                json_to_dict_want["dhcpServers"] = json.dumps(dict(dhcpServers=want_have_dhcp_servers, separators=(",", ":")))
+                want_dhcp_servers[2] = dict(srvrAddr=cfg.get("dhcp_srvr3_ip"), srvrVrf=json_to_dict_have["vrfDhcp3"])
+                if cfg.get("dhcp_srvr3_vrf", None) is not None:
+                    want_dhcp_servers[2].update({"srvrVrf": cfg.get("dhcp_srvr3_vrf")})
+            want_dhcp_servers = [srvr for srvr in want_dhcp_servers[:] if srvr is not None]
+            if want_dhcp_servers == []:
+                json_to_dict_want["dhcpServers"] = ""
             else:
-                json_to_dict_want["dhcpServers"] = json_to_dict_have["dhcpServers"]
+                json_to_dict_want["dhcpServers"] = json.dumps(dict(dhcpServers=want_dhcp_servers), separators=(",", ":"))
 
         if cfg.get("dhcp_loopback_id", None) is None:
             json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]
