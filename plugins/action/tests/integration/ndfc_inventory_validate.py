@@ -11,22 +11,6 @@ try:
 except ImportError:
     HAS_PYDANTIC = False
     from ....module_utils.common.third_party.pydantic import BaseModel, model_validator, validator, ValidationError
-    # # Create dummy classes to allow import without pydantic
-    # BaseModel = object
-
-    # def model_validator(**kwargs):
-    #     """Dummy model_validator decorator that accepts any arguments"""
-    #     def decorator(func):
-    #         return func
-    #     return decorator
-
-    # def validator(*args, **kwargs):
-    #     """Dummy validator decorator that accepts any arguments"""
-    #     def decorator(func):
-    #         return func
-    #     return decorator
-
-    # ValidationError = Exception
 
 __metaclass__ = type  # pylint: disable=invalid-name
 
