@@ -1,0 +1,338 @@
+##############################################
+##            REQUIRED VARS                 ##
+##############################################
+# parent_fabric
+# A Parent MSD VXLAN_EVPN fabric
+#
+# child_fabric
+# A Child MSD VXLAN_EVPN fabric associated with parent_fabric
+#
+# child_switch_1
+# - A switch in the child MSD fabric
+# - VRF-lite capable switch
+#
+# child_switch_2  
+# - A switch in the child MSD fabric
+# - VRF-lite capable switch
+#
+# interface_2a
+# - Ethernet interface on child_switch_2
+# - Used to test VRF LITE configuration in MSD environment
+##############################################
+
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ parent_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ parent_fabric }}"
+  when: controller_version >= "12"
+
+- name: SETUP.0 - MSD DELETED - [with_items] print vars
+  ansible.builtin.debug:
+    var: item
+  with_items:
+     - "parent_fabric : {{ parent_fabric }}"
+     - "child_fabric : {{ child_fabric }}"
+     - "child_switch_1 : {{ child_switch_1 }}"
+     - "child_switch_2 : {{ child_switch_2 }}"
+     - "interface_2a : {{ interface_2a }}"
+
+- name: SETUP.1 - MSD DELETED - [dcnm_rest.GET] Verify parent fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - result.response.DATA != None
+
+- name: SETUP.2 - MSD DELETED - [deleted] Clean slate - delete all VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+  register: result_setup_2
+
+- name: SETUP.2a - MSD DELETED - [wait_for] Wait 60 seconds for controller and switch to sync
+  wait_for:
+    timeout: 60
+  when: result_setup_2.changed == true
+
+- name: SETUP.3 - MSD DELETED - [merged] Create VRFs for deletion testing
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-msd-delete-basic
+      vrf_id: 9008301
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2301
+      vrf_description: "Basic MSD deletion test VRF"
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+    - vrf_name: ansible-msd-delete-child
+      vrf_id: 9008302
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2302
+      vrf_description: "MSD deletion test VRF with Child config"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+    - vrf_name: ansible-msd-delete-lite
+      vrf_id: 9008303
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2303
+      vrf_description: "MSD deletion test VRF with VRF-Lite"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_2 }}"
+        vrf_lite:
+        - interface: "{{ interface_2a }}"
+          ipv4_addr: 10.10.1.2/30
+          neighbor_ipv4: 10.10.1.1
+          peer_vrf: external_delete_vrf
+          dot1q: 700
+      deploy: true
+    - vrf_name: ansible-msd-delete-bulk1
+      vrf_id: 9008321
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2321
+      vrf_description: "Bulk delete test VRF 1"
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+    - vrf_name: ansible-msd-delete-bulk2
+      vrf_id: 9008322
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2322
+      vrf_description: "Bulk delete test VRF 2"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_2 }}"
+      deploy: true
+  register: result_setup_3
+
+- name: SETUP.3a - MSD DELETED - [debug] print setup result
+  ansible.builtin.debug:
+    var: result_setup_3
+
+- name: SETUP.4 - MSD DELETED - [query] Wait for all VRFs to be deployed before testing deletion
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+  register: result_setup_4
+
+- name: SETUP.4a - MSD DELETED - [debug] print pre-deletion VRFs
+  ansible.builtin.debug:
+    var: result_setup_4
+
+###############################################
+###           MSD DELETED TESTS             ##
+###############################################
+
+- name: TEST.1 - MSD DELETED - [deleted] Delete single VRF without child config
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+    config: &conf1
+    - vrf_name: ansible-msd-delete-basic
+  register: result_1
+
+- name: TEST.1a - MSD DELETED - [debug] print result_1
+  ansible.builtin.debug:
+    var: result_1
+
+- assert:
+    that:
+    - result_1.changed == true
+    - result_1.workflow == "Multisite Parent without Child Fabric Processing"
+    - result_1.diff[0].vrf_name == "ansible-msd-delete-basic"
+    - result_1.diff[0].attach | length >= 1
+    - result_1.diff[0].attach[0].ip_address == "{{ child_switch_1 }}"
+    - result_1.diff[0].attach[0].deploy == false
+    - result_1.response[0].RETURN_CODE == 200
+
+- name: TEST.1b - MSD DELETED - [query] Verify single VRF deletion
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+    config: *conf1
+  register: result_1b
+
+- name: TEST.1c - MSD DELETED - [debug] print result_1b
+  ansible.builtin.debug:
+    var: result_1b
+
+- assert:
+    that:
+    - result_1b.response | length == 0
+
+- name: TEST.1d - MSD DELETED - [deleted] Delete single VRF - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+    config: *conf1
+  register: result_1d
+
+- name: TEST.1e - MSD DELETED - [debug] print result_1d
+  ansible.builtin.debug:
+    var: result_1d
+
+- assert:
+    that:
+    - result_1d.changed == false
+    - result_1d.workflow == "Multisite Parent without Child Fabric Processing"
+    - result_1d.diff | length == 0
+    - result_1d.response | length == 0
+
+- name: TEST.2 - MSD DELETED - [deleted] Delete multiple VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+    config: &conf2
+    - vrf_name: ansible-msd-delete-bulk1
+    - vrf_name: ansible-msd-delete-bulk2
+  register: result_2
+
+- name: TEST.2a - MSD DELETED - [debug] print result_2
+  ansible.builtin.debug:
+    var: result_2
+
+- assert:
+    that:
+    - result_2.changed == true
+    - result_2.workflow == "Multisite Parent without Child Fabric Processing"
+    - result_2.diff | length == 2
+    - result_2.diff[0].vrf_name == "ansible-msd-delete-bulk1"
+    - result_2.diff[1].vrf_name == "ansible-msd-delete-bulk2"
+    - result_2.diff[0].attach[0].deploy == false
+    - result_2.diff[1].attach[0].deploy == false
+
+- name: TEST.2b - MSD DELETED - [query] Verify multiple VRFs deletion
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+    config: *conf2
+  register: result_2b
+
+- name: TEST.2c - MSD DELETED - [debug] print result_2b
+  ansible.builtin.debug:
+    var: result_2b
+
+- assert:
+    that:
+    - result_2b.changed == false
+    - result_2b.workflow == "Multisite Parent without Child Fabric Processing"
+    - result_2b.diff | length == 0
+    - result_2b.response | length == 0
+
+- name: TEST.2d - MSD DELETED - [deleted] Delete multiple VRFs - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+    config: *conf2
+  register: result_2d
+
+- name: TEST.2e - MSD DELETED - [debug] print result_2d
+  ansible.builtin.debug:
+    var: result_2d
+
+- assert:
+    that:
+    - result_2d.changed == false
+    - result_2d.workflow == "Multisite Parent without Child Fabric Processing"
+    - result_2d.diff | length == 0
+    - result_2d.response | length == 0
+
+- name: TEST.3 - MSD DELETED - [deleted] Delete all VRFs (no config specified)
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+  register: result_3
+
+- name: TEST.3a - MSD DELETED - [debug] print result_3
+  ansible.builtin.debug:
+    var: result_3
+
+- assert:
+    that:
+    - result_3.changed == true
+    - result_3.workflow == "Multisite Parent without Child Fabric Processing"
+    - result_3.diff | length == 2
+    - result_3.response[2].RETURN_CODE == 200
+    - result_3.response[3].RETURN_CODE == 200
+    - result_3.diff[0].vrf_name == "ansible-msd-delete-lite"
+    - result_3.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
+    - result_3.diff[0].attach[0].deploy == false
+    - result_3.diff[1].attach[0].ip_address == "{{ child_switch_1 }}"
+    - result_3.diff[1].attach[0].deploy == false
+
+- name: TEST.3b - MSD DELETED - [query] Verify all VRFs deleted
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+  register: result_3b
+
+- name: TEST.3c - MSD DELETED - [debug] print result_3b
+  ansible.builtin.debug:
+    var: result_3b
+
+- assert:
+    that:
+    - result_3b.response | length == 0
+
+- name: TEST.3d - MSD DELETED - [deleted] Delete all VRFs when none exist - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+  register: result_3d
+
+- name: TEST.3e - MSD DELETED - [debug] print result_3d
+  ansible.builtin.debug:
+    var: result_3d
+
+- assert:
+    that:
+    - result_3d.changed == false
+    - result_3d.workflow == "Multisite Parent without Child Fabric Processing"
+    - result_3d.diff | length == 0
+    - result_3d.response | length == 0
+
+###############################################
+###              FINAL NOTES               ##
+###############################################
+
+- name: FINAL - MSD DELETED - Summary of tests completed
+  ansible.builtin.debug:
+    msg:
+    - "MSD Deletion tests completed successfully!"
+    - "Tests covered:"
+    - "  1. Single VRF deletion"
+    - "  2. Multiple VRF deletion"
+    - "  3. Delete all VRFs (no config specified)"
+    - "  4. Idempotence verification for all scenarios"
+    - "All MSD fabric deletion workflows validated successfully!"
