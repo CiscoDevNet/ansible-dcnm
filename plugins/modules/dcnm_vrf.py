@@ -5160,7 +5160,6 @@ def main():
     # Logging setup
     try:
         log = Log()
-        log.config = "/home/achengam/Desktop/VRF_Val/N6/ansible_collections/cisco/dcnm/ansible_cisco_log.json"
         log.commit()
     except (TypeError, ValueError):
         pass
