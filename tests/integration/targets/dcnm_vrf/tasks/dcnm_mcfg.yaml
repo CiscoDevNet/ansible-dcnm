@@ -1,0 +1,25 @@
+---
+- name: collect MCFG test cases
+  find:
+    paths: "{{ role_path }}/tests/dcnm/mcfg"
+    patterns: "{{ mcfg_pattern }}"
+    recurse: false
+  connection: local
+  register: mcfg_cases
+  tags: sanity
+
+- name: set MCFG test_items
+  set_fact: 
+    mcfg_test_items: "{{ mcfg_cases.files | map(attribute='path') | list }}"
+  tags: sanity
+
+- name: debug MCFG test items
+  debug:
+    var: mcfg_test_items
+
+- name: run MCFG test cases
+  include_tasks: "{{ test_case_to_run }}"
+  with_items: "{{ mcfg_test_items }}"
+  loop_control:
+    loop_var: test_case_to_run
+  tags: sanity

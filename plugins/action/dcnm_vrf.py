@@ -144,7 +144,7 @@ class ActionModule(ActionNetworkModule):
         if fabric_type in ["multisite_parent", "multicluster_parent"]:
             result = self.handle_parent_workflow(module_args, fabric_data, fabric_type, task_vars, tmp)
         elif fabric_type in ["multisite_child", "multicluster_child"]:
-            result = self.handle_child_workflow(module_args, fabric_data, task_vars, tmp)
+            result = self.handle_child_workflow(module_args, fabric_type, task_vars, tmp)
         else:
             result = self.handle_standalone_workflow(module_args, task_vars, tmp)
 
@@ -448,9 +448,14 @@ class ActionModule(ActionNetworkModule):
             state = module_args.get("state")
             parent_config = []
             child_tasks_dict = {}
+            child_fabric_associations = []
+            child_fabric_data = {}
+    
             # Extract associated child fabrics from NDFC data
-            child_fabric_associations = [
-                child_fabric.get("fabricName") for child_fabric in fabric_data.get("members", [])]
+            for child_fabric in fabric_data.get("members", []):
+                child_fabric_associations.append(child_fabric.get("fabricName"))
+                if child_fabric.get("fabricName") not in child_fabric_data:
+                    child_fabric_data[child_fabric.get("fabricName")] = child_fabric
 
             if config:
                 # Process each VRF configuration for parent/child splitting
@@ -487,7 +492,7 @@ class ActionModule(ActionNetworkModule):
 
                                 # Create child tasks and group by child fabric name
                                 child_tasks_dict = self.create_child_task(
-                                    vrf, child_config, child_tasks_dict, fabric_name, module_args
+                                    vrf, child_config, child_tasks_dict, child_fabric_data.get(fabric_name), module_args
                                 )
 
                         # Create parent VRF without child_fabric_config
@@ -615,8 +620,8 @@ class ActionModule(ActionNetworkModule):
             result = self.execute_module_with_args(child_module_args, task_vars, tmp)
 
             # Add workflow identification to result if not present
-            if "fabric_type" not in result:
-                result["fabric_type"] = fabric_type
+            if "fabric_details" not in result:
+                result["fabric_details"] = fabric_type
                 result["workflow"] = f"{log_type.capitalize()} Child VRF Processing"
 
             # Log successful completion

@@ -1331,7 +1331,7 @@ class DcnmVrf:
             interface_match = False
             if have_a:
                 for have in have_a:
-                    if want["serialNumber"] == have["serialNumber"]:
+                    if want["serialNumber"] == have["serialNumber"] and want["vrfName"] == have["vrfName"]:
                         # handle instanceValues first
                         want.update(
                             {"freeformConfig": have.get("freeformConfig", "")}
@@ -2018,8 +2018,11 @@ class DcnmVrf:
         self.log.debug(msg)
 
         verb = "GET"
+        attach_fabric = attach["fabric"]
+        if self.action_fabric_type == "multicluster_parent":
+            attach_fabric = self.fabric
         path = self.paths["GET_VRF_SWITCH"].format(
-            attach["fabric"], attach["vrfName"], attach["serialNumber"]
+            attach_fabric, attach["vrfName"], attach["serialNumber"]
         )
         msg = f"verb: {verb}, path: {path}"
         self.log.debug(msg)
@@ -5157,6 +5160,7 @@ def main():
     # Logging setup
     try:
         log = Log()
+        log.config = "/home/achengam/Desktop/VRF_Val/N6/ansible_collections/cisco/dcnm/ansible_cisco_log.json"
         log.commit()
     except (TypeError, ValueError):
         pass

@@ -204,7 +204,6 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_dcnm_send.stop()
         self.mock_dcnm_ip_sn.stop()
         self.mock_dcnm_fabric_details.stop()
-        # self.mock_dcnm_version_supported.stop()
         self.mock_dcnm_get_url.stop()
 
     def load_fixtures(self, response=None, device=""):
@@ -213,12 +212,6 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.nd_support_version = self.nd_version
         else:
             self.nd_support_version = self.nd_version_11
-
-        # if "_merged_lite_update" in self._testMethodName:
-        #     print(self.version)
-        #     print(self.run_dcnm_version_supported.return_value)
-        #     k = 1
-        #     assert k == 0
 
         if "mcfg" in self._testMethodName:
             self.multicluster_fabric_associations = self.multicluster_fabric_associations_data
