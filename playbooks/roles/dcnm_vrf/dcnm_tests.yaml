@@ -75,5 +75,12 @@
     # Example:
     # testcase: msd/sanity
 
+    # To run all tests under multicluster,
+    # testcase: mcfg/*
+    # To run individual multicluster tests,
+    # testcase: mcfg/<test_name>
+    # Example:
+    # testcase: mcfg/sanity
+
   roles:
     - dcnm_vrf

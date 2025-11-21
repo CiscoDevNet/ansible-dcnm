@@ -38,29 +38,6 @@ Parameters
             <tr>
                 <td colspan="5">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>_fabric_type</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>multisite_child</li>
-                                    <li>multisite_parent</li>
-                                    <li><div style="color: blue"><b>standalone</b>&nbsp;&larr;</div></li>
-                        </ul>
-                </td>
-                <td>
-                        <div>INTERNAL PARAMETER - DO NOT USE</div>
-                        <div>Fabric type is determined by the module&#x27;s action plugin</div>
-                        <div>This parameter is used internally by the module for multisite fabric processing</div>
-                        <div>Valid values are &#x27;multisite_child&#x27;, &#x27;multisite_parent&#x27; and &#x27;standalone&#x27;</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>config</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -1503,6 +1480,24 @@ Parameters
                 </td>
                 <td>
                         <div>Name of the target fabric for vrf operations</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>fabric_details</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>INTERNAL PARAMETER - DO NOT USE</div>
+                        <div>Fabric details are constructured by the module&#x27;s action plugin</div>
+                        <div>This parameter is used internally by the module for multisite fabric processing</div>
+                        <div>It will consist of the ND controller version, fabric type, members (if applicable) and cluster name (if applicable)</div>
                 </td>
             </tr>
             <tr>
