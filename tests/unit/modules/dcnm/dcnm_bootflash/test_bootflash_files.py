@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,35 +20,33 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import \
-    BootflashFiles
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import \
-    ConvertTargetToParams
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-    SwitchDetails
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import BootflashFiles
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import ConvertTargetToParams
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import SwitchDetails
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-    MockAnsibleModule, configs_deleted, does_not_raise, params_deleted,
-    payloads_bootflash_files, responses_ep_all_switches,
-    responses_ep_bootflash_files, targets)
+    MockAnsibleModule,
+    configs_deleted,
+    does_not_raise,
+    params_deleted,
+    payloads_bootflash_files,
+    responses_ep_all_switches,
+    responses_ep_bootflash_files,
+    targets,
+)
 
 
 def test_bootflash_files_00000() -> None:
@@ -77,17 +75,18 @@ def test_bootflash_files_00000() -> None:
         "serial_number",
         "supervisor",
     ]
-    assert instance.ok_to_delete_files_reason is None
+    assert instance.ok_to_delete_files_reason == ""
     assert instance.payload == {"deleteFiles": []}
-    assert instance.filename is None
-    assert instance.filepath is None
-    assert instance.ip_address is None
-    assert instance.partition is None
-    assert instance._rest_send is None
-    assert instance._results is None
-    assert instance.supervisor is None
-    assert instance.switch_details is None
-    assert instance.target is None
+    assert instance._filename == ""
+    assert instance._filepath == ""
+    assert instance._ip_address == ""
+    assert instance._partition == ""
+    assert instance._rest_send.params == {}
+    assert instance._rest_send.class_name == "RestSend"
+    assert instance._results.class_name == "Results"
+    assert instance._supervisor == ""
+    assert instance._switch_details.class_name == "SwitchDetails"
+    assert instance._target == {}
 
 
 def test_bootflash_files_00100() -> None:
@@ -143,39 +142,39 @@ def test_bootflash_files_00100() -> None:
         instance.rest_send = rest_send
         instance.results = Results()
         instance.switch_details = SwitchDetails()
+        instance.switch_details.rest_send = rest_send
         instance.switch_details.results = Results()
 
         convert_target = ConvertTargetToParams()
         convert_target.target = gen_targets.next
         convert_target.commit()
 
-        instance.filepath = convert_target.filepath
-        instance.filename = convert_target.filename
+        instance.filepath = convert_target.filepath or ""
+        instance.filename = convert_target.filename or ""
         instance.ip_address = "172.22.150.112"
-        instance.partition = convert_target.partition
-        instance.supervisor = convert_target.supervisor
-        instance.target = convert_target.target
+        instance.partition = convert_target.partition or ""
+        instance.supervisor = convert_target.supervisor or ""
+        instance.target = convert_target.target or {}
         instance.add_file()
 
         convert_target = ConvertTargetToParams()
         convert_target.target = gen_targets.next
         convert_target.commit()
 
-        instance.filepath = convert_target.filepath
-        instance.filename = convert_target.filename
+        instance.filepath = convert_target.filepath or ""
+        instance.filename = convert_target.filename or ""
         instance.ip_address = "172.22.150.113"
-        instance.partition = convert_target.partition
-        instance.supervisor = convert_target.supervisor
-        instance.target = convert_target.target
+        instance.partition = convert_target.partition or ""
+        instance.supervisor = convert_target.supervisor or ""
+        instance.target = convert_target.target or {}
         instance.add_file()
 
         instance.commit()
 
     assert instance.payload == payloads_bootflash_files(f"{key}a")
+    assert instance.results.response_current is not None
     assert instance.results.response_current["RETURN_CODE"] == 200
-    assert instance.results.result == [
-        {"success": True, "changed": True, "sequence_number": 1}
-    ]
+    assert instance.results.result == [{"success": True, "changed": True, "sequence_number": 1}]
 
 
 def test_bootflash_files_00110() -> None:
@@ -195,37 +194,10 @@ def test_bootflash_files_00110() -> None:
     """
     with does_not_raise():
         instance = BootflashFiles()
-        instance.results = Results()
         instance.switch_details = SwitchDetails()
 
-    match = r"BootflashFiles.validate_commit_parameters:\s+"
+    match = r"BootflashFiles\.validate_commit_parameters: "
     match += r"rest_send must be set before calling commit\(\)\."
-    with pytest.raises(ValueError, match=match):
-        instance.commit()
-
-
-def test_bootflash_files_00120() -> None:
-    """
-    ### Classes and Methods
-    - BootflashFiles()
-        - commit()
-        - validate_commit_parameters()
-
-    ### Summary
-    Verify ``ValueError`` is raised if ``results`` is not set before
-    calling commit.
-
-    ### Test
-    -   ValueError is raised by validate_commit_parameters().
-    -   Error message matches expectation.
-    """
-    with does_not_raise():
-        instance = BootflashFiles()
-        instance.rest_send = RestSend(params_deleted)
-        instance.switch_details = SwitchDetails()
-
-    match = r"BootflashFiles.validate_commit_parameters:\s+"
-    match += r"results must be set before calling commit\(\)\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -235,11 +207,10 @@ def test_bootflash_files_00130() -> None:
     ### Classes and Methods
     - BootflashFiles()
         - commit()
-        - validate_commit_parameters()
+        - switch_details property
 
     ### Summary
-    Verify ``ValueError`` is raised if ``switch_details`` is not set before
-    calling commit.
+    Verify `ValueError` is raised if `switch_details` is not set before calling commit.
 
     ### Test
     -   ValueError is raised by validate_commit_parameters().
@@ -250,7 +221,7 @@ def test_bootflash_files_00130() -> None:
         instance.rest_send = RestSend(params_deleted)
         instance.results = Results()
 
-    match = r"BootflashFiles.validate_commit_parameters:\s+"
+    match = r"BootflashFiles\.validate_commit_parameters: "
     match += r"switch_details must be set before calling commit\(\)\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -298,6 +269,7 @@ def test_bootflash_files_00200() -> None:
         instance.rest_send = rest_send
         instance.results = Results()
         instance.switch_details = SwitchDetails()
+        instance.switch_details.rest_send = rest_send
         instance.switch_details.results = Results()
 
         instance.filepath = "bootflash:/air.txt"
@@ -365,6 +337,7 @@ def test_bootflash_files_00210() -> None:
         instance.rest_send = rest_send
         instance.results = Results()
         instance.switch_details = SwitchDetails()
+        instance.switch_details.rest_send = rest_send
         instance.switch_details.results = Results()
 
         instance.filepath = "bootflash:/air.txt"
@@ -457,18 +430,19 @@ def test_bootflash_files_00220(key_responses_ep_all_switches, reason) -> None:
         instance.rest_send = rest_send
         instance.results = Results()
         instance.switch_details = SwitchDetails()
+        instance.switch_details.rest_send = rest_send
         instance.switch_details.results = Results()
 
         convert_target = ConvertTargetToParams()
         convert_target.target = gen_targets.next
         convert_target.commit()
 
-        instance.filepath = convert_target.filepath
-        instance.filename = convert_target.filename
+        instance.filepath = convert_target.filepath or ""
+        instance.filename = convert_target.filename or ""
         instance.ip_address = "172.22.150.112"
-        instance.partition = convert_target.partition
-        instance.supervisor = convert_target.supervisor
-        instance.target = convert_target.target
+        instance.partition = convert_target.partition or ""
+        instance.supervisor = convert_target.supervisor or ""
+        instance.target = convert_target.target or {}
 
     match = r"BootflashFiles\.add_file:\s+"
     match += r"Cannot delete files on switch 172\.22\.150\.112\.\s+"
@@ -662,6 +636,12 @@ def test_bootflash_files_00280() -> None:
     -   ValueError is raised by validate_prerequisites_for_add_file().
     -   Error message matches expectation.
     """
+    rest_send = RestSend(params_deleted)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = Sender()
+
     with does_not_raise():
         instance = BootflashFiles()
         instance.filename = "air.txt"
@@ -671,6 +651,8 @@ def test_bootflash_files_00280() -> None:
         instance.results = Results()
         instance.supervisor = "active"
         instance.switch_details = SwitchDetails()
+        instance.switch_details.rest_send = rest_send
+        instance.switch_details.results = Results()
 
     match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
     match += r"target must be set before calling add_file\(\)\."
@@ -725,9 +707,8 @@ def test_bootflash_files_00310() -> None:
         instance = BootflashFiles()
         instance.switch_details = SwitchDetails()
 
-    match = r"BootflashFiles\.refresh_switch_details:\s+"
-    match += r"rest_send must be set before calling\s+"
-    match += r"refresh_switch_details\."
+    match = r"BootflashFiles.refresh_switch_details: "
+    match += r"rest_send must be set before calling refresh_switch_details\."
     with pytest.raises(ValueError, match=match):
         instance.refresh_switch_details()
 
@@ -779,6 +760,7 @@ def test_bootflash_files_00400() -> None:
         instance.rest_send = rest_send
         instance.results = Results()
         instance.switch_details = SwitchDetails()
+        instance.switch_details.rest_send = rest_send
         instance.switch_details.results = Results()
 
     match = r"BootflashFiles\.ip_address_to_serial_number:\s+"
@@ -821,11 +803,10 @@ def test_bootflash_files_00500() -> None:
         instance.switch_details.results = Results()
         instance.delete_files()
 
+    assert instance.results.response_current is not None
     assert instance.results.response_current["RETURN_CODE"] == 200
     assert instance.results.response_current["MESSAGE"] == "No files to delete."
-    assert instance.results.result == [
-        {"success": True, "changed": False, "sequence_number": 1}
-    ]
+    assert instance.results.result == [{"success": True, "changed": False, "sequence_number": 1}]
 
 
 def test_bootflash_files_00600() -> None:
@@ -871,6 +852,7 @@ def test_bootflash_files_00600() -> None:
         instance.results = Results()
         instance.switch_details = SwitchDetails()
         instance.switch_details.results = Results()
+        instance.switch_details.rest_send = rest_send
         instance.payload = payloads_bootflash_files(key)
         instance.ip_address = "172.22.150.112"
         instance.partition = "usb1:"
@@ -921,6 +903,7 @@ def test_bootflash_files_00610() -> None:
         instance.rest_send = rest_send
         instance.results = Results()
         instance.switch_details = SwitchDetails()
+        instance.switch_details.rest_send = rest_send
         instance.switch_details.results = Results()
         instance.payload = payloads_bootflash_files(key)
         instance.ip_address = "172.22.150.112"
@@ -998,12 +981,10 @@ def test_bootflash_files_00800() -> None:
     match = r"BootflashFiles.target:\s+"
     match += r"target must be a dictionary\. Got type str for value foo\."
     with pytest.raises(TypeError, match=match):
-        instance.target = "foo"
+        instance.target = "foo"  # type: ignore
 
 
-@pytest.mark.parametrize(
-    "parameter", ["filepath", "ip_address", "serial_number", "supervisor"]
-)
+@pytest.mark.parametrize("parameter", ["filepath", "ip_address", "serial_number", "supervisor"])
 def test_bootflash_files_00810(parameter) -> None:
     """
     ### Classes and Methods

@@ -10,24 +10,9 @@ try:
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
-    # Create dummy classes to allow import without pydantic
-    BaseModel = object
+    from ....module_utils.common.third_party.pydantic import BaseModel, model_validator, validator, ValidationError
 
-    def model_validator(**kwargs):
-        """Dummy model_validator decorator that accepts any arguments"""
-        def decorator(func):
-            return func
-        return decorator
-
-    def validator(*args, **kwargs):
-        """Dummy validator decorator that accepts any arguments"""
-        def decorator(func):
-            return func
-        return decorator
-
-    ValidationError = Exception
-
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 display = Display()
 
