@@ -5,35 +5,21 @@ Validation model for controller responses related to the following endpoint:
 Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs/deployments
 Verb: POST
 """
+from __future__ import annotations
 
-# from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning
 import traceback
 import warnings
-from typing import Optional, Union
+from typing import Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning
-
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
+    from ..common.third_party.pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment]
-
-    # Fallback: Field that does nothing
-    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
-
-    # Fallback: ConfigDict that does nothing
-    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic ConfigDict fallback when pydantic is not available."""
-        return {}
-
-    PydanticExperimentalWarning = Warning  # type: ignore[assignment,misc]
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 
@@ -117,7 +103,7 @@ class ControllerResponseVrfsDeploymentsV12(ControllerResponseGenericV12):
      ```
     """
 
-    DATA: Optional[Union[VrfDeploymentsDataDictV12, str]] = Field(default="")
+    DATA: Optional[VrfDeploymentsDataDictV12 | str] = Field(default="")
     ERROR: Optional[str] = Field(default="")
     MESSAGE: Optional[str] = Field(default="")
     METHOD: Optional[str] = Field(default="")

@@ -19,29 +19,17 @@
 Serialize NDFC v11 payload fields to fields used in a dcnm_vrf playbook.
 """
 import traceback
-from typing import Optional, Union
+from typing import Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field
-
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
+    from ..common.third_party.pydantic import BaseModel, ConfigDict, Field
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment]
-
-    # Fallback: ConfigDict that does nothing
-    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic ConfigDict fallback when pydantic is not available."""
-        return {}
-
-    # Fallback: Field that does nothing
-    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 
 class VrfControllerToPlaybookV11Model(BaseModel):
@@ -72,7 +60,7 @@ class VrfControllerToPlaybookV11Model(BaseModel):
     redist_direct_rmap: Optional[str] = Field(alias="vrfRouteMap")
     rp_address: Optional[str] = Field(alias="rpAddress")
     rp_external: Optional[bool] = Field(alias="isRPExternal")
-    rp_loopback_id: Optional[Union[int, str]] = Field(alias="loopbackNumber")
+    rp_loopback_id: Optional[int | str] = Field(alias="loopbackNumber")
 
     static_default_route: Optional[bool] = Field(alias="configureStaticDefaultRouteFlag")
 

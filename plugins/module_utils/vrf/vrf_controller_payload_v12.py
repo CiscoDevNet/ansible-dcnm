@@ -5,61 +5,21 @@ following endpoint:
 Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs
 Verb: POST
 """
+from __future__ import annotations
 
 import traceback
 import warnings
-from typing import Union
+from typing import Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, field_serializer, field_validator, model_validator
-
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
+    from ..common.third_party.pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, field_serializer, field_validator, model_validator
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment]
-
-    # Fallback: ConfigDict that does nothing
-    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic ConfigDict fallback when pydantic is not available."""
-        return {}
-
-    # Fallback: Field that does nothing
-    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
-
-    PydanticExperimentalWarning = Warning  # type: ignore[assignment,misc]
-
-    # Fallback: field_serializer decorator that does nothing
-    def field_serializer(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic field_serializer fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
-
-    # Fallback: field_validator decorator that does nothing
-    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic field_validator fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
-
-    # Fallback: model_validator decorator that does nothing
-    def model_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic model_validator fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 
 from .vrf_template_config_v12 import VrfTemplateConfigV12
@@ -156,7 +116,7 @@ class VrfPayloadV12(BaseModel):
     fabric: str = Field(..., alias="fabric", max_length=64, description="Fabric name in which the VRF resides.")
     hierarchical_key: str = Field(alias="hierarchicalKey", default="", max_length=64)
     service_vrf_template: str = Field(alias="serviceVrfTemplate", default="")
-    source: Union[str, None] = Field(default=None)
+    source: Optional[str] = Field(default=None)
     tenant_name: str = Field(alias="tenantName", default="")
     vrf_extension_template: str = Field(alias="vrfExtensionTemplate", default="Default_VRF_Extension_Universal")
     vrf_id: int = Field(..., alias="vrfId", ge=1, le=16777214)
@@ -173,7 +133,7 @@ class VrfPayloadV12(BaseModel):
 
     @field_validator("service_vrf_template", mode="before")
     @classmethod
-    def validate_service_vrf_template(cls, value: Union[str, None]) -> str:
+    def validate_service_vrf_template(cls, value: Optional[str]) -> str:
         """
         Validate serviceVrfTemplate.  If it is not empty, it must be a valid
         service VRF template.

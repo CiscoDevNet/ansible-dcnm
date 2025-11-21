@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# mypy: disable-error-code="import-untyped"
 #
 # Copyright (c) 2020-2025 Cisco and/or its affiliates.
 #
@@ -14,15 +13,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=wrong-import-position
-from __future__ import absolute_import, division, print_function
+# pylint: disable=too-many-lines,wrong-import-position
+"""
+dcnm_vrf_v2 module implementation for NDFC version 12
+"""
 
-# pylint: disable=invalid-name
-__metaclass__ = type
+from __future__ import absolute_import, annotations, division, print_function
+
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Shrishail Kariyappanavar, Karthik Babu Harichandra Babu, Praveen Ramoorthy, Allen Robel"
-# pylint: enable=invalid-name
-"""
-"""
+
 import copy
 import inspect
 import json
@@ -31,33 +31,19 @@ import re
 import time
 import traceback
 from dataclasses import asdict, dataclass
-from typing import Any, Final, Optional, Union
+from typing import Any, Final, Optional
 
 from ansible.module_utils.basic import AnsibleModule
 
-# from pydantic import ValidationError
-
 try:
     from pydantic import ValidationError
-
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
+    from ..common.third_party.pydantic import ValidationError
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    class ValidationError(Exception):
-        """
-        For ansible-sanity checks when pydantic is not installed.
-        """
-
-        def __init__(self, message="A custom error occurred."):
-            self.message = message
-            super().__init__(self.message)
-
-        def __str__(self):
-            return f"ValidationError: {self.message}"
-
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet, EpVrfPost
 from ...module_utils.common.enums.http_requests import RequestVerb
@@ -125,7 +111,7 @@ class SendToControllerArgs:
     action: str
     verb: RequestVerb
     path: str
-    payload: Optional[Union[dict, list]]
+    payload: Optional[dict | list] = None
     log_response: bool = True
     is_rollback: bool = False
     response_model: Optional[Any] = None
@@ -1419,7 +1405,7 @@ class NdfcVrf12:
             msg += f"verb {endpoint.verb.value} path {endpoint.path}"
             raise ValueError(msg)
 
-        if isinstance(controller_response, Union[dict, list]):  # Avoid json.dumps(MagicMock) during unit tests
+        if isinstance(controller_response, (dict, list)):  # Avoid json.dumps(MagicMock) during unit tests
             msg = "controller_response: "
             msg += f"{json.dumps(controller_response, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -2089,7 +2075,7 @@ class NdfcVrf12:
                 detach_list.append(item)
         return detach_list
 
-    def get_items_to_detach_model(self, attach_list: list[HaveLanAttachItem]) -> Union[VrfDetachPayloadV12, None]:
+    def get_items_to_detach_model(self, attach_list: list[HaveLanAttachItem]) -> VrfDetachPayloadV12 | None:
         """
         # Summary
 

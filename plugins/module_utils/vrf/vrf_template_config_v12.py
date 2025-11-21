@@ -5,53 +5,22 @@ to the following endpoint:
 Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs
 Verb: GET
 """
+from __future__ import annotations
 
 import json
 import traceback
 import warnings
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, field_validator, model_validator
-
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
+    from ..common.third_party.pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, field_validator, model_validator
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment]
-
-    # Fallback: Field that does nothing
-    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
-
-    # Fallback: ConfigDict that does nothing
-    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic ConfigDict fallback when pydantic is not available."""
-        return {}
-
-    # Fallback: field_validator decorator that does nothing
-    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic field_validator fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
-
-    # Fallback: model_validator decorator that does nothing
-    def model_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic model_validator fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
-
-    PydanticExperimentalWarning = Warning  # type: ignore[assignment,misc]
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 from ..common.enums.bgp import BgpPasswordEncrypt
 
@@ -119,7 +88,7 @@ class VrfTemplateConfigV12(BaseModel):
         description="IPv4 Address. Applicable when trmEnabled is True and isRPAbsent is False",
     )
     rp_external: bool = Field(default=False, alias="isRPExternal", description="Is TRMv4 RP external to the fabric?")
-    rp_loopback_id: Optional[Union[int, str]] = Field(default="", alias="loopbackNumber", description="Loopback number")
+    rp_loopback_id: Optional[int | str] = Field(default="", alias="loopbackNumber", description="Loopback number")
     static_default_route: bool = Field(default=True, alias="configureStaticDefaultRouteFlag", description="Configure static default route flag")
     trm_bgw_msite: bool = Field(
         default=False,
@@ -142,7 +111,7 @@ class VrfTemplateConfigV12(BaseModel):
 
     @field_validator("rp_loopback_id", mode="before")
     @classmethod
-    def validate_rp_loopback_id(cls, data: Any) -> Union[int, str]:
+    def validate_rp_loopback_id(cls, data: Any) -> int | str:
         """
         If rp_loopback_id is None, return ""
         If rp_loopback_id is an empty string, return ""
@@ -232,7 +201,7 @@ class VrfTemplateConfigV12(BaseModel):
     '''
     @field_validator("rp_loopback_id", mode="before")
     @classmethod
-    def validate_rp_loopback_id(cls, data: Any) -> Union[int, str]:
+    def validate_rp_loopback_id(cls, data: Any) -> int | str:
         """
         If rp_loopback_id is None, return ""
         If rp_loopback_id is an empty string, return ""

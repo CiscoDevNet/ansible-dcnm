@@ -2,38 +2,17 @@
 from __future__ import annotations
 
 import traceback
-from typing import List, Optional, Union
+from typing import Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
+    from ..common.third_party.pydantic import BaseModel, ConfigDict, Field, field_validator
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment]
-
-    # Fallback: Field that does nothing
-    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
-
-    # Fallback: ConfigDict that does nothing
-    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic ConfigDict fallback when pydantic is not available."""
-        return {}
-
-    # Fallback: field_validator decorator that does nothing
-    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic field_validator fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 
 class LanDetachListItemV12(BaseModel):
@@ -51,7 +30,7 @@ class LanDetachListItemV12(BaseModel):
     - instance_values: Optional[str], alias: instanceValues, default=""
     - is_deploy: Optional[bool], alias: is_deploy
     - serial_number: str, alias: serialNumber
-    - vlan: Union(int | None), alias: vlanId
+    - vlan: int | None, alias: vlanId
     - vrf_name: str (min_length=1, max_length=32), alias: vrfName
 
     ## Notes
@@ -67,12 +46,12 @@ class LanDetachListItemV12(BaseModel):
     is_deploy: Optional[bool] = Field(alias="is_deploy")
     is_attached: Optional[bool] = Field(alias="isAttached", default=True)
     serial_number: str = Field(alias="serialNumber")
-    vlan: Union[int | None] = Field(alias="vlanId")
+    vlan: Optional[int] = Field(alias="vlanId", default=None)
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
 
     @field_validator("deployment", mode="after")
     @classmethod
-    def force_deployment_to_false(cls, value) -> bool:
+    def force_deployment_to_false(cls, _: bool) -> bool:
         """
         Force deployment to False.  This model is used for detaching
         VRF attachments, so deployment should always be False.
@@ -121,5 +100,5 @@ class VrfDetachPayloadV12(BaseModel):
         validate_by_name=True,
     )
 
-    lan_attach_list: List[LanDetachListItemV12] = Field(alias="lanAttachList")
+    lan_attach_list: list[LanDetachListItemV12] = Field(alias="lanAttachList")
     vrf_name: str = Field(alias="vrfName")

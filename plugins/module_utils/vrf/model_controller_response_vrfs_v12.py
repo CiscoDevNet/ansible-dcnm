@@ -10,40 +10,17 @@ from __future__ import annotations
 
 import traceback
 import warnings
-from typing import Optional, Union
+from typing import Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, model_validator
-
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
+    from ..common.third_party.pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, model_validator
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment]
-
-    # Fallback: Field that does nothing
-    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
-
-    # Fallback: ConfigDict that does nothing
-    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic ConfigDict fallback when pydantic is not available."""
-        return {}
-
-    # Fallback: model_validator decorator that does nothing
-    def model_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic model_validator fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
-
-    PydanticExperimentalWarning = Warning  # type: ignore[assignment,misc]
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 from .vrf_template_config_v12 import VrfTemplateConfigV12
@@ -148,14 +125,14 @@ class VrfObjectV12(BaseModel):
 
     model_config = base_vrf_model_config
 
-    fabric: str = Field(..., max_length=64, description="Fabric name in which the VRF resides.")
+    fabric: str = Field(max_length=64, description="Fabric name in which the VRF resides.")
     hierarchicalKey: str = Field(default="", max_length=64)
-    serviceVrfTemplate: Union[str, None] = Field(default=None)
-    source: Union[str, None] = Field(default=None)
-    tenantName: Union[str, None] = Field(default=None)
+    serviceVrfTemplate: str | None = Field(default=None)
+    source: str | None = Field(default=None)
+    tenantName: str | None = Field(default=None)
     vrfExtensionTemplate: str = Field(default="Default_VRF_Extension_Universal")
-    vrfId: int = Field(..., ge=1, le=16777214)
-    vrfName: str = Field(..., min_length=1, max_length=32, description="Name of the VRF, 1-32 characters.")
+    vrfId: int = Field(ge=1, le=16777214)
+    vrfName: str = Field(min_length=1, max_length=32, description="Name of the VRF, 1-32 characters.")
     vrfStatus: Optional[str] = Field(default="")
     vrfTemplate: str = Field(default="Default_VRF_Universal")
     vrfTemplateConfig: VrfTemplateConfigV12
@@ -166,7 +143,7 @@ class VrfObjectV12(BaseModel):
         If hierarchicalKey is "", set it to the fabric name.
         """
         if self.hierarchicalKey == "":
-            self.hierarchicalKey = self.fabric
+            self.hierarchicalKey = self.fabric  # pylint: disable=invalid-name
         return self
 
 

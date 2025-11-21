@@ -5,41 +5,21 @@ Validation model for controller responses related to the following endpoint:
 Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs/switches?vrf-names=ansible-vrf-int1&serial-numbers={serial1,serial2}
 Verb: GET
 """
+from __future__ import annotations
+
 import json
 import traceback
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
+    from ..common.third_party.pydantic import BaseModel, ConfigDict, Field, field_validator
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment]
-
-    # Fallback: Field that does nothing
-    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
-
-    # Fallback: ConfigDict that does nothing
-    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic ConfigDict fallback when pydantic is not available."""
-        return {}
-
-    # Fallback: field_validator decorator that does nothing
-    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic field_validator fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
-
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 
@@ -59,13 +39,13 @@ class ControllerResponseVrfsSwitchesVrfLiteConnProtoItem(BaseModel):
     peer_vrf_name: Optional[str] = Field(default="", alias="PEER_VRF_NAME")
     vrf_lite_jython_template: Optional[str] = Field(default="", alias="VRF_LITE_JYTHON_TEMPLATE")
 
-    @classmethod
-    def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-        """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-        if HAS_PYDANTIC:
-            return super().model_construct(*args, **kwargs)
-        # Fallback: return self when pydantic is not available
-        return cls()
+    # @classmethod
+    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
+    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
+    #     if HAS_PYDANTIC:
+    #         return super().model_construct(*args, **kwargs)
+    #     # Fallback: return self when pydantic is not available
+    #     return cls()
 
 
 class ControllerResponseVrfsSwitchesExtensionPrototypeValue(BaseModel):
@@ -96,13 +76,13 @@ class ControllerResponseVrfsSwitchesExtensionPrototypeValue(BaseModel):
             data = ControllerResponseVrfsSwitchesVrfLiteConnProtoItem(**data)
         return data
 
-    @classmethod
-    def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-        """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-        if HAS_PYDANTIC:
-            return super().model_construct(*args, **kwargs)
-        # Fallback: return self when pydantic is not available
-        return cls()
+    # @classmethod
+    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
+    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
+    #     if HAS_PYDANTIC:
+    #         return super().model_construct(*args, **kwargs)
+    #     # Fallback: return self when pydantic is not available
+    #     return cls()
 
 
 class ControllerResponseVrfsSwitchesInstanceValues(BaseModel):
@@ -124,23 +104,24 @@ class ControllerResponseVrfsSwitchesInstanceValues(BaseModel):
     switch_route_target_export_evpn: Optional[str] = Field(default="", alias="switchRouteTargetExportEvpn")
     switch_route_target_import_evpn: Optional[str] = Field(default="", alias="switchRouteTargetImportEvpn")
 
-    @classmethod
-    def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-        """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-        if HAS_PYDANTIC:
-            return super().model_construct(*args, **kwargs)
-        # Fallback: return self when pydantic is not available
-        return cls()
+    # @classmethod
+    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
+    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
+    #     if HAS_PYDANTIC:
+    #         return super().model_construct(*args, **kwargs)
+    #     # Fallback: return self when pydantic is not available
+    #     return cls()
 
 
 class ControllerResponseVrfsSwitchesMultisiteConnOuterItem(BaseModel):
-    @classmethod
-    def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-        """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-        if HAS_PYDANTIC:
-            return super().model_construct(*args, **kwargs)
-        # Fallback: return self when pydantic is not available
-        return cls()
+    pass
+    # @classmethod
+    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
+    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
+    #     if HAS_PYDANTIC:
+    #         return super().model_construct(*args, **kwargs)
+    #     # Fallback: return self when pydantic is not available
+    #     return cls()
 
 
 class VrfLiteConnOuterItem(BaseModel):
@@ -157,13 +138,13 @@ class VrfLiteConnOuterItem(BaseModel):
     peer_vrf_name: Optional[str] = Field(default="", alias="PEER_VRF_NAME")
     vrf_lite_jython_template: Optional[str] = Field(default="", alias="VRF_LITE_JYTHON_TEMPLATE")
 
-    @classmethod
-    def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-        """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-        if HAS_PYDANTIC:
-            return super().model_construct(*args, **kwargs)
-        # Fallback: return self when pydantic is not available
-        return cls()
+    # @classmethod
+    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
+    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
+    #     if HAS_PYDANTIC:
+    #         return super().model_construct(*args, **kwargs)
+    #     # Fallback: return self when pydantic is not available
+    #     return cls()
 
 
 class ControllerResponseVrfsSwitchesMultisiteConnOuter(BaseModel):
@@ -171,25 +152,25 @@ class ControllerResponseVrfsSwitchesMultisiteConnOuter(BaseModel):
         default=[ControllerResponseVrfsSwitchesMultisiteConnOuterItem().model_construct()], alias="MULTISITE_CONN"
     )
 
-    @classmethod
-    def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-        """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-        if HAS_PYDANTIC:
-            return super().model_construct(*args, **kwargs)
-        # Fallback: return self when pydantic is not available
-        return cls()
+    # @classmethod
+    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
+    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
+    #     if HAS_PYDANTIC:
+    #         return super().model_construct(*args, **kwargs)
+    #     # Fallback: return self when pydantic is not available
+    #     return cls()
 
 
 class ControllerResponseVrfsSwitchesVrfLiteConnOuter(BaseModel):
     vrf_lite_conn: Optional[List[VrfLiteConnOuterItem]] = Field(default=[VrfLiteConnOuterItem().model_construct()], alias="VRF_LITE_CONN")
 
-    @classmethod
-    def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-        """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-        if HAS_PYDANTIC:
-            return super().model_construct(*args, **kwargs)
-        # Fallback: return self when pydantic is not available
-        return cls()
+    # @classmethod
+    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
+    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
+    #     if HAS_PYDANTIC:
+    #         return super().model_construct(*args, **kwargs)
+    #     # Fallback: return self when pydantic is not available
+    #     return cls()
 
 
 class ControllerResponseVrfsSwitchesExtensionValuesOuter(BaseModel):
@@ -236,30 +217,30 @@ class ControllerResponseVrfsSwitchesExtensionValuesOuter(BaseModel):
             data = ControllerResponseVrfsSwitchesVrfLiteConnOuter(**data)
         return data
 
-    @classmethod
-    def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-        """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-        if HAS_PYDANTIC:
-            return super().model_construct(*args, **kwargs)
-        # Fallback: return self when pydantic is not available
-        return cls()
+    # @classmethod
+    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
+    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
+    #     if HAS_PYDANTIC:
+    #         return super().model_construct(*args, **kwargs)
+    #     # Fallback: return self when pydantic is not available
+    #     return cls()
 
 
 class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
-    error_message: Union[str, None] = Field(alias="errorMessage")
+    error_message: str | None = Field(alias="errorMessage")
     extension_prototype_values: Optional[List[ControllerResponseVrfsSwitchesExtensionPrototypeValue]] = Field(
         default=[ControllerResponseVrfsSwitchesExtensionPrototypeValue().model_construct()], alias="extensionPrototypeValues"
     )
     extension_values: Optional[ControllerResponseVrfsSwitchesExtensionValuesOuter] = Field(
         default=ControllerResponseVrfsSwitchesExtensionValuesOuter().model_construct(), alias="extensionValues"
     )
-    freeform_config: Union[str, None] = Field(alias="freeformConfig")
+    freeform_config: str | None = Field(alias="freeformConfig")
     instance_values: Optional[ControllerResponseVrfsSwitchesInstanceValues] = Field(
         default=ControllerResponseVrfsSwitchesInstanceValues().model_construct(), alias="instanceValues"
     )
     is_lan_attached: bool = Field(alias="islanAttached")
     lan_attached_state: str = Field(alias="lanAttachedState")
-    peer_serial_number: Union[str, None] = Field(alias="peerSerialNumber")
+    peer_serial_number: str | None = Field(alias="peerSerialNumber")
     role: str
     serial_number: str = Field(alias="serialNumber")
     switch_name: str = Field(alias="switchName")
@@ -287,7 +268,7 @@ class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
 
     @field_validator("extension_values", mode="before")
     @classmethod
-    def preprocess_extension_values(cls, data: Any) -> Union[ControllerResponseVrfsSwitchesExtensionValuesOuter, str]:
+    def preprocess_extension_values(cls, data: Any) -> ControllerResponseVrfsSwitchesExtensionValuesOuter | str:
         """
         Convert incoming data
 

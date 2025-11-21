@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @author: Allen Robel
 # @file: plugins/module_utils/vrf/vrf_controller_to_playbook_v12.py
-# Copyright (c) 2020-2023 Cisco and/or its affiliates.
+# Copyright (c) 2020-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,31 +18,20 @@
 """
 Serialize NDFC version 12 controller payload fields to fields used in a dcnm_vrf playbook.
 """
+from __future__ import annotations
 
 import traceback
-from typing import Optional, Union
+from typing import Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field
-
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
+    from ..common.third_party.pydantic import BaseModel, ConfigDict, Field
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment]
-
-    # Fallback: ConfigDict that does nothing
-    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic ConfigDict fallback when pydantic is not available."""
-        return {}
-
-    # Fallback: Field that does nothing
-    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 
 class VrfControllerToPlaybookV12Model(BaseModel):
@@ -86,7 +75,7 @@ class VrfControllerToPlaybookV12Model(BaseModel):
     redist_direct_rmap: Optional[str] = Field(alias="vrfRouteMap")
     rp_address: Optional[str] = Field(alias="rpAddress")
     rp_external: Optional[bool] = Field(alias="isRPExternal")
-    rp_loopback_id: Optional[Union[int, str]] = Field(alias="loopbackNumber")
+    rp_loopback_id: Optional[int | str] = Field(alias="loopbackNumber")
 
     static_default_route: Optional[bool] = Field(alias="configureStaticDefaultRouteFlag")
 

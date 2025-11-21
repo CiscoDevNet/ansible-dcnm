@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# @author: Allen Robel
 # @file: plugins/module_utils/vrf/vrf_playbook_model.py
 # Copyright (c) 2020-2023 Cisco and/or its affiliates.
 #
@@ -18,42 +17,20 @@
 """
 Validation model for dcnm_vrf playbooks.
 """
+from __future__ import annotations
+
 import traceback
-from typing import Optional, Union
+from typing import Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
-
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
+    from ..common.third_party.pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment]
-
-    StrictBool = bool  # type: ignore[assignment,misc]
-
-    # Fallback: Field that does nothing
-    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
-
-    # Fallback: ConfigDict that does nothing
-    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic ConfigDict fallback when pydantic is not available."""
-        return {}
-
-    # Fallback: field_validator decorator that does nothing
-    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic field_validator fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
-
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 from ..common.enums.bgp import BgpPasswordEncrypt
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
@@ -116,7 +93,7 @@ class PlaybookVrfLiteModel(BaseModel):
 
     @field_validator("dot1q", mode="before")
     @classmethod
-    def validate_dot1q_and_serialize_to_str(cls, value: Union[None, int, str]) -> str:
+    def validate_dot1q_and_serialize_to_str(cls, value: Optional[int | str]) -> str:
         """
         Validate dot1q and serialize it to a str.
 
@@ -246,7 +223,7 @@ class PlaybookVrfAttachModel(BaseModel):
 
     @field_validator("vrf_lite", mode="before")
     @classmethod
-    def vrf_lite_set_to_none_if_empty_list(cls, value: Union[None, list]) -> Optional[list[PlaybookVrfLiteModel]]:
+    def vrf_lite_set_to_none_if_empty_list(cls, value: Optional[list]) -> Optional[list[PlaybookVrfLiteModel]]:
         """
         Set vrf_lite to None if it is an empty list.
         This mimics the behavior of the original code.
@@ -343,7 +320,7 @@ class PlaybookVrfModelV12(BaseModel):
     v6_redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET")  # v6VrfRouteMap
     rp_address: str = Field(default="")  # rpAddress
     rp_external: StrictBool = Field(default=False)  # isRPExternal
-    rp_loopback_id: Optional[Union[int, str]] = Field(default="", ge=-1, le=1023)  # loopbackNumber
+    rp_loopback_id: Optional[int | str] = Field(default="", ge=-1, le=1023)  # loopbackNumber
     service_vrf_template: Optional[str] = Field(default=None)  # serviceVrfTemplate
     source: Optional[str] = None
     static_default_route: StrictBool = Field(default=True)  # configureStaticDefaultRouteFlag
@@ -392,7 +369,7 @@ class PlaybookVrfModelV12(BaseModel):
 
     @field_validator("rp_loopback_id", mode="before")
     @classmethod
-    def validate_rp_loopback_id_before(cls, value: Union[int, str]) -> Union[int, str]:
+    def validate_rp_loopback_id_before(cls, value: int | str) -> int | str:
         """
         Validate rp_loopback_id is an integer between 0 and 1023.
         If it is an empty string, return -1.  This will be converted to "" in an "after" validator.
@@ -407,7 +384,7 @@ class PlaybookVrfModelV12(BaseModel):
 
     @field_validator("rp_loopback_id", mode="after")
     @classmethod
-    def validate_rp_loopback_id_after(cls, value: Union[int, str]) -> Union[int, str]:
+    def validate_rp_loopback_id_after(cls, value: int | str) -> int | str:
         """
         Convert rp_loopback_id to an empty string if it is -1.
         """
@@ -427,7 +404,7 @@ class PlaybookVrfModelV12(BaseModel):
 
     @field_validator("vlan_id", mode="before")
     @classmethod
-    def validate_vlan_id_before(cls, value: Union[int, str]) -> Union[int, str]:
+    def validate_vlan_id_before(cls, value: int | str) -> int | str:
         """
         Validate vlan_id is an integer between 2 and 4094.
         If it is "", return -1.  This will be converted to None in an "after" validator.
@@ -449,7 +426,7 @@ class PlaybookVrfModelV12(BaseModel):
 
     @field_validator("vlan_id", mode="after")
     @classmethod
-    def validate_vlan_id_after(cls, value: Union[int, str]) -> Union[int, str]:
+    def validate_vlan_id_after(cls, value: int | str) -> int | str:
         """
         Convert vlan_id to None if it is -1.
         """

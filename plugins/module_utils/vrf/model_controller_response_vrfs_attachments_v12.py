@@ -5,31 +5,20 @@ Validation model for controller responses for the following endpoint:
 Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs/attachments?vrf-names={vrf1,vrf2,...}
 Verb: GET
 """
+from __future__ import annotations
+
 import traceback
-from typing import Optional, Union
+from typing import Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field
-
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
+    from ..common.third_party.pydantic import BaseModel, ConfigDict, Field
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment]
-
-    # Fallback: Field that does nothing
-    def Field(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
-
-    # Fallback: ConfigDict that does nothing
-    def ConfigDict(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic ConfigDict fallback when pydantic is not available."""
-        return {}
-
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 
@@ -52,8 +41,8 @@ class ControllerResponseLanAttachItem(BaseModel):
     - `switch_name`: str = alias="switchName"
     - `switch_role`: str = alias="switchRole"
     - `switch_serial_no`: str = alias="switchSerialNo"
-    - `vlan_id`: Union[int, None] = alias="vlanId", ge=2, le=4094
-    - `vrf_id`: Union[int, None] = alias="vrfId", ge=1, le=16777214
+    - `vlan_id`: int | None = alias="vlanId", ge=2, le=4094
+    - `vrf_id`: int | None = alias="vrfId", ge=1, le=16777214
     - `vrf_name`: str = alias="vrfName", min_length=1, max_length=32
     """
 
@@ -67,8 +56,8 @@ class ControllerResponseLanAttachItem(BaseModel):
     switch_name: str = Field(alias="switchName")
     switch_role: str = Field(alias="switchRole")
     switch_serial_no: str = Field(alias="switchSerialNo")
-    vlan_id: Union[int, None] = Field(alias="vlanId", ge=2, le=4094)
-    vrf_id: Union[int, None] = Field(alias="vrfId", ge=1, le=16777214)
+    vlan_id: int | None = Field(alias="vlanId", ge=2, le=4094)
+    vrf_id: int | None = Field(alias="vrfId", ge=1, le=16777214)
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
 
 
