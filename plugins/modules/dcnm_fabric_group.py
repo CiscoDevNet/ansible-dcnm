@@ -406,7 +406,7 @@ EXAMPLES = """
 # "The following parameter(value) combination(s) are invalid and need to be reviewed: Fabric: f3, ENABLE_PVLAN(False) requires ENABLE_SGT != True."
 
 """
-# pylint: disable=wrong-import-position, too-many-lines, too-many-instance-attributes
+# pylint: disable=wrong-import-position, too-many-lines, too-many-instance-attributes, too-many-statements
 import copy
 import inspect
 import json
@@ -415,33 +415,6 @@ import traceback
 from typing import Type, Union
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore[import-untyped]
-
-try:
-    from pydantic import BaseModel, Field, field_validator  # pylint: disable=unused-import
-except ImportError:
-    HAS_PYDANTIC = False
-    PYDANTIC_IMPORT_ERROR: Union[str, None] = traceback.format_exc()  # pylint: disable=invalid-name
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment,misc]
-
-    # Fallback: Field that does nothing
-    def Field(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
-
-    # Fallback: field_validator decorator that does nothing
-    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic field_validator fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
-
-else:
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None  # pylint: disable=invalid-name
 
 from ..module_utils.common.controller_features_v2 import ControllerFeatures
 from ..module_utils.common.controller_version_v2 import ControllerVersion
@@ -475,15 +448,7 @@ def json_pretty(msg):
     return json.dumps(msg, indent=4, sort_keys=True)
 
 
-# Use conditional base class to support import without pydantic
-CommonBase: Type
-if HAS_PYDANTIC:
-    CommonBase = FabricGroupCommon
-else:
-    CommonBase = object
-
-
-class Common(CommonBase):
+class Common(FabricGroupCommon):
     """
     # Summary
 
@@ -1212,12 +1177,6 @@ def main():
     }
 
     ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
-
-    # Check for pydantic dependency before proceeding
-    if not HAS_PYDANTIC:
-        ansible_module.fail_json(
-            msg="The pydantic library is required to use this module. " "Install it with: pip install pydantic", exception=PYDANTIC_IMPORT_ERROR
-        )
 
     params = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
