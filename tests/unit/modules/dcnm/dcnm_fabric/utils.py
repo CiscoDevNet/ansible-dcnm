@@ -1,4 +1,7 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+"""
+Utility functions, fixtures, and mocks for dcnm_fabric unit tests.
+"""
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +17,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 
 from contextlib import contextmanager

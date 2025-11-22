@@ -155,5 +155,49 @@
         "FABRIC_NAME": "f1",
         "FABRIC_TYPE": "VXLAN_EVPN",
         "STP_BRIDGE_PRIORITY": 45056
+    },
+    "test_verify_playbook_params_00900a": {
+        "TEST_NOTES": [
+            "Relevant dependent parameters for the first rule are satisfied by the playbook config.",
+            "ENABLE_TRM == true and UNDERLAY_IS_V6 != true"
+        ],
+        "BGP_AS": "65001",
+        "FABRIC_NAME": "f1",
+        "L3VNI_MCAST_GROUP": "239.1.1.1",
+        "ENABLE_TRM": "true",
+        "UNDERLAY_IS_V6": "false"
+    },
+    "test_verify_playbook_params_00900b": {
+        "TEST_NOTES": [
+            "Relevant dependent parameters for the second rule are satisfied by the playbook config.",
+            "ENABLE_TRMv6 == true and UNDERLAY_IS_V6 != true"
+        ],
+        "BGP_AS": "65001",
+        "FABRIC_NAME": "f1",
+        "L3VNI_MCAST_GROUP": "239.1.1.1",
+        "ENABLE_TRMv6": "true",
+        "UNDERLAY_IS_V6": "false"
+    },
+    "test_verify_playbook_params_00910a": {
+        "TEST_NOTES": [
+            "Relevant dependent parameters for the first rule are not satisfied by the playbook config.",
+            "RULE: ENABLE_TRM == true and UNDERLAY_IS_V6 != true"
+        ],
+        "BGP_AS": "65001",
+        "FABRIC_NAME": "f1",
+        "L3VNI_MCAST_GROUP": "239.1.1.1",
+        "ENABLE_TRM": "false",
+        "UNDERLAY_IS_V6": "true"
+    },
+    "test_verify_playbook_params_00910b": {
+        "TEST_NOTES": [
+            "Relevant dependent parameters for the second rule not satisfied by the playbook config.",
+            "RULE: ENABLE_TRMv6 == true and UNDERLAY_IS_V6 != true"
+        ],
+        "BGP_AS": "65001",
+        "FABRIC_NAME": "f1",
+        "L3VNI_MCAST_GROUP": "239.1.1.1",
+        "ENABLE_TRMv6": "false",
+        "UNDERLAY_IS_V6": "true"
     }
 }
