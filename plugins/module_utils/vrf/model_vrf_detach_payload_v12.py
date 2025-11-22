@@ -51,7 +51,7 @@ class LanDetachListItemV12(BaseModel):
 
     @field_validator("deployment", mode="after")
     @classmethod
-    def force_deployment_to_false(cls, _: bool) -> bool:
+    def force_deployment_to_false(cls, _value: bool) -> bool:
         """
         Force deployment to False.  This model is used for detaching
         VRF attachments, so deployment should always be False.
