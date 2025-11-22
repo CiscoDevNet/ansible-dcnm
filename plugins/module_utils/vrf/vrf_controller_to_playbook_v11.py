@@ -18,6 +18,8 @@
 """
 Serialize NDFC v11 payload fields to fields used in a dcnm_vrf playbook.
 """
+from __future__ import annotations
+
 import traceback
 from typing import Optional
 
