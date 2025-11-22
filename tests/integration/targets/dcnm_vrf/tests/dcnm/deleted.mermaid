@@ -1,0 +1,56 @@
+block-beta
+
+  block:title:1
+    columns 1
+    deleted_state_topology
+  end
+  space space space space space
+  columns 3
+
+  block:switch_3_block:3
+    switch_3
+  end
+  block:switch3_int:3
+    columns 2
+    interface_3a interface_3b
+  end
+
+  block:switch1_int:1
+    columns 1
+    interface_1a
+  end
+  block:blank:1
+    blank
+  end
+  block:switch2_inta:1
+    columns 1
+    interface_2a
+  end
+
+columns 3
+
+  block:switch_1_block:1
+    columns 1
+    switch_1
+  end
+
+  block:blank2:1
+    columns 1
+    blank
+  end
+
+  block:switch_2_block:1
+    columns 1
+    switch_2
+  end
+
+  switch_1:1 blank:1 switch_2:1
+
+interface_3a --- interface_1a
+interface_3b --- interface_2a
+
+style switch_1 fill:#079,stroke:#110,stroke-width:1px
+
+style switch_2 fill:#079,stroke:#110,stroke-width:1px
+
+style switch_3 fill:#968,stroke:#110,stroke-width:1px

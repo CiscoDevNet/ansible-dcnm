@@ -31,7 +31,7 @@
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
-- name: SETUP.0 - QUERY - [with_items] print vars
+- name: SETUP.0a - QUERY - [with_items] print vars
   ansible.builtin.debug:
     var: item
   with_items:
@@ -40,7 +40,24 @@
      - "switch_2 : {{ switch_2 }}"
      - "interface_2a : {{ interface_2a }}"
 
-- name: SETUP.1 - QUERY - [dcnm_rest.GET] Verify if fabric is deployed.
+- name: SETUP.0b - QUERY - [with_items] log vars
+  cisco.dcnm.dcnm_log:
+    msg: "{{ item }}"
+  with_items:
+     - "fabric_1 : {{ fabric_1 }}"
+     - "switch_1 : {{ switch_1 }}"
+     - "switch_2 : {{ switch_2 }}"
+     - "interface_2a : {{ interface_2a }}"
+
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.1 - QUERY - [dcnm_rest.GET] Verify if fabric is deployed."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_path }}"
@@ -50,13 +67,29 @@
     that:
     - 'result.response.DATA != None'
 
-- name: SETUP.2 - QUERY - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.2 - QUERY - [deleted] Delete all VRFs."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
   register: result_setup_2
 
-- name: SETUP.2a - QUERY - Wait 60 seconds for controller and switch to sync
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.2a - QUERY - Wait 60 seconds for controller and switch to sync."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
@@ -64,7 +97,15 @@
     timeout: 60
   when: result_setup_2.changed == true
 
-- name: SETUP.3 - QUERY - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.3 - QUERY - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -80,7 +121,15 @@
       deploy: true
   register: result_setup_3
 
-- name: SETUP.3a - QUERY - [query] Wait for vrfStatus == DEPLOYED
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.3a - QUERY - [query] Wait for vrfStatus == DEPLOYED"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -96,17 +145,17 @@
 
 - assert:
     that:
-    - 'result_setup_3.changed == true'
-    - 'result_setup_3.response[0].RETURN_CODE == 200'
-    - 'result_setup_3.response[1].RETURN_CODE == 200'
-    - 'result_setup_3.response[2].RETURN_CODE == 200'
-    - '(result_setup_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_setup_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_setup_3.diff[0].attach[0].deploy == true'
-    - 'result_setup_3.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_setup_3.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_setup_3.diff[0].attach[1].ip_address'
-    - 'result_setup_3.diff[0].vrf_name == "ansible-vrf-int1"'
+    - result_setup_3.changed == true
+    - result_setup_3.diff[0].attach[0].deploy == true
+    - result_setup_3.diff[0].attach[1].deploy == true
+    - result_setup_3.diff[0].vrf_name == "ansible-vrf-int1"
+    - result_setup_3.response[0].RETURN_CODE == 200
+    - result_setup_3.response[1].RETURN_CODE == 200
+    - result_setup_3.response[2].RETURN_CODE == 200
+    - (result_setup_3.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_setup_3.response[1].DATA|dict2items)[1].value == "SUCCESS"
+    - switch_1 in result_setup_3.diff[0].attach[0].ip_address
+    - switch_2 in result_setup_3.diff[0].attach[1].ip_address
 
 # ###############################################
 # ###                QUERY                     ##
@@ -134,16 +183,16 @@
 
 - assert:
     that:
-    - 'result_1.changed == false'
-    - 'result_1.response[0].parent.vrfName == "ansible-vrf-int1"'
-    - 'result_1.response[0].parent.vrfId == 9008011'
-    - 'result_1.response[0].parent.vrfStatus == "DEPLOYED"'
-    - 'result_1.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-    - 'result_1.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result_1.response[0].attach[0].switchDetailsList[0].vlan == 500'
-    - 'result_1.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-    - 'result_1.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result_1.response[0].attach[1].switchDetailsList[0].vlan == 500'
+    - result_1.changed == false
+    - result_1.response[0].attach[0].switchDetailsList[0].islanAttached == true
+    - result_1.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"
+    - result_1.response[0].attach[0].switchDetailsList[0].vlan == 500
+    - result_1.response[0].attach[1].switchDetailsList[0].islanAttached == true
+    - result_1.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"
+    - result_1.response[0].attach[1].switchDetailsList[0].vlan == 500
+    - result_1.response[0].parent.vrfId == 9008011
+    - result_1.response[0].parent.vrfName == "ansible-vrf-int1"
+    - result_1.response[0].parent.vrfStatus == "DEPLOYED"
 
 - name: TEST.2 - QUERY - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
@@ -157,17 +206,17 @@
 
 - assert:
     that:
-    - 'result_2.changed == true'
-    - 'result_2.response[0].RETURN_CODE == 200'
-    - 'result_2.response[1].RETURN_CODE == 200'
-    - 'result_2.response[1].MESSAGE == "OK"'
-    - 'result_2.response[2].RETURN_CODE == 200'
-    - 'result_2.response[2].METHOD == "DELETE"'
-    - '(result_2.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_2.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_2.diff[0].attach[0].deploy == false'
-    - 'result_2.diff[0].attach[1].deploy == false'
-    - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
+    - result_2.changed == true
+    - result_2.diff[0].attach[0].deploy == false
+    - result_2.diff[0].attach[1].deploy == false
+    - result_2.diff[0].vrf_name == "ansible-vrf-int1"
+    - result_2.response[1].MESSAGE == "OK"
+    - result_2.response[2].METHOD == "DELETE"
+    - result_2.response[0].RETURN_CODE == 200
+    - result_2.response[1].RETURN_CODE == 200
+    - result_2.response[2].RETURN_CODE == 200
+    - (result_2.response[0].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_2.response[0].DATA|dict2items)[1].value == "SUCCESS"
 
 - name: TEST.2b - QUERY - [wait_for] Wait 60 seconds for controller and switch to sync
   wait_for:
@@ -205,15 +254,15 @@
 
 - assert:
     that:
-    - 'result_3.changed == true'
-    - 'result_3.response[0].RETURN_CODE == 200'
-    - 'result_3.response[1].RETURN_CODE == 200'
-    - 'result_3.response[2].RETURN_CODE == 200'
-    - '(result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_3.diff[0].attach[0].deploy == true'
-    - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
+    - result_3.changed == true
+    - result_3.diff[0].attach[0].deploy == true
+    - result_3.response[0].RETURN_CODE == 200
+    - result_3.response[1].RETURN_CODE == 200
+    - result_3.response[2].RETURN_CODE == 200
+    - (result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"
+    - switch_1 in result_3.diff[0].attach[0].ip_address
+    - switch_2 in result_3.diff[0].attach[1].ip_address
 
 - name: TEST.4 - QUERY - [merged] Create, Attach, Deploy VRF+LITE EXTENSION ansible-vrf-int2 on switch_2
   cisco.dcnm.dcnm_vrf:
@@ -255,13 +304,13 @@
 
 - assert:
     that:
-    - 'result_4.changed == true'
-    - 'result_4.response[0].RETURN_CODE == 200'
-    - 'result_4.response[1].RETURN_CODE == 200'
-    - '(result_4.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result_4.diff[0].attach[0].deploy == true'
-    - '"{{ switch_2 }}" in result_4.diff[0].attach[0].ip_address'
-    - 'result_4.diff[0].vrf_name == "ansible-vrf-int2"'
+    - result_4.changed == true
+    - result_4.diff[0].attach[0].deploy == true
+    - result_4.diff[0].vrf_name == "ansible-vrf-int2"
+    - result_4.response[0].RETURN_CODE == 200
+    - result_4.response[1].RETURN_CODE == 200
+    - (result_4.response[0].DATA|dict2items)[0].value == "SUCCESS"
+    - switch_2 in result_4.diff[0].attach[0].ip_address
 
 - name: TEST.5 - QUERY - [query] Query VRF+LITE EXTENSION ansible-vrf-int2 switch_2
   cisco.dcnm.dcnm_vrf:
@@ -293,16 +342,16 @@
 
 - assert:
     that:
-    - 'result_5.changed == false'
-    - 'result_5.response[0].parent.vrfName == "ansible-vrf-int2"'
-    - 'result_5.response[0].parent.vrfId == 9008012'
-    - 'result_5.response[0].parent.vrfStatus == "DEPLOYED"'
-    - 'result_5.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-    - 'result_5.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result_5.response[0].attach[0].switchDetailsList[0].vlan == 1500'
-    - 'result_5.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-    - 'result_5.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result_5.response[0].attach[1].switchDetailsList[0].vlan == 1500'
+    - result_5.changed == false
+    - result_5.response[0].parent.vrfId == 9008012
+    - result_5.response[0].parent.vrfName == "ansible-vrf-int2"
+    - result_5.response[0].parent.vrfStatus == "DEPLOYED"
+    - result_5.response[0].attach[0].switchDetailsList[0].islanAttached == true
+    - result_5.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"
+    - result_5.response[0].attach[0].switchDetailsList[0].vlan == 1500
+    - result_5.response[0].attach[1].switchDetailsList[0].islanAttached == true
+    - result_5.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"
+    - result_5.response[0].attach[1].switchDetailsList[0].vlan == 1500
 
 - name: TEST.6 - QUERY - [query] Query without the config element
   cisco.dcnm.dcnm_vrf:
@@ -316,16 +365,16 @@
 
 - assert:
     that:
-    - 'result_6.changed == false'
-    - 'result_6.response[0].parent.vrfName == "ansible-vrf-int2"'
-    - 'result_6.response[0].parent.vrfId == 9008012'
-    - 'result_6.response[0].parent.vrfStatus == "DEPLOYED"'
-    - 'result_6.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-    - 'result_6.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result_6.response[0].attach[0].switchDetailsList[0].vlan == 1500'
-    - 'result_6.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-    - 'result_6.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result_6.response[0].attach[1].switchDetailsList[0].vlan == 1500'
+    - result_6.changed == false
+    - result_6.response[0].parent.vrfId == 9008012
+    - result_6.response[0].parent.vrfName == "ansible-vrf-int2"
+    - result_6.response[0].parent.vrfStatus == "DEPLOYED"
+    - result_6.response[0].attach[0].switchDetailsList[0].islanAttached == true
+    - result_6.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"
+    - result_6.response[0].attach[0].switchDetailsList[0].vlan == 1500
+    - result_6.response[0].attach[1].switchDetailsList[0].islanAttached == true
+    - result_6.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"
+    - result_6.response[0].attach[1].switchDetailsList[0].vlan == 1500
 
 - name: TEST.7 - QUERY - [query] Query non-existent VRF ansible-vrf-int1
   cisco.dcnm.dcnm_vrf:
@@ -349,8 +398,8 @@
 
 - assert:
     that:
-    - 'result_7.changed == false'
-    - 'result_7.response|length == 0'
+    - result_7.changed == false
+    - result_7.response|length == 0
 
 - name: TEST.7b - QUERY - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:

@@ -1,0 +1,20 @@
+{
+    "payload_full": {
+        "TEST_NOTES": [
+            "instanceValues is serialized by PayloadVrfsAttachmentsLanAttachListItem.model_dump() into a JSON string"
+        ],
+        "lanAttachList": [
+            {
+                "deployment": true,
+                "extensionValues": {},
+                "fabric": "test_fabric",
+                "freeformConfig": "",
+                "instanceValues": {"loopbackIpV6Address": "", "loopbackId": "", "deviceSupportL3VniNoVlan": "false", "switchRouteTargetImportEvpn": "", "loopbackIpAddress": "", "switchRouteTargetExportEvpn": ""},
+                "serialNumber": "01234567891",
+                "vlan": 0,
+                "vrfName": "test_vrf"
+            }
+        ],
+        "vrfName": "test_vrf"
+    }
+}

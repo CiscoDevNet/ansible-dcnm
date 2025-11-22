@@ -1,0 +1,12 @@
+architecture-beta
+    group isn(cloud)[ISN]
+      group switch_4g[switch_4 edge_router] in isn
+        service interface_4a(internet)[interface_4a] in switch_4g
+
+    group fabric_1(cloud)[fabric_1]
+      group switch_1g[switch_1 border_spine] in fabric_1
+      group switch_2g[switch_2 border_spine] in fabric_1
+        service interface_2a(server)[interface_2a] in switch_2g
+      group switch_3g[switch_3 non_border] in fabric_1
+
+    interface_4a:T -- B:interface_2a
