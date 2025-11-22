@@ -62,6 +62,7 @@ options:
                 type: str
             FABRIC_TYPE:
                 choices:
+                - External
                 - BGP
                 - IPFM
                 - ISN
@@ -3556,6 +3557,312 @@ options:
                         default: Default_VRF_Extension_Universal
                         description:
                         - Default Overlay VRF Template For Borders
+                        required: false
+                        type: str
+            EXTERNAL_FABRIC_PARAMETERS:
+                description:
+                - External fabric specific parameters.
+                - Also known as External Connectivity Network.
+                - The following parameters are specific to External fabrics.
+                - Fabric type attached to Border Leaf switches to connevt VXLAN EVPN fabrics via VRF-Lite.
+                - The indentation of these parameters is meant only to logically group them.
+                - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
+                suboptions:
+                    AAA_REMOTE_IP_ENABLED:
+                        default: false
+                        description:
+                        - Enable only, when IP Authorization is enabled in the AAA Server
+                        required: false
+                        type: bool
+                    AAA_SERVER_CONF:
+                        default: ''
+                        description:
+                        - AAA Configurations
+                        required: false
+                        type: str
+                    BGP_AS:
+                        default: ''
+                        description:
+                        - 1-4294967295 | 1-65535.0-65535 It is a good practice to have a unique
+                            ASN for each Fabric.
+                        required: false
+                        type: str
+                    BOOTSTRAP_CONF:
+                        default: ''
+                        description:
+                        - Additional CLIs required during device bootup/login e.g. AAA/Radius
+                        required: false
+                        type: str
+                    BOOTSTRAP_CONF_XE:
+                        default: ''
+                        description:
+                        - Additional CLIs required during device bootup/login e.g. AAA/Radius
+                        required: false
+                        type: str
+                    BOOTSTRAP_ENABLE:
+                        default: false
+                        description:
+                        - Automatic IP Assignment For POAP
+                        required: false
+                        type: bool
+                    BOOTSTRAP_MULTISUBNET:
+                        default: '#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix'
+                        description:
+                        - 'lines with # prefix are ignored here'
+                        required: false
+                        type: str
+                    CDP_ENABLE:
+                        default: false
+                        description:
+                        - Enable CDP on management interface
+                        required: false
+                        type: bool
+                    DHCP_ENABLE:
+                        default: false
+                        description:
+                        - Automatic IP Assignment For POAP From Local DHCP Server
+                        required: false
+                        type: bool
+                    DHCP_END:
+                        default: ''
+                        description:
+                        - End Address For Switch POAP
+                        required: false
+                        type: str
+                    DHCP_IPV6_ENABLE:
+                        choices:
+                        - DHCPv4
+                        - DHCPv6
+                        default: DHCPv4
+                        description:
+                        - No description available
+                        required: false
+                        type: str
+                    DHCP_START:
+                        default: ''
+                        description:
+                        - Start Address For Switch POAP
+                        required: false
+                        type: str
+                    DOMAIN_NAME:
+                        default: ''
+                        description:
+                        - Domain name for DHCP server PnP block
+                        required: false
+                        type: str
+                    ENABLE_AAA:
+                        default: false
+                        description:
+                        - Include AAA configs from Advanced tab during device bootup
+                        required: false
+                        type: bool
+                    ENABLE_NETFLOW:
+                        default: false
+                        description:
+                        - Enable Netflow on VTEPs
+                        required: false
+                        type: bool
+                    ENABLE_NXAPI:
+                        default: false
+                        description:
+                        - Enable HTTPS NX-API
+                        required: false
+                        type: bool
+                    ENABLE_NXAPI_HTTP:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    ENABLE_RT_INTF_STATS:
+                        default: false
+                        description:
+                        - Valid for NX-OS only
+                        required: false
+                        type: bool
+                    FABRIC_FREEFORM:
+                        default: ''
+                        description:
+                        - Additional supported CLIs for all same OS (e.g. all NxOS or IOS-XE,
+                            etc) switches
+                        required: false
+                        type: str
+                    FABRIC_NAME:
+                        default: ''
+                        description:
+                        - Please provide the fabric name to create it (Max Size 64)
+                        required: false
+                        type: str
+                    FEATURE_PTP:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    INBAND_ENABLE:
+                        default: false
+                        description:
+                        - 'Enable POAP over Inband Interface (Pre-req: Inband Mgmt Knob should
+                            be Enabled)'
+                        required: false
+                        type: bool
+                    INBAND_MGMT:
+                        default: false
+                        description:
+                        - Import switches with inband connectivity
+                        required: false
+                        type: bool
+                    INTF_STAT_LOAD_INTERVAL:
+                        default: 10
+                        description:
+                        - 'Time in seconds '
+                        required: false
+                        type: int
+                    IS_READ_ONLY:
+                        default: true
+                        description:
+                        - If enabled, fabric is only monitored. No configuration will be deployed
+                        required: false
+                        type: bool
+                    MGMT_GW:
+                        default: ''
+                        description:
+                        - Default Gateway For Management VRF On The Switch
+                        required: false
+                        type: str
+                    MGMT_PREFIX:
+                        default: 24
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    MGMT_V6PREFIX:
+                        default: 64
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    MPLS_HANDOFF:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    MPLS_LB_ID:
+                        default: 101
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    MPLS_LOOPBACK_IP_RANGE:
+                        default: 10.102.0.0/25
+                        description:
+                        - MPLS Loopback IP Address Range
+                        required: false
+                        type: str
+                    NETFLOW_EXPORTER_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Exporters
+                        required: false
+                        type: list
+                        elements: str
+                    NETFLOW_MONITOR_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Monitors
+                        required: false
+                        type: list
+                        elements: str
+                    NETFLOW_RECORD_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Records
+                        required: false
+                        type: list
+                        elements: str
+                    NETFLOW_SAMPLER_LIST:
+                        default: ''
+                        description:
+                        - One or multiple netflow samplers. Applicable to N7K only
+                        required: false
+                        type: list
+                        elements: str
+                    NXAPI_HTTPS_PORT:
+                        default: 443
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    NXAPI_HTTP_PORT:
+                        default: 80
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    PM_ENABLE:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    PNP_ENABLE:
+                        default: false
+                        description:
+                        - Enable Plug n Play (Automatic IP Assignment) for Cat9K switches
+                        required: false
+                        type: bool
+                    POWER_REDUNDANCY_MODE:
+                        choices:
+                        - ps-redundant
+                        - combined
+                        - insrc-redundant
+                        default: ps-redundant
+                        description:
+                        - Default Power Supply Mode For Bootstrapped NX-OS Switches
+                        required: false
+                        type: str
+                    PTP_DOMAIN_ID:
+                        default: 0
+                        description:
+                        - 'Multiple Independent PTP Clocking Subdomains on a Single Network '
+                        required: false
+                        type: int
+                    PTP_LB_ID:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    SNMP_SERVER_HOST_TRAP:
+                        default: true
+                        description:
+                        - Configure NDFC as a receiver for SNMP traps
+                        required: false
+                        type: bool
+                    SUBINTERFACE_RANGE:
+                        default: 2-511
+                        description:
+                        - 'Per Border Dot1q Range For VRF Lite Connectivity '
+                        required: false
+                        type: str
+                    enableRealTimeBackup:
+                        default: ''
+                        description:
+                        - Backup hourly only if there is any config deployment since last
+                            backup
+                        required: false
+                        type: bool
+                    enableScheduledBackup:
+                        default: ''
+                        description:
+                        - Backup at the specified time
+                        required: false
+                        type: bool
+                    scheduledTime:
+                        default: ''
+                        description:
+                        - Time (UTC) in 24hr format. (00:00 to 23:59)
                         required: false
                         type: str
 """
