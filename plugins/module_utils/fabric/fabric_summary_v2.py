@@ -267,8 +267,10 @@ class FabricSummary:
         self.log.debug(msg)
 
         self.results.response_current = self._rest_send.response_current
-        # self.results.add_response(self._rest_send.response_current)
         self.results.result_current = self._rest_send.result_current
+        # TODO: We are leaving these commented out for now.  We need to look into how
+        # these are used downstream (e.g. in fabric_delete, fabric_update, etc.)
+        # self.results.add_response(self._rest_send.response_current)
         # self.results.add_result(self._rest_send.result_current)
         self.results.register_task_result()
 
