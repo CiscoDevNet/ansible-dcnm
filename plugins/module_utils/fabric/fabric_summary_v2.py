@@ -450,10 +450,6 @@ class FabricSummary:
         Set an instance of the RestSend class.
         """
         method_name: str = inspect.stack()[0][3]
-        if not self._rest_send.params:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "RestSend.params must be set before accessing."
-            raise ValueError(msg)
         return self._rest_send
 
     @rest_send.setter
