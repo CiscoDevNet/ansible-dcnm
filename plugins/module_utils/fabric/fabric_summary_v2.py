@@ -77,7 +77,7 @@ class FabricSummary:
         }
     }
     ```
-    
+
     ## Usage
 
     ```python
@@ -136,7 +136,7 @@ class FabricSummary:
         # Summary
 
         From the controller response, update class properties pertaining to device counts.
-        
+
         ## Raises
 
         ### ValueError
@@ -301,7 +301,7 @@ class FabricSummary:
         raise ValueError(msg)
 
     @property
-    def all_data(self) -> dict [str, dict[str, Any]]:
+    def all_data(self) -> dict[str, dict[str, Any]]:
         """
         # Summary
 
@@ -395,7 +395,7 @@ class FabricSummary:
 
         -   getter: Return the fabric_name to query.
         -   setter: Set the fabric_name to query.
-    
+
         ## Raises
 
         ### ValueError
@@ -417,7 +417,7 @@ class FabricSummary:
     def leaf_count(self) -> int:
         """
         # Summary
-        
+
         Return the number of leaf devices in fabric fabric_name.
 
         ## Raises
