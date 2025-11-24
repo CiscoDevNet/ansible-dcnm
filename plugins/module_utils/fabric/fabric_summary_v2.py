@@ -157,7 +157,7 @@ class FabricSummary:
         self._border_gateway_count = self.data.get("switchRoles", {}).get("border gateway", 0)
         self._leaf_count = self.data.get("switchRoles", {}).get("leaf", 0)
         self._spine_count = self.data.get("switchRoles", {}).get("spine", 0)
-        self._device_count = self.leaf_count + self.spine_count + self.border_gateway_count
+        self._device_count = self._leaf_count + self._spine_count + self._border_gateway_count
 
     def _set_fabric_summary_endpoint(self) -> None:
         """
