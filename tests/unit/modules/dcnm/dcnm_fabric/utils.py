@@ -11,51 +11,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+Utilities for dcnm_fabric module unit tests
+"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 
 from contextlib import contextmanager
 
 import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
-    FabricConfigDeploy
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import \
-    FabricConfigSave
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
-    FabricCreate, FabricCreateBulk, FabricCreateCommon)
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
-    FabricDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetails as FabricDetailsV2
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByName as FabricDetailsByNameV2
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByNvPair as FabricDetailsByNvPairV2
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
-    FabricSummary
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
-    FabricTypes
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
-    FabricQuery
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.replaced import \
-    FabricReplacedBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
-    TemplateGet
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get_all import \
-    TemplateGetAll
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
-    FabricUpdateBulk
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.fixture import \
-    load_fixture
+from ansible_collections.ansible.netcommon.tests.unit.modules.utils import AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import FabricCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import FabricConfigDeploy
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import FabricConfigSave
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import FabricCreate, FabricCreateBulk, FabricCreateCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import FabricDelete
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import FabricDetails as FabricDetailsV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import FabricDetailsByName as FabricDetailsByNameV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import FabricDetailsByNvPair as FabricDetailsByNvPairV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import FabricSummary
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary_v2 import FabricSummary as FabricSummaryV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import FabricTypes
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import FabricQuery
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.replaced import FabricReplacedBulk
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import TemplateGet
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get_all import TemplateGetAll
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import FabricUpdateBulk
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.fixture import load_fixture
 
 params = {
     "state": "merged",
@@ -218,6 +203,14 @@ def fabric_summary_fixture():
     Return FabricSummary() instance.
     """
     return FabricSummary()
+
+
+@pytest.fixture(name="fabric_summary_v2")
+def fabric_summary_v2_fixture():
+    """
+    Return FabricSummary() instance.
+    """
+    return FabricSummaryV2()
 
 
 @pytest.fixture(name="fabric_types")
@@ -483,6 +476,16 @@ def responses_fabric_summary(key: str) -> dict[str, str]:
     Return responses for FabricSummary
     """
     data_file = "responses_FabricSummary"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_summary_v2(key: str) -> dict[str, str]:
+    """
+    Return responses for FabricSummary (v2)
+    """
+    data_file = "responses_FabricSummary_V2"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
