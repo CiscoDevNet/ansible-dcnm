@@ -320,12 +320,6 @@ class FabricSummary:
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
             raise ValueError(error) from error
-        if self.data == {}:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "self.data is empty. Unable to return fabric summary data. "
-            msg += f"Ensure {self.class_name}.refresh() has been called successfully."
-            self.log.error(msg)
-            raise ValueError(msg)
         return self.data
 
     @property
