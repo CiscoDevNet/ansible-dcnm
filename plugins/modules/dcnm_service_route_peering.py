@@ -1155,6 +1155,7 @@ EXAMPLES = """
     fabric: test-fabric
     service_fabric: external
     config:
+      - node_name: IT-SN-1 # mandatory
 """
 
 import re

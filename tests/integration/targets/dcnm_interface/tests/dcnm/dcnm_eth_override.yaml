@@ -11,8 +11,7 @@
       - "----------------------------------------------------------------"
 
 - name: Remove local log file
-  ansible.builtin.command: rm -f dcnm_intf.log
-  delegate_to: localhost
+  local_action: command rm -f dcnm_intf.log
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
@@ -136,8 +135,8 @@
         that:
           - not override_idem_result.changed
           - override_idem_result.response is defined
-          - override_idem_result.response | length >= 0
-
+          - override_idem_result.response | length >= 0   # Allow empty response for idempotence
+      # Don't loop over response items for idempotence check as they may be empty
   always:
     ##############################################
     ##             CLEANUP                      ##

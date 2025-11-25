@@ -17,6 +17,9 @@
       - name: po151
         switch:
           - "{{ test_data_common.switch1 }}"
+      - name: po152
+        switch:
+          - "{{ test_data_common.switch1 }}"
   register: result
   ignore_errors: true
 
@@ -42,10 +45,10 @@
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
         test_data_interfaces:
+          override_merge_conf_template: "templates/dcnm_st_fex/override_merge_conf.j2"
+          override_merge_conf_file: "{{ role_path }}/files/dcnm_interface_st_fex_override_merge_conf.yaml"
           override_conf_template: "templates/dcnm_st_fex/override_conf.j2"
           override_conf_file: "{{ role_path }}/files/dcnm_interface_st_fex_override_conf.yaml"
-          override_po150_conf_template: "templates/dcnm_st_fex/override_po150_conf.j2"
-          override_po150_conf_file: "{{ role_path }}/files/dcnm_interface_st_fex_override_po150_conf.yaml"
       delegate_to: localhost
 
     - name: Create Interface Config Files using J2 Templates
@@ -53,18 +56,17 @@
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       loop:
+        - override_merge
         - override
-        - override_po150
       delegate_to: localhost
 
     ##############################################
-    ##               OVERRIDE                   ##
+    ##               MERGE                      ##
     ##############################################
 
     - name: Load Interface Config Files
       ansible.builtin.set_fact:
-        dcnm_interface_override_conf: "{{ lookup('file', test_data_interfaces.override_conf_file) | from_yaml }}"
-        dcnm_interface_override_po150_conf: "{{ lookup('file', test_data_interfaces.override_po150_conf_file) | from_yaml }}"
+        dcnm_interface_override_merge_conf: "{{ lookup('file', test_data_interfaces.override_merge_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Create ST FEX interfaces
@@ -72,7 +74,7 @@
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: merged
-        config: "{{ dcnm_interface_override_po150_conf }}"
+        config: "{{ dcnm_interface_override_merge_conf }}"
       register: result
 
     - name: ASSERT - Verify ST FEX interface creation results
@@ -84,6 +86,29 @@
         success_msg: "Creation of ST FEX interface succeeded"
       loop: '{{ result.response }}'
 
+    - name: QUERY - Get ST FEX interface state in NDFC (merge)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_override_merge_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify ST FEX interface state in NDFC (merge)
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.override_merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+##############################################
+##           OVERRIDE                       ##
+##############################################
+
+    - name: Load Override Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_override_conf: "{{ lookup('file', test_data_interfaces.override_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
     - name: Override ST FEX interfaces
       cisco.dcnm.dcnm_interface: &fex_override
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
@@ -92,12 +117,42 @@
         config: "{{ dcnm_interface_override_conf }}"
       register: result
 
-    - name: ASSERT - Check changed flag is true for override
-      ansible.builtin.assert:
+    - name: ASSERT - Verify ST FEX interface override results
+      assert:
         that:
           - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+        fail_msg: "Override of ST FEX interfaces failed - {{ result }}"
+        success_msg: "Override of ST FEX interfaces succeeded"
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get ST FEX interface state in NDFC (override)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_override_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify ST FEX interface state in NDFC (override)
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.override_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+    - name: Override ST FEX interfaces - Idempotence
+      cisco.dcnm.dcnm_interface: *fex_override
+      register: result
+
+    - name: ASSERT - Verify ST FEX interface override idempotence results
+      assert:
+        that:
+          - 'result.changed == false'
           - 'result.response is defined'
-          - 'result.response | length >= 0'
+          - 'result.response | length >= 0'  # Allow empty response for idempotence
+        fail_msg: "Idempotence check for ST FEX interface override failed - {{ result }}"
+        success_msg: "Idempotence check for ST FEX interface override succeeded"
+      # Don't loop over response items for idempotence check as they may be empty
 
   ##############################################
   ##             CLEANUP                      ##

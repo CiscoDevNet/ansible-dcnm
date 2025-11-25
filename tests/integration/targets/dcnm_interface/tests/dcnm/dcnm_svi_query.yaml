@@ -1,5 +1,5 @@
 ##############################################
-## SVI QUERY TEST                           ##
+##             SETUP                        ##
 ##############################################
 
 - name: Skip SVI tests if svi_fabric is not defined
@@ -21,6 +21,11 @@
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ fabric_reset.response }}'
+- block:
+
+##############################################
+##             SETUP VARS                   ##
+##############################################
 
 - name: SVI query test workflow
   block:
@@ -33,9 +38,15 @@
 
     - name: Create Interface Config File using J2 Template
       ansible.builtin.template:
-        src: "{{ test_data_interfaces.merge_conf_template }}"
-        dest: "{{ test_data_interfaces.merge_conf_file }}"
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
+      loop:
+        - merge
       delegate_to: localhost
+
+ ##############################################
+ ##                MERGE                     ##
+ ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
@@ -72,6 +83,11 @@
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
+
+
+##############################################
+##             CLEANUP                      ##
+##############################################
   always:
     - name: Put fabric to default state (cleanup)
       cisco.dcnm.dcnm_interface:

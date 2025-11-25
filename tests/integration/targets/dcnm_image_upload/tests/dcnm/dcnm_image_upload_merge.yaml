@@ -28,17 +28,17 @@
         state: merged                             # choose from [merged, deleted, overridden, query]; default is merged
         files:
           - path: "{{ IMAGE_1_PATH }}"            # Full path to the image on the server
-            source: scp
-            remote_server: "{{ SERVER_IP }}"
-            username: "{{ USERNAME }}"
-            password: "{{ PASSWORD }}"
+            source: scp                           # choose from [local, scp, sftp], default is local
+            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
+            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
           - path: "{{ IMAGE_3_PATH }}"            # Full path to image on local host
-            source: local
+            source: local                         # choose from [local, scp, sftp], default is local
           - path: "{{ IMAGE_2_PATH }}"            # Full path to the image on the server
-            source: sftp
-            remote_server: "{{ SERVER_IP }}"
-            username: "{{ USERNAME }}"
-            password: "{{ PASSWORD }}"
+            source: sftp                          # choose from [local, scp, sftp], default is local
+            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
+            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp o sftp
       register: result
 
     - name: ASSERT - Upload result structure
@@ -78,7 +78,8 @@
       cisco.dcnm.dcnm_image_upload:
         state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - name: "{{ IMAGE_3_NAME }}"
+          - name: "{{ IMAGE_3_NAME }}"            # Name of the image on the controller
+            source: local                         # choose from [local, scp, sftp], default is local
       register: result
 
     - name: ASSERT - Delete result structure
@@ -102,8 +103,8 @@
     - name: Upload images to controller - without mentioning state
       cisco.dcnm.dcnm_image_upload:
         files:
-          - path: "{{ IMAGE_3_PATH }}"
-            source: local
+          - path: "{{ IMAGE_3_PATH }}"            # Full path to image on the local host
+            source: local                         # choose from [local, scp, sftp], default is local
       register: result
 
     - name: ASSERT - Upload (implicit state) structure

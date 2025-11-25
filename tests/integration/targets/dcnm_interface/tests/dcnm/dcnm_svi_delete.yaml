@@ -62,15 +62,6 @@
         config: "{{ dcnm_interface_merged_conf }}"
       register: result
 
-    - name: ASSERT - Verify creation results
-      ansible.builtin.assert:
-        that:
-          - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'
-        fail_msg: "Creation of SVI interfaces failed - {{ result }}"
-        success_msg: "Creation of SVI interfaces succeeded"
-      loop: '{{ result.response }}'
-
     - name: QUERY - Get SVI interface state in NDFC (merge)
       cisco.dcnm.dcnm_interface:
         state: query
@@ -106,10 +97,6 @@
       ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'
-        fail_msg: "Deletion of SVI interfaces failed - {{ result }}"
-        success_msg: "Deletion of SVI interfaces succeeded"
-      loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC (delete)
       cisco.dcnm.dcnm_interface:

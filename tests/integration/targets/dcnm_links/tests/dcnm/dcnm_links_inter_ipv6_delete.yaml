@@ -8,29 +8,31 @@
 - block:
 
 ##############################################
-##           BASELINE DELETE                ##
+##                  DELETE                  ##
 ##############################################
 
     - name: Baseline - Delete any pre-existing IPv6 inter-fabric links
       cisco.dcnm.dcnm_links: &links_delete
-        state: deleted
+        state: deleted                                           # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_3 }}"
-            dst_interface: "{{ intf_1_3 }}"
-            src_device: "{{ ansible_ipv6_switch1 }}"
-            dst_device: "{{ ansible_unnum_switch1 }}"
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_4 }}"
-            dst_interface: "{{ intf_1_4 }}"
-            src_device: "{{ ansible_ipv6_switch1 }}"
-            dst_device: "{{ ansible_unnum_switch1 }}"
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_5 }}"
-            dst_interface: "{{ intf_1_5 }}"
-            src_device: "{{ ansible_ipv6_switch1 }}"
-            dst_device: "{{ ansible_unnum_switch1 }}"
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
       register: baseline_delete_result
 
     - name: ASSERT - Baseline delete return codes
@@ -40,34 +42,39 @@
       loop: '{{ baseline_delete_result.response }}'
 
 ##############################################
-##          BASIC MERGE (CREATION)          ##
+##                MERGE                     ##
 ##############################################
 
     - name: Merge - Create single link with minimal params
       cisco.dcnm.dcnm_links: &links_merge_basic
-        state: merged
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_3 }}"
-            dst_interface: "{{ intf_1_3 }}"
-            src_device: "{{ ansible_ipv6_switch1 }}"
-            dst_device: "{{ ansible_unnum_switch1 }}"
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+            # template to be applied; choose from
+            # [ext_fabric_setup, ext_multisite_underlay_setup, ext_evpn_multisite_overlay_setup]
             template: ext_fabric_setup
             profile:
-              ipv4_subnet: 193.168.1.1/24
-              neighbor_ip: 193.168.1.2
-              src_asn: "{{ ansible_ipv6_asn }}"
-              dst_asn: "{{ ansible_unnum_asn }}"
+              ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in source fabric
+              dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
       register: merge_basic_result
 
     - name: ASSERT - Basic merge diff counters
       ansible.builtin.assert:
         that:
+          - '(merge_basic_result.changed == true'
           - '(merge_basic_result.diff[0].merged | length) == 1'
           - '(merge_basic_result.diff[0].modified | length) == 0'
           - '(merge_basic_result.diff[0].deleted | length) == 0'
           - '(merge_basic_result.diff[0].query | length) == 0'
+          - '(merge_basic_result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
+          - '(merge_basic_result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
         failed_when: merge_basic_result.diff is not defined
 
     - name: ASSERT - Basic merge return codes

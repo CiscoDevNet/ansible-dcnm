@@ -3712,6 +3712,8 @@ EXAMPLES = """
         ENABLE_PVLAN: false
 
 # Resulting error message (edited for brevity)
+# "The following parameter(value) combination(s) are invalid and need to be reviewed:
+# Fabric: f3, ENABLE_PVLAN(False) requires ENABLE_SGT != True."
 """
 # pylint: disable=wrong-import-position
 import copy

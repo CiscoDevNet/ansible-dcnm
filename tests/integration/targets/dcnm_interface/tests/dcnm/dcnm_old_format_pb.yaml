@@ -79,6 +79,8 @@
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
+        fail_msg: "Creation with old format 1 failed - {{ result }}"
+        success_msg: "Creation with old format 1 succeeded"
       loop: '{{ result.response }}'
 
     - name: QUERY - Get old format 1 interface state in NDFC
@@ -87,6 +89,13 @@
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_old_format1_conf }}"
       register: verify_result
+
+    - name: VALIDITY CHECK - Verify old format 1 interface state in NDFC
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.old_format1_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
 
     ##############################################
     ##               MERGE 2                    ##
@@ -108,7 +117,13 @@
     - name: ASSERT - Check condition
       ansible.builtin.assert:
         that:
+          - 'result.failed == false'
           - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##               MERGE 3                    ##
@@ -130,7 +145,13 @@
     - name: ASSERT - Check condition
       ansible.builtin.assert:
         that:
+          - 'result.failed == false'
           - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##               MERGE 4                    ##
@@ -149,6 +170,16 @@
         config: "{{ dcnm_interface_old_format4_conf }}"
       register: result
 
+    - assert:
+        that:
+          - 'result.failed == false'
+          - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
     ##############################################
     ##               MERGE 5                    ##
     ##############################################
@@ -165,6 +196,16 @@
         state: merged
         config: "{{ dcnm_interface_old_format5_conf }}"
       register: result
+
+    - assert:
+        that:
+          - 'result.failed == false'
+          - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##               MERGE 6                    ##
@@ -183,6 +224,16 @@
         config: "{{ dcnm_interface_old_format6_conf }}"
       register: result
 
+    - assert:
+        that:
+          - 'result.failed == false'
+          - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
     ##############################################
     ##               MERGE 7                    ##
     ##############################################
@@ -199,6 +250,16 @@
         state: merged
         config: "{{ dcnm_interface_old_format7_conf }}"
       register: result
+
+    - assert:
+        that:
+          - 'result.failed == false'
+          - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
 
   ##############################################
   ##             CLEANUP                      ##

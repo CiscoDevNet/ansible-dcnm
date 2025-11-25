@@ -130,7 +130,13 @@
       cisco.dcnm.dcnm_interface: *vpc_replace
       register: result
 
-    # Idempotence assertion intentionally omitted pending upstream bug fix (changed remains true)
+    # - name: ASSERT - Check changed flag is false and return codes for idempotence
+    #   assert:
+    #     that:
+    #       - 'result.changed == false'
+    #       - 'result.response is defined'
+    #       - 'result.response | length >= 0'  # Allow empty response for idempotence
+    # Don't loop over response items for idempotence check as they may be empty
 
 ##############################################
 ##             CLEANUP                      ##

@@ -141,7 +141,7 @@
       cisco.dcnm.dcnm_image_upload:
         state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - name: no-such-image.bin
+          - name: no-such-image.bin               # Name of an image that does not exist on controller
       register: result
 
     - name: ASSERT - Delete non-existing image
@@ -159,13 +159,13 @@
     - name: Upload images to controller (multiple)
       cisco.dcnm.dcnm_image_upload:
         files:
-          - path: "{{ IMAGE_3_PATH }}"
-            source: local
-          - path: "{{ IMAGE_2_PATH }}"
-            source: sftp
-            remote_server: "{{ SERVER_IP }}"
-            username: "{{ USERNAME }}"
-            password: "{{ PASSWORD }}"
+          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
+            source: local                         # choose from [local, scp, sftp], default is local
+          - path: "{{ IMAGE_2_PATH }}"            # Full path to the image on the server
+            source: sftp                          # choose from [local, scp, sftp], default is local
+            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
+            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
       register: result
 
     - name: ASSERT - Upload multiple result structure

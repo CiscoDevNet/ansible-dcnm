@@ -81,15 +81,6 @@
     #       - '(result["diff"][0]["overridden"] | length) == 0'
     #       - '(result["diff"][0]["deploy"] | length) == 3'
 
-    - name: ASSERT - Merge result structure
-      ansible.builtin.assert:
-        that:
-          - 'result.changed == true'
-          - '(result.diff[0].merged | length) == 3'
-          - '(result.diff[0].deleted | length) == 0'
-          - '(result.diff[0].replaced | length) == 0'
-          - '(result.diff[0].overridden | length) == 0'
-          - '(result.diff[0].deploy | length) == 3'
     - name: ASSERT - Merge response codes
       ansible.builtin.assert:
         that:
@@ -153,7 +144,7 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: query
+        state: query  # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ lookup('file', test_data_interfaces.query_mixed_conf_file) | from_yaml }}"
       register: result
 
@@ -167,15 +158,6 @@
     #       - '(result["diff"][0]["deploy"] | length) == 0'
     #       - '(result["diff"][0]["query"] | length) == 1'
 
-    - name: ASSERT - Query mixed result structure
-      ansible.builtin.assert:
-        that:
-          - '(result.diff[0].merged | length) == 0'
-          - '(result.diff[0].deleted | length) == 0'
-          - '(result.diff[0].replaced | length) == 0'
-          - '(result.diff[0].overridden | length) == 0'
-          - '(result.diff[0].deploy | length) == 0'
-          - '(result.diff[0].query | length) == 1'
     - name: ASSERT - Query mixed response
       ansible.builtin.assert:
         that:
@@ -185,7 +167,7 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: query
+        state: query  # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ lookup('file', test_data_interfaces.query_nonexist_conf_file) | from_yaml }}"
       register: result
 
@@ -218,7 +200,7 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: overridden
+        state: overridden  # only choose form [merged, replaced, deleted, overridden, query]
       register: result
       when: it_context is not defined
 

@@ -107,28 +107,31 @@
 
     - name: Merge - Enrich existing link with optional params (should modify)
       cisco.dcnm.dcnm_links: &links_merge_basic_opt
-        state: merged
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_ipv6_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_3 }}"
-            dst_interface: "{{ intf_1_3 }}"
-            src_device: "{{ ansible_ipv6_switch1 }}"
-            dst_device: "{{ ansible_unnum_switch1 }}"
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
+            # template to be applied; choose from
+            # [ext_fabric_setup, ext_multisite_underlay_setup, ext_evpn_multisite_overlay_setup]
             template: ext_fabric_setup
             profile:
-              ipv4_subnet: 193.168.1.1/24
-              neighbor_ip: 193.168.1.2
-              src_asn: "{{ ansible_ipv6_asn }}"
-              dst_asn: "{{ ansible_unnum_asn }}"
-              mtu: 9216
-              auto_deploy: false
-              peer1_description: "Description of source"
-              peer2_description: "Description of dest"
-              peer1_cmds:
-                - no shutdown
-              peer2_cmds:
-                - no shutdown
+              ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in source fabric
+              dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
+              mtu: 9216                                          # MTU value for the link; optional, default follows fabric policy
+              auto_deploy: false                                 # optional, default is false
+                                                                 # Flag that controls auto generation of neighbor VRF Lite configuration
+              peer1_description: "Description of source"         # optional, default is ""
+              peer2_description: "Description of dest"           # optional, default is ""
+              peer1_cmds:                                        # Freeform config for source interface
+                - no shutdown                                    # optional, default is ""
+              peer2_cmds:                                        # Freeform config for destination interface
+                - no shutdown                                    # optional, default is ""
       register: merge_basic_opt_result
 
     - name: ASSERT - Basic optional merge diff counters

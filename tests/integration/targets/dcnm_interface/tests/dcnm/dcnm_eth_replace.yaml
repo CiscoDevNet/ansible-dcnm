@@ -11,8 +11,7 @@
       - "----------------------------------------------------------------"
 
 - name: Remove local log file
-  ansible.builtin.command: rm -f dcnm_intf.log
-  delegate_to: localhost
+  local_action: command rm -f dcnm_intf.log
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
@@ -131,7 +130,7 @@
       cisco.dcnm.dcnm_interface: *eth_replace
       register: replace_idem_result
 
-    - name: ASSERT - Replace idempotence
+    - name: ASSERT - Check changed flag is false and return codes for idempotence
       ansible.builtin.assert:
         that:
           - not replace_idem_result.changed

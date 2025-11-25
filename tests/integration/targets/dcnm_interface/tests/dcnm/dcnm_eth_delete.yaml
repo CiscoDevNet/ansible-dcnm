@@ -11,8 +11,7 @@
       - "----------------------------------------------------------------"
 
 - name: Remove local log file
-  ansible.builtin.command: rm -f dcnm_intf.log
-  delegate_to: localhost
+  local_action: command rm -f dcnm_intf.log
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
@@ -142,23 +141,23 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: merged
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: "{{ test_data_common.eth_intf7 }}"
-            type: eth
+          - name: "{{ test_data_common.eth_intf7 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ test_data_common.switch1 }}"
-            deploy: true
+              - "{{ test_data_common.switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
             profile:
-              admin_state: true
-              mode: trunk
-              speed: 'Auto'
-              bpdu_guard: true
-              port_type_fast: true
-              mtu: jumbo
-              allowed_vlans: none
-              cmds:
-                - false shutdown
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              bpdu_guard: true                # choose from [true, false, 'no']
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range]
+              cmds:                           # Freeform config
+                - no shutdown
               description: "eth interface acting as trunk"
       register: single_merge_result
 
@@ -186,23 +185,23 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: deleted
+        state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: "{{ test_data_common.eth_intf7 }}"
-            type: eth
+          - name: "{{ test_data_common.eth_intf7 }}"   # should be of the form eth<port-id>
+            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ test_data_common.switch1 }}"
-            deploy: true
+              - "{{ test_data_common.switch1 }}"       # provide the switch information where the config is to be deployed
+            deploy: true                      # choose from [true, false]
             profile:
-              admin_state: true
-              mode: trunk
-              speed: 'Auto'
-              bpdu_guard: true
-              port_type_fast: true
-              mtu: jumbo
-              allowed_vlans: none
-              cmds:
-                - false shutdown
+              admin_state: true               # choose from [true, false]
+              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              bpdu_guard: true                # choose from [true, false, no]
+              port_type_fast: true            # choose from [true, false]
+              mtu: jumbo                      # choose from [default, jumbo]
+              allowed_vlans: none             # choose from [none, all, vlan range]
+              cmds:                           # Freeform config
+                - no shutdown
               description: "eth interface acting as trunk"
       register: single_delete_result
 

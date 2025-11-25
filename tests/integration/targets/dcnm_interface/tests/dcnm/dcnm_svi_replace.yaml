@@ -1,5 +1,5 @@
 ##############################################
-## SVI REPLACE TEST                         ##
+##                 SETUP                    ##
 ##############################################
 
 - name: Skip SVI tests if svi_fabric is not defined
@@ -22,6 +22,12 @@
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ fabric_reset.response }}'
 
+
+- block:
+
+##############################################
+##             SETUP VARS                   ##
+##############################################
 - name: SVI replace test workflow
   block:
     - name: Setup Internal TestCase Variables
@@ -42,6 +48,9 @@
         - replace
       delegate_to: localhost
 
+##############################################
+##                MERGE                     ##
+##############################################
     - name: Load Interface Config File (merged)
       ansible.builtin.set_fact:
         dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
@@ -78,6 +87,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
+##############################################
+##              REPLACE                     ##
+##############################################
     - name: Load Replace Interface Config File
       ansible.builtin.set_fact:
         dcnm_interface_replace_conf: "{{ lookup('file', test_data_interfaces.replace_conf_file) | from_yaml }}"
@@ -126,6 +138,17 @@
         fail_msg: "Idempotence test failed for SVI interfaces - {{ replace_idem }}"
         success_msg: "Idempotence test passed for SVI interfaces"
       loop: '{{ replace_idem.response }}'
+    #       - '(result["diff"][0]["replaced"] | length) == 0'
+    #       - '(result["diff"][0]["overridden"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+##############################################
+##             CLEANUP                      ##
+##############################################
   always:
     - name: Put fabric to default state (cleanup)
       cisco.dcnm.dcnm_interface:

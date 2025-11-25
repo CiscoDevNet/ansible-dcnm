@@ -24,7 +24,7 @@
           - name: vlan3000                                # should be of the form vlan<vlan-id>
         type: svi                                         # choose from [pc, vpc, sub_int, lo, eth, svi]
         switch:
-          - "{{ test_data_common.switch1 }}"
+          - "{{ test_data_common.switch1 }}"              # provide the switch information where the config is to be deployed
         deploy: true                                      # choose from [true, false]
         profile:
           mode: vlan                                      # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
@@ -65,17 +65,17 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
-        state: merged
+        state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan3000
-        type: svi
-        switch:
-          - "{{ test_data_common.switch1 }}"
-        deploy: true
-        profile:
-          admin_state: true
-          mode: vlan
-          ipv4_addr: 10.1.1.1                              # optional, Interface IP, default is ""
+          - name: vlan3000                                # should be of the form vlan<vlan-id>
+            type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
+            deploy: true                                  # choose from [true, false]
+            profile:
+              admin_state: true                           # Flag to enable/disable Vlan interaface
+              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+              ipv4_addr: 10.1.1.1                         # optional, Interfae IP, default is ""
       ignore_errors: true
       register: result
 
@@ -89,17 +89,17 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
-        state: merged
+        state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan3000
-        type: svi
-        switch:
-          - "{{ test_data_common.switch1 }}"
-        deploy: true
-        profile:
-          admin_state: true
-          mode: vlan
-          preempt: true                                   # preempt provided without enable_hsrp
+          - name: vlan3000                                # should be of the form vlan<vlan-id>
+            type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
+            deploy: true                                  # choose from [true, false]
+            profile:
+              admin_state: true                           # Flag to enable/disable Vlan interaface
+              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+              preempt: true                               # preempt provided without enable_hsrp
       ignore_errors: true
       register: result
 
@@ -113,17 +113,17 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
-        state: merged
+        state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan3000
-        type: svi
-        switch:
-          - "{{ test_data_common.switch1 }}"
-        deploy: true
-        profile:
-          admin_state: true
-          mode: vlan
-          enable_hsrp: true
+          - name: vlan3000                                # should be of the form vlan<vlan-id>
+            type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
+            deploy: true                                  # choose from [true, false]
+            profile:
+              admin_state: true                           # Flag to enable/disable Vlan interaface
+              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+              enable_hsrp: true                           # optional, flag to enable/disable HSRP on the interface, default is "false"
       ignore_errors: true
       register: result
 
@@ -137,18 +137,18 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
-        state: merged
+        state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan3000
-        type: svi
-        switch:
-          - "{{ test_data_common.switch1 }}"
-        deploy: true
-        profile:
-          admin_state: true
-          mode: vlan
-          enable_hsrp: true
-          hsrp_vip: 192.129.1.1
+          - name: vlan3000                                # should be of the form vlan<vlan-id>
+            type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
+            deploy: true                                  # choose from [true, false]
+            profile:
+              admin_state: true                           # Flag to enable/disable Vlan interaface
+              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+              enable_hsrp: true                           # optional, flag to enable/disable HSRP on the interface, default is "false"
+              hsrp_vip: 192.129.1.1                       # optional, Virtual IP address for HSRP, default is ""
       ignore_errors: true
       register: result
 
@@ -162,17 +162,17 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
-        state: merged
+        state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan3000
-        type: svi
-        switch:
-          - "{{ test_data_common.switch1 }}"
-        deploy: true
-        profile:
-          admin_state: true
-          mode: vlan
-          enable_netflow: true
+          - name: vlan3000                                # should be of the form vlan<vlan-id>
+            type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
+            deploy: true                                  # choose from [true, false]
+            profile:
+              admin_state: true                           # Flag to enable/disable Vlan interaface
+              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+              enable_netflow: true                        # optional, flag to enable netflow, default is "false"
       ignore_errors: true
       register: result
 
@@ -186,17 +186,17 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
-        state: merged
+        state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan3000
-        type: svi
-        switch:
-          - "{{ test_data_common.switch1 }}"
-        deploy: true
-        profile:
-          admin_state: true
-          mode: vlan
-          dhcp_server_addr1: 192.200.1.1
+          - name: vlan3000                                # should be of the form vlan<vlan-id>
+            type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
+            deploy: true                                  # choose from [true, false]
+            profile:
+              admin_state: true                           # Flag to enable/disable Vlan interaface
+              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+              dhcp_server_addr1: 192.200.1.1              # IP of the primary DHCP server, defaults to ""
       ignore_errors: true
       register: result
 
@@ -210,17 +210,17 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
-        state: merged
+        state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan3000
-        type: svi
-        switch:
-          - "{{ test_data_common.switch1 }}"
-        deploy: true
-        profile:
-          admin_state: true
-          mode: vlan
-          dhcp_server_addr2: 192.200.1.1
+          - name: vlan3000                                # should be of the form vlan<vlan-id>
+            type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
+            deploy: true                                  # choose from [true, false]
+            profile:
+              admin_state: true                           # Flag to enable/disable Vlan interaface
+              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+              dhcp_server_addr2: 192.200.1.1              # IP of the secondary DHCP server, defaults to ""
       ignore_errors: true
       register: result
 
@@ -234,17 +234,17 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.svi_fabric }}"
-        state: merged
+        state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: vlan3000
-        type: svi
-        switch:
-          - "{{ test_data_common.switch1 }}"
-        deploy: true
-        profile:
-          admin_state: true
-          mode: vlan
-          dhcp_server_addr3: 192.200.1.1
+          - name: vlan3000                                # should be of the form vlan<vlan-id>
+            type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
+            switch:
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
+            deploy: true                                  # choose from [true, false]
+            profile:
+              admin_state: true                           # Flag to enable/disable Vlan interaface
+              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+              dhcp_server_addr3: 192.200.1.1              # IP of the tertiary DHCP server, defaults to ""
       ignore_errors: true
       register: result
 

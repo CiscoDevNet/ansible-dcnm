@@ -140,8 +140,8 @@
       cisco.dcnm.dcnm_image_upload:
         state: query                              # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - name: no-such-image.bin
-          - name: "{{ IMAGE_1_NAME }}"
+          - name: no-such-image.bin               # Name of a non-existing image
+          - name: "{{ IMAGE_1_NAME }}"            # Name of the image to be used to filter the output
       register: result
 
     - name: ASSERT - Query mixed existing/non-existing

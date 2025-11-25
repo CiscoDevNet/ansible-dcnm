@@ -16,7 +16,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+  loop: '{{ result.response }}'
 
 - block:
 
@@ -61,7 +61,7 @@
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
-        loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC
       cisco.dcnm.dcnm_interface:
@@ -70,6 +70,31 @@
         config: "{{ dcnm_interface_no_optional_elems_conf }}"
       register: verify_result
 
+    - name: VALIDITY CHECK - Verify interface state in NDFC
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.no_optional_elems_merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+##############################################
+##               DELETE                     ##
+##############################################
+
+    - name: Delete all interfaces without optional elements
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_no_optional_elems_merge_conf }}"
+      register: result
+
+    - name: ASSERT - Check changed flag is true and return codes for delete
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
   ##############################################
   ##             CLEANUP                      ##
   ##############################################

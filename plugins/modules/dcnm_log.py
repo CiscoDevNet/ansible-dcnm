@@ -72,6 +72,7 @@ EXAMPLES = """
 - name: Log
   cisco.dcnm.dcnm_log:
     msg: dcnm_vrf.merged - Create VRF myVrf DONE
+    severity: INFO
 """  # noqa
 
 RETURN = """

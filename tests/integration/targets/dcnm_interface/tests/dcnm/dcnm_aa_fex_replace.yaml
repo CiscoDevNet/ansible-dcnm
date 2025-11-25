@@ -46,18 +46,27 @@
     ##                MERGE                     ##
     ##############################################
 
-    - name: Load Interface Config File (merged)
+    - name: Load Interface Config File
       ansible.builtin.set_fact:
         dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
       delegate_to: localhost
 
-    - name: Create AA FEX interfaces (merged)
+    - name: Create AA FEX interfaces w/o optional parameters
       cisco.dcnm.dcnm_interface: &fex_merge
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: merged
+        state: merged  # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_merged_conf }}"
       register: result_merge
+
+    # - assert:
+    #     that:
+    #       - 'result.changed == true'
+    #       - '(result["diff"][0]["merged"] | length) == 1'
+    #       - '(result["diff"][0]["deleted"] | length) == 0'
+    #       - '(result["diff"][0]["replaced"] | length) == 0'
+    #       - '(result["diff"][0]["overridden"] | length) == 0'
+    #       - '(result["diff"][0]["deploy"] | length) == 1'
 
     - name: ASSERT - Creation return codes (merged)
       ansible.builtin.assert:
@@ -78,7 +87,7 @@
       cisco.dcnm.dcnm_interface: &fex_replace
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: replaced
+        state: replaced # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_replace_conf }}"
       register: result_replace
 
