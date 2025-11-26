@@ -97,10 +97,19 @@ class FabricDelete(FabricCommon):
 
     def _get_fabrics_to_delete(self) -> None:
         """
-        -   Retrieve fabric info from the controller and set the list of
-            controller fabrics that are in our fabric_names list.
-        -   Raise ``ValueError`` if any fabric in ``fabric_names``
-            cannot be deleted.
+        # Summary
+
+        Determine which fabrics in self.fabric_names can be deleted.
+
+        Retrieve fabric info from the controller and set the list of
+        controller fabrics that are in our `fabric_names` list.  Verify
+        that each fabric in the list can be deleted.
+        
+        ## Raises
+
+        ### ValueError
+
+        - Any fabric in `fabric_names` cannot be deleted.
         """
         method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self._fabric_details_by_name.refresh()
@@ -239,23 +248,33 @@ class FabricDelete(FabricCommon):
         self._results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
         self._results.register_task_result()
 
-    def _send_requests(self):
+    def _send_requests(self) -> None:
         """
-        -   Update RestSend() parameters:
-                - check_mode : Enables or disables sending the request
-                - timeout : Reduce to 1 second from default of 300 seconds
-        -   Call _send_request() for each fabric to be deleted.
-        -   Raise ``ValueError`` if any fabric cannot be deleted.
+        # Summary
 
-        NOTES:
+        Send delete requests for each fabric in self._fabrics_to_delete.
+
+        - Update RestSend() parameters:
+          - check_mode : Enables or disables sending the request
+          - timeout : Reduce to 1 second from default of 300 seconds
+        - Call _send_request() for each fabric to be deleted.
+
+        ## Raises
+
+        ### ValueError
+
+        - Any fabric cannot be deleted.
+
+        ## Notes
+
         -   We don't want RestSend to retry on errors since the likelihood of a
             timeout error when deleting a fabric is low, and there are cases of
             permanent errors for which we don't want to retry.  Hence, we set
             timeout to 1 second and restore the original timeout after the
             requests are sent.
         """
-        self.rest_send.save_settings()
-        self.rest_send.timeout = 1
+        self._rest_send.save_settings()
+        self._rest_send.timeout = 1
 
         for fabric_name in self._fabrics_to_delete:
             try:
@@ -263,7 +282,7 @@ class FabricDelete(FabricCommon):
             except ValueError as error:
                 self.register_result(fabric_name="")
                 raise ValueError(error) from error
-        self.rest_send.restore_settings()
+        self._rest_send.restore_settings()
 
     def _set_fabric_delete_endpoint(self, fabric_name: str) -> None:
         """
@@ -291,13 +310,16 @@ class FabricDelete(FabricCommon):
 
     def _send_request(self, fabric_name: str) -> None:
         """
-        ### Summary
+        # Summary
+
         Send a delete request to the controller and register the result.
 
-        ### Raises
-            -   ``ValueError`` if the fabric delete endpoint cannot be set.
+        ## Raises
+
+        ### ValueError
+
+            - The fabric delete endpoint cannot be set.
         """
-        # pylint: disable=no-member
         try:
             self._set_fabric_delete_endpoint(fabric_name)
         except (ValueError, TypeError) as error:
@@ -311,11 +333,17 @@ class FabricDelete(FabricCommon):
 
     def register_result(self, fabric_name: str) -> None:
         """
+        # Summary
+
         -   Register the result of the fabric delete request
         -   If `fabric_name` is "" (empty string), set the result to indicate
             no changes occurred and the request was not successful.
         -   If `fabric_name` is not "" (empty string), set the result to indicate
             the success or failure of the request.
+        
+        ## Raises
+
+        None
         """
         method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self._results.action = self.action
@@ -359,9 +387,18 @@ class FabricDelete(FabricCommon):
     @property
     def fabric_names(self) -> list[str]:
         """
+        # Summary
+
+        The list of fabric names to delete.
+
         - getter: return list of fabric_names
         - setter: set list of fabric_names
-        - setter: raise ``ValueError`` if ``value`` is not a ``list`` of ``str``
+
+        ## Raises
+
+        ### ValueError
+
+        - setter: `value` is not a `list` of `str`
         """
         return self._fabric_names
 
