@@ -33,12 +33,9 @@ import inspect
 import re
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
-    RuleSet
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    does_not_raise, templates_ruleset)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import RuleSet
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import does_not_raise, templates_ruleset
 
 
 def test_ruleset_00010() -> None:
@@ -118,9 +115,9 @@ def test_ruleset_00030() -> None:
         instance = RuleSet()
         instance.template = templates_ruleset(key)
         instance.refresh()
-    assert instance.ruleset.get("ADVERTISE_PIP_ON_BORDER", {}).get("terms", {}).get(
-        "na"
-    ) == [{"operator": "!=", "parameter": "ADVERTISE_PIP_BGP", "value": True}]
+    assert instance.ruleset.get("ADVERTISE_PIP_ON_BORDER", {}).get("terms", {}).get("na") == [
+        {"operator": "!=", "parameter": "ADVERTISE_PIP_BGP", "value": True}
+    ]
 
 
 @pytest.mark.parametrize("bad_value", [("BAD_STRING"), (None), (10), ([10]), ({10})])
