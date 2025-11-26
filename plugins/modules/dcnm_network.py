@@ -3826,6 +3826,13 @@ class DcnmNetwork:
                 for v_a in d_a["lanAttachList"]:
                     if v_a.get("is_deploy"):
                         del v_a["is_deploy"]
+                    # Clean up tor_ports/torports keys if they exist and are empty
+                    if v_a.get("tor_ports") is not None:
+                        if not v_a["tor_ports"]:
+                            del v_a["tor_ports"]
+                    if v_a.get("torports") is not None:
+                        if not v_a["torports"]:
+                            del v_a["torports"]
 
             for attempt in range(0, 50):
                 resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
