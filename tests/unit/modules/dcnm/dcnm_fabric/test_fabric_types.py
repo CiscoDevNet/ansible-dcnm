@@ -28,8 +28,7 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import pytest
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    does_not_raise, fabric_types_fixture)
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import does_not_raise, fabric_types_fixture
 
 
 def test_fabric_types_00010(fabric_types) -> None:
@@ -78,9 +77,7 @@ MATCH_00020 += r"Expected one of:\s+.*\."
         ),
     ],
 )
-def test_fabric_types_00020(
-    fabric_types, fabric_type, template_name, does_raise, expected
-) -> None:
+def test_fabric_types_00020(fabric_types, fabric_type, template_name, does_raise, expected) -> None:
     """
     Classes and Methods
     - FabricTypes
@@ -147,9 +144,7 @@ MATCH_00040 += r"Invalid fabric type: INVALID_FABRIC_TYPE.\s+"
         ),
     ],
 )
-def test_fabric_types_00040(
-    fabric_types, fabric_type, parameters, does_raise, expected
-) -> None:
+def test_fabric_types_00040(fabric_types, fabric_type, parameters, does_raise, expected) -> None:
     """
     Classes and Methods
     - FabricTypes
