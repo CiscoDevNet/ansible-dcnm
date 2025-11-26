@@ -75,7 +75,6 @@
               admin_state: true
               mode: routed
               description: "Parent Interface for Sub-Interface test"
-      register: result
 
     - name: Create interfaces to check various delete form 1
       cisco.dcnm.dcnm_interface: &delete_diff_merge1
@@ -216,25 +215,8 @@
         dcnm_interface_diff_options_merge3_conf: "{{ lookup('file', test_data_interfaces.diff_options_merge3_conf_file) | from_yaml }}"
       delegate_to: localhost
 
-    - name: Create all interfaces to check delete form 3
-      cisco.dcnm.dcnm_interface: &delete_diff_merge3
-        check_deploy: false
-        fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config: "{{ dcnm_interface_diff_options_merge3_conf }}"
-      register: result
-
-    ##############################################
-    ##              DELETE 3                    ##
-    ##############################################
-
-    - name: Load Interface Config File - Delete 3
-      ansible.builtin.set_fact:
-        dcnm_interface_diff_options_delete3_conf: "{{ lookup('file', test_data_interfaces.diff_options_delete3_conf_file) | from_yaml }}"
-      delegate_to: localhost
-
     - name: Put Parent Interface for Sub-Interface into routed mode
-      cisco.dcnm.dcnm_interface:
+      cisco.dcnm.dcnm_interface: &delete_diff_merge3
         check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
@@ -270,6 +252,37 @@
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
+
+##############################################
+##              DELETE 3                    ##
+##############################################
+
+    - name: Load Interface Config File - Delete 3
+      ansible.builtin.set_fact:
+        dcnm_interface_diff_options_delete3_conf: "{{ lookup('file', test_data_interfaces.diff_options_delete3_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
+    - name: Delete all interfaces form 3
+      cisco.dcnm.dcnm_interface:
+        check_deploy: false
+        fabric: "{{ test_data_common.fabric }}"
+        state: deleted  # only choose form [merged, replaced, deleted, overridden,query]
+        config: "{{ dcnm_interface_diff_options_delete3_conf }}"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 4'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
 
   ##############################################
   ##             CLEANUP                      ##

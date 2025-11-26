@@ -100,9 +100,9 @@
       cisco.dcnm.dcnm_image_upload:
         state: query                              # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - name: "{{ IMAGE_2_NAME }}"
-          - name: "{{ IMAGE_3_NAME }}"
-          - name: "{{ IMAGE_1_NAME }}"
+          - name: "{{ IMAGE_2_NAME }}"            # Name of the image to be used to filter the output
+          - name: "{{ IMAGE_3_NAME }}"            # Name of the image to be used to filter the output
+          - name: "{{ IMAGE_1_NAME }}"            # Name of the image to be used to filter the output
       register: result
 
     - name: ASSERT - Query specific names

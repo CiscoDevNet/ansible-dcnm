@@ -27,8 +27,8 @@
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
         test_data_interfaces:
-          no_optional_elems_conf_template: "templates/dcnm_intf/no_optional_elems_conf.j2"
-          no_optional_elems_conf_file: "{{ role_path }}/files/dcnm_interface_intf_no_optional_elems_conf.yaml"
+          no_optional_elems_merge_conf_template: "templates/dcnm_intf/no_optional_elems_merge_conf.j2"
+          no_optional_elems_merge_conf_file: "{{ role_path }}/files/dcnm_interface_intf_no_optional_elems_merge_conf.yaml"
       delegate_to: localhost
 
     - name: Create Interface Config Files using J2 Templates
@@ -36,7 +36,7 @@
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
       loop:
-        - no_optional_elems
+        - no_optional_elems_merge
       delegate_to: localhost
 
     ##############################################
@@ -45,7 +45,7 @@
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
-        dcnm_interface_no_optional_elems_conf: "{{ lookup('file', test_data_interfaces.no_optional_elems_conf_file) | from_yaml }}"
+        dcnm_interface_no_optional_elems_merge_conf: "{{ lookup('file', test_data_interfaces.no_optional_elems_merge_conf_file) | from_yaml }}"
       delegate_to: localhost
 
     - name: Create interfaces without optional elements
@@ -53,7 +53,7 @@
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: merged
-        config: "{{ dcnm_interface_no_optional_elems_conf }}"
+        config: "{{ dcnm_interface_no_optional_elems_merge_conf }}"
       register: result
 
     - name: ASSERT - Verify interface creation results
@@ -67,7 +67,7 @@
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
-        config: "{{ dcnm_interface_no_optional_elems_conf }}"
+        config: "{{ dcnm_interface_no_optional_elems_merge_conf }}"
       register: verify_result
 
     - name: VALIDITY CHECK - Verify interface state in NDFC

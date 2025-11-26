@@ -143,8 +143,10 @@
 #                 "DATA": "Successfully detach the policy from device.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/",
-#                 "REQUEST_PATH_CONT": "detach-policy?serialNumber=FDO211218GC",
+#                 "REQUEST_PATH": (
+#                     "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
+#                     "policymgnt/detach-policy?serialNumber=FDO211218GC"
+#                 ),
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }

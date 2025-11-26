@@ -70,7 +70,7 @@
     - name: ASSERT - Merge changed & return codes
       ansible.builtin.assert:
         that:
-          - merge_result.changed | bool
+          - merge_result.changed == true
           - item.RETURN_CODE == 200
       loop: "{{ merge_result.response }}"
 
@@ -108,7 +108,7 @@
     - name: ASSERT - Replace changed & return codes
       ansible.builtin.assert:
         that:
-          - replace_result.changed | bool
+          - replace_result.changed == true
           - item.RETURN_CODE == 200
       loop: "{{ replace_result.response }}"
 
@@ -133,7 +133,7 @@
     - name: ASSERT - Check changed flag is false and return codes for idempotence
       ansible.builtin.assert:
         that:
-          - not replace_idem_result.changed
+          - replace_idem_result.changed == false
           - replace_idem_result.response is defined
           - replace_idem_result.response | length >= 0
 

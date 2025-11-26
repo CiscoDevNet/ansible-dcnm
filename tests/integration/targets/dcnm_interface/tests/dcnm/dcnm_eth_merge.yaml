@@ -67,7 +67,7 @@
     - name: ASSERT - Check changed flag is true and return codes
       ansible.builtin.assert:
         that:
-          - merge_result.changed | bool
+          - merge_result.changed == true
           - item.RETURN_CODE == 200
       loop: "{{ merge_result.response }}"
 
@@ -92,7 +92,7 @@
     - name: ASSERT - Idempotence result
       ansible.builtin.assert:
         that:
-          - not idem_result.changed
+          - idem_result.changed == false
           - idem_result.response is defined
           - idem_result.response | length >= 0  # Allow empty response for idempotence
       # Don't loop over response items for idempotence check as they may be empty

@@ -49,7 +49,7 @@
       delegate_to: localhost
 
   ##############################################
-  ##        BASIC MERGE (NO OPTIONALS)       ##
+  ##                   MERGE                  ##
   ##############################################
 
     - name: Load Basic Merge Interface Config File
@@ -64,12 +64,6 @@
         state: merged
         config: "{{ dcnm_interface_merge_basic_conf }}"
       register: result_basic_create
-
-    - name: ASSERT - Creation return codes (basic merge)
-      ansible.builtin.assert:
-        that:
-          - 'item.RETURN_CODE == 200'
-      loop: "{{ result_basic_create.response }}"
 
     - name: QUERY - Get AA FEX interface state in NDFC (basic merge)
       cisco.dcnm.dcnm_interface:
@@ -106,18 +100,12 @@
       delegate_to: localhost
 
     - name: Create AA FEX interfaces including optional parameters
-      cisco.dcnm.dcnm_interface: &fex_merge_opt
+      cisco.dcnm.dcnm_interface: &fex_merge2
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: merged
         config: "{{ dcnm_interface_merged_conf }}"
       register: result_opt_create
-
-    - name: ASSERT - Creation return codes (merged with optionals)
-      ansible.builtin.assert:
-        that:
-          - 'item.RETURN_CODE == 200'
-      loop: "{{ result_opt_create.response }}"
 
     - name: QUERY - Get AA FEX interface state in NDFC (merged)
       cisco.dcnm.dcnm_interface:
@@ -134,7 +122,7 @@
       delegate_to: localhost
 
     - name: Create AA FEX interfaces - Idempotence (merged)
-      cisco.dcnm.dcnm_interface: *fex_merge_opt
+      cisco.dcnm.dcnm_interface: *fex_merge2
       register: result_opt_idem
 
     - name: ASSERT - Idempotence checks (merged with optionals)

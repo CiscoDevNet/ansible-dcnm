@@ -160,18 +160,18 @@
       cisco.dcnm.dcnm_image_upload:
         state: overridden                         # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - path: "{{ IMAGE_2_PATH }}"
-            source: sftp
-            remote_server: "{{ SERVER_IP }}"
-            username: "{{ USERNAME }}"
-            password: "{{ PASSWORD }}"
-          - path: "{{ IMAGE_3_PATH }}"
-            source: local
-          - path: "{{ IMAGE_1_PATH }}"
-            source: scp
-            remote_server: "{{ SERVER_IP }}"
-            username: "{{ USERNAME }}"
-            password: "{{ PASSWORD }}"
+          - path: "{{ IMAGE_2_PATH }}"            # Full path to the image on the server
+            source: sftp                          # choose from [local, scp, sftp]; default is local
+            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
+            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
+          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
+            source: local                         # choose from [local, scp, sftp]; default is local
+          - path: "{{ IMAGE_1_PATH }}"            # Full path to the image on the server
+            source: scp                           # choose from [local, scp, sftp]; default is local
+            remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
+            username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
       register: result
 
     - name: ASSERT - Override mixed images structure

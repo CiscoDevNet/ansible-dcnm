@@ -26,8 +26,8 @@
       cisco.dcnm.dcnm_image_upload:
         state: merged                             # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - path: "{{ IMAGE_3_PATH }}"
-            source: local
+          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
+            source: local                         # choose from [local, scp, sftp]; default is local
       register: result
 
     - name: ASSERT - Upload result structure
@@ -52,7 +52,7 @@
       cisco.dcnm.dcnm_image_upload:
         state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - name: "{{ IMAGE_3_NAME }}"
+          - name: "{{ IMAGE_3_NAME }}"            # Name of the image on the controller
       register: result
 
     - name: ASSERT - Delete result structure
@@ -92,8 +92,8 @@
     - name: Upload images to controller (re-upload)
       cisco.dcnm.dcnm_image_upload:
         files:
-          - path: "{{ IMAGE_3_PATH }}"
-            source: local
+          - path: "{{ IMAGE_3_PATH }}"            # Full path to the image on local server
+            source: local                         # choose from [local, scp, sftp]; default is local
       register: result
 
     - name: ASSERT - Re-upload result structure
@@ -190,7 +190,7 @@
       cisco.dcnm.dcnm_image_upload:
         state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - name: "{{ IMAGE_3_NAME }}"
+          - name: "{{ IMAGE_3_NAME }}"            # Name of the image on the controller
       register: result
 
     - name: ASSERT - Delete one image structure
@@ -232,8 +232,8 @@
       cisco.dcnm.dcnm_image_upload:
         state: deleted                            # choose from [merged, deleted, overridden, query]; default is merged
         files:
-          - name: "{{ IMAGE_2_NAME }}"
-          - name: no-such-image.bin
+          - name: "{{ IMAGE_2_NAME }}"            # Name of the image on the controller
+          - name: no-such-image.bin               # Name of an image that does not exist on controller
       register: result
 
     - name: ASSERT - Delete existing + non-existing structure

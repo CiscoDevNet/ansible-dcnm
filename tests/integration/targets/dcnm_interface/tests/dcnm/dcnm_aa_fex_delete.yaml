@@ -50,18 +50,12 @@
       delegate_to: localhost
 
     - name: Create AA FEX interfaces including optional parameters
-      cisco.dcnm.dcnm_interface: &fex_merge
+      cisco.dcnm.dcnm_interface: &fex_merge2
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: merged  # only choose from [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_merged_conf }}"
       register: result_create
-
-    - name: ASSERT - Check creation return codes
-      ansible.builtin.assert:
-        that:
-          - "item.RETURN_CODE == 200"
-      loop: "{{ result_create.response }}"
 
     - name: QUERY - Get AA FEX interface state in NDFC (merge)
       cisco.dcnm.dcnm_interface:

@@ -67,7 +67,7 @@
     - name: ASSERT - Merge changed & return codes
       ansible.builtin.assert:
         that:
-          - merge_result.changed | bool
+          - merge_result.changed == true
           - item.RETURN_CODE == 200
       loop: "{{ merge_result.response }}"
 
@@ -100,7 +100,7 @@
     - name: ASSERT - Bulk delete diff counts
       ansible.builtin.assert:
         that:
-          - delete_result.changed | bool
+          - delete_result.changed == true
           - (delete_result.diff[0].merged | length) == 0
           - (delete_result.diff[0].deleted | length) == 0
           - (delete_result.diff[0].replaced | length) == 5
@@ -120,7 +120,7 @@
     - name: ASSERT - Bulk delete idempotence
       ansible.builtin.assert:
         that:
-          - not delete_idem_result.changed
+          - delete_idem_result.changed == false
           - (delete_idem_result.diff[0].merged | length) == 0
           - (delete_idem_result.diff[0].deleted | length) == 0
           - (delete_idem_result.diff[0].replaced | length) == 0
@@ -164,7 +164,7 @@
     - name: ASSERT - Single merge diff counts
       ansible.builtin.assert:
         that:
-          - single_merge_result.changed | bool
+          - single_merge_result.changed == true
           - (single_merge_result.diff[0].merged | length) == 1
           - (single_merge_result.diff[0].deploy | length) == 1
           - (single_merge_result.diff[0].deleted | length) == 0
@@ -208,7 +208,7 @@
     - name: ASSERT - Single delete diff counts
       ansible.builtin.assert:
         that:
-          - single_delete_result.changed | bool
+          - single_delete_result.changed == true
           - (single_delete_result.diff[0].merged | length) == 0
           - (single_delete_result.diff[0].deleted | length) == 0
           - (single_delete_result.diff[0].replaced | length) == 1

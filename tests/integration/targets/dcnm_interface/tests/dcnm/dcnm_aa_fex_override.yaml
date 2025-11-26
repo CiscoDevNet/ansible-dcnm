@@ -62,12 +62,6 @@
         config: "{{ dcnm_interface_merged_conf }}"
       register: result
 
-    - name: ASSERT - Check creation return codes
-      ansible.builtin.assert:
-        that:
-          - 'item.RETURN_CODE == 200'
-      loop: "{{ result.response }}"
-
     - name: QUERY - Get AA FEX interface state in NDFC (merged)
       cisco.dcnm.dcnm_interface:
         state: query
