@@ -104,7 +104,7 @@ class FabricDelete(FabricCommon):
         Retrieve fabric info from the controller and set the list of
         controller fabrics that are in our `fabric_names` list.  Verify
         that each fabric in the list can be deleted.
-        
+
         ## Raises
 
         ### ValueError
@@ -340,7 +340,7 @@ class FabricDelete(FabricCommon):
             no changes occurred and the request was not successful.
         -   If `fabric_name` is not "" (empty string), set the result to indicate
             the success or failure of the request.
-        
+
         ## Raises
 
         None
