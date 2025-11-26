@@ -8,6 +8,46 @@
         "10.10.10.227": "XYZKSJHSMK4",
         "10.10.10.228": "XYZKSJHSMK5"
     },
+    "fabric_associations": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://mock-ndfc/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "fabricId": 1,
+                "fabricName": "test_network",
+                "fabricType": "Switch_Fabric",
+                "fabricState": "standalone",
+                "fabricParent": "None",
+                "fabricTechnology": "VXLANFabric"
+            },
+            {
+                "fabricId": 100,
+                "fabricName": "msd-parent",
+                "fabricType": "MFD",
+                "fabricState": "msd",
+                "fabricParent": "None",
+                "fabricTechnology": "VXLANFabric"
+            },
+            {
+                "fabricId": 101,
+                "fabricName": "msd-child-1",
+                "fabricType": "Switch_Fabric",
+                "fabricState": "member",
+                "fabricParent": "msd-parent",
+                "fabricTechnology": "VXLANFabric"
+            },
+            {
+                "fabricId": 102,
+                "fabricName": "msd-child-2",
+                "fabricType": "Switch_Fabric",
+                "fabricState": "member",
+                "fabricParent": "msd-parent",
+                "fabricTechnology": "VXLANFabric"
+            }
+        ]
+    },
     "playbook_config": [
         {
             "net_name": "test_network",
@@ -632,6 +672,12 @@
         "METHOD": "POST",
         "RETURN_CODE": 200
     },
+    "empty_network_list": {
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "RETURN_CODE": 200
+    },
     "get_have_failure": {
         "DATA": "Invalid JSON response: Invalid Fabric: demo-fabric-123",
         "ERROR": "Not Found",
@@ -1126,6 +1172,544 @@
                 "vrfTemplate": "Default_VRF_Universal",
                 "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"routeTargetImport\":\"\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"disableRtAuto\":\"false\",\"L3VniMcastGroup\":\"\",\"vrfSegmentId\":\"9008013\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"routeTargetExport\":\"\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"routeTargetExportMvpn\":\"\",\"ENABLE_NETFLOW\":\"false\",\"configureStaticDefaultRouteFlag\":\"true\",\"tag\":\"12345\",\"rpAddress\":\"\",\"trmBGWMSiteEnabled\":\"false\",\"nveId\":\"1\",\"routeTargetExportEvpn\":\"\",\"NETFLOW_MONITOR\":\"\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"routeTargetImportMvpn\":\"\",\"isRPAbsent\":\"false\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"52125\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\",\"routeTargetImportEvpn\":\"\"}",
                 "vrfStatus": "DEPLOYED"
+            }
+        ]
+    },
+    "playbook_msd_config": [
+        {
+            "net_name": "ansible-msd-net1",
+            "vrf_name": "Tenant-1",
+            "net_id": "8001",
+            "net_template": "Default_Network_Universal",
+            "net_extension_template": "Default_Network_Extension_Universal",
+            "vlan_id": "2101",
+            "gw_ip_subnet": "192.168.101.1/24",
+            "routing_tag": 12345,
+            "int_desc": "MSD Network managed by Ansible",
+            "mtu_l3intf": 9214,
+            "arp_suppress": false,
+            "route_target_both": false,
+            "is_l2only": false,
+            "child_fabric_config": [
+                {
+                    "fabric": "msd-child-1",
+                    "netflow_enable": false,
+                    "l3gw_on_border": true,
+                    "dhcp_loopback_id": 204,
+                    "multicast_group_address": "239.1.1.1",
+                    "dhcp_srvr1_ip": "192.168.1.101",
+                    "dhcp_srvr1_vrf": "management"
+                }
+            ],
+            "attach": [
+                {
+                    "ip_address": "192.168.10.203",
+                    "ports": [
+                        "Ethernet1/15",
+                        "Ethernet1/16"
+                    ]
+                },
+                {
+                    "ip_address": "192.168.10.204",
+                    "ports": [
+                        "Ethernet1/15",
+                        "Ethernet1/16"
+                    ]
+                }
+            ],
+            "deploy": true
+        }
+    ],
+    "mock_msd_fabric_details": {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": {
+            "id": 100,
+            "fabricId": "FABRIC-100",
+            "fabricName": "msd-parent",
+            "fabricType": "MFD",
+            "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
+            "fabricTechnology": "VXLANFabric",
+            "templateFabricType": "VXLAN EVPN Multi-Site",
+            "fabricTechnologyFriendly": "VXLAN EVPN",
+            "provisionMode": "DCNMTopDown",
+            "deviceType": "n9k",
+            "replicationMode": "IngressReplication",
+            "operStatus": "CRITICAL",
+            "templateName": "MSD_Fabric",
+            "nvPairs": {
+                "FABRIC_NAME": "msd-parent",
+                "BGP_RP_ASN": "",
+                "FABRIC_TYPE": "MFD"
+            },
+            "vrfTemplate": "Default_VRF_Universal",
+            "networkTemplate": "Default_Network_Universal",
+            "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+            "networkExtensionTemplate": "Default_Network_Extension_Universal"
+        }
+    },
+    "mock_msd_child_fabric_details": {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": {
+            "id": 101,
+            "fabricId": "FABRIC-101",
+            "fabricName": "msd-child-1",
+            "fabricType": "Switch_Fabric",
+            "fabricTypeFriendly": "Switch Fabric",
+            "fabricTechnology": "VXLANFabric",
+            "templateFabricType": "Data Center VXLAN EVPN",
+            "fabricTechnologyFriendly": "VXLAN EVPN",
+            "provisionMode": "DCNMTopDown",
+            "deviceType": "n9k",
+            "replicationMode": "Multicast",
+            "operStatus": "MINOR",
+            "asn": "40000",
+            "siteId": "101",
+            "templateName": "Easy_Fabric",
+            "vrfTemplate": "Default_VRF_Universal",
+            "networkTemplate": "Default_Network_Universal",
+            "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+            "networkExtensionTemplate": "Default_Network_Extension_Universal"
+        }
+    },
+    "mock_msd_ip_sn": {
+        "192.168.10.203": {
+            "ipAddress": "192.168.10.203",
+            "logicalName": "leaf3",
+            "serialNumber": "9R518K2AT3R",
+            "switchRole": "leaf"
+        },
+        "192.168.10.204": {
+            "ipAddress": "192.168.10.204",
+            "logicalName": "leaf4",
+            "serialNumber": "915KQ8P3NS8",
+            "switchRole": "leaf"
+        }
+    },
+    "mock_msd_vrf_object": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "RETURN_CODE": 200,
+        "DATA": [
+            {
+                "fabric": "msd-parent",
+                "vrfName": "Tenant-1",
+                "enforce": null,
+                "defaultSGTag": null,
+                "vrfTemplate": "Default_VRF_Universal",
+                "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+                "vrfTemplateConfig": "{\"routeTargetExportEvpn\":\"\",\"routeTargetImport\":\"\",\"vrfVlanId\":\"501\",\"vrfDescription\":\"\",\"disableRtAuto\":\"false\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"vrfSegmentId\":\"9008012\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"routeTargetExport\":\"\",\"ipv6LinkLocalFlag\":\"true\",\"mtu\":\"9216\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"vrfVlanName\":\"\",\"tag\":\"12345\",\"nveId\":\"1\",\"vrfIntfDescription\":\"\",\"vrfName\":\"Tenant-1\",\"routeTargetImportEvpn\":\"\"}",
+                "tenantName": null,
+                "id": 19932,
+                "vrfId": 9008012,
+                "serviceVrfTemplate": null,
+                "source": null,
+                "vrfStatus": "DEPLOYED",
+                "hierarchicalKey": "msd-parent"
+            }
+        ]
+    },
+    "mock_msd_net_create_response": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "RETURN_CODE": 200,
+        "DATA": {
+            "Network Id": 8001,
+            "Network Name": "ansible-msd-net1"
+        }
+    },
+    "mock_msd_net_attach_response": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "RETURN_CODE": 200,
+        "DATA": {
+            "ansible-msd-net1-[9R518K2AT3R/leaf3]": "SUCCESS",
+            "ansible-msd-net1-[915KQ8P3NS8/leaf4]": "SUCCESS"
+        }
+    },
+    "mock_msd_child_net_object": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "RETURN_CODE": 200,
+        "DATA": [
+            {
+                "fabric": "msd-child-1",
+                "networkName": "ansible-msd-net1",
+                "displayName": "ansible-msd-net1",
+                "networkId": 8001,
+                "networkTemplate": "Default_Network_Universal",
+                "networkExtensionTemplate": "Default_Network_Extension_Universal",
+                "networkTemplateConfig": "{\"vlanId\":\"2101\",\"gatewayIpAddress\":\"192.168.101.1/24\",\"isLayer2Only\":false,\"tag\":\"12345\",\"vlanName\":\"\",\"intfDescription\":\"MSD Network managed by Ansible\",\"mtu\":\"9214\",\"suppressArp\":false,\"dhcpServerAddr1\":\"192.168.1.101\",\"dhcpServerAddr2\":\"\",\"dhcpServerAddr3\":\"\",\"vrfDhcp\":\"management\",\"vrfDhcp2\":\"\",\"vrfDhcp3\":\"\",\"loopbackId\":\"204\",\"mcastGroup\":\"239.1.1.1\",\"gatewayIpV6Address\":\"\",\"secondaryGW1\":\"\",\"secondaryGW2\":\"\",\"secondaryGW3\":\"\",\"secondaryGW4\":\"\",\"trmEnabled\":false,\"rtBothAuto\":false,\"enableL3OnBorder\":true,\"ENABLE_NETFLOW\":false,\"SVI_NETFLOW_MONITOR\":\"\",\"VLAN_NETFLOW_MONITOR\":\"monitor1\"}",
+                "vrf": "Tenant-1",
+                "tenantName": null,
+                "serviceNetworkTemplate": null,
+                "source": null,
+                "interfaceGroups": null,
+                "networkStatus": "DEPLOYED"
+            }
+        ]
+    },
+    "mock_msd_child_net_attach_object": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "RETURN_CODE": 200,
+        "DATA": [
+            {
+                "networkName": "ansible-msd-net1",
+                "lanAttachList": [
+                    {
+                        "networkName": "ansible-msd-net1",
+                        "fabricName": "msd-child-1",
+                        "serialNumber": "9R518K2AT3R",
+                        "switchPorts": "Ethernet1/15,Ethernet1/16",
+                        "ipAddress": "10.10.10.217",
+                        "lanAttachState": "OUT-OF-SYNC",
+                        "isLanAttached": true,
+                        "deployment": false
+                    },
+                    {
+                        "networkName": "ansible-msd-net1",
+                        "fabricName": "msd-child-1",
+                        "serialNumber": "915KQ8P3NS8",
+                        "switchPorts": "Ethernet1/15,Ethernet1/16",
+                        "ipAddress": "10.10.10.218",
+                        "lanAttachState": "OUT-OF-SYNC",
+                        "isLanAttached": true,
+                        "deployment": false
+                    }
+                ]
+            }
+        ]
+    },
+    "mock_msd_child_net_update_response": {
+        "MESSAGE": "OK",
+        "METHOD": "PUT",
+        "RETURN_CODE": 200,
+        "DATA": {}
+    },
+    "playbook_msd_dhcp_config": [
+        {
+            "net_name": "ansible-msd-dhcp-net",
+            "vrf_name": "Tenant-1",
+            "net_id": "8004",
+            "net_template": "Default_Network_Universal",
+            "net_extension_template": "Default_Network_Extension_Universal",
+            "vlan_id": "2104",
+            "gw_ip_subnet": "192.168.104.1/24",
+            "routing_tag": 12347,
+            "int_desc": "MSD DHCP Network",
+            "mtu_l3intf": 9214,
+            "route_target_both": false,
+            "is_l2only": false,
+            "child_fabric_config": [
+                {
+                    "fabric": "msd-child-1",
+                    "netflow_enable": false,
+                    "l3gw_on_border": true,
+                    "dhcp_loopback_id": 207,
+                    "multicast_group_address": "239.1.1.4",
+                    "dhcp_srvr1_ip": "192.168.1.102",
+                    "dhcp_srvr1_vrf": "management",
+                    "dhcp_srvr2_ip": "192.168.1.105",
+                    "dhcp_srvr2_vrf": "default",
+                    "dhcp_srvr3_ip": "192.168.1.106",
+                    "dhcp_srvr3_vrf": "management"
+                }
+            ],
+            "attach": [
+                {
+                    "ip_address": "192.168.10.203",
+                    "ports": [
+                        "Ethernet1/17",
+                        "Ethernet1/18"
+                    ]
+                },
+                {
+                    "ip_address": "192.168.10.204",
+                    "ports": [
+                        "Ethernet1/17",
+                        "Ethernet1/18"
+                    ]
+                }
+            ],
+            "deploy": true
+        }
+    ],
+    "mock_msd_dhcp_net_create_response": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "RETURN_CODE": 200,
+        "DATA": {
+            "Network Id": 8004,
+            "Network Name": "ansible-msd-dhcp-net"
+        }
+    },
+    "mock_msd_dhcp_net_attach_response": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "RETURN_CODE": 200,
+        "DATA": {
+            "ansible-msd-dhcp-net--9R518K2AT3R(leaf3)": "SUCCESS",
+            "ansible-msd-dhcp-net--915KQ8P3NS8(leaf4)": "SUCCESS"
+        }
+    },
+    "mock_msd_dhcp_child_net_object": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "RETURN_CODE": 200,
+        "DATA": [
+            {
+                "displayName": "ansible-msd-dhcp-net",
+                "fabric": "msd-child-1",
+                "networkId": "8004",
+                "networkName": "ansible-msd-dhcp-net",
+                "networkTemplate": "Default_Network_Universal",
+                "networkExtensionTemplate": "Default_Network_Extension_Universal",
+                "networkTemplateConfig": "{\"suppressArp\":\"false\",\"enableIR\":\"false\",\"trmEnabled\":\"false\",\"rtBothAuto\":\"false\",\"enableL3OnBorder\":\"true\",\"mtu\":\"9214\",\"tag\":\"12347\",\"vrfDhcp\":\"management\",\"vrfDhcp2\":\"default\",\"vrfDhcp3\":\"management\",\"loopbackId\":\"207\",\"dhcpServerAddr1\":\"192.168.1.104\",\"dhcpServerAddr2\":\"192.168.1.105\",\"dhcpServerAddr3\":\"192.168.1.106\",\"vrfName\":\"Tenant-1\",\"isLayer2Only\":\"false\",\"nveId\":\"1\",\"vlanId\":\"2104\",\"segmentId\":\"8004\",\"gatewayIpAddress\":\"192.168.104.1/24\",\"gatewayIpV6Address\":\"\",\"vlanName\":\"\",\"intfDescription\":\"MSD DHCP Network\",\"mcastGroup\":\"239.1.1.4\",\"ENABLE_NETFLOW\":\"false\",\"SVI_NETFLOW_MONITOR\":\"\",\"VLAN_NETFLOW_MONITOR\":\"monitor2\",\"secondaryGW1\":\"\",\"secondaryGW2\":\"\",\"secondaryGW3\":\"\",\"secondaryGW4\":\"\"}",
+                "vrf": "Tenant-1",
+                "serviceNetworkTemplate": null,
+                "source": null,
+                "interfaceGroups": null,
+                "networkStatus": "DEPLOYED"
+            }
+        ]
+    },
+    "mock_msd_dhcp_child_net_attach_object": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "RETURN_CODE": 200,
+        "DATA": [
+            {
+                "fabric": "msd-child-1",
+                "networkName": "ansible-msd-dhcp-net",
+                "serialNumber": "9R518K2AT3R",
+                "switchName": "leaf3",
+                "ipAddress": "192.168.10.203",
+                "lanAttachedState": "DEPLOYED",
+                "isLanAttached": true,
+                "deployment": true
+            },
+            {
+                "fabric": "msd-child-1",
+                "networkName": "ansible-msd-dhcp-net",
+                "serialNumber": "915KQ8P3NS8",
+                "switchName": "leaf4",
+                "ipAddress": "192.168.10.204",
+                "lanAttachedState": "DEPLOYED",
+                "isLanAttached": true,
+                "deployment": true
+            }
+        ]
+    },
+    "mock_msd_dhcp_child_net_update_response": {
+        "MESSAGE": "OK",
+        "METHOD": "PUT",
+        "RETURN_CODE": 200,
+        "DATA": {}
+    },
+    "playbook_msd_override_config": [
+        {
+            "net_name": "ansible-msd-dhcp-net",
+            "vrf_name": "Tenant-1",
+            "net_id": "8004",
+            "net_template": "Default_Network_Universal",
+            "net_extension_template": "Default_Network_Extension_Universal",
+            "vlan_id": "2104",
+            "gw_ip_subnet": "192.168.104.1/24",
+            "routing_tag": 12347,
+            "int_desc": "MSD DHCP Network",
+            "mtu_l3intf": 9216,
+            "route_target_both": false,
+            "is_l2only": false,
+            "child_fabric_config": [
+                {
+                    "fabric": "msd-child-1"
+                }
+            ],
+            "attach": [
+                {
+                    "ip_address": "192.168.10.203",
+                    "ports": [
+                        "Ethernet1/16",
+                        "Ethernet1/17"
+                    ]
+                },
+                {
+                    "ip_address": "192.168.10.204",
+                    "ports": [
+                        "Ethernet1/16",
+                        "Ethernet1/17"
+                    ]
+                }
+            ],
+            "deploy": true
+        }
+    ],
+    "mock_msd_override_parent_net_object": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "RETURN_CODE": 200,
+        "DATA": [
+            {
+                "id": 3277,
+                "fabric": "msd-parent",
+                "networkName": "ansible-msd-dhcp-net",
+                "displayName": "ansible-msd-dhcp-net",
+                "networkId": 8004,
+                "networkTemplate": "Default_Network_Universal",
+                "networkExtensionTemplate": "Default_Network_Extension_Universal",
+                "networkTemplateConfig": "{\"suppressArp\":\"false\",\"secondaryGW3\":\"\",\"secondaryGW2\":\"\",\"secondaryGW1\":\"\",\"vlanId\":\"2104\",\"gatewayIpAddress\":\"192.168.104.1/24\",\"vlanName\":\"\",\"type\":\"Normal\",\"mtu\":\"9216\",\"rtBothAuto\":\"false\",\"isLayer2Only\":\"false\",\"intfDescription\":\"MSD DHCP Network\",\"segmentId\":\"8004\",\"gatewayIpV6Address\":\"\",\"tag\":\"12347\",\"nveId\":\"1\",\"secondaryGW4\":\"\",\"vrfName\":\"Tenant-1\"}",
+                "vrf": "Tenant-1",
+                "tenantName": null,
+                "serviceNetworkTemplate": null,
+                "source": null,
+                "interfaceGroups": null,
+                "primaryNetworkId": -1,
+                "type": "Normal",
+                "primaryNetworkName": null,
+                "vlanId": null,
+                "vlanName": null,
+                "networkStatus": "DEPLOYED",
+                "hierarchicalKey": "msd-parent"
+            }
+        ]
+    },
+    "mock_msd_override_parent_net_attach_object": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "RETURN_CODE": 200,
+        "DATA": [
+            {
+                "networkName": "ansible-msd-dhcp-net",
+                "lanAttachList": [
+                    {
+                        "networkName": "ansible-msd-dhcp-net",
+                        "displayName": "ansible-msd-dhcp-net",
+                        "switchName": "leaf3",
+                        "switchRole": "leaf",
+                        "fabricName": "msd-child-1",
+                        "lanAttachState": "DEPLOYED",
+                        "isLanAttached": true,
+                        "portNames": "Ethernet1/17,Ethernet1/18",
+                        "switchSerialNo": "9R518K2AT3R",
+                        "peerSerialNo": null,
+                        "switchDbId": 1552090,
+                        "ipAddress": "192.168.10.203",
+                        "networkId": 8004,
+                        "vlanId": 2104,
+                        "instanceValues": "{\"isVPC\":\"false\"}",
+                        "entityName": "ansible-msd-dhcp-net",
+                        "interfaceGroups": null
+                    },
+                    {
+                        "networkName": "ansible-msd-dhcp-net",
+                        "displayName": "ansible-msd-dhcp-net",
+                        "switchName": "leaf4",
+                        "switchRole": "leaf",
+                        "fabricName": "msd-child-1",
+                        "lanAttachState": "DEPLOYED",
+                        "isLanAttached": true,
+                        "portNames": "Ethernet1/17,Ethernet1/18",
+                        "switchSerialNo": "915KQ8P3NS8",
+                        "peerSerialNo": null,
+                        "switchDbId": 1403960,
+                        "ipAddress": "192.168.10.204",
+                        "networkId": 8004,
+                        "vlanId": 2104,
+                        "instanceValues": "{\"isVPC\":\"false\"}",
+                        "entityName": "ansible-msd-dhcp-net",
+                        "interfaceGroups": null
+                    }
+                ]
+            }
+        ]
+    },
+    "mock_msd_override_attach_response": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "RETURN_CODE": 200,
+        "DATA": {
+            "ansible-msd-dhcp-net-[915KQ8P3NS8/leaf4]": "SUCCESS",
+            "ansible-msd-dhcp-net-[9R518K2AT3R/leaf3]": "SUCCESS"
+        }
+    },
+    "mock_msd_override_child_net_object": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "RETURN_CODE": 200,
+        "DATA": [
+            {
+                "id": 3278,
+                "fabric": "msd-child-1",
+                "networkName": "ansible-msd-dhcp-net",
+                "displayName": "ansible-msd-dhcp-net",
+                "networkId": 8004,
+                "networkTemplate": "Default_Network_Universal",
+                "networkExtensionTemplate": "Default_Network_Extension_Universal",
+                "networkTemplateConfig": "{\"suppressArp\":\"false\",\"secondaryGW3\":\"\",\"secondaryGW2\":\"\",\"loopbackId\":\"\",\"secondaryGW1\":\"\",\"enableL3OnBorder\":\"false\",\"networkName\":\"ansible-msd-dhcp-net\",\"enableL3OnBorderVpcBgw\":\"false\",\"SVI_NETFLOW_MONITOR\":\"\",\"type\":\"Normal\",\"enableIR\":\"false\",\"rtBothAuto\":\"false\",\"isLayer2Only\":\"false\",\"trmV6Enabled\":\"\",\"ENABLE_NETFLOW\":\"false\",\"segmentId\":\"8004\",\"dhcpServerAddr3\":\"\",\"gatewayIpV6Address\":\"\",\"dhcpServerAddr2\":\"\",\"tag\":\"12347\",\"nveId\":\"1\",\"vrfDhcp\":\"\",\"secondaryGW4\":\"\",\"vlanId\":\"2104\",\"gatewayIpAddress\":\"192.168.104.1/24\",\"vlanName\":\"\",\"mtu\":\"9216\",\"intfDescription\":\"MSD DHCP Network\",\"mcastGroup\":\"239.1.1.1\",\"igmpVersion\":\"2\",\"trmEnabled\":\"false\",\"VLAN_NETFLOW_MONITOR\":\"\",\"dhcpServers\":\"\",\"vrfName\":\"Tenant-1\"}",
+                "vrf": "Tenant-1",
+                "tenantName": null,
+                "serviceNetworkTemplate": null,
+                "source": null,
+                "interfaceGroups": "",
+                "primaryNetworkId": -1,
+                "type": "Normal",
+                "primaryNetworkName": null,
+                "vlanId": null,
+                "vlanName": null,
+                "networkStatus": "IN PROGRESS",
+                "hierarchicalKey": "msd-child-1"
+            }
+        ]
+    },
+    "mock_msd_override_child_net_attach_object": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "RETURN_CODE": 200,
+        "DATA": [
+            {
+                "networkName": "ansible-msd-dhcp-net",
+                "lanAttachList": [
+                    {
+                        "networkName": "ansible-msd-dhcp-net",
+                        "displayName": "ansible-msd-dhcp-net",
+                        "switchName": "leaf3",
+                        "switchRole": "leaf",
+                        "fabricName": "msd-child-1",
+                        "lanAttachState": "IN PROGRESS",
+                        "isLanAttached": true,
+                        "portNames": "Ethernet1/16,Ethernet1/17",
+                        "switchSerialNo": "9R518K2AT3R",
+                        "peerSerialNo": null,
+                        "switchDbId": 1552090,
+                        "ipAddress": "192.168.10.203",
+                        "networkId": 8004,
+                        "vlanId": 2104,
+                        "instanceValues": "{\"isVPC\":\"false\"}",
+                        "entityName": "ansible-msd-dhcp-net",
+                        "interfaceGroups": null
+                    },
+                    {
+                        "networkName": "ansible-msd-dhcp-net",
+                        "displayName": "ansible-msd-dhcp-net",
+                        "switchName": "leaf4",
+                        "switchRole": "leaf",
+                        "fabricName": "msd-child-1",
+                        "lanAttachState": "IN PROGRESS",
+                        "isLanAttached": true,
+                        "portNames": "Ethernet1/16,Ethernet1/17",
+                        "switchSerialNo": "915KQ8P3NS8",
+                        "peerSerialNo": null,
+                        "switchDbId": 1403960,
+                        "ipAddress": "192.168.10.204",
+                        "networkId": 8004,
+                        "vlanId": 2104,
+                        "instanceValues": "{\"isVPC\":\"false\"}",
+                        "entityName": "ansible-msd-dhcp-net",
+                        "interfaceGroups": null
+                    }
+                ]
             }
         ]
     }

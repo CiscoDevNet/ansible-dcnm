@@ -35,17 +35,52 @@
 # how each var below is used in each test.  Some tests,
 # for example, do not use interface_1.
 #   vars:
+    # standalone (non-msd) test vars
     # fabric_1: f1
-    # switch_1: 10.1.1.2
-    # switch_2: 10.1.1.3
-    # switch_3: 10.1.1.4
+    # switch_1: 192.168.1.2
+    # switch_2: 192.168.1.3
+    # switch_3: 192.168.1.4
+
+    # multisite test vars
+    # parent_fabric: pf1
+    # child_fabric: cf1
+    # child_switch_1: 192.168.1.2
+    # child_switch_2: 192.168.1.3
+
+    # common vars
     # interface_1: Ethernet1/1
-    # interface_2: Ethernet1/2
+    # interface_2a: Ethernet1/2
     # interface_3: Ethernet1/3
+  
     ## Uncomment ONE of the following testcases
-    # testcase: deleted
-    # testcase: merged
-    # testcase: query
+
+    # To run all tests under standalone,
+    # testcase: standalone/*
+    # To run individual standalone tests,
+    # testcase: standalone/<test_name>
+    # Example:
+    # testcase: standalone/deleted
+
+    # To run all tests under standalone/self-contained-tests,
+    # testcase: standalone/self-contained-tests/*
+    # To run individual self-contained tests,
+    # testcase: standalone/self-contained-tests/<test_name>
+    # Example:
+    # testcase: standalone/self-contained-tests/scale
+
+    # To run all tests under multisite,
+    # testcase: msd/*
+    # To run individual multisite tests,
+    # testcase: msd/<test_name>
+    # Example:
+    # testcase: msd/sanity
+
+    # To run all tests under multicluster,
+    # testcase: mcfg/*
+    # To run individual multicluster tests,
+    # testcase: mcfg/<test_name>
+    # Example:
+    # testcase: mcfg/sanity
 
   roles:
     - dcnm_vrf

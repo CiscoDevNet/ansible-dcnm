@@ -1,0 +1,38 @@
+---
+# This MSD test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+#
+
+# ------------------------------
+# MSD Basic Network with Child Fabric Config
+# ------------------------------
+- net_name: "{{ test_data_common.msd_net1 }}"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_id: "{{ test_data_common.msd_net1_net_id }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "{{ test_data_common.msd_net1_vlan_id }}"
+  gw_ip_subnet: "{{ test_data_common.msd_net1_gw_ip_subnet }}"
+  routing_tag: 12345
+  int_desc: 'MSD Network managed by Ansible'
+  mtu_l3intf: 9214
+  arp_suppress: false
+  route_target_both: false
+  is_l2only: false
+  # NOTE: trm_enable, l3gw_on_border, netflow_enable are NOT allowed on parent fabrics
+  child_fabric_config:
+    - fabric: "{{ test_data_common.child_fabric }}"
+      # Child fabric allows these specific parameters
+      netflow_enable: false
+      l3gw_on_border: True
+      dhcp_loopback_id: 204
+      multicast_group_address: '239.1.1.1'
+      vlan_nf_monitor: 'monitor1'
+      dhcp_srvr1_ip: '192.168.1.101'
+      dhcp_srvr1_vrf: 'management'
+  attach:
+    - ip_address: "{{ test_data_common.sw1 }}"
+      ports: ["{{ test_data_common.sw1_int1 }}", "{{ test_data_common.sw1_int2 }}"]
+    - ip_address: "{{ test_data_common.sw2 }}"
+      ports: ["{{ test_data_common.sw2_int1 }}", "{{ test_data_common.sw2_int2 }}"]
+  deploy: {{ deploy_local | bool }}

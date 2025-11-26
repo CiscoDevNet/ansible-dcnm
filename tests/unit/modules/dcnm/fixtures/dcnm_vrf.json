@@ -7,18 +7,22 @@
       "10.10.10.228": "XYZKSJHSMK5"
     },
     "mock_ip_fab" : {
-        "10.10.10.224": "test_fabric",
-        "10.10.10.225": "test_fabric",
-        "10.10.10.226": "test_fabric",
-        "10.10.10.227": "test_fabric",
-        "10.10.10.228": "test_fabric"
+        "10.10.10.224": "standalone_fabric",
+        "10.10.10.225": "standalone_fabric",
+        "10.10.10.226": "standalone_fabric",
+        "10.10.10.227": "standalone_fabric",
+        "10.10.10.228": "standalone_fabric"
     },
     "mock_sn_fab" : {
-        "XYZKSJHSMK1": "test_fabric",
-        "XYZKSJHSMK2": "test_fabric",
-        "XYZKSJHSMK3": "test_fabric",
-        "XYZKSJHSMK4": "test_fabric",
-        "XYZKSJHSMK5": "test_fabric"
+        "XYZKSJHSMK1": "standalone_fabric",
+        "XYZKSJHSMK2": "standalone_fabric",
+        "XYZKSJHSMK3": "standalone_fabric",
+        "XYZKSJHSMK4": "standalone_fabric",
+        "XYZKSJHSMK5": "standalone_fabric"
+    },
+    "mock_sn_fab_msd" : {
+        "XYZKSJHSMK1": "parent_fabric",
+        "XYZKSJHSMK2": "parent_fabric"
     },
     "playbook_config_input_validation" : [
       {
@@ -749,6 +753,401 @@
       "service_vrf_template": "None"
     }
   ],
+  "playbook_msd_config" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vlan_id": "2000",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "child_fabric_config": [
+        {
+          "adv_host_routes": true,
+          "adv_default_routes": true,
+          "l3vni_wo_vlan": false,
+          "fabric": "child_fabric"
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_msd_replace_config" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vrf_int_mtu": 1500,
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "child_fabric_config": [
+        {
+          "fabric": "child_fabric",
+          "static_default_route": true,
+          "l3vni_wo_vlan": true
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_msd_config_no_child" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vlan_id": "2000",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_msd_config_misconfig_1" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vlan_id": "2000",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "child_fabric_config": [
+        {
+          "fabric_name": "k_fab",
+          "static_default_route": true,
+          "l3vni_wo_vlan": true
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_msd_config_misconfig_2" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vlan_id": "2000",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "child_fabric_config": [
+        {
+          "fabric": "k_fab",
+          "static_default_route": true,
+          "l3vni_wo_vlan": true
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_msd_config_misconfig_3" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vlan_id": "2000",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "child_fabric_config": [
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_msd_delete_config" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vlan_id": "2000",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_msd_override_config": [
+    {
+      "vrf_name": "test_vrf_2",
+      "vrf_id": "9008012",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vlan_id": "2001",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224",
+          "deploy": true
+        }
+      ],
+      "child_fabric_config": [
+        {
+          "fabric": "child_fabric",
+          "adv_host_routes": true,
+          "adv_default_routes": true,
+          "l3vni_wo_vlan": false
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_msd_query_config" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vlan_id": "2000",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "child_fabric_config": [
+        {
+          "adv_host_routes": true,
+          "adv_default_routes": true,
+          "l3vni_wo_vlan": false,
+          "fabric": "child_fabric"
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_msd_child_config" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "adv_host_routes": true,
+      "adv_default_routes": true,
+      "l3vni_wo_vlan": false
+    }
+  ],
+  "playbook_mcfg_config" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vlan_id": "2000",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "child_fabric_config": [
+        {
+          "adv_host_routes": true,
+          "adv_default_routes": true,
+          "l3vni_wo_vlan": false,
+          "fabric": "child_fabric"
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_mcfg_replace_config" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vrf_int_mtu": 1500,
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "child_fabric_config": [
+        {
+          "fabric": "child_fabric",
+          "static_default_route": true,
+          "l3vni_wo_vlan": true
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_mcfg_delete_config" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vlan_id": "2000",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_mcfg_override_config": [
+    {
+      "vrf_name": "test_vrf_2",
+      "vrf_id": "9008012",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vlan_id": "2001",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224",
+          "deploy": true
+        }
+      ],
+      "child_fabric_config": [
+        {
+          "fabric": "child_fabric",
+          "adv_host_routes": true,
+          "adv_default_routes": true,
+          "l3vni_wo_vlan": false
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "nd_version": {
+    "RETURN_CODE":200,
+    "METHOD":"GET",
+    "MESSAGE":"OK",
+    "DATA":
+        {
+            "version": "12.2.1.321",
+            "mode": "",
+            "isMediaController": false,
+            "dev": false,
+            "isHaEnabled": false,
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": false
+        }
+  },
+  "nd_version_11": {
+    "RETURN_CODE":200,
+    "METHOD":"GET",
+    "MESSAGE":"OK",
+    "DATA":
+        {
+            "version": "11.1",
+            "mode": "",
+            "isMediaController": false,
+            "dev": false,
+            "isHaEnabled": false,
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": false
+        }
+  },
+  "mock_fabric_associations": {
+    "DATA": [
+      {
+        "fabricId": 38,
+        "fabricName": "parent_fabric",
+        "fabricParent": "None",
+        "fabricState": "msd",
+        "fabricTechnology": "VXLANFabric",
+        "fabricType": "MSD"
+      },
+      {
+        "fabricId": 40,
+        "fabricName": "child_fabric",
+        "fabricParent": "parent_fabric",
+        "fabricState": "member",
+        "fabricTechnology": "VXLANFabric",
+        "fabricType": "Switch_Fabric"
+      },
+      {
+        "fabricId": 11,
+        "fabricName": "standalone_fabric",
+        "fabricParent": "None",
+        "fabricState": "standalone",
+        "fabricTechnology": "VXLANFabric",
+        "fabricType": "Switch_Fabric"
+      }
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://mock.ndfc/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations",
+    "RETURN_CODE": 200
+  },
+  "mock_vrf_get_object": {
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA":[
+      {
+        "fabric": "child_fabric",
+        "vrfName": "test_vrf_1",
+        "enforce": null,
+        "defaultSGTag": null,
+        "vrfTemplate": "Default_VRF_Universal",
+        "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+        "vrfTemplateConfig": "{\"routeTargetExportEvpn\":\"\",\"routeTargetImport\":\"\",\"vrfVlanId\":\"2000\",\"vrfDescription\":\"\",\"disableRtAuto\":\"false\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"50000\",\"routeTargetExport\":\"\",\"ipv6LinkLocalFlag\":\"true\",\"mtu\":\"9216\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"vrfVlanName\":\"\",\"tag\":\"12345\",\"nveId\":\"1\",\"vrfIntfDescription\":\"\",\"routeTargetImportEvpn\":\"\",\"vrfName\":\"test_vrf_1\"}",
+        "tenantName": null,
+        "id": 19899,
+        "vrfId": 9008011,
+        "serviceVrfTemplate": null,
+        "source": null,
+        "vrfStatus": "DEPLOYED",
+        "hierarchicalKey": "child_fabric"
+      },
+      {
+        "fabric": "child_fabric",
+        "vrfName": "test_vrf_2",
+        "enforce": null,
+        "defaultSGTag": null,
+        "vrfTemplate": "Default_VRF_Universal",
+        "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+        "vrfTemplateConfig": "{\"routeTargetExportEvpn\":\"\",\"routeTargetImport\":\"\",\"vrfVlanId\":\"2001\",\"vrfDescription\":\"\",\"disableRtAuto\":\"false\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"50000\",\"routeTargetExport\":\"\",\"ipv6LinkLocalFlag\":\"true\",\"mtu\":\"9216\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"vrfVlanName\":\"\",\"tag\":\"12345\",\"nveId\":\"1\",\"vrfIntfDescription\":\"\",\"routeTargetImportEvpn\":\"\",\"vrfName\":\"test_vrf_2\"}",
+        "tenantName": null,
+        "id": 19899,
+        "vrfId": 9008012,
+        "serviceVrfTemplate": null,
+        "source": null,
+        "vrfStatus": "DEPLOYED",
+        "hierarchicalKey": "child_fabric"
+      }
+    ]
+  },
   "mock_vrf_attach_object_del_not_ready": {
     "ERROR": "",
     "RETURN_CODE": 200,
@@ -761,6 +1160,22 @@
             "lanAttachState": "DEPLOYED",
             "isLanAttached": false
           },
+          {
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": false
+          }
+        ]
+      }
+    ]
+  },
+  "mock_msd_vrf_attach_object_del_not_ready": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
           {
             "lanAttachState": "DEPLOYED",
             "isLanAttached": false
@@ -807,13 +1222,29 @@
       }
     ]
   },
+  "mock_msd_vrf_attach_object_del_ready": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "lanAttachState": "NA",
+            "isLanAttached": false
+          }
+        ]
+      }
+    ]
+  },
   "mock_vrf_object": {
     "ERROR": "",
     "RETURN_CODE": 200,
     "MESSAGE":"OK",
     "DATA": [
       {
-        "fabric": "test_fabric",
+        "fabric": "standalone_fabric",
         "serviceVrfTemplate": "None",
         "source": "None",
         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
@@ -821,6 +1252,60 @@
         "vrfName": "test_vrf_1",
         "vrfTemplate": "Default_VRF_Universal",
         "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\"}",
+        "vrfStatus": "DEPLOYED"
+      }
+    ]
+  },
+  "mock_msd_parent_vrf_object": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE":"OK",
+    "DATA": [
+      {
+        "fabric": "parent_fabric",
+        "serviceVrfTemplate": "None",
+        "source": "None",
+        "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+        "vrfId": 9008011,
+        "vrfName": "test_vrf_1",
+        "vrfTemplate": "Default_VRF_Universal",
+        "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"2000\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\"}",
+        "vrfStatus": "DEPLOYED"
+      }
+    ]
+  },
+  "mock_msd_vrf_object": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE":"OK",
+    "DATA": [
+      {
+        "fabric": "child_fabric",
+        "serviceVrfTemplate": "None",
+        "source": "None",
+        "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+        "vrfId": 9008011,
+        "vrfName": "test_vrf_1",
+        "vrfTemplate": "Default_VRF_Universal",
+        "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"2000\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\"}",
+        "vrfStatus": "DEPLOYED"
+      }
+    ]
+  },
+  "mock_msd_vrf_object_2": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE":"OK",
+    "DATA": [
+      {
+        "fabric": "child_fabric",
+        "serviceVrfTemplate": "None",
+        "source": "None",
+        "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+        "vrfId": 9008012,
+        "vrfName": "test_vrf_2",
+        "vrfTemplate": "Default_VRF_Universal",
+        "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"2001\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_2\"}",
         "vrfStatus": "DEPLOYED"
       }
     ]
@@ -863,6 +1348,105 @@
       }
     ]
   },
+  "mock_msd_vrf_attach_object" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"\",\"switchRouteTargetExportEvpn\":\"\"}",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "2000",
+            "vrfId": "9008011"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_msd_vrf_child_attach_object" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"\",\"switchRouteTargetExportEvpn\":\"\"}",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "child_fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "2000",
+            "vrfId": "9008011"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_msd_vrf_child_attach_object_2" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_2",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_2",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"\",\"switchRouteTargetExportEvpn\":\"\"}",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "child_fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "2001",
+            "vrfId": "9008012"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_msd_vrf_get_attach_object_replaced_parent" : {
+    "METHOD": "GET",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"\",\"switchRouteTargetExportEvpn\":\"\"}",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "2000",
+            "vrfId": "9008011"
+          }
+        ]
+      }
+    ]
+  },
    "mock_vrf_attach_object_query" : {
     "MESSAGE": "OK",
     "METHOD": "POST",
@@ -893,6 +1477,54 @@
             "fabricName": "test-fabric",
             "ipAddress": "10.10.10.225",
             "vlanId": "202",
+            "vrfId": "9008011"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_msd_vrf_parent_attach_object_query" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "parent_fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "2000",
+            "vrfId": "9008011"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_msd_vrf_child_attach_object_query" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "child_fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "2000",
             "vrfId": "9008011"
           }
         ]
@@ -982,7 +1614,7 @@
           {
             "deployment": true,
             "extensionValues": "",
-            "fabric": "test_fabric",
+            "fabric": "standalone_fabric",
             "freeformConfig": "",
             "instanceValues": "",
             "serialNumber": "XYZKSJHSMK1",
@@ -993,7 +1625,7 @@
           {
             "deployment": true,
             "extensionValues": "{\"VRF_LITE_CONN\":\"{\\\"VRF_LITE_CONN\\\":[{\\\"IF_NAME\\\":\\\"Ethernet1/16\\\",\\\"DOT1Q_ID\\\":\\\"2\\\",\\\"IP_MASK\\\":\\\"10.33.0.2/30\\\",\\\"NEIGHBOR_IP\\\":\\\"10.33.0.1\\\",\\\"NEIGHBOR_ASN\\\":\\\"65535\\\",\\\"IPV6_MASK\\\":\\\"2010::10:34:0:7/64\\\",\\\"IPV6_NEIGHBOR\\\":\\\"2010::10:34:0:3\\\",\\\"AUTO_VRF_LITE_FLAG\\\":\\\"false\\\",\\\"PEER_VRF_NAME\\\":\\\"ansible-vrf-int1\\\",\\\"VRF_LITE_JYTHON_TEMPLATE\\\":\\\"Ext_VRF_Lite_Jython\\\"}]}\",\"MULTISITE_CONN\":\"{\\\"MULTISITE_CONN\\\":[]}\"}",
-            "fabric": "test_fabric",
+            "fabric": "standalone_fabric",
             "freeformConfig": "",
             "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"5000:100\",\"switchRouteTargetExportEvpn\":\"5000:100\"}",
             "serialNumber": "XYZKSJHSMK4",
@@ -1046,7 +1678,7 @@
     "MESSAGE": "OK",
     "DATA": [
       {
-        "fabric": "test_fabric",
+        "fabric": "standalone_fabric",
         "vrfName": "test_vrf_dcnm",
         "vrfTemplate": "Default_VRF_Universal",
         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
@@ -1212,6 +1844,34 @@
       }
     ]
   },
+  "mock_msd_vrf_attach_get_ext_object_merge_att1_only": {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "switchDetailsList": [
+            {
+                "errorMessage": null,
+                "extensionPrototypeValues": [],
+                "extensionValues": "",
+                "freeformConfig": "",
+                "instanceValues": "",
+                "islanAttached": true,
+                "lanAttachedState": "DEPLOYED",
+                "peerSerialNumber": null,
+                "role": "leaf",
+                "serialNumber": "XYZKSJHSMK1",
+                "switchName": "n9kv_leaf1",
+                "vlan": "2000",
+                "vlanModifiable": true
+            }
+        ],
+        "templateName": "Default_VRF_Universal",
+        "vrfName": "test_vrf_1"
+      }
+    ]
+  },
 
   "mock_vrf_attach_get_ext_object_ov_att1_only": {
     "MESSAGE": "OK",
@@ -1334,12 +1994,82 @@
       }
     ]
   },
-
-
+  "mock_vrf_msd_attach_get_ext_object_dcnm_att1_only": {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "switchDetailsList": [
+            {
+                "errorMessage": null,
+                "extensionPrototypeValues": [],
+                "extensionValues": "",
+                "freeformConfig": "",
+                "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"\",\"switchRouteTargetExportEvpn\":\"\"}",
+                "islanAttached": true,
+                "lanAttachedState": "DEPLOYED",
+                "peerSerialNumber": null,
+                "role": "leaf",
+                "serialNumber": "XYZKSJHSMK1",
+                "switchName": "n9kv_leaf1",
+                "vlan": "2000",
+                "vlanModifiable": true
+            }
+        ],
+        "templateName": "Default_VRF_Universal",
+        "vrfName": "test_vrf_dcnm"
+      }
+    ]
+  },
+  "mock_vrf_msd_attach_get_ext_object_ov_att1_only": {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "switchDetailsList": [
+            {
+                "errorMessage": null,
+                "extensionPrototypeValues": [],
+                "extensionValues": "",
+                "freeformConfig": "",
+                "instanceValues": "",
+                "islanAttached": true,
+                "lanAttachedState": "DEPLOYED",
+                "peerSerialNumber": null,
+                "role": "leaf",
+                "serialNumber": "XYZKSJHSMK1",
+                "switchName": "n9kv_leaf1",
+                "vlan": "2001",
+                "vlanModifiable": true
+            }
+        ],
+        "templateName": "Default_VRF_Universal",
+        "vrfName": "test_vrf_1"
+      }
+    ]
+  },
   "attach_success_resp": {
     "DATA": {
       "test-vrf-1--XYZKSJHSMK1(leaf1)": "SUCCESS",
       "test-vrf-1--XYZKSJHSMK2(leaf2)": "SUCCESS"
+    },
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "msd_attach_success_resp": {
+    "DATA": {
+      "test-vrf-1--XYZKSJHSMK1(leaf1)": "SUCCESS"
+    },
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "msd_attach_success_resp_2": {
+    "DATA": {
+      "test-vrf-2--XYZKSJHSMK1(leaf1)": "SUCCESS"
     },
     "MESSAGE": "OK",
     "METHOD": "POST",
@@ -1372,6 +2102,11 @@
   "blank_data": {
     "MESSAGE": "OK",
     "METHOD": "POST",
+    "RETURN_CODE": 200
+  },
+  "update_data": {
+    "MESSAGE": "OK",
+    "METHOD": "PUT",
     "RETURN_CODE": 200
   },
   "get_have_failure": {
@@ -1445,7 +2180,7 @@
   },
   "fabric_details_mfd": {
         "id": 4,
-        "fabricId": "FABRIC-4",
+        "fabricId": "standalone_fabric_mfd",
         "fabricName": "MSD",
         "fabricType": "MFD",
         "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
@@ -1929,7 +2664,7 @@
     "MESSAGE":"OK",
     "DATA": [
       {
-        "fabric": "test_fabric",
+        "fabric": "standalone_fabric",
         "serviceVrfTemplate": "None",
         "source": "None",
         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
@@ -1968,6 +2703,36 @@
             "vrfName": "VRF_1"
         },
         "switchName": "cvd-1313-leaf"
+      }
+    ]
+  },
+  "mock_pools_top_down_dot1q": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE":"OK",
+    "DATA": [
+      {
+        "allocatedFlag": true,
+        "allocatedIp": "5",
+        "allocatedOn": 1734051260507,
+        "allocatedScopeValue": "XYZKSJHSMK1",
+        "entityName": "test_vrf_1",
+        "entityType": "DeviceInterface",
+        "hierarchicalKey": "0",
+        "id": 6613,
+        "ipAddress": "10.10.10.224",
+        "resourcePool": {
+            "dynamicSubnetRange": null,
+            "fabricName": "parent_fabric",
+            "hierarchicalKey": "parent_fabric",
+            "id": 0,
+            "overlapAllowed": false,
+            "poolName": "TOP_DOWN_L3_DOT1Q",
+            "poolType": "ID_POOL",
+            "targetSubnet": 0,
+            "vrfName": "VRF_1"
+        },
+        "switchName": "n9kv_leaf1"
       }
     ]
   },
@@ -2013,5 +2778,553 @@
         ]
       }
     ]
+  },
+  "mock_msd_vrf_lite_obj": {
+   "RETURN_CODE":200,
+   "METHOD":"GET",
+   "MESSAGE":"OK",
+   "DATA": [
+      {
+        "vrfName":"test_vrf_1",
+        "templateName":"Default_VRF_Extension_Universal",
+        "switchDetailsList":[
+          {
+             "switchName":"leaf1",
+             "vlan":2000,
+             "serialNumber":"XYZKSJHSMK1",
+             "peerSerialNumber": "None",
+             "extensionValues":"{}",
+             "extensionPrototypeValues":[
+               {
+                 "interfaceName":"Ethernet1/3",
+                 "extensionType":"VRF_LITE",
+                 "extensionValues":"{\"PEER_VRF_NAME\": \"\", \"NEIGHBOR_IP\": \"10.33.0.1\", \"VRF_LITE_JYTHON_TEMPLATE\": \"Ext_VRF_Lite_Jython\", \"enableBorderExtension\": \"VRF_LITE\", \"AUTO_VRF_LITE_FLAG\":\"false\", \"IP_MASK\": \"10.33.0.2/30\", \"MTU\": \"9216\", \"NEIGHBOR_ASN\": \"23132\", \"IF_NAME\": \"Ethernet1/3\", \"IPV6_NEIGHBOR\": \"\", \"IPV6_MASK\": \"\", \"DOT1Q_ID\": \"2\", \"asn\": \"52125\"}",
+                 "destInterfaceName":"Ethernet1/1",
+                 "destSwitchName":"poap-import-static"
+               }
+             ],
+             "islanAttached":false,
+             "lanAttachedState":"DEPLOYED",
+             "errorMessage":"None",
+             "instanceValues": "{\"loopbackIpV6Address\":\"\",\"loopbackId\":\"\",\"deviceSupportL3VniNoVlan\":\"false\",\"switchRouteTargetImportEvpn\":\"\",\"loopbackIpAddress\":\"\",\"switchRouteTargetExportEvpn\":\"\"}",
+             "freeformConfig":"",
+             "role":"leaf",
+             "vlanModifiable":true
+          }
+        ]
+      }
+    ]
+  },
+  "mock_msd_vrf_lite_obj_2": {
+   "RETURN_CODE":200,
+   "METHOD":"GET",
+   "MESSAGE":"OK",
+   "DATA": [
+      {
+        "vrfName":"test_vrf_2",
+        "templateName":"Default_VRF_Extension_Universal",
+        "switchDetailsList":[
+          {
+             "switchName":"leaf1",
+             "vlan":2001,
+             "serialNumber":"XYZKSJHSMK1",
+             "peerSerialNumber": "None",
+             "extensionValues":"{}",
+             "extensionPrototypeValues":[
+               {
+                 "interfaceName":"Ethernet1/3",
+                 "extensionType":"VRF_LITE",
+                 "extensionValues":"{\"PEER_VRF_NAME\": \"\", \"NEIGHBOR_IP\": \"10.33.0.1\", \"VRF_LITE_JYTHON_TEMPLATE\": \"Ext_VRF_Lite_Jython\", \"enableBorderExtension\": \"VRF_LITE\", \"AUTO_VRF_LITE_FLAG\":\"false\", \"IP_MASK\": \"10.33.0.2/30\", \"MTU\": \"9216\", \"NEIGHBOR_ASN\": \"23132\", \"IF_NAME\": \"Ethernet1/3\", \"IPV6_NEIGHBOR\": \"\", \"IPV6_MASK\": \"\", \"DOT1Q_ID\": \"2\", \"asn\": \"52125\"}",
+                 "destInterfaceName":"Ethernet1/1",
+                 "destSwitchName":"poap-import-static"
+               }
+             ],
+             "islanAttached":false,
+             "lanAttachedState":"DEPLOYED",
+             "errorMessage":"None",
+             "instanceValues": "{\"loopbackIpV6Address\":\"\",\"loopbackId\":\"\",\"deviceSupportL3VniNoVlan\":\"false\",\"switchRouteTargetImportEvpn\":\"\",\"loopbackIpAddress\":\"\",\"switchRouteTargetExportEvpn\":\"\"}",
+             "freeformConfig":"",
+             "role":"leaf",
+             "vlanModifiable":true
+          }
+        ]
+      }
+    ]
+  },
+  "multicluster_fabric_associations_empty": {
+   "RETURN_CODE":200,
+   "METHOD":"GET",
+   "MESSAGE":"OK",
+   "DATA": []
+  },
+  "multicluster_fabric_associations": {
+   "RETURN_CODE":200,
+   "METHOD":"GET",
+   "MESSAGE":"OK",
+   "DATA": [
+    {
+        "id": 1,
+        "clusterName": "",
+        "fabricId": "MC-FABRIC-3524b4ad-2d41-415f-a9c7-ab0382f891a3",
+        "fabricName": "parent_fabric",
+        "fabricType": "MFD",
+        "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
+        "fabricTechnology": "VXLANFabric",
+        "fabricTechnologyFriendly": "VXLAN EVPN",
+        "provisionMode": "",
+        "deviceType": "",
+        "replicationMode": "",
+        "operStatus": "HEALTHY",
+        "asn": "",
+        "siteId": "",
+        "templateName": "MSD_Fabric",
+        "nvPairs": {
+            "ANYCAST_GW_MAC": "2020.0000.00aa",
+            "BGP_RP_ASN": "",
+            "BGW_ROUTING_TAG": "54321",
+            "BGW_ROUTING_TAG_PREV": "54321",
+            "BORDER_GWY_CONNECTIONS": "Manual",
+            "CLOUDSEC_ALGORITHM": "AES_128_CMAC",
+            "CLOUDSEC_AUTOCONFIG": "false",
+            "CLOUDSEC_AUTOCONFIG_PREV": "false",
+            "CLOUDSEC_ENFORCEMENT": "",
+            "CLOUDSEC_KEY_STRING": "",
+            "CLOUDSEC_REPORT_TIMER": "5",
+            "DCI_SUBNET_RANGE": "10.10.1.0/24",
+            "DCI_SUBNET_TARGET_MASK": "30",
+            "DCNM_ID": "",
+            "DELAY_RESTORE": "300",
+            "DSVNI_L2VNI_RANGE": "10030000-10049000",
+            "DSVNI_L3VNI_RANGE": "10050000-10059000",
+            "ENABLE_BGP_BFD": false,
+            "ENABLE_BGP_LOG_NEIGHBOR_CHANGE": false,
+            "ENABLE_BGP_SEND_COMM": false,
+            "ENABLE_DSVNI": "false",
+            "ENABLE_DSVNI_PREV": "false",
+            "ENABLE_PVLAN": "false",
+            "ENABLE_PVLAN_PREV": "false",
+            "ENABLE_RS_REDIST_DIRECT": false,
+            "ENABLE_SGT": "off",
+            "ENABLE_SGT_PREV": "off",
+            "ENABLE_TRM_TRMv6": "false",
+            "ENABLE_TRM_TRMv6_PREV": "false",
+            "EXT_FABRIC_TYPE": "",
+            "FABRIC_NAME": "MCFG_PARENT",
+            "FABRIC_TYPE": "MFD",
+            "FF": "MSD",
+            "L2_SEGMENT_ID_RANGE": "30000-49000",
+            "L3_PARTITION_ID_RANGE": "50000-59000",
+            "LOOPBACK100_IPV6_RANGE": "fd00::a10:0/120",
+            "LOOPBACK100_IP_RANGE": "10.10.0.0/24",
+            "MSO_CONTROLER_ID": "",
+            "MSO_SITE_GROUP_NAME": "",
+            "MS_IFC_BGP_AUTH_KEY_TYPE": "",
+            "MS_IFC_BGP_AUTH_KEY_TYPE_PREV": "",
+            "MS_IFC_BGP_PASSWORD": "",
+            "MS_IFC_BGP_PASSWORD_ENABLE": "false",
+            "MS_IFC_BGP_PASSWORD_ENABLE_PREV": "false",
+            "MS_IFC_BGP_PASSWORD_PREV": "",
+            "MS_LOOPBACK_ID": "100",
+            "MS_UNDERLAY_AUTOCONFIG": "false",
+            "PARENT_ONEMANAGE_FABRIC": "",
+            "PREMSO_PARENT_FABRIC": "",
+            "RP_SERVER_IP": "",
+            "RS_ROUTING_TAG": "",
+            "SGT_ID_RANGE": "",
+            "SGT_ID_RANGE_PREV": "",
+            "SGT_NAME_PREFIX": "",
+            "SGT_NAME_PREFIX_PREV": "",
+            "SGT_OPER_STATUS": "off",
+            "SGT_PREPROVISION": false,
+            "SGT_PREPROVISION_PREV": false,
+            "SGT_PREPROV_RECALC_STATUS": "empty",
+            "SGT_RECALC_STATUS": "empty",
+            "V6_DCI_SUBNET_RANGE": "fd00::a11:0/120",
+            "V6_DCI_SUBNET_TARGET_MASK": "126",
+            "VXLAN_UNDERLAY_IS_V6": "false",
+            "default_network": "Default_Network_Universal",
+            "default_pvlan_sec_network": "Pvlan_Secondary_Network",
+            "default_vrf": "Default_VRF_Universal",
+            "enableMsOverlayIfcBgpDesc": false,
+            "enableScheduledBackup": "",
+            "network_extension_template": "Default_Network_Extension_Universal",
+            "routeServerCollection": "{\"routeServerCollection\":[]}",
+            "scheduledTime": "",
+            "securityGroupStatus": "disabled",
+            "unifiedNDFabricType": "vxlan",
+            "vrf_extension_template": "Default_VRF_Extension_Universal"
+        },
+        "vrfTemplate": "Default_VRF_Universal",
+        "networkTemplate": "Default_Network_Universal",
+        "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+        "networkExtensionTemplate": "Default_Network_Extension_Universal",
+        "createdOn": 1761942870,
+        "modifiedOn": 1761942870,
+        "members": [
+            {
+                "clusterName": "ND41-CL1",
+                "fabricId": 2010,
+                "fabricName": "child_fabric",
+                "templateName": "Easy_Fabric",
+                "fabricType": "Switch_Fabric",
+                "fabricState": "member",
+                "fabricParent": "parent_fabric",
+                "fabricTechnology": "VXLANFabric",
+                "fabricTypeFriendly": "Data Center VXLAN EVPN",
+                "fabricTechnologyFriendly": "VXLAN EVPN",
+                "asn": "88",
+                "ndfcIpAddress": "10.122.84.116",
+                "clusterIpAddresses": [
+                    "10.122.84.116"
+                ],
+                "operStatus": "MINOR",
+                "nvPairs": {
+                    "AAA_REMOTE_IP_ENABLED": "false",
+                    "AAA_SERVER_CONF": "",
+                    "ACTIVE_MIGRATION": "false",
+                    "ADVERTISE_PIP_BGP": "false",
+                    "ADVERTISE_PIP_ON_BORDER": "true",
+                    "AGENT_INTF": "eth0",
+                    "AGG_ACC_VPC_PO_ID_RANGE": "",
+                    "AI_ML_QOS_POLICY": "AI_Fabric_QOS_400G",
+                    "AI_QOS_400G_MIN_BW": "950",
+                    "ALLOW_NXC": "true",
+                    "ALLOW_NXC_PREV": "true",
+                    "ANYCAST_BGW_ADVERTISE_PIP": "false",
+                    "ANYCAST_GW_MAC": "2020.0000.00aa",
+                    "ANYCAST_LB_ID": "",
+                    "ANYCAST_RP_IP_RANGE": "10.254.254.0/24",
+                    "ANYCAST_RP_IP_RANGE_INTERNAL": "10.254.254.0/24",
+                    "AUTO_BGP_NEIGHBOR_DESC": "true",
+                    "AUTO_SYMMETRIC_DEFAULT_VRF": "false",
+                    "AUTO_SYMMETRIC_VRF_LITE": "false",
+                    "AUTO_UNIQUE_VRF_LITE_IP_PREFIX": "false",
+                    "AUTO_UNIQUE_VRF_LITE_IP_PREFIX_PREV": "false",
+                    "AUTO_VRFLITE_IFC_DEFAULT_VRF": "false",
+                    "BANNER": "",
+                    "BFD_AUTH_ENABLE": "false",
+                    "BFD_AUTH_KEY": "",
+                    "BFD_AUTH_KEY_ID": "",
+                    "BFD_ENABLE": "false",
+                    "BFD_ENABLE_PREV": "false",
+                    "BFD_IBGP_ENABLE": "false",
+                    "BFD_ISIS_ENABLE": "false",
+                    "BFD_OSPF_ENABLE": "false",
+                    "BFD_PIM_ENABLE": "false",
+                    "BGP_AS": "88",
+                    "BGP_AS_PREV": "88",
+                    "BGP_AUTH_ENABLE": "false",
+                    "BGP_AUTH_KEY": "",
+                    "BGP_AUTH_KEY_TYPE": "3",
+                    "BGP_LB_ID": "0",
+                    "BOOTSTRAP_CONF": "",
+                    "BOOTSTRAP_ENABLE": "false",
+                    "BOOTSTRAP_ENABLE_PREV": "false",
+                    "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+                    "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
+                    "BRFIELD_DEBUG_FLAG": "Disable",
+                    "BROWNFIELD_NETWORK_NAME_FORMAT": "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$",
+                    "BROWNFIELD_SKIP_OVERLAY_NETWORK_ATTACHMENTS": "false",
+                    "CDP_ENABLE": "false",
+                    "COPP_POLICY": "strict",
+                    "DCI_MACSEC_ALGORITHM": "",
+                    "DCI_MACSEC_CIPHER_SUITE": "",
+                    "DCI_MACSEC_FALLBACK_ALGORITHM": "",
+                    "DCI_MACSEC_FALLBACK_KEY_STRING": "",
+                    "DCI_MACSEC_KEY_STRING": "",
+                    "DCI_SUBNET_RANGE": "10.33.0.0/16",
+                    "DCI_SUBNET_TARGET_MASK": "30",
+                    "DEAFULT_QUEUING_POLICY_CLOUDSCALE": "queuing_policy_default_8q_cloudscale",
+                    "DEAFULT_QUEUING_POLICY_OTHER": "queuing_policy_default_other",
+                    "DEAFULT_QUEUING_POLICY_R_SERIES": "queuing_policy_default_r_series",
+                    "DEFAULT_VRF_REDIS_BGP_RMAP": "",
+                    "DEPLOYMENT_FREEZE": "false",
+                    "DHCP_ENABLE": "false",
+                    "DHCP_END": "",
+                    "DHCP_END_INTERNAL": "",
+                    "DHCP_IPV6_ENABLE": "",
+                    "DHCP_IPV6_ENABLE_INTERNAL": "",
+                    "DHCP_START": "",
+                    "DHCP_START_INTERNAL": "",
+                    "DNS_SERVER_IP_LIST": "",
+                    "DNS_SERVER_VRF": "",
+                    "DOMAIN_NAME_INTERNAL": "",
+                    "ENABLE_AAA": "false",
+                    "ENABLE_AGENT": "false",
+                    "ENABLE_AGG_ACC_ID_RANGE": "false",
+                    "ENABLE_AI_ML_QOS_POLICY": "false",
+                    "ENABLE_AI_ML_QOS_POLICY_FLAP": "false",
+                    "ENABLE_DCI_MACSEC": "false",
+                    "ENABLE_DCI_MACSEC_PREV": "false",
+                    "ENABLE_DEFAULT_QUEUING_POLICY": "false",
+                    "ENABLE_EVPN": "true",
+                    "ENABLE_FABRIC_VPC_DOMAIN_ID": "false",
+                    "ENABLE_FABRIC_VPC_DOMAIN_ID_PREV": "false",
+                    "ENABLE_L3VNI_NO_VLAN": "false",
+                    "ENABLE_MACSEC": "false",
+                    "ENABLE_MACSEC_PREV": "false",
+                    "ENABLE_NETFLOW": "false",
+                    "ENABLE_NETFLOW_PREV": "false",
+                    "ENABLE_NGOAM": "true",
+                    "ENABLE_NXAPI": "true",
+                    "ENABLE_NXAPI_HTTP": "true",
+                    "ENABLE_PBR": "false",
+                    "ENABLE_PVLAN": "false",
+                    "ENABLE_PVLAN_PREV": "false",
+                    "ENABLE_QKD": "",
+                    "ENABLE_RT_INTF_STATS": "false",
+                    "ENABLE_SGT": "false",
+                    "ENABLE_SGT_PREV": "false",
+                    "ENABLE_TENANT_DHCP": "true",
+                    "ENABLE_TRM": "false",
+                    "ENABLE_TRM_PREV": "false",
+                    "ENABLE_TRMv6": "false",
+                    "ENABLE_TRMv6_PREV": "false",
+                    "ENABLE_VPC_PEER_LINK_NATIVE_VLAN": "false",
+                    "ENABLE_VRI_ID_REALLOC": "false",
+                    "EXTRA_CONF_INTRA_LINKS": "",
+                    "EXTRA_CONF_LEAF": "",
+                    "EXTRA_CONF_SPINE": "",
+                    "EXTRA_CONF_TOR": "",
+                    "EXT_FABRIC_TYPE": "",
+                    "FABRIC_INTERFACE_TYPE": "p2p",
+                    "FABRIC_MTU": "9216",
+                    "FABRIC_MTU_PREV": "9216",
+                    "FABRIC_NAME": "child_fabric_cluster2",
+                    "FABRIC_TYPE": "Switch_Fabric",
+                    "FABRIC_VPC_DOMAIN_ID": "",
+                    "FABRIC_VPC_DOMAIN_ID_PREV": "",
+                    "FABRIC_VPC_QOS": "false",
+                    "FABRIC_VPC_QOS_POLICY_NAME": "spine_qos_for_fabric_vpc_peering",
+                    "FEATURE_PTP": "false",
+                    "FEATURE_PTP_INTERNAL": "false",
+                    "FF": "Easy_Fabric",
+                    "GRFIELD_DEBUG_FLAG": "Disable",
+                    "HD_TIME": "180",
+                    "HOST_INTF_ADMIN_STATE": "true",
+                    "IBGP_PEER_TEMPLATE": "",
+                    "IBGP_PEER_TEMPLATE_LEAF": "",
+                    "IGNORE_CERT": "",
+                    "INBAND_DHCP_SERVERS": "",
+                    "INBAND_MGMT": "false",
+                    "INBAND_MGMT_PREV": "false",
+                    "INTF_STAT_LOAD_INTERVAL": "",
+                    "IPv6_ANYCAST_RP_IP_RANGE": "",
+                    "IPv6_ANYCAST_RP_IP_RANGE_INTERNAL": "",
+                    "IPv6_DCI_SUBNET_RANGE": "fd00::a33:0/112",
+                    "IPv6_DCI_SUBNET_TARGET_MASK": "126",
+                    "IPv6_MULTICAST_GROUP_SUBNET": "",
+                    "ISIS_AREA_NUM": "0001",
+                    "ISIS_AREA_NUM_PREV": "",
+                    "ISIS_AUTH_ENABLE": "false",
+                    "ISIS_AUTH_KEY": "",
+                    "ISIS_AUTH_KEYCHAIN_KEY_ID": "",
+                    "ISIS_AUTH_KEYCHAIN_NAME": "",
+                    "ISIS_LEVEL": "level-2",
+                    "ISIS_OVERLOAD_ELAPSE_TIME": "",
+                    "ISIS_OVERLOAD_ENABLE": "",
+                    "ISIS_P2P_ENABLE": "",
+                    "KME_SERVER_IP": "",
+                    "KME_SERVER_PORT": "",
+                    "L2_HOST_INTF_MTU": "9216",
+                    "L2_HOST_INTF_MTU_PREV": "9216",
+                    "L2_SEGMENT_ID_RANGE": "30000-49000",
+                    "L3VNI_IPv6_MCAST_GROUP": "",
+                    "L3VNI_MCAST_GROUP": "",
+                    "L3_PARTITION_ID_RANGE": "50000-59000",
+                    "LINK_STATE_ROUTING": "ospf",
+                    "LINK_STATE_ROUTING_TAG": "UNDERLAY",
+                    "LINK_STATE_ROUTING_TAG_PREV": "UNDERLAY",
+                    "LOOPBACK0_IPV6_RANGE": "",
+                    "LOOPBACK0_IP_RANGE": "10.2.0.0/22",
+                    "LOOPBACK1_IPV6_RANGE": "",
+                    "LOOPBACK1_IP_RANGE": "10.3.0.0/22",
+                    "MACSEC_ALGORITHM": "",
+                    "MACSEC_CIPHER_SUITE": "",
+                    "MACSEC_FALLBACK_ALGORITHM": "",
+                    "MACSEC_FALLBACK_KEY_STRING": "",
+                    "MACSEC_KEY_STRING": "",
+                    "MACSEC_REPORT_TIMER": "",
+                    "MGMT_GW": "",
+                    "MGMT_GW_INTERNAL": "",
+                    "MGMT_PREFIX": "",
+                    "MGMT_PREFIX_INTERNAL": "",
+                    "MGMT_V6PREFIX": "",
+                    "MGMT_V6PREFIX_INTERNAL": "",
+                    "MPLS_HANDOFF": "false",
+                    "MPLS_ISIS_AREA_NUM": "0001",
+                    "MPLS_ISIS_AREA_NUM_PREV": "",
+                    "MPLS_LB_ID": "",
+                    "MPLS_LOOPBACK_IP_RANGE": "",
+                    "MSO_CONNECTIVITY_DEPLOYED": "",
+                    "MSO_CONTROLER_ID": "",
+                    "MSO_SITE_GROUP_NAME": "",
+                    "MSO_SITE_ID": "",
+                    "MST_INSTANCE_RANGE": "",
+                    "MULTICAST_GROUP_SUBNET": "239.1.1.0/25",
+                    "MVPN_VRI_ID_RANGE": "",
+                    "NETFLOW_EXPORTER_LIST": "",
+                    "NETFLOW_MONITOR_LIST": "",
+                    "NETFLOW_RECORD_LIST": "",
+                    "NETWORK_VLAN_RANGE": "2300-2999",
+                    "NTP_SERVER_IP_LIST": "",
+                    "NTP_SERVER_VRF": "",
+                    "NVE_LB_ID": "1",
+                    "NXAPI_HTTPS_PORT": "443",
+                    "NXAPI_HTTP_PORT": "80",
+                    "NXC_DEST_VRF": "",
+                    "NXC_PROXY_PORT": "8080",
+                    "NXC_PROXY_SERVER": "",
+                    "NXC_SRC_INTF": "",
+                    "OBJECT_TRACKING_NUMBER_RANGE": "100-299",
+                    "OSPF_AREA_ID": "0.0.0.0",
+                    "OSPF_AUTH_ENABLE": "false",
+                    "OSPF_AUTH_KEY": "",
+                    "OSPF_AUTH_KEY_ID": "",
+                    "OVERLAY_MODE": "cli",
+                    "OVERLAY_MODE_PREV": "cli",
+                    "OVERWRITE_GLOBAL_NXC": "false",
+                    "PER_VRF_LOOPBACK_AUTO_PROVISION": "false",
+                    "PER_VRF_LOOPBACK_AUTO_PROVISION_PREV": "false",
+                    "PER_VRF_LOOPBACK_AUTO_PROVISION_V6": "false",
+                    "PER_VRF_LOOPBACK_AUTO_PROVISION_V6_PREV": "false",
+                    "PER_VRF_LOOPBACK_IP_RANGE": "",
+                    "PER_VRF_LOOPBACK_IP_RANGE_V6": "",
+                    "PFC_WATCH_INT": "",
+                    "PFC_WATCH_INT_PREV": "",
+                    "PHANTOM_RP_LB_ID1": "",
+                    "PHANTOM_RP_LB_ID2": "",
+                    "PHANTOM_RP_LB_ID3": "",
+                    "PHANTOM_RP_LB_ID4": "",
+                    "PIM_HELLO_AUTH_ENABLE": "false",
+                    "PIM_HELLO_AUTH_KEY": "",
+                    "PM_ENABLE": "false",
+                    "PM_ENABLE_PREV": "false",
+                    "PNP_ENABLE_INTERNAL": "",
+                    "POWER_REDUNDANCY_MODE": "ps-redundant",
+                    "PREMSO_PARENT_FABRIC": "",
+                    "PTP_DOMAIN_ID": "",
+                    "PTP_LB_ID": "",
+                    "PTP_VLAN_ID": "",
+                    "QKD_PROFILE_NAME": "",
+                    "QKD_PROFILE_NAME_PREV": "",
+                    "REPLICATION_MODE": "Multicast",
+                    "ROUTER_ID_RANGE": "",
+                    "ROUTE_MAP_SEQUENCE_NUMBER_RANGE": "1-65534",
+                    "RP_COUNT": "2",
+                    "RP_LB_ID": "254",
+                    "RP_MODE": "asm",
+                    "RR_COUNT": "2",
+                    "SEED_SWITCH_CORE_INTERFACES": "",
+                    "SERVICE_NETWORK_VLAN_RANGE": "3000-3199",
+                    "SGT_ID_RANGE": "",
+                    "SGT_NAME_PREFIX": "",
+                    "SGT_OPER_STATUS": "off",
+                    "SGT_PREPROVISION": "",
+                    "SGT_PREPROVISION_PREV": "",
+                    "SGT_PREPROV_RECALC_STATUS": "empty",
+                    "SGT_RECALC_STATUS": "empty",
+                    "SITE_ID": "88",
+                    "SITE_ID_POLICY_ID": "",
+                    "SLA_ID_RANGE": "10000-19999",
+                    "SNMP_SERVER_HOST_TRAP": "true",
+                    "SPINE_COUNT": "2",
+                    "SPINE_SWITCH_CORE_INTERFACES": "",
+                    "SSPINE_ADD_DEL_DEBUG_FLAG": "Disable",
+                    "SSPINE_COUNT": "0",
+                    "STATIC_UNDERLAY_IP_ALLOC": "false",
+                    "STP_BRIDGE_PRIORITY": "",
+                    "STP_ROOT_OPTION": "unmanaged",
+                    "STP_VLAN_RANGE": "",
+                    "STRICT_CC_MODE": "false",
+                    "SUBINTERFACE_RANGE": "2-511",
+                    "SUBNET_RANGE": "10.4.0.0/16",
+                    "SUBNET_TARGET_MASK": "30",
+                    "SYSLOG_SERVER_IP_LIST": "",
+                    "SYSLOG_SERVER_VRF": "",
+                    "SYSLOG_SEV": "",
+                    "TCAM_ALLOCATION": "true",
+                    "TOPDOWN_CONFIG_RM_TRACKING": "notstarted",
+                    "TRUSTPOINT_LABEL": "",
+                    "UNDERLAY_IS_V6": "false",
+                    "UNDERLAY_IS_V6_PREV": "false",
+                    "UNNUM_BOOTSTRAP_LB_ID": "",
+                    "UNNUM_DHCP_END": "",
+                    "UNNUM_DHCP_END_INTERNAL": "",
+                    "UNNUM_DHCP_START": "",
+                    "UNNUM_DHCP_START_INTERNAL": "",
+                    "UPGRADE_FROM_VERSION": "",
+                    "USE_LINK_LOCAL": "true",
+                    "V6_SUBNET_RANGE": "",
+                    "V6_SUBNET_TARGET_MASK": "126",
+                    "VPC_AUTO_RECOVERY_TIME": "360",
+                    "VPC_DELAY_RESTORE": "150",
+                    "VPC_DELAY_RESTORE_TIME": "60",
+                    "VPC_DOMAIN_ID_RANGE": "1-1000",
+                    "VPC_ENABLE_IPv6_ND_SYNC": "true",
+                    "VPC_LAYER3_PEER_ROUTER": "true",
+                    "VPC_PEER_KEEP_ALIVE_OPTION": "management",
+                    "VPC_PEER_LINK_PO": "500",
+                    "VPC_PEER_LINK_VLAN": "3600",
+                    "VRF_LITE_AUTOCONFIG": "Manual",
+                    "VRF_VLAN_RANGE": "2000-2299",
+                    "abstract_anycast_rp": "anycast_rp",
+                    "abstract_bgp": "base_bgp",
+                    "abstract_bgp_neighbor": "evpn_bgp_rr_neighbor",
+                    "abstract_bgp_rr": "evpn_bgp_rr",
+                    "abstract_dhcp": "base_dhcp",
+                    "abstract_extra_config_bootstrap": "extra_config_bootstrap_11_1",
+                    "abstract_extra_config_leaf": "extra_config_leaf",
+                    "abstract_extra_config_spine": "extra_config_spine",
+                    "abstract_extra_config_tor": "extra_config_tor",
+                    "abstract_feature_leaf": "base_feature_leaf_upg",
+                    "abstract_feature_spine": "base_feature_spine_upg",
+                    "abstract_isis": "base_isis_level2",
+                    "abstract_isis_interface": "isis_interface",
+                    "abstract_loopback_interface": "int_fabric_loopback_11_1",
+                    "abstract_multicast": "base_multicast_11_1",
+                    "abstract_ospf": "base_ospf",
+                    "abstract_ospf_interface": "ospf_interface_11_1",
+                    "abstract_pim_interface": "pim_interface",
+                    "abstract_route_map": "route_map",
+                    "abstract_routed_host": "int_routed_host",
+                    "abstract_trunk_host": "int_trunk_host",
+                    "abstract_vlan_interface": "int_fabric_vlan_11_1",
+                    "abstract_vpc_domain": "base_vpc_domain_11_1",
+                    "allowVlanOnLeafTorPairing": "none",
+                    "autoGenerateMulticastGroupAddress": "false",
+                    "bootstrapSubnetCollection": "{\"bootstrapSubnetCollection\":[]}",
+                    "dcnmUser": "admin",
+                    "default_network": "Default_Network_Universal",
+                    "default_pvlan_sec_network": "",
+                    "default_vrf": "Default_VRF_Universal",
+                    "enableMvpnVriId": "",
+                    "enableMvpnVriIdPrev": "",
+                    "enableRealTimeBackup": "",
+                    "enableScheduledBackup": "",
+                    "heartbeatInterval": "190",
+                    "network_extension_template": "Default_Network_Extension_Universal",
+                    "ngoamSouthBoundLoopDetect": "false",
+                    "ngoamSouthBoundLoopDetectProbeInterval": "",
+                    "ngoamSouthBoundLoopDetectRecoveryInterval": "",
+                    "ngoamSouthBoundLoopDetect_PREV": "false",
+                    "preInterfaceConfigLeaf": "",
+                    "preInterfaceConfigSpine": "",
+                    "preInterfaceConfigTor": "",
+                    "scheduledTime": "",
+                    "securityGroupStatus": "disabled",
+                    "temp_anycast_gateway": "anycast_gateway",
+                    "temp_vpc_domain_mgmt": "vpc_domain_mgmt",
+                    "temp_vpc_peer_link": "int_vpc_peer_link_po",
+                    "underlayMulticastGroupAddressLimit": "128",
+                    "unifiedNDFabricType": "vxlanIbgp",
+                    "vpcTorDelayRestoreTimer": "30",
+                    "vrf_extension_template": "Default_VRF_Extension_Universal"
+                }
+            }
+        ],
+        "consistencyStatus": "unknown"
+    }
+   ]
   }
 }

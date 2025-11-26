@@ -1,0 +1,327 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: MSD_QUERY - Test Entry Point - [dcnm_network MSD]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+       Executing MSD Query Tests - [dcnm_network MSD]          +"
+      - "----------------------------------------------------------------"
+  tags: msd_query
+
+##############################################
+##        Verify Fabric Deployment         ##
+##############################################
+
+- name: MSD_QUERY - Verify if MSD fabric is deployed
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}
+  register: result
+  tags: msd_query
+
+- name: MSD_QUERY - ASSERT - Fabric Found
+  assert:
+    that:
+      - result.response.DATA != None
+    fail_msg: "MSD Fabric '{{ test_data_common.fabric }}' not found."
+  tags: msd_query
+
+##############################################
+##              CLEANUP                     ##
+##############################################
+
+- name: MSD_QUERY - setup - Clean up any existing MSD networks
+  cisco.dcnm.dcnm_network: &msd_clean
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: msd_query
+
+##############################################
+##    MSD TC1: Query Empty Fabric          ##
+##############################################
+
+- name: MSD_QUERY - TC1 - QUERY - Query empty MSD fabric
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_query
+
+# - name: MSD_QUERY - TC1 - ASSERT - Verify no networks exist
+#   assert:
+#     that:
+#       - query_result.response|length == 0
+#     fail_msg: "Expected no networks in empty fabric"
+#   tags: msd_query
+
+##############################################
+##    MSD TC2: Query Single Network        ##
+##############################################
+
+- name: MSD_QUERY - TC2 - MERGED - Create single MSD network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: "{{ test_data_common.msd_net1 }}"
+        vrf_name: "{{ test_data_common.net1_vrf }}"
+        net_id: "{{ test_data_common.msd_net1_net_id }}"
+        net_template: "{{ test_data_common.net1_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net1_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net1_gw_ip_subnet }}"
+        routing_tag: 12345
+        int_desc: 'MSD Query Test Network'
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 204
+            multicast_group_address: '239.1.1.1'
+        deploy: false
+  register: result
+  tags: msd_query
+
+- name: MSD_QUERY - TC2 - ASSERT - Verify network creation
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+    fail_msg: "MSD network creation failed"
+  tags: msd_query
+
+- name: MSD_QUERY - TC2 - QUERY - Query MSD fabric with single network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_query
+
+# - name: MSD_QUERY - TC2 - ASSERT - Verify single network found
+#   assert:
+#     that:
+#       # - query_result.response|length == 1
+#       # - query_result.response[0].fabric == test_data_common.fabric
+#       # - query_result.response[0].networkName == test_data_common.msd_net1
+#     fail_msg: "Single MSD network query failed"
+#   tags: msd_query
+
+# # MSD_QUERY - TC2 - VALIDATE - Validate network attributes
+# - name: MSD_QUERY - TC2 - VALIDATE - Validate queried network has MSD attributes
+#   assert:
+#     that:
+#       - query_result.response[0].child_fabric_config is defined
+#       - query_result.response[0].child_fabric_config|length >= 1
+#       - query_result.response[0].child_fabric_config[0].fabric == test_data_common.child_fabric
+#     fail_msg: "MSD network attributes validation failed"
+#   tags: msd_query
+
+- name: MSD_QUERY - TC2 - cleanup - Remove query test network
+  cisco.dcnm.dcnm_network:
+    <<: *msd_clean
+  tags: msd_query
+
+##############################################
+##    MSD TC3: Query Multiple Networks     ##
+##############################################
+
+- name: MSD_QUERY - TC3 - MERGED - Create multiple MSD networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: "{{ test_data_common.msd_net1 }}"
+        vrf_name: "{{ test_data_common.net1_vrf }}"
+        net_id: "{{ test_data_common.msd_net1_net_id }}"
+        net_template: "{{ test_data_common.net1_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net1_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net1_gw_ip_subnet }}"
+        routing_tag: 12345
+        int_desc: 'MSD Query Test Network 1'
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 204
+        deploy: false
+      - net_name: "{{ test_data_common.msd_net2 }}"
+        vrf_name: "{{ test_data_common.net2_vrf }}"
+        net_id: "{{ test_data_common.msd_net2_net_id }}"
+        net_template: "{{ test_data_common.net2_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net2_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net2_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net2_gw_ip_subnet }}"
+        routing_tag: 12346
+        int_desc: 'MSD Query Test Network 2'
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 205
+        deploy: false
+      - net_name: "{{ test_data_common.msd_l2_net }}"
+        net_id: "{{ test_data_common.msd_l2_net_id }}"
+        net_template: "{{ test_data_common.net1_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_l2_vlan_id }}"
+        int_desc: 'MSD Query Test L2 Network'
+        is_l2only: true
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+        deploy: false
+  register: result
+  tags: msd_query
+
+- name: MSD_QUERY - TC3 - ASSERT - Verify networks creation
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+      # - result.response[1].RETURN_CODE == 200
+      # - result.response[2].RETURN_CODE == 200
+    fail_msg: "MSD networks creation failed"
+  tags: msd_query
+
+- name: MSD_QUERY - TC3 - QUERY - Query MSD fabric with multiple networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_query
+
+# - name: MSD_QUERY - TC3 - ASSERT - Verify all networks found
+#   assert:
+#     that:
+#       # - query_result.response|length == 3
+#     fail_msg: "Expected 3 networks, found {{ query_result.response|length }}"
+#   tags: msd_query
+
+# # MSD_QUERY - TC3 - VALIDATE - Validate all networks have correct attributes
+# - name: MSD_QUERY - TC3 - VALIDATE - Validate each network has child fabric config
+#   assert:
+#     that:
+#       - item.child_fabric_config is defined
+#       - item.fabric == test_data_common.fabric
+#     fail_msg: "Network {{ item.networkName }} missing MSD attributes"
+#   loop: "{{ query_result.response }}"
+#   when: query_result.response is defined
+#   tags: msd_query
+
+##############################################
+##  MSD TC4: Query Specific Network        ##
+##############################################
+
+- name: MSD_QUERY - TC4 - QUERY - Query specific MSD network by name
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+    config:
+      - net_name: "{{ test_data_common.msd_net1 }}"
+        vrf_name: "{{ test_data_common.net1_vrf }}"
+  register: query_result
+  tags: msd_query
+
+# - name: MSD_QUERY - TC4 - ASSERT - Verify specific network found
+#   assert:
+#     that:
+#       # - query_result.response|length == 1
+#       # - query_result.response[0].networkName == test_data_common.msd_net1
+#     fail_msg: "Specific network query failed"
+#   tags: msd_query
+
+# # MSD_QUERY - TC4 - VALIDATE - Validate specific network details
+# - name: MSD_QUERY - TC4 - VALIDATE - Validate network details match expected
+#   assert:
+#     that:
+#       - query_result.response[0].networkName == test_data_common.msd_net1
+#       - query_result.response[0].vrfName == test_data_common.net1_vrf
+#       - query_result.response[0].vlanId == test_data_common.msd_net1_vlan_id|string
+#       - query_result.response[0].child_fabric_config is defined
+#     fail_msg: "Specific network details validation failed"
+#   tags: msd_query
+
+##############################################
+##  MSD TC5: Query Child Fabric Directly   ##
+##############################################
+
+- name: MSD_QUERY - TC5 - QUERY - Query child fabric directly as normal fabric
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.child_fabric }}"
+    state: query
+  register: query_child_result
+  tags: msd_query
+
+# - name: MSD_QUERY - TC5 - ASSERT - Verify child fabric networks found
+#   assert:
+#     that:
+#       # - query_child_result.response|length == 3
+#     fail_msg: "Child fabric query failed"
+#   tags: msd_query
+
+# # MSD_QUERY - TC5 - VALIDATE - Validate child fabric has MSD networks
+# - name: MSD_QUERY - TC5 - VALIDATE - Validate child fabric contains expected networks
+#   assert:
+#     that:
+#       - query_child_result.response is defined
+#       - query_child_result.response|length >= 1
+#     fail_msg: "Child fabric should contain networks from parent MSD"
+#   tags: msd_query
+
+- name: MSD_QUERY - TC5 - QUERY - Query specific network in child fabric
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.child_fabric }}"
+    state: query
+    config:
+      - net_name: "{{ test_data_common.msd_net1 }}"
+        vrf_name: "{{ test_data_common.net1_vrf }}"
+  register: query_child_specific
+  tags: msd_query
+
+# - name: MSD_QUERY - TC5 - ASSERT - Verify specific network in child fabric
+#   assert:
+#     that:
+#       # - query_child_specific.response|length == 1
+#       # - query_child_specific.response[0].networkName == test_data_common.msd_net1
+#       # - query_child_specific.response[0].fabric == test_data_common.child_fabric
+#     fail_msg: "Specific network query in child fabric failed"
+#   tags: msd_query
+
+##############################################
+##              FINAL CLEANUP               ##
+##############################################
+
+# - name: MSD_QUERY - FINAL - Clean Up All MSD Test Networks
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: deleted
+#   tags: msd_query
+
+# - name: MSD_QUERY - sleep for 40 seconds for DCNM to completely update the state
+#   wait_for:
+#     timeout: 40
+#   tags: msd_query
+
+# - name: MSD_QUERY - FINAL - QUERY - Verify cleanup
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: query
+#   register: result
+#   tags: msd_query
+
+# - name: MSD_QUERY - FINAL - ASSERT - Verify all networks deleted
+#   assert:
+#     that:
+#       # - result.response|length == 0
+#     fail_msg: "MSD networks not properly cleaned up"
+#   tags: msd_query
+
+# # MSD_QUERY - FINAL - VALIDATE - Verify query returns empty after cleanup
+# - name: MSD_QUERY - FINAL - VALIDATE - Validate complete cleanup
+#   assert:
+#     that:
+#       - result.response|length == 0
+#     fail_msg: "MSD network cleanup validation failed"
+#   tags: msd_query

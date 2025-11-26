@@ -1,0 +1,31 @@
+---
+# This MSD test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+#
+
+# ------------------------------
+# Replaced MSD Network Configuration
+# ------------------------------
+- net_name: "{{ test_data_common.msd_net1 }}"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_id: "{{ test_data_common.msd_net1_net_id }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "{{ test_data_common.msd_net1_vlan_id }}"
+  gw_ip_subnet: "{{ test_data_common.msd_net1_gw_ip_subnet }}"
+  routing_tag: 54321  # Changed routing tag
+  int_desc: 'MSD Network replaced by Ansible'  # Changed description
+  mtu_l3intf: 9000   # Changed MTU
+  arp_suppress: true  # Changed from false
+  route_target_both: false
+  is_l2only: false
+  child_fabric_config:
+    - fabric: "{{ test_data_common.child_fabric }}"
+      netflow_enable: false  # Changed from false
+      l3gw_on_border: True
+      dhcp_loopback_id: 207
+      multicast_group_address: '239.1.1.4'  # Changed
+      vlan_nf_monitor: 'monitor2'  # Changed
+      dhcp_srvr1_ip: '192.168.1.104'  # Changed
+      dhcp_srvr1_vrf: 'default'  # Changed from management
+  deploy: {{ deploy_local | bool }}

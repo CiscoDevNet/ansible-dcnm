@@ -19,59 +19,100 @@
     # Uncomment testcase to run a specific test
     # testcase: replaced_net_all
     test_data_common:
-      #---
-      fabric: fabric-stage
+      #----------------------------------
+      # Fabric Configuration
+      #----------------------------------
+      fabric: fabric
       deploy: false
-      #---
-      # Resources
-      #---
+      
+      #----------------------------------
+      # MSD Fabric Configuration
+      #----------------------------------
+      child_fabric: fabric-1 # Child fabric 1
+      child_fabric2: fabric-2 # Child fabric 2
+      
+      #----------------------------------
+      # Resources (switches)
+      #----------------------------------
       sw1: 192.168.1.1
       sw2: 192.168.1.2
-      #---
-      # Common VRF setup
-      #---
-      vrf_1: ansible-vrf-int1
-      vrf_1_id: 9008011
-      vrf_1_vlan_id: 500
-      #---
-      vrf_2: Tenant-1
-      vrf_2_id: 9008012
-      vrf_2_vlan_id: 501
-      #---
-      vrf_3: Tenant-2
-      vrf_3_id: 9008013
-      vrf_3_vlan_id: 502
-      #---
+
+      #----------------------------------
       # Interfaces
-      #---
+      #----------------------------------
       sw1_int1: Ethernet1/15
       sw1_int2: Ethernet1/16
       sw1_int3: Ethernet1/17
       sw1_int4: Ethernet1/18
-      #---
+      sw1_int5: Ethernet1/19
+      sw1_int6: Ethernet1/20
+      
       sw2_int1: Ethernet1/15
       sw2_int2: Ethernet1/16
       sw2_int3: Ethernet1/17
       sw2_int4: Ethernet1/18
       sw2_int5: Ethernet1/19
       sw2_int6: Ethernet1/20
-      #---
+      
+      #----------------------------------
+      # VRF Configuration
+      #----------------------------------
+      vrf_1: ansible-vrf-int1
+      vrf_1_id: 9008011
+      vrf_1_vlan_id: 500
+      
+      vrf_2: Tenant-1
+      vrf_2_id: 9008012
+      vrf_2_vlan_id: 501
+      
+      vrf_3: Tenant-2
+      vrf_3_id: 9008013
+      vrf_3_vlan_id: 502
+      
+      #----------------------------------
+      # Standard Network Configuration
+      #----------------------------------
       net1: ansible-net13
       net1_net_id: 7005
       net1_default_net_template: Default_Network_Universal
       net1_net_extension_template: Default_Network_Extension_Universal
-      net1_vlan_id: 1500
+      net1_vlan_id: 1502
       net1_gw_ip_subnet: '192.168.30.1/24'
-      #---
+      net1_vrf: Tenant-1
+      
       net2: ansible-net12
       net2_net_id: 7002
       net2_default_net_template: Default_Network_Universal
       net2_net_extension_template: Default_Network_Extension_Universal
       net2_vlan_id: 151
       net2_gw_ip_subnet: '192.168.40.1/24'
-      #---
-      net1_vrf: Tenant-1
       net2_vrf: Tenant-2
-  
+      
+      #----------------------------------
+      # MSD Network Configuration
+      #----------------------------------
+      # MSD Basic Network
+      msd_net1: ansible-msd-net1
+      msd_net1_net_id: 8001
+      msd_net1_vlan_id: 2101
+      msd_net1_gw_ip_subnet: '192.168.101.1/24'
+      
+      # MSD Multi-Child Network
+      msd_net2: ansible-msd-net2
+      msd_net2_net_id: 8002
+      msd_net2_vlan_id: 2102
+      msd_net2_gw_ip_subnet: '192.168.102.1/24'
+      
+      # MSD L2-only Network
+      msd_l2_net: ansible-msd-l2net
+      msd_l2_net_id: 8003
+      msd_l2_vlan_id: 2103
+      
+      # MSD DHCP Network
+      msd_dhcp_net: ansible-msd-dhcp-net
+      msd_dhcp_net_id: 8004
+      msd_dhcp_vlan_id: 2104
+      msd_dhcp_gw_ip_subnet: '192.168.104.1/24'
+
   roles:
     - dcnm_network

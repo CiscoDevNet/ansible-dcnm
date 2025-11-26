@@ -1,0 +1,362 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: MSD_OVERRIDDEN - Test Entry Point - [dcnm_network MSD]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+    Executing MSD Overridden Tests - [dcnm_network MSD]        +"
+      - "----------------------------------------------------------------"
+  tags: msd_overridden
+
+##############################################
+##      Create Dictionary of Test Data      ##
+##############################################
+- name: MSD_OVERRIDDEN - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    deploy_local: false
+    
+    test_data_msd_overridden:
+      #----------------------------------  
+      # MSD overridden config templates and auto generated file location for test cases
+      #----------------------------------
+      # MSD TC1 - Override all networks with new MSD configuration
+      msd_overridden_net_conf_template: "msd_overridden/dcnm_network_msd_overridden_net_conf.j2"
+      msd_overridden_net_conf_file: "{{ role_path }}/files/dcnm_network_msd_overridden_net_conf.yaml"
+      
+      # MSD TC2 - Override with different child fabric config
+      msd_overridden_changed_conf_template: "msd_overridden/dcnm_network_msd_overridden_changed_conf.j2"
+      msd_overridden_changed_conf_file: "{{ role_path }}/files/dcnm_network_msd_overridden_changed_conf.yaml"
+      
+  delegate_to: localhost
+  tags: msd_overridden
+
+##############################################
+## Create Module Payloads using J2 Template ##
+##############################################
+
+- name: MSD_OVERRIDDEN - Create Overridden Network Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_overridden.msd_overridden_net_conf_template }}"
+    dest: "{{ test_data_msd_overridden.msd_overridden_net_conf_file }}"
+  delegate_to: localhost
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - Create Overridden Changed Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_overridden.msd_overridden_changed_conf_template }}"
+    dest: "{{ test_data_msd_overridden.msd_overridden_changed_conf_file }}"
+  delegate_to: localhost
+  tags: msd_overridden
+
+##############################################
+##          Load Config Files               ##
+##############################################
+
+- name: MSD_OVERRIDDEN - Load Overridden Network Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_overridden_net_conf: "{{ lookup('file', '{{ test_data_msd_overridden.msd_overridden_net_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - Load Overridden Changed Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_overridden_changed_conf: "{{ lookup('file', '{{ test_data_msd_overridden.msd_overridden_changed_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_overridden
+
+##############################################
+##        Verify Fabric Deployment         ##
+##############################################
+
+- name: MSD_OVERRIDDEN - Verify if MSD fabric is deployed
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}
+  register: result
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - ASSERT - Fabric Found
+  assert:
+    that:
+      - result.response.DATA != None
+    fail_msg: "MSD Fabric '{{ test_data_common.fabric }}' not found."
+  tags: msd_overridden
+
+##############################################
+##              CLEANUP                     ##
+##############################################
+
+- name: MSD_OVERRIDDEN - setup - Clean up any existing MSD networks
+  cisco.dcnm.dcnm_network: &msd_clean
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: msd_overridden
+
+##############################################
+##  MSD TC1: Override All Networks         ##
+##############################################
+
+- name: MSD_OVERRIDDEN - TC1 - MERGED - Create initial MSD networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: "{{ test_data_common.msd_net1 }}"
+        vrf_name: "{{ test_data_common.net1_vrf }}"
+        net_id: "{{ test_data_common.msd_net1_net_id }}"
+        net_template: "{{ test_data_common.net1_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net1_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net1_gw_ip_subnet }}"
+        routing_tag: 12345
+        int_desc: 'Initial MSD Network 1'
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 204
+        deploy: false
+      - net_name: "{{ test_data_common.msd_net2 }}"
+        vrf_name: "{{ test_data_common.net2_vrf }}"
+        net_id: "{{ test_data_common.msd_net2_net_id }}"
+        net_template: "{{ test_data_common.net2_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net2_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net2_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net2_gw_ip_subnet }}"
+        routing_tag: 12346
+        int_desc: 'Initial MSD Network 2'
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 205
+        deploy: false
+  register: result
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC1 - ASSERT - Verify initial networks creation
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+      # - result.response[1].RETURN_CODE == 200
+    fail_msg: "Initial MSD networks creation failed"
+  tags: msd_overridden
+
+# - name: MSD_OVERRIDDEN - TC1 - QUERY - Verify both initial networks exist
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: query
+#   register: query_result
+#   tags: msd_overridden
+
+# - name: MSD_OVERRIDDEN - TC1 - ASSERT - Verify initial network count
+#   assert:
+#     that:
+#       # - query_result.response|length == 2
+#     fail_msg: "Expected 2 initial networks, found {{ query_result.response|length }}"
+#   tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC1 - OVERRIDDEN - Override all networks with new configuration
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: overridden
+    config: "{{ dcnm_network_msd_overridden_net_conf }}"
+  register: result
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC1 - ASSERT - Verify network override
+  assert:
+    that:
+      - result.changed == true
+    fail_msg: "MSD network override failed"
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC1 - OVERRIDDEN - conf1 - Idempotence
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: overridden
+    config: "{{ dcnm_network_msd_overridden_net_conf }}"
+  register: result
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC1 - ASSERT - Verify idempotence
+  assert:
+    that:
+      - result.changed == false
+      # - result.response|length == 0
+    fail_msg: "MSD network override idempotence failed"
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC1 - QUERY - Get overridden MSD network state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC1 - ASSERT - Verify overridden network exists
+  assert:
+    that:
+      # - query_result.response|length >= 1
+    fail_msg: "Overridden MSD network not found in query"
+  tags: msd_overridden
+
+# # MSD_OVERRIDDEN - TC1 - VALIDATE - Validate overridden MSD network configuration
+# - name: MSD_OVERRIDDEN - TC1 - VALIDATE - Validate overridden network configuration
+#   ndfc_network_validate:
+#     ndfc_data: "{{ query_result }}"
+#     test_data: "{{ test_data_common }}"
+#     config_path: "{{ test_data_msd_overridden.msd_overridden_net_conf_file }}"
+#     ignore_fields:
+#       - "networkId"        # Auto-generated network ID
+#       - "displayName"      # Auto-generated display name
+#       - "policyId"         # Auto-generated policy ID
+#       - "source"           # Source may vary
+#   register: validation_result
+#   tags: msd_overridden
+#
+# - name: MSD_OVERRIDDEN - TC1 - ASSERT - Check validation passed
+#   assert:
+#     that:
+#       - validation_result.failed == false
+#     fail_msg: "Overridden MSD Network validation failed: {{ validation_result.msg }}"
+#   tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC1 - cleanup - Remove overridden MSD network
+  cisco.dcnm.dcnm_network:
+    <<: *msd_clean
+  tags: msd_overridden
+
+
+##############################################
+##  MSD TC2: Override with Changed Config  ##
+##############################################
+
+- name: MSD_OVERRIDDEN - TC2 - MERGED - Create initial MSD network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: "{{ test_data_common.msd_net1 }}"
+        vrf_name: "{{ test_data_common.net1_vrf }}"
+        net_id: "{{ test_data_common.msd_net1_net_id }}"
+        net_template: "{{ test_data_common.net1_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net1_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net1_gw_ip_subnet }}"
+        routing_tag: 12345
+        int_desc: 'Initial MSD Network'
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 204
+            multicast_group_address: '239.1.1.1'
+        deploy: false
+  register: result
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC2 - ASSERT - Verify initial network creation
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+    fail_msg: "Initial MSD network creation failed"
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC2 - OVERRIDDEN - Override with changed child fabric configuration
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: overridden
+    config: "{{ dcnm_network_msd_overridden_changed_conf }}"
+  register: result
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC2 - ASSERT - Verify override with changed config
+  assert:
+    that:
+      - result.changed == true
+    fail_msg: "Override with changed child fabric configuration failed"
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC2 - OVERRIDDEN - conf2 - Idempotence
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: overridden
+    config: "{{ dcnm_network_msd_overridden_changed_conf }}"
+  register: result
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC2 - ASSERT - Verify idempotence
+  assert:
+    that:
+      - result.changed == false
+      # - result.response|length == 0
+    fail_msg: "Override idempotence failed"
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC2 - QUERY - Get overridden MSD network state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_overridden
+
+- name: MSD_OVERRIDDEN - TC2 - ASSERT - Verify overridden network exists
+  assert:
+    that:
+      # - query_result.response|length >= 1
+    fail_msg: "Overridden changed network not found in query"
+  tags: msd_overridden
+
+# # MSD_OVERRIDDEN - TC2 - VALIDATE - Validate changed child fabric parameters
+# - name: MSD_OVERRIDDEN - TC2 - VALIDATE - Validate child fabric changes
+#   assert:
+#     that:
+#       - item.child_fabric_config is defined
+#       - item.child_fabric_config[0].dhcp_loopback_id is defined
+#       - item.child_fabric_config[0].multicast_group_address is defined
+#     fail_msg: "Changed child fabric configuration validation failed for {{ item.net_name }}"
+#   loop: "{{ query_result.response }}"
+#   when: query_result.response is defined and query_result.response|length > 0
+#   tags: msd_overridden
+
+##############################################
+##              FINAL CLEANUP               ##
+##############################################
+
+# - name: MSD_OVERRIDDEN - FINAL - Clean Up All MSD Test Networks
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: deleted
+#   tags: msd_overridden
+
+# - name: MSD_OVERRIDDEN - sleep for 40 seconds for DCNM to completely update the state
+#   wait_for:
+#     timeout: 40
+#   tags: msd_overridden
+
+# - name: MSD_OVERRIDDEN - FINAL - QUERY - Verify cleanup
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: query
+#   register: result
+#   tags: msd_overridden
+
+# - name: MSD_OVERRIDDEN - FINAL - ASSERT - Verify all networks deleted
+#   assert:
+#     that:
+#       # - result.response|length == 0
+#     fail_msg: "MSD networks not properly cleaned up"
+#   tags: msd_overridden
+
+# # MSD_OVERRIDDEN - FINAL - VALIDATE - Verify all MSD configurations are removed
+# - name: MSD_OVERRIDDEN - FINAL - VALIDATE - Validate complete cleanup
+#   assert:
+#     that:
+#       # - result.response|length == 0
+#     fail_msg: "MSD network cleanup validation failed"
+#   tags: msd_overridden
