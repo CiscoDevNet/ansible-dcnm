@@ -72,7 +72,8 @@ def test_bootflash_deleted_00000() -> None:
     assert instance.check_mode is False
     assert instance.config == params_deleted.get("config")
     assert instance.convert_target_to_params.class_name == "ConvertTargetToParams"
-    assert instance._rest_send is None
+    assert instance._rest_send.params == {}
+    assert instance._rest_send.class_name == "RestSend"
     assert instance.results.class_name == "Results"
     assert instance.results.check_mode is False
     assert instance.results.state == "deleted"
@@ -337,7 +338,9 @@ def test_bootflash_deleted_03200() -> None:
         instance.rest_send = rest_send
         instance.bootflash_files.switch_details = SwitchDetails()
         instance.bootflash_files.rest_send = rest_send
+        instance.bootflash_files.switch_details.rest_send = rest_send
         instance.bootflash_files.switch_details.results = Results()
+
     match = r"Deleted\.update_bootflash_files:\s+"
     match += r"Error adding file to bootflash_files\.\s+"
     match += r"Error detail:\s+"
@@ -401,6 +404,7 @@ def test_bootflash_deleted_03210() -> None:
         instance.rest_send = rest_send
         instance.bootflash_files.switch_details = SwitchDetails()
         instance.bootflash_files.rest_send = rest_send
+        instance.bootflash_files.switch_details.rest_send = rest_send
         instance.bootflash_files.switch_details.results = Results()
     match = r"Deleted\.update_bootflash_files:\s+"
     match += r"Error adding file to bootflash_files\.\s+"

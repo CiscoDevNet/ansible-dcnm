@@ -1,0 +1,125 @@
+{
+    "TEST_NOTES": [
+        "Mocked payloads for FabricGroupCreate unit tests.",
+        "tests/unit/modules/dcnm/dcnm_fabric_group/test_fabric_group_create.py"
+    ],
+    "test_fabric_group_create_00020a": {
+        "TEST_NOTES": [
+            "Valid payload for fabric group create"
+        ],
+        "FABRIC_NAME": "MFG1",
+        "FABRIC_TYPE": "MCFG",
+        "BGP_RP_ASN": 65000,
+        "L2_SEGMENT_ID_RANGE": "30000-49000",
+        "L3_PARTITION_ID_RANGE": "50000-59000",
+        "LOOPBACK100_IP_RANGE": "10.2.0.0/22",
+        "DCI_SUBNET_RANGE": "10.33.0.0/16",
+        "DCI_SUBNET_TARGET_MASK": 24,
+        "seed_member": {
+            "clusterName": "nd-cluster-1",
+            "fabricName": "FABRIC-1"
+        }
+    },
+    "test_fabric_group_create_00023a": {
+        "TEST_NOTES": [
+            "Valid payload for mandatory parameter test"
+        ],
+        "FABRIC_NAME": "MFG1",
+        "FABRIC_TYPE": "MCFG",
+        "BGP_RP_ASN": 65000,
+        "L2_SEGMENT_ID_RANGE": "30000-49000",
+        "L3_PARTITION_ID_RANGE": "50000-59000",
+        "LOOPBACK100_IP_RANGE": "10.2.0.0/22",
+        "DCI_SUBNET_RANGE": "10.33.0.0/16",
+        "DCI_SUBNET_TARGET_MASK": 24,
+        "seed_member": {
+            "clusterName": "nd-cluster-1",
+            "fabricName": "FABRIC-1"
+        }
+    },
+    "test_fabric_group_create_00025a": {
+        "TEST_NOTES": [
+            "FABRIC_TYPE value is invalid"
+        ],
+        "FABRIC_NAME": "MFG1",
+        "FABRIC_TYPE": "INVALID_FABRIC_TYPE",
+        "BGP_RP_ASN": 65000,
+        "L2_SEGMENT_ID_RANGE": "30000-49000",
+        "L3_PARTITION_ID_RANGE": "50000-59000",
+        "LOOPBACK100_IP_RANGE": "10.2.0.0/22",
+        "DCI_SUBNET_RANGE": "10.33.0.0/16",
+        "DCI_SUBNET_TARGET_MASK": 24,
+        "seed_member": {
+            "clusterName": "nd-cluster-1",
+            "fabricName": "FABRIC-1"
+        }
+    },
+    "test_fabric_group_create_00026a": {
+        "TEST_NOTES": [
+            "Valid payload for rest_send not set test"
+        ],
+        "FABRIC_NAME": "MFG1",
+        "FABRIC_TYPE": "MCFG",
+        "BGP_RP_ASN": 65000,
+        "L2_SEGMENT_ID_RANGE": "30000-49000",
+        "L3_PARTITION_ID_RANGE": "50000-59000",
+        "LOOPBACK100_IP_RANGE": "10.2.0.0/22",
+        "DCI_SUBNET_RANGE": "10.33.0.0/16",
+        "DCI_SUBNET_TARGET_MASK": 24,
+        "seed_member": {
+            "clusterName": "nd-cluster-1",
+            "fabricName": "FABRIC-1"
+        }
+    },
+    "test_fabric_group_create_00030a": {
+        "TEST_NOTES": [
+            "Valid payload for successful create test"
+        ],
+        "FABRIC_NAME": "MFG1",
+        "FABRIC_TYPE": "MCFG",
+        "BGP_RP_ASN": 65000,
+        "L2_SEGMENT_ID_RANGE": "30000-49000",
+        "L3_PARTITION_ID_RANGE": "50000-59000",
+        "LOOPBACK100_IP_RANGE": "10.2.0.0/22",
+        "DCI_SUBNET_RANGE": "10.33.0.0/16",
+        "DCI_SUBNET_TARGET_MASK": 24,
+        "seed_member": {
+            "clusterName": "nd-cluster-1",
+            "fabricName": "FABRIC-1"
+        }
+    },
+    "test_fabric_group_create_00031a": {
+        "TEST_NOTES": [
+            "Valid payload for fabric group already exists test"
+        ],
+        "FABRIC_NAME": "MFG1",
+        "FABRIC_TYPE": "MCFG",
+        "BGP_RP_ASN": 65000,
+        "L2_SEGMENT_ID_RANGE": "30000-49000",
+        "L3_PARTITION_ID_RANGE": "50000-59000",
+        "LOOPBACK100_IP_RANGE": "10.2.0.0/22",
+        "DCI_SUBNET_RANGE": "10.33.0.0/16",
+        "DCI_SUBNET_TARGET_MASK": 24,
+        "seed_member": {
+            "clusterName": "nd-cluster-1",
+            "fabricName": "FABRIC-1"
+        }
+    },
+    "test_fabric_group_create_00032a": {
+        "TEST_NOTES": [
+            "Valid payload for 500 error test"
+        ],
+        "FABRIC_NAME": "MFG1",
+        "FABRIC_TYPE": "MCFG",
+        "BGP_RP_ASN": 65000,
+        "L2_SEGMENT_ID_RANGE": "30000-49000",
+        "L3_PARTITION_ID_RANGE": "50000-59000",
+        "LOOPBACK100_IP_RANGE": "10.2.0.0/22",
+        "DCI_SUBNET_RANGE": "10.33.0.0/16",
+        "DCI_SUBNET_TARGET_MASK": 24,
+        "seed_member": {
+            "clusterName": "nd-cluster-1",
+            "fabricName": "FABRIC-1"
+        }
+    }
+}
