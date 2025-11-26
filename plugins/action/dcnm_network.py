@@ -209,17 +209,26 @@ class ActionModule(ActionBase):
                     fabrics_needed.add(child_fabric_name)
 
         # Step 1: Get MFD fabrics from OneManage API (federated fabrics)
-        display.vvv("="*80)
-        display.vvv("Getting MFD fabrics from OneManage API")
-        display.vvv("="*80)
+        # Only call federated fabrics API if login domain is not 'local'
+        login_domain = task_vars.get('ansible_httpapi_login_domain', 'local')
         
-        federated_fabrics = obtain_federated_fabric_associations(self, task_vars, tmp)
-        if federated_fabrics is None:
-            result['failed'] = True
-            result['msg'] = "Failed to get federated fabric associations from OneManage API"
-            return result
+        federated_fabrics = {}
+        if login_domain and login_domain.lower() != 'local':
+            display.vvv("="*80)
+            display.vvv(f"Login domain '{login_domain}' detected - getting MFD fabrics from OneManage API")
+            display.vvv("="*80)
+            
+            federated_fabrics = obtain_federated_fabric_associations(self, task_vars, tmp)
+            if federated_fabrics is None:
+                result['failed'] = True
+                result['msg'] = "Failed to get federated fabric associations from OneManage API"
+                return result
 
-        display.vvv(f"Found {len(federated_fabrics)} MFD fabrics from OneManage API")
+            display.vvv(f"Found {len(federated_fabrics)} MFD fabrics from OneManage API")
+        else:
+            display.vvv("="*80)
+            display.vvv("Login domain is 'local' - skipping MFD fabrics API call")
+            display.vvv("="*80)
 
         # Build initial fabrics dict from MFD data
         fabrics = {}
