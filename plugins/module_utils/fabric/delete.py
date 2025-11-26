@@ -286,7 +286,6 @@ class FabricDelete(FabricCommon):
         except (ValueError, TypeError) as error:
             raise ValueError(error) from error
 
-
     def _send_request(self, fabric_name: str) -> None:
         """
         ### Summary
