@@ -88,6 +88,9 @@ class FabricDelete(FabricCommon):
         self._ep_fabric_delete: EpFabricDelete = EpFabricDelete()
         self._fabric_names: list[str] = []
         self._fabrics_to_delete: list[str] = []
+        # TODO: Overriding path and verb from FabricCommon for now to pass UT during initial commit. Remove when common_v2.py is added.
+        self.path: str = ""
+        self.verb: str = ""
 
         msg = "ENTERED FabricDelete()"
         self.log.debug(msg)
