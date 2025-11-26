@@ -24,3 +24,11 @@ class ControllerResponseError(Exception):
     """
 
     pass
+
+
+class ActionError(Exception):
+    """
+    Used to raise an exception when the action plugin encounters an error.
+    """
+
+    pass

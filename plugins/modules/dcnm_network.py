@@ -39,7 +39,7 @@ options:
     description:
     - INTERNAL PARAMETER - DO NOT USE
     - Fabric details dictionary automatically provided by the action plugin
-    - Contains fabric_type and clusterName information
+    - Contains fabric_type, cluster_name, and nd_version information
     - This parameter is used internally by the action plugin for MSD/MFD fabric processing
     type: dict
     required: false
@@ -49,11 +49,18 @@ options:
         - Type of fabric (multicluster_parent, multicluster_child, multisite_parent, multisite_child, standalone)
         type: str
         required: true
-      clusterName:
+      cluster_name:
         description:
         - Name of the cluster if applicable
         type: str
         required: false
+      nd_version:
+        description:
+        - ND/NDFC version number used for API path selection
+        - Automatically provided by action plugin
+        - Module will fail if this is not provided by action plugin
+        type: float
+        required: true
   _fabric_type:
     description:
     - INTERNAL PARAMETER - DO NOT USE - DEPRECATED
@@ -896,7 +903,9 @@ EXAMPLES = """
 """
 
 import copy
+import inspect
 import json
+import logging
 import re
 import time
 
@@ -905,14 +914,15 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_ip_addr_info,
     dcnm_get_url,
     dcnm_send,
-    dcnm_version_supported,
     get_fabric_details,
-    get_fabric_inventory_details,
+    get_nd_fabric_inventory_details,
     get_ip_sn_dict,
     get_ip_sn_fabric_dict,
     has_partial_dhcp_config,
     validate_list_of_dicts,
 )
+
+from ..module_utils.common.log_v2 import Log
 
 
 class DcnmNetwork:
@@ -945,8 +955,17 @@ class DcnmNetwork:
     }
 
     def __init__(self, module):
+        self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self.module = module
         self.params = module.params
+
+        msg = "self.params: "
+        msg += f"{json.dumps(self.params, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         self.fabric = module.params["fabric"]
         self.config = copy.deepcopy(module.params.get("config"))
         self.check_mode = False
@@ -978,7 +997,6 @@ class DcnmNetwork:
         self.query = []
         self.deployment_states = {}
         self.network_to_sns = {}
-        self.dcnm_version = dcnm_version_supported(self.module)
         
         # Get fabric details from parameter (set by action plugin) - MUST be done before inventory call
         fabric_details = module.params.get("_fabric_details")
@@ -986,12 +1004,38 @@ class DcnmNetwork:
         # Store fabric_details as instance variable for later use
         self.fabric_details = fabric_details
         
-        self.inventory_data = get_fabric_inventory_details(self.module, self.fabric, self.fabric_details)
+        # Get ND version from action plugin (similar to dcnm_vrf)
+        # The action plugin must provide nd_version in fabric_details
+        action_nd_version = None
+        if self.fabric_details and isinstance(self.fabric_details, dict):
+            action_nd_version = self.fabric_details.get("nd_version")
+        
+        if action_nd_version:
+            self.dcnm_version = action_nd_version
+            msg = f"ND version from action plugin: {self.dcnm_version}"
+            self.log.debug(msg)
+        else:
+            # Fail if nd_version is not provided by action plugin
+            msg = "ND version not provided by action plugin. The '_fabric_details' parameter with 'nd_version' is required."
+            self.module.fail_json(msg=msg)
+        
+        msg = f"self.dcnm_version: {self.dcnm_version}"
+        self.log.debug(msg)
+        
+        self.inventory_data = get_nd_fabric_inventory_details(self.module, self.dcnm_version, self.fabric, self.fabric_details)
+
+        msg = "self.inventory_data: "
+        msg += f"{json.dumps(self.inventory_data, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
         
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
         self.fabric_det = get_fabric_details(module, self.fabric)
+
+        msg = "self.fabric_det: "
+        msg += f"{json.dumps(self.fabric_det, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         
         self.is_ms_fabric = True if self.fabric_det.get("fabricType") == "MFD" else False
         if self.dcnm_version > 12:
@@ -999,34 +1043,41 @@ class DcnmNetwork:
         else:
             self.paths = self.dcnm_network_paths[self.dcnm_version]
 
-        # Extract fabric_type from fabric_details, or fall back to legacy _fabric_type parameter
+        # Extract fabric_type from fabric_details
         # Note: fabric_details was already retrieved and stored as self.fabric_details earlier
         if self.fabric_details and isinstance(self.fabric_details, dict):
             self.fabric_type = self.fabric_details.get("fabric_type")
-            self.cluster_name = self.fabric_details.get("clusterName", "")
+            self.cluster_name = self.fabric_details.get("cluster_name", "")
         else:
-            # Fallback to legacy _fabric_type parameter for backward compatibility
-            self.fabric_type = module.params.get("_fabric_type")
-            self.cluster_name = ""
+            # Fail if fabric_details not provided
+            self.module.fail_json(msg="Fabric type detection failed. The '_fabric_details' parameter is required but was not provided by the action plugin.")
 
         if self.fabric_type is None:
-            self.module.fail_json(msg="Could not determine fabric type. Please set _fabric_details in the playbook")
+            self.module.fail_json(msg="Could not determine fabric type from _fabric_details. Please ensure the action plugin is functioning correctly.")
 
         # Modify paths based on fabric type for MFD (multicluster) fabrics
         if self.fabric_type == "multicluster_child":
-            # For multicluster child fabrics, prepend /fedproxy/<clusterName> to all paths
+            # For multicluster child fabrics, prepend proxy path based on ND version
+            # Version >= 12.4 uses /fedproxy/, < 12.4 uses /onepath/ (similar to dcnm_vrf)
+            if self.dcnm_version >= 12.4:
+                proxy = "/fedproxy/"
+            else:
+                proxy = "/onepath/"
+            self.module.warn(f"multicluster_child proxy path: {proxy} (version: {self.dcnm_version}, cluster: {self.cluster_name})")
             for path_key in self.paths:
-                self.paths[path_key] = "/fedproxy/" + self.cluster_name + self.paths[path_key]
+                self.paths[path_key] = proxy + self.cluster_name + self.paths[path_key]
         elif self.fabric_type == "multicluster_parent":
-            # For multicluster parent fabrics, prepend /onemanage and replace lan-fabric/rest with onemanage
-            # EXCEPT for GET_NET_STATUS which should always use fedproxy
-            # For GET_NET_SWITCH_DEPLOY, use the dedicated onemanage endpoint
+            # For multicluster parent fabrics - ALL versions:
+            # 1. Replace "lan-fabric/rest" with "onemanage" (middle replacement) - applies to ALL versions
+            # 2. Prepend "/onemanage" proxy - applies to ALL versions
+            proxy = "/onemanage"
             for path_key in self.paths:
                 if path_key == "GET_NET_SWITCH_DEPLOY":
                     # Use the dedicated onemanage deploy endpoint
                     self.paths[path_key] = self.paths["GET_NET_SWITCH_DEPLOY_ONEMANAGE"]
                 else:
-                    self.paths[path_key] = "/onemanage" + self.paths[path_key].replace("lan-fabric/rest", "onemanage")
+                    # Always replace lan-fabric/rest with onemanage AND prepend /onemanage for ALL versions
+                    self.paths[path_key] = proxy + self.paths[path_key].replace("lan-fabric/rest", "onemanage")
 
         self.check_extra_params = True
 
@@ -1077,6 +1128,12 @@ class DcnmNetwork:
         return next(match, None)
 
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"replace == {replace}"
+        self.log.debug(msg)
 
         attach_list = []
         atch_tor_ports = []
@@ -1287,6 +1344,11 @@ class DcnmNetwork:
         return attach_list, dep_net
 
     def update_attach_params(self, attach, net_name, deploy):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         torlist = []
         if not attach:
@@ -1333,7 +1395,7 @@ class DcnmNetwork:
                 torports.update({"switch": self.inventory_data[tor["ip_address"]].get("logicalName")})
                 torports.update({"torPorts": ",".join(tor["ports"])})
                 torlist.append(torports)
-                del attach["tor_ports"]
+            del attach["tor_ports"]
         attach.update({"torports": torlist})
 
         if "deploy" in attach:
@@ -1412,6 +1474,11 @@ class DcnmNetwork:
         return multicluster_payload
 
     def diff_for_create(self, want, have):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         # Possible update scenarios
         # vlanId - Changing vlanId on an already deployed network only affects new attachments
@@ -1951,6 +2018,11 @@ class DcnmNetwork:
         )
 
     def update_create_params(self, net):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         if not net:
             return net
@@ -2086,6 +2158,11 @@ class DcnmNetwork:
         return net_upd
 
     def get_have(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         have_create = []
         have_deploy = {}
@@ -2358,7 +2435,24 @@ class DcnmNetwork:
         self.have_deploy = have_deploy
         self.network_to_sns = network_to_sns
 
+        msg = "self.have_create: "
+        msg += f"{json.dumps(self.have_create, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.have_attach: "
+        msg += f"{self.have_attach}"
+        self.log.debug(msg)
+
+        msg = "self.have_deploy: "
+        msg += f"{json.dumps(self.have_deploy, indent=4)}"
+        self.log.debug(msg)
+
     def get_want(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         want_create = []
         want_attach = []
@@ -2432,6 +2526,18 @@ class DcnmNetwork:
         self.want_attach = want_attach
         self.want_deploy = want_deploy
 
+        msg = "self.want_create: "
+        msg += f"{json.dumps(self.want_create, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.want_attach: "
+        msg += f"{json.dumps(self.want_attach, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.want_deploy: "
+        msg += f"{json.dumps(self.want_deploy, indent=4)}"
+        self.log.debug(msg)
+
     def check_want_networks_deployment_state(self):
         """
         Check deployment state of wanted networks and wait for networks that are not
@@ -2491,6 +2597,11 @@ class DcnmNetwork:
             self.deployment_states = {}
 
     def get_diff_delete(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         diff_detach = []
         diff_undeploy = {}
@@ -2552,7 +2663,24 @@ class DcnmNetwork:
         self.diff_undeploy = diff_undeploy
         self.diff_delete = diff_delete
 
+        msg = "self.diff_detach: "
+        msg += f"{json.dumps(self.diff_detach, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.diff_undeploy: "
+        msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.diff_delete: "
+        msg += f"{json.dumps(self.diff_delete, indent=4)}"
+        self.log.debug(msg)
+
     def get_diff_override(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         all_nets = ""
         diff_delete = {}
@@ -2605,6 +2733,11 @@ class DcnmNetwork:
         return warn_msg
 
     def get_diff_replace(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         all_nets = ""
 
@@ -2702,6 +2835,12 @@ class DcnmNetwork:
         return warn_msg
 
     def get_diff_merge(self, replace=False):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"replace == {replace}"
+        self.log.debug(msg)
 
         #
         # Special cases:
@@ -3467,6 +3606,12 @@ class DcnmNetwork:
 
 
     def push_to_remote(self, is_rollback=False):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"is_rollback: {is_rollback}"
+        self.log.debug(msg)
 
         path = self.paths["GET_NET"].format(self.fabric)
 
@@ -3935,6 +4080,11 @@ class DcnmNetwork:
         return net_spec
 
     def validate_input(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         """Parse the playbook values, validate to param specs."""
 
@@ -4121,6 +4271,12 @@ class DcnmNetwork:
                 self.module.fail_json(msg=msg)
 
     def handle_response(self, resp, op):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"op: {op}"
+        self.log.debug(msg)
 
         fail = False
         changed = True
@@ -4172,6 +4328,11 @@ class DcnmNetwork:
         return fail, changed
 
     def failure(self, resp):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         # Donot Rollback for Multi-site fabrics
         if self.is_ms_fabric or self.fabric_type != "standalone":
@@ -4439,14 +4600,9 @@ def main():
                     type="str",
                     choices=["multicluster_parent", "multicluster_child", "multisite_parent", "multisite_child", "standalone"]
                 ),
-                clusterName=dict(required=False, type="str", default="")
+                cluster_name=dict(required=False, type="str", default=""),
+                nd_version=dict(required=False, type="float")
             )
-        ),
-        _fabric_type=dict(
-            required=False,
-            type="str",
-            default="standalone",
-            choices=["multicluster_parent", "multicluster_child", "multisite_parent", "multisite_child", "standalone"]
         ),
         config=dict(required=False, type="list", elements="dict"),
         state=dict(
@@ -4466,7 +4622,7 @@ def main():
 
     dcnm_net.get_want()
     dcnm_net.get_have()
-    if module.params["_fabric_type"] in ["multisite_child", "multicluster_child"]:
+    if dcnm_net.fabric_type in ["multisite_child", "multicluster_child"]:
         dcnm_net.check_want_networks_deployment_state()
 
     warn_msg = None
