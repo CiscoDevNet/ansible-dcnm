@@ -23,8 +23,7 @@ import copy
 import inspect
 import logging
 
-from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabricConfigSave
+from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import EpFabricConfigSave
 from ..common.conversion import ConversionUtils
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
