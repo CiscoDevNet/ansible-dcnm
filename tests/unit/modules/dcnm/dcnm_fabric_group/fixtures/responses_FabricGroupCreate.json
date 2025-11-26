@@ -1,0 +1,34 @@
+{
+    "TEST_NOTES": [
+        "Mocked responses for FabricGroupCreate.commit() unit tests.",
+        "tests/unit/modules/dcnm/dcnm_fabric_group/test_fabric_group_create.py",
+        "",
+        "INSTRUCTIONS FOR GATHERING RESPONSES:",
+        "1. Use the NDFC API endpoint: POST /appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "2. Request body should contain the fabric group configuration",
+        "3. For test_fabric_group_create_00030a: Successful create (RETURN_CODE 200)",
+        "4. For test_fabric_group_create_00032a: Server error (RETURN_CODE 400)"
+    ],
+    "test_fabric_group_create_00030a": {
+        "TEST_NOTES": [
+            "Successful fabric group create",
+            "NDFC Response for POST /appcenter/cisco/ndfc/api/v1/onemanage/fabrics"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": {}
+    },
+    "test_fabric_group_create_00032a": {
+        "TEST_NOTES": [
+            "Server error during fabric group create",
+            "NDFC Response for POST /appcenter/cisco/ndfc/api/v1/onemanage/fabrics"
+        ],
+        "RETURN_CODE": 400,
+        "METHOD": "POST",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "Bad Request",
+        "DATA": "Invalid JSON response: Multisite Overlay IFC deployment option BAD_VALUE not valid for fabric MFG1"
+    }
+}

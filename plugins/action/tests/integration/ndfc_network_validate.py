@@ -7,23 +7,17 @@ from pprint import pprint
 import json
 from ansible.utils.display import Display
 from ansible.plugins.action import ActionBase
-from ansible.module_utils.six import raise_from
-from ansible.errors import AnsibleError
 from ansible.module_utils.common.text.converters import to_native
 from ..plugin_utils.tools import load_yaml_file, process_deepdiff
 from ..plugin_utils.pydantic_schemas.dcnm_network.schemas import DcnmNetworkQuerySchema
 
 try:
     from deepdiff import DeepDiff
-except ImportError as imp_exc:
-    DEEPDIFF_IMPORT_ERROR = imp_exc
-else:
+    HAS_DEEPDIFF = True
     DEEPDIFF_IMPORT_ERROR = None
-
-if DEEPDIFF_IMPORT_ERROR:
-    raise_from(
-        AnsibleError('DeepDiff must be installed to use this plugin. Use pip or install test-requirements.'),
-        DEEPDIFF_IMPORT_ERROR)
+except ImportError as imp_exc:
+    HAS_DEEPDIFF = False
+    DEEPDIFF_IMPORT_ERROR = str(imp_exc)
 
 display = Display()
 
@@ -80,6 +74,12 @@ class ActionModule(ActionBase):
     def run(self, tmp=None, task_vars=None):
         results = super(ActionModule, self).run(tmp, task_vars)
         results['failed'] = False
+
+        # Check if deepdiff is available at runtime
+        if not HAS_DEEPDIFF:
+            results['failed'] = True
+            results['msg'] = f"DeepDiff must be installed to use this plugin. Use pip or install test-requirements. Import error: {DEEPDIFF_IMPORT_ERROR}"
+            return results
 
         ndfc_data = self._task.args.get('ndfc_data', None)
         test_data = self._task.args.get('test_data', None)

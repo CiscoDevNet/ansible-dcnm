@@ -16,7 +16,7 @@
 # pylint: disable=wrong-import-position
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 DOCUMENTATION = """
@@ -188,39 +188,28 @@ EXAMPLES = """
 import copy
 import inspect
 import logging
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import \
-    BootflashFiles
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
-    BootflashInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import \
-    ConvertTargetToParams
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
-    Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-    SwitchDetails
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import BootflashFiles
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import BootflashInfo
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import ConvertTargetToParams
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import SwitchDetails
 
 
-@Properties.add_rest_send
 class Common:
     """
     Common methods for all states
     """
 
-    def __init__(self, params):
+    def __init__(self, params: dict[str, Any]) -> None:
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -238,20 +227,21 @@ class Common:
         def raise_error(msg):
             raise ValueError(f"{self.class_name}.{method_name}: {msg}")
 
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
+        if self.params.get("check_mode") is None:
             msg = "params is missing mandatory key: check_mode."
             raise_error(msg)
+
+        self.check_mode: bool = self.params.get("check_mode", False)
 
         if self.check_mode not in [True, False]:
             msg = "check_mode must be True or False. "
             msg += f"Got {self.check_mode}."
             raise_error(msg)
 
-        self._valid_states = ["deleted", "query"]
+        self._valid_states: list[str] = ["deleted", "query"]
 
-        self.state = self.params.get("state", None)
-        if self.state is None:
+        self.state: str = self.params.get("state", "")
+        if not self.state:
             msg = "params is missing mandatory key: state."
             raise_error(msg)
         if self.state not in self._valid_states:
@@ -259,24 +249,23 @@ class Common:
             msg += f"Expected one of: {','.join(self._valid_states)}."
             raise_error(msg)
 
-        self.config = self.params.get("config", None)
+        self.config: dict[str, Any] = self.params.get("config", {})
         if not isinstance(self.config, dict):
             msg = "Expected dict for config. "
             msg += f"Got {type(self.config).__name__}."
             raise_error(msg)
 
-        self.targets = self.config.get("targets", None)
+        self.targets: list[dict] = self.config.get("targets", [])
         if not isinstance(self.targets, list):
             self.targets = []
 
-        if len(self.targets) > 0:
-            for item in self.targets:
-                if not isinstance(item, dict):
-                    msg = "Expected list of dict for params.config.targets. "
-                    msg += f"Got list element of type {type(item).__name__}."
-                    raise_error(msg)
+        for item in self.targets:
+            if not isinstance(item, dict):
+                msg = "Expected list of dict for params.config.targets. "
+                msg += f"Got list element of type {type(item).__name__}."
+                raise_error(msg)
 
-        self.switches = self.config.get("switches", None)
+        self.switches: list[dict] = self.config.get("switches", [])
         if not isinstance(self.switches, list):
             msg = "Expected list of dict for params.config.switches. "
             msg += f"Got {type(self.switches).__name__}."
@@ -288,14 +277,14 @@ class Common:
                 msg += f"Got list element of type {type(item).__name__}."
                 raise_error(msg)
 
-        self._rest_send = None
+        self._rest_send: RestSend = RestSend({})
 
-        self.bootflash_info = BootflashInfo()
-        self.convert_target_to_params = ConvertTargetToParams()
-        self.results = Results()
+        self.bootflash_info: BootflashInfo = BootflashInfo()
+        self.convert_target_to_params: ConvertTargetToParams = ConvertTargetToParams()
+        self.results: Results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
-        self.want = []
+        self.want: list[dict] = []
 
         msg = f"ENTERED Common().{method_name}: "
         msg += f"state: {self.state}, "
@@ -350,7 +339,7 @@ class Common:
         ```
 
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
@@ -361,28 +350,68 @@ class Common:
             raise TypeError(f"{self.class_name}.{method_name}: {msg}")
 
         for switch in self.switches:
-            if switch.get("ip_address", None) is None:
+            if not switch.get("ip_address"):
                 msg = "Expected ip_address in switch dict. "
                 msg += f"Got {switch}."
                 raise_value_error(msg)
 
-            if switch.get("targets", None) is None:
+            if not switch.get("targets", []):
                 switch["targets"] = self.targets
             if not isinstance(switch["targets"], list):
                 msg = "Expected list of dictionaries for switch['targets']. "
                 msg += f"Got {type(switch['targets']).__name__}."
                 raise_type_error(msg)
 
-            for target in switch["targets"]:
-                if target.get("filepath", None) is None:
+            target: dict[str, str]
+            for target in switch.get("targets", []):
+                if not target.get("filepath"):
                     msg = "Expected filepath in target dict. "
                     msg += f"Got {target}."
                     raise_value_error(msg)
-                if target.get("supervisor", None) is None:
+                if not target.get("supervisor"):
                     msg = "Expected supervisor in target dict. "
                     msg += f"Got {target}."
                     raise_value_error(msg)
             self.want.append(copy.deepcopy(switch))
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        ### Summary
+        An instance of the RestSend class.
+
+        ### Raises
+        -   getter: `ValueError` if rest_send has not been properly initialized (missing params).
+        -   setter: ``TypeError`` if the value is not an instance of RestSend.
+
+        ### getter
+        Return a properly initialized instance of the RestSend class.
+
+        ### setter
+        Set an instance of the RestSend class.
+        """
+        if not self._rest_send.params:
+            msg = f"{self.class_name}.rest_send: "
+            msg += "rest_send has not been set (missing params)."
+            raise ValueError(msg)
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend):
+        method_name: str = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._rest_send = value
 
 
 class Deleted(Common):
@@ -395,9 +424,9 @@ class Deleted(Common):
         -   ``Common.__init__()`` raises TypeError or ValueError.
     """
 
-    def __init__(self, params):
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+    def __init__(self, params: dict[str, Any]) -> None:
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -406,8 +435,8 @@ class Deleted(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.bootflash_files = BootflashFiles()
-        self.files_to_delete = {}
+        self.bootflash_files: BootflashFiles = BootflashFiles()
+        self.files_to_delete: dict[str, list[dict[str, str]]] = {}
 
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
@@ -448,7 +477,7 @@ class Deleted(Common):
         }
         ```
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.bootflash_info.filter_switch = switch["ip_address"]
         if switch["ip_address"] not in self.files_to_delete:
             self.files_to_delete[switch["ip_address"]] = []
@@ -462,11 +491,9 @@ class Deleted(Common):
                 msg += "Error assigning BootflashInfo.filter_supervisor. "
                 msg += f"Error detail: {error}"
                 raise ValueError(msg) from error
-            self.files_to_delete[switch["ip_address"]].extend(
-                self.bootflash_info.matches
-            )
+            self.files_to_delete[switch["ip_address"]].extend(self.bootflash_info.matches)
 
-    def update_bootflash_files(self, ip_address, target) -> None:
+    def update_bootflash_files(self, ip_address: str, target: dict[str, str]) -> None:
         """
         ### Summary
         Call ``BootflashFiles().add_file()`` to add the file associated with
@@ -478,7 +505,7 @@ class Deleted(Common):
         -    ``ValueError`` if:
                 -   ``BootflashFiles().add_file`` raises ``ValueError``.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         try:
             self.convert_target_to_params.target = target
@@ -534,9 +561,11 @@ class Deleted(Common):
         self.bootflash_info.results = Results()
         self.bootflash_info.rest_send = self.rest_send  # pylint: disable=no-member
         self.bootflash_info.switch_details = SwitchDetails()
+        self.bootflash_info.switch_details.rest_send = self.rest_send
+        self.bootflash_info.switch_details.results = Results()
 
         # Retrieve bootflash contents for the user's switches.
-        switch_list = []
+        switch_list: list[str] = []
         for switch in self.switches:
             switch_list.append(switch["ip_address"])
         self.bootflash_info.switches = switch_list
@@ -549,6 +578,7 @@ class Deleted(Common):
         self.bootflash_files.rest_send = self.rest_send
         self.bootflash_files.switch_details = SwitchDetails()
         self.bootflash_files.switch_details.results = Results()
+        self.bootflash_files.switch_details.rest_send = self.rest_send
 
         # Update BootflashFiles() with the files to delete
         self.files_to_delete = {}
@@ -572,13 +602,13 @@ class Query(Common):
         -   ``Common.__init__()`` raises TypeError or ValueError.
     """
 
-    def __init__(self, params):
-        self.class_name = self.__class__.__name__
+    def __init__(self, params: dict[str, Any]) -> None:
+        self.class_name: str = self.__class__.__name__
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.action = "bootflash_info"
-        method_name = inspect.stack()[0][3]
+        self.action: str = "bootflash_info"
+        method_name: str = inspect.stack()[0][3]
 
         try:
             super().__init__(params)
@@ -601,12 +631,12 @@ class Query(Common):
         ### Raises
         None
         """
-        response_dict = {}
+        response_dict: dict[str, dict[str, Any]] = {}
         response_dict["0.0.0.0"] = {}
         response_dict["0.0.0.0"]["DATA"] = "No switches to query."
         response_dict["0.0.0.0"]["MESSAGE"] = "OK"
         response_dict["0.0.0.0"]["RETURN_CODE"] = 200
-        result_dict = {}
+        result_dict: dict[str, dict[str, str]] = {}
         result_dict["0.0.0.0"] = {}
         result_dict["0.0.0.0"]["found"] = False
         result_dict["0.0.0.0"]["success"] = True
@@ -617,11 +647,13 @@ class Query(Common):
 
     def commit(self) -> None:
         """
-        ### Summary
-        query the bootflash on all switches in self.switches
+        # Summary
+
+        Query the bootflash on all switches in self.switches
         and register the results.
 
-        ### Raises
+        ## Raises
+
         None.  While this method does not directly raise exceptions, it
         calls other methods that may raise the following exceptions:
 
@@ -630,7 +662,7 @@ class Query(Common):
         -   ValueError
 
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
@@ -655,7 +687,7 @@ class Query(Common):
         self.bootflash_info.switch_details = SwitchDetails()
 
         # Retrieve bootflash contents for the user's switches.
-        switches_to_query = []
+        switches_to_query: list[str] = []
         for switch in self.switches:
             switches_to_query.append(switch["ip_address"])
         self.bootflash_info.switches = switches_to_query
@@ -667,7 +699,7 @@ class Query(Common):
 
         # Update results (diff)
         # Use the file info from the controller as the diff.
-        diff_current = {}
+        diff_current: dict[str, list[dict[str, Any]]] = {}
         for switch in self.switches:
             ip_address = switch.get("ip_address")
             self.bootflash_info.filter_switch = ip_address
@@ -688,7 +720,7 @@ def main():
     main entry point for module execution
     """
 
-    argument_spec = {
+    argument_spec: dict[str, dict[str, Any]] = {
         "config": {
             "required": True,
             "type": "dict",
@@ -698,23 +730,21 @@ def main():
             "choices": ["deleted", "query"],
         },
     }
-    ansible_module = AnsibleModule(
-        argument_spec=argument_spec, supports_check_mode=True
-    )
+    ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
-    params = copy.deepcopy(ansible_module.params)
+    params: dict[str, Any] = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
 
     # Logging setup
     try:
-        log = Log()
+        log: Log = Log()
         log.commit()
     except (TypeError, ValueError) as error:
         ansible_module.fail_json(str(error))
 
-    sender = Sender()
+    sender: Sender = Sender()
     sender.ansible_module = ansible_module
-    rest_send = RestSend(params)
+    rest_send: RestSend = RestSend(params)
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
 
@@ -730,6 +760,8 @@ def main():
         task.rest_send = rest_send
         task.commit()
     except (TypeError, ValueError) as error:
+        if task is None:
+            ansible_module.fail_json(f"{error}")
         ansible_module.fail_json(f"{error}", **task.results.failed_result)
 
     task.results.build_final_result()

@@ -1,0 +1,4 @@
+---
+testcase: "*"
+fabric_group_name_1: MCFG1
+fabric_group_type_1: MCFG

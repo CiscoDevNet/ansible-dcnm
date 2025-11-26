@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -378,7 +378,7 @@ class Results:
         """
         return a result for a failed task with no changes
         """
-        result = {}
+        result: dict = {}
         result["changed"] = False
         result["failed"] = True
         result["diff"] = [{}]
@@ -391,7 +391,7 @@ class Results:
         """
         return a result for a successful task with no changes
         """
-        result = {}
+        result: dict = {}
         result["changed"] = False
         result["failed"] = False
         result["diff"] = [{}]
@@ -505,7 +505,7 @@ class Results:
         -   setter: ``TypeError`` if value is not a dict.
         """
         value = self.properties.get("diff_current")
-        value["sequence_number"] = self.task_sequence_number
+        value["sequence_number"] = self.task_sequence_number  # type: ignore[index]
         return value
 
     @diff_current.setter
@@ -532,7 +532,7 @@ class Results:
         return self.properties["failed"]
 
     @failed.setter
-    def failed(self, value):
+    def failed(self, value: bool) -> None:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
             # Setting failed, itself failed(!)
@@ -596,7 +596,7 @@ class Results:
         -   setter: ``TypeError`` if value is not a dict.
         """
         value = self.properties.get("response_current")
-        value["sequence_number"] = self.task_sequence_number
+        value["sequence_number"] = self.task_sequence_number  # type: ignore[index]
         return value
 
     @response_current.setter
@@ -689,7 +689,7 @@ class Results:
         -   setter: ``TypeError`` if value is not a dict
         """
         value = self.properties.get("result_current")
-        value["sequence_number"] = self.task_sequence_number
+        value["sequence_number"] = self.task_sequence_number  # type: ignore[index]
         return value
 
     @result_current.setter
