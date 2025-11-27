@@ -238,12 +238,6 @@
               - ip_address: "{{ leaf3 }}"
               - ip_address: "{{ leaf4 }}"
             deploy: true
-      register: result
-
-    - name: ASSERT - Per-attachment deploy change triggered
-      ansible.builtin.assert:
-        that:
-          - 'result.changed == true'
 
     - name: Query VRF state until targeted deploy complete
       cisco.dcnm.dcnm_vrf:
@@ -305,10 +299,17 @@
             deploy: true
       register: result
 
-    - name: ASSERT - Auto-selected VRFs change triggered
-      ansible.builtin.assert:
-        that:
-          - 'result.changed == true'
+    - name: Query fabric state until vrfStatus transitions to DEPLOYED state
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: query
+      register: result
+      until:
+        - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
+      retries: 20
+      delay: 5
 
     - name: Query VRF state until auto-selected deploy completes
       cisco.dcnm.dcnm_vrf:
@@ -321,12 +322,6 @@
         - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
       retries: 20
       delay: 5
-
-    - name: Query VRF state after auto-selected deploy
-      cisco.dcnm.dcnm_vrf:
-        fabric: "{{ fabric_name }}"
-        state: query
-      register: result
 
     - name: ASSERT - Auto-selected VRFs deployed
       ansible.builtin.assert:

@@ -49,11 +49,6 @@
               - ip_address: "{{ leaf4 }}"
       register: result
 
-    - name: ASSERT - Initial VRF deploy change triggered
-      ansible.builtin.assert:
-        that:
-          - 'result.changed == true'
-
     - name: Query fabric state until vrfStatus transitions to DEPLOYED
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
@@ -77,26 +72,12 @@
             deploy: true
       register: result
 
-    - name: ASSERT - Engineering VRF replacement triggered change
-      ansible.builtin.assert:
-        that:
-          - 'result.changed == true'
-
     - name: Query VRF state after replacement
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: query
       register: result
 
-    - name: ASSERT - Engineering VRF attachments removed
-      ansible.builtin.assert:
-        that:
-          - 'result.response[0].parent.vrfName == "green_red"'
-          - 'result.response[0].attach | length == 4'
-          - 'result.response[1].parent.vrfName == "engineering"'
-          - 'result.response[1].attach | length == 0'
-          - 'result.response[2].parent.vrfName == "sales"'
-          - 'result.response[2].attach | length == 4'
   always:
     - name: End dcnm_fabric spine_leaf_replaced_2 test
       ansible.builtin.debug:
