@@ -88,16 +88,13 @@ class FabricQuery(FabricCommon):
 
         self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
+        self._fabric_details_by_name: FabricDetailsByName = FabricDetailsByName()
         self._results: Results = Results()
         self._results.operation_type = OperationType.QUERY
         self._rest_send: RestSend = RestSend(params={})
 
         self._fabric_names: list[str] = []
         self._fabrics_to_query: list[str] = []
-
-        self._fabric_details_by_name: FabricDetailsByName = FabricDetailsByName()
-        self._fabric_details_by_name.rest_send = self._rest_send
-        self._fabric_details_by_name.results = self._results
 
         msg = "ENTERED FabricQuery()"
         self.log.debug(msg)
