@@ -32,21 +32,18 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import FabricDetailsByName
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, fabric_query_fixture,
-    responses_fabric_query)
+    MockAnsibleModule,
+    does_not_raise,
+    fabric_query_fixture,
+    responses_fabric_query,
+)
 
 PARAMS = {"state": "query", "check_mode": False}
 
@@ -69,8 +66,8 @@ def test_fabric_query_00000(fabric_query) -> None:
         instance = fabric_query
     assert instance.class_name == "FabricQuery"
     assert instance.action == "fabric_query"
-    assert instance.fabric_details is None
-    assert instance.fabric_names is None
+    assert instance._fabric_details_by_name.class_name == "FabricDetailsByName"
+    assert instance.fabric_names == []
     assert instance._fabrics_to_query == []
 
 
@@ -84,15 +81,16 @@ def test_fabric_query_00020(fabric_query) -> None:
         - __init__()
         - fabric_names setter
 
-    ### Summary
-    Verify behavior when ``fabric_names`` is set to a list of strings.
+    # Summary
 
-    ### Test
+    Verify behavior when `fabric_names` is set to a list of strings.
 
-    -   ``fabric_names`` is set to expected value.
-    -   Exception is not raised.
+    ## Test
+
+    - `fabric_names` is set to expected value.
+    - Exception is not raised.
     """
-    fabric_names = ["FOO", "BAR"]
+    fabric_names: list[str] = ["FOO", "BAR"]
     with does_not_raise():
         instance = fabric_query
         instance.fabric_names = fabric_names
@@ -101,21 +99,21 @@ def test_fabric_query_00020(fabric_query) -> None:
 
 def test_fabric_query_00021(fabric_query) -> None:
     """
-    ### Classes and Methods
+    # Summary
+
+    Verify behavior when `fabric_names` is set to a non-list.
+
+    ## Test
+    -   `ValueError` is raised because `fabric_names` is not a list.
+    -   `fabric_names` is not modified, hence it retains its initial value of "".
+
+    ## Classes and Methods
 
     - FabricCommon
         - __init__()
     - FabricQuery
         - __init__()
         - fabric_names setter
-
-    ### Summary
-    Verify behavior when ``fabric_names`` is set to a non-list.
-
-    ### Test
-    -   ``ValueError`` is raised because ``fabric_names`` is not a list.
-    -   ``fabric_names`` is not modified, hence it retains its initial value
-        of None.
     """
     with does_not_raise():
         instance = fabric_query
@@ -126,12 +124,21 @@ def test_fabric_query_00021(fabric_query) -> None:
     with pytest.raises(ValueError, match=match):
         instance.fabric_names = "NOT_A_LIST"
 
-    assert instance.fabric_names is None
+    assert instance.fabric_names == []
 
 
 def test_fabric_query_00022(fabric_query) -> None:
     """
-    ### Classes and Methods
+    # Summary
+
+    Verify behavior when `fabric_names` is set to a list with a non-string element.
+
+    ## Test
+
+    -   `ValueError` is raised because fabric_names is a list with a non-string element.
+    -   `fabric_names` is not modified, hence it retains its initial value of "".
+
+    ## Classes and Methods
 
     - FabricCommon
         - __init__()
@@ -139,16 +146,6 @@ def test_fabric_query_00022(fabric_query) -> None:
         - __init__()
         - fabric_names setter
 
-    ### Summary
-    Verify behavior when ``fabric_names`` is set to a list with a non-string
-    element.
-
-    ### Test
-
-    -   ``ValueError`` is raised because fabric_names is a list with a
-        non-string element.
-    -   ``fabric_names`` is not modified, hence it retains its initial value
-        of None.
     """
     with does_not_raise():
         instance = fabric_query
@@ -159,25 +156,28 @@ def test_fabric_query_00022(fabric_query) -> None:
     with pytest.raises(ValueError, match=match):
         instance.fabric_names = [1, 2, 3]
 
-    assert instance.fabric_names is None
+    assert instance.fabric_names == []
 
 
 def test_fabric_query_00023(fabric_query) -> None:
     """
-    ### Classes and Methods
+    # Summary
+
+    Verify behavior when `fabric_names` is set to an empty list.
+
+    ## Setup
+
+    - FabricQuery().fabric_names is set to an empty list
+
+    ## Test
+
+    - `ValueError` is raised from `fabric_names` setter.
+
+    ## Classes and Methods
 
     - FabricQuery
         - fabric_names setter
 
-    ### Summary
-    Verify behavior when ``fabric_names`` is set to an empty list.
-
-    ### Setup
-
-    -   FabricQuery().fabric_names is set to an empty list
-
-    ### Test
-    -   ``ValueError`` is raised from ``fabric_names`` setter.
     """
     match = r"FabricQuery\.fabric_names: fabric_names must be a list of "
     match += r"at least one string\."
@@ -187,37 +187,7 @@ def test_fabric_query_00023(fabric_query) -> None:
         instance.fabric_names = []
 
 
-def test_fabric_query_00024(fabric_query) -> None:
-    """
-    ### Classes and Methods
-
-    - FabricCommon
-        - __init__()
-    - FabricQuery
-        - __init__()
-        - commit()
-        - _validate_commit_parameters()
-
-    ### Summary
-    Verify behavior when ``fabric_details`` is not set before calling commit.
-
-    ### Test
-    ``ValueError`` is raised because fabric_details is not set before
-    calling commit.
-    """
-    with does_not_raise():
-        instance = fabric_query
-        instance.fabric_names = ["f1"]
-        instance.rest_send = RestSend(PARAMS)
-        instance.results = Results()
-
-    match = r"FabricQuery._validate_commit_parameters:\s+"
-    match += r"fabric_details must be set before calling commit\."
-
-    with pytest.raises(ValueError, match=match):
-        instance.commit()
-
-    assert instance.fabric_names == ["f1"]
+# test_fabric_query_00024 removed since fabric_details is now set in FabricQuery.__init__()
 
 
 def test_fabric_query_00025(fabric_query) -> None:
@@ -232,18 +202,17 @@ def test_fabric_query_00025(fabric_query) -> None:
         - _validate_commit_parameters()
 
     ### Summary
-    Verify behavior when ``fabric_names`` is not set before calling commit.
+    Verify behavior when `fabric_names` is not set before calling commit.
 
     ### Test
 
-    -   ``ValueError`` is raised because fabric_names is not set before
+    -   `ValueError` is raised because fabric_names is not set before
         calling commit.
-    -   ``fabric_names`` is not modified, hence it retains its initial value
+    -   `fabric_names` is not modified, hence it retains its initial value
         of None.
     """
     with does_not_raise():
         instance = fabric_query
-        instance.fabric_details = FabricDetailsByName()
         instance.rest_send = RestSend(PARAMS)
         instance.results = Results()
 
@@ -253,12 +222,21 @@ def test_fabric_query_00025(fabric_query) -> None:
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
-    assert instance.fabric_names is None
+    assert instance.fabric_names == []
 
 
 def test_fabric_query_00026(fabric_query) -> None:
     """
-    ### Classes and Methods
+    # Summary
+
+    Verify behavior when `rest_send` is not set before calling commit.
+
+    ## Test
+
+    -   `ValueError` is raised because `rest_send.params` is not set before calling commit.
+    -   `rest_send.params` is not modified, hence it retains its initial value of {}.
+
+    ## Classes and Methods
 
     - FabricCommon
         - __init__()
@@ -267,21 +245,10 @@ def test_fabric_query_00026(fabric_query) -> None:
         - commit()
         - _validate_commit_parameters()
 
-    ### Summary
-    Verify behavior when ``rest_send`` is not set before calling commit.
-
-    ### Test
-
-    -   ``ValueError`` is raised because ``rest_send`` is not set before
-        calling commit.
-    -   ``rest_send`` is not modified, hence it retains its initial value
-        of None.
     """
     with does_not_raise():
         instance = fabric_query
-        instance.fabric_details = FabricDetailsByName()
         instance.fabric_names = ["f1"]
-        instance.results = Results()
 
     match = r"FabricQuery\._validate_commit_parameters:\s+"
     match += r"rest_send must be set before calling commit\."
@@ -289,70 +256,20 @@ def test_fabric_query_00026(fabric_query) -> None:
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
-    assert instance.rest_send is None
+    assert instance.rest_send.params == {}
 
 
-def test_fabric_query_00027(fabric_query) -> None:
-    """
-    ### Classes and Methods
-
-    - FabricCommon
-        - __init__()
-    - FabricQuery
-        - __init__()
-        - commit()
-        - _validate_commit_parameters()
-
-    ### Summary
-    Verify behavior when ``results`` is not set before calling commit.
-
-    ### Test
-
-    -   ``ValueError`` is raised because ``results`` is not set before
-        calling commit.
-    -   ``Results()`` is instantiated in ``_validate_commit_parameters``
-        in order to register a failed result.
-    """
-    with does_not_raise():
-        instance = fabric_query
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_names = ["f1"]
-        instance.rest_send = RestSend(PARAMS)
-
-    match = r"FabricQuery\._validate_commit_parameters:\s+"
-    match += r"results must be set before calling commit\."
-
-    with pytest.raises(ValueError, match=match):
-        instance.commit()
-
-    assert instance.results.class_name == "Results"
+# test_fabric_query_00027 removed since results is now set in FabricQuery.__init__() and is now optional
 
 
 def test_fabric_query_00030(fabric_query) -> None:
     """
-    ### Classes and Methods
+    # Summary
 
-    - FabricCommon()
-        - __init__()
-    - FabricDetails()
-        - __init__()
-        - refresh_super()
-    - FabricDetailsByName()
-        - __init__()
-        - refresh()
-    - FabricQuery
-        - __init__()
-        - fabric_names setter
-        - commit()
-    - Query()
-        - __init__()
-        - commit()
-
-    ### Summary
     Verify behavior when user queries a fabric and no fabrics exist
     on the controller and the RestSend() RETURN_CODE is 200.
 
-    ### Code Flow
+    ## Code Flow
 
     -   main.Query() is instantiated and instantiates FabricQuery()
     -   FabricQuery() instantiates FabricDetailsByName()
@@ -372,6 +289,24 @@ def test_fabric_query_00030(fabric_query) -> None:
     -   FabricQuery.commit() calls Results().register_task_result()
     -   Results().register_task_result() adds sequence_number (with value 1) to
         each of the results dicts
+
+    ## Classes and Methods
+
+    - FabricCommon()
+        - __init__()
+    - FabricDetails()
+        - __init__()
+        - refresh_super()
+    - FabricDetailsByName()
+        - __init__()
+        - refresh()
+    - FabricQuery
+        - __init__()
+        - fabric_names setter
+        - commit()
+    - Query()
+        - __init__()
+        - commit()
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -392,9 +327,6 @@ def test_fabric_query_00030(fabric_query) -> None:
 
     with does_not_raise():
         instance = fabric_query
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = rest_send
-        instance.fabric_details.results = Results()
         instance.fabric_names = ["f1"]
         instance.rest_send = rest_send
         instance.results = Results()
@@ -715,10 +647,7 @@ def test_fabric_query_00033(fabric_query) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.diff[0].get("f1", {}).get("asn", None) == "65001"
-    assert (
-        instance.results.diff[0].get("f1", {}).get("nvPairs", {}).get("BGP_AS")
-        == "65001"
-    )
+    assert instance.results.diff[0].get("f1", {}).get("nvPairs", {}).get("BGP_AS") == "65001"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
 

@@ -15,18 +15,20 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import copy
 import inspect
 import json
 import logging
+from typing import Any
 
-from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabricUpdate
+from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import EpFabricUpdate
 from ..common.exceptions import ControllerResponseError
-from .common import FabricCommon
+from .common_v2 import FabricCommon
+from .fabric_details_v3 import FabricDetailsByName
+from .fabric_summary_v2 import FabricSummary
 from .fabric_types import FabricTypes
 from .param_info import ParamInfo
 from .ruleset import RuleSet
@@ -40,19 +42,21 @@ class FabricReplacedCommon(FabricCommon):
     - FabricReplacedBulk
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.class_name = self.__class__.__name__
-        self.action = "fabric_replace"
+        self.class_name: str = self.__class__.__name__
+        self.action: str = "fabric_replace"
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.ep_fabric_update = EpFabricUpdate()
-        self.fabric_types = FabricTypes()
-        self.param_info = ParamInfo()
-        self.ruleset = RuleSet()
-        self.template_get = TemplateGet()
-        self.verify_playbook_params = VerifyPlaybookParams()
+        self._ep_fabric_update: EpFabricUpdate = EpFabricUpdate()
+        self._fabric_summary: FabricSummary = FabricSummary()
+        self._fabric_details: FabricDetailsByName = FabricDetailsByName()
+        self._fabric_types: FabricTypes = FabricTypes()
+        self._param_info: ParamInfo = ParamInfo()
+        self._ruleset: RuleSet = RuleSet()
+        self._template_get: TemplateGet = TemplateGet()
+        self._verify_playbook_params: VerifyPlaybookParams = VerifyPlaybookParams()
 
         # key: fabric_type, value: dict
         # Updated in _build_fabric_templates()
@@ -263,11 +267,11 @@ class FabricReplacedCommon(FabricCommon):
 
         # Refresh ParamInfo() with the fabric template
         try:
-            self.param_info.template = self.fabric_templates.get(fabric_type)
+            self._param_info.template = self.fabric_templates.get(fabric_type)
         except TypeError as error:
             raise ValueError(error) from error
         try:
-            self.param_info.refresh()
+            self._param_info.refresh()
         except ValueError as error:
             raise ValueError(error) from error
 
@@ -287,7 +291,7 @@ class FabricReplacedCommon(FabricCommon):
             self.log.debug(msg)
 
             try:
-                parameter_info = self.param_info.parameter(parameter)
+                parameter_info = self._param_info.parameter(parameter)
             except KeyError as error:
                 msg = f"SKIP parameter: {parameter} in fabric {fabric_name}. "
                 msg += "parameter not found in template."
@@ -357,13 +361,13 @@ class FabricReplacedCommon(FabricCommon):
             if fabric_type in self.fabric_templates:
                 continue
             try:
-                self.fabric_types.fabric_type = fabric_type
+                self._fabric_types.fabric_type = fabric_type
             except ValueError as error:
                 raise ValueError(error) from error
 
-            self.template_get.template_name = self.fabric_types.template_name
-            self.template_get.refresh()
-            self.fabric_templates[fabric_type] = self.template_get.template
+            self._template_get.template_name = self._fabric_types.template_name
+            self._template_get.refresh()
+            self.fabric_templates[fabric_type] = self._template_get.template
 
     def _build_payloads_for_replaced_state(self):
         """
@@ -382,6 +386,7 @@ class FabricReplacedCommon(FabricCommon):
             configuration.
         """
         self.fabric_details.refresh()
+        print(f"ZZZ: self.fabric_details.all_data: {self.fabric_details.all_data}")
         self._payloads_to_commit = []
         # Builds self.fabric_templates dictionary, keyed on fabric type.
         # Value is the fabric template associated with each fabric_type.
@@ -421,17 +426,17 @@ class FabricReplacedCommon(FabricCommon):
         fabric_type = payload.get("FABRIC_TYPE", None)
         fabric_name = payload.get("FABRIC_NAME", None)
         try:
-            self.verify_playbook_params.config_playbook = payload
+            self._verify_playbook_params.config_playbook = payload
         except TypeError as error:
             raise ValueError(error) from error
 
         try:
-            self.fabric_types.fabric_type = fabric_type
+            self._fabric_types.fabric_type = fabric_type
         except ValueError as error:
             raise ValueError(error) from error
 
         try:
-            self.verify_playbook_params.template = self.fabric_templates[fabric_type]
+            self._verify_playbook_params.template = self.fabric_templates[fabric_type]
         except TypeError as error:
             raise ValueError(error) from error
         config_controller = self.fabric_details.all_data.get(fabric_name, {}).get(
@@ -439,12 +444,12 @@ class FabricReplacedCommon(FabricCommon):
         )
 
         try:
-            self.verify_playbook_params.config_controller = config_controller
+            self._verify_playbook_params.config_controller = config_controller
         except TypeError as error:
             raise ValueError(error) from error
 
         try:
-            self.verify_playbook_params.commit()
+            self._verify_playbook_params.commit()
         except ValueError as error:
             raise ValueError(error) from error
 
@@ -502,24 +507,24 @@ class FabricReplacedCommon(FabricCommon):
         - raise ``ValueError`` if the enpoint assignment fails
         """
         try:
-            self.ep_fabric_update.fabric_name = payload.get("FABRIC_NAME")
+            self._ep_fabric_update.fabric_name = payload.get("FABRIC_NAME")
         except ValueError as error:
             raise ValueError(error) from error
 
         self.fabric_type = copy.copy(payload.get("FABRIC_TYPE"))
         try:
-            self.fabric_types.fabric_type = self.fabric_type
+            self._fabric_types.fabric_type = self.fabric_type
         except ValueError as error:
             raise ValueError(error) from error
 
         try:
-            self.ep_fabric_update.template_name = self.fabric_types.template_name
+            self._ep_fabric_update.template_name = self._fabric_types.template_name
         except ValueError as error:
             raise ValueError(error) from error
 
         payload.pop("FABRIC_TYPE", None)
-        self.path = self.ep_fabric_update.path
-        self.verb = self.ep_fabric_update.verb
+        self.path = self._ep_fabric_update.path
+        self.verb = self._ep_fabric_update.verb
 
     def _send_payload(self, payload):
         """
@@ -566,13 +571,21 @@ class FabricReplacedCommon(FabricCommon):
     @property
     def payloads(self):
         """
-        Payloads must be a ``list`` of ``dict`` of payloads for the
-        ``fabric_update`` endpoint.
+        # Summary
+
+        Get/Set the payloads for fabric update in replaced state.
+
+        Payloads must be a `list` of `dict` of payloads for the `fabric_update` endpoint.
 
         - getter: Return the fabric update payloads
         - setter: Set the fabric update payloads
-        - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
-        - setter: raise ``ValueError`` if any payload is missing mandatory keys
+
+        ## Raises
+
+        ### ValueError
+
+        - setter: `payloads` is not a `list` of `dict`
+        - setter: Any payload is missing mandatory keys
         """
         return self._payloads
 
@@ -584,6 +597,10 @@ class FabricReplacedCommon(FabricCommon):
             msg += "payloads must be a list of dict. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
+            raise ValueError(msg)
+        if len(value) == 0:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "payloads must not be an empty list."
             raise ValueError(msg)
         for item in value:
             try:
@@ -599,10 +616,8 @@ class FabricReplacedBulk(FabricReplacedCommon):
 
     Usage (where params is an AnsibleModule.params dictionary):
     ```python
-    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
-        FabricReplacedBulk
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-        Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import FabricReplacedBulk
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
 
     payloads = [
         { "FABRIC_NAME": "fabric1", "FABRIC_TYPE": "VXLAN_EVPN", "BGP_AS": 65000, "DEPLOY": True },
@@ -637,7 +652,7 @@ class FabricReplacedBulk(FabricReplacedCommon):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._payloads = None
+        self._payloads: list[dict[str, Any]] = []
 
         self.log.debug("ENTERED FabricReplacedBulk()")
 
@@ -645,31 +660,19 @@ class FabricReplacedBulk(FabricReplacedCommon):
         """
         - Update fabrics and register results.
         - Return if there are no fabrics to update for replaced state.
-        - raise ``ValueError`` if ``fabric_details`` is not set
-        - raise ``ValueError`` if ``fabric_summary`` is not set
         - raise ``ValueError`` if ``payloads`` is not set
         - raise ``ValueError`` if ``rest_send`` is not set
         - raise ``ValueError`` if ``_build_payloads_for_replaced_state`` fails
         - raise ``ValueError`` if ``_send_payloads`` fails
         """
         method_name = inspect.stack()[0][3]
-        if self.fabric_details is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_details must be set prior to calling commit."
-            raise ValueError(msg)
 
-        if self.fabric_summary is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_summary must be set prior to calling commit."
-            raise ValueError(msg)
-
-        if self.payloads is None:
+        if not self._payloads:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be set prior to calling commit."
             raise ValueError(msg)
 
-        # pylint: disable=no-member
-        if self.rest_send is None:
+        if not self._rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit."
             raise ValueError(msg)
@@ -678,7 +681,10 @@ class FabricReplacedBulk(FabricReplacedCommon):
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
 
-        self.template_get.rest_send = self.rest_send
+        self._fabric_details.rest_send = self.rest_send
+        self._fabric_summary.rest_send = self.rest_send
+
+        self._template_get.rest_send = self.rest_send
         try:
             self._build_payloads_for_replaced_state()
         except ValueError as error:

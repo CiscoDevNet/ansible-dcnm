@@ -28,7 +28,7 @@ import logging
 from time import sleep
 
 # Using only for its failed_result property
-from .results import Results
+from .results_v2 import Results
 
 
 class RestSend:
