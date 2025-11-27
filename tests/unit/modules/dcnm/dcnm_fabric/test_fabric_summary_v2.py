@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,29 +21,32 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
-
+"""
+Unit tests for FabricSummary (v2) class
+"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, fabric_summary_fixture,
-    responses_fabric_summary)
+    does_not_raise,
+    fabric_summary_v2_fixture,
+    responses_fabric_summary_v2,
+)
 
 
-def test_fabric_summary_00010(fabric_summary) -> None:
+def test_fabric_summary_v2_00010(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -56,21 +59,21 @@ def test_fabric_summary_00010(fabric_summary) -> None:
     - Exception is not raised
     """
     with does_not_raise():
-        instance = fabric_summary
+        instance = fabric_summary_v2
     assert instance.class_name == "FabricSummary"
-    assert instance.data is None
+    assert instance.data == {}
     assert instance.refreshed is False
-    assert instance.ep_fabric_summary.class_name == "EpFabricSummary"
-    assert instance.results.class_name == "Results"
-    assert instance.conversion.class_name == "ConversionUtils"
+    assert instance._conversion.class_name == "ConversionUtils"
+    assert instance._ep_fabric_summary.class_name == "EpFabricSummary"
+    assert instance._results.class_name == "Results"
     assert instance._border_gateway_count == 0
     assert instance._device_count == 0
-    assert instance._fabric_name is None
+    assert instance._fabric_name == ""
     assert instance._leaf_count == 0
     assert instance._spine_count == 0
 
 
-def test_fabric_summary_00030(fabric_summary) -> None:
+def test_fabric_summary_v2_00030(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -95,9 +98,16 @@ def test_fabric_summary_00030(fabric_summary) -> None:
     -   ``ValueError`` is raised
     -   Exception message matches expected
     """
+
+    def responses():
+        yield {"key": "value"}
+
     with does_not_raise():
-        instance = fabric_summary
-        instance.rest_send = RestSend(MockAnsibleModule())
+        sender = Sender()
+        sender.gen = ResponseGenerator(responses())
+        instance = fabric_summary_v2
+        instance.rest_send = RestSend(params={"check_mode": False, "state": "query"})
+        instance.rest_send.sender = sender
 
     match = r"FabricSummary\.refresh: "
     match += r"Set FabricSummary\.fabric_name prior to calling "
@@ -106,7 +116,7 @@ def test_fabric_summary_00030(fabric_summary) -> None:
         instance.refresh()
 
 
-def test_fabric_summary_00031(fabric_summary) -> None:
+def test_fabric_summary_v2_00031(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -132,7 +142,7 @@ def test_fabric_summary_00031(fabric_summary) -> None:
     -   Exception message matches expected
     """
     with does_not_raise():
-        instance = fabric_summary
+        instance = fabric_summary_v2
         instance.fabric_name = "MyFabric"
 
     match = r"FabricSummary\.refresh: "
@@ -142,7 +152,7 @@ def test_fabric_summary_00031(fabric_summary) -> None:
         instance.refresh()
 
 
-def test_fabric_summary_00032(monkeypatch, fabric_summary) -> None:
+def test_fabric_summary_v2_00032(monkeypatch, fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -182,20 +192,25 @@ def test_fabric_summary_00032(monkeypatch, fabric_summary) -> None:
             msg = "mocked MockEpFabricSummary().fabric_name setter exception."
             raise ValueError(msg)
 
-    match = r"Error retrieving fabric_summary endpoint\.\s+"
-    match += r"Detail: mocked MockEpFabricSummary\(\)\.fabric_name\s+"
-    match += r"setter exception\."
+    def responses():
+        yield {"key": "value"}
 
     with does_not_raise():
-        instance = fabric_summary
-        monkeypatch.setattr(instance, "ep_fabric_summary", MockEpFabricSummary())
+        instance = fabric_summary_v2
+        monkeypatch.setattr(instance, "_ep_fabric_summary", MockEpFabricSummary())
         instance.fabric_name = "MyFabric"
-        instance.rest_send = RestSend(MockAnsibleModule())
+        sender = Sender()
+        sender.gen = ResponseGenerator(responses())
+        instance.rest_send = RestSend(params={"check_mode": False, "state": "query"})
+        instance.rest_send.sender = sender
+
+    match = r"Error retrieving fabric_summary endpoint\. Detail: mocked MockEpFabricSummary\(\)\.fabric_name setter exception\."
+
     with pytest.raises(ValueError, match=match):
         instance.refresh()
 
 
-def test_fabric_summary_00033(monkeypatch, fabric_summary) -> None:
+def test_fabric_summary_v2_00033(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -233,26 +248,20 @@ def test_fabric_summary_00033(monkeypatch, fabric_summary) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
 
-    gen = ResponseGenerator(responses())
-
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
-
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(params={"check_mode": False, "state": "query"})
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
     with does_not_raise():
-        instance = fabric_summary
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-        instance.rest_send.timeout = 1
+        instance = fabric_summary_v2
+        instance.rest_send = rest_send
         instance.fabric_name = "MyFabric"
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     with does_not_raise():
         instance.refresh()
@@ -262,8 +271,8 @@ def test_fabric_summary_00033(monkeypatch, fabric_summary) -> None:
     assert isinstance(instance.results.response, list)
 
     assert len(instance.results.diff) == 1
-    assert len(instance.results.result) == 2
-    assert len(instance.results.response) == 2
+    assert len(instance.results.result) == 1
+    assert len(instance.results.response) == 1
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
     assert instance.results.result[0].get("found", None) is True
@@ -284,7 +293,7 @@ def test_fabric_summary_00033(monkeypatch, fabric_summary) -> None:
     assert instance.fabric_is_empty is False
 
 
-def test_fabric_summary_00034(monkeypatch, fabric_summary) -> None:
+def test_fabric_summary_v2_00034(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -322,26 +331,21 @@ def test_fabric_summary_00034(monkeypatch, fabric_summary) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
 
-    gen = ResponseGenerator(responses())
-
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(params={"check_mode": False, "state": "query"})
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
-        instance = fabric_summary
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-        instance.rest_send.timeout = 1
+        instance = fabric_summary_v2
+        instance.rest_send = rest_send
         instance.fabric_name = "MyFabric"
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     with does_not_raise():
         instance.refresh()
@@ -353,8 +357,8 @@ def test_fabric_summary_00034(monkeypatch, fabric_summary) -> None:
     assert isinstance(instance.results.response, list)
 
     assert len(instance.results.diff) == 1
-    assert len(instance.results.result) == 2
-    assert len(instance.results.response) == 2
+    assert len(instance.results.result) == 1
+    assert len(instance.results.response) == 1
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
     assert instance.results.result[0].get("found", None) is True
@@ -375,7 +379,7 @@ def test_fabric_summary_00034(monkeypatch, fabric_summary) -> None:
     assert instance.fabric_is_empty is True
 
 
-def test_fabric_summary_00035(monkeypatch, fabric_summary) -> None:
+def test_fabric_summary_v2_00035(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -417,26 +421,23 @@ def test_fabric_summary_00035(monkeypatch, fabric_summary) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
 
-    gen = ResponseGenerator(responses())
-
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(params={"check_mode": False, "state": "query"})
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
-        instance = fabric_summary
-        instance.rest_send = RestSend(MockAnsibleModule())
+        instance = fabric_summary_v2
+        instance.rest_send = rest_send
         instance.rest_send.unit_test = True
         instance.rest_send.timeout = 1
         instance.fabric_name = "MyFabric"
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     match = r"FabricSummary\._verify_controller_response:\s+"
     match += r"Failed to retrieve fabric_summary for fabric_name MyFabric\.\s+"
@@ -452,8 +453,8 @@ def test_fabric_summary_00035(monkeypatch, fabric_summary) -> None:
     assert isinstance(instance.results.response, list)
 
     assert len(instance.results.diff) == 1
-    assert len(instance.results.result) == 2
-    assert len(instance.results.response) == 2
+    assert len(instance.results.result) == 1
+    assert len(instance.results.response) == 1
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 404
     assert instance.results.result[0].get("found", None) is False
@@ -469,7 +470,7 @@ def test_fabric_summary_00035(monkeypatch, fabric_summary) -> None:
     assert instance.data.get("switchRoles", {}).get("border gateway", None) is None
 
 
-def test_fabric_summary_00036(monkeypatch, fabric_summary) -> None:
+def test_fabric_summary_v2_00036(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -507,26 +508,23 @@ def test_fabric_summary_00036(monkeypatch, fabric_summary) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
 
-    gen = ResponseGenerator(responses())
-
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(params={"check_mode": False, "state": "query"})
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
-        instance = fabric_summary
-        instance.rest_send = RestSend(MockAnsibleModule())
+        instance = fabric_summary_v2
+        instance.rest_send = rest_send
         instance.rest_send.unit_test = True
         instance.rest_send.timeout = 1
         instance.fabric_name = "MyFabric"
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     match = r"FabricSummary.\_verify_controller_response:\s+"
     match += r"Controller responded with missing or empty DATA\."
@@ -542,8 +540,8 @@ def test_fabric_summary_00036(monkeypatch, fabric_summary) -> None:
     assert isinstance(instance.results.response, list)
 
     assert len(instance.results.diff) == 1
-    assert len(instance.results.result) == 2
-    assert len(instance.results.response) == 2
+    assert len(instance.results.result) == 1
+    assert len(instance.results.response) == 1
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
     assert instance.results.result[0].get("found", None) is True
@@ -555,7 +553,7 @@ def test_fabric_summary_00036(monkeypatch, fabric_summary) -> None:
     assert True not in instance.results.changed
 
 
-def test_fabric_summary_00040(fabric_summary) -> None:
+def test_fabric_summary_v2_00040(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -580,7 +578,7 @@ def test_fabric_summary_00040(fabric_summary) -> None:
     -   Exception message matches expected
     """
     with does_not_raise():
-        instance = fabric_summary
+        instance = fabric_summary_v2
 
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.all_data\."
@@ -588,7 +586,7 @@ def test_fabric_summary_00040(fabric_summary) -> None:
         instance.all_data  # pylint: disable=pointless-statement
 
 
-def test_fabric_summary_00050(fabric_summary) -> None:
+def test_fabric_summary_v2_00050(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -613,7 +611,7 @@ def test_fabric_summary_00050(fabric_summary) -> None:
     -   Exception message matches expected
     """
     with does_not_raise():
-        instance = fabric_summary
+        instance = fabric_summary_v2
 
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.border_gateway_count\."
@@ -621,7 +619,7 @@ def test_fabric_summary_00050(fabric_summary) -> None:
         instance.border_gateway_count  # pylint: disable=pointless-statement
 
 
-def test_fabric_summary_00060(fabric_summary) -> None:
+def test_fabric_summary_v2_00060(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -646,7 +644,7 @@ def test_fabric_summary_00060(fabric_summary) -> None:
     -   Exception message matches expected
     """
     with does_not_raise():
-        instance = fabric_summary
+        instance = fabric_summary_v2
 
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.device_count\."
@@ -654,7 +652,7 @@ def test_fabric_summary_00060(fabric_summary) -> None:
         instance.device_count  # pylint: disable=pointless-statement
 
 
-def test_fabric_summary_00070(fabric_summary) -> None:
+def test_fabric_summary_v2_00070(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -679,7 +677,7 @@ def test_fabric_summary_00070(fabric_summary) -> None:
     -   Exception message matches expected
     """
     with does_not_raise():
-        instance = fabric_summary
+        instance = fabric_summary_v2
 
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.fabric_is_empty\."
@@ -704,9 +702,9 @@ MATCH_00080b += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\."
         ("My_Fabric", does_not_raise(), False),
         ("My-Fabric", does_not_raise(), False),
         ("M", does_not_raise(), False),
-        (1, pytest.raises(TypeError, match=MATCH_00080a), True),
-        ({}, pytest.raises(TypeError, match=MATCH_00080a), True),
-        ([1, 2, 3], pytest.raises(TypeError, match=MATCH_00080a), True),
+        (1, pytest.raises(ValueError, match=MATCH_00080a), True),
+        ({}, pytest.raises(ValueError, match=MATCH_00080a), True),
+        ([1, 2, 3], pytest.raises(ValueError, match=MATCH_00080a), True),
         ("1", pytest.raises(ValueError, match=MATCH_00080b), True),
         ("-MyFabric", pytest.raises(ValueError, match=MATCH_00080b), True),
         ("_MyFabric", pytest.raises(ValueError, match=MATCH_00080b), True),
@@ -715,9 +713,7 @@ MATCH_00080b += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\."
         ("My*Fabric", pytest.raises(ValueError, match=MATCH_00080b), True),
     ],
 )
-def test_fabric_summary_00080(
-    fabric_summary, fabric_name, expected, does_raise
-) -> None:
+def test_fabric_summary_v2_00080(fabric_summary_v2, fabric_name, expected, does_raise) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -742,14 +738,14 @@ def test_fabric_summary_00080(
     -   Exception message matches expected
     """
     with does_not_raise():
-        instance = fabric_summary
+        instance = fabric_summary_v2
     with expected:
         instance.fabric_name = fabric_name
     if does_raise is False:
         assert instance.fabric_name == fabric_name
 
 
-def test_fabric_summary_00090(fabric_summary) -> None:
+def test_fabric_summary_v2_00090(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -774,7 +770,7 @@ def test_fabric_summary_00090(fabric_summary) -> None:
     -   Exception message matches expected
     """
     with does_not_raise():
-        instance = fabric_summary
+        instance = fabric_summary_v2
 
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.leaf_count\."
@@ -782,7 +778,7 @@ def test_fabric_summary_00090(fabric_summary) -> None:
         instance.leaf_count  # pylint: disable=pointless-statement
 
 
-def test_fabric_summary_00100(fabric_summary) -> None:
+def test_fabric_summary_v2_00100(fabric_summary_v2) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -807,7 +803,7 @@ def test_fabric_summary_00100(fabric_summary) -> None:
     -   Exception message matches expected
     """
     with does_not_raise():
-        instance = fabric_summary
+        instance = fabric_summary_v2
 
     match = r"FabricSummary\.refresh\(\) must be called before "
     match += r"accessing FabricSummary\.spine_count\."

@@ -11,51 +11,40 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+Utilities for dcnm_fabric module unit tests
+"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 
 from contextlib import contextmanager
+from typing import Any
 
 import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
-    FabricConfigDeploy
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import \
-    FabricConfigSave
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
-    FabricCreate, FabricCreateBulk, FabricCreateCommon)
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
-    FabricDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetails as FabricDetailsV2
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByName as FabricDetailsByNameV2
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByNvPair as FabricDetailsByNvPairV2
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
-    FabricSummary
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
-    FabricTypes
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
-    FabricQuery
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.replaced import \
-    FabricReplacedBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
-    TemplateGet
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get_all import \
-    TemplateGetAll
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
-    FabricUpdateBulk
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.fixture import \
-    load_fixture
+from ansible_collections.ansible.netcommon.tests.unit.modules.utils import AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import FabricCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common_v2 import FabricCommon as FabricCommonV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy_v2 import FabricConfigDeploy
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import FabricConfigSave
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import FabricCreate, FabricCreateBulk, FabricCreateCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import FabricDelete
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import FabricDetails as FabricDetailsV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import FabricDetailsByName as FabricDetailsByNameV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import FabricDetailsByNvPair as FabricDetailsByNvPairV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v3 import FabricDetails as FabricDetailsV3
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v3 import FabricDetailsByName as FabricDetailsByNameV3
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v3 import FabricDetailsByNvPair as FabricDetailsByNvPairV3
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary_v2 import FabricSummary as FabricSummaryV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import FabricTypes
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import FabricQuery
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.replaced import FabricReplacedBulk
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import TemplateGet
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get_all import TemplateGetAll
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import FabricUpdateBulk
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.fixture import load_fixture
 
 params = {
     "state": "merged",
@@ -69,7 +58,7 @@ class MockAnsibleModule:
     Mock the AnsibleModule class
     """
 
-    check_mode = False
+    check_mode: bool = False
 
     params = {
         "state": "merged",
@@ -83,17 +72,17 @@ class MockAnsibleModule:
             "choices": ["deleted", "overridden", "merged", "query", "replaced"],
         },
     }
-    supports_check_mode = True
+    supports_check_mode: bool = True
 
     @property
-    def state(self):
+    def state(self) -> str:
         """
         return the state
         """
-        return self.params["state"]
+        return self.params.get("state", "")
 
     @state.setter
-    def state(self, value):
+    def state(self, value: str):
         """
         set the state
         """
@@ -117,15 +106,23 @@ class MockAnsibleModule:
 
 
 @pytest.fixture(name="fabric_common")
-def fabric_common_fixture():
+def fabric_common_fixture() -> FabricCommon:
     """
     Return FabricCommon() instance.
     """
     return FabricCommon()
 
 
+@pytest.fixture(name="fabric_common_v2")
+def fabric_common_v2_fixture() -> FabricCommonV2:
+    """
+    Return FabricCommon() V2 instance.
+    """
+    return FabricCommonV2()
+
+
 @pytest.fixture(name="fabric_config_deploy")
-def fabric_config_deploy_fixture():
+def fabric_config_deploy_fixture() -> FabricConfigDeploy:
     """
     return instance of FabricConfigDeploy()
     """
@@ -133,7 +130,7 @@ def fabric_config_deploy_fixture():
 
 
 @pytest.fixture(name="fabric_config_save")
-def fabric_config_save_fixture():
+def fabric_config_save_fixture() -> FabricConfigSave:
     """
     return instance of FabricConfigSave()
     """
@@ -141,7 +138,7 @@ def fabric_config_save_fixture():
 
 
 @pytest.fixture(name="fabric_create")
-def fabric_create_fixture():
+def fabric_create_fixture() -> FabricCreate:
     """
     Return FabricCreate() instance.
     """
@@ -149,7 +146,7 @@ def fabric_create_fixture():
 
 
 @pytest.fixture(name="fabric_create_bulk")
-def fabric_create_bulk_fixture():
+def fabric_create_bulk_fixture() -> FabricCreateBulk:
     """
     Return FabricCreateBulk() instance.
     """
@@ -157,7 +154,7 @@ def fabric_create_bulk_fixture():
 
 
 @pytest.fixture(name="fabric_create_common")
-def fabric_create_common_fixture():
+def fabric_create_common_fixture() -> FabricCreateCommon:
     """
     Return FabricCreateCommon() instance.
     """
@@ -165,7 +162,7 @@ def fabric_create_common_fixture():
 
 
 @pytest.fixture(name="fabric_delete")
-def fabric_delete_fixture():
+def fabric_delete_fixture() -> FabricDelete:
     """
     Return FabricDelete() instance.
     """
@@ -173,7 +170,7 @@ def fabric_delete_fixture():
 
 
 @pytest.fixture(name="fabric_details_v2")
-def fabric_details_v2_fixture():
+def fabric_details_v2_fixture() -> FabricDetailsV2:
     """
     Return FabricDetails() v2 instance
     """
@@ -181,23 +178,47 @@ def fabric_details_v2_fixture():
 
 
 @pytest.fixture(name="fabric_details_by_name_v2")
-def fabric_details_by_name_v2_fixture():
+def fabric_details_by_name_v2_fixture() -> FabricDetailsByNameV2:
     """
     Return FabricDetailsByName version 2 instance
     """
     return FabricDetailsByNameV2()
 
 
+@pytest.fixture(name="fabric_details_by_name_v3")
+def fabric_details_by_name_v3_fixture() -> FabricDetailsByNameV3:
+    """
+    Return FabricDetailsByName version 3 instance
+    """
+    return FabricDetailsByNameV3()
+
+
 @pytest.fixture(name="fabric_details_by_nv_pair_v2")
-def fabric_details_by_nv_pair_v2_fixture():
+def fabric_details_by_nv_pair_v2_fixture() -> FabricDetailsByNvPairV2:
     """
     Return FabricDetailsByNvPair version 2 instance
     """
     return FabricDetailsByNvPairV2()
 
 
+@pytest.fixture(name="fabric_details_by_nv_pair_v3")
+def fabric_details_by_nv_pair_v3_fixture() -> FabricDetailsByNvPairV3:
+    """
+    Return FabricDetailsByNvPair version 3 instance
+    """
+    return FabricDetailsByNvPairV3()
+
+
+@pytest.fixture(name="fabric_details_v3")
+def fabric_details_v3_fixture() -> FabricDetailsV3:
+    """
+    Return FabricDetails() v3 instance
+    """
+    return FabricDetailsV3()
+
+
 @pytest.fixture(name="fabric_query")
-def fabric_query_fixture():
+def fabric_query_fixture() -> FabricQuery:
     """
     Return FabricQuery() instance.
     """
@@ -205,23 +226,23 @@ def fabric_query_fixture():
 
 
 @pytest.fixture(name="fabric_replaced_bulk")
-def fabric_replaced_bulk_fixture():
+def fabric_replaced_bulk_fixture() -> FabricReplacedBulk:
     """
     Return FabricReplacedBulk() instance.
     """
     return FabricReplacedBulk()
 
 
-@pytest.fixture(name="fabric_summary")
-def fabric_summary_fixture():
+@pytest.fixture(name="fabric_summary_v2")
+def fabric_summary_v2_fixture() -> FabricSummaryV2:
     """
-    Return FabricSummary() instance.
+    Return FabricSummaryV2() instance.
     """
-    return FabricSummary()
+    return FabricSummaryV2()
 
 
 @pytest.fixture(name="fabric_types")
-def fabric_types_fixture():
+def fabric_types_fixture() -> FabricTypes:
     """
     Return FabricTypes() instance.
     """
@@ -229,7 +250,7 @@ def fabric_types_fixture():
 
 
 @pytest.fixture(name="fabric_update_bulk")
-def fabric_update_bulk_fixture():
+def fabric_update_bulk_fixture() -> FabricUpdateBulk:
     """
     Return FabricUpdateBulk() instance.
     """
@@ -237,7 +258,7 @@ def fabric_update_bulk_fixture():
 
 
 @pytest.fixture(name="response_handler")
-def response_handler_fixture():
+def response_handler_fixture() -> ResponseHandler:
     """
     Return ResponseHandler() instance.
     """
@@ -245,7 +266,7 @@ def response_handler_fixture():
 
 
 @pytest.fixture(name="template_get")
-def template_get_fixture():
+def template_get_fixture() -> TemplateGet:
     """
     Return TemplateGet() instance.
     """
@@ -253,7 +274,7 @@ def template_get_fixture():
 
 
 @pytest.fixture(name="template_get_all")
-def template_get_all_fixture():
+def template_get_all_fixture() -> TemplateGetAll:
     """
     Return TemplateGetAll() instance.
     """
@@ -278,11 +299,21 @@ def nv_pairs_verify_playbook_params(key: str) -> dict[str, str]:
     return data
 
 
-def payloads_fabric_common(key: str) -> dict[str, str]:
+def payloads_fabric_common(key: str) -> dict[str, dict[str, Any]]:
     """
     Return payloads for FabricCommon
     """
     data_file = "payloads_FabricCommon"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def payloads_fabric_common_v2(key: str) -> dict[str, dict[str, Any]]:
+    """
+    Return payloads for FabricCommon
+    """
+    data_file = "payloads_FabricCommon_V2"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
@@ -328,7 +359,7 @@ def payloads_fabric_replaced_bulk(key: str) -> dict[str, str]:
     return data
 
 
-def payloads_fabric_update_bulk(key: str) -> dict[str, str]:
+def payloads_fabric_update_bulk(key: str) -> list[dict[str, Any]]:
     """
     Return payloads for FabricUpdateBulk
     """
@@ -478,11 +509,11 @@ def responses_fabric_replaced_bulk(key: str) -> dict[str, str]:
     return data
 
 
-def responses_fabric_summary(key: str) -> dict[str, str]:
+def responses_fabric_summary_v2(key: str) -> dict[str, str]:
     """
-    Return responses for FabricSummary
+    Return responses for FabricSummaryV2
     """
-    data_file = "responses_FabricSummary"
+    data_file = "responses_FabricSummary_V2"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

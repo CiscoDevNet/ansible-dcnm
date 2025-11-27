@@ -12,45 +12,57 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+Update fabrics in bulk.
+"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import copy
 import inspect
 import json
 import logging
+from typing import Any, Literal
 
-from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabricUpdate
+from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import EpFabricUpdate
 from ..common.exceptions import ControllerResponseError
-from .common import FabricCommon
+from ..common.operation_type import OperationType
+from ..common.rest_send_v2 import RestSend
+from ..common.results_v2 import Results
+from .common_v2 import FabricCommon
+from .fabric_details_v3 import FabricDetailsByName
+from .fabric_summary_v2 import FabricSummary
 from .fabric_types import FabricTypes
 
 
 class FabricUpdateCommon(FabricCommon):
     """
+    # Summary
+
     Common methods and properties for:
+
     - FabricUpdate
     - FabricUpdateBulk
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.class_name = self.__class__.__name__
-        self.action = "fabric_update"
+        self.class_name: str = self.__class__.__name__
+        self.action: str = "fabric_update"
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.ep_fabric_update = EpFabricUpdate()
-        self.fabric_types = FabricTypes()
+        self._ep_fabric_update: EpFabricUpdate = EpFabricUpdate()
+        self._fabric_details_by_name: FabricDetailsByName = FabricDetailsByName()
+        self._fabric_summary: FabricSummary = FabricSummary()
+        self.fabric_types: FabricTypes = FabricTypes()
 
         msg = "ENTERED FabricUpdateCommon()"
         self.log.debug(msg)
 
-    def _fabric_needs_update_for_merged_state(self, payload):
+    def _fabric_needs_update_for_merged_state(self, payload: dict[str, Any]) -> None:
         """
         -   Add True to self._fabric_update_required set() if the fabric needs
             to be updated for merged state.
@@ -69,13 +81,16 @@ class FabricUpdateCommon(FabricCommon):
         -   We've already verified that the fabric exists on the
             controller in ``_build_payloads_for_merged_state()``.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        fabric_name = payload.get("FABRIC_NAME", None)
+        fabric_name: str = payload.get("FABRIC_NAME", "")
 
         self._fabric_changes_payload[fabric_name] = {}
-        nv_pairs = self.fabric_details.all_data[fabric_name].get("nvPairs", {})
+        nv_pairs: dict[str, Any] = self._fabric_details_by_name.all_data[fabric_name].get("nvPairs", {})
 
+        key: str = ""
+        payload_value: Any
+        payload_key: str
         for payload_key, payload_value in payload.items():
             # Translate payload keys to equivilent keys on the controller
             # if necessary.  This handles cases where the controller key
@@ -92,33 +107,28 @@ class FabricUpdateCommon(FabricCommon):
             if key == "FABRIC_TYPE":
                 continue
 
-            # self._key_translations returns None for any keys that would not
-            # be found in the controller configuration (e.g. DEPLOY).
-            # Skip these keys.
-            if key is None:
+            if not key:
                 continue
 
             # If a key is in the payload that is not in the fabric
             # configuration on the controller:
             # - Update Results()
             # - raise ValueError
-            # pylint: disable=no-member
             if nv_pairs.get(key) is None:
-                self.results.diff_current = {}
-                self.results.result_current = {"success": False, "changed": False}
-                self.results.failed = True
-                self.results.changed = False
-                self.results.failed_result["msg"] = (
+                self._results.diff_current = {}
+                self._results.result_current = {"success": False, "changed": False}
+                self._results.add_failed(True)
+                self._results.add_changed(False)
+                self._results.failed_result["msg"] = (
                     f"Key {key} not found in fabric configuration for "
                     f"fabric {fabric_name}"
                 )
-                self.results.register_task_result()
+                self._results.register_task_result()
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Invalid key: {key} found in payload for "
                 msg += f"fabric {fabric_name}"
                 self.log.debug(msg)
                 raise ValueError(msg)
-            # pylint: enable=no-member
             msg = f"{self.class_name}.{method_name}: "
             msg += f"key: {key}, payload_value: {payload_value}, "
             msg += f"fabric_value: {nv_pairs.get(key)}"
@@ -174,12 +184,13 @@ class FabricUpdateCommon(FabricCommon):
         -   self._fabric_needs_update_for_merged_state() may remove payload
             key/values that would not change the controller configuration.
         """
-        self.fabric_details.refresh()
+        self._fabric_details_by_name.rest_send = self._rest_send
+        self._fabric_details_by_name.refresh()
         self._payloads_to_commit = []
 
         for payload in self.payloads:
             fabric_name = payload.get("FABRIC_NAME", None)
-            if fabric_name not in self.fabric_details.all_data:
+            if fabric_name not in self._fabric_details_by_name.all_data:
                 continue
 
             self._fabric_update_required = set()
@@ -222,8 +233,7 @@ class FabricUpdateCommon(FabricCommon):
                 raise ValueError(error) from error
 
         # Skip config-save if prior actions encountered errors.
-        # pylint: disable=no-member
-        if True in self.results.failed:
+        if True in self._results.failed:
             return
 
         for payload in self._payloads_to_commit:
@@ -233,9 +243,8 @@ class FabricUpdateCommon(FabricCommon):
                 raise ValueError(error) from error
 
         # Skip config-deploy if prior actions encountered errors.
-        if True in self.results.failed:
+        if True in self._results.failed:
             return
-        # pylint: enable=no-member
 
         for payload in self._payloads_to_commit:
             try:
@@ -249,7 +258,7 @@ class FabricUpdateCommon(FabricCommon):
         - raise ``ValueError`` if the enpoint assignment fails
         """
         try:
-            self.ep_fabric_update.fabric_name = payload.get("FABRIC_NAME")
+            self._ep_fabric_update.fabric_name = payload.get("FABRIC_NAME")
         except ValueError as error:
             raise ValueError(error) from error
 
@@ -261,20 +270,20 @@ class FabricUpdateCommon(FabricCommon):
             raise ValueError(error) from error
 
         try:
-            self.ep_fabric_update.template_name = self.fabric_types.template_name
+            self._ep_fabric_update.template_name = self.fabric_types.template_name
         except ValueError as error:
             raise ValueError(error) from error
 
         payload.pop("FABRIC_TYPE", None)
-        self.path = self.ep_fabric_update.path
-        self.verb = self.ep_fabric_update.verb
+        self.path = self._ep_fabric_update.path
+        self.verb = self._ep_fabric_update.verb
 
     def _send_payload(self, payload):
         """
         - Send one fabric update payload
         - raise ``ValueError`` if the endpoint assignment fails
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         try:
             self._set_fabric_update_endpoint(payload)
@@ -289,30 +298,29 @@ class FabricUpdateCommon(FabricCommon):
         # We don't want RestSend to retry on errors since the likelihood of a
         # timeout error when updating a fabric is low, and there are many cases
         # of permanent errors for which we don't want to retry.
-        # pylint: disable=no-member
-        self.rest_send.timeout = 1
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
-        self.rest_send.payload = payload
-        self.rest_send.commit()
+        self._rest_send.timeout = 1
+        self._rest_send.path = self.path
+        self._rest_send.verb = self.verb
+        self._rest_send.payload = payload
+        self._rest_send.commit()
 
-        if self.rest_send.result_current["success"] is False:
-            self.results.diff_current = {}
+        if self._rest_send.result_current["success"] is False:
+            self._results.diff_current = {}
         else:
-            self.results.diff_current = copy.deepcopy(payload)
+            self._results.diff_current = copy.deepcopy(payload)
 
         self.send_payload_result[payload["FABRIC_NAME"]] = (
-            self.rest_send.result_current["success"]
+            self._rest_send.result_current["success"]
         )
-        self.results.action = self.action
-        self.results.check_mode = self.rest_send.check_mode
-        self.results.state = self.rest_send.state
-        self.results.response_current = copy.deepcopy(self.rest_send.response_current)
-        self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-        self.results.register_task_result()
+        self._results.action = self.action
+        self._results.check_mode = self._rest_send.check_mode
+        self._results.state = self._rest_send.state
+        self._results.response_current = copy.deepcopy(self._rest_send.response_current)
+        self._results.result_current = copy.deepcopy(self._rest_send.result_current)
+        self._results.register_task_result()
 
     @property
-    def payloads(self):
+    def payloads(self) -> list[dict[str, Any]]:
         """
         Payloads must be a ``list`` of ``dict`` of payloads for the
         ``fabric_update`` endpoint.
@@ -325,8 +333,8 @@ class FabricUpdateCommon(FabricCommon):
         return self._payloads
 
     @payloads.setter
-    def payloads(self, value):
-        method_name = inspect.stack()[0][3]
+    def payloads(self, value: list[dict[str, Any]]) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be a list of dict. "
@@ -343,13 +351,15 @@ class FabricUpdateCommon(FabricCommon):
 
 class FabricUpdateBulk(FabricUpdateCommon):
     """
+    # Summary
+
     Update fabrics in bulk.
 
-    Usage:
-    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
-        FabricUpdateBulk
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-        Results
+    ##vUsage
+
+    ```python
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import FabricUpdateBulk
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
 
     payloads = [
         { "FABRIC_NAME": "fabric1", "BGP_AS": 65000, "DEPLOY": True },
@@ -376,54 +386,57 @@ class FabricUpdateBulk(FabricUpdateCommon):
         msg = "Fabric update(s) failed."
         ansible_module.fail_json(msg, **task.results.final_result)
     ansible_module.exit_json(**task.results.final_result)
+    ```
     """
 
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
+        self.action: str = "fabric_update_bulk"
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._payloads = None
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
+
+        self._rest_send: RestSend = RestSend({})
+
+        self._results: Results = Results()
+        self._results.action = self.action
+        self._results.operation_type = OperationType.UPDATE
+        self._payloads: list[dict] = []
 
         msg = "ENTERED FabricUpdateBulk()"
         self.log.debug(msg)
 
     def commit(self):
         """
+        # Summary
+
         - Update fabrics and register results.
         - Return if there are no fabrics to update for merged state.
-        - raise ``ValueError`` if ``fabric_details`` is not set
-        - raise ``ValueError`` if ``fabric_summary`` is not set
-        - raise ``ValueError`` if ``payloads`` is not set
-        - raise ``ValueError`` if ``rest_send`` is not set
-        - raise ``ValueError`` if ``_build_payloads_for_merged_state`` fails
-        - raise ``ValueError`` if ``_send_payloads`` fails
+
+        ## Raises
+
+        ### ValueError
+
+        - `payloads` is not set
+        - `rest_send` is not set
+        - `_build_payloads_for_merged_state` fails
+        - `_send_payloads` fails
         """
-        method_name = inspect.stack()[0][3]
-        if self.fabric_details is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_details must be set prior to calling commit."
-            raise ValueError(msg)
+        method_name: str = inspect.stack()[0][3]
 
-        if self.fabric_summary is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_summary must be set prior to calling commit."
-            raise ValueError(msg)
-
-        if self.payloads is None:
+        if not self.payloads:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be set prior to calling commit."
             raise ValueError(msg)
 
-        # pylint: disable=no-member
-        if self.rest_send is None:
+        if not self._rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit."
             raise ValueError(msg)
 
-        self.results.action = self.action
-        self.results.check_mode = self.rest_send.check_mode
-        self.results.state = self.rest_send.state
+        self._results.action = self.action
+        self._results.check_mode = self._rest_send.check_mode
+        self._results.state = self._rest_send.state
 
         try:
             self._build_payloads_for_merged_state()
@@ -431,24 +444,108 @@ class FabricUpdateBulk(FabricUpdateCommon):
             raise ValueError(error) from error
 
         if len(self._payloads_to_commit) == 0:
-            self.results.diff_current = {}
-            self.results.result_current = {"success": True, "changed": False}
+            self._results.diff_current = {}
+            self._results.result_current = {"success": True, "changed": False}
             msg = "No fabrics to update for merged state."
-            self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
-            self.results.register_task_result()
+            self._results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
+            self._results.register_task_result()
             return
 
         try:
             self._send_payloads()
         except ValueError as error:
-            self.results.diff_current = {}
-            self.results.result_current = {"success": False, "changed": False}
-            return_code = self.rest_send.response_current.get("RETURN_CODE", None)
-            msg = f"ValueError self.results.response: {self.results.response}"
+            self._results.diff_current = {}
+            self._results.result_current = {"success": False, "changed": False}
+            return_code = self._rest_send.response_current.get("RETURN_CODE", None)
+            msg = f"ValueError self._results.response: {self._results.response}"
             self.log.debug(msg)
-            self.results.response_current = {
+            self._results.response_current = {
                 "RETURN_CODE": f"{return_code}",
                 "MESSAGE": f"{error}",
             }
-            self.results.register_task_result()
+            self._results.register_task_result()
             raise ValueError(error) from error
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        # Summary
+
+        An instance of the RestSend class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of RestSend.
+        -   setter: `ValueError` if RestSend.params is not set.
+
+        ## getter
+
+        Return an instance of the RestSend class.
+
+        ## setter
+
+        Set an instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["RestSend"] = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set before assigning "
+            msg += "to FabricConfigDeploy.rest_send."
+            raise ValueError(msg)
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        # Summary
+
+        An instance of the Results class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of Results.
+
+        ## getter
+
+        Return an instance of the Results class.
+
+        ## setter
+
+        Set an instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["Results"] = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._results = value
+        self._results.action = self.action
+        self._results.operation_type = OperationType.UPDATE

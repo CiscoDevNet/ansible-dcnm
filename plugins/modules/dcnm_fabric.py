@@ -13,10 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# pylint: disable=too-many-lines
+"""
+Manage creation and configuration of NDFC fabrics
+"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 DOCUMENTATION = """
@@ -3720,23 +3723,23 @@ import copy
 import inspect
 import json
 import logging
+from typing import Any, Literal
 
 from ansible.module_utils.basic import AnsibleModule
 
-from ..module_utils.common.controller_features import ControllerFeatures
-from ..module_utils.common.controller_version import ControllerVersion
+from ..module_utils.common.controller_features_v2 import ControllerFeatures
+from ..module_utils.common.controller_version_v2 import ControllerVersion
 from ..module_utils.common.exceptions import ControllerResponseError
 from ..module_utils.common.log_v2 import Log
-from ..module_utils.common.properties import Properties
 from ..module_utils.common.response_handler import ResponseHandler
 from ..module_utils.common.rest_send_v2 import RestSend
-from ..module_utils.common.results import Results
+from ..module_utils.common.results_v2 import Results
 from ..module_utils.common.sender_dcnm import Sender
-from ..module_utils.fabric.common import FabricCommon
+from ..module_utils.fabric.common_v2 import FabricCommon
 from ..module_utils.fabric.create import FabricCreateBulk
 from ..module_utils.fabric.delete import FabricDelete
-from ..module_utils.fabric.fabric_details_v2 import FabricDetailsByName
-from ..module_utils.fabric.fabric_summary import FabricSummary
+from ..module_utils.fabric.fabric_details_v3 import FabricDetailsByName
+from ..module_utils.fabric.fabric_summary_v2 import FabricSummary
 from ..module_utils.fabric.fabric_types import FabricTypes
 from ..module_utils.fabric.query import FabricQuery
 from ..module_utils.fabric.replaced import FabricReplacedBulk
@@ -3745,48 +3748,46 @@ from ..module_utils.fabric.update import FabricUpdateBulk
 from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
 
 
-def json_pretty(msg):
+def json_pretty(msg) -> str:
     """
     Return a pretty-printed JSON string for logging messages
     """
     return json.dumps(msg, indent=4, sort_keys=True)
 
 
-@Properties.add_rest_send
 class Common(FabricCommon):
     """
     Common methods, properties, and resources for all states.
     """
 
-    def __init__(self, params):
-        self.class_name = self.__class__.__name__
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+    def __init__(self, params: dict[str, Any]) -> None:
+        self.class_name: str = self.__class__.__name__
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
         super().__init__()
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        self.controller_features = ControllerFeatures()
-        self.controller_version = ControllerVersion()
-        self.features = {}
-        self._implemented_states = set()
+        self.controller_features: ControllerFeatures = ControllerFeatures()
+        self.controller_version: ControllerVersion = ControllerVersion()
+        self.features: dict = {}
+        self._implemented_states: set = set()
 
-        self.params = params
+        self.params: dict[str, Any] = params
         # populated in self.validate_input()
-        self.payloads = {}
+        self.payloads: dict[str, Any] = {}
 
         self.populate_check_mode()
         self.populate_state()
         self.populate_config()
 
-        self.results = Results()
-        self.results.state = self.state
-        self.results.check_mode = self.check_mode
-        self._rest_send = None
-        self._verify_playbook_params = VerifyPlaybookParams()
-
-        self.have = {}
+        self._results: Results = Results()
+        self._results.state = self.state
+        self._results.check_mode = self.check_mode
+        self._rest_send: RestSend = RestSend({})
+        self._verify_playbook_params: VerifyPlaybookParams = VerifyPlaybookParams()
+        self.have: FabricDetailsByName = FabricDetailsByName()
         self.query = []
         self.validated = []
-        self.want = []
+        self.want: list[dict[str, Any]] = []
 
         msg = "ENTERED Common(): "
         msg += f"state: {self.state}, "
@@ -3801,12 +3802,16 @@ class Common(FabricCommon):
         ### Raises
         -   ValueError if check_mode is not provided.
         """
-        method_name = inspect.stack()[0][3]
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
+        method_name: str = inspect.stack()[0][3]
+        if self.params.get("check_mode") is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "check_mode is required."
             raise ValueError(msg)
+        if not isinstance(self.params["check_mode"], bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "check_mode must be a boolean."
+            raise ValueError(msg)
+        self.check_mode: bool = self.params["check_mode"]
 
     def populate_config(self):
         """
@@ -3818,19 +3823,20 @@ class Common(FabricCommon):
                 -   ``state`` is "merged" or "replaced" and ``config`` is None.
                 -   ``config`` is not a list.
         """
-        method_name = inspect.stack()[0][3]
-        states_requiring_config = {"merged", "replaced"}
-        self.config = self.params.get("config", None)
+        method_name: str = inspect.stack()[0][3]
+        states_requiring_config = {"deleted", "merged", "replaced"}
+        self.config: list[dict[str, Any]] = []
         if self.state in states_requiring_config:
-            if self.config is None:
+            if self.params.get("config") is None:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "params is missing config parameter."
                 raise ValueError(msg)
-            if not isinstance(self.config, list):
+            if not isinstance(self.params["config"], list):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "expected list type for self.config. "
-                msg += f"got {type(self.config).__name__}"
+                msg += f"got {type(self.params['config']).__name__}"
                 raise ValueError(msg)
+            self.config = self.params["config"]
 
     def populate_state(self):
         """
@@ -3842,7 +3848,7 @@ class Common(FabricCommon):
                 -   ``state`` is not provided.
                 -   ``state`` is not a valid state.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         valid_states = ["deleted", "merged", "query", "replaced"]
 
@@ -3859,35 +3865,22 @@ class Common(FabricCommon):
 
     def get_have(self):
         """
-        ### Summary
-        Build ``self.have``, which is a dict containing the current controller
+        # Summary
+
+        Instantiate and refresh `self.have` to retrieve the current controller
         fabrics and their details.
 
-        ### Raises
-        -   ``ValueError`` if the controller returns an error when attempting to
-            retrieve the fabric details.
+        ## Raises
 
-        ### have structure
+        ### ValueError
 
-        ``have`` is a dict, keyed on fabric_name, where each element is a dict
-        with the following structure.
-
-        ```python
-        have = {
-            "fabric_name": "fabric_name",
-            "fabric_config": {
-                "fabricName": "fabric_name",
-                "fabricType": "VXLAN EVPN",
-                "etc...": "etc..."
-            }
-        }
-        ```
+        - The controller returns an error when attempting to retrieve the fabric details.
 
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
         try:
             self.have = FabricDetailsByName()
-            self.have.rest_send = self.rest_send
+            self.have.rest_send = self._rest_send
             self.have.results = Results()
             self.have.refresh()
         except ValueError as error:
@@ -3906,8 +3899,8 @@ class Common(FabricCommon):
         ### Raises
         -   ``ValueError`` if the playbook configs are invalid.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        merged_configs = []
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        merged_configs: list[dict[str, Any]] = []
         for config in self.config:
             try:
                 self._verify_payload(config)
@@ -3935,9 +3928,9 @@ class Common(FabricCommon):
         -   ``ValueError`` if the controller returns an error when attempting to
             retrieve the controller features.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.features = {}
-        self.controller_features.rest_send = self.rest_send
+        self.controller_features.rest_send = self._rest_send
         try:
             self.controller_features.refresh()
         except ControllerResponseError as error:
@@ -3962,9 +3955,9 @@ class Common(FabricCommon):
         -   ``ValueError`` if the controller returns an error when attempting
             to retrieve the controller version.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         try:
-            self.controller_version.rest_send = self.rest_send
+            self.controller_version.rest_send = self._rest_send
             self.controller_version.refresh()
         except (ControllerResponseError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
@@ -3972,6 +3965,87 @@ class Common(FabricCommon):
             msg += "controller version. "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        # Summary
+
+        An instance of the RestSend class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of RestSend.
+        -   setter: `ValueError` if RestSend.params is not set.
+
+        ## getter
+
+        Return an instance of the RestSend class.
+
+        ## setter
+
+        Set an instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["RestSend"] = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set."
+            raise ValueError(msg)
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        # Summary
+
+        An instance of the Results class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of Results.
+
+        ## getter
+
+        Return an instance of the Results class.
+
+        ## setter
+
+        Set an instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["Results"] = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._results = value
 
 
 class Deleted(Common):
@@ -3991,8 +4065,8 @@ class Deleted(Common):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = "ENTERED Deleted(): "
-        msg += f"state: {self.results.state}, "
-        msg += f"check_mode: {self.results.check_mode}"
+        msg += f"state: {self._results.state}, "
+        msg += f"check_mode: {self._results.check_mode}"
         self.log.debug(msg)
 
     def commit(self) -> None:
@@ -4006,23 +4080,13 @@ class Deleted(Common):
             delete the fabrics.
         """
         self.get_want()
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED: {self.class_name}.{method_name}"
         self.log.debug(msg)
 
-        self.fabric_details = FabricDetailsByName()
-        self.fabric_details.rest_send = self.rest_send
-        self.fabric_details.results = Results()
-
-        self.fabric_summary = FabricSummary()
-        self.fabric_summary.rest_send = self.rest_send
-        self.fabric_summary.results = Results()
-
-        self.delete.rest_send = self.rest_send
-        self.delete.fabric_details = self.fabric_details
-        self.delete.fabric_summary = self.fabric_summary
-        self.delete.results = self.results
+        self.delete.rest_send = self._rest_send
+        self.delete.results = self._results
 
         fabric_names_to_delete = []
         for want in self.want:
@@ -4060,47 +4124,45 @@ class Merged(Common):
             the fabric.
     """
 
-    def __init__(self, params):
-        self.class_name = self.__class__.__name__
-        super().__init__(params)
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+    def __init__(self, params: dict[str, Any]) -> None:
+        self.class_name: str = self.__class__.__name__
+        super().__init__(params=params)
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        self.action = "fabric_create"
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.action: str = "fabric_create"
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.fabric_details = FabricDetailsByName()
-        self.fabric_summary = FabricSummary()
         self.fabric_create = FabricCreateBulk()
         self.fabric_types = FabricTypes()
         self.fabric_update = FabricUpdateBulk()
-        self.template = TemplateGet()
+        self.template_get: TemplateGet = TemplateGet()
 
         msg = f"ENTERED Merged.{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        self.need_create = []
-        self.need_update = []
+        self.need_create: list[dict[str, Any]] = []
+        self.need_update: list[dict[str, Any]] = []
 
         self._implemented_states.add("merged")
 
     def get_need(self):
         """
-        ### Summary
-        Build ``self.need`` for merged state.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-            -   The controller features required for the fabric type are not
-                running on the controller.
-            -   The playbook parameters are invalid.
-            -   The controller returns an error when attempting to retrieve
-                the template.
-            -   The controller returns an error when attempting to retrieve
-                the fabric details.
+        Build `self.need` for merged state.
+
+        ## Raises
+
+        ### ValueError
+
+        - The controller features required for the fabric type are not running on the controller.
+        - The playbook parameters are invalid.
+        - The controller returns an error when attempting to retrieve the template.
+        - The controller returns an error when attempting to retrieve the fabric details.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.payloads = {}
         for want in self.want:
 
@@ -4139,15 +4201,15 @@ class Merged(Common):
                 raise ValueError(f"{error}") from error
 
             try:
-                template_name = self.fabric_types.template_name
+                template_name: str = self.fabric_types.template_name
             except ValueError as error:
                 raise ValueError(f"{error}") from error
 
-            self.template.rest_send = self.rest_send
-            self.template.template_name = template_name
+            self.template_get.rest_send = self._rest_send
+            self.template_get.template_name = template_name
 
             try:
-                self.template.refresh()
+                self.template_get.refresh()
             except ValueError as error:
                 raise ValueError(f"{error}") from error
             except ControllerResponseError as error:
@@ -4158,7 +4220,7 @@ class Merged(Common):
                 raise ValueError(msg) from error
 
             try:
-                self._verify_playbook_params.template = self.template.template
+                self._verify_playbook_params.template = self.template_get.template
             except TypeError as error:
                 raise ValueError(f"{error}") from error
 
@@ -4223,18 +4285,11 @@ class Merged(Common):
                 the fabric.
             -   The controller returns an error when attempting to update
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
 
         self.get_controller_version()
-
-        self.fabric_details.rest_send = self.rest_send
-        self.fabric_summary.rest_send = self.rest_send
-
-        self.fabric_details.results = Results()
-        self.fabric_summary.results = Results()
-
         self.get_controller_features()
         self.get_want()
         self.get_have()
@@ -4254,7 +4309,7 @@ class Merged(Common):
             -   The controller returns an error when attempting to create
                 the fabric.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered. "
         msg += f"self.need_create: {json_pretty(self.need_create)}"
         self.log.debug(msg)
@@ -4266,8 +4321,8 @@ class Merged(Common):
             return
 
         self.fabric_create.fabric_details = self.fabric_details
-        self.fabric_create.rest_send = self.rest_send
-        self.fabric_create.results = self.results
+        self.fabric_create.rest_send = self._rest_send
+        self.fabric_create.results = self._results
 
         try:
             self.fabric_create.payloads = self.need_create
@@ -4291,7 +4346,7 @@ class Merged(Common):
             -   The controller returns an error when attempting to update
                 the fabric.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered. "
         msg += "self.need_update: "
         msg += f"{json_pretty(self.need_update)}"
@@ -4303,10 +4358,8 @@ class Merged(Common):
             self.log.debug(msg)
             return
 
-        self.fabric_update.fabric_details = self.fabric_details
-        self.fabric_update.fabric_summary = self.fabric_summary
-        self.fabric_update.rest_send = self.rest_send
-        self.fabric_update.results = self.results
+        self.fabric_update.rest_send = self._rest_send
+        self.fabric_update.results = self._results
 
         try:
             self.fabric_update.payloads = self.need_update
@@ -4359,15 +4412,14 @@ class Query(Common):
                 query the fabrics.
         """
         self.fabric_details = FabricDetailsByName()
-        self.fabric_details.rest_send = self.rest_send
+        self.fabric_details.rest_send = self._rest_send
         self.fabric_details.results = Results()
 
         self.get_want()
 
         fabric_query = FabricQuery()
-        fabric_query.fabric_details = self.fabric_details
-        fabric_query.rest_send = self.rest_send
-        fabric_query.results = self.results
+        fabric_query.rest_send = self._rest_send
+        fabric_query.results = self._results
 
         fabric_names_to_query = []
         for want in self.want:
@@ -4406,7 +4458,7 @@ class Replaced(Common):
     def __init__(self, params):
         self.class_name = self.__class__.__name__
         super().__init__(params)
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.action = "fabric_replaced"
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -4418,7 +4470,7 @@ class Replaced(Common):
         self.merged = None
         self.need_create = []
         self.need_replaced = []
-        self.template = TemplateGet()
+        self.template_get: TemplateGet = TemplateGet()
         self._implemented_states.add("replaced")
 
         msg = f"ENTERED Replaced.{method_name}: "
@@ -4436,7 +4488,7 @@ class Replaced(Common):
             -   The controller features required for the fabric type are not
                 running on the controller.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.payloads = {}
         for want in self.want:
 
@@ -4480,14 +4532,14 @@ class Replaced(Common):
             -   The controller features required for the fabric type are not
                 running on the controller.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
 
         self.get_controller_version()
 
-        self.fabric_details.rest_send = self.rest_send
-        self.fabric_summary.rest_send = self.rest_send
+        self.fabric_details.rest_send = self._rest_send
+        self.fabric_summary.rest_send = self._rest_send
 
         self.fabric_details.results = Results()
         self.fabric_summary.results = Results()
@@ -4511,7 +4563,7 @@ class Replaced(Common):
             -   The controller returns an error when attempting to
                  update the fabric.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered. "
         msg += "self.need_replaced: "
         msg += f"{json_pretty(self.need_replaced)}"
@@ -4519,10 +4571,10 @@ class Replaced(Common):
 
         if len(self.need_create) != 0:
             self.merged = Merged(self.params)
-            self.merged.rest_send = self.rest_send
-            self.merged.fabric_details.rest_send = self.rest_send
-            self.merged.fabric_summary.rest_send = self.rest_send
-            self.merged.results = self.results
+            self.merged.rest_send = self._rest_send
+            self.merged.fabric_details.rest_send = self._rest_send
+            self.merged.fabric_summary.rest_send = self._rest_send
+            self.merged.results = self._results
             self.merged.need_create = self.need_create
             self.merged.send_need_create()
 
@@ -4534,8 +4586,8 @@ class Replaced(Common):
 
         self.fabric_replaced.fabric_details = self.fabric_details
         self.fabric_replaced.fabric_summary = self.fabric_summary
-        self.fabric_replaced.rest_send = self.rest_send
-        self.fabric_replaced.results = self.results
+        self.fabric_replaced.rest_send = self._rest_send
+        self.fabric_replaced.results = self._results
 
         try:
             self.fabric_replaced.payloads = self.need_replaced
@@ -4576,9 +4628,7 @@ def main():
         "choices": ["deleted", "merged", "query", "replaced"],
     }
 
-    ansible_module = AnsibleModule(
-        argument_spec=argument_spec, supports_check_mode=True
-    )
+    ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     params = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
 
@@ -4610,6 +4660,9 @@ def main():
         task.rest_send = rest_send
         task.commit()
     except ValueError as error:
+        if task is None:
+            msg = f"Invalid state: {params['state']}"
+            ansible_module.fail_json(msg)
         ansible_module.fail_json(f"{error}", **task.results.failed_result)
 
     task.results.build_final_result()

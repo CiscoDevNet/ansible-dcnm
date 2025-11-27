@@ -32,22 +32,22 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import FabricDetailsByName
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, fabric_create_bulk_fixture, params,
-    payloads_fabric_create_bulk, responses_fabric_create_bulk,
-    responses_fabric_details_by_name_v2, rest_send_response_current)
+    MockAnsibleModule,
+    does_not_raise,
+    fabric_create_bulk_fixture,
+    params,
+    payloads_fabric_create_bulk,
+    responses_fabric_create_bulk,
+    responses_fabric_details_by_name_v2,
+    rest_send_response_current,
+)
 
 
 def test_fabric_create_bulk_00000(fabric_create_bulk) -> None:
@@ -120,7 +120,7 @@ def test_fabric_create_bulk_00021(fabric_create_bulk) -> None:
 
     with pytest.raises(ValueError, match=match):
         instance.payloads = "NOT_A_LIST"
-    assert instance.payloads is None
+    assert instance.payloads == []
 
 
 def test_fabric_create_bulk_00022(fabric_create_bulk) -> None:
@@ -149,7 +149,7 @@ def test_fabric_create_bulk_00022(fabric_create_bulk) -> None:
 
     with pytest.raises(ValueError, match=match):
         instance.payloads = [1, 2, 3]
-    assert instance.payloads is None
+    assert instance.payloads == []
 
 
 def test_fabric_create_bulk_00023(fabric_create_bulk) -> None:
@@ -172,18 +172,28 @@ def test_fabric_create_bulk_00023(fabric_create_bulk) -> None:
     -   instance.payloads is not modified, hence it retains its
         initial value of None
     """
+
+    def responses():
+        yield {"MESSAGE": "OK", "RETURN_CODE": 200, "DATA": {}}
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
     with does_not_raise():
         instance = fabric_create_bulk
         instance.results = Results()
-        instance.rest_send = RestSend(params)
-        instance.rest_send.unit_test = True
+        instance.rest_send = rest_send
 
     match = r"FabricCreateBulk\.commit: "
     match += r"payloads must be set prior to calling commit\."
 
     with pytest.raises(ValueError, match=match):
         instance.commit()
-    assert instance.payloads is None
+    assert instance.payloads == []
 
 
 def test_fabric_create_bulk_00024(fabric_create_bulk) -> None:
@@ -378,13 +388,7 @@ def test_fabric_create_bulk_00030(fabric_create_bulk) -> None:
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert (
-        instance.results.response[0]
-        .get("DATA", {})
-        .get("nvPairs", {})
-        .get("BGP_AS", None)
-        == "65001"
-    )
+    assert instance.results.response[0].get("DATA", {}).get("nvPairs", {}).get("BGP_AS", None) == "65001"
     assert instance.results.response[0].get("METHOD", None) == "POST"
 
     assert instance.results.result[0].get("changed", None) is True
@@ -553,10 +557,7 @@ def test_fabric_create_bulk_00032(fabric_create_bulk) -> None:
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 500
-    assert (
-        instance.results.response[0].get("DATA", {})
-        == "Error in validating provided name value pair: [BGP_AS]"
-    )
+    assert instance.results.response[0].get("DATA", {}) == "Error in validating provided name value pair: [BGP_AS]"
     assert instance.results.response[0].get("METHOD", None) == "POST"
 
     assert instance.results.result[0].get("changed", None) is False

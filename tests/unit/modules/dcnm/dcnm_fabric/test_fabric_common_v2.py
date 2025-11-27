@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,28 +21,29 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
-
+"""
+Unit tests for FabricCommon V2 class in module_utils/fabric/common_v2.py
+"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    does_not_raise, fabric_common_fixture, params, payloads_fabric_common,
-    responses_fabric_common)
+    does_not_raise,
+    fabric_common_v2_fixture,
+    payloads_fabric_common_v2,
+    responses_fabric_common,
+)
 
 
-def test_fabric_common_00010(fabric_common) -> None:
+def test_fabric_common_v2_00010(fabric_common_v2) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -58,17 +59,17 @@ def test_fabric_common_00010(fabric_common) -> None:
     - ``ValueError`` is not called
     """
     with does_not_raise():
-        instance = fabric_common
+        instance = fabric_common_v2
     assert instance.class_name == "FabricCommon"
 
-    assert instance._fabric_details is None
-    assert instance._fabric_summary is None
+    assert instance._fabric_details.class_name == "FabricDetailsByName"
+    assert instance._fabric_summary.class_name == "FabricSummary"
     assert instance._fabric_type == "VXLAN_EVPN"
-    assert instance._rest_send is None
-    assert instance._results is None
+    assert instance._rest_send.params == {}
+    assert instance._results.class_name == "Results"
 
 
-def test_fabric_common_00020(fabric_common) -> None:
+def test_fabric_common_v2_00020(fabric_common_v2) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -82,9 +83,9 @@ def test_fabric_common_00020(fabric_common) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
     with does_not_raise():
-        instance = fabric_common
+        instance = fabric_common_v2
         instance.results = Results()
-        instance._payloads_to_commit = payloads_fabric_common(key)
+        instance._payloads_to_commit = payloads_fabric_common_v2(key)
     match = r"FabricCommon\._fixup_anycast_gw_mac: "
     match += "Error translating ANYCAST_GW_MAC for fabric f1, "
     match += r"ANYCAST_GW_MAC: 00\.54, Error detail: Invalid MAC address"
@@ -119,7 +120,7 @@ MATCH_00021b += r"Use a string or integer instead\."
         (65001.65000, pytest.raises(ValueError, match=MATCH_00021b)),
     ],
 )
-def test_fabric_common_00021(fabric_common, bgp_as, expected) -> None:
+def test_fabric_common_v2_00021(fabric_common_v2, bgp_as, expected) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -131,11 +132,9 @@ def test_fabric_common_00021(fabric_common, bgp_as, expected) -> None:
     - Verify ``ValueError`` is raised when BGP_AS fails regex validation.
     """
     with does_not_raise():
-        instance = fabric_common
+        instance = fabric_common_v2
         instance.results = Results()
-        instance._payloads_to_commit = [
-            {"BGP_AS": bgp_as, "FABRIC_NAME": "f1", "FABRIC_TYPE": "VXLAN_EVPN"}
-        ]
+        instance._payloads_to_commit = [{"BGP_AS": bgp_as, "FABRIC_NAME": "f1", "FABRIC_TYPE": "VXLAN_EVPN"}]
     with expected:
         instance._fixup_payloads_to_commit()
 
@@ -157,7 +156,7 @@ def test_fabric_common_00021(fabric_common, bgp_as, expected) -> None:
         (101.4, 101.4),
     ],
 )
-def test_fabric_common_00070(fabric_common, value, expected_return_value) -> None:
+def test_fabric_common_v2_00070(fabric_common_v2, value, expected_return_value) -> None:
     """
     Classes and Methods
     - ConversionUtils
@@ -169,8 +168,8 @@ def test_fabric_common_00070(fabric_common, value, expected_return_value) -> Non
     -   Verify FabricCommon().conversion.make_none returns expected values.
     """
     with does_not_raise():
-        instance = fabric_common
-        return_value = instance.conversion.make_none(value)
+        instance = fabric_common_v2
+        return_value = instance._conversion.make_none(value)
     assert return_value == expected_return_value
 
 
@@ -193,7 +192,7 @@ def test_fabric_common_00070(fabric_common, value, expected_return_value) -> Non
         (101.4, 101.4),
     ],
 )
-def test_fabric_common_00080(fabric_common, value, expected_return_value) -> None:
+def test_fabric_common_v2_00080(fabric_common_v2, value, expected_return_value) -> None:
     """
     Classes and Methods
     - ConversionUtils
@@ -206,12 +205,12 @@ def test_fabric_common_00080(fabric_common, value, expected_return_value) -> Non
     -   Verify FabricCommon().conversion.make_boolean returns expected values.
     """
     with does_not_raise():
-        instance = fabric_common
-        return_value = instance.conversion.make_boolean(value)
+        instance = fabric_common_v2
+        return_value = instance._conversion.make_boolean(value)
     assert return_value == expected_return_value
 
 
-def test_fabric_common_00100(fabric_common) -> None:
+def test_fabric_common_v2_00100(fabric_common_v2) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -224,10 +223,10 @@ def test_fabric_common_00100(fabric_common) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    payload = payloads_fabric_common(key)
+    payload = payloads_fabric_common_v2(key)
 
     with does_not_raise():
-        instance = fabric_common
+        instance = fabric_common_v2
 
     match = r"FabricCommon\._verify_payload:\s+"
     match += r"Playbook configuration for fabrics must be a dict\.\s+"
@@ -245,7 +244,7 @@ def test_fabric_common_00100(fabric_common) -> None:
         "FABRIC_TYPE",
     ],
 )
-def test_fabric_common_00110(fabric_common, mandatory_key) -> None:
+def test_fabric_common_v2_00110(fabric_common_v2, mandatory_key) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -259,12 +258,12 @@ def test_fabric_common_00110(fabric_common, mandatory_key) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    payload = payloads_fabric_common(key)
+    payload = payloads_fabric_common_v2(key)
 
     payload.pop(mandatory_key, None)
 
     with does_not_raise():
-        instance = fabric_common
+        instance = fabric_common_v2
         instance.action = "fabric_create"
 
     match = r"FabricCommon\._verify_payload:\s+"
@@ -274,7 +273,7 @@ def test_fabric_common_00110(fabric_common, mandatory_key) -> None:
         instance._verify_payload(payload)
 
 
-def test_fabric_common_00111(fabric_common) -> None:
+def test_fabric_common_v2_00111(fabric_common_v2) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -291,7 +290,7 @@ def test_fabric_common_00111(fabric_common) -> None:
         when its input parameter is the wrong type (str vs dict).
     """
     with does_not_raise():
-        instance = fabric_common
+        instance = fabric_common_v2
         instance.action = "foo"
         instance._verify_payload("NOT_A_DICT")
 
@@ -328,7 +327,7 @@ MATCH_00112b += r"Bad configuration:.*"
         ("@MyFabric", pytest.raises(ValueError, match=MATCH_00112a)),
     ],
 )
-def test_fabric_common_00112(fabric_common, fabric_name, expected) -> None:
+def test_fabric_common_v2_00112(fabric_common_v2, fabric_name, expected) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -345,7 +344,7 @@ def test_fabric_common_00112(fabric_common, fabric_name, expected) -> None:
     }
 
     with does_not_raise():
-        instance = fabric_common
+        instance = fabric_common_v2
         instance.action = "fabric_create"
         instance.results = Results()
     with expected:
@@ -370,7 +369,7 @@ MATCH_00113a += r"Bad configuration:\s+"
         ("FOOBAR", pytest.raises(ValueError, match=MATCH_00113a)),
     ],
 )
-def test_fabric_common_00113(fabric_common, fabric_type, expected) -> None:
+def test_fabric_common_v2_00113(fabric_common_v2, fabric_type, expected) -> None:
     """
     Classes and Methods
     - FabricCommon
@@ -387,7 +386,7 @@ def test_fabric_common_00113(fabric_common, fabric_type, expected) -> None:
     }
 
     with does_not_raise():
-        instance = fabric_common
+        instance = fabric_common_v2
         instance.action = "fabric_create"
         instance.results = Results()
     with expected:
@@ -409,7 +408,7 @@ MATCH_00120a += r"ANYCAST_GW_MAC: .*, Error detail: Invalid MAC address:\s+.*"
         ("0001", None, True, pytest.raises(ValueError, match=MATCH_00120a)),
     ],
 )
-def test_fabric_common_00120(fabric_common, mac_in, mac_out, raises, expected) -> None:
+def test_fabric_common_v2_00120(fabric_common_v2, mac_in, mac_out, raises, expected) -> None:
     """
     Classes and Methods
     - FabricCommon()
@@ -425,7 +424,7 @@ def test_fabric_common_00120(fabric_common, mac_in, mac_out, raises, expected) -
         translated.
     """
     with does_not_raise():
-        instance = fabric_common
+        instance = fabric_common_v2
         instance.results = Results()
     with expected:
         result = instance.translate_anycast_gw_mac("MyFabric", mac_in)

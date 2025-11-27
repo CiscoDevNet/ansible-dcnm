@@ -32,22 +32,22 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import FabricDetailsByName
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, fabric_create_fixture, params,
-    payloads_fabric_create, responses_fabric_create,
-    responses_fabric_details_by_name_v2, rest_send_response_current)
+    MockAnsibleModule,
+    does_not_raise,
+    fabric_create_fixture,
+    params,
+    payloads_fabric_create,
+    responses_fabric_create,
+    responses_fabric_details_by_name_v2,
+    rest_send_response_current,
+)
 
 
 def test_fabric_create_00000(fabric_create) -> None:
@@ -109,9 +109,8 @@ def test_fabric_create_00021(fabric_create) -> None:
         - payloads setter
 
     ### Summary
-    -   Verify ``ValueError`` is raised because payloads is not a ``dict``
-    -   Verify ``instance.payload`` is not modified, hence it retains its
-        initial value of None
+    -   Verify `ValueError` is raised because payloads is not a `dict`
+    -   Verify ``instance.payload`` is not modified, hence it retains its initial value of {}
     """
     match = r"FabricCreate\.payload: "
     match += r"payload must be a dict\."
@@ -121,7 +120,7 @@ def test_fabric_create_00021(fabric_create) -> None:
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.payload = "NOT_A_DICT"
-    assert instance.payload is None
+    assert instance.payload == {}
 
 
 def test_fabric_create_00022(fabric_create) -> None:
@@ -135,7 +134,7 @@ def test_fabric_create_00022(fabric_create) -> None:
         - payload setter
 
     ### Summary
-    Verify that ``ValueError`` is raised because payload is empty.
+    Verify that `ValueError` is raised because payload is empty.
     """
     with does_not_raise():
         instance = fabric_create
@@ -145,7 +144,8 @@ def test_fabric_create_00022(fabric_create) -> None:
     match = r"FabricCreate\.payload: payload is empty."
     with pytest.raises(ValueError, match=match):
         instance.payload = {}
-    assert instance.payload is None
+
+    assert instance.payload == {}
 
 
 @pytest.mark.parametrize(
@@ -163,8 +163,7 @@ def test_fabric_create_00023(fabric_create, mandatory_parameter) -> None:
         - payload setter
 
     ### Summary
-    -   Verify that ``ValueError`` is raised because payload is missing
-        mandatory parameters.
+    -   Verify that `ValueError` is raised because payload is missing mandatory parameters.
 
     """
     method_name = inspect.stack()[0][3]
@@ -183,7 +182,7 @@ def test_fabric_create_00023(fabric_create, mandatory_parameter) -> None:
     match += r"parameter"
     with pytest.raises(ValueError, match=match):
         instance.payload = payload
-    assert instance.payload is None
+    assert instance.payload == {}
 
 
 def test_fabric_create_00024(fabric_create) -> None:
@@ -198,10 +197,8 @@ def test_fabric_create_00024(fabric_create) -> None:
         - commit()
 
     ### Summary
-    -   Verify ``ValueError`` is raised because payload is not set prior
-        to calling commit
-    -   Verify instance.payloads is not modified, hence it retains its
-        initial value of None
+    -   Verify `ValueError` is raised because payload is not set prior to calling commit
+    -   Verify instance.payloads is not modified, hence it retains its initial value of {}
     """
     with does_not_raise():
         instance = fabric_create
@@ -213,7 +210,7 @@ def test_fabric_create_00024(fabric_create) -> None:
 
     with pytest.raises(ValueError, match=match):
         instance.commit()
-    assert instance.payload is None
+    assert instance.payload == {}
 
 
 def test_fabric_create_00025(fabric_create) -> None:
@@ -230,7 +227,7 @@ def test_fabric_create_00025(fabric_create) -> None:
         an unexpected value.
 
     Test
-    -   ``ValueError`` is raised because the value of FABRIC_TYPE is invalid
+    -   `ValueError` is raised because the value of FABRIC_TYPE is invalid
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -266,7 +263,7 @@ def test_fabric_create_00026(fabric_create) -> None:
     Verify behavior when ``rest_send`` is not set prior to calling commit.
 
     ### Test
-    -   ``ValueError`` is raised because ``rest_send`` is not set prior
+    -   `ValueError` is raised because ``rest_send`` is not set prior
         to calling commit.
     """
     method_name = inspect.stack()[0][3]
@@ -368,13 +365,7 @@ def test_fabric_create_00030(fabric_create) -> None:
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
     print(f"response[0] {instance.results.response[0]}")
-    assert (
-        instance.results.response[0]
-        .get("DATA", {})
-        .get("nvPairs", {})
-        .get("BGP_AS", None)
-        == "65001"
-    )
+    assert instance.results.response[0].get("DATA", {}).get("nvPairs", {}).get("BGP_AS", None) == "65001"
     assert instance.results.response[0].get("METHOD", None) == "POST"
 
     assert instance.results.result[0].get("changed", None) is True
@@ -540,10 +531,7 @@ def test_fabric_create_00032(monkeypatch, fabric_create) -> None:
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 500
-    assert (
-        instance.results.response[0].get("DATA", {})
-        == "Error in validating provided name value pair: [BGP_AS]"
-    )
+    assert instance.results.response[0].get("DATA", {}) == "Error in validating provided name value pair: [BGP_AS]"
     assert instance.results.response[0].get("METHOD", None) == "POST"
 
     assert instance.results.result[0].get("changed", None) is False
@@ -555,7 +543,7 @@ def test_fabric_create_00032(monkeypatch, fabric_create) -> None:
     assert True not in instance.results.changed
 
 
-def test_fabric_create_00033(monkeypatch, fabric_create) -> None:
+def test_fabric_create_00033(fabric_create) -> None:
     """
     ### Classes and Methods
 
@@ -573,7 +561,7 @@ def test_fabric_create_00033(monkeypatch, fabric_create) -> None:
         - commit()
 
     ### Summary
-    -   Verify ``ValueError`` is raised when user attempts to create a fabric
+    -   Verify `ValueError` is raised when user attempts to create a fabric
         but the payload contains ``ANYCAST_GW_MAC`` with a malformed mac address.
 
     ### Setup
@@ -591,7 +579,7 @@ def test_fabric_create_00033(monkeypatch, fabric_create) -> None:
         to a list containing fabric f1 payload
     -   FabricCreate.commit() calls FabricCommon_fixup_payloads_to_commit()
     -   FabricCommon_fixup_payloads_to_commit() calls
-        FabricCommon()._fixup_anycast_gw_mac() which raises ``ValueError``
+        FabricCommon()._fixup_anycast_gw_mac() which raises `ValueError`
         because the mac address is malformed.
     """
     method_name = inspect.stack()[0][3]
@@ -613,9 +601,6 @@ def test_fabric_create_00033(monkeypatch, fabric_create) -> None:
 
     with does_not_raise():
         instance = fabric_create
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.results = Results()
-        instance.fabric_details.rest_send = rest_send
         instance.rest_send = rest_send
         instance.results = Results()
         instance.payload = payloads_fabric_create(key)
