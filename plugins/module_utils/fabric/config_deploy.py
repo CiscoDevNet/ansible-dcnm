@@ -194,8 +194,6 @@ class FabricConfigDeploy:
         """
         method_name = inspect.stack()[0][3]
 
-        print("ZZZ: FabricConfigDeploy.commit: ENTERED")
-
         if not self.payload:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.payload must be set "
@@ -382,7 +380,6 @@ class FabricConfigDeploy:
     @rest_send.setter
     def rest_send(self, value: RestSend) -> None:
         method_name: str = inspect.stack()[0][3]
-        print("ZZZ: FabricConfigDeploy.rest_send.setter: ENTERED")
         _class_have: str = ""
         _class_need: Literal["RestSend"] = "RestSend"
         msg = f"{self.class_name}.{method_name}: "
@@ -396,7 +393,6 @@ class FabricConfigDeploy:
         if _class_have != _class_need:
             raise TypeError(msg)
         self._rest_send = value
-        print(f"ZZZ: FabricConfigDeploy._rest_send.params: {self._rest_send.params}")
 
     @property
     def results(self) -> Results:

@@ -386,7 +386,6 @@ class FabricReplacedCommon(FabricCommon):
             configuration.
         """
         self.fabric_details.refresh()
-        print(f"ZZZ: self.fabric_details.all_data: {self.fabric_details.all_data}")
         self._payloads_to_commit = []
         # Builds self.fabric_templates dictionary, keyed on fabric type.
         # Value is the fabric template associated with each fabric_type.
