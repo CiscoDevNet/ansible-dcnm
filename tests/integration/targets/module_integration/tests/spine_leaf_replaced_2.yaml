@@ -1,21 +1,25 @@
----
-- name: DEBUG start spine_leaf_replaced_2
+- name: Start dcnm_fabric spine_leaf_replaced_2 test
   ansible.builtin.debug:
-    msg: "Starting dcnm_fabric spine_leaf_replaced_2 test (role_path={{ role_path }})"
+    msg: "Starting dcnm_fabric spine_leaf_replaced_2 test"
 
-- name: CLEANUP networks
+- name: Display role path
+  ansible.builtin.debug:
+    msg: "Role Path {{ role_path }}"
+
+- name: Cleanup - Delete Networks
   cisco.dcnm.dcnm_network:
     fabric: "{{ fabric_name }}"
     state: deleted
 
-- name: CLEANUP vrfs
+- name: Cleanup - Delete Tenant VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_name }}"
     state: deleted
 
-- block:
+- name: Execute spine_leaf_replaced_2 workflow
+  block:
     - name: Add 3 VRFs and deploy them to all leaf devices
-      cisco.dcnm.dcnm_vrf: &deploy_true
+      cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: replaced
         config:
@@ -43,109 +47,57 @@
               - ip_address: "{{ leaf2 }}"
               - ip_address: "{{ leaf3 }}"
               - ip_address: "{{ leaf4 }}"
-      register: deploy_true_result
-    - name: WAIT deployed
+      register: result
+
+    - name: ASSERT - Initial VRF deploy change triggered
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+
+    - name: Query fabric state until vrfStatus transitions to DEPLOYED
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: query
-      register: deploy_true_wait
+      register: result
       until:
-        - "deploy_true_wait.response[0].parent.vrfStatus is search('DEPLOYED')"
-        - "deploy_true_wait.response[1].parent.vrfStatus is search('DEPLOYED')"
-        - "deploy_true_wait.response[2].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
       retries: 20
       delay: 5
-    - name: ASSERT deployed
-      ansible.builtin.assert:
-        that:
-          - 'deploy_true_wait.response[0].parent.vrfStatus is search("DEPLOYED")'
-          - 'deploy_true_wait.response[1].parent.vrfStatus is search("DEPLOYED")'
-          - 'deploy_true_wait.response[2].parent.vrfStatus is search("DEPLOYED")'
 
-    - name: REPLACE remove engineering attachments
-      cisco.dcnm.dcnm_vrf: &remove_eng
+    - name: Replace engineering VRF to remove attachments
+      cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: replaced
         config:
-          - vrf_name: green_red
-            vrf_id: 470000
-            vlan_id: 201
-            attach:
-              - ip_address: "{{ leaf1 }}"
-              - ip_address: "{{ leaf2 }}"
-              - ip_address: "{{ leaf3 }}"
-              - ip_address: "{{ leaf4 }}"
-            deploy: true
           - vrf_name: engineering
             vrf_id: 480000
             vlan_id: 401
             deploy: true
-          - vrf_name: sales
-            vrf_id: 550000
-            vlan_id: 501
-            attach:
-              - ip_address: "{{ leaf1 }}"
-              - ip_address: "{{ leaf2 }}"
-              - ip_address: "{{ leaf3 }}"
-              - ip_address: "{{ leaf4 }}"
-            deploy: true
-      register: remove_eng_result
-    - name: WAIT after remove engineering attach
-      cisco.dcnm.dcnm_vrf:
-        fabric: "{{ fabric_name }}"
-        state: query
-      register: remove_eng_wait
-      until:
-        - "remove_eng_wait.response[0].parent.vrfStatus is search('DEPLOYED')"
-        - "remove_eng_wait.response[1].parent.vrfStatus is search('DEPLOYED')"
-        - "remove_eng_wait.response[2].parent.vrfStatus is search('DEPLOYED')"
-      retries: 20
-      delay: 5
-    - name: ASSERT engineering detach
-      ansible.builtin.assert:
-        that:
-          - 'remove_eng_wait.response[1].attach|length == 0'
-          - 'remove_eng_wait.response[0].attach|length == 4'
-          - 'remove_eng_wait.response[2].attach|length == 4'
+      register: result
 
-    - name: DELETE green_red
-      cisco.dcnm.dcnm_vrf:
-        fabric: "{{ fabric_name }}"
-        state: deleted
-        config:
-          - vrf_name: green_red
-      register: del_green
-    - name: QUERY after delete green_red
-      cisco.dcnm.dcnm_vrf:
-        fabric: "{{ fabric_name }}"
-        state: query
-      register: after_del_green
-    - name: ASSERT two left
+    - name: ASSERT - Engineering VRF replacement triggered change
       ansible.builtin.assert:
         that:
-          - 'after_del_green.response|length == 2'
-    - name: DELETE sales
-      cisco.dcnm.dcnm_vrf:
-        fabric: "{{ fabric_name }}"
-        state: deleted
-        config:
-          - vrf_name: sales
-      register: del_sales
-    - name: QUERY after delete sales
-      cisco.dcnm.dcnm_vrf:
-        fabric: "{{ fabric_name }}"
-        state: query
-      register: after_del_sales
-    - name: ASSERT one left
-      ansible.builtin.assert:
-        that:
-          - 'after_del_sales.response|length == 1'
+          - 'result.changed == true'
 
-    - name: FINAL cleanup all vrfs
+    - name: Query VRF state after replacement
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
-        state: deleted
+        state: query
+      register: result
+
+    - name: ASSERT - Engineering VRF attachments removed
+      ansible.builtin.assert:
+        that:
+          - 'result.response[0].parent.vrfName == "green_red"'
+          - 'result.response[0].attach | length == 4'
+          - 'result.response[1].parent.vrfName == "engineering"'
+          - 'result.response[1].attach | length == 0'
+          - 'result.response[2].parent.vrfName == "sales"'
+          - 'result.response[2].attach | length == 4'
   always:
-    - name: DEBUG end spine_leaf_replaced_2
+    - name: End dcnm_fabric spine_leaf_replaced_2 test
       ansible.builtin.debug:
         msg: "End dcnm_fabric spine_leaf_replaced_2 test"

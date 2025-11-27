@@ -1,9 +1,12 @@
----
-- name: DEBUG start spine_leaf_basic
+- name: Start dcnm_fabric spine_leaf_basic test
   ansible.builtin.debug:
-    msg: "Starting dcnm_fabric spine_leaf_basic test (role_path={{ role_path }})"
+    msg: "Starting dcnm_fabric spine_leaf_basic test"
 
-- name: CLEANUP interfaces
+- name: Display role path
+  ansible.builtin.debug:
+    msg: "Role Path {{ role_path }}"
+
+- name: Cleanup - Reset or Default Ethernet Interfaces
   cisco.dcnm.dcnm_interface:
     fabric: "{{ fabric_name }}"
     state: deleted
@@ -11,19 +14,20 @@
       - name: "Ethernet1/3"
       - name: "Ethernet1/4"
 
-- name: CLEANUP networks
+- name: Cleanup - Delete Networks
   cisco.dcnm.dcnm_network:
     fabric: "{{ fabric_name }}"
     state: deleted
 
-- name: CLEANUP vrfs
+- name: Cleanup - Delete Tenant VRF
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_name }}"
     state: deleted
 
-- block:
-    - name: MERGE access ethernet interfaces
-      cisco.dcnm.dcnm_interface: &interfaces_cfg
+- name: Execute spine_leaf_basic workflow
+  block:
+    - name: Configure access ethernet interfaces
+      cisco.dcnm.dcnm_interface: &config_interfaces
         fabric: "{{ fabric_name }}"
         state: merged
         config:
@@ -36,12 +40,14 @@
             profile:
               admin_state: true
               mode: access
-              speed: Auto
+              speed: 'Auto'
               bpdu_guard: true
               port_type_fast: true
               mtu: default
               access_vlan: 55
-            description: "Access interface for vlan55"
+              cmds:
+                - no shutdown
+              description: "Access interface for vlan55"
           - name: "Ethernet1/4"
             type: eth
             switch:
@@ -51,27 +57,35 @@
             profile:
               admin_state: true
               mode: access
-              speed: Auto
+              speed: 'Auto'
               bpdu_guard: true
               port_type_fast: true
               mtu: default
               access_vlan: 65
-            description: "Access interface for vlan65"
-      register: interfaces_result
-    - name: ASSERT interfaces merged
-      ansible.builtin.assert:
-        that:
-          - 'interfaces_result.changed'
-    - name: INTERFACES idempotence
-      cisco.dcnm.dcnm_interface: *interfaces_cfg
-      register: interfaces_idem
-    - name: ASSERT interfaces idempotence
-      ansible.builtin.assert:
-        that:
-          - 'interfaces_idem.changed == false'
+              cmds:
+                - no shutdown
+              description: "Access interface for vlan65"
+      register: result
 
-    - name: MERGE tenant VRF green_red
-      cisco.dcnm.dcnm_vrf: &vrf_cfg
+    - name: ASSERT - Interfaces created
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'result.response[0].RETURN_CODE == 200'
+          - 'result.response[1].RETURN_CODE == 200'
+
+    - name: Configure access ethernet interfaces - Idempotence
+      cisco.dcnm.dcnm_interface: *config_interfaces
+      register: result
+
+    - name: ASSERT - Interface idempotence
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == false'
+          - 'result.response | length == 0'
+
+    - name: Add Tenant VRF
+      cisco.dcnm.dcnm_vrf: &add_vrf
         fabric: "{{ fabric_name }}"
         state: merged
         config:
@@ -82,30 +96,28 @@
               - ip_address: "{{ leaf1 }}"
               - ip_address: "{{ leaf3 }}"
             deploy: true
-      register: vrf_result
-    - name: QUERY vrf until DEPLOYED
-      cisco.dcnm.dcnm_vrf:
-        fabric: "{{ fabric_name }}"
-        state: query
-      register: vrf_query
-      until:
-        - "vrf_query.response[0].parent.vrfStatus is search('DEPLOYED')"
-      retries: 30
-      delay: 2
-    - name: ASSERT vrf merged
-      ansible.builtin.assert:
-        that:
-          - 'vrf_result.changed'
-    - name: VRF idempotence
-      cisco.dcnm.dcnm_vrf: *vrf_cfg
-      register: vrf_idem
-    - name: ASSERT vrf idempotence
-      ansible.builtin.assert:
-        that:
-          - 'vrf_idem.changed == false'
+      register: result
 
-    - name: MERGE networks l2vni_4000 & l2vni_7000
-      cisco.dcnm.dcnm_network: &net_cfg
+    - name: ASSERT - VRF created
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'result.response[0].RETURN_CODE == 200'
+          - 'result.response[1].RETURN_CODE == 200'
+          - 'result.response[2].RETURN_CODE == 200'
+
+    - name: Add Tenant VRF - Idempotence
+      cisco.dcnm.dcnm_vrf: *add_vrf
+      register: result
+
+    - name: ASSERT - VRF idempotence
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == false'
+          - 'result.response | length == 0'
+
+    - name: Add Networks
+      cisco.dcnm.dcnm_network: &add_networks
         fabric: "{{ fabric_name }}"
         state: merged
         config:
@@ -116,12 +128,11 @@
             gw_ip_subnet: '192.168.1.1/24'
             attach:
               - ip_address: "{{ leaf1 }}"
-                ports:
-                  - Ethernet1/3
+                ports: [Ethernet1/3]
+                deploy: true
               - ip_address: "{{ leaf3 }}"
-                ports:
-                  - Ethernet1/3
-            deploy: true
+                ports: [Ethernet1/3]
+                deploy: true
           - net_name: l2vni_7000
             vrf_name: green_red
             net_id: 7000
@@ -129,29 +140,36 @@
             gw_ip_subnet: '192.168.2.1/24'
             attach:
               - ip_address: "{{ leaf1 }}"
-                ports:
-                  - Ethernet1/4
+                ports: []
+                deploy: true
               - ip_address: "{{ leaf3 }}"
-                ports:
-                  - Ethernet1/4
-            deploy: true
-      register: net_result
-    - name: ASSERT networks merged
+                ports: []
+                deploy: true
+      register: result
+
+    - name: ASSERT - Networks created
       ansible.builtin.assert:
         that:
-          - 'net_result.changed'
-    - name: WAIT before networks idempotence
+          - 'result.changed == true'
+          - 'result.response[0].RETURN_CODE == 200'
+          - 'result.response[1].RETURN_CODE == 200'
+          - 'result.response[2].RETURN_CODE == 200'
+          - 'result.response[3].RETURN_CODE == 200'
+
+    - name: Sleep before checking network idempotence
       ansible.builtin.wait_for:
         timeout: 30
-    - name: NETWORKS idempotence
-      cisco.dcnm.dcnm_network: *net_cfg
-      register: net_idem
-    - name: ASSERT networks idempotence
+
+    - name: Add Networks - Idempotence
+      cisco.dcnm.dcnm_network: *add_networks
+      register: result
+
+    - name: ASSERT - Network idempotence
       ansible.builtin.assert:
         that:
-          - 'net_idem.changed == false'
-
+          - 'result.changed == false'
+          - 'result.response | length == 0'
   always:
-    - name: DEBUG end spine_leaf_basic
+    - name: End dcnm_fabric spine_leaf_basic test
       ansible.builtin.debug:
         msg: "End dcnm_fabric spine_leaf_basic test"

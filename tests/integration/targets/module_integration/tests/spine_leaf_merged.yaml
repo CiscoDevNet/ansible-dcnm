@@ -1,60 +1,85 @@
----
-- name: DEBUG start spine_leaf_merged
+- name: Start dcnm_fabric spine_leaf_merged test
   ansible.builtin.debug:
-    msg: "Starting dcnm_fabric spine_leaf_merged test (role_path={{ role_path }})"
+    msg: "Starting dcnm_fabric spine_leaf_merged test"
 
-- name: INCLUDE vrf list items
-  include_vars: ./exec_vars/vrfs.yaml
+- name: Display role path
+  ansible.builtin.debug:
+    msg: "Role Path {{ role_path }}"
 
-- name: CLEANUP networks
+- name: Include VRF list items
+  ansible.builtin.include_vars:
+    file: ./exec_vars/vrfs.yaml
+
+- name: Cleanup - Delete Networks
   cisco.dcnm.dcnm_network:
     fabric: "{{ fabric_name }}"
     state: deleted
 
-- name: CLEANUP vrfs
+- name: Cleanup - Delete Tenant VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_name }}"
     state: deleted
 
-- block:
-    ##############################################
-    ## 1. Add base VRF objects (no deploy)      ##
-    ##############################################
-    - name: MERGE base VRFs
-      cisco.dcnm.dcnm_vrf: &base_vrfs
+- name: Execute spine_leaf_merged workflow
+  block:
+    - name: Add Tenant VRF objects
+      cisco.dcnm.dcnm_vrf: &add_vrfs
         fabric: "{{ fabric_name }}"
         state: merged
         config: "{{ vrfs }}"
-      register: base_result
-    - name: ASSERT base merge
+      register: result
+
+    - name: ASSERT - VRF objects created
       ansible.builtin.assert:
         that:
-          - 'base_result.changed'
-    - name: BASE idempotence
-      cisco.dcnm.dcnm_vrf: *base_vrfs
-      register: base_idem
-    - name: ASSERT base idempotence
+          - 'result.changed == true'
+          - 'result.response | length == 3'
+
+    - name: Add Tenant VRF objects - Idempotence
+      cisco.dcnm.dcnm_vrf: *add_vrfs
+      register: result
+
+    - name: ASSERT - VRF objects idempotence
       ansible.builtin.assert:
         that:
-          - 'base_idem.changed == false'
-    - name: QUERY base VRFs
+          - 'result.changed == false'
+
+    - name: Query VRF state
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: query
-      register: base_query
-    - name: ASSERT base NA state
-      ansible.builtin.assert:
-        that:
-          - 'base_query.response|length == 3'
-          - 'base_query.response[0].parent.vrfStatus == "NA"'
-          - 'base_query.response[1].parent.vrfStatus == "NA"'
-          - 'base_query.response[2].parent.vrfStatus == "NA"'
+      register: result
 
-    ##############################################
-    ## 2. Attach all leaves deploy false        ##
-    ##############################################
-    - name: MERGE attach all leaves deploy false
-      cisco.dcnm.dcnm_vrf: &attach_false
+    - name: ASSERT - VRF state with no attachments deployed
+      ansible.builtin.assert: &vrf_created_no_attach_deploy
+        that:
+          - 'result.response[0].parent.vrfName == "green_red"'
+          - 'result.response[0].parent.vrfId == 470000'
+          - 'result.response[0].parent.vrfStatus == "NA"'
+          - 'result.response[0].attach | length == 4'
+          - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == false'
+          - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == false'
+          - 'result.response[0].attach[2].switchDetailsList[0].islanAttached == false'
+          - 'result.response[0].attach[3].switchDetailsList[0].islanAttached == false'
+          - 'result.response[1].parent.vrfName == "engineering"'
+          - 'result.response[1].parent.vrfId == 480000'
+          - 'result.response[1].parent.vrfStatus == "NA"'
+          - 'result.response[1].attach | length == 4'
+          - 'result.response[1].attach[0].switchDetailsList[0].islanAttached == false'
+          - 'result.response[1].attach[1].switchDetailsList[0].islanAttached == false'
+          - 'result.response[1].attach[2].switchDetailsList[0].islanAttached == false'
+          - 'result.response[1].attach[3].switchDetailsList[0].islanAttached == false'
+          - 'result.response[2].parent.vrfName == "sales"'
+          - 'result.response[2].parent.vrfId == 550000'
+          - 'result.response[2].parent.vrfStatus == "NA"'
+          - 'result.response[2].attach | length == 4'
+          - 'result.response[2].attach[0].switchDetailsList[0].islanAttached == false'
+          - 'result.response[2].attach[1].switchDetailsList[0].islanAttached == false'
+          - 'result.response[2].attach[2].switchDetailsList[0].islanAttached == false'
+          - 'result.response[2].attach[3].switchDetailsList[0].islanAttached == false'
+
+    - name: Specify attachments with global deploy disabled
+      cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: merged
         config:
@@ -85,28 +110,19 @@
               - ip_address: "{{ leaf3 }}"
               - ip_address: "{{ leaf4 }}"
             deploy: false
-      register: attach_false_result
-    - name: ASSERT attach false
-      ansible.builtin.assert:
-        that:
-          - 'attach_false_result.changed'
-    - name: QUERY attach false
+      register: result
+
+    - name: Query VRF state after deploy false
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: query
-      register: attach_false_query
-    - name: ASSERT still NA
-      ansible.builtin.assert:
-        that:
-          - 'attach_false_query.response[0].parent.vrfStatus == "NA"'
-          - 'attach_false_query.response[1].parent.vrfStatus == "NA"'
-          - 'attach_false_query.response[2].parent.vrfStatus == "NA"'
+      register: result
 
-    ##############################################
-    ## 3. Attach & deploy true                  ##
-    ##############################################
-    - name: MERGE attach all leaves deploy true
-      cisco.dcnm.dcnm_vrf: &attach_true
+    - name: ASSERT - VRF state remains not deployed
+      ansible.builtin.assert: *vrf_created_no_attach_deploy
+
+    - name: Specify attachments with global deploy enabled
+      cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: merged
         config:
@@ -137,38 +153,66 @@
               - ip_address: "{{ leaf3 }}"
               - ip_address: "{{ leaf4 }}"
             deploy: true
-      register: attach_true_result
-    - name: ASSERT attach true
+      register: result
+
+    - name: ASSERT - Deploy true results changed
       ansible.builtin.assert:
         that:
-          - 'attach_true_result.changed'
-    - name: WAIT until all DEPLOYED
+          - 'result.changed == true'
+
+    - name: Query VRF state until deployed (all VRFs)
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: query
-      register: attach_true_wait
+      register: result
       until:
-        - "attach_true_wait.response[0].parent.vrfStatus is search('DEPLOYED')"
-        - "attach_true_wait.response[1].parent.vrfStatus is search('DEPLOYED')"
-        - "attach_true_wait.response[2].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
       retries: 20
       delay: 5
-    - name: ASSERT deployed state
+
+    - name: Query VRF state after deploy true
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: query
+      register: result
+
+    - name: ASSERT - VRFs deployed with attachments
       ansible.builtin.assert:
         that:
-          - 'attach_true_wait.response[0].parent.vrfStatus is search("DEPLOYED")'
-          - 'attach_true_wait.response[1].parent.vrfStatus is search("DEPLOYED")'
-          - 'attach_true_wait.response[2].parent.vrfStatus is search("DEPLOYED")'
+          - 'result.response[0].parent.vrfName == "green_red"'
+          - 'result.response[0].parent.vrfId == 470000'
+          - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+          - 'result.response[0].attach | length == 4'
+          - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+          - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+          - 'result.response[0].attach[2].switchDetailsList[0].islanAttached == true'
+          - 'result.response[0].attach[3].switchDetailsList[0].islanAttached == true'
+          - 'result.response[1].parent.vrfName == "engineering"'
+          - 'result.response[1].parent.vrfId == 480000'
+          - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
+          - 'result.response[1].attach | length == 4'
+          - 'result.response[1].attach[0].switchDetailsList[0].islanAttached == true'
+          - 'result.response[1].attach[1].switchDetailsList[0].islanAttached == true'
+          - 'result.response[1].attach[2].switchDetailsList[0].islanAttached == true'
+          - 'result.response[1].attach[3].switchDetailsList[0].islanAttached == true'
+          - 'result.response[2].parent.vrfName == "sales"'
+          - 'result.response[2].parent.vrfId == 550000'
+          - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
+          - 'result.response[2].attach | length == 4'
+          - 'result.response[2].attach[0].switchDetailsList[0].islanAttached == true'
+          - 'result.response[2].attach[1].switchDetailsList[0].islanAttached == true'
+          - 'result.response[2].attach[2].switchDetailsList[0].islanAttached == true'
+          - 'result.response[2].attach[3].switchDetailsList[0].islanAttached == true'
 
-    ##############################################
-    ## 4. Mixed per-attach deploy overrides     ##
-    ##############################################
-    - name: CLEANUP vrfs mid-cycle
+    - name: Cleanup - Delete Tenant VRFs after deploy true
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: deleted
-    - name: MERGE mixed per-attach deploy
-      cisco.dcnm.dcnm_vrf: &mixed_deploy
+
+    - name: Add VRFs with per-attachment deploy overrides
+      cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: merged
         config:
@@ -181,9 +225,7 @@
               - ip_address: "{{ leaf2 }}"
                 deploy: true
               - ip_address: "{{ leaf3 }}"
-                deploy: false
               - ip_address: "{{ leaf4 }}"
-                deploy: false
             deploy: false
           - vrf_name: engineering
             vrf_id: 480000
@@ -194,37 +236,49 @@
               - ip_address: "{{ leaf2 }}"
                 deploy: false
               - ip_address: "{{ leaf3 }}"
-                deploy: true
               - ip_address: "{{ leaf4 }}"
-                deploy: true
-            deploy: false
-        register: mixed_result  # This line intentionally kept? actually should be outside config, keep original placement
-      register: mixed_result
-    - name: WAIT mixed deploy
+            deploy: true
+      register: result
+
+    - name: ASSERT - Per-attachment deploy change triggered
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+
+    - name: Query VRF state until targeted deploy complete
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: query
-      register: mixed_wait
+      register: result
       until:
-        - "mixed_wait.response[0].parent.vrfStatus is search('DEPLOYED')"
-        - "mixed_wait.response[1].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
       retries: 20
       delay: 5
-    - name: ASSERT mixed deploy
+
+    - name: Query VRF state after targeted deploy
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: query
+      register: result
+
+    - name: ASSERT - Targeted deploy results
       ansible.builtin.assert:
         that:
-          - 'mixed_wait.response[0].parent.vrfStatus is search("DEPLOYED")'
-          - 'mixed_wait.response[1].parent.vrfStatus is search("DEPLOYED")'
+          - 'result.response[0].parent.vrfName == "green_red"'
+          - 'result.response[0].parent.vrfId == 470000'
+          - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+          - 'result.response[1].parent.vrfName == "engineering"'
+          - 'result.response[1].parent.vrfId == 480000'
+          - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
 
-    ##############################################
-    ## 5. Autoselection of vrf_id/vlan_id       ##
-    ##############################################
-    - name: CLEANUP vrfs before autoselect
+    - name: Cleanup - Delete Tenant VRFs (post targeted deploy)
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: deleted
-    - name: MERGE vrfs autoselect ids
-      cisco.dcnm.dcnm_vrf: &auto_vrfs
+
+    - name: Add VRFs allowing DCNM to auto-select IDs
+      cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: merged
         config:
@@ -249,26 +303,56 @@
               - ip_address: "{{ leaf3 }}"
               - ip_address: "{{ leaf4 }}"
             deploy: true
-      register: auto_result
-    - name: WAIT auto DEPLOYED
+      register: result
+
+    - name: ASSERT - Auto-selected VRFs change triggered
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+
+    - name: Query VRF state until auto-selected deploy completes
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: query
-      register: auto_wait
+      register: result
       until:
-        - "auto_wait.response[0].parent.vrfStatus is search('DEPLOYED')"
-        - "auto_wait.response[1].parent.vrfStatus is search('DEPLOYED')"
-        - "auto_wait.response[2].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
+        - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
       retries: 20
       delay: 5
-    - name: ASSERT auto deploy
+
+    - name: Query VRF state after auto-selected deploy
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: query
+      register: result
+
+    - name: ASSERT - Auto-selected VRFs deployed
       ansible.builtin.assert:
         that:
-          - 'auto_wait.response[0].attach|length == 4'
-          - 'auto_wait.response[1].attach|length == 4'
-          - 'auto_wait.response[2].attach|length == 4'
-
+          - 'result.response[0].parent.vrfName == "green_red"'
+          - "result.response[0].parent.vrfStatus is search('DEPLOYED')"
+          - 'result.response[0].attach | length == 4'
+          - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+          - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+          - 'result.response[0].attach[2].switchDetailsList[0].islanAttached == true'
+          - 'result.response[0].attach[3].switchDetailsList[0].islanAttached == true'
+          - 'result.response[1].parent.vrfName == "engineering"'
+          - "result.response[1].parent.vrfStatus is search('DEPLOYED')"
+          - 'result.response[1].attach | length == 4'
+          - 'result.response[1].attach[0].switchDetailsList[0].islanAttached == true'
+          - 'result.response[1].attach[1].switchDetailsList[0].islanAttached == true'
+          - 'result.response[1].attach[2].switchDetailsList[0].islanAttached == true'
+          - 'result.response[1].attach[3].switchDetailsList[0].islanAttached == true'
+          - 'result.response[2].parent.vrfName == "sales"'
+          - "result.response[2].parent.vrfStatus is search('DEPLOYED')"
+          - 'result.response[2].attach | length == 4'
+          - 'result.response[2].attach[0].switchDetailsList[0].islanAttached == true'
+          - 'result.response[2].attach[1].switchDetailsList[0].islanAttached == true'
+          - 'result.response[2].attach[2].switchDetailsList[0].islanAttached == true'
+          - 'result.response[2].attach[3].switchDetailsList[0].islanAttached == true'
   always:
-    - name: DEBUG end spine_leaf_merged
+    - name: End dcnm_fabric spine_leaf_merged test
       ansible.builtin.debug:
         msg: "End dcnm_fabric spine_leaf_merged test"
