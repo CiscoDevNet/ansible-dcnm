@@ -3873,7 +3873,7 @@ class Common(FabricCommon):
         ## Raises
 
         ### ValueError
-     
+
         - The controller returns an error when attempting to retrieve the fabric details.
 
         """
@@ -4046,6 +4046,7 @@ class Common(FabricCommon):
         if _class_have != _class_need:
             raise TypeError(msg)
         self._results = value
+
 
 class Deleted(Common):
     """
@@ -4627,9 +4628,7 @@ def main():
         "choices": ["deleted", "merged", "query", "replaced"],
     }
 
-    ansible_module = AnsibleModule(
-        argument_spec=argument_spec, supports_check_mode=True
-    )
+    ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     params = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
 

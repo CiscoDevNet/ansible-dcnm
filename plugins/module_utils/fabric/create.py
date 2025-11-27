@@ -351,6 +351,7 @@ class FabricCreateCommon(FabricCommon):
         self._results.action = self.action
         self._results.operation_type = OperationType.CREATE
 
+
 class FabricCreateBulk(FabricCreateCommon):
     """
     Create fabrics in bulk.  Skip any fabrics that already exist.
