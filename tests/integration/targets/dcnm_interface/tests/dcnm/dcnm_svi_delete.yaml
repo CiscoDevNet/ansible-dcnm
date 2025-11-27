@@ -93,7 +93,7 @@
         config: "{{ dcnm_interface_delete_conf }}"
       register: result
 
-    - name: ASSERT - Verify delete results
+    - name: ASSERT - Check changed flag is false and return codes for idempotence (delete)
       ansible.builtin.assert:
         that:
           - 'result.changed == true'
@@ -115,14 +115,12 @@
       cisco.dcnm.dcnm_interface: *svi_del
       register: result
 
-    - name: ASSERT - Verify idempotence delete results
+    - name: ASSERT - Check changed flag is false and return codes for idempotence (delete)
       ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'
-        success_msg: "Idempotence check for delete succeeded"
-        fail_msg: "Idempotence check for delete failed - {{ result }}"
 
   ##############################################
   ##             CLEANUP                      ##

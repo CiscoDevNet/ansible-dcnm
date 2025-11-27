@@ -77,6 +77,7 @@
     - name: ASSERT - Verify old format 1 interface creation results
       ansible.builtin.assert:
         that:
+          - 'result.failed == false'
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
         fail_msg: "Creation with old format 1 failed - {{ result }}"

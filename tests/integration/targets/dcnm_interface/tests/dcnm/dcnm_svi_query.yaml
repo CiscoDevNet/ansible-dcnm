@@ -27,8 +27,6 @@
 ##             SETUP VARS                   ##
 ##############################################
 
-- name: SVI query test workflow
-  block:
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
         test_data_interfaces:

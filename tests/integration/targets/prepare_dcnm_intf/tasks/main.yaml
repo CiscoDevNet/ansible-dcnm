@@ -67,7 +67,7 @@
       - switch:
           - ip: "{{ test_data_common.switch1 }}"
           - ip: "{{ test_data_common.switch2 }}"
-    deploy: "{{ test_data_common.deploy | bool }}"
+    deploy: "{{ test_data_common.deploy == true }}"
     state: merged
   register: result
   tags: sanity
@@ -202,8 +202,9 @@
   ansible.builtin.set_fact:
     vpc_create_path: "{{ vpc_create_path | combine(item) }}"
   with_items:
-    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair'}
-    - {'11': '/rest/vpcpair'}
+    - '12': >-
+        /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair
+    - '11': '/rest/vpcpair'
 
 - name: Set fact
   ansible.builtin.set_fact:
@@ -246,7 +247,7 @@
       "useVirtualPeerlink": false
     }
     vxlan_vpc_create: true
-    vxlan_vpc_deploy: "{{ test_data_common.deploy | bool }}"
+    vxlan_vpc_deploy: "{{ test_data_common.deploy == true }}"
   when: (test_data_common.vxlan_fabric is defined and test_data_common.vxlan_fabric_sno1 is defined and test_data_common.vxlan_fabric_sno2 is defined)
 
 - name: Set fact
@@ -288,7 +289,7 @@
       }
     }
     cxt_vpc_create: true
-    cxt_vpc_deploy: "{{ test_data_common.deploy | bool }}"
+    cxt_vpc_deploy: "{{ test_data_common.deploy == true }}"
   when: (test_data_common.cxt_fabric is defined and test_data_common.cxt_fabric_sno1 is defined and test_data_common.cxt_fabric_sno2 is defined)
 
 ##############################################
@@ -302,13 +303,13 @@
     json_data:
       "{{ vpc_vxlan_data | to_json }}"
   register: result
-  when: (vxlan_vpc_create | bool)
+  when: vxlan_vpc_create | bool
   failed_when: false
 
 - name: Wait for 10 secs
   ansible.builtin.wait_for:
     timeout: 10
-  when: (vxlan_vpc_create | bool)
+  when: vxlan_vpc_create | bool
 
 ##############################################
 ##          CONFIG SAVE                     ##
@@ -319,7 +320,7 @@
     method: POST
     path: "{{ vxlan_config_save_path[controller_version] }}"
   register: result
-  when: (vxlan_vpc_create | bool)
+  when: vxlan_vpc_create | bool
   failed_when: false
 
 ##############################################
@@ -334,13 +335,13 @@
   with_sequence: count=1
   loop_control:
     pause: 5
-  when: (vxlan_vpc_deploy | bool)
+  when: vxlan_vpc_deploy | bool
   failed_when: false
 
 - name: Wait for 30 secs
   ansible.builtin.wait_for:
     timeout: 30
-  when: (vxlan_vpc_deploy | bool)
+  when: vxlan_vpc_deploy | bool
 
 ##############################################
 ##          CREATE CXT VPC PAIR             ##
@@ -353,13 +354,13 @@
     json_data:
       "{{ vpc_cxt_data | to_json }}"
   register: result
-  when: (cxt_vpc_create | bool)
+  when: cxt_vpc_create | bool
   failed_when: false
 
 - name: Wait for 20 secs
   ansible.builtin.wait_for:
     timeout: 10
-  when: (cxt_vpc_create | bool)
+  when: cxt_vpc_create | bool
 
 ##############################################
 ##          CONFIG SAVE                     ##
@@ -370,7 +371,7 @@
     method: POST
     path: "{{ cxt_config_save_path[controller_version] }}"
   register: result
-  when: (cxt_vpc_create | bool)
+  when: cxt_vpc_create | bool
   failed_when: false
 
 ##############################################
@@ -385,10 +386,10 @@
   with_sequence: count=1
   loop_control:
     pause: 5
-  when: (cxt_vpc_deploy | bool)
+  when: cxt_vpc_deploy | bool
   failed_when: false
 
 - name: Wait for 30 secs
   ansible.builtin.wait_for:
     timeout: 30
-  when: (cxt_vpc_deploy | bool)
+  when: cxt_vpc_deploy | bool

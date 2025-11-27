@@ -46,12 +46,12 @@
         config:
           - name: vlan3000                                # should be of the form vlan<vlan-id>
         type: svi                                         # choose from [pc, vpc, sub_int, lo, eth, svi]
-        switch:
+        switch:                                           # provide the switch information where the config is to be deployed
           - "{{ test_data_common.switch1 }}"
         deploy: true                                      # choose from [true, false]
         profile:
           admin_state: true                               # Flag to enable/disable Vlan interface
-          # mode intentionally omitted
+          # mode : vlan                                   # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
       ignore_errors: true
       register: result
 
@@ -99,7 +99,7 @@
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
               mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
-              preempt: true                               # preempt provided without enable_hsrp
+              preempt: true                               # optional, flag to enable/disable overthrow of low priority active routers, optional is "false"
       ignore_errors: true
       register: result
 

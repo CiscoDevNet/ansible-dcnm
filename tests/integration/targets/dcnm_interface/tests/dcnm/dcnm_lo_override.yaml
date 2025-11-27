@@ -2,14 +2,6 @@
 ##               SETUP                      ##
 ##############################################
 
-- name: LO OVERRIDE - Test Entry Point - [ndfc_interface]
-  ansible.builtin.debug:
-    msg:
-      - "----------------------------------------------------------------"
-      - "+              Executing Tests - [ndfc_interface]               +"
-      - "+                   LO OVERRIDE Tests                         +"
-      - "----------------------------------------------------------------"
-
 - name: Remove local log file
   local_action: command rm -f dcnm_intf.log
 
@@ -70,8 +62,10 @@
     - name: ASSERT - Merge changed & return codes
       ansible.builtin.assert:
         that:
-          - merge_result.changed | bool
+          - merge_result.changed == true
           - item.RETURN_CODE == 200
+        fail_msg: "Creation of loopback interfaces failed - {{ result }}"
+        success_msg: "Creation of loopback interfaces succeeded"
       loop: "{{ merge_result.response }}"
 
     - name: QUERY - Get loopback interface state in NDFC (merge)
@@ -81,7 +75,7 @@
         config: "{{ dcnm_interface_override_merge_conf }}"
       register: merge_verify_result
 
-    - name: VALIDITY CHECK - Merge state
+    - name: VALIDITY CHECK - Verify loopback interface state in NDFC (merge)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
         config_path: "{{ test_data_interfaces.override_merge_conf_file }}"
         ndfc_data: "{{ merge_verify_result }}"
@@ -108,7 +102,7 @@
     - name: ASSERT - Override changed & return codes
       ansible.builtin.assert:
         that:
-          - override_result.changed | bool
+          - override_result.changed == true
           - item.RETURN_CODE == 200
         fail_msg: "Override of loopback interfaces failed - {{ result }}"
         success_msg: "Override of loopback interfaces succeeded"
@@ -121,7 +115,7 @@
         config: "{{ dcnm_interface_override_conf }}"
       register: override_verify_result
 
-    - name: VALIDITY CHECK - Override state
+    - name: VALIDITY CHECK - Verify loopback interface state in NDFC (override)
       cisco.dcnm.tests.integration.ndfc_interface_validate:
         config_path: "{{ test_data_interfaces.override_conf_file }}"
         ndfc_data: "{{ override_verify_result }}"
@@ -132,7 +126,7 @@
       cisco.dcnm.dcnm_interface: *lo_override
       register: override_idem_result
 
-    - name: ASSERT - Override idempotence
+    - name: ASSERT - Verify loopback interface override idempotence results
       ansible.builtin.assert:
         that:
           - 'result.changed == false'

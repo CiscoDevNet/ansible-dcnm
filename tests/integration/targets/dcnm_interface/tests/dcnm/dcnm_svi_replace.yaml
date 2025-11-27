@@ -28,8 +28,6 @@
 ##############################################
 ##             SETUP VARS                   ##
 ##############################################
-- name: SVI replace test workflow
-  block:
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
         test_data_interfaces:
@@ -137,7 +135,6 @@
           - '(replace_idem.response | length) == 0'
         fail_msg: "Idempotence test failed for SVI interfaces - {{ replace_idem }}"
         success_msg: "Idempotence test passed for SVI interfaces"
-      loop: '{{ replace_idem.response }}'
     #       - '(result["diff"][0]["replaced"] | length) == 0'
     #       - '(result["diff"][0]["overridden"] | length) == 0'
 

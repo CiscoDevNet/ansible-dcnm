@@ -27,8 +27,6 @@
 ##############################################
 ##             SETUP VARS                   ##
 ##############################################
-- name: Interface SVI test workflow
-  block:
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
         test_data_interfaces:
@@ -47,10 +45,8 @@
         - override
       delegate_to: localhost
 
-- block:
-
 ##############################################
-##             SETUP VARS                   ##
+##                  MERGE                   ##
 ##############################################
     - name: Load Interface Config File (merged)
       ansible.builtin.set_fact:
