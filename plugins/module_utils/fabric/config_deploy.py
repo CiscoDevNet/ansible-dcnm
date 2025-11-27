@@ -274,58 +274,6 @@ class FabricConfigDeploy:
             raise ValueError(error) from error
         self._fabric_name = value
 
-    # @property
-    # def fabric_details(self):
-    #     """
-    #     -   getter: Return an instance of the FabricDetailsByName class.
-    #     -   setter: Set an instance of the FabricDetailsByName class.
-    #     -   setter: Raise ``TypeError`` if the value is not an
-    #         instance of FabricDetailsByName.
-    #     """
-    #     return self._fabric_details
-
-    # @fabric_details.setter
-    # def fabric_details(self, value):
-    #     method_name = inspect.stack()[0][3]
-    #     msg = f"{self.class_name}.{method_name}: "
-    #     msg += "fabric_details must be an instance of FabricDetailsByName. "
-    #     try:
-    #         class_name = value.class_name
-    #     except AttributeError as error:
-    #         msg += f"Error detail: {error}. "
-    #         raise TypeError(msg) from error
-    #     if class_name != "FabricDetailsByName":
-    #         msg += f"Got {class_name}."
-    #         self.log.debug(msg)
-    #         raise TypeError(msg)
-    #     self._fabric_details = value
-
-    # @property
-    # def fabric_summary(self):
-    #     """
-    #     -   getter: Return an instance of the FabricSummary class.
-    #     -   setter: Set an instance of the FabricSummary class.
-    #     -   setter: Raise ``TypeError`` if the value is not an
-    #         instance of FabricSummary.
-    #     """
-    #     return self._fabric_summary
-
-    # @fabric_summary.setter
-    # def fabric_summary(self, value):
-    #     method_name = inspect.stack()[0][3]
-    #     msg = f"{self.class_name}.{method_name}: "
-    #     msg += "fabric_summary must be an instance of FabricSummary. "
-    #     try:
-    #         class_name = value.class_name
-    #     except AttributeError as error:
-    #         msg += f"Error detail: {error}. "
-    #         raise TypeError(msg) from error
-    #     if class_name != "FabricSummary":
-    #         msg += f"Got {class_name}."
-    #         self.log.debug(msg)
-    #         raise TypeError(msg)
-    #     self._fabric_summary = value
-
     @property
     def payload(self):
         """

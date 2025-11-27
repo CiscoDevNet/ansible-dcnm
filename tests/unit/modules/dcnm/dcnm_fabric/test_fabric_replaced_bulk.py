@@ -449,54 +449,6 @@ def test_fabric_replaced_bulk_00050(fabric_replaced_bulk, user_value, controller
 # test_fabric_replaced_bulk_00200 removed because fabric_details is now set in FabricReplacedBulk.__init__()
 # test_fabric_replaced_bulk_00210 removed because fabric_summary is now set in FabricReplacedBulk.__init__()
 
-# def test_fabric_replaced_bulk_00200(fabric_replaced_bulk) -> None:
-#     """
-#     ### Classes and Methods
-
-#     - FabricReplacedBulk
-#         - commit()
-
-#     ### Summary
-#     Verify `ValueError`` is raised when ``fabric_details`` is not set before
-#     calling `commit`.
-#     """
-#     with does_not_raise():
-#         instance = fabric_replaced_bulk
-#         instance.payloads = []
-#         instance.rest_send = RestSend(PARAMS)
-#         instance.results = Results()
-
-#     match = r"FabricReplacedBulk\.commit:\s+"
-#     match += r"fabric_details must be set prior to calling commit\."
-
-#     with pytest.raises(ValueError, match=match):
-#         instance.commit()
-
-
-# def test_fabric_replaced_bulk_00210(fabric_replaced_bulk) -> None:
-#     """
-#     ### Classes and Methods
-
-#     - FabricReplacedBulk
-#         - commit()
-
-#     ### Summary
-#     Verify `ValueError`` is raised when ``fabric_summary`` is not set before
-#     calling `commit`.
-#     """
-#     with does_not_raise():
-#         instance = fabric_replaced_bulk
-#         instance.fabric_details = FabricDetailsByName()
-#         instance.payloads = []
-#         instance.rest_send = RestSend(PARAMS)
-#         instance.results = Results()
-
-#     match = r"FabricReplacedBulk\.commit:\s+"
-#     match += r"fabric_summary must be set prior to calling commit\."
-
-#     with pytest.raises(ValueError, match=match):
-#         instance.commit()
-
 
 def test_fabric_replaced_bulk_00220(fabric_replaced_bulk) -> None:
     """

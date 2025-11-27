@@ -32,7 +32,6 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import EpFabricCreate
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import RestSend
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule,
