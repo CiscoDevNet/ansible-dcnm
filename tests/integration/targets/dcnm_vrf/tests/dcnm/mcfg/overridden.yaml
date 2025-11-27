@@ -1,0 +1,454 @@
+##############################################
+##            REQUIRED VARS                 ##
+##############################################
+# parent_fabric
+# A Parent MCFG VXLAN_EVPN fabric
+#
+# child_fabric
+# A Child MCFG VXLAN_EVPN fabric associated with parent_fabric
+#
+# child_switch_1
+# - A switch in the child MCFG fabric
+# - VRF-lite capable switch
+#
+# child_switch_2  
+# - A switch in the child MCFG fabric
+# - VRF-lite capable switch
+#
+# interface_2a
+# - Ethernet interface on child_switch_2
+# - Used to test VRF LITE configuration in MCFG environment
+##############################################
+
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ parent_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ parent_fabric }}"
+  when: controller_version >= "12"
+
+- name: SETUP.0 - MCFG OVERRIDDEN - [with_items] print vars
+  ansible.builtin.debug:
+    var: item
+  with_items:
+     - "parent_fabric : {{ parent_fabric }}"
+     - "child_fabric : {{ child_fabric }}"
+     - "child_switch_1 : {{ child_switch_1 }}"
+     - "child_switch_2 : {{ child_switch_2 }}"
+     - "interface_2a : {{ interface_2a }}"
+
+- name: SETUP.1 - MCFG OVERRIDDEN - [dcnm_rest.GET] Verify parent fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - result.response.DATA != None
+
+- name: SETUP.2 - MCFG OVERRIDDEN - [deleted] Clean slate - delete all VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+  register: result_setup_2
+
+- name: SETUP.2a - MCFG OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
+  wait_for:
+    timeout: 60
+  when: result_setup_2.changed == true
+
+- name: SETUP.3 - MCFG OVERRIDDEN - [merged] Create initial VRFs for override testing
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-mcfg-override-initial1
+      vrf_id: 9008501
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2501
+      vrf_description: "Initial VRF 1 for override testing"
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+    - vrf_name: ansible-mcfg-override-initial2
+      vrf_id: 9008502
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2502
+      vrf_description: "Initial VRF 2 for override testing"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_2 }}"
+      deploy: true
+    - vrf_name: ansible-mcfg-override-initial3
+      vrf_id: 9008503
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2503
+      vrf_description: "Initial VRF 3 for override testing"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+  register: result_setup_3
+
+- name: SETUP.3a - MCFG OVERRIDDEN - [debug] print setup result
+  ansible.builtin.debug:
+    var: result_setup_3
+
+- name: SETUP.4 - MCFG OVERRIDDEN - [query] Wait for initial VRFs to be deployed before testing override
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+  register: result_setup_4
+  until:
+    - "result_setup_4.response | selectattr('parent.vrfStatus', 'search', 'DEPLOYED') | list | length == 3"
+  retries: 20
+  delay: 3
+
+- name: SETUP.4a - MCFG OVERRIDDEN - [debug] print pre-override VRFs
+  ansible.builtin.debug:
+    var: result_setup_4
+
+###############################################
+###          MCFG OVERRIDDEN TESTS           ##
+###############################################
+
+- name: TEST.1 - MCFG OVERRIDDEN - [overridden] Basic override without Child config
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config: &conf1
+    - vrf_name: ansible-mcfg-override-basic
+      vrf_id: 9008511
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2511
+      vrf_description: "Basic MCFG override test VRF"
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+  register: result_1
+
+- name: TEST.1a - MCFG OVERRIDDEN - [debug] print result_1
+  ansible.builtin.debug:
+    var: result_1
+
+- assert:
+    that:
+    - result_1.changed == true
+    - result_1.workflow == "Multicluster Parent without Child Fabric Processing"
+    - result_1.diff[0].vrf_name == "ansible-mcfg-override-basic"
+    - result_1.diff[1].vrf_name == "ansible-mcfg-override-initial1"
+    - result_1.diff[2].vrf_name == "ansible-mcfg-override-initial2"
+    - result_1.diff[3].vrf_name == "ansible-mcfg-override-initial3"
+    - result_1.response[0].RETURN_CODE == 200
+
+- name: TEST.1b - MCFG OVERRIDDEN - [query] Verify override result
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+    config: *conf1
+  register: result_1b
+
+- name: TEST.1c - MCFG OVERRIDDEN - [debug] print result_1b
+  ansible.builtin.debug:
+    var: result_1b
+
+- assert:
+    that:
+    - result_1b.response | length == 1
+    - result_1b.response[0].parent.vrfName == "ansible-mcfg-override-basic"
+    - result_1b.response[0].parent.vrfId == 9008511
+    - (result_1b.response[0].parent.vrfTemplateConfig | from_json).vrfVlanId == "2511"
+    - (result_1b.response[0].parent.vrfTemplateConfig | from_json).vrfDescription == "Basic MCFG override test VRF"
+
+- name: TEST.1d - MCFG OVERRIDDEN - [overridden] Basic override - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config: *conf1
+  register: result_1d
+
+- name: TEST.1e - MCFG OVERRIDDEN - [debug] print result_1d
+  ansible.builtin.debug:
+    var: result_1d
+
+- assert:
+    that:
+    - result_1d.changed == false
+    - result_1d.workflow == "Multicluster Parent without Child Fabric Processing"
+    - result_1d.diff | length == 0
+    - result_1d.response | length == 0
+
+- name: TEST.2 - MCFG OVERRIDDEN - [overridden] Override with Child fabric config
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config: &conf2
+    - vrf_name: ansible-mcfg-override-child
+      vrf_id: 9008512
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2512
+      vrf_description: "MCFG override test VRF with Child config"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+  register: result_2
+
+- name: TEST.2a - MCFG OVERRIDDEN - [debug] print result_2
+  ansible.builtin.debug:
+    var: result_2
+
+- assert:
+    that:
+    - result_2.changed == true
+    - result_2.workflow == "Multicluster Parent with Child Fabric Processing"
+    - result_2.parent_fabric.changed == true
+    - result_2.parent_fabric.diff[0].vrf_name == "ansible-mcfg-override-child"
+    - result_2.parent_fabric.diff[1].vrf_name == "ansible-mcfg-override-basic"
+    - result_2.child_fabrics[0].fabric == "AK-RT"
+    - result_2.child_fabrics[0].diff[0].vrf_name == "ansible-mcfg-override-child"
+    - result_2.parent_fabric.response[0].RETURN_CODE == 200
+
+- name: TEST.2b - MCFG OVERRIDDEN - [query] Verify override with child config
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+    config: *conf2
+  register: result_2b
+
+- name: TEST.2c - MCFG OVERRIDDEN - [debug] print result_2b
+  ansible.builtin.debug:
+    var: result_2b
+
+- assert:
+    that:
+    - result_2b.parent_fabric.response | length == 1
+    - result_2b.parent_fabric.response[0].parent.vrfName == "ansible-mcfg-override-child"
+    - result_2b.parent_fabric.response[0].parent.vrfId == 9008512
+    - (result_2b.parent_fabric.response[0].parent.vrfTemplateConfig | from_json).vrfVlanId == "2512"
+    - (result_2b.parent_fabric.response[0].parent.vrfTemplateConfig | from_json).vrfDescription == "MCFG override test VRF with Child config"
+    - result_2b.child_fabrics | length == 1
+    - result_2b.child_fabrics[0].response | length == 1
+    - result_2b.child_fabrics[0].response[0].parent.vrfName == "ansible-mcfg-override-child"
+    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "true"
+    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "false"
+    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "true"
+
+- name: TEST.2d - MCFG OVERRIDDEN - [overridden] Override with child config - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config: *conf2
+  register: result_2d
+
+- name: TEST.2e - MCFG OVERRIDDEN - [debug] print result_2d
+  ansible.builtin.debug:
+    var: result_2d
+
+- assert:
+    that:
+    - result_2d.changed == false
+    - result_2d.workflow == "Multicluster Parent with Child Fabric Processing"
+    - result_2d.parent_fabric.diff | length == 0
+    - result_2d.parent_fabric.response | length == 0
+    - result_2d.child_fabrics | length == 1
+    - result_2d.child_fabrics[0].diff | length == 0
+    - result_2d.child_fabrics[0].response | length == 0
+
+- name: TEST.3 - MCFG OVERRIDDEN - [overridden] Override with multiple VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config: &conf3
+    - vrf_name: ansible-mcfg-override-bulk1
+      vrf_id: 9008521
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2521
+      vrf_description: "Bulk override test VRF 1"
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+    - vrf_name: ansible-mcfg-override-bulk2
+      vrf_id: 9008522
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2522
+      vrf_description: "Bulk override test VRF 2"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_2 }}"
+      deploy: true
+  register: result_3
+
+- name: TEST.3a - MCFG OVERRIDDEN - [debug] print result_3
+  ansible.builtin.debug:
+    var: result_3
+
+- assert:
+    that:
+    - result_3.changed == true
+    - result_3.workflow == "Multicluster Parent with Child Fabric Processing"
+    - result_3.parent_fabric.changed == true
+    - result_3.parent_fabric.diff | length == 3
+    - result_3.parent_fabric.diff | selectattr('vrf_name', 'equalto', 'ansible-mcfg-override-bulk1') | list | length == 1
+    - result_3.parent_fabric.diff | selectattr('vrf_name', 'equalto', 'ansible-mcfg-override-bulk2') | list | length == 1
+    - result_3.parent_fabric.diff | selectattr('vrf_name', 'equalto', 'ansible-mcfg-override-child') | selectattr('attach', 'defined') | list | length == 1
+    - result_3.child_fabrics | length == 1
+    - result_3.child_fabrics[0].fabric == "AK-RT"
+    - result_3.child_fabrics[0].diff[0].vrf_name == "ansible-mcfg-override-bulk2"
+    - result_3.parent_fabric.response[0].RETURN_CODE == 200
+
+- name: TEST.3b - MCFG OVERRIDDEN - [query] Verify multiple VRFs override
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+    config: *conf3
+  register: result_3b
+
+- name: TEST.3c - MCFG OVERRIDDEN - [debug] print result_3b
+  ansible.builtin.debug:
+    var: result_3b
+
+- assert:
+    that:
+    - result_3b.parent_fabric.response | length == 2
+    - result_3b.parent_fabric.response | selectattr('parent.vrfName', 'equalto', 'ansible-mcfg-override-bulk1') | list | length == 1
+    - result_3b.parent_fabric.response | selectattr('parent.vrfName', 'equalto', 'ansible-mcfg-override-bulk2') | list | length == 1
+    - result_3b.child_fabrics | length == 1
+    - result_3b.child_fabrics[0].response | length == 1
+    - result_3b.child_fabrics[0].response[0].parent.vrfName == "ansible-mcfg-override-bulk2"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "true"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "false"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "true"
+
+- name: TEST.3d - MCFG OVERRIDDEN - [overridden] Override with multiple VRFs - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config: *conf3
+  register: result_3d
+
+- name: TEST.3e - MCFG OVERRIDDEN - [debug] print result_3d
+  ansible.builtin.debug:
+    var: result_3d
+
+- assert:
+    that:
+    - result_3d.changed == false
+    - result_3d.workflow == "Multicluster Parent with Child Fabric Processing"
+    - result_3d.parent_fabric.diff | length == 0
+    - result_3d.parent_fabric.response | length == 0
+    - result_3d.child_fabrics | length == 1
+    - result_3d.child_fabrics[0].diff | length == 0
+    - result_3d.child_fabrics[0].response | length == 0
+
+- name: TEST.4 - MCFG OVERRIDDEN - [overridden] Override with empty config (delete all)
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config: []
+  register: result_4
+
+- name: TEST.4a - MCFG OVERRIDDEN - [debug] print result_4
+  ansible.builtin.debug:
+    var: result_4
+
+- assert:
+    that:
+    - result_4.changed == true
+    - result_4.workflow == "Multicluster Parent without Child Fabric Processing"
+    - result_4.diff | length == 2
+    - result_4.diff | selectattr('vrf_name', 'equalto', 'ansible-mcfg-override-bulk1') | list | length == 1
+    - result_4.diff | selectattr('vrf_name', 'equalto', 'ansible-mcfg-override-bulk2') | list | length == 1
+    - result_4.response[0].RETURN_CODE == 200
+
+- name: TEST.4b - MCFG OVERRIDDEN - [query] Verify all VRFs deleted by empty override
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+  register: result_4b
+
+- name: TEST.4c - MCFG OVERRIDDEN - [debug] print result_4b
+  ansible.builtin.debug:
+    var: result_4b
+
+- assert:
+    that:
+    - result_4b.response | length == 0
+
+- name: TEST.4d - MCFG OVERRIDDEN - [overridden] Override with empty config - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config: []
+  register: result_4d
+
+- name: TEST.4e - MCFG OVERRIDDEN - [debug] print result_4d
+  ansible.builtin.debug:
+    var: result_4d
+
+- assert:
+    that:
+    - result_4d.changed == false
+    - result_4d.workflow == "Multicluster Parent without Child Fabric Processing"
+    - result_4d.diff | length == 0
+    - result_4d.response | length == 0
+
+###############################################
+###              FINAL CLEANUP             ##
+###############################################
+
+- name: CLEANUP.1 - MCFG OVERRIDDEN - [deleted] Ensure all VRFs are deleted
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+  register: result_cleanup_1
+
+- name: CLEANUP.2 - MCFG OVERRIDDEN - [wait_for] Wait 60 seconds for cleanup to complete
+  wait_for:
+    timeout: 60
+  when: result_cleanup_1.changed == true
+
+###############################################
+###              FINAL NOTES               ##
+###############################################
+
+- name: FINAL - MCFG OVERRIDDEN - Summary of tests completed
+  ansible.builtin.debug:
+    msg:
+    - "MCFG Overridden tests completed successfully!"
+    - "Tests covered:"
+    - "  1. Basic VRF override (Parent-only)"
+    - "  2. VRF override with Child fabric config"
+    - "  3. Multiple VRF override"
+    - "  4. Empty config override (delete all)"
+    - "  5. Idempotence verification for all scenarios"
+    - "All MCFG fabric override workflows validated successfully!"

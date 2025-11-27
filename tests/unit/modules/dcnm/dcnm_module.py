@@ -222,7 +222,13 @@ class TestDcnmModule(ModuleTestCase):
             if module_name == "cisco.dcnm.dcnm_rest":
                 # Return the mocked fabric_associations response directly
                 path = module_args.get('path', '') if module_args else ''
-                if '/fabric-associations' in path:
+                if '/about/version' in path:
+                    if hasattr(self, 'nd_support_version'):
+                        return {'response': self.nd_support_version, 'failed': False}
+                if '/onemanage/fabrics' in path:
+                    if hasattr(self, 'multicluster_fabric_associations'):
+                        return {'response': self.multicluster_fabric_associations, 'failed': False}
+                elif '/fabric-associations' in path:
                     if hasattr(self, 'fabric_associations'):
                         return {'response': self.fabric_associations, 'failed': False}
                 elif 'vrfs' in path:
