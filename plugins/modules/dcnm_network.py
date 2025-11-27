@@ -35,16 +35,41 @@ options:
     - Name of the target fabric for network operations
     type: str
     required: yes
-  _fabric_type:
+  _fabric_details:
     description:
     - INTERNAL PARAMETER - DO NOT USE
-    - Fabric type is automatically detected by the module using fabric associations API
-    - Valid values are 'standalone', 'multisite_parent', 'multisite_child' but should never be manually specified
-    - This parameter is used internally by the action plugin for MSD fabric processing
+    - Fabric details dictionary automatically provided by the action plugin
+    - Contains fabric_type, cluster_name, and nd_version information
+    - This parameter is used internally by the action plugin for MSD/MFD fabric processing
+    type: dict
+    required: false
+    suboptions:
+      fabric_type:
+        description:
+        - Type of fabric (multicluster_parent, multicluster_child, multisite_parent, multisite_child, standalone)
+        type: str
+        required: true
+      cluster_name:
+        description:
+        - Name of the cluster if applicable
+        type: str
+        required: false
+      nd_version:
+        description:
+        - ND/NDFC version number used for API path selection
+        - Automatically provided by action plugin
+        - Module will fail if this is not provided by action plugin
+        type: float
+        required: true
+  _fabric_type:
+    description:
+    - INTERNAL PARAMETER - DO NOT USE - DEPRECATED
+    - This parameter is deprecated in favor of _fabric_details
+    - Kept for backward compatibility only
     type: str
     required: false
     default: standalone
-    choices: ['multisite_child', 'standalone', 'multisite_parent']
+    choices: ['multisite_child', 'standalone', 'multisite_parent', 'multicluster_parent', 'multicluster_child']
   state:
     description:
     - The state of ND after module completion.
@@ -878,7 +903,9 @@ EXAMPLES = """
 """
 
 import copy
+import inspect
 import json
+import logging
 import re
 import time
 
@@ -887,14 +914,15 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_ip_addr_info,
     dcnm_get_url,
     dcnm_send,
-    dcnm_version_supported,
     get_fabric_details,
-    get_fabric_inventory_details,
+    get_nd_fabric_inventory_details,
     get_ip_sn_dict,
     get_ip_sn_fabric_dict,
     has_partial_dhcp_config,
     validate_list_of_dicts,
 )
+
+from ..module_utils.common.log_v2 import Log
 
 
 class DcnmNetwork:
@@ -910,6 +938,7 @@ class DcnmNetwork:
             "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
             "GET_NET_STATUS": "/rest/top-down/fabrics/{}/networks/{}/status",
             "GET_NET_SWITCH_DEPLOY": "/rest/top-down/fabrics/networks/deploy",
+            "GET_NET_SWITCH_DEPLOY_ONEMANAGE": "/onemanage/rest/top-down/networks/deploy",
         },
         12: {
             "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
@@ -921,12 +950,22 @@ class DcnmNetwork:
             "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
             "GET_NET_STATUS": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}/status",
             "GET_NET_SWITCH_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/networks/deploy",
+            "GET_NET_SWITCH_DEPLOY_ONEMANAGE": "/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/top-down/networks/deploy",
         },
     }
 
     def __init__(self, module):
+        self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self.module = module
         self.params = module.params
+
+        msg = "self.params: "
+        msg += f"{json.dumps(self.params, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         self.fabric = module.params["fabric"]
         self.config = copy.deepcopy(module.params.get("config"))
         self.check_mode = False
@@ -957,22 +996,88 @@ class DcnmNetwork:
         self.diff_input_format = []
         self.query = []
         self.deployment_states = {}
-        self.dcnm_version = dcnm_version_supported(self.module)
-        self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
+        self.network_to_sns = {}
+        
+        # Get fabric details from parameter (set by action plugin) - MUST be done before inventory call
+        fabric_details = module.params.get("_fabric_details")
+        
+        # Store fabric_details as instance variable for later use
+        self.fabric_details = fabric_details
+        
+        # Get ND version from action plugin (similar to dcnm_vrf)
+        # The action plugin must provide nd_version in fabric_details
+        action_nd_version = None
+        if self.fabric_details and isinstance(self.fabric_details, dict):
+            action_nd_version = self.fabric_details.get("nd_version")
+        
+        if action_nd_version:
+            self.dcnm_version = action_nd_version
+            msg = f"ND version from action plugin: {self.dcnm_version}"
+            self.log.debug(msg)
+        else:
+            # Fail if nd_version is not provided by action plugin
+            msg = "ND version not provided by action plugin. The '_fabric_details' parameter with 'nd_version' is required."
+            self.module.fail_json(msg=msg)
+        
+        msg = f"self.dcnm_version: {self.dcnm_version}"
+        self.log.debug(msg)
+        
+        self.inventory_data = get_nd_fabric_inventory_details(self.module, self.dcnm_version, self.fabric, self.fabric_details)
+
+        msg = "self.inventory_data: "
+        msg += f"{json.dumps(self.inventory_data, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
+        
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
         self.fabric_det = get_fabric_details(module, self.fabric)
+
+        msg = "self.fabric_det: "
+        msg += f"{json.dumps(self.fabric_det, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        
         self.is_ms_fabric = True if self.fabric_det.get("fabricType") == "MFD" else False
         if self.dcnm_version > 12:
             self.paths = self.dcnm_network_paths[12]
         else:
             self.paths = self.dcnm_network_paths[self.dcnm_version]
 
-        # Get fabric type from parameter (set by action plugin)
-        self.fabric_type = module.params.get("_fabric_type")
+        # Extract fabric_type from fabric_details
+        # Note: fabric_details was already retrieved and stored as self.fabric_details earlier
+        if self.fabric_details and isinstance(self.fabric_details, dict):
+            self.fabric_type = self.fabric_details.get("fabric_type")
+            self.cluster_name = self.fabric_details.get("cluster_name", "")
+        else:
+            # Fail if fabric_details not provided
+            self.module.fail_json(msg="Fabric type detection failed. The '_fabric_details' parameter is required but was not provided by the action plugin.")
 
         if self.fabric_type is None:
-            self.module.fail_json(msg="Could not determine fabric type. Please set fabric_type in the playbook")
+            self.module.fail_json(msg="Could not determine fabric type from _fabric_details. Please ensure the action plugin is functioning correctly.")
+
+        # Modify paths based on fabric type for MFD (multicluster) fabrics
+        if self.fabric_type == "multicluster_child":
+            # For multicluster child fabrics, prepend proxy path based on ND version
+            # Version >= 12.4 uses /fedproxy/, < 12.4 uses /onepath/ (similar to dcnm_vrf)
+            if self.dcnm_version >= 12.4:
+                proxy = "/fedproxy/"
+            else:
+                proxy = "/onepath/"
+            self.module.warn(f"multicluster_child proxy path: {proxy} (version: {self.dcnm_version}, cluster: {self.cluster_name})")
+            for path_key in self.paths:
+                self.paths[path_key] = proxy + self.cluster_name + self.paths[path_key]
+        elif self.fabric_type == "multicluster_parent":
+            # For multicluster parent fabrics - ALL versions:
+            # 1. Replace "lan-fabric/rest" with "onemanage" (middle replacement) - applies to ALL versions
+            # 2. Prepend "/onemanage" proxy - applies to ALL versions
+            proxy = "/onemanage"
+            for path_key in self.paths:
+                if path_key == "GET_NET_SWITCH_DEPLOY":
+                    # Use the dedicated onemanage deploy endpoint
+                    self.paths[path_key] = self.paths["GET_NET_SWITCH_DEPLOY_ONEMANAGE"]
+                else:
+                    # Always replace lan-fabric/rest with onemanage AND prepend /onemanage for ALL versions
+                    self.paths[path_key] = proxy + self.paths[path_key].replace("lan-fabric/rest", "onemanage")
 
         self.check_extra_params = True
 
@@ -1023,6 +1128,12 @@ class DcnmNetwork:
         return next(match, None)
 
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"replace == {replace}"
+        self.log.debug(msg)
 
         attach_list = []
         atch_tor_ports = []
@@ -1174,7 +1285,7 @@ class DcnmNetwork:
                                     for tor_w in want["torports"]:
                                         torconfig_list.append(tor_w["switch"] + "(" + tor_w["torPorts"] + ")")
                                     want.update({"torPorts": " ".join(torconfig_list)})
-                                del want["torports"]
+                                    del want["torports"]
                                 want.update({"deployment": True})
                                 attach_list.append(want)
                                 if bool(want["is_deploy"]):
@@ -1233,6 +1344,11 @@ class DcnmNetwork:
         return attach_list, dep_net
 
     def update_attach_params(self, attach, net_name, deploy):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         torlist = []
         if not attach:
@@ -1269,6 +1385,7 @@ class DcnmNetwork:
         attach.update({"instanceValues": ""})
         attach.update({"freeformConfig": ""})
         attach.update({"is_deploy": deploy})
+        
         if attach.get("tor_ports"):
             if role.lower() != "leaf":
                 msg = "tor_ports for Networks cannot be attached to switch {0} with role {1}".format(attach["ip_address"], role)
@@ -1288,7 +1405,80 @@ class DcnmNetwork:
 
         return attach
 
+    def transform_deploy_payload_for_multicluster(self, deploy_payload):
+        """
+        Transform deploy payload for multicluster parent fabrics ONLY.
+        
+        For multicluster parent, the deploy API expects:
+        {"serialNumber1": "net1,net2,net3", "serialNumber2": "net1,net2,net3"}
+        
+        For all other fabric types (including multicluster_child), use standard format:
+        {"networkNames": "net1,net2,net3"}
+        
+        Uses the network_to_sns mapping built in get_have()
+        to efficiently construct the payload for multicluster_parent.
+        
+        Args:
+            deploy_payload: Original payload with networkNames format
+            
+        Returns:
+            Transformed payload for multicluster_parent or original payload for other fabric types
+        """
+        # Only transform for multicluster_parent, all others (including multicluster_child) use standard format
+        if self.fabric_type != "multicluster_parent":
+            return deploy_payload
+        
+        if not deploy_payload or "networkNames" not in deploy_payload:
+            return deploy_payload
+        
+        network_names_str = deploy_payload["networkNames"]
+        if not network_names_str:
+            return {}
+        
+        # Parse the comma-separated network names
+        network_names_list = [name.strip() for name in network_names_str.split(",")]
+        
+        # Check if we have the mappings from get_have()
+        if not hasattr(self, 'network_to_sns') or not self.network_to_sns:
+            return deploy_payload
+        
+        # Build the multicluster format payload using the mappings
+        # For each network in deploy list, find its serial numbers
+        # Then invert to get serial -> networks mapping
+        serial_to_networks = {}
+        
+        for network_name in network_names_list:
+            # Skip if network not in our mapping (shouldn't happen, but be safe)
+            if network_name not in self.network_to_sns:
+                continue
+            
+            # Get all serial numbers for this network
+            serial_numbers = self.network_to_sns[network_name]
+            
+            # Add this network to each serial's list
+            for serial in serial_numbers:
+                if serial not in serial_to_networks:
+                    serial_to_networks[serial] = []
+                if network_name not in serial_to_networks[serial]:
+                    serial_to_networks[serial].append(network_name)
+        
+        # If we couldn't build the mapping, fall back to original payload
+        if not serial_to_networks:
+            return deploy_payload
+        
+        # Build the multicluster format payload: {serialNumber: "net1,net2,net3"}
+        multicluster_payload = {}
+        for serial, networks in serial_to_networks.items():
+            multicluster_payload[serial] = ",".join(networks)
+        
+        return multicluster_payload
+
     def diff_for_create(self, want, have):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         # Possible update scenarios
         # vlanId - Changing vlanId on an already deployed network only affects new attachments
@@ -1395,11 +1585,11 @@ class DcnmNetwork:
         trmen_want = str(json_to_dict_want.get("trmEnabled", "")).lower()
         trmen_have = str(json_to_dict_have.get("trmEnabled", "")).lower()
         rt_both_want = str(json_to_dict_want.get("rtBothAuto", "")).lower()
-        rt_both_have = json_to_dict_have.get("rtBothAuto", "")
+        rt_both_have = str(json_to_dict_have.get("rtBothAuto", "")).lower()
         l3gw_onbd_want = str(json_to_dict_want.get("enableL3OnBorder", "")).lower()
-        l3gw_onbd_have = json_to_dict_have.get("enableL3OnBorder", "")
+        l3gw_onbd_have = str(json_to_dict_have.get("enableL3OnBorder", "")).lower()
         nf_en_want = str(json_to_dict_want.get("ENABLE_NETFLOW", "")).lower()
-        nf_en_have = json_to_dict_have.get("ENABLE_NETFLOW", "")
+        nf_en_have = str(json_to_dict_have.get("ENABLE_NETFLOW", "")).lower()
         intvlan_nfen_want = json_to_dict_want.get("SVI_NETFLOW_MONITOR", "")
         intvlan_nfen_have = json_to_dict_have.get("SVI_NETFLOW_MONITOR", "")
         vlan_nfen_want = json_to_dict_want.get("VLAN_NETFLOW_MONITOR", "")
@@ -1828,6 +2018,11 @@ class DcnmNetwork:
         )
 
     def update_create_params(self, net):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         if not net:
             return net
@@ -1963,6 +2158,11 @@ class DcnmNetwork:
         return net_upd
 
     def get_have(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         have_create = []
         have_deploy = {}
@@ -2147,7 +2347,7 @@ class DcnmNetwork:
                     dep_net = attach["networkName"]
 
                 sn = attach["switchSerialNo"]
-                vlan = attach["vlanId"]
+                vlan = attach.get("vlanId")
 
                 if attach["portNames"] and re.match(r"\S+\(\S+\d+\/\d+\)", attach["portNames"]):
                     for idx, sw_list in enumerate(re.findall(r"\S+\(\S+\d+\/\d+\)", attach["portNames"])):
@@ -2169,7 +2369,8 @@ class DcnmNetwork:
                 # Ex: 'vlanId' in the attach section of incoming payload needs to be changed to 'vlan'
                 # on the attach section of outgoing payload.
 
-                del attach["vlanId"]
+                if "vlanId" in attach:
+                    del attach["vlanId"]
                 del attach["switchSerialNo"]
                 del attach["switchName"]
                 del attach["switchRole"]
@@ -2208,11 +2409,50 @@ class DcnmNetwork:
         if dep_networks:
             have_deploy.update({"networkNames": ",".join(dep_networks)})
 
+        # Build mapping for multicluster deploy payload transformation
+        # network_to_sns: {networkName: [sn1, sn2, ...]}
+        network_to_sns = {}
+        
+        for net_attach in have_attach:
+            network_name = net_attach.get("networkName")
+            if not network_name:
+                continue
+            
+            lan_attach_list = net_attach.get("lanAttachList", [])
+            for attach in lan_attach_list:
+                serial = attach.get("serialNumber")
+                if not serial:
+                    continue
+                
+                # Build network_to_sns mapping
+                if network_name not in network_to_sns:
+                    network_to_sns[network_name] = []
+                if serial not in network_to_sns[network_name]:
+                    network_to_sns[network_name].append(serial)
+
         self.have_create = have_create
         self.have_attach = have_attach
         self.have_deploy = have_deploy
+        self.network_to_sns = network_to_sns
+
+        msg = "self.have_create: "
+        msg += f"{json.dumps(self.have_create, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.have_attach: "
+        msg += f"{self.have_attach}"
+        self.log.debug(msg)
+
+        msg = "self.have_deploy: "
+        msg += f"{json.dumps(self.have_deploy, indent=4)}"
+        self.log.debug(msg)
 
     def get_want(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         want_create = []
         want_attach = []
@@ -2235,7 +2475,10 @@ class DcnmNetwork:
                 continue
             for attach in net["attach"]:
                 deploy = net_deploy
-                networks.append(self.update_attach_params(attach, net["net_name"], deploy))
+                
+                result = self.update_attach_params(attach, net["net_name"], deploy)
+                
+                networks.append(result)
             if networks:
                 for attch in net["attach"]:
                     for ip, ser in self.ip_sn.items():
@@ -2282,6 +2525,18 @@ class DcnmNetwork:
         self.want_create = want_create
         self.want_attach = want_attach
         self.want_deploy = want_deploy
+
+        msg = "self.want_create: "
+        msg += f"{json.dumps(self.want_create, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.want_attach: "
+        msg += f"{json.dumps(self.want_attach, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.want_deploy: "
+        msg += f"{json.dumps(self.want_deploy, indent=4)}"
+        self.log.debug(msg)
 
     def check_want_networks_deployment_state(self):
         """
@@ -2342,6 +2597,11 @@ class DcnmNetwork:
             self.deployment_states = {}
 
     def get_diff_delete(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         diff_detach = []
         diff_undeploy = {}
@@ -2403,7 +2663,24 @@ class DcnmNetwork:
         self.diff_undeploy = diff_undeploy
         self.diff_delete = diff_delete
 
+        msg = "self.diff_detach: "
+        msg += f"{json.dumps(self.diff_detach, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.diff_undeploy: "
+        msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.diff_delete: "
+        msg += f"{json.dumps(self.diff_delete, indent=4)}"
+        self.log.debug(msg)
+
     def get_diff_override(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         all_nets = ""
         diff_delete = {}
@@ -2456,6 +2733,11 @@ class DcnmNetwork:
         return warn_msg
 
     def get_diff_replace(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         all_nets = ""
 
@@ -2553,6 +2835,12 @@ class DcnmNetwork:
         return warn_msg
 
     def get_diff_merge(self, replace=False):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"replace == {replace}"
+        self.log.debug(msg)
 
         #
         # Special cases:
@@ -3119,9 +3407,15 @@ class DcnmNetwork:
 
         if payload_net["lanAttachList"]:
             payload = [payload_net]
+            
+            # Update the fabric name to specific fabric which the switches are part of.
+            self.update_ms_fabric(payload)
+            
             method = "POST"
             path = self.paths["GET_NET"].format(self.fabric) + "/attachments"
+            
             resp = dcnm_send(self.module, method, path, json.dumps(payload))
+            
             self.result["response"].append(resp)
             fail, dummy_changed = self.handle_response(resp, "attach")
             if fail:
@@ -3141,28 +3435,89 @@ class DcnmNetwork:
         if self.diff_delete:
             for net in self.diff_delete:
                 state = False
-                path = self.paths["GET_NET_STATUS"].format(self.fabric, net)
+                # For multicluster_parent, use GET_NET_ATTACH instead of GET_NET_STATUS
+                if self.fabric_type == "multicluster_parent":
+                    path = self.paths["GET_NET_ATTACH"].format(self.fabric, net)
+                else:
+                    path = self.paths["GET_NET_STATUS"].format(self.fabric, net)
+                
                 retry = max(100 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
                 deploy_started = False
                 while not state and retry >= 0:
                     retry -= 1
-                    resp = dcnm_send(self.module, method, path)
+                    resp = dcnm_send(self.module, method, path)      
                     state = True
-                    if resp["DATA"]:
-                        if resp["DATA"]["networkStatus"].upper() == "PENDING" and not deploy_started:
-                            self.detach_and_deploy_for_del(resp["DATA"])
-                            deploy_started = True
-                        attach_list = resp["DATA"]["switchList"]
-                        for atch in attach_list:
-                            if atch["lanAttachedState"].upper() == "OUT-OF-SYNC" or atch["lanAttachedState"].upper() == "FAILED":
-                                self.diff_delete.update({net: "OUT-OF-SYNC"})
-                                break
-                            if atch["lanAttachedState"].upper() != "NA":
-                                self.diff_delete.update({net: "DEPLOYED"})
-                                state = False
-                                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
-                                break
+                    
+                    # For multicluster_parent with GET_NET_ATTACH, response structure is different
+                    if self.fabric_type == "multicluster_parent":
+                        if resp.get("DATA") is None:
+                            time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                            state = False
+                            continue
+                        
+                        # GET_NET_ATTACH returns: [{'networkName': 'name', 'lanAttachList': [attachments]}]
+                        if isinstance(resp["DATA"], list) and len(resp["DATA"]) > 0:
+                            # Get the lanAttachList from the first element
+                            attach_list = resp["DATA"][0].get("lanAttachList", [])
+                            
+                            # Check for PENDING state and trigger detach/deploy if needed
+                            for attach in attach_list:
+                                if attach.get("lanAttachState") == "PENDING" and not deploy_started:
+                                    # For multicluster, we need to convert the response structure
+                                    # from: [{'networkName': 'name', 'lanAttachList': [attachments]}]
+                                    # to: {'networkName': 'name', 'fabric': 'fabric', 'switchList': [attachments]}
+                                    
+                                    # Convert multicluster response to format expected by detach_and_deploy_for_del
+                                    adapted_net = {
+                                        "networkName": resp["DATA"][0]["networkName"],
+                                        "fabric": self.fabric,
+                                        "switchList": resp["DATA"][0]["lanAttachList"]
+                                    }
+                                    
+                                    # Note: lanAttachList uses 'lanAttachState' while switchList uses 'lanAttachedState'
+                                    # We need to rename the key for compatibility
+                                    for switch in adapted_net["switchList"]:
+                                        if "lanAttachState" in switch:
+                                            switch["lanAttachedState"] = switch["lanAttachState"]
+                                        if "switchSerialNo" in switch:
+                                            switch["serialNumber"] = switch["switchSerialNo"]
+                                    
+                                    self.detach_and_deploy_for_del(adapted_net)
+                                    deploy_started = True
+                            
+                            for attach in attach_list:
+                                if attach.get("lanAttachState") == "OUT-OF-SYNC" or attach.get("lanAttachState") == "FAILED":
+                                    self.diff_delete.update({net: "OUT-OF-SYNC"})
+                                    break
+                                if attach.get("lanAttachState") != "NA":
+                                    self.diff_delete.update({net: "DEPLOYED"})
+                                    state = False
+                                    time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                                    break
+                            else:
+                                # All attachments are NA or no attachments
+                                self.diff_delete.update({net: "NA"})
+                        else:
+                            # No data found, network is ready
                             self.diff_delete.update({net: "NA"})
+                    
+                    else:
+                        # Original logic for GET_NET_STATUS (non-multicluster)
+                        if resp["DATA"]:
+                            if resp["DATA"]["networkStatus"].upper() == "PENDING" and not deploy_started:
+                                self.detach_and_deploy_for_del(resp["DATA"])
+                                deploy_started = True
+                            attach_list = resp["DATA"]["switchList"]
+                            for atch in attach_list:
+                                if atch["lanAttachedState"].upper() == "OUT-OF-SYNC" or atch["lanAttachedState"].upper() == "FAILED":
+                                    self.diff_delete.update({net: "OUT-OF-SYNC"})
+                                    break
+                                if atch["lanAttachedState"].upper() != "NA":
+                                    self.diff_delete.update({net: "DEPLOYED"})
+                                    state = False
+                                    time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                                    break
+                                self.diff_delete.update({net: "NA"})
                 if retry < 0:
                     self.diff_delete.update({net: "TIMEOUT"})
                     return False
@@ -3238,14 +3593,25 @@ class DcnmNetwork:
         return network_states
 
     def update_ms_fabric(self, diff):
-        if not self.is_ms_fabric:
+        # Update fabric field for both multisite (MFD) and multicluster parent fabrics
+        if not self.is_ms_fabric and self.fabric_type != "multicluster_parent":
             return
 
         for list_elem in diff:
             for node in list_elem["lanAttachList"]:
-                node["fabric"] = self.sn_fab[node["serialNumber"]]
+                old_fabric = node.get("fabric")
+                sn = node["serialNumber"]
+                new_fabric = self.sn_fab.get(sn, old_fabric)
+                node["fabric"] = new_fabric
+
 
     def push_to_remote(self, is_rollback=False):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"is_rollback: {is_rollback}"
+        self.log.debug(msg)
 
         path = self.paths["GET_NET"].format(self.fabric)
 
@@ -3308,9 +3674,20 @@ class DcnmNetwork:
                 self.failure(resp)
 
         method = "POST"
+        payload = copy.deepcopy(self.diff_undeploy)
         if self.diff_undeploy:
-            deploy_path = path + "/deployments"
-            resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_undeploy))
+            # For multicluster_parent, use special endpoint and payload format
+            # For all others (including multicluster_child), use standard /deployments path
+            if self.fabric_type == "multicluster_parent":
+                deploy_path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
+                deploy_payload = self.transform_deploy_payload_for_multicluster(payload)
+            else:
+                # Standard path for standalone, multisite, and multicluster_child
+                path = self.paths["GET_NET"].format(self.fabric)
+                deploy_path = path + "/deployments"
+                deploy_payload = payload
+            
+            resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
             # Use the self.wait_for_del_ready() function to refresh the state
             # of self.diff_delete dict and re-attempt the undeploy action if
             # the state of the network is "OUT-OF-SYNC"
@@ -3339,8 +3716,18 @@ class DcnmNetwork:
                     if state == "OUT-OF-SYNC":
                         resp += "Network is out of sync.\n"
                     continue
-                delete_path = path + "/" + net
-                resp = dcnm_send(self.module, method, delete_path)
+                # Use bulk-delete API for multicluster_parent, regular delete for others
+                if self.fabric_type == "multicluster_parent":
+                    delete_path = path.replace("/networks","") + "/bulk-delete/networks?network-names=" + net
+                    delete_payload = None
+                else:
+                    delete_path = path + "/" + net
+                    delete_payload = {net: "NA"}
+                
+                if delete_payload:
+                    resp = dcnm_send(self.module, method, delete_path, json.dumps(delete_payload))
+                else:
+                    resp = dcnm_send(self.module, method, delete_path)
                 self.result["response"].append(resp)
                 fail, self.result["changed"] = self.handle_response(resp, "delete")
                 if fail:
@@ -3439,9 +3826,17 @@ class DcnmNetwork:
                 for v_a in d_a["lanAttachList"]:
                     if v_a.get("is_deploy"):
                         del v_a["is_deploy"]
+                    # Clean up tor_ports/torports keys if they exist and are empty
+                    if v_a.get("tor_ports") is not None:
+                        if not v_a["tor_ports"]:
+                            del v_a["tor_ports"]
+                    if v_a.get("torports") is not None:
+                        if not v_a["torports"]:
+                            del v_a["torports"]
 
             for attempt in range(0, 50):
                 resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
+                
                 update_in_progress = False
                 for key in resp["DATA"].keys():
                     if re.search(r"Failed.*Please try after some time", str(resp["DATA"][key])):
@@ -3464,8 +3859,17 @@ class DcnmNetwork:
 
         method = "POST"
         if self.diff_deploy:
-            deploy_path = path + "/deployments"
-            resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_deploy))
+            # For multicluster_parent, use special endpoint and payload format
+            # For all others (including multicluster_child), use standard /deployments path
+            if self.fabric_type == "multicluster_parent":
+                deploy_path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
+                deploy_payload = self.transform_deploy_payload_for_multicluster(self.diff_deploy)
+            else:
+                # Standard path for standalone, multisite, and multicluster_child
+                path = self.paths["GET_NET"].format(self.fabric)
+                deploy_path = path + "/deployments"
+                deploy_payload = self.diff_deploy
+            resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
             self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "deploy")
             if fail:
@@ -3518,7 +3922,7 @@ class DcnmNetwork:
         Returns:
             list: List of attribute names to skip
         """
-        if self.fabric_type != "multisite_parent":
+        if "_parent" != self.fabric_type:
             return []
 
         # Get child spec dynamically using parameter
@@ -3586,7 +3990,7 @@ class DcnmNetwork:
         net_fabric_type = fabric_type if fabric_type is not None else self.fabric_type
 
         # Define the restricted spec for MSD child configurations
-        if net_fabric_type == "multisite_child":
+        if "_child" in net_fabric_type:
             net_spec = dict(
                 net_name=dict(required=True, type="str", length_max=64),
                 vrf_name=dict(type="str", length_max=32),
@@ -3606,7 +4010,7 @@ class DcnmNetwork:
                 deploy=dict(type="bool", default=True if not is_query_state else None),
                 is_l2only=dict(type="bool", default=False),
             )
-        elif net_fabric_type == "multisite_parent":
+        elif "_parent" in net_fabric_type:
             # Parent-specific attributes: attributes present in full spec but not in child spec
             net_spec = dict(
                 net_name=dict(required=True, type="str", length_max=64),
@@ -3683,6 +4087,11 @@ class DcnmNetwork:
         return net_spec
 
     def validate_input(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         """Parse the playbook values, validate to param specs."""
 
@@ -3715,7 +4124,7 @@ class DcnmNetwork:
         state = self.params["state"]
 
         # Check for invalid state combinations with MSD child
-        if self.fabric_type == "multisite_child":
+        if self.fabric_type in ["multisite_child", "multicluster_child"]:
             if state in ["overridden", "deleted"]:
                 self.module.fail_json(
                     msg=f"State '{state}' is not allowed for MSD child networks. Networks cannot be "
@@ -3737,7 +4146,7 @@ class DcnmNetwork:
                 valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec, check_extra_params=self.check_extra_params)
                 for net in valid_net:
                     # Check for attachment attributes in MSD child fabrics
-                    if self.fabric_type == "multisite_child" and net.get("attach"):
+                    if self.fabric_type in ["multisite_child", "multicluster_child"] and net.get("attach"):
                         self.module.fail_json(
                             msg=f"Network '{net.get('net_name', 'unknown')}': Attachment attributes are "
                             "not allowed for MSD child networks. MSD child fabrics do not support "
@@ -3779,7 +4188,7 @@ class DcnmNetwork:
                 valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec, check_extra_params=self.check_extra_params)
                 for net in valid_net:
                     # Check for attachment attributes in MSD child fabrics
-                    if self.fabric_type == "multisite_child" and net.get("attach"):
+                    if self.fabric_type in ["multisite_child", "multicluster_child"] and net.get("attach"):
                         self.module.fail_json(
                             msg=f"Network '{net.get('net_name', 'unknown')}': Attachment attributes are "
                             "not allowed for MSD child networks. MSD child fabrics do not support "
@@ -3869,6 +4278,12 @@ class DcnmNetwork:
                 self.module.fail_json(msg=msg)
 
     def handle_response(self, resp, op):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"op: {op}"
+        self.log.debug(msg)
 
         fail = False
         changed = True
@@ -3920,6 +4335,11 @@ class DcnmNetwork:
         return fail, changed
 
     def failure(self, resp):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         # Donot Rollback for Multi-site fabrics
         if self.is_ms_fabric or self.fabric_type != "standalone":
@@ -3968,7 +4388,7 @@ class DcnmNetwork:
         # Check if this is a replaced state with MSD child fabric
         is_replaced_multisite_child = (
             self.module.params["state"] == "replaced"
-            and self.fabric_type == "multisite_child"
+            and self.fabric_type in ["multisite_child", "multicluster_child"]
         )
 
         # MSD child configurable attributes (can be updated in replaced state):
@@ -4137,9 +4557,8 @@ class DcnmNetwork:
         """
 
         # For child fabrics, copy have attachments to want attachments since child fabrics don't support attachments in config
-        if self.fabric_type == "multisite_child":
+        if self.fabric_type in ["multisite_child", "multicluster_child"]:
             # Copy have attachments to want attachments for child fabrics
-            import copy
             self.want_attach = copy.deepcopy(self.have_attach)
 
         # only for 'merged' state we need to update the objects that are not included in playbook with
@@ -4150,7 +4569,7 @@ class DcnmNetwork:
         if state == "merged":
             # Normal merged state processing
             pass
-        elif state == "replaced" and self.fabric_type == "multisite_child":
+        elif state == "replaced" and self.fabric_type in ["multisite_child", "multicluster_child"]:
             # For MSD child in replaced state, we need special handling
             pass
         else:
@@ -4179,11 +4598,18 @@ def main():
 
     element_spec = dict(
         fabric=dict(required=True, type="str"),
-        _fabric_type=dict(
+        _fabric_details=dict(
             required=False,
-            type="str",
-            default="standalone",
-            choices=["multisite_child", "standalone", "multisite_parent"]
+            type="dict",
+            options=dict(
+                fabric_type=dict(
+                    required=True,
+                    type="str",
+                    choices=["multicluster_parent", "multicluster_child", "multisite_parent", "multisite_child", "standalone"]
+                ),
+                cluster_name=dict(required=False, type="str", default=""),
+                nd_version=dict(required=False, type="float")
+            )
         ),
         config=dict(required=False, type="list", elements="dict"),
         state=dict(
@@ -4203,7 +4629,7 @@ def main():
 
     dcnm_net.get_want()
     dcnm_net.get_have()
-    if module.params["_fabric_type"] == "multisite_child":
+    if dcnm_net.fabric_type in ["multisite_child", "multicluster_child"]:
         dcnm_net.check_want_networks_deployment_state()
 
     warn_msg = None
