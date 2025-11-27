@@ -309,6 +309,11 @@ class FabricCreateCommon(FabricCommon):
             raise TypeError(msg) from error
         if _class_have != _class_need:
             raise TypeError(msg)
+        if not value.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set before assigning "
+            msg += "to FabricConfigDeploy.rest_send."
+            raise ValueError(msg)
         self._rest_send = value
 
     @property
