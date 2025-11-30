@@ -101,7 +101,7 @@
 
 - name: MERGED - TC1 - Load VPC Pair Config File
   ansible.builtin.set_fact:
-    dcnm_vpc_pair_full_conf: "{{ lookup('file', test_data_merged.vpc_pair_full_file) | from_yaml }}"
+    dcnm_vpc_pair_full_conf: "{{ lookup('file', '{{ test_data_merged.vpc_pair_full_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: merged
 
@@ -266,7 +266,7 @@
 # TC4 - Create VPC Pair with minimal configuration
 - name: MERGED - TC4 - Load VPC Pair Minimal Config File
   ansible.builtin.set_fact:
-    dcnm_vpc_pair_minimal_conf: "{{ lookup('file', test_data_merged.vpc_pair_minimal_file) | from_yaml }}"
+    dcnm_vpc_pair_minimal_conf: "{{ lookup('file', '{{ test_data_merged.vpc_pair_minimal_file) }}' | from_yaml }}"
   delegate_to: localhost
   tags: merged
 
@@ -389,7 +389,7 @@
 # TC6 - Create VPC Pair with deploy flag as False
 - name: MERGED - TC6 - Load VPC Pair No Deploy Config File
   ansible.builtin.set_fact:
-    dcnm_vpc_pair_no_deploy_conf: "{{ lookup('file', test_data_merged.vpc_pair_no_deploy_file) | from_yaml }}"
+    dcnm_vpc_pair_no_deploy_conf: "{{ lookup('file', '{{ test_data_merged.vpc_pair_no_deploy_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: merged
 

@@ -4,6 +4,7 @@
 
 - name: Initialize templates (ensure clean slate)
   cisco.dcnm.dcnm_template:
+    state: deleted
     config:
       - name: template_101
       - name: template_102
@@ -20,7 +21,7 @@
 - block:
 
 ##############################################
-##                CREATE                    ##
+##                MERGE                     ##
 ##############################################
 
     - name: Create all templates
@@ -28,9 +29,9 @@
         state: merged
         config:
           - name: template_101
-            description: "Template_101"
             tags: "internal policy 101"
             content: |
+              telemetry
               certificate /bootflash/telegraf.crt telegraf
               destination-profile
                 use-vrf management
@@ -44,8 +45,6 @@
                 snsr-grp 1 sample-interval 10000
 
           - name: template_102
-            description: "Template_102"
-            tags: "internal policy 102"
             content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
@@ -61,8 +60,6 @@
                   snsr-grp 2 sample-interval 20000
 
           - name: template_103
-            description: "Template_103"
-            tags: "internal policy 103"
             content: |
               telemetry
                 certificate /bootflash/telegraf.crt telegraf
@@ -120,8 +117,8 @@
         config:
           - name: template_101
             description: "Template_101 - added this description"
-            tags: "internal policy 101"
             content: |
+              telemetry
               certificate /bootflash/telegraf.crt telegraf
               destination-profile
                 use-vrf management
@@ -231,6 +228,8 @@
       ansible.builtin.assert:
         that:
           - 'query_result.changed == false'
+          - '(query_result["diff"][0]["merged"] | length) == 0'
+          - '(query_result["diff"][0]["deleted"] | length) == 0'
           - '(query_result.diff[0].query | length) == 4'
           - '("Template_101 - added this description" in query_result.response[0].description)'
           - '("Template_102 - added this" in query_result.response[1].description)'

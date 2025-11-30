@@ -4,6 +4,7 @@
 
 - name: SANITY - Initialize templates
   cisco.dcnm.dcnm_template:
+    state: deleted
     config:
       - name: template_101
       - name: template_102
@@ -28,6 +29,7 @@
             description: "Template_101"
             tags: "internal policy 101"
             content: |
+              telemetry
               certificate /bootflash/telegraf.crt telegraf
               destination-profile
                 use-vrf management
@@ -132,6 +134,7 @@
             description: "Template_101 - added this description"
             tags: "internal policy 101"
             content: |
+              telemetry
               certificate /bootflash/telegraf.crt telegraf
               destination-profile
                 use-vrf management
@@ -221,12 +224,62 @@
           - '(sanity_modify_idem.diff[0].query | length) == 0'
 
 ##############################################
-##                NO DELETE TEST            ##
+##                CLEANUP                   ##
 ##############################################
 
     - name: SANITY - Delete templates including in-use
       cisco.dcnm.dcnm_template:
         state: deleted
+        config:
+          - name: template_101
+          - name: template_102
+          - name: template_103
+          - name: template_104
+
+##############################################
+##               NO DELETE                  ##
+##############################################
+
+    - name: SANITY- Create a template
+      cisco.dcnm.dcnm_template: &temp_merge2
+        state: merged        # only choose form [merged, deleted, query]
+        config:
+          - name: template_101
+            description: "Template_101"
+            tags: "internal policy 101"
+            content: |
+              telemetry
+                certificate /bootflash/telegraf.crt telegraf
+                destination-profile
+                  use-vrf management
+                destination-group 1
+                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+                sensor-group 1
+                  data-source DME
+                  path sys/ch depth unbounded
+                subscription 1
+                  dst-grp 1
+                  snsr-grp 1 sample-interval 10000
+
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - '"Template Created" in item["DATA"]["status"]'
+      loop: '{{ result.response }}'
+
+    - name: SANITY- Delete templates along with the template which is already installed on a switch
+      cisco.dcnm.dcnm_template:
+        state: deleted       # only choose form [merged, deleted, query]
+
         config:
           - name: template_inuse_1
           - name: template_inuse_2
@@ -237,15 +290,12 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-          - '"Templates in use, not deleted" in item["DATA"]'
-        loop: '{{ delete_inuse_result.response }}'
-
-    - name: SANITY - Assert policy map
-      ansible.builtin.assert:
-        that:
+          - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_1" in item["DATA"])'
+          - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_2" in item["DATA"])'
           - '(delete_inuse_result["template-policy-map"] | length) == 2'
           - '"template_inuse_1" in delete_inuse_result["template-policy-map"].keys()'
           - '"template_inuse_2" in delete_inuse_result["template-policy-map"].keys()'
+      loop: '{{ delete_inuse_result.response }}'
 
     - name: SANITY - Delete non-existent template
       cisco.dcnm.dcnm_template:
@@ -268,6 +318,10 @@
       cisco.dcnm.dcnm_template:
         state: query
         config:
+          - name: template_101
+          - name: template_102
+          - name: template_103
+          - name: template_104
           - name: template_inuse_1
       register: query_inuse_result
 
@@ -275,6 +329,8 @@
       ansible.builtin.assert:
         that:
           - 'query_inuse_result.changed == false'
+          - '(query_inuse_result["diff"][0]["merged"] | length) == 0'
+          - '(query_inuse_result["diff"][0]["deleted"] | length) == 0'
           - '(query_inuse_result.diff[0].query | length) == 1'
           - '"template_inuse_1" in query_inuse_result["template-policy-map"].keys()'
 
@@ -290,6 +346,7 @@
             description: "test_fail"
             tags: "internal template test_fail"
             content: |
+              #    Copyright (c) 2018 by Cisco Systems, Inc.
               #    All rights reserved.
 
               @(DisplayName="AAA Server Name/IP", Description="Name or IPv4/IPv6 Address of an AAA Server")
@@ -316,7 +373,8 @@
     - name: SANITY - Flag error_exists
       ansible.builtin.set_fact:
         error_exists: true
-      when: '"ERROR" in (validation_fail_result.response[0].DATA | string)'
+      loop: "{{ lookup('list', result['response'][0]['DATA']) }}"
+      when: '"ERROR" == item.get("reportItemType")'
 
     - name: SANITY - Assert error flag
       ansible.builtin.assert:
@@ -335,6 +393,7 @@
             description: "Template_101"
             tags: "internal policy 101"
             content: |
+              telemetry
               certificate /bootflash/telegraf.crt telegraf
               destination-profile
                 use-vrf management

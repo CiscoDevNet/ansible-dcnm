@@ -4,6 +4,7 @@
 
 - name: Initialize template_101 (pre-test)
   cisco.dcnm.dcnm_template:
+    state: deleted
     config:
       - name: template_101
   register: init_result
@@ -17,7 +18,7 @@
 - block:
 
 ##############################################
-##                CREATE                    ##
+##                MERGE                     ##
 ##############################################
 
     - name: Create template_101
@@ -28,6 +29,7 @@
             description: "Template_101"
             tags: "internal policy 101"
             content: |
+              telemetry
               certificate /bootflash/telegraf.crt telegraf
               destination-profile
                 use-vrf management
@@ -73,12 +75,8 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-          - '("Templates in use, not deleted" in item["DATA"])'
-        loop: '{{ delete_inuse_result.response }}'
-
-    - name: Assert template-policy-map keys
-      ansible.builtin.assert:
-        that:
+          - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_1" in item["DATA"])'
+          - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_2" in item["DATA"])'
           - '(delete_inuse_result["template-policy-map"] | length) == 2'
           - '"template_inuse_1" in delete_inuse_result["template-policy-map"].keys()'
           - '"template_inuse_2" in delete_inuse_result["template-policy-map"].keys()'

@@ -1,3 +1,4 @@
+---
 ##############################################
 ##               SETUP                      ##
 ##############################################
@@ -6,6 +7,9 @@
   cisco.dcnm.dcnm_template:
     config:
       - name: template_101
+      - name: template_102
+      - name: template_103
+      - name: template_104
   register: init_result
 
 - name: Assert initialization responses
@@ -32,6 +36,7 @@
             description: "test_fail"
             tags: "internal template test_fail"
             content: |
+              #    Copyright (c) 2018 by Cisco Systems, Inc.
               #    All rights reserved.
 
               @(DisplayName="AAA Server Name/IP", Description="Name or IPv4/IPv6 Address of an AAA Server")
@@ -58,7 +63,8 @@
     - name: Flag error_exists when ERROR present
       ansible.builtin.set_fact:
         error_exists: true
-      when: '"ERROR" in (fail_result.response[0].DATA | string)'
+      loop: "{{ lookup('list', result['response'][0]['DATA']) }}"
+      when: '"ERROR" == item.get("reportItemType")'
 
     - name: Assert error flag
       ansible.builtin.assert:

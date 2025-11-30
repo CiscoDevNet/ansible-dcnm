@@ -63,7 +63,7 @@
 
 - name: OVERRIDDEN - TC1 - Load VPC Pair Initial Config File
   ansible.builtin.set_fact:
-    dcnm_vpc_pair_initial_conf: "{{ lookup('file', test_data_overridden.vpc_pair_initial_file) | from_yaml }}"
+    dcnm_vpc_pair_initial_conf: "{{ lookup('file', '{{ test_data_overridden.vpc_pair_initial_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: overridden
 
@@ -110,7 +110,7 @@
 # TC2 - Override with same VPC switch pair with changes
 - name: OVERRIDDEN - TC2 - Load VPC Pair Overridden Config File
   ansible.builtin.set_fact:
-    dcnm_vpc_pair_overridden_conf: "{{ lookup('file', test_data_overridden.vpc_pair_overridden_file) | from_yaml }}"
+    dcnm_vpc_pair_overridden_conf: "{{ lookup('file', '{{ test_data_overridden.vpc_pair_overridden_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: overridden
 

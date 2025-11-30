@@ -52,7 +52,7 @@
 
 - name: QUERY - TC1 - Load VPC Pair Setup Config File
   ansible.builtin.set_fact:
-    dcnm_vpc_pair_setup_conf: "{{ lookup('file', test_data_query.vpc_pair_setup_file) | from_yaml }}"
+    dcnm_vpc_pair_setup_conf: "{{ lookup('file', '{{ test_data_query.vpc_pair_setup_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: query
 

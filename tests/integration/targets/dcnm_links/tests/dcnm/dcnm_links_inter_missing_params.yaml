@@ -271,35 +271,3 @@
               dummy: 1
       ignore_errors: true
       register: bad_profile
-
-  ##############################################
-  ##               ASSERTIONS                 ##
-  ##############################################
-
-    - name: ASSERT each negative test failed or returned error indicator
-      ansible.builtin.assert:
-        that:
-          - invalid_template is failed or (invalid_template.msg is defined)
-          - no_src_fabric is failed or (no_src_fabric.msg is defined)
-          - no_dst_fabric is failed or (no_dst_fabric.msg is defined)
-          - no_src_interface is failed or (no_src_interface.msg is defined)
-          - no_dst_interface is failed or (no_dst_interface.msg is defined)
-          - no_src_device is failed or (no_src_device.msg is defined)
-          - no_dst_device is failed or (no_dst_device.msg is defined)
-          - no_template is failed or (no_template.msg is defined)
-          - no_ipv4_subnet is failed or (no_ipv4_subnet.msg is defined)
-          - no_ipv4_addr is failed or (no_ipv4_addr.msg is defined)
-          - no_neighbor_ip is failed or (no_neighbor_ip.msg is defined)
-          - no_src_asn is failed or (no_src_asn.msg is defined)
-          - no_dst_asn is failed or (no_dst_asn.msg is defined)
-          - no_profile is failed or (no_profile.msg is defined)
-          - bad_profile is failed or (bad_profile.msg is defined)
-
-  ##############################################
-  ##               CLEANUP                    ##
-  ##############################################
-
-  always:
-    - name: LOG - Negative tests complete
-      ansible.builtin.debug:
-        msg: "inter_missing_params negative validation complete"

@@ -1,158 +1,167 @@
 ##############################################
-##   INTRA UNNUMBERED LINK DELETE TESTS     ##
+##               SETUP                      ##
 ##############################################
 
-- name: LINKS INTRA UNNUMBERED DELETE - Test Entry Point
-  ansible.builtin.debug:
-    msg:
-      - "--------------------------------------------------------------"
-      - "+   Executing dcnm_links intra unnumbered delete tests       +"
-      - "--------------------------------------------------------------"
-
 - name: Remove local log file
-  ansible.builtin.command: rm -f dcnm_links.log
-  delegate_to: localhost
+  local_action: command rm -f dcnm_links.log
 
 - block:
-    ##############################################
-    ##            INITIAL DELETE (CLEAN)        ##
-    ##############################################
+
+##############################################
+##               DELETE                     ##
+##############################################
 
     - name: Initial setup - Delete Links
       cisco.dcnm.dcnm_links: &links_delete
-        state: deleted
+        state: deleted                                           # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_unnum_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_1 }}"
-            dst_interface: "{{ intf_1_1 }}"
-            src_device: "{{ ansible_unnum_switch1 }}"
-            dst_device: "{{ ansible_unnum_switch2 }}"
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_2 }}"
-            dst_interface: "{{ intf_1_2 }}"
-            src_device: "{{ ansible_unnum_switch1 }}"
-            dst_device: "{{ ansible_unnum_switch2 }}"
-      register: initial_delete_result
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_unnum_switch1 }}"            # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch2 }}"            # Device on the Destination fabric
 
-    - name: ASSERT - Initial delete return codes
-      ansible.builtin.assert:
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_2 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_2 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_unnum_switch1 }}"            # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch2 }}"            # Device on the Destination fabric
+
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_unnum_switch1 }}"            # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch2 }}"            # Device on the Destination fabric
+
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_unnum_switch1 }}"            # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch2 }}"            # Device on the Destination fabric
+
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_unnum_switch1 }}"            # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch2 }}"            # Device on the Destination fabric
+
+      register: result
+
+    - ansible.builtin.assert:
         that:
-          - item.RETURN_CODE == 200
-      loop: "{{ initial_delete_result.response | default([]) }}"
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
 
-    ##############################################
-    ##                BASE MERGE               ##
-    ##############################################
+##############################################
+##                MERGE                     ##
+##############################################
 
-    - name: Create Links (baseline for delete scenario)
-      cisco.dcnm.dcnm_links: &links_merge_base
-        state: merged
+    - name: Create Links without including optional parameters
+      cisco.dcnm.dcnm_links: &links_merge_no_opt
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_unnum_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_1 }}"
-            dst_interface: "{{ intf_1_1 }}"
-            src_device: "{{ ansible_unnum_switch1 }}"
-            dst_device: "{{ ansible_unnum_switch2 }}"
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_unnum_switch1 }}"            # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch2 }}"            # Device on the Destination fabric
+            template: int_intra_fabric_unnum_link                # template to be applied, choose from
+                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+
             profile:
-              admin_state: true
-              mtu: 9216
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_2 }}"
-            dst_interface: "{{ intf_1_2 }}"
-            src_device: "{{ ansible_unnum_switch1 }}"
-            dst_device: "{{ ansible_unnum_switch2 }}"
-            profile:
-              admin_state: true
-              mtu: 9216
-      register: merge_base_result
+              peer1_ipv4_addr: 192.173.1.1                       # IP address of the Source interface
+              peer2_ipv4_addr: 192.173.1.2                       # IP address of the Destination interface
+              admin_state: true                                  # choose from [true, false]
+              mtu: 9216                                          #
 
-    - name: ASSERT - Base merge diff counters
-      ansible.builtin.assert:
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_2 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_2 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_unnum_switch1 }}"            # Device on the Source fabric
+            dst_device: "{{ ansible_unnum_switch2 }}"            # Device on the Destination fabric
+            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
+                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+
+      register: result
+
+    - ansible.builtin.assert:
         that:
-          - '(merge_base_result.diff[0].merged | length) == 2'
-          - '(merge_base_result.diff[0].modified | length) == 0'
-          - '(merge_base_result.diff[0].deleted | length) == 0'
-          - '(merge_base_result.diff[0].query | length) == 0'
-      failed_when: merge_base_result.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 2'
 
-    - name: ASSERT - Base merge return codes
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - item.RETURN_CODE == 200
-      loop: "{{ merge_base_result.response }}"
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
 
-    - name: Base merge - Idempotence
-      cisco.dcnm.dcnm_links: *links_merge_base
-      register: merge_base_idem
 
-    - name: ASSERT - Base merge idempotence diff counters
-      ansible.builtin.assert:
-        that:
-          - '(merge_base_idem.diff[0].merged | length) == 0'
-          - '(merge_base_idem.diff[0].modified | length) == 0'
-          - '(merge_base_idem.diff[0].deleted | length) == 0'
-          - '(merge_base_idem.diff[0].query | length) == 0'
-      failed_when: merge_base_idem.diff is not defined
+###############################################
+###              DELETE                      ##
+###############################################
 
-    - name: ASSERT - Base merge idempotence return codes
-      ansible.builtin.assert:
-        that:
-          - item.RETURN_CODE == 200
-      loop: "{{ merge_base_idem.response }}"
-
-    ##############################################
-    ##                 DELETE                  ##
-    ##############################################
-
-    - name: Delete Links (after baseline create)
+    - name: Delete Links
       cisco.dcnm.dcnm_links: *links_delete
-      register: delete_result
+      register: result
 
-    - name: ASSERT - Delete diff counters
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - '(delete_result.diff[0].merged | length) == 0'
-          - '(delete_result.diff[0].modified | length) == 0'
-          - '(delete_result.diff[0].deleted | length) == 2'
-          - '(delete_result.diff[0].query | length) == 0'
-      failed_when: delete_result.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 2'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 2'
 
-    - name: ASSERT - Delete return codes
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - item.RETURN_CODE == 200
-      loop: "{{ delete_result.response }}"
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+
+##############################################
+##                IDEMPOTENCE               ##
+##############################################
 
     - name: Delete Links - Idempotence
       cisco.dcnm.dcnm_links: *links_delete
-      register: delete_idem_result
+      register: result
 
-    - name: ASSERT - Delete idempotence diff counters
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - '(delete_idem_result.diff[0].merged | length) == 0'
-          - '(delete_idem_result.diff[0].modified | length) == 0'
-          - '(delete_idem_result.diff[0].deleted | length) == 0'
-          - '(delete_idem_result.diff[0].query | length) == 0'
-      failed_when: delete_idem_result.diff is not defined
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - name: ASSERT - Delete idempotence return codes
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - item.RETURN_CODE == 200
-      loop: "{{ delete_idem_result.response }}"
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+
+###############################################
+###              CLEANUP                     ##
+###############################################
 
   always:
-    - name: Cleanup - Delete Links
-      cisco.dcnm.dcnm_links: *links_delete
-      register: cleanup_result
-      when: it_context is not defined
 
-    - name: ASSERT - Cleanup return codes
-      ansible.builtin.assert:
+    - name: Delete Links
+      cisco.dcnm.dcnm_links: *links_delete
+      register: result
+
+    - ansible.builtin.assert:
         that:
-          - item.RETURN_CODE == 200
-      loop: "{{ cleanup_result.response | default([]) }}"
-      when: it_context is not defined
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'

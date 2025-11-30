@@ -10,746 +10,891 @@
 #############################################
 #               DELETE                     ##
 #############################################
-    - name: Baseline - Delete assorted links (misc)
+
+    - name: Initial setup - Delete Links on numbered fabric
       cisco.dcnm.dcnm_links: &links_delete
-        state: deleted
+        state: deleted                                           # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_3 }}"
-            dst_interface: "{{ intf_1_3 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-test-sw3"
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_4 }}"
-            dst_interface: "{{ intf_1_4 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-test-sw100"
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_5 }}"
-            dst_interface: "{{ intf_1_5 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-svi1"
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_6 }}"
-            dst_interface: "{{ intf_1_6 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-test-sw3"
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_7 }}"
-            dst_interface: "{{ intf_1_7 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-svi1"
-          - dst_fabric: "{{ ansible_ext_fabric }}"
-            src_interface: "{{ intf_1_8 }}"
-            dst_interface: "{{ intf_1_8 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-test-sw4"
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_9 }}"
-            dst_interface: "{{ intf_1_9 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-unnum-1"
-          - dst_fabric: "{{ ansible_ext_fabric }}"
-            src_interface: "{{ intf_1_10 }}"
-            dst_interface: "{{ intf_1_10 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-ext-sw1"
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_11 }}"
-            dst_interface: "{{ intf_1_11 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-unnum-1"
-      register: delete_result
+          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "dummy-switch-1"                         # Device on the Source fabric
+            dst_device: "{{ ansible_num_switch1 }}"              # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-test-sw100"                        # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-svi1"                              # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_6 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_6 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_7 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_7 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-svi1"                              # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_ext_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_8 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_8 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-test-sw4"                          # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_9 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_9 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_ext_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_10 }}"                     # Interface on the Source fabric
+            dst_interface: "{{ intf_1_10 }}"                     # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-ext-sw1"                           # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_11 }}"                     # Interface on the Source fabric
+            dst_interface: "{{ intf_1_11 }}"                     # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+      register: result
 
-    - name: ASSERT - Baseline delete RETURN_CODE
-      ansible.builtin.assert:
-        that: "item['RETURN_CODE'] == 200"
-      loop: "{{ delete_result.response | default([]) }}"
-      failed_when: delete_result.diff is not defined and (delete_result.response | length) > 0
-
-    - name: ASSERT - Baseline delete diff
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "(delete_result.diff[0].merged | length) == 0"
-          - "(delete_result.diff[0].modified | length) == 0"
-          - "(delete_result.diff[0].deleted | length) == 9"
-          - "(delete_result.diff[0].query | length) == 0"
-      failed_when: delete_result.diff is not defined
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
 
-##############################################
-##      NEGATIVE: MONITORING SOURCE FABRIC  ##
-##############################################
+#############################################
+#                MERGE                     ##
+#############################################
 
-    - name: Attempt create from monitoring mode source fabric (expect failure)
-      cisco.dcnm.dcnm_links: &links_monitoring_negative
-        state: merged
+    - name: Create Links - Source Fabric in Monitoring mode
+      cisco.dcnm.dcnm_links:
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_extmon_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_num_fabric }}"
-            src_interface: "{{ intf_1_3 }}"
-            dst_interface: "{{ intf_1_3 }}"
-            src_device: "dummy-switch-1"
-            dst_device: "{{ ansible_num_switch1 }}"
-            template: ext_fabric_setup
+          - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "dummy-switch-1"                         # Device on the Source fabric
+            dst_device: "{{ ansible_num_switch1 }}"              # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
             profile:
-              ipv4_subnet: 193.168.1.1/24
-              neighbor_ip: 193.168.1.2
-              src_asn: "{{ ansible_extmon_asn }}"
-              dst_asn: "{{ ansible_num_asn }}"
-      register: monitoring_result
+              ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_extmon_asn }}"                # BGP ASN in source fabric
+              dst_asn: "{{ ansible_num_asn }}"                   # BGP ASN in destination fabric
+      register: result
       ignore_errors: true
 
-    - name: ASSERT - Monitoring rejection message
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "'Monitoring mode' in monitoring_result.msg"
-          - "'No changes are allowed on the fabric' in monitoring_result.msg"
-          - "'{{ ansible_extmon_fabric }}' in monitoring_result.msg"
+          - '("Monitoring mode" in result["msg"])'
+          - '("No changes are allowed on the fabric" in result["msg"])'
+          - '("{{ ansible_extmon_fabric }}" in result["msg"])'
 
-##############################################
-##  SCENARIO 1: NUM -> SVI (intf_1_3)       ##
-##############################################
-
-    - name: Scenario1 - Create link
-      cisco.dcnm.dcnm_links: &links_s1
-        state: merged
+    - name: Create Links - Destination Fabric - Monitoring, Source Switches Not Managable and Destination Switches Not Managable (in POAP)
+      cisco.dcnm.dcnm_links: &links_create1
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_3 }}"
-            dst_interface: "{{ intf_1_3 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-test-sw3"
-            template: ext_fabric_setup
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
             profile:
-              ipv4_subnet: 193.168.2.1/24
-              neighbor_ip: 193.168.2.2
-              src_asn: "{{ ansible_num_asn }}"
-              dst_asn: "{{ ansible_svi_asn }}"
-      register: s1_create
+              ipv4_subnet: 193.168.2.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.2.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
+              dst_asn: "{{ ansible_svi_asn }}"                   # BGP ASN in destination fabric
+      register: result
       ignore_errors: true
 
-    - name: ASSERT - Scenario1 create diff
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "(s1_create.diff[0].merged | length) == 1"
-          - "(s1_create.diff[0].modified | length) == 0"
-          - "(s1_create.diff[0].deleted | length) == 0"
-          - "(s1_create.diff[0].query | length) == 0"
-      failed_when: s1_create.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario1 - Idempotence
-      cisco.dcnm.dcnm_links: *links_s1
-      register: s1_idem
+############################################
+#             IDEMPOTENCE                  #
+############################################
 
-    - name: ASSERT - Scenario1 idempotence diff
-      ansible.builtin.assert:
+    - name: Create Links - Idempotence
+      cisco.dcnm.dcnm_links: *links_create1
+      register: result
+
+    - ansible.builtin.assert:
         that:
-          - "(s1_idem.diff[0].merged | length) == 0"
-          - "(s1_idem.diff[0].modified | length) == 0"
-          - "(s1_idem.diff[0].deleted | length) == 0"
-          - "(s1_idem.diff[0].query | length) == 0"
-      failed_when: s1_idem.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario1 - Query
+###############################################
+###             QUERY                        ##
+###############################################
+
+    - name: Query Links
       cisco.dcnm.dcnm_links:
-        state: query
+        state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_3 }}"
-            dst_interface: "{{ intf_1_3 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-test-sw3"
-            template: ext_fabric_setup
-      register: s1_query
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+      register: result
 
-    - name: ASSERT - Scenario1 query
-      ansible.builtin.assert:
-        that: "(s1_query.response | length) >= 1"
+    - ansible.builtin.assert:
+        that:
+          - '(result["response"] | length) >= 1'
 
-##############################################
-##  SCENARIO 2: NUM -> SVI missing device   ##
-##############################################
+#############################################
+#                MERGE                     ##
+#############################################
 
-    - name: Scenario2 - Create link (missing dest)
-      cisco.dcnm.dcnm_links: &links_s2
-        state: merged
+    - name: Create Links - Destination Fabric - Monitoring, Source Switches Not Managable and Destination Switches Not Managable (not present)
+      cisco.dcnm.dcnm_links: &links_create2
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_4 }}"
-            dst_interface: "{{ intf_1_4 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-test-sw100"
-            template: ext_fabric_setup
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-test-sw100"                        # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
             profile:
-              ipv4_subnet: 193.168.3.1/24
-              neighbor_ip: 193.168.3.2
-              src_asn: "{{ ansible_num_asn }}"
-              dst_asn: "{{ ansible_svi_asn }}"
-              peer1_description: "Description of source"
-              peer2_description: "Description of dest"
-      register: s2_create
+              ipv4_subnet: 193.168.3.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
+              dst_asn: "{{ ansible_svi_asn }}"                   # BGP ASN in destination fabric
+              peer1_description: "Description of source"         # optional, default is ""
+              peer2_description: "Description of dest"           # optional, default is ""
+      register: result
       ignore_errors: true
 
-    - name: ASSERT - Scenario2 create diff
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "(s2_create.diff[0].merged | length) == 1"
-          - "(s2_create.diff[0].modified | length) == 0"
-          - "(s2_create.diff[0].deleted | length) == 0"
-          - "(s2_create.diff[0].query | length) == 0"
-      failed_when: s2_create.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario2 - Modify profile
-      cisco.dcnm.dcnm_links: &links_s2_mod
-        state: merged
-        src_fabric: "{{ ansible_num_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_4 }}"
-            dst_interface: "{{ intf_1_4 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-test-sw100"
-            template: ext_fabric_setup
-            profile:
-              ipv4_subnet: 193.168.20.1/24
-              neighbor_ip: 193.168.20.2
-              src_asn: "{{ ansible_num_asn }}"
-              dst_asn: "{{ ansible_svi_asn }}"
-              peer1_description: "Description of source - REP"
-              peer2_description: "Description of dest - REP"
-      register: s2_modify
-      ignore_errors: true
-
-    - name: ASSERT - Scenario2 modify diff
-      ansible.builtin.assert:
-        that:
-          - "(s2_modify.diff[0].merged | length) == 0"
-          - "(s2_modify.diff[0].modified | length) == 1"
-          - "(s2_modify.diff[0].deleted | length) == 0"
-          - "(s2_modify.diff[0].query | length) == 0"
-      failed_when: s2_modify.diff is not defined
-
-    - name: Scenario2 - Idempotence
-      cisco.dcnm.dcnm_links: *links_s2_mod
-      register: s2_idem
-
-    - name: ASSERT - Scenario2 idempotence diff
-      ansible.builtin.assert:
-        that:
-          - "(s2_idem.diff[0].merged | length) == 0"
-          - "(s2_idem.diff[0].modified | length) == 0"
-          - "(s2_idem.diff[0].deleted | length) == 0"
-          - "(s2_idem.diff[0].query | length) == 0"
-      failed_when: s2_idem.diff is not defined
-
-    - name: Scenario2 - Query
+    - name: Merge Links - Destination Fabric - Monitoring, Source Switches Not Managable and Destination Switches Not Managable (not present)
       cisco.dcnm.dcnm_links:
-        state: query
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_4 }}"
-            dst_interface: "{{ intf_1_4 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-test-sw100"
-            template: ext_fabric_setup
-      register: s2_query
-
-    - name: ASSERT - Scenario2 query
-      ansible.builtin.assert:
-        that: "(s2_query.response | length) >= 1"
-
-##############################################
-##  SCENARIO 3: NUM -> SVI manageable       ##
-##############################################
-
-    - name: Scenario3 - Create link
-      cisco.dcnm.dcnm_links: &links_s3
-        state: merged
-        src_fabric: "{{ ansible_num_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_5 }}"
-            dst_interface: "{{ intf_1_5 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-svi1"
-            template: ext_fabric_setup
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-test-sw100"                        # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
             profile:
-              ipv4_subnet: 193.168.4.1/24
-              neighbor_ip: 193.168.4.2
-              src_asn: "{{ ansible_num_asn }}"
-              dst_asn: "{{ ansible_svi_asn }}"
-      register: s3_create
+              ipv4_subnet: 193.168.20.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.20.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
+              dst_asn: "{{ ansible_svi_asn }}"                   # BGP ASN in destination fabric
+              peer1_description: "Description of source - REP"   # optional, default is ""
+              peer2_description: "Description of dest - REP"     # optional, default is ""
+      register: result
       ignore_errors: true
 
-    - name: ASSERT - Scenario3 create diff
-      ansible.builtin.assert:
-        that: "(s3_create.diff[0].merged | length) == 1"
-      failed_when: s3_create.diff is not defined
-
-    - name: ASSERT - Scenario3 create diff (extended)
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "(s3_create.diff[0].merged | length) == 1"
-          - "(s3_create.diff[0].modified | length) == 0"
-          - "(s3_create.diff[0].deleted | length) == 0"
-          - "(s3_create.diff[0].query | length) == 0"
-      failed_when: s3_create.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario3 - Idempotence
-      cisco.dcnm.dcnm_links: *links_s3
-      register: s3_idem
-
-    - name: ASSERT - Scenario3 idempotence diff
-      ansible.builtin.assert:
-        that:
-          - "(s3_idem.diff[0].merged | length) == 0"
-          - "(s3_idem.diff[0].modified | length) == 0"
-          - "(s3_idem.diff[0].deleted | length) == 0"
-          - "(s3_idem.diff[0].query | length) == 0"
-      failed_when: s3_idem.diff is not defined
-
-    - name: Scenario3 - Query
+    - name: Merge Links - Destination Fabric - Monitoring, Source Switches Not Managable and Destination Switches Not Managable (not present)
       cisco.dcnm.dcnm_links:
-        state: query
+        state: replaced                                          # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_5 }}"
-            dst_interface: "{{ intf_1_5 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-svi1"
-            template: ext_fabric_setup
-      register: s3_query
-
-    - name: ASSERT - Scenario3 query
-      ansible.builtin.assert:
-        that: "(s3_query.response | length) >= 1"
-
-##############################################
-##  SCENARIO 4: NUM(manage)->SVI(unmanage)  ##
-##############################################
-
-    - name: Scenario4 - Create link
-      cisco.dcnm.dcnm_links: &links_s4
-        state: merged
-        src_fabric: "{{ ansible_num_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_6 }}"
-            dst_interface: "{{ intf_1_6 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-test-sw3"
-            template: ext_fabric_setup
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-test-sw100"                        # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
             profile:
-              ipv4_subnet: 193.168.5.1/24
-              neighbor_ip: 193.168.5.2
-              src_asn: "{{ ansible_num_asn }}"
-              dst_asn: "{{ ansible_svi_asn }}"
-      register: s4_create
+              ipv4_subnet: 193.168.20.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.20.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
+              dst_asn: "{{ ansible_svi_asn }}"                   # BGP ASN in destination fabric
+              peer1_description: "Description of source - REP"   # optional, default is ""
+              peer2_description: "Description of dest - REP"     # optional, default is ""
+      register: result
       ignore_errors: true
 
-    - name: ASSERT - Scenario4 create diff
-      ansible.builtin.assert:
-        that: "(s4_create.diff[0].merged | length) == 1"
-      failed_when: s4_create.diff is not defined
-
-    - name: ASSERT - Scenario4 create diff (extended)
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "(s4_create.diff[0].merged | length) == 1"
-          - "(s4_create.diff[0].modified | length) == 0"
-          - "(s4_create.diff[0].deleted | length) == 0"
-          - "(s4_create.diff[0].query | length) == 0"
-      failed_when: s4_create.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario4 - Idempotence
-      cisco.dcnm.dcnm_links: *links_s4
-      register: s4_idem
+#############################################
+#             IDEMPOTENCE                  ##
+#############################################
 
-    - name: ASSERT - Scenario4 idempotence diff
-      ansible.builtin.assert:
+    - name: Create Links - Idempotence
+      cisco.dcnm.dcnm_links: *links_create2
+      register: result
+
+    - ansible.builtin.assert:
         that:
-          - "(s4_idem.diff[0].merged | length) == 0"
-          - "(s4_idem.diff[0].modified | length) == 0"
-          - "(s4_idem.diff[0].deleted | length) == 0"
-          - "(s4_idem.diff[0].query | length) == 0"
-      failed_when: s4_idem.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario4 - Query
+###############################################
+###             QUERY                        ##
+###############################################
+
+    - name: Query Links
       cisco.dcnm.dcnm_links:
-        state: query
+        state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_6 }}"
-            dst_interface: "{{ intf_1_6 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-test-sw3"
-            template: ext_fabric_setup
-      register: s4_query
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-test-sw100"                        # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+      register: result
 
-    - name: ASSERT - Scenario4 query
-      ansible.builtin.assert:
-        that: "(s4_query.response | length) >= 1"
+    - ansible.builtin.assert:
+        that:
+          - '(result["response"] | length) >= 1'
 
-##############################################
-##  SCENARIO 5: NUM(manage)->SVI(manage)    ##
-##############################################
+#############################################
+#                MERGE                     ##
+#############################################
 
-    - name: Scenario5 - Create link
-      cisco.dcnm.dcnm_links: &links_s5
-        state: merged
+    - name: Create Links - Destination Fabric - Monitoring, Source Switches Not Managable and Destination Switches Managable
+      cisco.dcnm.dcnm_links: &links_create3
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_7 }}"
-            dst_interface: "{{ intf_1_7 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-svi1"
-            template: ext_fabric_setup
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-svi1"                              # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
             profile:
-              ipv4_subnet: 193.168.6.1/24
-              neighbor_ip: 193.168.6.2
-              src_asn: "{{ ansible_num_asn }}"
-              dst_asn: "{{ ansible_svi_asn }}"
-      register: s5_create
+              ipv4_subnet: 193.168.4.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.4.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
+              dst_asn: "{{ ansible_svi_asn }}"                   # BGP ASN in destination fabric
+      register: result
       ignore_errors: true
 
-    - name: ASSERT - Scenario5 create diff
-      ansible.builtin.assert:
-        that: "(s5_create.diff[0].merged | length) == 1"
-      failed_when: s5_create.diff is not defined
-
-    - name: ASSERT - Scenario5 create diff (extended)
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "(s5_create.diff[0].merged | length) == 1"
-          - "(s5_create.diff[0].modified | length) == 0"
-          - "(s5_create.diff[0].deleted | length) == 0"
-          - "(s5_create.diff[0].query | length) == 0"
-      failed_when: s5_create.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario5 - Idempotence
-      cisco.dcnm.dcnm_links: *links_s5
-      register: s5_idem
+#############################################
+#             IDEMPOTENCE                  ##
+#############################################
 
-    - name: ASSERT - Scenario5 idempotence diff
-      ansible.builtin.assert:
+    - name: Create Links - Idempotence
+      cisco.dcnm.dcnm_links: *links_create3
+      register: result
+
+    - ansible.builtin.assert:
         that:
-          - "(s5_idem.diff[0].merged | length) == 0"
-          - "(s5_idem.diff[0].modified | length) == 0"
-          - "(s5_idem.diff[0].deleted | length) == 0"
-          - "(s5_idem.diff[0].query | length) == 0"
-      failed_when: s5_idem.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario5 - Query
+###############################################
+###             QUERY                        ##
+###############################################
+
+    - name: Query Links
       cisco.dcnm.dcnm_links:
-        state: query
+        state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_svi_fabric }}"
-            src_interface: "{{ intf_1_7 }}"
-            dst_interface: "{{ intf_1_7 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-svi1"
-            template: ext_fabric_setup
-      register: s5_query
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-svi1"                              # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+      register: result
 
-    - name: ASSERT - Scenario5 query
-      ansible.builtin.assert:
-        that: "(s5_query.response | length) >= 1"
+    - ansible.builtin.assert:
+        that:
+          - '(result["response"] | length) >= 1'
 
-##############################################
-##  SCENARIO 6: NUM -> EXT unmanaged        ##
-##############################################
+#############################################
+#                MERGE                     ##
+#############################################
 
-    - name: Scenario6 - Create link
-      cisco.dcnm.dcnm_links: &links_s6
-        state: merged
+    - name: Create Links - Destination Fabric - Monitoring, Source Switches Managable and Destination Switches Not Managable
+      cisco.dcnm.dcnm_links: &links_create4
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_ext_fabric }}"
-            src_interface: "{{ intf_1_8 }}"
-            dst_interface: "{{ intf_1_8 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-test-sw4"
-            template: ext_fabric_setup
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_6 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_6 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
             profile:
-              ipv4_subnet: 193.168.7.1/24
-              neighbor_ip: 193.168.7.2
-              src_asn: "{{ ansible_num_asn }}"
-              dst_asn: "{{ ansible_ext_asn }}"
-      register: s6_create
+              ipv4_subnet: 193.168.5.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.5.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
+              dst_asn: "{{ ansible_svi_asn }}"                   # BGP ASN in destination fabric
+      register: result
       ignore_errors: true
 
-    - name: ASSERT - Scenario6 create diff
-      ansible.builtin.assert:
-        that: "(s6_create.diff[0].merged | length) == 1"
-      failed_when: s6_create.diff is not defined
-
-    - name: ASSERT - Scenario6 create diff (extended)
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "(s6_create.diff[0].merged | length) == 1"
-          - "(s6_create.diff[0].modified | length) == 0"
-          - "(s6_create.diff[0].deleted | length) == 0"
-          - "(s6_create.diff[0].query | length) == 0"
-      failed_when: s6_create.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 1'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario6 - Idempotence
-      cisco.dcnm.dcnm_links: *links_s6
-      register: s6_idem
+#############################################
+#             IDEMPOTENCE                  ##
+#############################################
 
-    - name: ASSERT - Scenario6 idempotence diff
-      ansible.builtin.assert:
+    - name: Create Links - Idempotence
+      cisco.dcnm.dcnm_links: *links_create4
+      register: result
+
+    - ansible.builtin.assert:
         that:
-          - "(s6_idem.diff[0].merged | length) == 0"
-          - "(s6_idem.diff[0].modified | length) == 0"
-          - "(s6_idem.diff[0].deleted | length) == 0"
-          - "(s6_idem.diff[0].query | length) == 0"
-      failed_when: s6_idem.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 1'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario6 - Query
+###############################################
+###             QUERY                        ##
+###############################################
+
+    - name: Query Links
       cisco.dcnm.dcnm_links:
-        state: query
+        state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_ext_fabric }}"
-            src_interface: "{{ intf_1_8 }}"
-            dst_interface: "{{ intf_1_8 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-test-sw4"
-            template: ext_fabric_setup
-      register: s6_query
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_6 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_6 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-test-sw3"                          # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+      register: result
 
-    - name: ASSERT - Scenario6 query
-      ansible.builtin.assert:
-        that: "(s6_query.response | length) >= 1"
+    - ansible.builtin.assert:
+        that:
+          - '(result["response"] | length) >= 1'
 
-##############################################
-##  SCENARIO 7: NUM -> UNNUM unmanaged      ##
-##############################################
+#############################################
+#                MERGE                     ##
+#############################################
 
-    - name: Scenario7 - Create link
-      cisco.dcnm.dcnm_links: &links_s7
-        state: merged
+    - name: Create Links - Destination Fabric - Monitoring, Source Switches Managable and Destination Switches Managable
+      cisco.dcnm.dcnm_links: &links_create5
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_9 }}"
-            dst_interface: "{{ intf_1_9 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-unnum-1"
-            template: ext_fabric_setup
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_7 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_7 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-svi1"                              # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
             profile:
-              ipv4_subnet: 193.168.8.1/24
-              neighbor_ip: 193.168.8.2
-              src_asn: "{{ ansible_num_asn }}"
-              dst_asn: "{{ ansible_unnum_asn }}"
-      register: s7_create
+              ipv4_subnet: 193.168.6.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.6.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
+              dst_asn: "{{ ansible_svi_asn }}"                   # BGP ASN in destination fabric
+      register: result
       ignore_errors: true
 
-    - name: ASSERT - Scenario7 create diff
-      ansible.builtin.assert:
-        that: "(s7_create.diff[0].merged | length) == 1"
-      failed_when: s7_create.diff is not defined
-
-    - name: ASSERT - Scenario7 create diff (extended)
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "(s7_create.diff[0].merged | length) == 1"
-          - "(s7_create.diff[0].modified | length) == 0"
-          - "(s7_create.diff[0].deleted | length) == 0"
-          - "(s7_create.diff[0].query | length) == 0"
-      failed_when: s7_create.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 1'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario7 - Idempotence
-      cisco.dcnm.dcnm_links: *links_s7
-      register: s7_idem
+#############################################
+#             IDEMPOTENCE                  ##
+#############################################
 
-    - name: ASSERT - Scenario7 idempotence diff
-      ansible.builtin.assert:
+    - name: Create Links - Idempotence
+      cisco.dcnm.dcnm_links: *links_create5
+      register: result
+
+    - ansible.builtin.assert:
         that:
-          - "(s7_idem.diff[0].merged | length) == 0"
-          - "(s7_idem.diff[0].modified | length) == 0"
-          - "(s7_idem.diff[0].deleted | length) == 0"
-          - "(s7_idem.diff[0].query | length) == 0"
-      failed_when: s7_idem.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 1'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_svi_fabric }}" ] | length) == 0'
 
-    - name: Scenario7 - Query
+###############################################
+###             QUERY                        ##
+###############################################
+
+    - name: Query Links
       cisco.dcnm.dcnm_links:
-        state: query
+        state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_9 }}"
-            dst_interface: "{{ intf_1_9 }}"
-            src_device: "n9kv-test-sw1"
-            dst_device: "n9kv-unnum-1"
-            template: ext_fabric_setup
-      register: s7_query
+          - dst_fabric: "{{ ansible_svi_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_7 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_7 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-svi1"                              # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+      register: result
 
-    - name: ASSERT - Scenario7 query
-      ansible.builtin.assert:
-        that: "(s7_query.response | length) >= 1"
+    - ansible.builtin.assert:
+        that:
+          - '(result["response"] | length) >= 1'
 
-##############################################
-##  SCENARIO 8: NUM(manage)->EXT(manage?)   ##
-##############################################
+#############################################
+#                MERGE                     ##
+#############################################
 
-    - name: Scenario8 - Create link
-      cisco.dcnm.dcnm_links: &links_s8
-        state: merged
+    - name: Create Links - Source Switches Not Managable and Destination Switches Not Managable
+      cisco.dcnm.dcnm_links: &links_create6
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_ext_fabric }}"
-            src_interface: "{{ intf_1_10 }}"
-            dst_interface: "{{ intf_1_10 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-ext-sw1"
-            template: ext_fabric_setup
+          - dst_fabric: "{{ ansible_ext_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_8 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_8 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-test-sw4"                          # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
             profile:
-              ipv4_subnet: 193.168.9.1/24
-              neighbor_ip: 193.168.9.2
-              src_asn: "{{ ansible_num_asn }}"
-              dst_asn: "{{ ansible_ext_asn }}"
-      register: s8_create
+              ipv4_subnet: 193.168.7.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.7.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
+              dst_asn: "{{ ansible_ext_asn }}"                   # BGP ASN in destination fabric
+      register: result
       ignore_errors: true
 
-    - name: ASSERT - Scenario8 create diff
-      ansible.builtin.assert:
-        that: "(s8_create.diff[0].merged | length) == 1"
-      failed_when: s8_create.diff is not defined
-
-    - name: ASSERT - Scenario8 create diff (extended)
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "(s8_create.diff[0].merged | length) == 1"
-          - "(s8_create.diff[0].modified | length) == 0"
-          - "(s8_create.diff[0].deleted | length) == 0"
-          - "(s8_create.diff[0].query | length) == 0"
-      failed_when: s8_create.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ext_fabric }}" ] | length) == 0'
 
-    - name: Scenario8 - Idempotence
-      cisco.dcnm.dcnm_links: *links_s8
-      register: s8_idem
+#############################################
+#             IDEMPOTENCE                  ##
+#############################################
 
-    - name: ASSERT - Scenario8 idempotence diff
-      ansible.builtin.assert:
+    - name: Create Links - Idempotence
+      cisco.dcnm.dcnm_links: *links_create6
+      register: result
+
+    - ansible.builtin.assert:
         that:
-          - "(s8_idem.diff[0].merged | length) == 0"
-          - "(s8_idem.diff[0].modified | length) == 0"
-          - "(s8_idem.diff[0].deleted | length) == 0"
-          - "(s8_idem.diff[0].query | length) == 0"
-      failed_when: s8_idem.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ext_fabric }}" ] | length) == 0'
 
-    - name: Scenario8 - Query
+###############################################
+###             QUERY                        ##
+###############################################
+
+    - name: Query Links
       cisco.dcnm.dcnm_links:
-        state: query
+        state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_ext_fabric }}"
-            src_interface: "{{ intf_1_10 }}"
-            dst_interface: "{{ intf_1_10 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-ext-sw1"
-            template: ext_fabric_setup
-      register: s8_query
+          - dst_fabric: "{{ ansible_ext_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_8 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_8 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-test-sw4"                          # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+      register: result
 
-    - name: ASSERT - Scenario8 query
-      ansible.builtin.assert:
-        that: "(s8_query.response | length) >= 1"
+    - ansible.builtin.assert:
+        that:
+          - '(result["response"] | length) >= 1'
 
-##############################################
-##  SCENARIO 9: NUM(manage)->UNNUM(manage)  ##
-##############################################
+#############################################
+#                MERGE                     ##
+#############################################
 
-    - name: Scenario9 - Create link
-      cisco.dcnm.dcnm_links: &links_s9
-        state: merged
+    - name: Create Links - Source Switches Not Managable and Destination Switches Managable
+      cisco.dcnm.dcnm_links: &links_create7
+        state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_11 }}"
-            dst_interface: "{{ intf_1_11 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-unnum-1"
-            template: ext_fabric_setup
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_9 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_9 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
             profile:
-              ipv4_subnet: 193.168.10.1/24
-              neighbor_ip: 193.168.10.2
-              src_asn: "{{ ansible_num_asn }}"
-              dst_asn: "{{ ansible_unnum_asn }}"
-      register: s9_create
+              ipv4_subnet: 193.168.8.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.8.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
+              dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
+      register: result
       ignore_errors: true
 
-    - name: ASSERT - Scenario9 create diff
-      ansible.builtin.assert:
-        that: "(s9_create.diff[0].merged | length) == 1"
-      failed_when: s9_create.diff is not defined
-
-    - name: ASSERT - Scenario9 create diff (extended)
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "(s9_create.diff[0].merged | length) == 1"
-          - "(s9_create.diff[0].modified | length) == 0"
-          - "(s9_create.diff[0].deleted | length) == 0"
-          - "(s9_create.diff[0].query | length) == 0"
-      failed_when: s9_create.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 0'
 
-    - name: Scenario9 - Idempotence
-      cisco.dcnm.dcnm_links: *links_s9
-      register: s9_idem
+#############################################
+#             IDEMPOTENCE                  ##
+#############################################
 
-    - name: ASSERT - Scenario9 idempotence diff
-      ansible.builtin.assert:
+    - name: Create Links - Idempotence
+      cisco.dcnm.dcnm_links: *links_create7
+      register: result
+
+    - ansible.builtin.assert:
         that:
-          - "(s9_idem.diff[0].merged | length) == 0"
-          - "(s9_idem.diff[0].modified | length) == 0"
-          - "(s9_idem.diff[0].deleted | length) == 0"
-          - "(s9_idem.diff[0].query | length) == 0"
-      failed_when: s9_idem.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 0'
 
-    - name: Scenario9 - Query
+###############################################
+###             QUERY                        ##
+###############################################
+
+    - name: Query Links
       cisco.dcnm.dcnm_links:
-        state: query
+        state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_unnum_fabric }}"
-            src_interface: "{{ intf_1_11 }}"
-            dst_interface: "{{ intf_1_11 }}"
-            src_device: "n9kv-num-1"
-            dst_device: "n9kv-unnum-1"
-            template: ext_fabric_setup
-      register: s9_query
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_9 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_9 }}"                      # Interface on the Destination fabric
+            src_device: "n9kv-test-sw1"                          # Device on the Source fabric
+            dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+      register: result
 
-    - name: ASSERT - Scenario9 query
-      ansible.builtin.assert:
-        that: "(s9_query.response | length) >= 1"
+    - ansible.builtin.assert:
+        that:
+          - '(result["response"] | length) >= 1'
+
+#############################################
+#                MERGE                     ##
+#############################################
+
+    - name: Create Links - Source Switches Managable and Destination Switches Not Managable (not present in Fabric)
+      cisco.dcnm.dcnm_links: &links_create8
+        state: merged                                            # choose from [merged, replaced, deleted, query]
+        src_fabric: "{{ ansible_num_fabric }}"
+        config:
+          - dst_fabric: "{{ ansible_ext_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_10 }}"                     # Interface on the Source fabric
+            dst_interface: "{{ intf_1_10 }}"                     # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-ext-sw1"                           # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+            profile:
+              ipv4_subnet: 193.168.9.1/24                        # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.9.2                           # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
+              dst_asn: "{{ ansible_ext_asn }}"                 # BGP ASN in destination fabric
+      register: result
+      ignore_errors: true
+
+    - ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 1'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ext_fabric }}" ] | length) == 0'
+
+#############################################
+#             IDEMPOTENCE                  ##
+#############################################
+
+    - name: Create Links - Idempotence
+      cisco.dcnm.dcnm_links: *links_create8
+      register: result
+
+    - ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 1'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_ext_fabric }}" ] | length) == 0'
+
+###############################################
+###             QUERY                        ##
+###############################################
+
+    - name: Query Links
+      cisco.dcnm.dcnm_links:
+        state: query                                             # choose from [merged, replaced, deleted, query]
+        src_fabric: "{{ ansible_num_fabric }}"
+        config:
+          - dst_fabric: "{{ ansible_ext_fabric }}"               # Destination fabric
+            src_interface: "{{ intf_1_10 }}"                     # Interface on the Source fabric
+            dst_interface: "{{ intf_1_10 }}"                     # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-ext-sw1"                           # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+      register: result
+
+    - ansible.builtin.assert:
+        that:
+          - '(result["response"] | length) >= 1'
+
+#############################################
+#                MERGE                     ##
+#############################################
+
+    - name: Create Links - Source Switches Managable and Destination Switches Managable
+      cisco.dcnm.dcnm_links: &links_create9
+        state: merged                                            # choose from [merged, replaced, deleted, query]
+        src_fabric: "{{ ansible_num_fabric }}"
+        config:
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_11 }}"                     # Interface on the Source fabric
+            dst_interface: "{{ intf_1_11 }}"                     # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+            profile:
+              ipv4_subnet: 193.168.10.1/24                       # IP address of interface in src fabric with mask
+              neighbor_ip: 193.168.10.2                          # IP address of the interface in dst fabric
+              src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
+              dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
+      register: result
+      ignore_errors: true
+
+    - ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 1'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
+
+#############################################
+#             IDEMPOTENCE                  ##
+#############################################
+
+    - name: Create Links - Idempotence
+      cisco.dcnm.dcnm_links: *links_create9
+      register: result
+
+    - ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 1'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
+
+###############################################
+###             QUERY                        ##
+###############################################
+
+    - name: Query Links
+      cisco.dcnm.dcnm_links:
+        state: query                                             # choose from [merged, replaced, deleted, query]
+        src_fabric: "{{ ansible_num_fabric }}"
+        config:
+          - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
+            src_interface: "{{ intf_1_11 }}"                     # Interface on the Source fabric
+            dst_interface: "{{ intf_1_11 }}"                     # Interface on the Destination fabric
+            src_device: "n9kv-num-1"                             # Device on the Source fabric
+            dst_device: "n9kv-unnum-1"                           # Device on the Destination fabric
+            template: ext_fabric_setup                           # template to be applied, choose from
+                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+                                                                 #     ext_evpn_multisite_overlay_setup ]
+      register: result
+
+    - ansible.builtin.assert:
+        that:
+          - '(result["response"] | length) >= 1'
+
+#############################################
+#             CLEANUP                      ##
+#############################################
 
   always:
+
     - name: Cleanup - Delete Links
       cisco.dcnm.dcnm_links: *links_delete
-      register: cleanup_result
-      when: it_context is not defined
+      register: result
+      when: IT_CONTEXT is not defined
 
-    - name: ASSERT - Cleanup RETURN_CODE
-      ansible.builtin.assert:
-        that: "item['RETURN_CODE'] == 200"
-      loop: "{{ cleanup_result.response | default([]) }}"
-      when: it_context is not defined
-
-    - name: ASSERT - Cleanup delete diff
-      ansible.builtin.assert:
+    - ansible.builtin.assert:
         that:
-          - "(cleanup_result.diff[0].merged | length) == 0"
-          - "(cleanup_result.diff[0].modified | length) == 0"
-          - "(cleanup_result.diff[0].deleted | length) == 9"
-          - "(cleanup_result.diff[0].query | length) == 0"
-      failed_when: cleanup_result.diff is not defined
-      when: it_context is not defined
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined

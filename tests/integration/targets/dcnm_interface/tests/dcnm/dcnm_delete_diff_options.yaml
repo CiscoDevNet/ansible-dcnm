@@ -216,7 +216,7 @@
       delegate_to: localhost
 
     - name: Put Parent Interface for Sub-Interface into routed mode
-      cisco.dcnm.dcnm_interface: &delete_diff_merge3
+      cisco.dcnm.dcnm_interface:
         check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
@@ -232,7 +232,7 @@
               description: "Parent Interface for Sub-Interface test"
 
     - name: Create all interfaces to check delete form 3
-      cisco.dcnm.dcnm_interface:
+      cisco.dcnm.dcnm_interface: &delete_diff_merge3
         check_deploy: false
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]

@@ -4,6 +4,7 @@
 
 - name: Initialize templates for query test
   cisco.dcnm.dcnm_template:
+    state: deleted
     config:
       - name: template_101
       - name: template_102
@@ -20,7 +21,7 @@
 - block:
 
 ##############################################
-##                CREATE                    ##
+##                MERGE                     ##
 ##############################################
 
     - name: Create templates
@@ -31,6 +32,7 @@
             description: "Template_101"
             tags: "internal policy 101"
             content: |
+              telemetry
               certificate /bootflash/telegraf.crt telegraf
               destination-profile
                 use-vrf management
@@ -129,6 +131,8 @@
       ansible.builtin.assert:
         that:
           - 'query_result.changed == false'
+          - '(query_result["diff"][0]["merged"] | length) == 0'
+          - '(query_result["diff"][0]["deleted"] | length) == 0'
           - '(query_result.diff[0].query | length) == 5'
           - '"template_inuse_1" in query_result["template-policy-map"].keys()'
 

@@ -16,100 +16,175 @@
         state: deleted
         src_fabric: "{{ ansible_xe_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_xe_fabric }}"
-            src_interface: "{{ intf_1_3 }}"
-            dst_interface: "{{ intf_1_3 }}"
-            src_device: "{{ ansible_xe_switch1 }}"
-            dst_device: "{{ ansible_xe_switch2 }}"
-      register: delete_result
+          - dst_fabric: "{{ ansible_xe_fabric }}"                # Destination fabric
+            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
+            dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
 
-    - name: ASSERT - Baseline delete RETURN_CODE
-      ansible.builtin.assert:
-        that: "item['RETURN_CODE'] == 200"
-      loop: "{{ delete_result.response | default([]) }}"
-      failed_when: delete_result.diff is not defined and (delete_result.response | length) > 0
+          - dst_fabric: "{{ ansible_xe_fabric }}"                # Destination fabric
+            src_interface: "{{ intf_1_2 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_2 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
+            dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
 
-##############################################
-##                CREATE                    ##
-##############################################
+          - dst_fabric: "{{ ansible_xe_fabric }}"                # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
+            dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
 
-    - name: XE REPLACE - Create initial link
-      cisco.dcnm.dcnm_links: &links_initial
-        state: merged
-        src_fabric: "{{ ansible_xe_fabric }}"
-        config:
-          - dst_fabric: "{{ ansible_xe_fabric }}"
-            src_interface: "{{ intf_1_3 }}"
-            dst_interface: "{{ intf_1_3 }}"
-            src_device: "{{ ansible_xe_switch1 }}"
-            dst_device: "{{ ansible_xe_switch2 }}"
-            template: ios_xe_int_intra_fabric_num_link
-            profile:
-              peer1_ipv4_addr: 192.169.2.1
-              peer2_ipv4_addr: 192.169.2.2
-              admin_state: true
-      register: create_result
-      ignore_errors: true
+          - dst_fabric: "{{ ansible_xe_fabric }}"                # Destination fabric
+            src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
+            dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
 
-    - name: ASSERT - Create diff
+          - dst_fabric: "{{ ansible_xe_fabric }}"                # Destination fabric
+            src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
+            dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
+
+      register: result
+
+    - name: ASSERT - response
       ansible.builtin.assert:
         that:
-          - "(create_result.diff[0].merged | length) == 1"
-          - "(create_result.diff[0].modified | length) == 0"
-          - "(create_result.diff[0].deleted | length) == 0"
-          - "(create_result.diff[0].query | length) == 0"
-      failed_when: create_result.diff is not defined
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ result.response }}'
 
 ##############################################
-##                REPLACE                   ##
+##                MERGE                     ##
 ##############################################
 
-    - name: XE REPLACE - Replace link (change IPs & state)
+    - name: Create Links
+      cisco.dcnm.dcnm_links:
+        state: merged                                            # choose from [merged, replaced, deleted, query]
+        src_fabric: "{{ ansible_xe_fabric }}"
+        config:
+          - dst_fabric: "{{ ansible_xe_fabric }}"                # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
+            dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
+            template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
+                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+
+            profile:
+              peer1_ipv4_addr: 192.169.2.1                       # IPV4 address of the Source interface
+              peer2_ipv4_addr: 192.169.2.2                       # IPV4 address of the Destination interface
+              peer1_ipv6_addr: 2080:01::01                       # optional, default is ""
+              peer2_ipv6_addr: 2080:01::02                       # optional, default is ""
+              admin_state: true                                  # choose from [true, false]
+              mtu: 1500                                          # optional, default is 1500
+              peer1_description: "Description of source"         # optional, default is ""
+              peer2_description: "Description of dest"           # optional, default is ""
+              peer1_bfd_echo_disable: false                      # optional, choose from [true, false]
+              peer2_bfd_echo_disable: false                      # optional, choose from [true, false]
+              enable_macsec: false                               # optional, choose from [true, false]
+              peer1_cmds:                                        # Freeform config for source device
+                - no shutdown                                    # optional, default is ""
+              peer2_cmds:                                        # Freeform config for destination device
+                - no shutdown                                    # optional, default is ""
+
+      register: result
+
+    - name: ASSERT - diff
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 1'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_xe_fabric }}" ] | length) == 2'
+
+    - name: ASSERT - response
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ result.response }}'
+
+##############################################
+##              REPLACE                     ##
+##############################################
+
+    - name: Replace Links
       cisco.dcnm.dcnm_links: &links_replace
-        state: replaced
+        state: replaced                                          # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_xe_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_xe_fabric }}"
-            src_interface: "{{ intf_1_3 }}"
-            dst_interface: "{{ intf_1_3 }}"
-            src_device: "{{ ansible_xe_switch1 }}"
-            dst_device: "{{ ansible_xe_switch2 }}"
-            template: ios_xe_int_intra_fabric_num_link
+          - dst_fabric: "{{ ansible_xe_fabric }}"                # Destination fabric
+            src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
+            dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
+            src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
+            dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
+            template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
+                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+
             profile:
-              peer1_ipv4_addr: 192.170.2.1
-              peer2_ipv4_addr: 192.170.2.2
-              admin_state: false
-              mtu: 2000
-              peer1_description: "REP Src"
-              peer2_description: "REP Dst"
-      register: replace_result
-      ignore_errors: true
+              peer1_ipv4_addr: 192.170.2.1                       # IPV4 address of the Source interface
+              peer2_ipv4_addr: 192.170.2.2                       # IPV4 address of the Destination interface
+              peer1_ipv6_addr: 2080:91::01                       # optional, default is ""
+              peer2_ipv6_addr: 2080:91::02                       # optional, default is ""
+              admin_state: false                                 # choose from [true, false]
+              mtu: 2000                                          # optional, default is 1500
+              peer1_description: "New Description - Rep"         # optional, default is ""
+              peer2_description: "New Description - Rep"         # optional, default is ""
+              peer1_bfd_echo_disable: false                      # optional, choose from [true, false]
+              peer2_bfd_echo_disable: false                      # optional, choose from [true, false]
+              enable_macsec: false                               # optional, choose from [true, false]
+              peer1_cmds:                                        # Freeform config for source device
+                - cdp enable                                     # optional, default is ""
+              peer2_cmds:                                        # Freeform config for destination device
+                - cdp enable                                     # optional, default is ""
 
-    - name: ASSERT - Replace diff
+      register: result
+
+    - name: ASSERT - diff
       ansible.builtin.assert:
         that:
-          - "(replace_result.diff[0].merged | length) == 0"
-          - "(replace_result.diff[0].modified | length) == 1"
-          - "(replace_result.diff[0].deleted | length) == 0"
-          - "(replace_result.diff[0].query | length) == 0"
-      failed_when: replace_result.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 1'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_xe_fabric }}" ] | length) == 2'
+
+    - name: ASSERT - response
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ result.response }}'
 
 ##############################################
-##              IDEMPOTENCE                ##
+##                IDEMPOTENCE               ##
 ##############################################
 
-    - name: XE REPLACE - Idempotence
+    - name: Repalce Links - Idempotence
       cisco.dcnm.dcnm_links: *links_replace
-      register: replace_idem
+      register: result
 
-    - name: ASSERT - Replace idempotence diff
+    - name: ASSERT - diff
       ansible.builtin.assert:
         that:
-          - "(replace_idem.diff[0].merged | length) == 0"
-          - "(replace_idem.diff[0].modified | length) == 0"
-          - "(replace_idem.diff[0].deleted | length) == 0"
-          - "(replace_idem.diff[0].query | length) == 0"
-      failed_when: replace_idem.diff is not defined
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"][0][ "{{ ansible_xe_fabric }}" ] | length) == 2'
+
+    - name: ASSERT - response
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ result.response }}'
 
 ###############################################
 ###               CLEANUP                  ##

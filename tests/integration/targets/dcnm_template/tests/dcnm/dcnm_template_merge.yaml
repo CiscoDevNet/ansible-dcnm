@@ -4,6 +4,7 @@
 
 - name: Initialize the setup
   cisco.dcnm.dcnm_template:
+    state: deleted
     config:
       - name: template_101
       - name: template_102
@@ -18,6 +19,10 @@
     loop: '{{ result.response }}'
 
 - block:
+##############################################
+##                MERGE                     ##
+##############################################
+
     - name: Create templates
       cisco.dcnm.dcnm_template: &create_templates
         state: merged
@@ -26,6 +31,7 @@
             description: "Template_101"
             tags: "internal policy 101"
             content: |
+              telemetry
               certificate /bootflash/telegraf.crt telegraf
               destination-profile
                 use-vrf management
@@ -114,9 +120,12 @@
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
 
+    # This task will generate an error and return code 500 since the template
+    # is in use.  We ignore the error for the task to continue running the
+    # playbook but still check the error data returned by the module.
+
     - name: Modify existing template which is in use
       cisco.dcnm.dcnm_template:
-        state: merged
         config:
           - name: template_inuse_1
             description: "Template_installed"
@@ -136,6 +145,12 @@
                   snsr-grp 1 sample-interval 10000
       register: result
       ignore_errors: true
+
+#   - assert:
+#       that:
+#         - 'result.changed == false'
+#         - 'result.msg["RETURN_CODE"] == 500'
+#         - '"Template is already in use" in result.msg["DATA"]'
 
     - name: Create template 105 without mentioning state
       cisco.dcnm.dcnm_template:
