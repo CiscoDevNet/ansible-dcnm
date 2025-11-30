@@ -3772,6 +3772,7 @@ class Common(FabricCommon):
         self._implemented_states: set = set()
 
         self.params: dict[str, Any] = params
+
         # populated in self.validate_input()
         self.payloads: dict[str, Any] = {}
 
@@ -3791,7 +3792,8 @@ class Common(FabricCommon):
 
         msg = "ENTERED Common(): "
         msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
+        msg += f"check_mode: {self.check_mode}, "
+        msg += f"params: {json_pretty(self.params)}"
         self.log.debug(msg)
 
     def populate_check_mode(self):
@@ -3837,6 +3839,15 @@ class Common(FabricCommon):
                 msg += f"got {type(self.params['config']).__name__}"
                 raise ValueError(msg)
             self.config = self.params["config"]
+        else:
+            # For "query" state, config is optional
+            if self.params.get("config") is not None:
+                if not isinstance(self.params["config"], list):
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += "expected list type for self.config. "
+                    msg += f"got {type(self.params['config']).__name__}"
+                    raise ValueError(msg)
+                self.config = self.params["config"]
 
     def populate_state(self):
         """
