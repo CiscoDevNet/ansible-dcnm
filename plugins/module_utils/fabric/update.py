@@ -355,7 +355,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
 
     Update fabrics in bulk.
 
-    ##vUsage
+    ## Usage
 
     ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import FabricUpdateBulk
