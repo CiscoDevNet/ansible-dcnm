@@ -238,7 +238,7 @@
       - result.response[2].METHOD == "POST"
       - result.response[2].RETURN_CODE == 200
 ################################################################################
-# MERGED - TEST - Merge additional valid configs into fabric_1 and fabric_2
+# MERGED - TEST - Merge additional valid configs into fabrics fabric_name_00 and fabric_name_100
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -275,13 +275,13 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "fabric_update_bulk",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             },
 #             {
-#                 "action": "fabric_update_bulk",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 2,
 #                 "state": "merged"
@@ -396,7 +396,7 @@
 #     }
 # }
 ################################################################################
-- name: MERGED - TEST - Merge additional configs into fabric_1 and fabric_2
+- name: MERGED - TEST - Merge additional configs into fabrics {{ fabric_name_00 }} and {{ fabric_name_100 }}
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
@@ -427,11 +427,11 @@
       - result.diff[1].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 6
-      - result.metadata[0].action == "fabric_update_bulk"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
-      - result.metadata[1].action == "fabric_update_bulk"
+      - result.metadata[1].action == "fabric_update"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "merged"
@@ -499,7 +499,7 @@
       - result.result[5].success == true
       - result.result[5].sequence_number == 6
 ################################################################################
-# MERGED - TEST - Merge additional valid configs into fabric_3
+# MERGED - TEST - Merge additional valid configs into fabric_name_10
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -523,7 +523,7 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "fabric_update_bulk",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
@@ -588,8 +588,8 @@
 #     }
 # }
 ################################################################################
-- name: MERGED - TEST - Merge additional config into fabric_3
-  cisco.dcnm.dcnm_fabric: &merge_fabric_3
+- name: MERGED - TEST - Merge additional valid configs into fabric {{ fabric_name_10 }}
+  cisco.dcnm.dcnm_fabric: &merge_fabric_name_10
     state: merged
     config:
       - FABRIC_NAME: "{{ fabric_name_10 }}"
@@ -610,7 +610,7 @@
       - result.diff[1].sequence_number == 2
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
-      - result.metadata[0].action == "fabric_update_bulk"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
@@ -636,7 +636,7 @@
       - result.response[2].sequence_number == 3
       - result.response[2].RETURN_CODE == 200
 ################################################################################
-# MERGED - TEST - Merge additional valid configs into fabric_3 - idempotence
+# MERGED - TEST - Merge additional valid configs into fabric fabric_name_10 - idempotence
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -652,7 +652,7 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "fabric_update_bulk",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
@@ -675,8 +675,8 @@
 #     }
 # }
 ################################################################################
-- name: MERGED - TEST - Merge additional config into fabric_3 - idempotence
-  cisco.dcnm.dcnm_fabric: *merge_fabric_3
+- name: MERGED - TEST - Merge additional valid configs into fabric {{ fabric_name_10 }} - idempotence
+  cisco.dcnm.dcnm_fabric: *merge_fabric_name_10
   register: result
 - debug:
     var: result
@@ -687,7 +687,7 @@
       - (result.diff | length) == 1
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "fabric_update_bulk"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
