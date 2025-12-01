@@ -186,8 +186,8 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-          deploy: true
-          register: result_3
+            deploy: true
+            register: result_3
 
 - name: TEST.3a - QUERY - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
@@ -228,8 +228,8 @@
   attach:
     - ip_address: "{{ switch_1 }}"
     - ip_address: "{{ switch_2 }}"
-    vrf_lite:
-      - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
+      vrf_lite:
+        - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
           interface: "{{ interface_2a }}" # mandatory
           ipv4_addr: 10.33.0.2/30 # optional
           neighbor_ipv4: 10.33.0.1 # optional
@@ -269,23 +269,23 @@
     state: query
     config:
       - vrf_name: ansible-vrf-int2
-    vrf_id: 9008012
-    vrf_template: Default_VRF_Universal
-    vrf_extension_template: Default_VRF_Extension_Universal
-    vlan_id: 1500
-  attach:
-    - ip_address: "{{ switch_1 }}"
-    - ip_address: "{{ switch_2 }}"
-    vrf_lite:
-      - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
-      interface: "{{ interface_2a }}" # mandatory
-      ipv4_addr: 10.33.0.2/30 # optional
-      neighbor_ipv4: 10.33.0.1 # optional
-      ipv6_addr: 2010::10:34:0:7/64 # optional
-      neighbor_ipv6: 2010::10:34:0:3 # optional
-      dot1q: 2 # optional controller can provide
-      deploy: true
-      register: result_5
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 1500
+        attach:
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
+                interface: "{{ interface_2a }}" # mandatory
+                ipv4_addr: 10.33.0.2/30 # optional
+                neighbor_ipv4: 10.33.0.1 # optional
+                ipv6_addr: 2010::10:34:0:7/64 # optional
+                neighbor_ipv6: 2010::10:34:0:3 # optional
+                dot1q: 2 # optional controller can provide
+                deploy: true
+                register: result_5
 
 - name: TEST.5a - QUERY - [debug] print result_5
   debug:
@@ -333,15 +333,15 @@
     state: query
     config:
       - vrf_name: ansible-vrf-int1
-    vrf_id: 9008011
-    vrf_template: Default_VRF_Universal
-    vrf_extension_template: Default_VRF_Extension_Universal
-    vlan_id: 500
-  attach:
-    - ip_address: "{{ switch_1 }}"
-    - ip_address: "{{ switch_2 }}"
-        deploy: true
-        register: result_7
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
+            deploy: true
+            register: result_7
 
 - name: TEST.7a - QUERY - [debug] print result_7
   debug:
@@ -374,16 +374,16 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-          vrf_lite:
-            - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
-            interface: "{{ interface_2a }}" # mandatory
-            ipv4_addr: 10.33.0.2/30 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
-            dot1q: 2 # optional controller can provide
-            deploy: false
-            register: result_8
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
+                interface: "{{ interface_2a }}" # mandatory
+                ipv4_addr: 10.33.0.2/30 # optional
+                neighbor_ipv4: 10.33.0.1 # optional
+                ipv6_addr: 2010::10:34:0:7/64 # optional
+                neighbor_ipv6: 2010::10:34:0:3 # optional
+                dot1q: 2 # optional controller can provide
+                deploy: false
+                register: result_8
 
 - name: TEST.8a - QUERY - [query] query VRF state
   cisco.dcnm.dcnm_vrf:
@@ -414,23 +414,23 @@
     state: query
     config:
       - vrf_name: ansible-vrf-int2
-    vrf_id: 9008012
-    vrf_template: Default_VRF_Universal
-    vrf_extension_template: Default_VRF_Extension_Universal
-    l3vni_wo_vlan: true
-  attach:
-    - ip_address: "{{ switch_1 }}"
-    - ip_address: "{{ switch_2 }}"
-    vrf_lite:
-      - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
-      interface: "{{ interface_2a }}" # mandatory
-      ipv4_addr: 10.33.0.2/30 # optional
-      neighbor_ipv4: 10.33.0.1 # optional
-      ipv6_addr: 2010::10:34:0:7/64 # optional
-      neighbor_ipv6: 2010::10:34:0:3 # optional
-      dot1q: 2 # optional controller can provide
-      deploy: false
-      register: result_9
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        l3vni_wo_vlan: true
+        attach:
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
+                interface: "{{ interface_2a }}" # mandatory
+                ipv4_addr: 10.33.0.2/30 # optional
+                neighbor_ipv4: 10.33.0.1 # optional
+                ipv6_addr: 2010::10:34:0:7/64 # optional
+                neighbor_ipv6: 2010::10:34:0:3 # optional
+                dot1q: 2 # optional controller can provide
+                deploy: false
+                register: result_9
 
 - name: TEST.9a - QUERY - [debug] print result_9
   debug:
@@ -443,10 +443,10 @@
     - 'result_9.response[0].parent.vrfId == 9008012'
     - 'result_9.response[0].parent.vrfStatus == "PENDING"'
     - '"enableL3VniNoVlan\":\"true\"" in result_9.response[0].parent.vrfTemplateConfig'
-        - 'result_9.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-        - 'result_9.response[0].attach[0].switchDetailsList[0].lanAttachedState == "PENDING"'
-        - 'result_9.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-        - 'result_9.response[0].attach[1].switchDetailsList[0].lanAttachedState == "PENDING"'
+    - 'result_9.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+    - 'result_9.response[0].attach[0].switchDetailsList[0].lanAttachedState == "PENDING"'
+    - 'result_9.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+    - 'result_9.response[0].attach[1].switchDetailsList[0].lanAttachedState == "PENDING"'
 
 ###############################################
 ###                 CLEAN-UP                 ##

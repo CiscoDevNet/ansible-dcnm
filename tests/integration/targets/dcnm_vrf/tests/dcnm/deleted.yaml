@@ -200,12 +200,12 @@
   cisco.dcnm.dcnm_vrf: &conf1h
     fabric: "{{ fabric_1 }}"
     state: deleted
-  config:
-    - vrf_name: ansible-vrf-int1
-    vrf_id: 9008011
-    vrf_template: Default_VRF_Universal
-    vrf_extension_template: Default_VRF_Extension_Universal
-      register: result_1h
+    config:
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+  register: result_1h
 
 - name: TEST.1j - DELETED - [debug] print result_1
   debug:

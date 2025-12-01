@@ -163,7 +163,7 @@
     - 'result_1.diff[1].attach[1].deploy == false'
     - 'result_1.diff[1].vrf_name == "ansible-vrf-int1"'
     - '"enableL3VniNoVlan\":\"true\"" in result_1a.response[0].parent.vrfTemplateConfig'
-        - 'result_1a.response[0].parent.vrfStatus == "PENDING"'
+    - 'result_1a.response[0].parent.vrfStatus == "PENDING"'
 
 - name: TEST.1c - OVERRIDDEN - [overridden] conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
@@ -197,8 +197,8 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-              deploy: true
-              register: result_2
+            deploy: true
+            register: result_2
 
 - name: TEST.2a - OVERRIDDEN - [debug] print result_2
   debug:
@@ -229,19 +229,19 @@
     - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
 
 - name: TEST.2c - OVERRIDDEN - [overridden] Override existing VRF ansible-vrf-int1 to create new VRF ansible-vrf-int2
-    cisco.dcnm.dcnm_vrf: &conf2
+  cisco.dcnm.dcnm_vrf: &conf2
     fabric: "{{ fabric_1 }}"
     state: overridden
-  config:
-    - vrf_name: ansible-vrf-int2
-    vrf_id: 9008012
-    vrf_template: Default_VRF_Universal
-    vrf_extension_template: Default_VRF_Extension_Universal
-    vlan_id: 500
-  attach:
-    - ip_address: "{{ switch_1 }}"
-    - ip_address: "{{ switch_2 }}"
-    deploy: true
+    config:
+      - vrf_name: ansible-vrf-int2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
+            deploy: true
     register: result_2c
 
 - name: TEST.2d - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
@@ -280,8 +280,8 @@
     - 'result_2c.diff[1].vrf_name == "ansible-vrf-int1"'
 
 - name: TEST.2f - OVERRIDDEN - [overridden] conf2 - Idempotence
-    cisco.dcnm.dcnm_vrf: *conf2
-    register: result_2f
+  cisco.dcnm.dcnm_vrf: *conf2
+  register: result_2f
 
 - name: TEST.2g - OVERRIDDEN - [debug] print result_2f
   debug:
@@ -298,23 +298,23 @@
     state: merged
     config:
       - vrf_name: ansible-vrf-int2
-    vrf_id: 9008012
-    vrf_template: Default_VRF_Universal
-    vrf_extension_template: Default_VRF_Extension_Universal
-    vlan_id: 1500
-  attach:
-    - ip_address: "{{ switch_1 }}"
-    - ip_address: "{{ switch_2 }}"
-    vrf_lite:
-      - peer_vrf: ansible-vrf-int2 # optional
-      interface: "{{ interface_2a }}" # mandatory
-      ipv4_addr: 10.33.0.1/24 # optional
-      neighbor_ipv4: 10.33.0.0 # optional
-      ipv6_addr: 2010::10:34:0:7/64 # optional
-      neighbor_ipv6: 2010::10:34:0:3 # optional
-      dot1q: 2 # optional controller can provide
-      deploy: true
-      register: result_3
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 1500
+        attach:
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int2 # optional
+                interface: "{{ interface_2a }}" # mandatory
+                ipv4_addr: 10.33.0.1/24 # optional
+                neighbor_ipv4: 10.33.0.0 # optional
+                ipv6_addr: 2010::10:34:0:7/64 # optional
+                neighbor_ipv6: 2010::10:34:0:3 # optional
+                dot1q: 2 # optional controller can provide
+                deploy: true
+                register: result_3
 
 - name: TEST.3a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
   # The vrf lite profile removal returns ok for deployment, but the switch
@@ -353,28 +353,28 @@
     - 'result_3.diff[0].vrf_name == "ansible-vrf-int2"'
 
 - name: TEST.4 - OVERRIDDEN - [overridden] Override vrf_lite extension with new dot1q value
-    cisco.dcnm.dcnm_vrf: &conf4
+  cisco.dcnm.dcnm_vrf: &conf4
     fabric: "{{ fabric_1 }}"
     state: overridden
-  config:
-    - vrf_name: ansible-vrf-int2
-    vrf_id: 9008012
-    vrf_template: Default_VRF_Universal
-    vrf_extension_template: Default_VRF_Extension_Universal
-    vlan_id: 1500
-  attach:
-    - ip_address: "{{ switch_1 }}"
-    - ip_address: "{{ switch_2 }}"
-    vrf_lite:
-      - peer_vrf: ansible-vrf-int2 # optional
-      interface: "{{ interface_2a }}" # mandatory
-      ipv4_addr: 10.33.0.1/24 # optional
-      neighbor_ipv4: 10.33.0.0 # optional
-      ipv6_addr: 2010::10:34:0:7/64 # optional
-      neighbor_ipv6: 2010::10:34:0:3 # optional
-      dot1q: 21 # optional controller can provide
-      deploy: true
-      register: result_4
+    config:
+      - vrf_name: ansible-vrf-int2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 1500
+        attach:
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int2 # optional
+                interface: "{{ interface_2a }}" # mandatory
+                ipv4_addr: 10.33.0.1/24 # optional
+                neighbor_ipv4: 10.33.0.0 # optional
+                ipv6_addr: 2010::10:34:0:7/64 # optional
+                neighbor_ipv6: 2010::10:34:0:3 # optional
+                dot1q: 21 # optional controller can provide
+                deploy: true
+                register: result_4
 
 - name: TEST.4a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
   # The vrf lite profile removal returns ok for deployment, but the switch
@@ -427,8 +427,8 @@
     - 'result_4.diff[0].vrf_name == "ansible-vrf-int2"'
 
 - name: TEST.4f - OVERRIDDEN - [overridden] conf4 - Idempotence
-    cisco.dcnm.dcnm_vrf: *conf4
-    register: result_4f
+  cisco.dcnm.dcnm_vrf: *conf4
+  register: result_4f
 
 - name: TEST.4g - OVERRIDDEN - [debug] print result_4f
   debug:
@@ -440,28 +440,28 @@
     - 'result_4f.response|length == 0'
 
 - name: TEST.5 - OVERRIDDEN - [overridden] Override ansible-vrf-int2 to create ansible-vrf-int1 with LITE Extension
-    cisco.dcnm.dcnm_vrf: &conf5
+  cisco.dcnm.dcnm_vrf: &conf5
     fabric: "{{ fabric_1 }}"
     state: overridden
-  config:
-    - vrf_name: ansible-vrf-int1
-    vrf_id: 9008011
-    vrf_template: Default_VRF_Universal
-    vrf_extension_template: Default_VRF_Extension_Universal
-    vlan_id: 500
-  attach:
-    - ip_address: "{{ switch_1 }}"
-    - ip_address: "{{ switch_2 }}"
-    vrf_lite:
-      - peer_vrf: ansible-vrf-int1 # optional
-      interface: "{{ interface_2a }}" # mandatory
-      ipv4_addr: 10.33.0.1/24 # optional
-      neighbor_ipv4: 10.33.0.0 # optional
-      ipv6_addr: 2010::10:34:0:1/64 # optional
-      neighbor_ipv6: 2010::10:34:0:2 # optional
-      dot1q: 31 # optional controller can provide
-      deploy: true
-      register: result_5
+    config:
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
+            vrf_lite:
+              - peer_vrf: ansible-vrf-int1 # optional
+                interface: "{{ interface_2a }}" # mandatory
+                ipv4_addr: 10.33.0.1/24 # optional
+                neighbor_ipv4: 10.33.0.0 # optional
+                ipv6_addr: 2010::10:34:0:1/64 # optional
+                neighbor_ipv6: 2010::10:34:0:2 # optional
+                dot1q: 31 # optional controller can provide
+                deploy: true
+                register: result_5
 
 - name: TEST.5a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
   # The vrf lite profile removal returns ok for deployment, but the switch
@@ -508,8 +508,8 @@
     - 'result_5.diff[1].vrf_name == "ansible-vrf-int2"'
 
 - name: TEST.5d - OVERRIDDEN - [overridden] conf5 - Idempotence
-    cisco.dcnm.dcnm_vrf: *conf5
-    register: result_5d
+  cisco.dcnm.dcnm_vrf: *conf5
+  register: result_5d
 
 - name: TEST.5e - OVERRIDDEN - [debug] print result_5d
   debug:
