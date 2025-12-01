@@ -191,7 +191,7 @@
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"
       - (result.response | length) == 1
-      - result.response[0].DATA == "Invalid JSON response: Fabric 'ISN' is deleted successfully!"
+      - "result.response[0].DATA == \"Invalid JSON response: Fabric 'ISN' is deleted successfully!\""
       - result.response[0].MESSAGE == "OK"
       - result.response[0].METHOD == "DELETE"
       - result.response[0].RETURN_CODE == 200
