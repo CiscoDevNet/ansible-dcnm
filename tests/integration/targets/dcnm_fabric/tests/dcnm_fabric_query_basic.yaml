@@ -54,11 +54,11 @@
 #
 # vars:
 #   testcase: dcnm_fabric_query_basic
-#   fabric_name_1: VXLAN_EVPN_Fabric
+#   fabric_name_1: VXLAN_EVPN
 #   fabric_type_1: VXLAN_EVPN
-#   fabric_name_2: VXLAN_EVPN_MSD_Fabric
+#   fabric_name_2: VXLAN_EVPN_MSD
 #   fabric_type_2: VXLAN_EVPN_MSD
-#   fabric_name_3: LAN_CLASSIC_Fabric
+#   fabric_name_3: LAN_CLASSIC
 #   fabric_type_3: LAN_CLASSIC
 ################################################################################
 # QUERY - SETUP - Delete fabrics
@@ -85,16 +85,16 @@
 #         "diff": [
 #             {
 #                 "BGP_AS": 65535,
-#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "FABRIC_NAME": "VXLAN_EVPN",
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                 "FABRIC_NAME": "VXLAN_EVPN_MSD",
 #                 "sequence_number": 2
 #             },
 #             {
 #                 "BOOTSTRAP_ENABLE": false,
-#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                 "FABRIC_NAME": "LAN_CLASSIC",
 #                 "IS_READ_ONLY": false,
 #                 "sequence_number": 3
 #             }
@@ -125,24 +125,24 @@
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "BGP_AS": "65535",
-#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric"
+#                         "FABRIC_NAME": "VXLAN_EVPN"
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN/Easy_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             },
 #             {
 #                 "DATA": {
 #                     "nvPairs": {
-#                         "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                         "FABRIC_NAME": "VXLAN_EVPN_MSD",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD_Fabric/MSD_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD/MSD_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             },
@@ -150,13 +150,13 @@
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "BOOTSTRAP_ENABLE": "false",
-#                         "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                         "FABRIC_NAME": "LAN_CLASSIC",
 #                         "IS_READ_ONLY": "false",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/LAN_Classic",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC/LAN_Classic",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
@@ -244,11 +244,11 @@
 #         "changed": false,
 #         "diff": [
 #             {
-#                 "LAN_CLASSIC_Fabric": {
+#                 "LAN_CLASSIC": {
 #                     "createdOn": 1721954060733,
 #                     "deviceType": "n9k",
 #                     "fabricId": "FABRIC-4",
-#                     "fabricName": "LAN_CLASSIC_Fabric",
+#                     "fabricName": "LAN_CLASSIC",
 #                     "fabricTechnology": "LANClassic",
 #                     "fabricTechnologyFriendly": "Classic LAN",
 #                     "fabricType": "External",
@@ -283,7 +283,7 @@
 #                         "ENABLE_NXAPI_HTTP": "false",
 #                         "EXT_FABRIC_TYPE": "",
 #                         "FABRIC_FREEFORM": "",
-#                         "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                         "FABRIC_NAME": "LAN_CLASSIC",
 #                         "FABRIC_TECHNOLOGY": "LANClassic",
 #                         "FABRIC_TYPE": "External",
 #                         "FEATURE_PTP": "false",
@@ -331,12 +331,12 @@
 #                     "replicationMode": "IngressReplication",
 #                     "templateName": "LAN_Classic"
 #                 },
-#                 "VXLAN_EVPN_Fabric": {
+#                 "VXLAN_EVPN": {
 #                     "asn": "65535",
 #                     "createdOn": 1721954053773,
 #                     "deviceType": "n9k",
 #                     "fabricId": "FABRIC-2",
-#                     "fabricName": "VXLAN_EVPN_Fabric",
+#                     "fabricName": "VXLAN_EVPN",
 #                     "fabricTechnology": "VXLANFabric",
 #                     "fabricTechnologyFriendly": "VXLAN EVPN",
 #                     "fabricType": "Switch_Fabric",
@@ -440,7 +440,7 @@
 #                         "FABRIC_INTERFACE_TYPE": "p2p",
 #                         "FABRIC_MTU": "9216",
 #                         "FABRIC_MTU_PREV": "9216",
-#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                         "FABRIC_NAME": "VXLAN_EVPN",
 #                         "FABRIC_TYPE": "Switch_Fabric",
 #                         "FABRIC_VPC_DOMAIN_ID": "",
 #                         "FABRIC_VPC_DOMAIN_ID_PREV": "",
@@ -636,11 +636,11 @@
 #                     "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
 #                     "vrfTemplate": "Default_VRF_Universal"
 #                 },
-#                 "VXLAN_EVPN_MSD_Fabric": {
+#                 "VXLAN_EVPN_MSD": {
 #                     "createdOn": 1721954059451,
 #                     "deviceType": "n9k",
 #                     "fabricId": "FABRIC-3",
-#                     "fabricName": "VXLAN_EVPN_MSD_Fabric",
+#                     "fabricName": "VXLAN_EVPN_MSD",
 #                     "fabricTechnology": "VXLANFabric",
 #                     "fabricTechnologyFriendly": "VXLAN EVPN",
 #                     "fabricType": "MFD",
@@ -671,7 +671,7 @@
 #                         "ENABLE_PVLAN_PREV": "false",
 #                         "ENABLE_RS_REDIST_DIRECT": "",
 #                         "EXT_FABRIC_TYPE": "",
-#                         "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                         "FABRIC_NAME": "VXLAN_EVPN_MSD",
 #                         "FABRIC_TYPE": "MFD",
 #                         "FF": "MSD",
 #                         "L2_SEGMENT_ID_RANGE": "30000-49000",
@@ -725,7 +725,7 @@
 #                         "createdOn": 1721954059451,
 #                         "deviceType": "n9k",
 #                         "fabricId": "FABRIC-3",
-#                         "fabricName": "VXLAN_EVPN_MSD_Fabric",
+#                         "fabricName": "VXLAN_EVPN_MSD",
 #                         "fabricTechnology": "VXLANFabric",
 #                         "fabricTechnologyFriendly": "VXLAN EVPN",
 #                         "fabricType": "MFD",
@@ -756,7 +756,7 @@
 #                             "ENABLE_PVLAN_PREV": "false",
 #                             "ENABLE_RS_REDIST_DIRECT": "",
 #                             "EXT_FABRIC_TYPE": "",
-#                             "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                             "FABRIC_NAME": "VXLAN_EVPN_MSD",
 #                             "FABRIC_TYPE": "MFD",
 #                             "FF": "MSD",
 #                             "L2_SEGMENT_ID_RANGE": "30000-49000",
@@ -795,7 +795,7 @@
 #                         "createdOn": 1721954060733,
 #                         "deviceType": "n9k",
 #                         "fabricId": "FABRIC-4",
-#                         "fabricName": "LAN_CLASSIC_Fabric",
+#                         "fabricName": "LAN_CLASSIC",
 #                         "fabricTechnology": "LANClassic",
 #                         "fabricTechnologyFriendly": "Classic LAN",
 #                         "fabricType": "External",
@@ -830,7 +830,7 @@
 #                             "ENABLE_NXAPI_HTTP": "false",
 #                             "EXT_FABRIC_TYPE": "",
 #                             "FABRIC_FREEFORM": "",
-#                             "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                             "FABRIC_NAME": "LAN_CLASSIC",
 #                             "FABRIC_TECHNOLOGY": "LANClassic",
 #                             "FABRIC_TYPE": "External",
 #                             "FEATURE_PTP": "false",
@@ -883,7 +883,7 @@
 #                         "createdOn": 1721954053773,
 #                         "deviceType": "n9k",
 #                         "fabricId": "FABRIC-2",
-#                         "fabricName": "VXLAN_EVPN_Fabric",
+#                         "fabricName": "VXLAN_EVPN",
 #                         "fabricTechnology": "VXLANFabric",
 #                         "fabricTechnologyFriendly": "VXLAN EVPN",
 #                         "fabricType": "Switch_Fabric",
@@ -987,7 +987,7 @@
 #                             "FABRIC_INTERFACE_TYPE": "p2p",
 #                             "FABRIC_MTU": "9216",
 #                             "FABRIC_MTU_PREV": "9216",
-#                             "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                             "FABRIC_NAME": "VXLAN_EVPN",
 #                             "FABRIC_TYPE": "Switch_Fabric",
 #                             "FABRIC_VPC_DOMAIN_ID": "",
 #                             "FABRIC_VPC_DOMAIN_ID_PREV": "",
@@ -1244,15 +1244,15 @@
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "FABRIC_NAME": "VXLAN_EVPN",
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                 "FABRIC_NAME": "VXLAN_EVPN_MSD",
 #                 "sequence_number": 2
 #             },
 #             {
-#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                 "FABRIC_NAME": "LAN_CLASSIC",
 #                 "sequence_number": 3
 #             }
 #         ],
@@ -1279,26 +1279,26 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
+#                 "DATA": "Fabric 'VXLAN_EVPN' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "DATA": "Fabric 'VXLAN_EVPN_MSD_Fabric' is deleted successfully!",
+#                 "DATA": "Fabric 'VXLAN_EVPN_MSD' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             },
 #             {
-#                 "DATA": "Fabric 'LAN_CLASSIC_Fabric' is deleted successfully!",
+#                 "DATA": "Fabric 'LAN_CLASSIC' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }

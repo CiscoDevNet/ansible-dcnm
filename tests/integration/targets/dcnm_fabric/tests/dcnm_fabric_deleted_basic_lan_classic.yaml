@@ -2,7 +2,8 @@
 # RUNTIME
 ################################################################################
 # Recent run times (MM:SS.ms):
-# 00:49.83
+# 02:22.74 (2 node vND v3.2)
+# 00:49.83 (1 node vND v3.1)
 ################################################################################
 # DESCRIPTION - BASIC FABRIC DELETED STATE TEST
 # 
@@ -38,7 +39,7 @@
 # Example vars:
 # vars:
 #   testcase: dcnm_fabric_deleted_basic_lan_classic
-#   fabric_name_3: LAN_CLASSIC_Fabric
+#   fabric_name_3: LAN_CLASSIC
 #   fabric_type_3: LAN_CLASSIC
 ################################################################################
 # SETUP
@@ -63,7 +64,7 @@
 #         "diff": [
 #             {
 #                 "BOOTSTRAP_ENABLE": false,
-#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                 "FABRIC_NAME": "LAN_CLASSIC",
 #                 "IS_READ_ONLY": false,
 #                 "sequence_number": 1
 #             }
@@ -107,7 +108,7 @@
 #                         "ENABLE_NXAPI_HTTP": "",
 #                         "EXT_FABRIC_TYPE": "",
 #                         "FABRIC_FREEFORM": "",
-#                         "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                         "FABRIC_NAME": "LAN_CLASSIC",
 #                         "FABRIC_TECHNOLOGY": "LANClassic",
 #                         "FABRIC_TYPE": "External",
 #                         "FEATURE_PTP": "false",
@@ -153,7 +154,7 @@
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/LAN_CLASSIC_Fabric/LAN_Classic",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/LAN_CLASSIC/LAN_Classic",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
@@ -201,7 +202,7 @@
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                 "FABRIC_NAME": "LAN_CLASSIC",
 #                 "sequence_number": 1
 #             }
 #         ],
@@ -216,10 +217,10 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": "Invalid JSON response: Fabric 'LAN_CLASSIC_Fabric' is deleted successfully!",
+#                 "DATA": "Invalid JSON response: Fabric 'LAN_CLASSIC' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/LAN_CLASSIC_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/LAN_CLASSIC",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
