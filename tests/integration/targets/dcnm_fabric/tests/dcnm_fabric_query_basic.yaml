@@ -14,32 +14,32 @@
 ################################################################################
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - fabric_name_1
-#    - fabric_type_1  # VXLAN_EVPN
-#    - fabric_name_2
-#    - fabric_type_2  # VXLAN_EVPN_MSD
-#    - fabric_name_3
-#    - fabric_type_3  # LAN_CLASSIC
+#    - fabric_name_00
+#    - fabric_type_00  # VXLAN_EVPN
+#    - fabric_name_100
+#    - fabric_type_100  # VXLAN_EVPN_MSD
+#    - fabric_name_10
+#    - fabric_type_10  # LAN_CLASSIC
 # 2. Delete fabrics under test, if they exist
-#    - fabric_name_1
-#    - fabric_name_2
-#    - fabric_name_3
+#    - fabric_name_00
+#    - fabric_name_100
+#    - fabric_name_10
 ################################################################################
 # TEST
 ################################################################################
 # 3. Create fabrics and verify result
-#    - fabric_name_1
-#    - fabric_name_1
-#    - fabric_name_1
+#    - fabric_name_00
+#    - fabric_name_100
+#    - fabric_name_10
 #
 # 4. Query fabric configurations and verify results
 ################################################################################
 # CLEANUP
 ################################################################################
 # 6. Delete fabrics under test
-#    - fabric_name_1
-#    - fabric_name_1
-#    - fabric_name_1
+#    - fabric_name_00
+#    - fabric_name_100
+#    - fabric_name_10
 ################################################################################
 # REQUIREMENTS
 ################################################################################
@@ -54,12 +54,12 @@
 #
 # vars:
 #   testcase: dcnm_fabric_query_basic
-#   fabric_name_1: VXLAN_EVPN
-#   fabric_type_1: VXLAN_EVPN
-#   fabric_name_2: VXLAN_EVPN_MSD
-#   fabric_type_2: VXLAN_EVPN_MSD
-#   fabric_name_3: LAN_CLASSIC
-#   fabric_type_3: LAN_CLASSIC
+#   fabric_name_00: VXLAN_EVPN
+#   fabric_type_00: VXLAN_EVPN
+#   fabric_name_100: MSD
+#   fabric_type_100: VXLAN_EVPN_MSD
+#   fabric_name_10: LAN_CLASSIC
+#   fabric_type_10: LAN_CLASSIC
 ################################################################################
 # QUERY - SETUP - Delete fabrics
 ################################################################################
@@ -67,9 +67,9 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-      - FABRIC_NAME: "{{ fabric_name_2 }}"
-      - FABRIC_NAME: "{{ fabric_name_3 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+      - FABRIC_NAME: "{{ fabric_name_100 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
   register: result
 - debug:
     var: result
@@ -89,7 +89,7 @@
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                 "FABRIC_NAME": "MSD",
 #                 "sequence_number": 2
 #             },
 #             {
@@ -137,12 +137,12 @@
 #             {
 #                 "DATA": {
 #                     "nvPairs": {
-#                         "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                         "FABRIC_NAME": "MSD",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD/MSD_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/MSD/MSD_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             },
@@ -181,19 +181,19 @@
 #     }
 # }
 ################################################################################
-- name: QUERY - TEST - Create all supported fabric types with minimal config
+- name: QUERY - TEST - Create {{ fabric_name_00 }}, {{ fabric_name_100 }}, and {{ fabric_name_10 }} with basic config
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-        FABRIC_TYPE: "{{ fabric_type_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+        FABRIC_TYPE: "{{ fabric_type_00 }}"
         BGP_AS: 65535
         DEPLOY: true
-      - FABRIC_NAME: "{{ fabric_name_2 }}"
-        FABRIC_TYPE: "{{ fabric_type_2 }}"
+      - FABRIC_NAME: "{{ fabric_name_100 }}"
+        FABRIC_TYPE: "{{ fabric_type_100 }}"
         DEPLOY: true
-      - FABRIC_NAME: "{{ fabric_name_3 }}"
-        FABRIC_TYPE: "{{ fabric_type_3 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
+        FABRIC_TYPE: "{{ fabric_type_10 }}"
         BOOTSTRAP_ENABLE: false
         IS_READ_ONLY: false
         DEPLOY: true
@@ -206,11 +206,11 @@
       - result.failed == false
       - (result.diff | length) == 3
       - result.diff[0].BGP_AS == 65535
-      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_00
       - result.diff[0].sequence_number == 1
-      - result.diff[1].FABRIC_NAME == fabric_name_2
+      - result.diff[1].FABRIC_NAME == fabric_name_100
       - result.diff[1].sequence_number == 2
-      - result.diff[2].FABRIC_NAME == fabric_name_3
+      - result.diff[2].FABRIC_NAME == fabric_name_10
       - result.diff[2].sequence_number == 3
       - result.diff[2].BOOTSTRAP_ENABLE == false
       - result.diff[2].IS_READ_ONLY == false
@@ -636,11 +636,11 @@
 #                     "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
 #                     "vrfTemplate": "Default_VRF_Universal"
 #                 },
-#                 "VXLAN_EVPN_MSD": {
+#                 "MSD": {
 #                     "createdOn": 1721954059451,
 #                     "deviceType": "n9k",
 #                     "fabricId": "FABRIC-3",
-#                     "fabricName": "VXLAN_EVPN_MSD",
+#                     "fabricName": "MSD",
 #                     "fabricTechnology": "VXLANFabric",
 #                     "fabricTechnologyFriendly": "VXLAN EVPN",
 #                     "fabricType": "MFD",
@@ -671,7 +671,7 @@
 #                         "ENABLE_PVLAN_PREV": "false",
 #                         "ENABLE_RS_REDIST_DIRECT": "",
 #                         "EXT_FABRIC_TYPE": "",
-#                         "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                         "FABRIC_NAME": "MSD",
 #                         "FABRIC_TYPE": "MFD",
 #                         "FF": "MSD",
 #                         "L2_SEGMENT_ID_RANGE": "30000-49000",
@@ -725,7 +725,7 @@
 #                         "createdOn": 1721954059451,
 #                         "deviceType": "n9k",
 #                         "fabricId": "FABRIC-3",
-#                         "fabricName": "VXLAN_EVPN_MSD",
+#                         "fabricName": "MSD",
 #                         "fabricTechnology": "VXLANFabric",
 #                         "fabricTechnologyFriendly": "VXLAN EVPN",
 #                         "fabricType": "MFD",
@@ -756,7 +756,7 @@
 #                             "ENABLE_PVLAN_PREV": "false",
 #                             "ENABLE_RS_REDIST_DIRECT": "",
 #                             "EXT_FABRIC_TYPE": "",
-#                             "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                             "FABRIC_NAME": "MSD",
 #                             "FABRIC_TYPE": "MFD",
 #                             "FF": "MSD",
 #                             "L2_SEGMENT_ID_RANGE": "30000-49000",
@@ -1201,13 +1201,13 @@
 #     }
 # }
 ################################################################################
-- name: QUERY - TEST - Query the fabrics
+- name: QUERY - TEST - Query {{ fabric_name_00 }}, {{ fabric_name_100 }}, {{ fabric_name_10 }}
   cisco.dcnm.dcnm_fabric:
     state: query
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-      - FABRIC_NAME: "{{ fabric_name_2 }}"
-      - FABRIC_NAME: "{{ fabric_name_3 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+      - FABRIC_NAME: "{{ fabric_name_100 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
   register: result
 - debug:
     var: result
@@ -1216,9 +1216,9 @@
       - result.changed == false
       - result.failed == false
       - (result.diff | length) == 1
-      - fabric_name_1 in result.diff[0]
-      - fabric_name_2 in result.diff[0]
-      - fabric_name_3 in result.diff[0]
+      - fabric_name_00 in result.diff[0]
+      - fabric_name_100 in result.diff[0]
+      - fabric_name_10 in result.diff[0]
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
       - result.metadata[0].action == "fabric_query"
@@ -1248,7 +1248,7 @@
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                 "FABRIC_NAME": "MSD",
 #                 "sequence_number": 2
 #             },
 #             {
@@ -1287,10 +1287,10 @@
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "DATA": "Fabric 'VXLAN_EVPN_MSD' is deleted successfully!",
+#                 "DATA": "Fabric 'MSD' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/MSD",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             },
@@ -1323,13 +1323,13 @@
 #     }
 # }
 ################################################################################
-- name: QUERY - CLEANUP - Delete the fabrics
+- name: QUERY - CLEANUP - Delete {{ fabric_name_00 }}, {{ fabric_name_100 }}, {{ fabric_name_10 }}
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-      - FABRIC_NAME: "{{ fabric_name_2 }}"
-      - FABRIC_NAME: "{{ fabric_name_3 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+      - FABRIC_NAME: "{{ fabric_name_100 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
   register: result
 - debug:
     var: result
@@ -1338,11 +1338,11 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 3
-      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_00
       - result.diff[0].sequence_number == 1
-      - result.diff[1].FABRIC_NAME == fabric_name_2
+      - result.diff[1].FABRIC_NAME == fabric_name_100
       - result.diff[1].sequence_number == 2
-      - result.diff[2].FABRIC_NAME == fabric_name_3
+      - result.diff[2].FABRIC_NAME == fabric_name_10
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
       - result.metadata[0].action == "fabric_delete"

@@ -15,28 +15,28 @@
 # SETUP
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - fabric_name_1
-#    - fabric_type_1  # VXLAN_EVPN
-#    - fabric_name_5
-#    - fabric_type_5  # ISN
-#    - fabric_name_6
-#    - fabric_type_6  # VXLAN_EVPN_MSD
-#    - fabric_name_7
-#    - fabric_type_7  # LAN_CLASSIC
+#    - fabric_name_00
+#    - fabric_type_00  # VXLAN_EVPN
+#    - fabric_name_30
+#    - fabric_type_30  # ISN
+#    - fabric_name_100
+#    - fabric_type_100  # VXLAN_EVPN_MSD
+#    - fabric_name_10
+#    - fabric_type_10  # LAN_CLASSIC
 # 2. Delete fabrics under test, if they exist
-#    - fabric_name_1
-#    - fabric_name_5
-#    - fabric_name_6
-#    - fabric_name_7
+#    - fabric_name_00
+#    - fabric_name_30
+#    - fabric_name_100
+#    - fabric_name_10
 # TEST
 # 3. Create fabrics and verify result
-#    - fabric_name_1
-#    - fabric_name_5
-#    - fabric_name_6
-#    - fabric_name_7
-# 4. Delete fabric_name_1 and fabric_name_6. Verify result
-# 5. Delete fabric_name_7 and fabric_name_5. Verify result
-# 6. Delete fabric_name_7 and fabric_name_5 again to verify idempotence.
+#    - fabric_name_00
+#    - fabric_name_10
+#    - fabric_name_30
+#    - fabric_name_100
+# 4. Delete fabric_name_00 and fabric_name_100. Verify result
+# 5. Delete fabric_name_10 and fabric_name_30. Verify result
+# 6. Delete fabric_name_10 and fabric_name_30 again to verify idempotence.
 # CLEANUP
 # 7. No cleanup required
 ################################################################################
@@ -53,14 +53,14 @@
 #
 # vars:
 #   testcase: dcnm_fabric_deleted_basic
-#   fabric_name_1: VXLAN_EVPN
-#   fabric_type_1: VXLAN_EVPN
-#   fabric_name_6: VXLAN_EVPN_MSD
-#   fabric_type_6: VXLAN_EVPN_MSD
-#   fabric_name_7: LAN_CLASSIC
-#   fabric_type_7: LAN_CLASSIC
-#   fabric_name_5: ISN
-#   fabric_type_5: ISN
+#   fabric_name_00: VXLAN_EVPN
+#   fabric_type_00: VXLAN_EVPN
+#   fabric_name_10: LAN_CLASSIC
+#   fabric_type_10: LAN_CLASSIC
+#   fabric_name_30: ISN
+#   fabric_type_30: ISN
+#   fabric_name_100: MSD
+#   fabric_type_100: VXLAN_EVPN_MSD
 ################################################################################
 # SETUP
 ################################################################################
@@ -68,10 +68,10 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-      - FABRIC_NAME: "{{ fabric_name_6 }}"
-      - FABRIC_NAME: "{{ fabric_name_7 }}"
-      - FABRIC_NAME: "{{ fabric_name_5 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+      - FABRIC_NAME: "{{ fabric_name_100 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
+      - FABRIC_NAME: "{{ fabric_name_30 }}"
   register: result
 - debug:
     var: result
@@ -91,7 +91,7 @@
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                 "FABRIC_NAME": "MSD",
 #                 "sequence_number": 2
 #             },
 #             {
@@ -139,12 +139,12 @@
 #             {
 #                 "DATA": {
 #                     "nvPairs": {
-#                         "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                         "FABRIC_NAME": "MSD",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD/MSD_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/MSD/MSD_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             },
@@ -187,20 +187,20 @@
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-        FABRIC_TYPE: "{{ fabric_type_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+        FABRIC_TYPE: "{{ fabric_type_00 }}"
         BGP_AS: "65535.65534"
         DEPLOY: true
-      - FABRIC_NAME: "{{ fabric_name_6 }}"
-        FABRIC_TYPE: "{{ fabric_type_6 }}"
+      - FABRIC_NAME: "{{ fabric_name_100 }}"
+        FABRIC_TYPE: "{{ fabric_type_100 }}"
         DEPLOY: true
-      - FABRIC_NAME: "{{ fabric_name_7 }}"
-        FABRIC_TYPE: "{{ fabric_type_7 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
+        FABRIC_TYPE: "{{ fabric_type_10 }}"
         BOOTSTRAP_ENABLE: false
         IS_READ_ONLY: false
         DEPLOY: true
-      - FABRIC_NAME: "{{ fabric_name_5 }}"
-        FABRIC_TYPE: "{{ fabric_type_5 }}"
+      - FABRIC_NAME: "{{ fabric_name_30 }}"
+        FABRIC_TYPE: "{{ fabric_type_30 }}"
         BGP_AS: "65005"
         DEPLOY: true
   register: result
@@ -212,16 +212,16 @@
       - result.failed == false
       - (result.diff | length) == 4
       - result.diff[0].BGP_AS == "65535.65534"
-      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_00
       - result.diff[0].sequence_number == 1
-      - result.diff[1].FABRIC_NAME == fabric_name_6
+      - result.diff[1].FABRIC_NAME == fabric_name_100
       - result.diff[1].sequence_number == 2
-      - result.diff[2].FABRIC_NAME == fabric_name_7
+      - result.diff[2].FABRIC_NAME == fabric_name_10
       - result.diff[2].sequence_number == 3
       - result.diff[2].BOOTSTRAP_ENABLE == false
       - result.diff[2].IS_READ_ONLY == false
       - result.diff[3].BGP_AS == "65005"
-      - result.diff[3].FABRIC_NAME == fabric_name_5
+      - result.diff[3].FABRIC_NAME == fabric_name_30
       - result.diff[3].sequence_number == 4
       - (result.metadata | length) == 4
       - result.metadata[0].action == "fabric_create"
@@ -272,7 +272,7 @@
       - result.result[3].sequence_number == 4
 
 ###############################################################################################
-# DELETED - TEST - Delete first two fabrics (fabric_name_1, fabric_name_6) and verify
+# DELETED - TEST - Delete first two fabrics (fabric_name_00, fabric_name_100) and verify
 ###############################################################################################
 # Expected result
 # ok: [172.22.150.244] => {
@@ -284,7 +284,7 @@
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                 "FABRIC_NAME": "MSD",
 #                 "sequence_number": 2
 #             }
 #         ],
@@ -313,10 +313,10 @@
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "DATA": "Invalid JSON response: Fabric 'VXLAN_EVPN_MSD' is deleted successfully!",
+#                 "DATA": "Invalid JSON response: Fabric 'MSD' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/VXLAN_EVPN_MSD",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/MSD",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
@@ -336,12 +336,12 @@
 #     }
 # }
 ###############################################################################################
-- name: DELETED - TEST - Delete first two fabrics (fabric_name_1, fabric_name_6) and verify
+- name: DELETED - TEST - Delete first two fabrics (fabric_name_00, fabric_name_100) and verify
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-      - FABRIC_NAME: "{{ fabric_name_6 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+      - FABRIC_NAME: "{{ fabric_name_100 }}"
   register: result
 - debug:
     var: result
@@ -352,8 +352,8 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 2
-      - result.diff[0].FABRIC_NAME == fabric_name_1
-      - result.diff[1].FABRIC_NAME == fabric_name_6
+      - result.diff[0].FABRIC_NAME == fabric_name_00
+      - result.diff[1].FABRIC_NAME == fabric_name_100
       - result.diff[0].sequence_number == 1
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 2
@@ -384,7 +384,7 @@
       - result.result[1].success == true
       - result.result[1].sequence_number == 2
 ################################################################################
-# DELETED - TEST - Delete remaining fabrics (fabric_name_7, fabric_name_5) and verify
+# DELETED - TEST - Delete remaining fabrics (fabric_name_10, fabric_name_30) and verify
 ################################################################################
 # Expected result
 # ok: [172.22.150.244] => {
@@ -448,12 +448,12 @@
 #     }
 # }
 ################################################################################
-- name: DELETED - TEST - Delete remaining fabrics (fabric_name_7, fabric_name_5) and verify
+- name: DELETED - TEST - Delete remaining fabrics (fabric_name_10, fabric_name_30) and verify
   cisco.dcnm.dcnm_fabric: &fabric_deleted
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_7 }}"
-      - FABRIC_NAME: "{{ fabric_name_5 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
+      - FABRIC_NAME: "{{ fabric_name_30 }}"
   register: result
 - debug:
     var: result
@@ -464,9 +464,9 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 2
-      - result.diff[0].FABRIC_NAME == fabric_name_7
+      - result.diff[0].FABRIC_NAME == fabric_name_10
       - result.diff[0].sequence_number == 1
-      - result.diff[1].FABRIC_NAME == fabric_name_5
+      - result.diff[1].FABRIC_NAME == fabric_name_30
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 2
       - result.metadata[0].action == "fabric_delete"
@@ -496,7 +496,7 @@
       - result.result[1].success == true
       - result.result[1].sequence_number == 2
 ################################################################################
-# DELETED - TEST - Delete remaining fabrics (fabric_name_7, fabric_name_5) idempotence
+# DELETED - TEST - Delete remaining fabrics (fabric_name_10, fabric_name_30) idempotence
 ################################################################################
 # Expected result
 # ok: [172.22.150.244] => {
@@ -533,7 +533,7 @@
 #     }
 # }
 ################################################################################
-- name: DELETED - TEST - Delete remaining fabrics (fabric_name_7, fabric_name_5) idempotence
+- name: DELETED - TEST - Delete remaining fabrics (fabric_name_10, fabric_name_30) idempotence
   cisco.dcnm.dcnm_fabric: *fabric_deleted
   register: result
 - debug:

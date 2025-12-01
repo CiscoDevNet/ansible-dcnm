@@ -16,32 +16,32 @@
 ################################################################################
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - fabric_name_1  # VXLAN_EVPN
-#    - fabric_type_1  # VXLAN_EVPN
-#    - fabric_name_6  # VXLAN_EVPN_MSD
-#    - fabric_type_6  # VXLAN_EVPN_MSD
-#    - fabric_name_7  # LAN_CLASSIC
-#    - fabric_type_7  # LAN_CLASSIC
+#    - fabric_name_00  # VXLAN_EVPN
+#    - fabric_type_00  # VXLAN_EVPN
+#    - fabric_name_100  # MSD
+#    - fabric_type_100  # VXLAN_EVPN_MSD
+#    - fabric_name_10  # LAN_CLASSIC
+#    - fabric_type_10  # LAN_CLASSIC
 # 2. Delete fabrics under test, if they exist
-#    - fabric_name_1
-#    - fabric_name_6
-#    - fabric_name_7
+#    - fabric_name_00
+#    - fabric_name_100
+#    - fabric_name_10
 ################################################################################
 # TEST
 ################################################################################
 # 3. Create fabrics and verify result
-#    - fabric_name_1
-#    - fabric_name_6
-#    - fabric_name_7
+#    - fabric_name_00
+#    - fabric_name_100
+#    - fabric_name_10
 # 4. Merge additional configs into fabric_1 and fabric_6 and verify result
 # 5. Merge additional config into fabric_7 and verify result
 ################################################################################
 # CLEANUP
 ################################################################################
 # 6. Delete fabrics under test
-#    - fabric_name_1
-#    - fabric_name_6
-#    - fabric_name_7
+#    - fabric_name_00
+#    - fabric_name_100
+#    - fabric_name_10
 ################################################################################
 # REQUIREMENTS
 ################################################################################
@@ -56,12 +56,12 @@
 #
 # vars:
 #   testcase: dcnm_fabric_merged_basic
-#   fabric_name_1: VXLAN_EVPN
-#   fabric_type_1: VXLAN_EVPN
-#   fabric_name_6: VXLAN_EVPN_MSD
-#   fabric_type_6: VXLAN_EVPN_MSD
-#   fabric_name_7: LAN_CLASSIC
-#   fabric_type_7: LAN_CLASSIC
+#   fabric_name_00: VXLAN_EVPN
+#   fabric_type_00: VXLAN_EVPN
+#   fabric_name_100: MSD
+#   fabric_type_100: VXLAN_EVPN_MSD
+#   fabric_name_10: LAN_CLASSIC
+#   fabric_type_10: LAN_CLASSIC
 ################################################################################
 # MERGED - SETUP - Delete fabrics
 ################################################################################
@@ -69,9 +69,9 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-      - FABRIC_NAME: "{{ fabric_name_6 }}"
-      - FABRIC_NAME: "{{ fabric_name_7 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+      - FABRIC_NAME: "{{ fabric_name_100 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
   register: result
 - debug:
     var: result
@@ -91,7 +91,7 @@
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                 "FABRIC_NAME": "MSD",
 #                 "sequence_number": 2
 #             },
 #             {
@@ -139,12 +139,12 @@
 #             {
 #                 "DATA": {
 #                     "nvPairs": {
-#                         "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                         "FABRIC_NAME": "MSD",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD/MSD_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/MSD/MSD_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             },
@@ -187,15 +187,15 @@
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-        FABRIC_TYPE: "{{ fabric_type_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+        FABRIC_TYPE: "{{ fabric_type_00 }}"
         BGP_AS: 65535
         DEPLOY: true
-      - FABRIC_NAME: "{{ fabric_name_6 }}"
-        FABRIC_TYPE: "{{ fabric_type_6 }}"
+      - FABRIC_NAME: "{{ fabric_name_100 }}"
+        FABRIC_TYPE: "{{ fabric_type_100 }}"
         DEPLOY: true
-      - FABRIC_NAME: "{{ fabric_name_7 }}"
-        FABRIC_TYPE: "{{ fabric_type_7 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
+        FABRIC_TYPE: "{{ fabric_type_10 }}"
         BOOTSTRAP_ENABLE: false
         IS_READ_ONLY: false
         DEPLOY: true
@@ -208,11 +208,11 @@
       - result.failed == false
       - (result.diff | length) == 3
       - result.diff[0].BGP_AS == 65535
-      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_00
       - result.diff[0].sequence_number == 1
-      - result.diff[1].FABRIC_NAME == fabric_name_6
+      - result.diff[1].FABRIC_NAME == fabric_name_100
       - result.diff[1].sequence_number == 2
-      - result.diff[2].FABRIC_NAME == fabric_name_7
+      - result.diff[2].FABRIC_NAME == fabric_name_10
       - result.diff[2].sequence_number == 3
       - result.diff[2].BOOTSTRAP_ENABLE == false
       - result.diff[2].IS_READ_ONLY == false
@@ -256,7 +256,7 @@
 #             },
 #             {
 #                 "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
-#                 "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                 "FABRIC_NAME": "MSD",
 #                 "sequence_number": 2
 #             },
 #             {
@@ -331,12 +331,12 @@
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
-#                         "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                         "FABRIC_NAME": "MSD",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "PUT",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD/MSD_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/MSD/MSD_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             },
@@ -346,7 +346,7 @@
 #                 "sequence_number": 3
 #             },
 #             {
-#                 "MESSAGE": "Fabric VXLAN_EVPN_MSD DEPLOY is False or None. Skipping config-save.",
+#                 "MESSAGE": "Fabric MSD DEPLOY is False or None. Skipping config-save.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 4
 #             },
@@ -356,7 +356,7 @@
 #                 "sequence_number": 5
 #             },
 #             {
-#                 "MESSAGE": "Fabric VXLAN_EVPN_MSD DEPLOY is False or None. Skipping config-deploy.",
+#                 "MESSAGE": "Fabric MSD DEPLOY is False or None. Skipping config-deploy.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 6
 #             }
@@ -400,15 +400,15 @@
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-        FABRIC_TYPE: "{{ fabric_type_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+        FABRIC_TYPE: "{{ fabric_type_00 }}"
         ANYCAST_GW_MAC: aaaabbbbcccc
         BGP_AS: 65535
         REPLICATION_MODE: Ingress
         SITE_ID: 65000
         DEPLOY: false
-      - FABRIC_NAME: "{{ fabric_name_6 }}"
-        FABRIC_TYPE: "{{ fabric_type_6 }}"
+      - FABRIC_NAME: "{{ fabric_name_100 }}"
+        FABRIC_TYPE: "{{ fabric_type_100 }}"
         ANYCAST_GW_MAC: aa:aa:bb:bb:cc:cc
         DEPLOY: false
   register: result
@@ -419,11 +419,11 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 6
-      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_00
       - result.diff[0].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
       - result.diff[0].SITE_ID == "65000"
       - result.diff[0].sequence_number == 1
-      - result.diff[1].FABRIC_NAME == fabric_name_6
+      - result.diff[1].FABRIC_NAME == fabric_name_100
       - result.diff[1].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 6
@@ -460,13 +460,13 @@
       - result.response[0].DATA.nvPairs.BGP_AS == "65535"
       - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Ingress"
       - result.response[0].DATA.nvPairs.SITE_ID == "65000"
-      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_1
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_00
       - result.response[1].sequence_number == 2
       - result.response[1].MESSAGE == "OK"
       - result.response[1].METHOD == "PUT"
       - result.response[1].RETURN_CODE == 200
       - result.response[1].DATA.nvPairs.ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
-      - result.response[1].DATA.nvPairs.FABRIC_NAME == fabric_name_6
+      - result.response[1].DATA.nvPairs.FABRIC_NAME == fabric_name_100
       - result.response[2].sequence_number == 3
       - result.response[2].RETURN_CODE == 200
       - result.response[2].MESSAGE is match '.*Skipping config-save.*'
@@ -592,8 +592,8 @@
   cisco.dcnm.dcnm_fabric: &merge_fabric_3
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_7 }}"
-        FABRIC_TYPE: "{{ fabric_type_7 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
+        FABRIC_TYPE: "{{ fabric_type_10 }}"
         SUBINTERFACE_RANGE: 2-101
         DEPLOY: false
   register: result
@@ -605,7 +605,7 @@
       - result.failed == false
       - (result.diff | length) == 3
       - result.diff[0].SUBINTERFACE_RANGE == "2-101"
-      - result.diff[0].FABRIC_NAME == fabric_name_7
+      - result.diff[0].FABRIC_NAME == fabric_name_10
       - result.diff[0].sequence_number == 1
       - result.diff[1].sequence_number == 2
       - result.diff[2].sequence_number == 3
@@ -628,7 +628,7 @@
       - result.response[0].METHOD == "PUT"
       - result.response[0].RETURN_CODE == 200
       - result.response[0].DATA.nvPairs.BOOTSTRAP_ENABLE == "false"
-      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_7
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_10
       - result.response[0].DATA.nvPairs.IS_READ_ONLY == "false"
       - result.response[0].DATA.nvPairs.SUBINTERFACE_RANGE == "2-101"
       - result.response[1].sequence_number == 2
@@ -712,7 +712,7 @@
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_MSD",
+#                 "FABRIC_NAME": "MSD",
 #                 "sequence_number": 2
 #             },
 #             {
@@ -751,10 +751,10 @@
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "DATA": "Fabric 'VXLAN_EVPN_MSD' is deleted successfully!",
+#                 "DATA": "Fabric 'MSD' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/MSD",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             },
@@ -791,9 +791,9 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-      - FABRIC_NAME: "{{ fabric_name_6 }}"
-      - FABRIC_NAME: "{{ fabric_name_7 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+      - FABRIC_NAME: "{{ fabric_name_100 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
   register: result
 - debug:
     var: result
@@ -802,11 +802,11 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 3
-      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_00
       - result.diff[0].sequence_number == 1
-      - result.diff[1].FABRIC_NAME == fabric_name_6
+      - result.diff[1].FABRIC_NAME == fabric_name_100
       - result.diff[1].sequence_number == 2
-      - result.diff[2].FABRIC_NAME == fabric_name_7
+      - result.diff[2].FABRIC_NAME == fabric_name_10
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
       - result.metadata[0].action == "fabric_delete"
