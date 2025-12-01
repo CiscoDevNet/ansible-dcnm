@@ -39,16 +39,24 @@
     # testcase: dcnm_fabric_replaced_save_deploy
     # testcase: dcnm_fabric_replaced_save_deploy_ipfm
     # testcase: dcnm_fabric_query_basic.yaml
-    fabric_name_1: VXLAN_EVPN_Fabric
-    fabric_type_1: VXLAN_EVPN
-    fabric_name_2: VXLAN_EVPN_MSD_Fabric
-    fabric_type_2: VXLAN_EVPN_MSD
-    fabric_name_3: LAN_CLASSIC_Fabric
-    fabric_type_3: LAN_CLASSIC
-    fabric_name_4: IPFM_Fabric
-    fabric_type_4: IPFM
-    fabric_name_5: ISN_Fabric
-    fabric_type_5: ISN
+    fabric_name_00: VXLAN_EVPN
+    fabric_type_00: VXLAN_EVPN
+    fabric_name_10: LAN_CLASSIC
+    fabric_type_10: LAN_CLASSIC
+    fabric_name_20: BGP
+    fabric_type_20: BGP
+    fabric_name_30: ISN
+    fabric_type_30: ISN
+    fabric_name_40: IPFM
+    fabric_type_40: IPFM
+    fabric_name_50: AI
+    fabric_type_50: AI
+    fabric_name_100: MSD
+    fabric_type_100: VXLAN_EVPN_MSD
+    fabric_name_110: MCFG
+    fabric_type_110: MCFG
+    fabric_name_120: FG
+    fabric_type_120: FG
     leaf_1: 172.22.150.103
     leaf_2: 172.22.150.104
     nxos_username: admin
