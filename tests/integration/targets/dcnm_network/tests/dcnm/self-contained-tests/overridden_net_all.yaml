@@ -23,7 +23,7 @@
       # ----------------------------------
       net2_conf_template: "self-contained-tests/net2_conf.j2"
       net2_conf_file: "{{ role_path }}/files/self_contained_overridden_all_net2_conf.yaml"
-      # ----------------------------------
+# ----------------------------------
 
 - name: OVERRIDDEN_ALL - Create Network Config File using J2 Template
   ansible.builtin.template:

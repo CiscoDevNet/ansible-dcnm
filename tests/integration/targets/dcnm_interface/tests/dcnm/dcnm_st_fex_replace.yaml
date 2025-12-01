@@ -60,9 +60,9 @@
         - merged
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
@@ -148,11 +148,11 @@
           - 'result.response | length >= 0'  # Allow empty response for idempotence
         fail_msg: "Idempotence check for ST FEX interface replace failed - {{ result }}"
         success_msg: "Idempotence check for ST FEX interface replace succeeded"
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 

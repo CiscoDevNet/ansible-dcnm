@@ -7,9 +7,9 @@
 
 - block:
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
 
     - name: Initial setup - Delete Links
       cisco.dcnm.dcnm_links: &links_delete
@@ -53,9 +53,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create Links including all optional parameters
       cisco.dcnm.dcnm_links: &links_merge_with_opt
@@ -68,9 +68,9 @@
             src_device: "{{ ansible_unnum_switch1 }}"            # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch2 }}"            # Device on the Destination fabric
             template: int_intra_fabric_unnum_link                # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+            #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+            #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+            #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
             profile:
               admin_state: true                                  # choose from [true, false]
@@ -89,9 +89,9 @@
             src_device: "{{ ansible_unnum_switch1 }}"            # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch2 }}"            # Device on the Destination fabric
             template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+      #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+      #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+      #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
       register: result
 
     - ansible.builtin.assert:
@@ -108,9 +108,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##              REPLACE                     ##
-##############################################
+    ##############################################
+    ##              REPLACE                     ##
+    ##############################################
 
     - name: Replace Links
       cisco.dcnm.dcnm_links: &links_replace
@@ -123,9 +123,9 @@
             src_device: "{{ ansible_unnum_switch1 }}"            # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch2 }}"            # Device on the Destination fabric
             template: int_intra_fabric_unnum_link                # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+            #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+            #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+            #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
             profile:
               admin_state: false                                 # choose from [true, false]
@@ -142,9 +142,9 @@
             src_device: "{{ ansible_unnum_switch1 }}"            # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch2 }}"            # Device on the Destination fabric
             template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+      #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+      #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+      #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
       register: result
 
     - ansible.builtin.assert:
@@ -161,9 +161,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                IDEMPOTENCE               ##
-##############################################
+    ##############################################
+    ##                IDEMPOTENCE               ##
+    ##############################################
 
     - name: Repalce Links - Idempotence
       cisco.dcnm.dcnm_links: *links_replace
@@ -183,9 +183,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-###############################################
-###             CLEANUP                      ##
-###############################################
+  ###############################################
+  ###             CLEANUP                      ##
+  ###############################################
 
   always:
 

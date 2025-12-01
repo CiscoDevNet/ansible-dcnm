@@ -12,7 +12,7 @@
 
           feature vpc
 
-          ##
+      ##
       - name: my_lacp
         tags: "lacp"
         description: "internal template for enabling LACP feature"
@@ -22,7 +22,7 @@
 
           feature lacp
 
-          ##
+      ##
       - name: my_interface_vlan
         tags: "interface_vlan"
         description: "internal template for enabling interface-vlan feature"
@@ -32,7 +32,7 @@
 
           feature interface-vlan
 
-          ##
+      ##
       - name: my_hsrp
         tags: "hsrp"
         description: "internal template for enabling hsrp feature"
@@ -42,7 +42,7 @@
 
           feature hsrp
 
-          ##
+  ##
   tags: sanity
   register: result
 

@@ -64,9 +64,9 @@
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create Resources
       cisco.dcnm.dcnm_resource_manager: &rm_merge
@@ -140,9 +140,9 @@
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ result.response }}'
 
-##############################################
-##             DELETE                       ##
-##############################################
+    ##############################################
+    ##             DELETE                       ##
+    ##############################################
 
     - name: Delete Resources
       cisco.dcnm.dcnm_resource_manager: *rm_delete
@@ -162,9 +162,9 @@
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ result.response }}'
 
-##############################################
-##          IDEMPOTENCE                     ##
-##############################################
+    ##############################################
+    ##          IDEMPOTENCE                     ##
+    ##############################################
 
     - name: Delete Resources - Idempotence
       cisco.dcnm.dcnm_resource_manager: *rm_delete
@@ -183,9 +183,9 @@
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ result.response }}'
 
-##############################################
-##        MISSING PARAMS IN DELETE          ##
-##############################################
+    ##############################################
+    ##        MISSING PARAMS IN DELETE          ##
+    ##############################################
 
     - name: Delete Resources - scope_type missing
       cisco.dcnm.dcnm_resource_manager:
@@ -201,9 +201,9 @@
         that:
           - 'result["msg"] == "Mandatory parameter ''scope_type'' missing"'
 
-##############################################
-##        MISSING PARAMS IN DELETE          ##
-##############################################
+    ##############################################
+    ##        MISSING PARAMS IN DELETE          ##
+    ##############################################
 
     - name: Delete Resources - pool_type missing
       cisco.dcnm.dcnm_resource_manager:
@@ -219,9 +219,9 @@
         that:
           - 'result["msg"] == "Mandatory parameter ''pool_type'' missing"'
 
-##############################################
-##        MISSING PARAMS IN DELETE          ##
-##############################################
+    ##############################################
+    ##        MISSING PARAMS IN DELETE          ##
+    ##############################################
 
     - name: Delete Resources - entity_name missing
       cisco.dcnm.dcnm_resource_manager:
@@ -239,9 +239,9 @@
         that:
           - 'result["msg"] == "Mandatory parameter ''entity_name'' missing"'
 
-##############################################
-##        MISSING PARAMS IN DELETE          ##
-##############################################
+    ##############################################
+    ##        MISSING PARAMS IN DELETE          ##
+    ##############################################
 
     - name: Delete Resources - pool_name missing
       cisco.dcnm.dcnm_resource_manager:
@@ -259,9 +259,9 @@
         that:
           - 'result["msg"] == "Mandatory parameter ''pool_name'' missing"'
 
-##############################################
-##        MISSING PARAMS IN DELETE          ##
-##############################################
+    ##############################################
+    ##        MISSING PARAMS IN DELETE          ##
+    ##############################################
 
     - name: Delete Resources - switch info missing
       cisco.dcnm.dcnm_resource_manager:

@@ -25,9 +25,9 @@
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
         test_data_interfaces:
@@ -46,9 +46,9 @@
         - replace
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
     - name: Load Interface Config File (merged)
       ansible.builtin.set_fact:
         dcnm_interface_merged_conf: "{{ lookup('file', test_data_interfaces.merged_conf_file) | from_yaml }}"
@@ -85,9 +85,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              REPLACE                     ##
-##############################################
+    ##############################################
+    ##              REPLACE                     ##
+    ##############################################
     - name: Load Replace Interface Config File
       ansible.builtin.set_fact:
         dcnm_interface_replace_conf: "{{ lookup('file', test_data_interfaces.replace_conf_file) | from_yaml }}"
@@ -143,9 +143,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
   always:
     - name: Put fabric to default state (cleanup)
       cisco.dcnm.dcnm_interface:

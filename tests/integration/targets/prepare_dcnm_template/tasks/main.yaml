@@ -47,9 +47,9 @@
 - name: Prepare DCNM templates and policies
   block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create templates to be used by policies below
       cisco.dcnm.dcnm_template:
@@ -90,8 +90,8 @@
                   snsr-grp 8 sample-interval 8000
       tags: sanity
 
-# Policy IT cases depend on telemetry feature being enabled on the switches. So create a policy for
-# deploying the telemetry feature on the switches before starting the tests
+    # Policy IT cases depend on telemetry feature being enabled on the switches. So create a policy for
+    # deploying the telemetry feature on the switches before starting the tests
 
     - name: Create template for telemetry feature
       cisco.dcnm.dcnm_template:
@@ -106,7 +106,7 @@
 
               feature telemetry
 
-              ##
+      ##
       register: result
       tags: sanity
 

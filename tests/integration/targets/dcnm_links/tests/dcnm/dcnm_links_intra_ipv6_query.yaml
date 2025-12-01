@@ -7,9 +7,9 @@
 
 - block:
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
 
     - name: Initial setup - Delete Links
       cisco.dcnm.dcnm_links: &links_delete
@@ -53,9 +53,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-###############################################
-###                MERGE                     ##
-###############################################
+    ###############################################
+    ###                MERGE                     ##
+    ###############################################
 
     - name: Create Links without including optional parameters
       cisco.dcnm.dcnm_links: &links_merge_no_opt
@@ -68,9 +68,9 @@
             src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch2 }}"             # Device on the Destination fabric
             template: int_intra_fabric_ipv6_link_local           # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+            #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+            #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+            #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
             profile:
               peer1_ipv6_addr: 2080:0201::01                     # IP address of the Source interface
@@ -84,9 +84,9 @@
             src_device: "{{ ansible_ipv6_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch2 }}"              # Device on the Destination fabric
             template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+          #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+          #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+          #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
           - dst_fabric: "{{ ansible_ipv6_fabric }}"               # Destination fabric
             src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
@@ -94,9 +94,9 @@
             src_device: "{{ ansible_ipv6_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch2 }}"              # Device on the Destination fabric
             template: int_intra_fabric_num_link                  # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+            #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+            #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+            #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
             profile:
               peer1_ipv6_addr: 2080:0202::01                     # IP address of the Source interface
@@ -120,9 +120,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-###############################################
-###             QUERY                        ##
-###############################################
+    ###############################################
+    ###             QUERY                        ##
+    ###############################################
 
     - name: Query Links - with Src Fabric
       cisco.dcnm.dcnm_links:
@@ -216,9 +216,9 @@
             src_device: "{{ ansible_ipv6_switch1 }}"             # optional, Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch2 }}"             # optional, Device on the Destination fabric
             template: int_intra_fabric_ipv6_link_local           # optional, template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+          #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+          #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+          #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
           - dst_fabric: "{{ ansible_ipv6_fabric }}"              # optional, Destination fabric
             src_interface: "{{ intf_1_2 }}"                      # optional, Interface on the Source fabric
@@ -226,9 +226,9 @@
             src_device: "{{ ansible_ipv6_switch1 }}"             # optional, Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch2 }}"             # optional, Device on the Destination fabric
             template: int_pre_provision_intra_fabric_link        # optional, template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+          #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+          #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+          #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
           - dst_fabric: "{{ ansible_ipv6_fabric }}"              # optional, Destination fabric
             src_interface: "{{ intf_1_3 }}"                      # optional, Interface on the Source fabric
@@ -236,18 +236,18 @@
             src_device: "{{ ansible_ipv6_switch1 }}"             # optional, Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch2 }}"             # optional, Device on the Destination fabric
             template: int_intra_fabric_num_link                  # optional, template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+      #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+      #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+      #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
       register: result
 
     - ansible.builtin.assert:
         that:
           '(result["response"] | length) >= 3'
 
-###############################################
-###             CLEANUP                      ##
-###############################################
+  ###############################################
+  ###             CLEANUP                      ##
+  ###############################################
 
   always:
 

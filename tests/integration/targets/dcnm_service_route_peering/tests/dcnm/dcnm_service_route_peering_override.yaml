@@ -20,9 +20,9 @@
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create different non-existing service route peerings including all objects
       cisco.dcnm.dcnm_service_route_peering: &dcnm_srp_all
@@ -271,9 +271,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##              OVERRIDDEN                  ##
-##############################################
+    ##############################################
+    ##              OVERRIDDEN                  ##
+    ##############################################
 
     - name: Override existing route peerings with new peerings
       cisco.dcnm.dcnm_service_route_peering:
@@ -351,9 +351,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##              OVERRIDDEN                  ##
-##############################################
+    ##############################################
+    ##              OVERRIDDEN                  ##
+    ##############################################
 
     - name: Create RP6 peering again
       cisco.dcnm.dcnm_service_route_peering:
@@ -404,9 +404,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##              OVERRIDDEN                  ##
-##############################################
+    ##############################################
+    ##              OVERRIDDEN                  ##
+    ##############################################
 
     - name: Override existing route peerings with an existing peering modified
       cisco.dcnm.dcnm_service_route_peering:
@@ -456,9 +456,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##              OVERRIDDEN                  ##
-##############################################
+    ##############################################
+    ##              OVERRIDDEN                  ##
+    ##############################################
 
     - name: Override existing route peerings with an existing peering unchanged
       cisco.dcnm.dcnm_service_route_peering:
@@ -509,9 +509,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##              OVERRIDDEN                  ##
-##############################################
+    ##############################################
+    ##              OVERRIDDEN                  ##
+    ##############################################
 
     - name: Override existing route peerings with no new peerings
       cisco.dcnm.dcnm_service_route_peering:
@@ -538,9 +538,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                CLEANUP                   ##
-##############################################
+  ##############################################
+  ##                CLEANUP                   ##
+  ##############################################
 
   always:
 

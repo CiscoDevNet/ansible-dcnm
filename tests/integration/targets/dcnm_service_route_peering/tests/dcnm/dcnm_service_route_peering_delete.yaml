@@ -20,9 +20,9 @@
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create different non-existing service route peerings including all objects
       cisco.dcnm.dcnm_service_route_peering:
@@ -271,9 +271,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                DELETE                    ##
-##############################################
+    ##############################################
+    ##                DELETE                    ##
+    ##############################################
 
     - name: Delete route peerings
       cisco.dcnm.dcnm_service_route_peering: &dncm_srp_delete_all
@@ -336,9 +336,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create different non-existing service route peerings including all objects
       cisco.dcnm.dcnm_service_route_peering:
@@ -484,9 +484,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                DELETE                    ##
-##############################################
+    ##############################################
+    ##                DELETE                    ##
+    ##############################################
 
     - name: Delete route peerings with node name - 1
       cisco.dcnm.dcnm_service_route_peering:

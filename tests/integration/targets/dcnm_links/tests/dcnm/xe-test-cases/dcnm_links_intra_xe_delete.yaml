@@ -7,18 +7,18 @@
 
 - block:
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
     - name: Initial setup - Delete Links
       cisco.dcnm.dcnm_links: &links_delete_simple
         state: deleted
 
     - name: Delete Links
       cisco.dcnm.dcnm_links: *links_delete_simple
-##############################################
-##           BASELINE DELETE               ##
-##############################################
+    ##############################################
+    ##           BASELINE DELETE               ##
+    ##############################################
 
     - name: XE DELETE - Baseline delete (ensure clean start)
       cisco.dcnm.dcnm_links: &links_delete
@@ -61,9 +61,9 @@
         that: "item['RETURN_CODE'] == 200"
         loop: '{{ result.response }}'
 
-##############################################
-##                MERGE                    ##
-##############################################
+    ##############################################
+    ##                MERGE                    ##
+    ##############################################
 
     - name: Create Links without including optional parameters
       cisco.dcnm.dcnm_links: &links_merge_no_opt
@@ -76,9 +76,9 @@
             src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
             template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+            #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+            #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+            #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
             profile:
               peer1_ipv4_addr: 192.168.2.1                       # IPV4 address of the Source interface
@@ -102,9 +102,9 @@
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ create_result.response }}'
 
-###############################################
-###              DELETE                      ##
-###############################################
+    ###############################################
+    ###              DELETE                      ##
+    ###############################################
 
     - name: Delete Links
       cisco.dcnm.dcnm_links: *links_delete
@@ -124,9 +124,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                IDEMPOTENCE               ##
-##############################################
+    ##############################################
+    ##                IDEMPOTENCE               ##
+    ##############################################
 
     - name: Delete Links - Idempotence
       cisco.dcnm.dcnm_links: *links_delete
@@ -146,9 +146,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##              CLEANUP                     ##
-##############################################
+  ##############################################
+  ##              CLEANUP                     ##
+  ##############################################
 
   always:
 

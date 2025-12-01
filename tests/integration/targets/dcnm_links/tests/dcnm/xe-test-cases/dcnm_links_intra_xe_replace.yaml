@@ -7,9 +7,9 @@
 
 - block:
 
-##############################################
-##           BASELINE DELETE               ##
-##############################################
+    ##############################################
+    ##           BASELINE DELETE               ##
+    ##############################################
 
     - name: XE REPLACE - Baseline delete
       cisco.dcnm.dcnm_links: &links_delete
@@ -54,9 +54,9 @@
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ result.response }}'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create Links
       cisco.dcnm.dcnm_links:
@@ -69,9 +69,9 @@
             src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
             template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+            #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+            #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+            #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
             profile:
               peer1_ipv4_addr: 192.169.2.1                       # IPV4 address of the Source interface
@@ -108,9 +108,9 @@
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ result.response }}'
 
-##############################################
-##              REPLACE                     ##
-##############################################
+    ##############################################
+    ##              REPLACE                     ##
+    ##############################################
 
     - name: Replace Links
       cisco.dcnm.dcnm_links: &links_replace
@@ -123,9 +123,9 @@
             src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
             template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+            #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+            #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+            #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
             profile:
               peer1_ipv4_addr: 192.170.2.1                       # IPV4 address of the Source interface
@@ -162,9 +162,9 @@
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ result.response }}'
 
-##############################################
-##                IDEMPOTENCE               ##
-##############################################
+    ##############################################
+    ##                IDEMPOTENCE               ##
+    ##############################################
 
     - name: Repalce Links - Idempotence
       cisco.dcnm.dcnm_links: *links_replace
@@ -186,9 +186,9 @@
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ result.response }}'
 
-###############################################
-###               CLEANUP                  ##
-###############################################
+  ###############################################
+  ###               CLEANUP                  ##
+  ###############################################
 
   always:
     - name: XE REPLACE - Cleanup delete link

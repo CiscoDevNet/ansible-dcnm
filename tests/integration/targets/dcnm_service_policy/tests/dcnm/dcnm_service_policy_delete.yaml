@@ -34,9 +34,9 @@
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy:
@@ -101,9 +101,9 @@
         - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
 
     - name: Delete service policies with Node Name and Policy Name
       cisco.dcnm.dcnm_service_policy: &dcnm_sp_del
@@ -145,9 +145,9 @@
         - '(result["diff"][0]["query"] | length) == 0'
         - '(result["diff"][0]["deploy"] | length) == 0'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy:
@@ -272,9 +272,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
 
     - name: Delete service policies with Node names
       cisco.dcnm.dcnm_service_policy:
@@ -300,9 +300,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy:
@@ -427,9 +427,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
 
     - name: Delete service policies with Node name and RP name
       cisco.dcnm.dcnm_service_policy:
@@ -458,9 +458,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy:
@@ -545,9 +545,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
 
     - name: Delete service policies without config
       cisco.dcnm.dcnm_service_policy:

@@ -6,9 +6,9 @@
   local_action: command rm -f dcnm_links.log
 
 - block:
-  ##############################################
-  ##        NEGATIVE MERGE (MISSING PARAMS)    ##
-  ##############################################
+    ##############################################
+    ##        NEGATIVE MERGE (MISSING PARAMS)    ##
+    ##############################################
 
     - name: Create Links with invalid template name
       cisco.dcnm.dcnm_links:

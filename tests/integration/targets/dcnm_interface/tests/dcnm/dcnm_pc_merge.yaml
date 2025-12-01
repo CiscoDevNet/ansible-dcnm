@@ -86,11 +86,11 @@
           - merge_idem_result.changed == false
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
     - name: Put fabric to default state (cleanup)

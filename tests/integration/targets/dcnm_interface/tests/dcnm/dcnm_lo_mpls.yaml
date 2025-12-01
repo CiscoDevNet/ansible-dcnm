@@ -124,7 +124,7 @@
           - 'result.response | length >= 0'  # Allow empty response for idempotence
         fail_msg: "Idempotence check for loopback101 failed - {{ result }}"
         success_msg: "Idempotence check for loopback101 succeeded"
-      # Don't loop over response items for idempotence check as they may be empty
+    # Don't loop over response items for idempotence check as they may be empty
 
     ##############################################
     ##                MERGE                     ##
@@ -180,7 +180,7 @@
           - 'result.response | length >= 0'  # Allow empty response for idempotence
         fail_msg: "Idempotence check for loopback201 failed - {{ result }}"
         success_msg: "Idempotence check for loopback201 succeeded"
-      # Don't loop over response items for idempotence check as they may be empty
+    # Don't loop over response items for idempotence check as they may be empty
 
     ##############################################
     ##             DELETE                       ##
@@ -230,11 +230,11 @@
           - 'result.response | length >= 0'  # Allow empty response for idempotence
         fail_msg: "Deletion idempotence check for loopback201 failed - {{ result }}"
         success_msg: "Deletion idempotence check for loopback201 succeeded"
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
-    ##############################################
-    ##             CLEANUP                      ##
-    ##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
   when: run_test
   always:
     - name: Put fabric to default state

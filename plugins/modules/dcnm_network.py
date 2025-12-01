@@ -405,10 +405,10 @@ EXAMPLES = """
             srvr_vrf: vrf_10
         attach:
           - ip_address: 192.168.1.224
-          # Replace the ports with new ports
-          # ports: [Ethernet1/13, Ethernet1/14]
+            # Replace the ports with new ports
+            # ports: [Ethernet1/13, Ethernet1/14]
             ports: [Ethernet1/16, Ethernet1/17]
-          # Delete this attachment
+        # Delete this attachment
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
         deploy: true
@@ -448,20 +448,20 @@ EXAMPLES = """
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
         deploy: true
-      # Delete this network
-      # - net_name: ansible-net12
-      #   vrf_name: Tenant-2
-      #   net_id: 7002
-      #   net_template: Default_Network_Universal
-      #   net_extension_template: Default_Network_Extension_Universal
-      #   vlan_id: 151
-      #   gw_ip_subnet: '192.168.40.1/24'
-      #   attach:
-      #   - ip_address: 192.168.1.224
-      #     ports: [Ethernet1/11, Ethernet1/12]
-      #   - ip_address: 192.168.1.225
-      #     ports: [Ethernet1/11, Ethernet1/12]
-      #   deploy: false
+# Delete this network
+# - net_name: ansible-net12
+#   vrf_name: Tenant-2
+#   net_id: 7002
+#   net_template: Default_Network_Universal
+#   net_extension_template: Default_Network_Extension_Universal
+#   vlan_id: 151
+#   gw_ip_subnet: '192.168.40.1/24'
+#   attach:
+#   - ip_address: 192.168.1.224
+#     ports: [Ethernet1/11, Ethernet1/12]
+#   - ip_address: 192.168.1.225
+#     ports: [Ethernet1/11, Ethernet1/12]
+#   deploy: false
 
 - name: Delete selected networks
   cisco.dcnm.dcnm_network:
@@ -677,16 +677,16 @@ class DcnmNetwork:
 
                                                     torconfig = tor_w["switch"] + "(" + ",".join(atch_tor_ports) + ")"
                                                     want.update({"torPorts": torconfig})
-                                                    # Update torports_configured to True. If there is no other config change for attach
-                                                    # We will still append this attach to attach_list as there is tor port change
+        # Update torports_configured to True. If there is no other config change for attach
+        # We will still append this attach to attach_list as there is tor port change
                                                     if sorted(atch_tor_ports) != sorted(h_tor_ports):
                                                         torports_configured = True
 
                                         if not torports_present:
                                             torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
                                             want.update({"torPorts": torconfig})
-                                            # Update torports_configured to True. If there is no other config change for attach
-                                            # We will still append this attach to attach_list as there is tor port change
+        # Update torports_configured to True. If there is no other config change for attach
+        # We will still append this attach to attach_list as there is tor port change
                                             torports_configured = True
 
                                     if have.get("torports"):

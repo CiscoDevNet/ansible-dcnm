@@ -34,9 +34,9 @@
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy:
@@ -157,9 +157,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##               OVERRRIDE                  ##
-##############################################
+    ##############################################
+    ##               OVERRRIDE                  ##
+    ##############################################
 
     - name: Override and delete all service policies without any new one
       cisco.dcnm.dcnm_service_policy: &dcnm_sp_create_all
@@ -182,9 +182,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy:
@@ -305,9 +305,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##               OVERRRIDE                  ##
-##############################################
+    ##############################################
+    ##               OVERRRIDE                  ##
+    ##############################################
 
     - name: Override all policies with a new one modifying existing one
       cisco.dcnm.dcnm_service_policy:
@@ -352,9 +352,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                CLEANUP                   ##
-##############################################
+  ##############################################
+  ##                CLEANUP                   ##
+  ##############################################
 
   always:
 

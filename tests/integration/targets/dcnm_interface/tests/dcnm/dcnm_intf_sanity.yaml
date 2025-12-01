@@ -107,9 +107,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              REPLACE                     ##
-##############################################
+    ##############################################
+    ##              REPLACE                     ##
+    ##############################################
 
     - name: Load Ethernet Replace Interface Config File
       ansible.builtin.set_fact:
@@ -155,11 +155,11 @@
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -182,9 +182,9 @@
   tags: sanity
   block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: SANITY- Create ethernet interfaces - 2
       cisco.dcnm.dcnm_interface: &eth_merge2
@@ -215,9 +215,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              REPLACE                     ##
-##############################################
+    ##############################################
+    ##              REPLACE                     ##
+    ##############################################
 
     - name: SANITY- Replace ethernet interfaces - 2
       cisco.dcnm.dcnm_interface: &eth_replace2
@@ -258,11 +258,11 @@
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -284,9 +284,9 @@
   tags: sanity
   block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load PC Interface Config File
       ansible.builtin.set_fact:
@@ -322,9 +322,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##                REPLACE                   ##
-##############################################
+    ##############################################
+    ##                REPLACE                   ##
+    ##############################################
 
     - name: Load PC Replace Interface Config File
       ansible.builtin.set_fact:
@@ -364,18 +364,18 @@
       cisco.dcnm.dcnm_interface: *pc_replace
       register: result
 
-    # possible bug
-    # - name: ASSERT - Check changed flag is false and return codes for idempotence
-    #   assert:
-    #     that:
-    #       - 'result.changed == false'
-    #       - 'result.response is defined'
-    #       - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+  # possible bug
+  # - name: ASSERT - Check changed flag is false and return codes for idempotence
+  #   assert:
+  #     that:
+  #       - 'result.changed == false'
+  #       - 'result.response is defined'
+  #       - 'result.response | length >= 0'  # Allow empty response for idempotence
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -397,9 +397,9 @@
   tags: sanity
   block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Sub Interface Config File
       ansible.builtin.set_fact:
@@ -435,9 +435,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##             REPLACE                      ##
-##############################################
+    ##############################################
+    ##             REPLACE                      ##
+    ##############################################
 
     - name: Load Sub Replace Interface Config File
       ansible.builtin.set_fact:
@@ -483,11 +483,11 @@
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -509,9 +509,9 @@
   tags: sanity
   block:
 
-##############################################
-##              MERGE                       ##
-##############################################
+    ##############################################
+    ##              MERGE                       ##
+    ##############################################
 
     - name: Load Multi Interface Config File
       ansible.builtin.set_fact:

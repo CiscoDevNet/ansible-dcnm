@@ -74,9 +74,9 @@
         - lo1_replace
       delegate_to: localhost
 
-##############################################
-##                REPLACE                   ##
-##############################################
+    ##############################################
+    ##                REPLACE                   ##
+    ##############################################
 
     # Note: Fabric loopback interfaces are created at fabric creation time
     # This test validates that we can modify them with the replace state
@@ -165,7 +165,7 @@
           - 'result.response | length >= 0'  # Allow empty response for idempotence
         fail_msg: "Idempotence check for loopback0 failed - {{ result }}"
         success_msg: "Idempotence check for loopback0 succeeded"
-      # Don't loop over response items for idempotence check as they may be empty
+    # Don't loop over response items for idempotence check as they may be empty
 
     - name: Replace fabric loopback interface (loopback1) - Idempotence
       cisco.dcnm.dcnm_interface: *lo_replace_lo1
@@ -179,7 +179,7 @@
           - 'result.response | length >= 0'  # Allow empty response for idempotence
         fail_msg: "Idempotence check for loopback1 failed - {{ result }}"
         success_msg: "Idempotence check for loopback1 succeeded"
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
   ##############################################
   ##             CLEANUP                      ##

@@ -20,9 +20,9 @@
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -51,9 +51,9 @@
         - misc_non_manageable
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
@@ -89,9 +89,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##                DELETE                    ##
-##############################################
+    ##############################################
+    ##                DELETE                    ##
+    ##############################################
 
     - name: Load Delete No Deploy Interface Config File
       ansible.builtin.set_fact:
@@ -112,9 +112,9 @@
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ result.response }}'
 
-##############################################
-##                DELETE                    ##
-##############################################
+    ##############################################
+    ##                DELETE                    ##
+    ##############################################
 
     - name: Load Delete Interface Config File
       ansible.builtin.set_fact:
@@ -136,9 +136,9 @@
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ result.response }}'
 
-##############################################
-##                DELETE                    ##
-##############################################
+    ##############################################
+    ##                DELETE                    ##
+    ##############################################
 
     - name: Delete interface again (already deployed) with deploy set to True
       cisco.dcnm.dcnm_interface:
@@ -154,11 +154,11 @@
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+          # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##                MERGE                     ##
-##############################################
+          ##############################################
+          ##                MERGE                     ##
+          ##############################################
 
           - name: Load Monitoring Mode Interface Config File
       ansible.builtin.set_fact:
@@ -180,9 +180,9 @@
     #       - '("No changes are allowed on the fabric" in result["msg"])'
     #       - '("{{ test_data_common.ext_fabric }}" in result["msg"])'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Non-Manageable Interface Config File
       ansible.builtin.set_fact:
@@ -198,15 +198,15 @@
         register: result
         ignore_errors: true
 
-    # - assert:
-    #     that:
-    #       - '("are not managable in Fabric" in result["msg"])'
-    #       - '("No changes are allowed on these switches" in result["msg"])'
-    #       - '("n9kv-test-sw2" in result["msg"])'
+  # - assert:
+  #     that:
+  #       - '("are not managable in Fabric" in result["msg"])'
+  #       - '("No changes are allowed on these switches" in result["msg"])'
+  #       - '("n9kv-test-sw2" in result["msg"])'
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 

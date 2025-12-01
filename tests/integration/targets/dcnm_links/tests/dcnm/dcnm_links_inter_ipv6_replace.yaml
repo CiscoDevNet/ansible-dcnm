@@ -7,9 +7,9 @@
 
 - block:
 
-##############################################
-##            BASELINE DELETE               ##
-##############################################
+    ##############################################
+    ##            BASELINE DELETE               ##
+    ##############################################
 
     - name: Baseline - Delete any pre-existing IPv6 inter-fabric links
       cisco.dcnm.dcnm_links: &links_delete
@@ -39,9 +39,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ baseline_delete_result.response }}'
 
-##############################################
-##        BASIC MERGE (CREATION)            ##
-##############################################
+    ##############################################
+    ##        BASIC MERGE (CREATION)            ##
+    ##############################################
 
     - name: Merge - Create single link (minimal params)
       cisco.dcnm.dcnm_links: &links_merge_basic
@@ -61,7 +61,7 @@
               dst_asn: "{{ ansible_unnum_asn }}"
               mtu: 9216                                          #
               auto_deploy: false                                 # optional, default is false
-                                                                 # Flag that controls auto generation of neighbor VRF Lite configuration
+              # Flag that controls auto generation of neighbor VRF Lite configuration
               peer1_description: "Description of source"         # optional, default is ""
               peer2_description: "Description of dest"           # optional, default is ""
               peer1_cmds:                                        # Freeform config for source interface
@@ -87,9 +87,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ merge_basic_result.response }}'
 
-##############################################
-##               MERGE                      ##
-##############################################
+    ##############################################
+    ##               MERGE                      ##
+    ##############################################
 
     - name: Merge - Create multisite underlay + overlay links (minimal)
       cisco.dcnm.dcnm_links: &links_merge_ms
@@ -115,8 +115,8 @@
               ebgp_password: 9BFE3270E19CA112                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
               inherit_from_msd: true                             # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco ]
+              # is false. Default is 3
+              # choose from [3 - 3DES, 7 - Cisco ]
               peer1_description: "Description of source"         # optional, default is ""
               peer2_description: "Description of dest"           # optional, default is ""
               peer1_cmds:                                        # Freeform config for source interface
@@ -130,8 +130,8 @@
             src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
             template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
-                                                                 #   [ ext_fabric_setup, ext_multisite_underlay_setup,
-                                                                 #     ext_evpn_multisite_overlay_setup ]
+            #   [ ext_fabric_setup, ext_multisite_underlay_setup,
+            #     ext_evpn_multisite_overlay_setup ]
             profile:
               ipv4_addr: 193.168.3.1                             # IP address of interface in src fabric
               neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
@@ -143,8 +143,8 @@
               ebgp_password: 9BFE3270E19CA112                    # optional, required only if ebgp_password_enable flag is true and inherit_from_msd is false
               inherit_from_msd: false                            # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true and inherit_from_msd
-                                                                 # is false. Default is 3
-                                                                 # choose from [3 - 3DES, 7 - Cisco ]
+      # is false. Default is 3
+      # choose from [3 - 3DES, 7 - Cisco ]
       register: merge_ms_result
       when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
@@ -167,9 +167,9 @@
       loop: '{{ merge_ms_result.response }}'
       when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-##############################################
-##           REPLACE                       ##
-##############################################
+    ##############################################
+    ##           REPLACE                       ##
+    ##############################################
 
     - name: Replace - Replace single link with new params
       cisco.dcnm.dcnm_links: &links_replace_basic
@@ -214,9 +214,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ replace_basic_result.response }}'
 
-##############################################
-##                 IDEMPOTENCE              ##
-##############################################
+    ##############################################
+    ##                 IDEMPOTENCE              ##
+    ##############################################
 
     - name: Replace - Idempotence (basic link)
       cisco.dcnm.dcnm_links: *links_replace_basic
@@ -239,9 +239,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ replace_basic_idem.response }}'
 
-##############################################
-##                 REPLACE                  ##
-##############################################
+    ##############################################
+    ##                 REPLACE                  ##
+    ##############################################
 
     - name: Replace - Multisite links with new params
       cisco.dcnm.dcnm_links: &links_replace_ms
@@ -308,9 +308,9 @@
       loop: '{{ replace_ms_result.response }}'
       when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-##############################################
-## MULTISITE REPLACE - IDEMPOTENCE          ##
-##############################################
+    ##############################################
+    ## MULTISITE REPLACE - IDEMPOTENCE          ##
+    ##############################################
 
     - name: Replace - Multisite idempotence
       cisco.dcnm.dcnm_links: *links_replace_ms
@@ -336,9 +336,9 @@
       loop: '{{ replace_ms_idem.response }}'
       when: (ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-##############################################
-##                CLEANUP                  ##
-##############################################
+  ##############################################
+  ##                CLEANUP                  ##
+  ##############################################
 
   always:
     - name: Cleanup - Delete all created links

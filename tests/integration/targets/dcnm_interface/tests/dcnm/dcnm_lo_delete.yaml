@@ -70,9 +70,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##             DELETE                       ##
-##############################################
+    ##############################################
+    ##             DELETE                       ##
+    ##############################################
 
     - name: Delete loopback interfaces
       cisco.dcnm.dcnm_interface: &lo_del

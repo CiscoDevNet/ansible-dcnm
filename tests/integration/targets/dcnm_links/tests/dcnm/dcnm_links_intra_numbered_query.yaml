@@ -7,9 +7,9 @@
 
 - block:
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
 
     - name: Initial setup - Delete Links
       cisco.dcnm.dcnm_links: &links_delete
@@ -53,9 +53,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-###############################################
-###                MERGE                     ##
-###############################################
+    ###############################################
+    ###                MERGE                     ##
+    ###############################################
 
     - name: Create Links without including optional parameters
       cisco.dcnm.dcnm_links:
@@ -68,9 +68,9 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
             template: int_intra_fabric_num_link                  # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+            #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+            #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+            #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
             profile:
               peer1_ipv4_addr: 192.168.1.1                       # IP address of the Source interface
@@ -84,9 +84,9 @@
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
             template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+      #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+      #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+      #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
       register: result
 
     - ansible.builtin.assert:
@@ -103,9 +103,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-###############################################
-###             QUERY                        ##
-###############################################
+    ###############################################
+    ###             QUERY                        ##
+    ###############################################
 
     - name: Query Links - with Src Fabric
       cisco.dcnm.dcnm_links:
@@ -198,9 +198,9 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # optional, Device on the Destination fabric
             template: int_intra_fabric_num_link                  # optional, template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+          #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+          #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+          #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
           - dst_fabric: "{{ ansible_num_fabric }}"               # optional, Destination fabric
             src_interface: "{{ intf_1_2 }}"                      # optional, Interface on the Source fabric
@@ -208,18 +208,18 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # optional, Device on the Destination fabric
             template: int_pre_provision_intra_fabric_link        # optional, template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+      #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+      #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+      #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
       register: result
 
     - ansible.builtin.assert:
         that:
           '(result["response"] | length) >= 2'
 
-###############################################
-###             CLEANUP                      ##
-###############################################
+  ###############################################
+  ###             CLEANUP                      ##
+  ###############################################
 
   always:
 

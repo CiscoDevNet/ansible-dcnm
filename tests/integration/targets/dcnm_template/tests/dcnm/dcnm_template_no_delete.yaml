@@ -17,9 +17,9 @@
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create template_101
       cisco.dcnm.dcnm_template:
@@ -58,9 +58,9 @@
           - '"Template Created" in item["DATA"]["status"]'
         loop: '{{ create_result.response }}'
 
-##############################################
-##           DELETE (IN-USE)                ##
-##############################################
+    ##############################################
+    ##           DELETE (IN-USE)                ##
+    ##############################################
 
     - name: Attempt delete of in-use templates plus created one
       cisco.dcnm.dcnm_template:
@@ -81,9 +81,9 @@
           - '"template_inuse_1" in delete_inuse_result["template-policy-map"].keys()'
           - '"template_inuse_2" in delete_inuse_result["template-policy-map"].keys()'
 
-##############################################
-##             DELETE (NON-EXISTENT)        ##
-##############################################
+    ##############################################
+    ##             DELETE (NON-EXISTENT)        ##
+    ##############################################
 
     - name: Delete non-existent template
       cisco.dcnm.dcnm_template:

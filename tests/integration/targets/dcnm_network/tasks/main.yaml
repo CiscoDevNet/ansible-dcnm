@@ -7,7 +7,7 @@
       # ----------------------------------
       vrf_conf_template: "dcnm_network_setup_vrf_conf.j2"
       vrf_conf_file: "{{ role_path }}/files/dcnm_network_setup_vrf_conf.yaml"
-      # ----------------------------------
+  # ----------------------------------
   delegate_to: localhost
   tags: always
 

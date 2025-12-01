@@ -127,9 +127,9 @@
   tags: sanity test
   block:
 
-##############################################
-##           MERGE VRFs                     ##
-##############################################
+    ##############################################
+    ##           MERGE VRFs                     ##
+    ##############################################
 
     - name: Initialize the setup - Create all VRFs
       cisco.dcnm.dcnm_vrf:
@@ -200,9 +200,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##           MERGE SERVICE NODES            ##
-##############################################
+    ##############################################
+    ##           MERGE SERVICE NODES            ##
+    ##############################################
 
     - name: Initialize the setup - Create all Service Nodes
       cisco.dcnm.dcnm_service_node:

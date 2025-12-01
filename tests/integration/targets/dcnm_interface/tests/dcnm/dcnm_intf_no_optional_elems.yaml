@@ -77,9 +77,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
 
     - name: Delete all interfaces without optional elements
       cisco.dcnm.dcnm_interface:

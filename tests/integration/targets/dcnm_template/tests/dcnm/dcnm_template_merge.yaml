@@ -19,9 +19,9 @@
     loop: '{{ result.response }}'
 
 - block:
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create templates
       cisco.dcnm.dcnm_template: &create_templates
@@ -146,11 +146,11 @@
       register: result
       ignore_errors: true
 
-#   - assert:
-#       that:
-#         - 'result.changed == false'
-#         - 'result.msg["RETURN_CODE"] == 500'
-#         - '"Template is already in use" in result.msg["DATA"]'
+    #   - assert:
+    #       that:
+    #         - 'result.changed == false'
+    #         - 'result.msg["RETURN_CODE"] == 500'
+    #         - '"Template is already in use" in result.msg["DATA"]'
 
     - name: Create template 105 without mentioning state
       cisco.dcnm.dcnm_template:

@@ -23,7 +23,7 @@
       # ----------------------------------
       net1_changed_conf_template: "self-contained-tests/net1_changed_conf.j2"
       net1_changed_conf_file: "{{ role_path }}/files/self_contained_replaced_all_net1_changed_conf.yaml"
-      # ----------------------------------
+# ----------------------------------
 
 - name: REPLACED_ALL - Create Network Config File using J2 Template
   ansible.builtin.template:

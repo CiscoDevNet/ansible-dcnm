@@ -20,9 +20,9 @@
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -39,9 +39,9 @@
         - multi_switches
       delegate_to: localhost
 
-##############################################
-##              MERGE                       ##
-##############################################
+    ##############################################
+    ##              MERGE                       ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
@@ -87,11 +87,11 @@
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 

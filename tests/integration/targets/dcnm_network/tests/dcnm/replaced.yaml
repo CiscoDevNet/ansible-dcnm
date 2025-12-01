@@ -32,7 +32,7 @@
       # ----------------------------------
       l2_l3_net_changed_conf_template: "replaced/dcnm_network_replaced_l2_l3_net_changed_conf.j2"
       l2_l3_net_changed_conf_file: "{{ role_path }}/files/dcnm_network_replaced_l2_l3_net_changed_conf.yaml"
-      # ----------------------------------
+  # ----------------------------------
   delegate_to: localhost
   tags: replaced
 

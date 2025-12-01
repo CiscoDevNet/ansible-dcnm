@@ -20,9 +20,9 @@
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -42,9 +42,9 @@
         - override
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Merge Interface Config File
       ansible.builtin.set_fact:
@@ -82,9 +82,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##           OVERRIDE                       ##
-##############################################
+    ##############################################
+    ##           OVERRIDE                       ##
+    ##############################################
 
     - name: Load Override Interface Config File
       ansible.builtin.set_fact:
@@ -140,9 +140,9 @@
         success_msg: "Idempotence check for loopback interface override succeeded"
       loop: "{{ override_idem_result.response }}"
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 

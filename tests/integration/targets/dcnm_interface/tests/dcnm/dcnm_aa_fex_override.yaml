@@ -20,9 +20,9 @@
 
 - block:
 
-  ##############################################
-  ##             SETUP VARS                   ##
-  ##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -111,46 +111,46 @@
       cisco.dcnm.dcnm_interface: *fex_override
       register: result
 
-    # - name: ASSERT - Check changed flag is false and return codes for idempotence (override)
-    #   assert:
-    #     that:
-    #       - 'result.changed == false'
-    #       - 'result.response is defined'
-    #       - 'result.response | length >= 0'
+  # - name: ASSERT - Check changed flag is false and return codes for idempotence (override)
+  #   assert:
+  #     that:
+  #       - 'result.changed == false'
+  #       - 'result.response is defined'
+  #       - 'result.response | length >= 0'
 
-    ##############################################
-    ##            OVERRIDE MODIFY               ##
-    ##############################################
+  ##############################################
+  ##            OVERRIDE MODIFY               ##
+  ##############################################
 
-    # this fails due to an internal server error, checking the issue
+  # this fails due to an internal server error, checking the issue
 
-    # - name: Load Override Modify Interface Config File
-    #   ansible.builtin.set_fact:
-    #     dcnm_interface_override_modify_conf: "{{ lookup('file', test_data_interfaces.override_modify_conf_file) | from_yaml }}"
-    #   delegate_to: localhost
+  # - name: Load Override Modify Interface Config File
+  #   ansible.builtin.set_fact:
+  #     dcnm_interface_override_modify_conf: "{{ lookup('file', test_data_interfaces.override_modify_conf_file) | from_yaml }}"
+  #   delegate_to: localhost
 
-    # - name: Override existing AA FEX interface with a few modifications
-    #   cisco.dcnm.dcnm_interface:
-    #     check_deploy: "{{ test_data_common.check_deploy | bool }}"
-    #     fabric: "{{ test_data_common.fabric }}"
-    #     state: overridden  # only choose form [merged, replaced, deleted, overridden, query]
-    #     config: "{{ dcnm_interface_override_modify_conf }}"
-    #   register: result
+  # - name: Override existing AA FEX interface with a few modifications
+  #   cisco.dcnm.dcnm_interface:
+  #     check_deploy: "{{ test_data_common.check_deploy | bool }}"
+  #     fabric: "{{ test_data_common.fabric }}"
+  #     state: overridden  # only choose form [merged, replaced, deleted, overridden, query]
+  #     config: "{{ dcnm_interface_override_modify_conf }}"
+  #   register: result
 
-    # - name: QUERY - Get AA FEX interface state in NDFC (override modify)
-    #   cisco.dcnm.dcnm_interface:
-    #     state: query
-    #     fabric: "{{ test_data_common.fabric }}"
-    #     config: "{{ dcnm_interface_override_modify_conf }}"
-    #   register: verify_result
+  # - name: QUERY - Get AA FEX interface state in NDFC (override modify)
+  #   cisco.dcnm.dcnm_interface:
+  #     state: query
+  #     fabric: "{{ test_data_common.fabric }}"
+  #     config: "{{ dcnm_interface_override_modify_conf }}"
+  #   register: verify_result
 
-    # - name: VALIDITY CHECK - Verify AA FEX interface state in NDFC (override modify)
-    #   cisco.dcnm.tests.integration.ndfc_interface_validate:
-    #     config_path: "{{ test_data_interfaces.override_modify_conf_file }}"
-    #     ndfc_data: "{{ verify_result }}"
-    #     test_data: "{{ test_data_common }}"
-    #     switch_ip_sn_mapping: "{{ test_data_common.sw_sn | default(global_sw_sn_mapping | default({})) }}"
-    #   delegate_to: localhost
+  # - name: VALIDITY CHECK - Verify AA FEX interface state in NDFC (override modify)
+  #   cisco.dcnm.tests.integration.ndfc_interface_validate:
+  #     config_path: "{{ test_data_interfaces.override_modify_conf_file }}"
+  #     ndfc_data: "{{ verify_result }}"
+  #     test_data: "{{ test_data_common }}"
+  #     switch_ip_sn_mapping: "{{ test_data_common.sw_sn | default(global_sw_sn_mapping | default({})) }}"
+  #   delegate_to: localhost
 
   ##############################################
   ##             CLEANUP                      ##

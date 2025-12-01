@@ -11,9 +11,9 @@
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create SVI interfaces w/o admin state
       cisco.dcnm.dcnm_interface:
@@ -51,7 +51,7 @@
         deploy: true                                      # choose from [true, false]
         profile:
           admin_state: true                               # Flag to enable/disable Vlan interface
-          # mode : vlan                                   # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+      # mode : vlan                                   # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
       ignore_errors: true
       register: result
 

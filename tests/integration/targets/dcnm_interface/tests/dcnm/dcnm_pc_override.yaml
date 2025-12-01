@@ -134,9 +134,9 @@
         success_msg: "Idempotence check for port channel interface override succeeded"
       loop: '{{ result.response }}'
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
     - name: Put fabric to default state

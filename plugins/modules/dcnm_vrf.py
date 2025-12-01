@@ -508,14 +508,14 @@ EXAMPLES = """
       # - ip_address: 192.168.1.225
       # Create the following attachment
       - ip_address: 192.168.1.226
-    # Dont touch this if its present on DCNM
-    # - vrf_name: ansible-vrf-r2
-    #   vrf_id: 9008012
-    #   vrf_template: Default_VRF_Universal
-    #   vrf_extension_template: Default_VRF_Extension_Universal
-    #   attach:
-    #   - ip_address: 192.168.1.224
-    #   - ip_address: 192.168.1.225
+      # Dont touch this if its present on DCNM
+      # - vrf_name: ansible-vrf-r2
+      #   vrf_id: 9008012
+      #   vrf_template: Default_VRF_Universal
+      #   vrf_extension_template: Default_VRF_Extension_Universal
+      #   attach:
+      #   - ip_address: 192.168.1.224
+      #   - ip_address: 192.168.1.225
 
 # The two VRFs below will be overridden in the target fabric.
 - name: Override vrfs
@@ -535,16 +535,16 @@ EXAMPLES = """
       # - ip_address: 192.168.1.225
       # Create the following attachment
       - ip_address: 192.168.1.226
-    # Delete this vrf
-    # - vrf_name: ansible-vrf-r2
-    #   vrf_id: 9008012
-    #   vrf_template: Default_VRF_Universal
-    #   vrf_extension_template: Default_VRF_Extension_Universal
-    #   vlan_id: 2000
-    #   service_vrf_template: null
-    #   attach:
-    #   - ip_address: 192.168.1.224
-    #   - ip_address: 192.168.1.225
+      # Delete this vrf
+      # - vrf_name: ansible-vrf-r2
+      #   vrf_id: 9008012
+      #   vrf_template: Default_VRF_Universal
+      #   vrf_extension_template: Default_VRF_Extension_Universal
+      #   vlan_id: 2000
+      #   service_vrf_template: null
+      #   attach:
+      #   - ip_address: 192.168.1.224
+      #   - ip_address: 192.168.1.225
 
 - name: Delete selected vrfs
   cisco.dcnm.dcnm_vrf:

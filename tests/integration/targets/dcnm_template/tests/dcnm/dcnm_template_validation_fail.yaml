@@ -24,9 +24,9 @@
 
 - block:
 
-##############################################
-##           VALIDATION FAILURE TEST        ##
-##############################################
+    ##############################################
+    ##           VALIDATION FAILURE TEST        ##
+    ##############################################
 
     - name: Attempt to create invalid template
       cisco.dcnm.dcnm_template:

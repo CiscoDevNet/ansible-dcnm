@@ -4,7 +4,7 @@
 
 - name: SANITY- Remove local log file
   local_action: command rm -f sp.log
-  # tags: sanity
+# tags: sanity
 
 - name: SANITY- Delete service policies
   cisco.dcnm.dcnm_service_policy: &dcnm_sp_del_all
@@ -27,19 +27,19 @@
       - name: service_policy_5                            # mandatory
         node_name: "{{ ansible_snode_2 }}"                # mandatory
   register: result
-  # tags: sanity
+# tags: sanity
 
 - assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
-  # tags: sanity
+# tags: sanity
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: SANITY- Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy: &dcnm_sp_create_all
@@ -191,9 +191,9 @@
           - '(result["diff"][0]["deploy"] | length) == 0'
           - '(result.response | length) == 5'
 
-##############################################
-##               OVERRRIDE                   ##
-##############################################
+    ##############################################
+    ##               OVERRRIDE                   ##
+    ##############################################
 
     - name: SANITY- Override and delete all service policies without any new one
       cisco.dcnm.dcnm_service_policy:
@@ -216,9 +216,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: SANITY- Create service policy including all optional objects
       cisco.dcnm.dcnm_service_policy:
@@ -280,9 +280,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##               REPLACE                     ##
-##############################################
+    ##############################################
+    ##               REPLACE                     ##
+    ##############################################
 
     - name: SANITY- Replace some of the objects in already created policy
       cisco.dcnm.dcnm_service_policy: &dcnm_sp_replace_all
@@ -356,9 +356,9 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-##############################################
-##                CLEANUP                   ##
-##############################################
+  ##############################################
+  ##                CLEANUP                   ##
+  ##############################################
 
   always:
 

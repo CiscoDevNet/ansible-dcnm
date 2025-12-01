@@ -2,9 +2,9 @@
 - name: MAIN - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data_setup:
-      # ----------------------------------
-      # No setup templates needed for VPC pair tests
-      # ----------------------------------
+  # ----------------------------------
+  # No setup templates needed for VPC pair tests
+  # ----------------------------------
   delegate_to: localhost
   tags: always
 

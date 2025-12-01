@@ -58,9 +58,9 @@
 - name: Create and deploy templates
   block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create templates
       cisco.dcnm.dcnm_template: &temp_merge
@@ -198,7 +198,7 @@
               router ospf $$OSPF_TAG$$
               router-id $$LOOPBACK_IP$$
 
-              ##
+      ##
       register: result
       tags: sanity
     - name: Assert
@@ -218,8 +218,8 @@
       loop: '{{ result.response }}'
       tags: sanity
 
-# Policy IT cases depend on telemetry feature being enabled on the switches. So create a policy for
-# deploying the telemetry feature on the switches before starting the tests
+    # Policy IT cases depend on telemetry feature being enabled on the switches. So create a policy for
+    # deploying the telemetry feature on the switches before starting the tests
 
     - name: Create template for telemetry feature
       cisco.dcnm.dcnm_template:
@@ -234,7 +234,7 @@
 
               feature telemetry
 
-              ##
+      ##
       register: result
       tags: sanity
     - name: Assert
@@ -254,7 +254,7 @@
       loop: '{{ result.response }}'
       tags: sanity
 
-# Create the policy to deploy telemetry feature on the switches
+    # Create the policy to deploy telemetry feature on the switches
     - name: Create telemetry policy
       cisco.dcnm.dcnm_policy:
         fabric: "{{ ansible_it_fabric }}"

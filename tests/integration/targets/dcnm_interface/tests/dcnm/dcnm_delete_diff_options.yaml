@@ -253,9 +253,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              DELETE 3                    ##
-##############################################
+    ##############################################
+    ##              DELETE 3                    ##
+    ##############################################
 
     - name: Load Interface Config File - Delete 3
       ansible.builtin.set_fact:

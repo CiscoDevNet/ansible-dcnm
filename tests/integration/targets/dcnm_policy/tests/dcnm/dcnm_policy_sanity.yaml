@@ -32,9 +32,9 @@
 - tags: sanity
   block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: SANITY- Create different non-existing policies
       cisco.dcnm.dcnm_policy: &dcnm_pol
@@ -112,9 +112,9 @@
       ansible.builtin.set_fact:
         list_len: "{{ modify_policy_list | length }}"
 
-##############################################
-##                QUERY                     ##
-##############################################
+    ##############################################
+    ##                QUERY                     ##
+    ##############################################
     - name: SANITY- Query all policies from the specified switches
       cisco.dcnm.dcnm_policy:
         fabric: "{{ ansible_it_fabric }}"
@@ -158,9 +158,9 @@
         - '(result["diff"][0]["deploy"] | length) == 0'
         - '(result["response"] | length) == 5'
 
-##############################################
-##               MODIFY                     ##
-##############################################
+    ##############################################
+    ##               MODIFY                     ##
+    ##############################################
 
     - name: SANITY- Modify existing policy using template name - should create the policy
       cisco.dcnm.dcnm_policy:
@@ -231,9 +231,9 @@
       loop_control:
       index_var: my_idx
 
-##############################################
-##                CLEANUP                   ##
-##############################################
+  ##############################################
+  ##                CLEANUP                   ##
+  ##############################################
 
   always:
 

@@ -28,7 +28,7 @@
       # TC3 - REPLACED - Update Network using replace - Delete Attachments
       replaced_conf_template: "sanity/dcnm_network_sanity_replaced_conf.j2"
       replaced_conf_file: "{{ role_path }}/files/dcnm_network_sanity_replaced_conf.yaml"
-      # ----------------------------------
+  # ----------------------------------
 
   delegate_to: localhost
   tags: sanity

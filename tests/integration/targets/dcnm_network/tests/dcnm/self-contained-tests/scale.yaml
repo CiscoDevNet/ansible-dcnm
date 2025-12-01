@@ -20,7 +20,7 @@
       # ----------------------------------
       scale_conf_template: "self-contained-tests/scale_conf.j2"
       scale_conf_file: "{{ role_path }}/files/self_contained_scale_conf.yaml"
-      # ----------------------------------
+# ----------------------------------
 
 
 - name: SCALED_ALL - Create Network Config File using J2 Template

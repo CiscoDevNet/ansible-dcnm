@@ -20,9 +20,9 @@
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create Intertenant Firewall SRP with Static Peering
       cisco.dcnm.dcnm_service_route_peering:
@@ -83,9 +83,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                CONVERT                   ##
-##############################################
+    ##############################################
+    ##                CONVERT                   ##
+    ##############################################
 
     - name: Convert Intertenant Firewall SRP with Static Peering to eBGP peering
       cisco.dcnm.dcnm_service_route_peering:
@@ -156,9 +156,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                CONVERT                   ##
-##############################################
+    ##############################################
+    ##                CONVERT                   ##
+    ##############################################
 
     - name: Convert Intertenant Firewall SRP with eBGP Peering back to Static Peering
       cisco.dcnm.dcnm_service_route_peering:
@@ -219,9 +219,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                CLEANUP                   ##
-##############################################
+  ##############################################
+  ##                CLEANUP                   ##
+  ##############################################
 
   always:
 

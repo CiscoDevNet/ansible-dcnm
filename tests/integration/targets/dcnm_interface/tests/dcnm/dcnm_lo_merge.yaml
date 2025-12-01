@@ -95,11 +95,11 @@
           - merge_idem_result.changed == false
           - merge_idem_result.response is defined
           - merge_idem_result.response | length >= 0  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 

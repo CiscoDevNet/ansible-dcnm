@@ -25,7 +25,7 @@
       # TC5 - L2only and L3 network with dhcp, arp options
       l2_l3_net_conf_template: "deleted/dcnm_network_deleted_l2_l3_net_conf.j2"
       l2_l3_net_conf_file: "{{ role_path }}/files/dcnm_network_deleted_l2_l3_net_conf.yaml"
-      # ----------------------------------
+  # ----------------------------------
 
   delegate_to: localhost
   tags: query

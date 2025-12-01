@@ -20,9 +20,9 @@
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -48,9 +48,9 @@
         - deploy_delete2
       delegate_to: localhost
 
-##############################################
-##                MERGE 1                   ##
-##############################################
+    ##############################################
+    ##                MERGE 1                   ##
+    ##############################################
 
     - name: Load Interface Config File - Deploy Merge 1
       ansible.builtin.set_fact:
@@ -79,9 +79,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              DELETE 1                    ##
-##############################################
+    ##############################################
+    ##              DELETE 1                    ##
+    ##############################################
 
     - name: Delete interfaces with global deploy as false
       cisco.dcnm.dcnm_interface:
@@ -103,9 +103,9 @@
         that:
           - 'verify_result.response | length == 0'
 
-##############################################
-##              DELETE 2                    ##
-##############################################
+    ##############################################
+    ##              DELETE 2                    ##
+    ##############################################
 
     - name: Delete interfaces again, global deploy as true
       cisco.dcnm.dcnm_interface:
@@ -127,9 +127,9 @@
         that:
           - 'verify_result.response | length == 0'
 
-##############################################
-##              DELETE 3                    ##
-##############################################
+    ##############################################
+    ##              DELETE 3                    ##
+    ##############################################
 
     - name: Delete interfaces - Idempotence
       cisco.dcnm.dcnm_interface:
@@ -146,9 +146,9 @@
           - 'result.response is defined'
           - 'result.response | length >= 0'
 
-##############################################
-##                MERGE 2                   ##
-##############################################
+    ##############################################
+    ##                MERGE 2                   ##
+    ##############################################
 
     - name: Load Interface Config File - Deploy Merge 2
       ansible.builtin.set_fact:
@@ -177,9 +177,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              DELETE 4                    ##
-##############################################
+    ##############################################
+    ##              DELETE 4                    ##
+    ##############################################
 
     - name: Load Interface Config File - Deploy Delete 1
       ansible.builtin.set_fact:
@@ -207,9 +207,9 @@
         that:
           - 'verify_result.response | length == 0'
 
-##############################################
-##              DELETE 5                    ##
-##############################################
+    ##############################################
+    ##              DELETE 5                    ##
+    ##############################################
 
     - name: Load Interface Config File - Deploy Delete 2
       ansible.builtin.set_fact:
@@ -237,9 +237,9 @@
         that:
           - 'verify_result.response | length == 0'
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
     - name: Put fabric to default state

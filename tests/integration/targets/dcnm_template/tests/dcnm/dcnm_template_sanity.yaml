@@ -122,9 +122,9 @@
           - '(sanity_create_idem.diff[0].deleted | length) == 0'
           - '(sanity_create_idem.diff[0].query | length) == 0'
 
-##############################################
-##            MODIFY PROPERTIES             ##
-##############################################
+    ##############################################
+    ##            MODIFY PROPERTIES             ##
+    ##############################################
 
     - name: SANITY - Modify templates
       cisco.dcnm.dcnm_template: &sanity_modify_set
@@ -223,9 +223,9 @@
           - '(sanity_modify_idem.diff[0].deleted | length) == 0'
           - '(sanity_modify_idem.diff[0].query | length) == 0'
 
-##############################################
-##                CLEANUP                   ##
-##############################################
+    ##############################################
+    ##                CLEANUP                   ##
+    ##############################################
 
     - name: SANITY - Delete templates including in-use
       cisco.dcnm.dcnm_template:
@@ -236,9 +236,9 @@
           - name: template_103
           - name: template_104
 
-##############################################
-##               NO DELETE                  ##
-##############################################
+    ##############################################
+    ##               NO DELETE                  ##
+    ##############################################
 
     - name: SANITY- Create a template
       cisco.dcnm.dcnm_template: &temp_merge2
@@ -310,9 +310,9 @@
           - 'item["RETURN_CODE"] == 200'
         loop: '{{ delete_missing_result.response }}'
 
-##############################################
-##                QUERY INUSE               ##
-##############################################
+    ##############################################
+    ##                QUERY INUSE               ##
+    ##############################################
 
     - name: SANITY - Query in-use template only
       cisco.dcnm.dcnm_template:
@@ -334,9 +334,9 @@
           - '(query_inuse_result.diff[0].query | length) == 1'
           - '"template_inuse_1" in query_inuse_result["template-policy-map"].keys()'
 
-##############################################
-##          TEMPLATE VALIDATION FAIL        ##
-##############################################
+    ##############################################
+    ##          TEMPLATE VALIDATION FAIL        ##
+    ##############################################
 
     - name: SANITY - Attempt invalid template creation
       cisco.dcnm.dcnm_template:
@@ -381,9 +381,9 @@
         that:
           - 'error_exists == true'
 
-##############################################
-##             WRONG STATE TEST             ##
-##############################################
+    ##############################################
+    ##             WRONG STATE TEST             ##
+    ##############################################
 
     - name: SANITY - Wrong state invocation
       cisco.dcnm.dcnm_template:
@@ -414,9 +414,9 @@
           - 'wrong_state_result.changed == false'
           - 'wrong_state_result.msg == "value of state must be one of: merged, deleted, query, got: replaced"'
 
-##############################################
-##                DELETE ALL                ##
-##############################################
+    ##############################################
+    ##                DELETE ALL                ##
+    ##############################################
 
     - name: SANITY - Delete all templates
       cisco.dcnm.dcnm_template:

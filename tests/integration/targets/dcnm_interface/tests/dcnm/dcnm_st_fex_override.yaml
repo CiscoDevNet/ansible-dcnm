@@ -100,9 +100,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##           OVERRIDE                       ##
-##############################################
+    ##############################################
+    ##           OVERRIDE                       ##
+    ##############################################
 
     - name: Load Override Interface Config File
       ansible.builtin.set_fact:
@@ -152,7 +152,7 @@
           - 'result.response | length >= 0'  # Allow empty response for idempotence
         fail_msg: "Idempotence check for ST FEX interface override failed - {{ result }}"
         success_msg: "Idempotence check for ST FEX interface override succeeded"
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
   ##############################################
   ##             CLEANUP                      ##

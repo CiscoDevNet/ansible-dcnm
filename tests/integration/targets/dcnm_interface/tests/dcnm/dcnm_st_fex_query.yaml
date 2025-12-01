@@ -101,9 +101,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##               QUERY                      ##
-##############################################
+    ##############################################
+    ##               QUERY                      ##
+    ##############################################
     - name: Query interface details - Existing
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"

@@ -86,9 +86,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##           OVERRIDE                       ##
-##############################################
+    ##############################################
+    ##           OVERRIDE                       ##
+    ##############################################
 
     - name: Override vpc interface types alone
       cisco.dcnm.dcnm_interface:
@@ -105,9 +105,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##           OVERRIDE                       ##
-##############################################
+    ##############################################
+    ##           OVERRIDE                       ##
+    ##############################################
 
     - name: Load PC Interface Config File
       ansible.builtin.set_fact:
@@ -130,9 +130,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##           OVERRIDE                       ##
-##############################################
+    ##############################################
+    ##           OVERRIDE                       ##
+    ##############################################
 
     - name: Override sub_int/lo interface types alone
       cisco.dcnm.dcnm_interface:

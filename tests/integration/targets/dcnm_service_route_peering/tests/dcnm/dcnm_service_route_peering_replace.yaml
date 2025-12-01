@@ -20,9 +20,9 @@
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create different non-existing service route peerings including all objects
       cisco.dcnm.dcnm_service_route_peering: &dcnm_srp_all
@@ -271,9 +271,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                REPLACE RP1-RP3           ##
-##############################################
+    ##############################################
+    ##                REPLACE RP1-RP3           ##
+    ##############################################
 
     - name: Replace service route peerings RP1 to RP3
       cisco.dcnm.dcnm_service_route_peering: &dcnm_srp_rep_13
@@ -536,9 +536,9 @@
           - '(result["diff"][0]["deploy"] | length) == 0'
 
 
-##############################################
-##                REPLACE RP4-RP7           ##
-##############################################
+    ##############################################
+    ##                REPLACE RP4-RP7           ##
+    ##############################################
 
     - name: Replace service route peerings RP4 to RP7
       cisco.dcnm.dcnm_service_route_peering: &dcnm_srp_rep_47
@@ -801,9 +801,9 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-##############################################
-##                CLEANUP                   ##
-##############################################
+  ##############################################
+  ##                CLEANUP                   ##
+  ##############################################
 
   always:
 
