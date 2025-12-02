@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Build a `target` dictionary from a `file_info` dictionary.
+"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -24,12 +27,16 @@ from pathlib import PurePosixPath
 
 class ConvertFileInfoToTarget:
     """
-    ### Summary
-    Build a ``target`` dictionary from a ``file_info`` dictionary.
+    # Summary
 
-    ### Raises
+    Build a `target` dictionary from a `file_info` dictionary.
 
-    ### ``file_info`` Dictionary (from bootflash-info endpoint response)
+    ## Raises
+
+    ## `file_info` structure
+
+    Returned by the bootflash-info endpoint.
+
     ```json
     {
         "bootflash_type": "active",
@@ -44,7 +51,8 @@ class ConvertFileInfoToTarget:
     }
     ```
 
-    ### ``target`` Dictionary
+    ## `target` structure
+
     ```json
     {
         "date": "2023-09-19 22:20:07",
@@ -57,7 +65,8 @@ class ConvertFileInfoToTarget:
     }
     ```
 
-    ### Usage
+    ## Usage
+
     ```python
     instance = ConvertFileInfoToTarget()
     instance.file_info = {
@@ -75,7 +84,8 @@ class ConvertFileInfoToTarget:
     print(instance.target)
     ```
 
-    ### Output
+    ## Output
+
     ```json
     {
         "date": "2023-09-19 22:20:07",
@@ -108,13 +118,15 @@ class ConvertFileInfoToTarget:
 
     def validate_commit_parameters(self) -> None:
         """
-        ### Summary
-        Validate that the parameters required to build the target dictionary
-        are present.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-            -   ``file_info`` is not set.
+        Validate that the parameters required to build the target dictionary are present.
+
+        ## Raises
+
+        ### ValueError
+
+        - `file_info` is not set.
         """
         method_name = inspect.stack()[0][3]
 
@@ -127,28 +139,34 @@ class ConvertFileInfoToTarget:
 
     def commit(self) -> None:
         """
-        ### Summary
-        Given ``file_info``, which is the information for a single file from
-        the bootflash-info endpoint response, build a ``target`` dictionary
+        # Summary
+
+        Given `file_info`, which is the information for a single file from
+        the bootflash-info endpoint response, build a `target` dictionary
         containing:
 
-        1.  A Posix path ``filepath`` from the ``file_info`` dictionary.
-        2.  Rename ``bootflash_type`` to ``supervisor`` in the target
+        1.  A Posix path `filepath` from the `file_info` dictionary.
+        2.  Rename `bootflash_type` to `supervisor` in the target
             dictionary.
-        3.  Convert the ``date`` value to a more easily digestable format
+        3.  Convert the `date` value to a more easily digestable format
             (YYYY-MM-DD HH:MM:SS).
-        4.  Rename ipAddr to ip_address and strip the leading space that
+        4.  Rename `ipAddr` to `ip_address` and strip the leading space that
             NDFC adds.
-        5.  Rename serialNumber to serial_number and add to the target
+        5.  Rename `serialNumber` to `serial_number` and add to the target
             dictionary.
-        6.  Add size to the target dictionary.
+        6.  Add `size` to the target dictionary.
 
-        ### Raises
-        -   ``ValueError`` if:
-            -   ``file_info`` is not set.
-            -   ``target`` cannot be built from ``file_info``.
+        ## Raises
 
-        ### ``file_info`` (from bootflash-info endpoint response)
+        ### ValueError
+
+        - `file_info` is not set.
+        - `target` cannot be built from `file_info`.
+
+        ## `file_info` structure
+
+        From bootflash-info endpoint response.
+
         ```json
         {
             "bootflash_type": "active",
@@ -163,7 +181,8 @@ class ConvertFileInfoToTarget:
         }
         ```
 
-        ### ``target`` Structure
+        ## `target` structure
+
         ```json
         {
             "date": "2023-09-19 22:20:07",
@@ -215,13 +234,16 @@ class ConvertFileInfoToTarget:
 
     def _get(self, key):
         """
-        ### Summary
-        Get the value of a key from the ``file_info`` dictionary.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-            -   ``file_info`` has not been set before calling _get.
-            -   ``key`` is not in the target dictionary.
+        Get the value of a key from the `file_info` dictionary.
+
+        ## Raises
+
+        ### ValueError
+
+        - `file_info` has not been set before calling _get.
+        - `key` is not in the target dictionary.
         """
         method_name = inspect.stack()[0][3]
 
@@ -241,21 +263,27 @@ class ConvertFileInfoToTarget:
     @property
     def file_info(self):
         """
-        ### Summary
+        # Summary
+
         A single file dictionary from the bootflash-info endpoint response.
 
-        ### Raises
-        -   ``ValueError`` if:
-            -   ``file_info`` is not a dictionary.
-            -   ``file_info`` does not contain the requisite keys.
+        ## Raises
 
-        ### Expected Structure
+        ### ValueError
+
+        - `file_info` is not a dictionary.
+        - `file_info` does not contain the requisite keys.
+
+        ## Expected Structure
+
         This class uses the following keys from the file_info dictionary:
-        -   fileName
-        -   filePath
-        -   bootflash_type
 
-        ### Example
+        - fileName
+        - filePath
+        - bootflash_type
+
+        ## Example
+
         ```json
         {
             "bootflash_type": "active",
@@ -279,16 +307,19 @@ class ConvertFileInfoToTarget:
     @property
     def date(self):
         """
-        ### Summary
-        The value of ``date`` from the ``file_info`` dictionary
-        converted to a ``datetime`` object.  The string representation of
-        this object will be "YYYY-MM-DD HH:MM:SS".
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-            -   ``file_info`` has not been set before accessing.
-            -   ``date`` is not in the ``file_info`` dictionary.
-            -   ``date`` cannot be converted to a datetime object.
+        The value of `date` from the `file_info` dictionary converted to a `datetime` object.
+        
+        The string representation of this object will be "YYYY-MM-DD HH:MM:SS".
+
+        ## Raises
+
+        ### ValueError
+
+        - `file_info` has not been set before accessing.
+        - `date` is not in the `file_info` dictionary.
+        - `date` cannot be converted to a datetime object.
         """
         method_name = inspect.stack()[0][3]
         try:
@@ -304,103 +335,127 @@ class ConvertFileInfoToTarget:
     @property
     def device_name(self):
         """
-        ### Summary
-        The value of ``deviceName`` from the ``file_info`` dictionary.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``file_info`` has not been set before accessing.
-        -   ``deviceName`` is not in the ``file_info`` dictionary.
+        The value of `deviceName` from the `file_info` dictionary.
+
+        ## Raises
+
+        ### ValueError
+
+        - `file_info` has not been set before accessing.
+        - `deviceName` is not in the `file_info` dictionary.
         """
         return self._get("deviceName")
 
     @property
     def filename(self):
         """
-        ### Summary
-        The value of ``fileName`` from the ``file_info`` dictionary.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``file_info`` has not been set before accessing.
-        -   ``fileName`` is not in the ``file_info`` dictionary.
+        The value of `fileName` from the `file_info` dictionary.
+
+        ## Raises
+
+        ### ValueError
+
+        - `file_info` has not been set before accessing.
+        - `fileName` is not in the `file_info` dictionary.
         """
         return self._get("fileName")
 
     @property
     def filepath(self):
         """
-        ### Summary
-        The value of ``filePath`` from the ``file_info`` dictionary.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``file_info`` has not been set before accessing.
-        -   ``filePath`` is not in the ``file_info`` dictionary.
+        The value of `filePath` from the `file_info` dictionary.
+
+        ## Raises
+
+        ### ValueError
+
+        - `file_info` has not been set before accessing.
+        - `filePath` is not in the `file_info` dictionary.
         """
         return self._get("filePath")
 
     @property
     def ip_address(self):
         """
-        ### Summary
-        The stripped value of ``ipAddr`` from the ``file_info`` dictionary.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``file_info`` has not been set before accessing.
-        -   ``ipAddr`` is not in the ``file_info`` dictionary.
+        The stripped value of `ipAddr` from the `file_info` dictionary.
+
+        ## Raises
+
+        ### ValueError
+
+        - `file_info` has not been set before accessing.
+        - `ipAddr` is not in the `file_info` dictionary.
         """
         return self._get("ipAddr").strip()
 
     @property
     def name(self):
         """
-        ### Summary
-        The value of ``name`` from the ``file_info`` dictionary.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``file_info`` has not been set before accessing.
-        -   ``name`` is not in the ``file_info`` dictionary.
+        The value of `name` from the `file_info` dictionary.
+
+        ## Raises
+
+        ### ValueError
+
+        - `file_info` has not been set before accessing.
+        - `name` is not in the `file_info` dictionary.
         """
         return self._get("name")
 
     @property
     def serial_number(self):
         """
-        ### Summary
-        The value of ``serialNumber`` from the ``file_info`` dictionary.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``file_info`` has not been set before accessing.
-        -   ``serialNumber`` is not in the ``file_info`` dictionary.
+        The value of `serialNumber` from the `file_info` dictionary.
+
+        ## Raises
+
+        ### ValueError
+
+        - `file_info` has not been set before accessing.
+        - `serialNumber` is not in the `file_info` dictionary.
         """
         return self._get("serialNumber")
 
     @property
     def size(self):
         """
-        ### Summary
-        The value of ``size`` from the ``file_info`` dictionary.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``file_info`` has not been set before accessing.
-        -   ``size`` is not in the ``file_info`` dictionary.
+        The value of `size` from the `file_info` dictionary.
+
+        ## Raises
+
+        ### ValueError
+
+        - `file_info` has not been set before accessing.
+        - `size` is not in the `file_info` dictionary.
         """
         return self._get("size")
 
     @property
     def target(self):
         """
-        ### Summary
-        The target dictionary built from the ``file_info`` dictionary.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``commit()`` has not been called before accessing.
+        The target dictionary built from the `file_info` dictionary.
+
+        ## Raises
+
+        ### ValueError
+
+        - `commit()` has not been called before accessing.
         """
         if self._target is None:
             msg = f"{self.class_name}.target: "
@@ -415,12 +470,15 @@ class ConvertFileInfoToTarget:
     @property
     def supervisor(self):
         """
-        ### Summary
-        The value of ``bootflash_type`` from the ``file_info`` dictionary.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``file_info`` has not been set before accessing.
-        -   ``bootflash_type`` is not in the ``file_info`` dictionary.
+        The value of `bootflash_type` from the `file_info` dictionary.
+
+        ## Raises
+
+        ### ValueError
+
+        - `file_info` has not been set before accessing.
+        - `bootflash_type` is not in the `file_info` dictionary.
         """
         return self._get("bootflash_type")

@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Parse `target` into its consituent API parameters
+"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -22,17 +25,22 @@ import logging
 
 class ConvertTargetToParams:
     """
-    ### Summary
-    Parse ``target`` into its consituent API parameters.
+    # Summary
 
-    ### Raises
-    -   ``ValueError`` if:
-        -   ``filepath`` is not set in the target dict.
-        -   ``supervisor`` is not set in the target dict.
+    Parse `target` into its consituent API parameters.
 
-    ### Usage
+    ## Raises
+
+    ### ValueError
+
+    -   `filepath` is not set in the target dict.
+    -   `supervisor` is not set in the target dict.
+
+    ## Usage
+
+    ### Example 1, file in directory.
+
     ```python
-    # Example 1, file in directory.
     target = {
         "filepath": "bootflash:/myDir/foo.txt",
         "supervisor": "active"
@@ -44,19 +52,22 @@ class ConvertTargetToParams:
     print(instance.filepath)   # bootflash:/myDir/
     print(instance.filename)   # foo.txt
     print(instance.supervisor) # active
+    ```
 
-    # Example 2, file in root of bootflash partition.
+    ### Example 2, file in root of bootflash partition.
+
+    ```python
     target = {
         "filepath": "bootflash:/foo.txt",
         "supervisor": "active"
     }
+    instance = ConvertTargetToParams()
     instance.target = target
     instance.commit()
     print(instance.partition)  # bootflash:
     print(instance.filepath)   # bootflash:
     print(instance.filename)   # foo.txt
     print(instance.supervisor) # active
-
     ```
     """
 
@@ -78,12 +89,15 @@ class ConvertTargetToParams:
 
     def commit(self):
         """
-        ### Summary
+        # Summary
+
         Commit the target to be parsed.
 
-        ### Raises
-        -   ``ValueError`` if:
-            -   target is not set before calling commit.
+        ## Raises
+
+        ### ValueError
+
+        - `target` is not set before calling commit.
         """
         if self.target is None:
             msg = f"{self.class_name}.commit: "
@@ -95,19 +109,27 @@ class ConvertTargetToParams:
 
     def parse_target(self) -> None:
         """
-        ### Summary
-        Parse target into its consituent API parameters.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-            -   ``filepath`` is not set in the target dict.
-            -   ``supervisor`` is not set in the target dict.
+        Parse `target` into its consituent API parameters.
 
-        ### Target Structure
+        ## Raises
+
+        ### ValueError
+
+        - `filepath` is not set in the target dict.
+        - `supervisor` is not set in the target dict.
+
+        ## Target Structure
+
+        ```json
         {
             filepath: bootflash:/myDir/foo.txt
             supervisor: active
         }
+        ```
+
+        ## API Parameters
 
         Set the following API parameters from the above structure:
 
@@ -116,7 +138,8 @@ class ConvertTargetToParams:
         - self.filename: foo.txt
         - self.supervisor: active
 
-        ### Notes
+        ## Notes
+
         -   While this method is written to support files in directories, the
             NDFC API does not support listing files within a directory. Hence,
             we currently support only files in the root directory of the
@@ -166,12 +189,15 @@ class ConvertTargetToParams:
     @property
     def filename(self):
         """
-        ### Summary
-        Return the filename parsed from ``target``.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``commit()`` has not been called before accessing this property.
+        Return the filename parsed from `target`.
+
+        ## Raises
+
+        ### ValueError
+
+        - `commit()` has not been called before accessing this property.
         """
         method_name = inspect.stack()[0][3]
         if not self.committed:
@@ -187,12 +213,15 @@ class ConvertTargetToParams:
     @property
     def filepath(self):
         """
-        ### Summary
-        Return the filepath parsed from ``target``.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``commit()`` has not been called before accessing this property.
+        Return the filepath parsed from `target`.
+
+        ## Raises
+
+        ### ValueError
+
+        -   `commit()` has not been called before accessing this property.
         """
         method_name = inspect.stack()[0][3]
         if not self.committed:
@@ -208,9 +237,9 @@ class ConvertTargetToParams:
     @property
     def target(self):
         """
-        ### Summary
-        The target to be parsed.  This is a dictionary with the following
-        structure:
+        # Summary
+
+        The target to be parsed.  This is a dictionary with the following structure:
 
         ```json
         {
@@ -228,12 +257,15 @@ class ConvertTargetToParams:
     @property
     def partition(self):
         """
-        ### Summary
-        Return the partition parsed from ``target``.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``commit()`` has not been called before accessing this property.
+        Return the partition parsed from `target`.
+
+        ## Raises
+
+        ### ValueError
+
+        -   `commit()` has not been called before accessing this property.
         """
         method_name = inspect.stack()[0][3]
         if not self.committed:
@@ -255,14 +287,17 @@ class ConvertTargetToParams:
     @property
     def supervisor(self):
         """
-        ### Summary
-        Return the supervisor parsed from ``target``. This is the state
-        (active or standby) of the supervisor that hosts the file described
-        in ``target``.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if:
-        -   ``commit()`` has not been called before accessing this property.
+        Return the supervisor parsed from `target`. This is the state
+        (active or standby) of the supervisor that hosts the file described
+        in `target`.
+
+        ## Raises
+
+        ### ValueError
+
+        - `commit()` has not been called before accessing this property.
         """
         method_name = inspect.stack()[0][3]
         if not self.committed:

@@ -13,6 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Bootflash management for Nexus switches.
+"""
 # pylint: disable=wrong-import-position
 from __future__ import absolute_import, division, print_function
 
@@ -293,10 +296,10 @@ class Common:
 
     def get_want(self) -> None:
         """
-        ### Summary
+        # Summary
+
         1.  Validate the playbook configs
-        2.  Convert the validated configs to the structure required by the
-            the Delete() and Query() classes.
+        2.  Convert the validated configs to the structure required by the the Delete() and Query() classes.
         3.  Update self.want with this list of payloads
 
         If a switch in the switches list does not have a targets key, add the
@@ -304,22 +307,28 @@ class Common:
         playbook.  Else, use the switch's targets info (i.e. the switch's
         targets info overrides the global targets info).
 
-        ### Raises
-        -   ValueError if:
-            -   ``ip_address`` is missing from a switch dict.
-            -   ``filepath`` is missing from a target dict.
-        -   TypeError if:
-            -   The value of ``targets`` is not a list of dictionaries.
+        ## Raises
 
-        ### ``want`` Structure
-        -   A list of dictionaries.  Each dictionary contains the following keys:
-            -   ip_address: The ip address of the switch.
-            -   targets: A list of dictionaries.  Each dictionary contains the
-                following keys:
-                -   filepath: The path to the file to be deleted or queried.
-                -   supervisor: The supervisor containing the filepath.
+        ### ValueError
 
-        ### Example ``want`` Structure
+        - `ip_address` is missing from a switch dict.
+        - `filepath` is missing from a target dict.
+
+        ### TypeError
+
+        - The value of `targets` is not a list of dictionaries.
+
+        ## ``want`` structure
+
+        A list of dictionaries.  Each dictionary contains the following keys:
+
+        - ip_address: The ip address of the switch.
+        - targets: A list of dictionaries.  Each dictionary contains the following keys:
+          - filepath: The path to the file to be deleted or queried.
+          - supervisor: The supervisor containing the filepath.
+
+        ## Example ``want`` structure
+
         ```json
         [
             {
@@ -377,18 +386,20 @@ class Common:
     @property
     def rest_send(self) -> RestSend:
         """
-        ### Summary
-        An instance of the RestSend class.
+        # Summary
 
-        ### Raises
-        -   getter: `ValueError` if rest_send has not been properly initialized (missing params).
-        -   setter: ``TypeError`` if the value is not an instance of RestSend.
+        Get/set an instance of the RestSend class.
 
-        ### getter
-        Return a properly initialized instance of the RestSend class.
+        ## Raises
 
-        ### setter
-        Set an instance of the RestSend class.
+        ### ValueError
+
+        - getter: `rest_send` has not been properly initialized (missing params).
+
+        ### TypeError
+
+        - setter: The value is not an instance of `RestSend`.
+
         """
         if not self._rest_send.params:
             msg = f"{self.class_name}.rest_send: "
@@ -416,12 +427,15 @@ class Common:
 
 class Deleted(Common):
     """
-    ### Summary
+    # Summary
+
     Handle deleted state
 
-    ### Raises
-    -   ValueError if:
-        -   ``Common.__init__()`` raises TypeError or ValueError.
+    ## Raises
+
+    ### ValueError
+
+    - `Common.__init__()` raises TypeError or ValueError.
     """
 
     def __init__(self, params: dict[str, Any]) -> None:
@@ -445,22 +459,27 @@ class Deleted(Common):
 
     def populate_files_to_delete(self, switch) -> None:
         """
-        ### Summary
-        Populate the ``files_to_delete`` dictionary with files
-        the user intends to delete.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-            -    ``supervisor`` is not one of:
-                    -   active
-                    -   standby
+        Populate the `files_to_delete` dictionary with files the user intends to delete.
 
-        ### ``files_to_delete`` Structure
-        files_to_delete is a dictionary containing
-        -   key: switch ip address.
-        -   value: a list of dictionaries containing the files to delete.
+        ## Raises
 
-        ### ``files_to_delete`` Example
+        ### ValueError
+
+        - `supervisor` is not one of
+          - active
+          - standby
+
+        ## `files_to_delete` structure
+
+        `files_to_delete` is a dictionary containing
+
+        - key: switch ip address.
+        - value: a list of dictionaries containing the files to delete.
+
+        ### Example
+
         ```json
         {
             "172.22.150.112": [
@@ -495,15 +514,20 @@ class Deleted(Common):
 
     def update_bootflash_files(self, ip_address: str, target: dict[str, str]) -> None:
         """
-        ### Summary
-        Call ``BootflashFiles().add_file()`` to add the file associated with
-        ``ip_address`` and ``target`` to the list of files to be deleted.
+        # Summary
 
-        ### Raises
-        -    ``TypeError`` if:
-                -   ``target`` is not a dictionary.
-        -    ``ValueError`` if:
-                -   ``BootflashFiles().add_file`` raises ``ValueError``.
+        Call `BootflashFiles().add_file()` to add the file associated with
+        `ip_address` and `target` to the list of files to be deleted.
+
+        ## Raises
+
+        ### TypeError
+
+        - `target` is not a dictionary.
+
+        ### ValueError
+
+        - `BootflashFiles().add_file` raises `ValueError`.
         """
         method_name: str = inspect.stack()[0][3]
 
@@ -543,16 +567,18 @@ class Deleted(Common):
 
     def commit(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Delete the specified files if they exist.
 
-        ### Raises
+        # Raises
+
         None.  While this method does not directly raise exceptions, it
         calls other methods that may raise the following exceptions:
 
-        -   ControllerResponseError
-        -   TypeError
-        -   ValueError
+        - ControllerResponseError
+        - TypeError
+        - ValueError
         """
         # Populate self.switches
         self.get_want()
@@ -594,12 +620,15 @@ class Deleted(Common):
 
 class Query(Common):
     """
-    ### Summary
+    # Summary
+
     Handle query state.
 
-    ### Raises
-    -   ValueError if:
-        -   ``Common.__init__()`` raises TypeError or ValueError.
+    ## Raises
+
+    ### ValueError
+
+    -`Common.__init__()` raises TypeError or ValueError.
     """
 
     def __init__(self, params: dict[str, Any]) -> None:
@@ -625,10 +654,12 @@ class Query(Common):
 
     def register_null_result(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Register a null result when there are no switches to query.
 
-        ### Raises
+        ## Raises
+
         None
         """
         response_dict: dict[str, dict[str, Any]] = {}
@@ -657,9 +688,9 @@ class Query(Common):
         None.  While this method does not directly raise exceptions, it
         calls other methods that may raise the following exceptions:
 
-        -   ControllerResponseError
-        -   TypeError
-        -   ValueError
+        - ControllerResponseError
+        - TypeError
+        - ValueError
 
         """
         method_name: str = inspect.stack()[0][3]
