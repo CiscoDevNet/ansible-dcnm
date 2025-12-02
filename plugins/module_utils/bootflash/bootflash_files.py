@@ -538,7 +538,7 @@ class BootflashFiles:
         ### ValueError
 
         - The switch does not allow file deletion.
-        - Mandatory parameters are not set.
+        - Mandatory parameters are not set (see `validate_prerequisites_for_add_file()`).
         """
         method_name: str = inspect.stack()[0][3]
         self.validate_prerequisites_for_add_file()
@@ -789,7 +789,7 @@ class BootflashFiles:
 
         ### TypeError
 
-        - `switch_details`` is not an instance of `SwitchDetails`.
+        - `switch_details` is not an instance of `SwitchDetails`.
         """
         return self._switch_details
 
@@ -829,7 +829,6 @@ class BootflashFiles:
         ### ValueError
 
         -   `target` is missing a mandatory key.
-
 
         ## `target` Structure
 

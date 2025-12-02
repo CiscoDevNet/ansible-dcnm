@@ -571,7 +571,7 @@ class Deleted(Common):
 
         Delete the specified files if they exist.
 
-        # Raises
+        ## Raises
 
         None.  While this method does not directly raise exceptions, it
         calls other methods that may raise the following exceptions:
@@ -628,7 +628,7 @@ class Query(Common):
 
     ### ValueError
 
-    -`Common.__init__()` raises TypeError or ValueError.
+    - `Common.__init__()` raises TypeError or ValueError.
     """
 
     def __init__(self, params: dict[str, Any]) -> None:

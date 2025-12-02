@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Parse `target` into its consituent API parameters
+Parse `target` into its constituent API parameters
 """
 from __future__ import absolute_import, division, print_function
 
@@ -27,7 +27,7 @@ class ConvertTargetToParams:
     """
     # Summary
 
-    Parse `target` into its consituent API parameters.
+    Parse `target` into its constituent API parameters.
 
     ## Raises
 
@@ -111,7 +111,7 @@ class ConvertTargetToParams:
         """
         # Summary
 
-        Parse `target` into its consituent API parameters.
+        Parse `target` into its constituent API parameters.
 
         ## Raises
 

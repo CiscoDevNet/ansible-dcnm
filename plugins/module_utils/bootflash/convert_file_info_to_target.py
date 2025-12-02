@@ -146,15 +146,11 @@ class ConvertFileInfoToTarget:
         containing:
 
         1.  A Posix path `filepath` from the `file_info` dictionary.
-        2.  Rename `bootflash_type` to `supervisor` in the target
-            dictionary.
-        3.  Convert the `date` value to a more easily digestable format
-            (YYYY-MM-DD HH:MM:SS).
-        4.  Rename `ipAddr` to `ip_address` and strip the leading space that
-            NDFC adds.
-        5.  Rename `serialNumber` to `serial_number` and add to the target
-            dictionary.
-        6.  Add `size` to the target dictionary.
+        2.  Rename `bootflash_type` to `supervisor` in the `target` dictionary.
+        3.  Convert the `date` value to a more easily digestible format (YYYY-MM-DD HH:MM:SS).
+        4.  Rename `ipAddr` to `ip_address` and strip the leading space that NDFC adds.
+        5.  Rename `serialNumber` to `serial_number` and add to the `target` dictionary.
+        6.  Add `size` to the `target` dictionary.
 
         ## Raises
 
