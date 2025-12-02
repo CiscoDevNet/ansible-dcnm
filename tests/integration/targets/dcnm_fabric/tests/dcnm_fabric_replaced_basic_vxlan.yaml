@@ -304,7 +304,7 @@
       - result.result[2].sequence_number == 3
 
 ################################################################################
-# REPLACED - TEST - Replace fabric fabric_name_00 config with default config omnipotence
+# REPLACED - TEST - Replace fabric fabric_name_00 config with default config idempotence
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.

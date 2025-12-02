@@ -281,7 +281,7 @@
       - result.result[2].success == true
       - result.result[2].sequence_number == 3
 ################################################################################
-# REPLACED - TEST - Replace fabric_name_40 config with default config omnipotence
+# REPLACED - TEST - Replace fabric_name_40 config with default config idempotence
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -320,7 +320,7 @@
 #     }
 # }
 ################################################################################
-- name: REPLACED - TEST - Replace {{ fabric_name_40 }} config with default config omnipotence
+- name: REPLACED - TEST - Replace {{ fabric_name_40 }} config with default config idempotence
   cisco.dcnm.dcnm_fabric: *replace_fabric_name_40
   register: result
 - debug:
