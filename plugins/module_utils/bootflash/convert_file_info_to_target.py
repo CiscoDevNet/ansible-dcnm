@@ -310,7 +310,7 @@ class ConvertFileInfoToTarget:
         # Summary
 
         The value of `date` from the `file_info` dictionary converted to a `datetime` object.
-        
+
         The string representation of this object will be "YYYY-MM-DD HH:MM:SS".
 
         ## Raises
