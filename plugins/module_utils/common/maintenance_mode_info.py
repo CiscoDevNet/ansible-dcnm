@@ -34,60 +34,68 @@ from .switch_details import SwitchDetails
 @Properties.add_results
 class MaintenanceModeInfo:
     """
-    ### Summary
-    -   Retrieve the maintenance mode state of switches.
+    # Summary
 
-    ### Raises
-    -   ``TypeError`` in the following public properties:
-            -   ``config`` if value is not a list.
-            -   ``rest_send`` if value is not an instance of RestSend.
-            -   ``results`` if value is not an instance of Results.
+    Retrieve the maintenance mode state of switches.
 
-    -   ``ValueError`` in the following public methods:
-            -   ``refresh()`` if:
-                    -    ``config`` has not been set.
-                    -    ``rest_send`` has not been set.
-                    -    ``results`` has not been set.
+    ## Raises
 
-    ### Details
-    Updates ``MaintenanceModeInfo().results`` to reflect success/failure of
+    ### TypeError
+
+    - `config` property setter: value is not a list.
+    - `rest_send` property setter: value is not an instance of RestSend.
+    - `results` property setter: value is not an instance of Results.
+
+    ### ValueError
+
+    - `refresh()`: `config` has not been set.
+    - `refresh()`: `rest_send` has not been set.
+    - `refresh()`: `results` has not been set.
+
+    ## Details
+
+    Updates `MaintenanceModeInfo().results` to reflect success/failure of
     the operation on the controller.
 
-    Example value for ``config`` in the ``Usage`` section below:
+    ## Example value for `config` in the `Usage` section below
+
     ```json
     ["192.168.1.2", "192.168.1.3"]
     ```
 
-    Example value for ``info`` in the ``Usage`` section below:
-        ```json
-        {
-            "192.169.1.2": {
-                deployment_disabled: true
-                fabric_freeze_mode: true,
-                fabric_name: "MyFabric",
-                fabric_read_only: true
-                mode: "maintenance",
-                role: "spine",
-                serial_number: "FCI1234567"
-            },
-            "192.169.1.3": {
-                deployment_disabled: false,
-                fabric_freeze_mode: false,
-                fabric_name: "YourFabric",
-                fabric_read_only: false
-                mode: "normal",
-                role: "leaf",
-                serial_number: "FCH2345678"
-            }
-        }
-        ```
+    ## Example value for `info` in the `Usage` section below
 
-    ### Usage
-    -   Where:
-            -   ``params`` is ``AnsibleModule.params``
-            -   ``config`` is per the above example.
-            -   ``sender`` is an instance of a Sender() class.
-                See ``sender_dcnm.py`` for usage.
+    ```json
+    {
+        "192.169.1.2": {
+            "deployment_disabled": true,
+            "fabric_freeze_mode": true,
+            "fabric_name": "MyFabric",
+            "fabric_read_only": true,
+            "mode": "maintenance",
+            "role": "spine",
+            "serial_number": "FCI1234567"
+        },
+        "192.169.1.3": {
+            "deployment_disabled": false,
+            "fabric_freeze_mode": false,
+            "fabric_name": "YourFabric",
+            "fabric_read_only": false,
+            "mode": "normal",
+            "role": "leaf",
+            "serial_number": "FCH2345678"
+        }
+    }
+    ```
+
+    ## Usage
+
+    Where:
+
+    - `params` is `AnsibleModule.params`
+    - `config` is per the above example.
+    - `sender` is an instance of a Sender() class.
+      See `sender_dcnm.py` for usage.
 
     ```python
     ansible_module = AnsibleModule()
@@ -139,15 +147,17 @@ class MaintenanceModeInfo:
 
     def verify_refresh_parameters(self) -> None:
         """
-        ### Summary
-        Verify that required parameters are present before
-        calling ``refresh()``.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``config`` is not set.
-                -   ``rest_send`` is not set.
-                -   ``results`` is not set.
+        Verify that required parameters are present before calling `refresh()`.
+
+        ## Raises
+
+        ### ValueError
+
+        - `config` is not set.
+        - `rest_send` is not set.
+        - `results` is not set.
         """
         method_name = inspect.stack()[0][3]
         if self.config is None:
@@ -168,47 +178,52 @@ class MaintenanceModeInfo:
 
     def refresh(self):
         """
-        ### Summary
-        Build ``self.info``, a dict containing the current maintenance mode
+        # Summary
+
+        Build `self.info`, a dict containing the current maintenance mode
         status of all switches in self.config.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``SwitchDetails()`` raises ``ControllerResponseError``
-                -   ``SwitchDetails()`` raises ``ValueError``
-                -   ``FabricDetails()`` raises ``ControllerResponseError``
-                -   switch with ``ip_address`` does not exist on the controller.
+        ## Raises
 
-        ### self.info structure
+        ### ValueError
+
+        - `SwitchDetails()` raises `ControllerResponseError`
+        - `SwitchDetails()` raises `ValueError`
+        - `FabricDetails()` raises `ControllerResponseError`
+        - switch with `ip_address` does not exist on the controller.
+
+        ## self.info structure
+
         info is a dict, keyed on switch_ip, where each element is a dict
         with the following structure:
-        -   ``fabric_name``: The name of the switch's hosting fabric.
-        -   ``freeze_mode``: The current state of the switch's hosting fabric.
-            If freeze_mode is True, configuration changes cannot be made to the
-            fabric or the switches within the fabric.
-        -   ``mode``: The current maintenance mode of the switch.
-        -   ``role``: The role of the switch in the hosting fabric.
-        -   ``serial_number``: The serial number of the switch.
+
+        - `fabric_name`: The name of the switch's hosting fabric.
+        - `freeze_mode`: The current state of the switch's hosting fabric.
+          If freeze_mode is True, configuration changes cannot be made to the
+          fabric or the switches within the fabric.
+        - `mode`: The current maintenance mode of the switch.
+        - `role`: The role of the switch in the hosting fabric.
+        - `serial_number`: The serial number of the switch.
 
         ```json
         {
             "192.169.1.2": {
-                fabric_deployment_disabled: true
-                fabric_freeze_mode: true,
-                fabric_name: "MyFabric",
-                fabric_read_only: true
-                mode: "maintenance",
-                role: "spine",
-                serial_number: "FCI1234567"
+                "fabric_deployment_disabled": true,
+                "fabric_freeze_mode": true,
+                "fabric_name": "MyFabric",
+                "fabric_read_only": true,
+                "mode": "maintenance",
+                "role": "spine",
+                "serial_number": "FCI1234567"
             },
             "192.169.1.3": {
-                fabric_deployment_disabled: false,
-                fabric_freeze_mode: false,
-                fabric_name: "YourFabric",
-                fabric_read_only: false
-                mode: "normal",
-                role: "leaf",
-                serial_number: "FCH2345678"
+                "fabric_deployment_disabled": false,
+                "fabric_freeze_mode": false,
+                "fabric_name": "YourFabric",
+                "fabric_read_only": false,
+                "mode": "normal",
+                "role": "leaf",
+                "serial_number": "FCH2345678"
             }
         }
         ```
@@ -303,15 +318,21 @@ class MaintenanceModeInfo:
 
     def _get(self, item):
         """
+        # Summary
+
         Return the value of the item from the filtered switch.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``filter`` is not set.
-                -   ``filter`` is not in the controller response.
-        ### NOTES
-        -   We do not need to check that ``item`` exists in the filtered
-            switch dict, since ``refresh()`` has already done so.
+        ## Raises
+
+        ### ValueError
+
+        - `filter` is not set.
+        - `filter` is not in the controller response.
+
+        ## Notes
+
+        We do not need to check that `item` exists in the filtered
+        switch dict, since `refresh()` has already done so.
         """
         method_name = inspect.stack()[0][3]
 
@@ -332,20 +353,25 @@ class MaintenanceModeInfo:
     @property
     def filter(self):
         """
-        ### Summary
+        # Summary
+
         Set the query filter (switch IP address)
 
-        ### Raises
-        None. However, if ``filter`` is not set, or ``filter`` is set to
+        ## Raises
+
+        None
+
+        However, if `filter` is not set, or `filter` is set to
         an ip_address for a switch that does not exist on the controller,
-        ``ValueError`` will be raised when accessing the various getter
+        `ValueError` will be raised when accessing the various getter
         properties.
 
-        ### Details
+        ## Details
+
         The filter should be the ip_address of the switch from which to
         retrieve details.
 
-        ``filter`` must be set before accessing this class's properties.
+        `filter` must be set before accessing this class's properties.
         """
         return self._filter
 
@@ -356,25 +382,34 @@ class MaintenanceModeInfo:
     @property
     def config(self) -> list:
         """
-        ### Summary
+        # Summary
+
         A list of switch ip addresses for which maintenance mode state
         will be retrieved.
 
-        ### Raises
-        -   setter: ``TypeError`` if:
-                -   ``config`` is not a ``list``.
-                -   Elements of ``config`` are not ``str``.
+        ## Raises
 
-        ### getter
-        Return ``config``.
+        ### TypeError
 
-        ### setter
-        Set ``config``.
+        setter:
 
-        ### Value structure
-        value is a ``list`` of ip addresses
+        - `config` is not a `list`.
+        - Elements of `config` are not `str`.
 
-        ### Example
+        ## getter
+
+        Return `config`.
+
+        ## setter
+
+        Set `config`.
+
+        ## Value structure
+
+        value is a `list` of ip addresses
+
+        ## Example
+
         ```json
         ["172.22.150.2", "172.22.150.3"]
         ```
@@ -404,136 +439,159 @@ class MaintenanceModeInfo:
     @property
     def fabric_deployment_disabled(self):
         """
-        ### Summary
-        The current ``fabric_deployment_disabled`` state of the
+        # Summary
+
+        The current `fabric_deployment_disabled` state of the
         filtered switch's hosting fabric.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``filter`` is not set.
-                -   ``filter`` is not in the controller response.
-                -   ``deployment_disabled`` is not in the filtered switch dict.
+        ## Raises
 
-        ### Valid values
-        -   ``True``: The fabric is in a state where configuration changes
-            cannot be made.
-        -   ``False``: The fabric is in a state where configuration changes
-            can be made.
+        ### ValueError
+
+        - `filter` is not set.
+        - `filter` is not in the controller response.
+        - `deployment_disabled` is not in the filtered switch dict.
+
+        ## Valid values
+
+        - `True`: The fabric is in a state where configuration changes
+          cannot be made.
+        - `False`: The fabric is in a state where configuration changes
+          can be made.
         """
         return self._get("fabric_deployment_disabled")
 
     @property
     def fabric_freeze_mode(self):
         """
-        ### Summary
+        # Summary
+
         The freezeMode state of the fabric in which the
         filtered switch resides.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``filter`` is not set.
-                -   ``filter`` is not in the controller response.
-                -   ``fabric_name`` is not in the filtered switch dict.
+        ## Raises
 
-        ### Valid values
-        -   ``True``: The fabric is in a state where configuration changes
-            cannot be made.
-        -   ``False``: The fabric is in a state where configuration changes
-            can be made.
+        ### ValueError
+
+        - `filter` is not set.
+        - `filter` is not in the controller response.
+        - `fabric_name` is not in the filtered switch dict.
+
+        ## Valid values
+
+        - `True`: The fabric is in a state where configuration changes
+          cannot be made.
+        - `False`: The fabric is in a state where configuration changes
+          can be made.
         """
         return self._get("fabric_freeze_mode")
 
     @property
     def fabric_name(self):
         """
-        ### Summary
+        # Summary
+
         The name of the fabric in which the
         filtered switch resides.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``filter`` is not set.
-                -   ``filter`` is not in the controller response.
-                -   ``fabric_name`` is not in the filtered switch dict.
+        ## Raises
+
+        ### ValueError
+
+        - `filter` is not set.
+        - `filter` is not in the controller response.
+        - `fabric_name` is not in the filtered switch dict.
         """
         return self._get("fabric_name")
 
     @property
     def fabric_read_only(self):
         """
-        ### Summary
+        # Summary
+
         The read-only state of the fabric in which the
         filtered switch resides.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``filter`` is not set.
-                -   ``filter`` is not in the controller response.
-                -   ``fabric_name`` is not in the filtered switch dict.
+        ## Raises
 
-        ### Valid values
-        -   ``True``: The fabric is in a state where configuration changes
-            cannot be made.
-        -   ``False``: The fabric is in a state where configuration changes
-            can be made.
+        ### ValueError
+
+        - `filter` is not set.
+        - `filter` is not in the controller response.
+        - `fabric_name` is not in the filtered switch dict.
+
+        ## Valid values
+
+        - `True`: The fabric is in a state where configuration changes
+          cannot be made.
+        - `False`: The fabric is in a state where configuration changes
+          can be made.
         """
         return self._get("fabric_read_only")
 
     @property
     def info(self) -> dict:
         """
-        ### Summary
+        # Summary
+
         Return or set the current maintenance mode state of the switches
         represented by the ip_addresses in self.config.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``refresh()`` has not been called before accessing ``info``.
+        ## Raises
 
-        ### getter
-        Return ``info``.
+        ### ValueError
 
-        ### setter
-        Set ``info``.
+        - `refresh()` has not been called before accessing `info`.
 
-        ### ``info`` structure
-        ``info`` is a dict, keyed on switch_ip, where each element is a dict
+        ## getter
+
+        Return `info`.
+
+        ## setter
+
+        Set `info`.
+
+        ## `info` structure
+
+        `info` is a dict, keyed on switch_ip, where each element is a dict
         with the following structure:
-        -   ``fabric_deployment_disabled``: The current state of the switch's
-            hosting fabric.  If fabric_deployment_disabled is True,
-            configuration changes cannot be made to the fabric or the switches
-            within the fabric.
-        -   ``fabric_name``: The name of the switch's hosting fabric.
-        -   ``fabric_freeze_mode``: The current state of the switch's
-            hosting fabric.  If freeze_mode is True, configuration changes
-            cannot be made to the fabric or the switches within the fabric.
-        -   ``fabric_read_only``: The current state of the switch's
-            hosting fabric.  If fabric_read_only is True, configuration changes
-            cannot be made to the fabric or the switches within the fabric.
-        -   ``mode``: The current maintenance mode of the switch.
-        -   ``role``: The role of the switch in the hosting fabric.
-        -   ``serial_number``: The serial number of the switch.
 
-        ### Example info dict
+        - `fabric_deployment_disabled`: The current state of the switch's
+          hosting fabric. If fabric_deployment_disabled is True,
+          configuration changes cannot be made to the fabric or the switches
+          within the fabric.
+        - `fabric_name`: The name of the switch's hosting fabric.
+        - `fabric_freeze_mode`: The current state of the switch's
+          hosting fabric. If freeze_mode is True, configuration changes
+          cannot be made to the fabric or the switches within the fabric.
+        - `fabric_read_only`: The current state of the switch's
+          hosting fabric. If fabric_read_only is True, configuration changes
+          cannot be made to the fabric or the switches within the fabric.
+        - `mode`: The current maintenance mode of the switch.
+        - `role`: The role of the switch in the hosting fabric.
+        - `serial_number`: The serial number of the switch.
+
+        ## Example info dict
+
         ```json
         {
             "192.169.1.2": {
-                fabric_deployment_disabled: true
-                fabric_freeze_mode: true,
-                fabric_name: "MyFabric",
-                fabric_read_only: true
-                mode: "maintenance",
-                role: "spine",
-                serial_number: "FCI1234567"
+                "fabric_deployment_disabled": true,
+                "fabric_freeze_mode": true,
+                "fabric_name": "MyFabric",
+                "fabric_read_only": true,
+                "mode": "maintenance",
+                "role": "spine",
+                "serial_number": "FCI1234567"
             },
             "192.169.1.3": {
-                fabric_deployment_disabled: false
-                fabric_freeze_mode: false,
-                fabric_name: "YourFabric",
-                fabric_read_only: false
-                mode: "normal",
-                role: "leaf",
-                serial_number: "FCH2345678"
+                "fabric_deployment_disabled": false,
+                "fabric_freeze_mode": false,
+                "fabric_name": "YourFabric",
+                "fabric_read_only": false,
+                "mode": "normal",
+                "role": "leaf",
+                "serial_number": "FCH2345678"
             }
         }
         ```
@@ -558,41 +616,50 @@ class MaintenanceModeInfo:
     @property
     def mode(self):
         """
-        ### Summary
+        # Summary
+
         The current maintenance mode of the filtered switch.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``filter`` is not set.
-                -   ``filter`` is not in the controller response.
-                -   ``mode`` is not in the filtered switch dict.
+        ## Raises
+
+        ### ValueError
+
+        - `filter` is not set.
+        - `filter` is not in the controller response.
+        - `mode` is not in the filtered switch dict.
         """
         return self._get("mode")
 
     @property
     def role(self):
         """
-        ### Summary
+        # Summary
+
         The role of the filtered switch in the hosting fabric.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``filter`` is not set.
-                -   ``filter`` is not in the controller response.
-                -   ``role`` is not in the filtered switch dict.
+        ## Raises
+
+        ### ValueError
+
+        - `filter` is not set.
+        - `filter` is not in the controller response.
+        - `role` is not in the filtered switch dict.
         """
         return self._get("role")
 
     @property
     def serial_number(self):
         """
-        ### Summary
+        # Summary
+
         The serial number of the filtered switch.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``filter`` is not set.
-                -   ``filter`` is not in the controller response.
-                -   ``serial_number`` is not in the filtered switch dict.
+        ## Raises
+
+        ### ValueError
+
+        - `filter` is not set.
+        - `filter` is not in the controller response.
+        - `serial_number` is not in the filtered switch dict.
         """
         return self._get("serial_number")

@@ -33,34 +33,34 @@ from .properties import Properties
 @Properties.add_results
 class MaintenanceMode:
     """
-    ### Summary
-    -   Modify the maintenance mode state of switches.
-    -   Optionally deploy the changes.
+    # Summary
 
-    ### Raises
-    -   ``ValueError`` in the following methods:
-            -   __init__() if params is missing mandatory parameters
-                ``check_mode`` or ``state``.
+    Modify the maintenance mode state of switches and optionally deploy the changes.
 
-    -   ``ValueError`` in the following properties:
-            -   ``config`` if config contains invalid content.
-            -   ``commit`` if config, rest_send, or results are not set.
-            -   ``commit`` if ``EpMaintenanceModeEnable`` or
-                ``EpMaintenanceModeDisable`` raise ``ValueError``.
-            -   ``commit``  if either ``chance_system_mode()`` or
-                ``deploy_switches()`` raise ``ControllerResponseError``.
+    ## Raises
 
-    -   ``TypeError`` in the following properties:
-            -   ``rest_send`` if value is not an instance of RestSend.
-            -   ``results`` if value is not an instance of Results.
+    ### ValueError
 
-    ### Details
-    -   Updates MaintenanceMode().results to reflect success/failure of
-        the operation on the controller.
-    -   For switches that are to be deployed, initiates a per-fabric
-        bulk switch config-deploy.
+    - `__init__()`: params is missing mandatory parameters `check_mode` or `state`.
+    - `config` property setter: config contains invalid content.
+    - `commit()`: config, rest_send, or results are not set.
+    - `commit()`: `EpMaintenanceModeEnable` or `EpMaintenanceModeDisable` raise `ValueError`.
+    - `commit()`: either `chance_system_mode()` or `deploy_switches()` raise `ControllerResponseError`.
 
-    ### Example value for ``config`` in the ``Usage`` section below:
+    ### TypeError
+
+    - `rest_send` property setter: value is not an instance of RestSend.
+    - `results` property setter: value is not an instance of Results.
+
+    ## Details
+
+    - Updates MaintenanceMode().results to reflect success/failure of
+      the operation on the controller.
+    - For switches that are to be deployed, initiates a per-fabric
+      bulk switch config-deploy.
+
+    ## Example value for `config` in the `Usage` section below
+
     ```json
     [
         {
@@ -80,16 +80,17 @@ class MaintenanceMode:
     ]
     ```
 
-    ### Usage
-    -   Where ``params`` is ``AnsibleModule.params``
-    -   Where ``config`` is a list of dicts, each containing the following:
-        -   ``deploy``: ``bool``.  If True, the switch maintenance mode
-            will be deployed.
-        -   ``fabric_name``: ``str``.  The name of the switch's hosting fabric.
-        -   ``ip_address``: ``str``.  The ip address of the switch.
-        -   ``mode``: ``str``.  The intended maintenance mode.  Must be one of
-            "maintenance" or "normal".
-        -   ``serial_number``: ``str``.  The serial number of the switch.
+    ## Usage
+
+    Where `params` is `AnsibleModule.params` and `config` is a list of dicts,
+    each containing the following:
+
+    - `deploy`: `bool`. If True, the switch maintenance mode will be deployed.
+    - `fabric_name`: `str`. The name of the switch's hosting fabric.
+    - `ip_address`: `str`. The ip address of the switch.
+    - `mode`: `str`. The intended maintenance mode. Must be one of
+      "maintenance" or "normal".
+    - `serial_number`: `str`. The serial number of the switch.
 
     ```python
     instance = MaintenanceMode(params)
@@ -151,20 +152,29 @@ class MaintenanceMode:
 
     def verify_config_parameters(self, value) -> None:
         """
-        ### Summary
+        # Summary
+
         Verify that required parameters are present in config.
 
-        ### Raises
-        -   ``TypeError`` if ``config`` is not a list.
-        -   ``ValueError`` if ``config`` contains invalid content.
+        ## Raises
 
-        ### NOTES
-        1. See the following validation methods for details:
-            -   verify_deploy()
-            -   verify_fabric_name()
-            -   verify_ip_address()
-            -   verify_mode()
-            -   verify_serial_number()
+        ### TypeError
+
+        - `config` is not a list.
+
+        ### ValueError
+
+        - `config` contains invalid content.
+
+        ## Notes
+
+        See the following validation methods for details:
+
+        - verify_deploy()
+        - verify_fabric_name()
+        - verify_ip_address()
+        - verify_mode()
+        - verify_serial_number()
         """
         method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
@@ -186,14 +196,19 @@ class MaintenanceMode:
 
     def verify_deploy(self, item) -> None:
         """
-        ### Summary
-        Verify the ``deploy`` parameter.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``deploy`` is not present.
-        -   ``TypeError`` if:
-                -   `deploy`` is not a boolean.
+        Verify the `deploy` parameter.
+
+        ## Raises
+
+        ### ValueError
+
+        - `deploy` is not present.
+
+        ### TypeError
+
+        - `deploy` is not a boolean.
         """
         method_name = inspect.stack()[0][3]
         if item.get("deploy", None) is None:
@@ -209,13 +224,16 @@ class MaintenanceMode:
 
     def verify_fabric_name(self, item) -> None:
         """
-        ### Summary
-        Validate the ``fabric_name`` parameter.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``fabric_name`` is not present.
-                -   ``fabric_name`` is not a valid fabric name.
+        Validate the `fabric_name` parameter.
+
+        ## Raises
+
+        ### ValueError
+
+        - `fabric_name` is not present.
+        - `fabric_name` is not a valid fabric name.
         """
         method_name = inspect.stack()[0][3]
         if item.get("fabric_name", None) is None:
@@ -229,12 +247,15 @@ class MaintenanceMode:
 
     def verify_ip_address(self, item) -> None:
         """
-        ### Summary
-        Validate the ``ip_address`` parameter.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``ip_address`` is not present.
+        Validate the `ip_address` parameter.
+
+        ## Raises
+
+        ### ValueError
+
+        - `ip_address` is not present.
         """
         method_name = inspect.stack()[0][3]
         if item.get("ip_address", None) is None:
@@ -244,13 +265,16 @@ class MaintenanceMode:
 
     def verify_mode(self, item) -> None:
         """
-        ### Summary
-        Validate the ``mode`` parameter.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``mode`` is not present.
-                -   ``mode`` is not one of "maintenance" or "normal".
+        Validate the `mode` parameter.
+
+        ## Raises
+
+        ### ValueError
+
+        - `mode` is not present.
+        - `mode` is not one of "maintenance" or "normal".
         """
         method_name = inspect.stack()[0][3]
         if item.get("mode", None) is None:
@@ -265,12 +289,15 @@ class MaintenanceMode:
 
     def verify_serial_number(self, item) -> None:
         """
-        ### Summary
-        Validate the ``serial_number`` parameter.
+        # Summary
 
-        ### Raises
-        - ``ValueError`` if:
-                -   ``serial_number`` is not present.
+        Validate the `serial_number` parameter.
+
+        ## Raises
+
+        ### ValueError
+
+        - `serial_number` is not present.
         """
         method_name = inspect.stack()[0][3]
         if item.get("serial_number", None) is None:
@@ -280,14 +307,19 @@ class MaintenanceMode:
 
     def verify_wait_for_mode_change(self, item) -> None:
         """
-        ### Summary
-        Verify the ``wait_for_mode_change`` parameter.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``wait_for_mode_change`` is not present.
-        -   ``TypeError`` if:
-                -   `wait_for_mode_change`` is not a boolean.
+        Verify the `wait_for_mode_change` parameter.
+
+        ## Raises
+
+        ### ValueError
+
+        - `wait_for_mode_change` is not present.
+
+        ### TypeError
+
+        - `wait_for_mode_change` is not a boolean.
         """
         method_name = inspect.stack()[0][3]
         if item.get("wait_for_mode_change", None) is None:
@@ -303,14 +335,17 @@ class MaintenanceMode:
 
     def verify_commit_parameters(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Verify that required parameters are present before calling commit.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``config`` is not set.
-                -   ``rest_send`` is not set.
-                -   ``results`` is not set.
+        ## Raises
+
+        ### ValueError
+
+        - `config` is not set.
+        - `rest_send` is not set.
+        - `results` is not set.
         """
         method_name = inspect.stack()[0][3]
         if self.config is None:
@@ -331,18 +366,21 @@ class MaintenanceMode:
 
     def commit(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Initiates the maintenance mode change on the controller.
 
-        ### Raises
-        -   ``ValueError`` if
-                -   ``config`` is not set.
-                -   ``rest_send`` is not set.
-                -   ``results`` is not set.
-                -   any exception is raised by:
-                        -   ``verify_commit_parameters()``
-                        -   ``change_system_mode()``
-                        -   ``deploy_switches()``
+        ## Raises
+
+        ### ValueError
+
+        - `config` is not set.
+        - `rest_send` is not set.
+        - `results` is not set.
+        - any exception is raised by:
+            - `verify_commit_parameters()`
+            - `change_system_mode()`
+            - `deploy_switches()`
         """
         try:
             self.verify_commit_parameters()
@@ -357,18 +395,25 @@ class MaintenanceMode:
 
     def change_system_mode(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Send the maintenance mode change request to the controller.
 
-        ### Raises
-        -   ``ControllerResponseError`` if:
-                -   controller response != 200.
-        -  ``ValueError`` if:
-                -   ``fabric_name`` is invalid.
-                -   endpoint cannot be resolved.
-                -   ``Results()`` raises an exception.
-        -  ``TypeError`` if:
-                -   ``serial_number`` is not a string.
+        ## Raises
+
+        ### ControllerResponseError
+
+        - controller response != 200.
+
+        ### ValueError
+
+        - `fabric_name` is invalid.
+        - endpoint cannot be resolved.
+        - `Results()` raises an exception.
+
+        ### TypeError
+
+        - `serial_number` is not a string.
         """
         method_name = inspect.stack()[0][3]
 
@@ -432,41 +477,46 @@ class MaintenanceMode:
 
     def build_deploy_dict(self) -> None:
         """
-        ### Summary
-        -   Build the deploy_dict
+        # Summary
 
-        ### Raises
+        Build the deploy_dict
+
+        ## Raises
+
         None
 
-        ### Structure
-        -   key: fabric_name
-        -   value: list of dict
-        -   each dict contains ``serial_number`` and ``wait_for_mode_change keys``
+        ## Structure
 
-        ### Example
+        - key: fabric_name
+        - value: list of dict
+        - each dict contains `serial_number` and `wait_for_mode_change` keys
+
+        ## Example
+
         ```json
         {
             "MyFabric": [
                 {
                     "serial_number": "CDM4593459",
-                    "wait_for_mode_change": True
+                    "wait_for_mode_change": true
                 },
                 {
                     "serial_number": "CDM4593460",
-                    "wait_for_mode_change": False
+                    "wait_for_mode_change": false
                 }
             ],
             "YourFabric": [
                 {
                     "serial_number": "DDM0455882",
-                    "wait_for_mode_change": True
+                    "wait_for_mode_change": true
                 },
                 {
                     "serial_number": "DDM5598759",
-                    "wait_for_mode_change": True
+                    "wait_for_mode_change": true
                 }
             ]
         }
+        ```
         """
         self.deploy_dict = {}
         for item in self.config:
@@ -484,25 +534,27 @@ class MaintenanceMode:
 
     def build_serial_number_to_ip_address(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Populate self.serial_number_to_ip_address dict.
 
-        ### Raises
+        ## Raises
+
         None
 
-        ### Structure
-        -   key: switch serial_number
-        -   value: associated switch ip_address
+        ## Structure
+
+        - key: switch serial_number
+        - value: associated switch ip_address
 
         ```json
         { "CDM4593459": "192.168.1.2" }
         ```
-        ### Raises
-        None
 
-        ### Notes
-        -   ip_address and serial_number are added to the diff in the
-            ``deploy_switches()`` method.
+        ## Notes
+
+        ip_address and serial_number are added to the diff in the
+        `deploy_switches()` method.
         """
         for item in self.config:
             serial_number = item.get("serial_number")
@@ -511,11 +563,15 @@ class MaintenanceMode:
 
     def build_endpoints(self) -> None:
         """
-        ### Summary
-        Build ``endpoints`` dict used in ``self.deploy_switches``.
+        # Summary
 
-        ### Raises
-        ``ValueError`` if endpoint configuration fails.
+        Build `endpoints` dict used in `self.deploy_switches`.
+
+        ## Raises
+
+        ### ValueError
+
+        - endpoint configuration fails.
         """
         method_name = inspect.stack()[0][3]
         endpoints = []
@@ -540,14 +596,19 @@ class MaintenanceMode:
 
     def deploy_switches(self) -> None:
         """
-        ### Summary
-        Initiate config-deploy for the switches in ``self.deploy_dict``.
+        # Summary
 
-        ### Raises
-        -   ``ControllerResponseError`` if:
-                -   controller response != 200.
-        -   ``ValueError`` if:
-                -   endpoint cannot be resolved.
+        Initiate config-deploy for the switches in `self.deploy_dict`.
+
+        ## Raises
+
+        ### ControllerResponseError
+
+        - controller response != 200.
+
+        ### ValueError
+
+        - endpoint cannot be resolved.
         """
         method_name = inspect.stack()[0][3]
         self.build_deploy_dict()
@@ -598,31 +659,30 @@ class MaintenanceMode:
     @property
     def config(self) -> list:
         """
-        ### Summary
-        The maintenance mode configurations to be sent to the controller.
+        # Summary
 
-        ### Raises
-        -   setter: ``ValueError`` if:
-                -   value is not a list.
-                -   value contains invalid content.
+        Get/set the maintenance mode configurations to be sent to the controller.
 
-        ### getter
-        Return ``config``.
+        ## Raises
 
-        ### setter
-        Set ``config``.
+        ### ValueError
 
-        ### Value structure
-        value is a ``list`` of ``dict``.  Each dict must contain the following:
-        -   ``deploy``: ``bool``.  If True, the switch maintenance mode
-            will be deployed.
-        -   ``fabric_name``: ``str``.  The name of the switch's hosting fabric.
-        -   ``ip_address``: ``str``.  The ip address of the switch.
-        -   ``mode``: ``str``.  The intended maintenance mode.  Must be one of
-            "maintenance" or "normal".
-        -   ``serial_number``: ``str``.  The serial number of the switch.
+        - setter: value is not a list.
+        - setter: value contains invalid content.
 
-        ### Example
+        ## Value structure
+
+        value is a `list` of `dict`. Each dict must contain the following:
+
+        - `deploy`: `bool`. If True, the switch maintenance mode will be deployed.
+        - `fabric_name`: `str`. The name of the switch's hosting fabric.
+        - `ip_address`: `str`. The ip address of the switch.
+        - `mode`: `str`. The intended maintenance mode. Must be one of
+          "maintenance" or "normal".
+        - `serial_number`: `str`. The serial number of the switch.
+
+        ## Example
+
         ```json
         [
             {
