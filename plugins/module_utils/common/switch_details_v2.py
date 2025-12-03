@@ -492,10 +492,15 @@ class SwitchDetails:
         ## Returns
 
         -   The `managable` value of the filtered switch, if it exists.
-        -   ``None`` otherwise.
-        -   Example: false, true
+        -   False otherwise.
+
+        ## Example Values
+
+        - True
+        - False
 
         ## Notes
+
         -   Yes, managable is misspelled.  It is spelled this way in the controller response.
 
         ## See also
@@ -525,6 +530,11 @@ class SwitchDetails:
 
         -   The `managable` value of the filtered switch, if it exists.
         -   False otherwise.
+
+        ## Example Values
+
+        - True
+        - False
 
         ## See also
 

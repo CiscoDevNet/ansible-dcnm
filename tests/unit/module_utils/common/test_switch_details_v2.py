@@ -87,8 +87,8 @@ def test_switch_details_v2_00100() -> None:
 
     ## Expected Result
 
-    -   SwitchDetails().validate_refresh_parameters() raises ``ValueError``.
-    -   SwitchDetails().refresh() catches and re-raises ``ValueError``.
+    -   SwitchDetails().validate_refresh_parameters() raises `ValueError`.
+    -   SwitchDetails().refresh() catches and re-raises `ValueError`.
 
     ## Classes and Methods
 
@@ -300,8 +300,8 @@ def test_switch_details_v2_00400() -> None:
 
     ## Setup - Code
 
-    -   Sender() is initialized and configured to raise ``ValueError``.
-        in ``commit()``.
+    -   Sender() is initialized and configured to raise `ValueError`.
+        in `commit()`.
     -   RestSend() is initialized and configured.
     -   SwitchDetails() is initialized and configured.
 
@@ -930,7 +930,7 @@ def test_switch_details_v2_00800() -> None:
     """
     # Summary
 
-    Verify ``platform`` returns an empty string if model == `null` in the controller response.
+    Verify `platform` returns an empty string if model == `null` in the controller response.
 
     ## Setup - Code
 
