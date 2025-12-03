@@ -88,6 +88,8 @@ class SwitchDetails:
         self._info: dict[str, Any] = {}
         self._rest_send: RestSend = RestSend({})
         self._results = Results()
+        self._results.action = self.action
+        self._results.operation_type = OperationType.QUERY
 
         msg = f"{self.class_name}.__init__ ENTERED."
         self.log.debug(msg)
@@ -373,11 +375,12 @@ class SwitchDetails:
 
         ## Returns
 
-        -   Parsed data from the GET request, if it exists.
-        -   And empty dictionary otherwise
+        - Parsed data from the GET request, if it exists.
+        - An empty dictionary otherwise
 
-        ### NOTES
-        -   Keyed on ip_address
+        ## Notes
+
+        - Keyed on ip_address
         """
         return self._info
 
@@ -405,7 +408,7 @@ class SwitchDetails:
         return value
 
     @property
-    def logical_name(self):
+    def logical_name(self) -> str:
         """
         # Summary
 
@@ -419,8 +422,8 @@ class SwitchDetails:
 
         ## Returns
 
-        -   The `logicalName` value of the filtered switch, if it exists.
-        -   Empty string otherwise.
+        - The `logicalName` value of the filtered switch, if it exists.
+        - Empty string otherwise.
         """
         value = self._get("logicalName")
         if value is None:
@@ -1001,4 +1004,4 @@ class SwitchDetails:
             raise TypeError(msg)
         self._results = value
         self._results.action = self.action
-        self._results.operation_type = OperationType.DELETE
+        self._results.operation_type = OperationType.QUERY

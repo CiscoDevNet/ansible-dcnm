@@ -639,8 +639,8 @@
     "test_switch_details_v2_00740a": {
         "TEST_NOTES": [
             "DATA[0].mode == Maintenance",
-            "DATA[0].system_mode == Maintenence",
-            "mode != system_mode",
+            "DATA[0].system_mode == Maintenance",
+            "mode == system_mode",
             "RETURN_CODE: 200",
             "MESSAGE: OK"
         ],
@@ -662,7 +662,7 @@
         "TEST_NOTES": [
             "DATA[0].mode == Normal",
             "DATA[0].system_mode == Normal",
-            "mode != system_mode",
+            "mode == system_mode",
             "RETURN_CODE: 200",
             "MESSAGE: OK"
         ],
