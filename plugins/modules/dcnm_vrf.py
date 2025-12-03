@@ -1851,6 +1851,7 @@ class DcnmVrf:
                 if vrf.get("vlan_id"):
                     vlan_id = vrf.get("vlan_id")
                 else:
+                    # Todo: When DCNM 11.x support is ended, change the default vlan_id to ""
                     vlan_id = 0
 
             want_create.append(self.update_create_params(vrf, vlan_id))
@@ -2276,8 +2277,9 @@ class DcnmVrf:
                     }
 
                     if self.dcnm_version > 11:
+                        vrf_vlan_id = "" if template_conf["vrfVlanId"] in [0, None] else template_conf["vrfVlanId"]
                         template_conf.update(
-                            vrfVlanId="" if template_conf["vrfVlanId"] == 0 else template_conf["vrfVlanId"]
+                            vrfVlanId=vrf_vlan_id
                         )
                         template_conf.update(
                             isRPAbsent=json_to_dict.get("isRPAbsent")
