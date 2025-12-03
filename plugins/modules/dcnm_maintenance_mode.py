@@ -149,6 +149,7 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
+
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.common.maintenance_mode import MaintenanceMode
 from ..module_utils.common.maintenance_mode_info import MaintenanceModeInfo
@@ -917,9 +918,7 @@ class Merged(Common):
             instance = MaintenanceModeInfo(self.params)
             instance.rest_send = self.rest_send
             instance.results = self.results
-            instance.config = [
-                item["ip_address"] for item in self.config.get("switches", {})
-            ]
+            instance.config = [item["ip_address"] for item in self.config.get("switches", {})]
             instance.refresh()
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
@@ -1212,9 +1211,7 @@ class Query(Common):
         try:
             self.maintenance_mode_info.rest_send = self.rest_send
             self.maintenance_mode_info.results = self.results
-            self.maintenance_mode_info.config = [
-                item["ip_address"] for item in self.config.get("switches", {})
-            ]
+            self.maintenance_mode_info.config = [item["ip_address"] for item in self.config.get("switches", {})]
             self.maintenance_mode_info.refresh()
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
@@ -1292,9 +1289,7 @@ def main():
         "type": "str",
     }
 
-    ansible_module = AnsibleModule(
-        argument_spec=argument_spec, supports_check_mode=True
-    )
+    ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     params = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
 
