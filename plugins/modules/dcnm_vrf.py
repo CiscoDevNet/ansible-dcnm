@@ -2176,6 +2176,9 @@ class DcnmVrf:
                 msg += f"{self.dcnm_version}"
                 self.module.fail_json(msg)
 
+            if vrf_id is not None:
+                break
+
         if vrf_id is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Unable to retrieve vrf_id "
@@ -2273,7 +2276,12 @@ class DcnmVrf:
                     }
 
                     if self.dcnm_version > 11:
-                        template_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
+                        template_conf.update(
+                            vrfVlanId="" if template_conf["vrfVlanId"] == 0 else template_conf["vrfVlanId"]
+                        )
+                        template_conf.update(
+                            isRPAbsent=json_to_dict.get("isRPAbsent")
+                        )
                         template_conf.update(
                             ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW")
                         )
