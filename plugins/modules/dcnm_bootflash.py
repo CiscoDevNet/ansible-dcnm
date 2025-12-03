@@ -685,8 +685,11 @@ class Query(Common):
 
         ## Raises
 
-        None.  While this method does not directly raise exceptions, it
-        calls other methods that may raise the following exceptions:
+        ### ValueError
+
+        - Missing `ip_address` in switch dict.
+
+        This method calls other methods that may also raise the following exceptions:
 
         - ControllerResponseError
         - TypeError
@@ -732,7 +735,11 @@ class Query(Common):
         # Use the file info from the controller as the diff.
         diff_current: dict[str, list[dict[str, Any]]] = {}
         for switch in self.switches:
-            ip_address = switch.get("ip_address")
+            ip_address = switch.get("ip_address", "")
+            if not ip_address:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Missing ip_address in switch dict."
+                raise ValueError(msg)
             self.bootflash_info.filter_switch = ip_address
             if ip_address not in diff_current:
                 diff_current[ip_address] = []

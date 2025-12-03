@@ -393,7 +393,7 @@ class BootflashInfo:
         """
         if not self.filter_filepath:
             return False
-        filepath: str = target.get("filepath") or ""
+        filepath: str = target.get("filepath", "")
         posix: PurePosixPath = PurePosixPath(filepath)
         if not posix.match(self.filter_filepath):
             return False
@@ -412,7 +412,7 @@ class BootflashInfo:
         """
         if not self.filter_supervisor:
             return False
-        if target.get("supervisor", None) != self.filter_supervisor:
+        if target.get("supervisor", "") != self.filter_supervisor:
             return False
         return True
 
@@ -429,7 +429,7 @@ class BootflashInfo:
         """
         if not self.filter_switch:
             return False
-        if target.get("ip_address", None) != self.filter_switch:
+        if target.get("ip_address", "") != self.filter_switch:
             return False
         return True
 
@@ -472,8 +472,8 @@ class BootflashInfo:
 
         diff: dict[str, list[dict[str, str]]] = {}
         for match in self._matches:
-            ip_address = match.get("ip_address", None)
-            if ip_address is None:
+            ip_address = match.get("ip_address", "")
+            if not ip_address:
                 continue
             if ip_address not in diff:
                 diff[ip_address] = []
@@ -624,11 +624,6 @@ class BootflashInfo:
 
         -   getter: if RestSend.params is not set.
         """
-        method_name: str = inspect.stack()[0][3]
-        if not self._rest_send.params:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "RestSend.params must be set before accessing."
-            raise ValueError(msg)
         return self._rest_send
 
     @rest_send.setter
@@ -646,6 +641,10 @@ class BootflashInfo:
             raise TypeError(msg) from error
         if _class_have != _class_need:
             raise TypeError(msg)
+        if not value.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set."
+            raise ValueError(msg)
         self._rest_send = value
 
     @property

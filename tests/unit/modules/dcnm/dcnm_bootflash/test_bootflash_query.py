@@ -16,11 +16,14 @@
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 # Due to the above, we also need to disable unused-import
 # Also, fixtures need to use *args to match the signature of the function they are mocking
+"""
+Unit tests for Query class
+"""
 # pylint: disable=unused-import, protected-access, use-implicit-booleaness-not-comparison, unused-variable
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -163,6 +166,9 @@ def test_bootflash_query_01000() -> None:
         instance.results.diff[0]["172.22.150.113"][0]["filepath"]
         == "bootflash:/black.txt"
     )
+    assert instance.results is not None
+    assert instance.results.response is not None
+    assert instance.results.result is not None
     assert instance.results.metadata[0]["action"] == "bootflash_info"
     assert instance.results.metadata[0]["check_mode"] is False
     assert instance.results.metadata[0]["sequence_number"] == 1
@@ -211,6 +217,9 @@ def test_bootflash_query_01010() -> None:
         instance.rest_send = rest_send
         instance.commit()
 
+    assert instance.results is not None
+    assert instance.results.response is not None
+    assert instance.results.result is not None
     assert len(instance.results.diff) == 1
     assert instance.results.diff[0]["sequence_number"] == 1
     assert instance.results.metadata[0]["action"] == "bootflash_info"

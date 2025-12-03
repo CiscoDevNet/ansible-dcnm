@@ -16,7 +16,7 @@ Build a `target` dictionary from a `file_info` dictionary.
 """
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import inspect
@@ -104,16 +104,17 @@ class ConvertFileInfoToTarget:
         self.action = "convert_file_info_to_target"
         self.timestamp_format = "%b %d %H:%M:%S %Y"
 
-        self._file_info = None
-        self._filename = None
-        self._filepath = None
-        self._ip_address = None
-        self._serial_number = None
-        self._supervisor = None
-        self._target = None
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED ConvertFileInfoToTarget(): "
+        self._file_info: dict[str, str] = {}
+        self._filename: str = ""
+        self._filepath: str = ""
+        self._ip_address: str = ""
+        self._serial_number: str = ""
+        self._supervisor: str = ""
+        self._target: dict[str, str] = {}
+
+        msg = f"{self.class_name}.__init__(): ENTERED"
         self.log.debug(msg)
 
     def validate_commit_parameters(self) -> None:
@@ -128,7 +129,7 @@ class ConvertFileInfoToTarget:
 
         - `file_info` is not set.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         def raise_error(msg):
             raise ValueError(f"{self.class_name}.{method_name}: {msg}")
@@ -192,7 +193,7 @@ class ConvertFileInfoToTarget:
         ```
 
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.validate_commit_parameters()
 
         def raise_error(msg):
@@ -228,7 +229,7 @@ class ConvertFileInfoToTarget:
             msg += f"Error detail: {error}"
             raise_error(msg)
 
-    def _get(self, key):
+    def _get(self, key: str) -> str:
         """
         # Summary
 
@@ -241,23 +242,21 @@ class ConvertFileInfoToTarget:
         - `file_info` has not been set before calling _get.
         - `key` is not in the target dictionary.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
 
-        def raise_error(msg):
-            raise ValueError(f"{self.class_name}.{method_name}: {msg}")
-
-        if self.file_info is None:
-            msg = "file_info must be set before calling ``_get()``."
-            raise_error(msg)
+        if not self.file_info:
+            msg += "file_info must be set before calling _get()."
+            raise ValueError(msg)
 
         if key not in self.file_info:
-            msg = f"Missing key {key} in file_info: {self.file_info}."
-            raise_error(msg)
+            msg += f"Missing key {key} in file_info: {self.file_info}."
+            raise ValueError(msg)
 
-        return self.file_info.get(key)
+        return self.file_info.get(key, "")
 
     @property
-    def file_info(self):
+    def file_info(self) -> dict[str, str]:
         """
         # Summary
 
@@ -297,11 +296,11 @@ class ConvertFileInfoToTarget:
         return self._file_info
 
     @file_info.setter
-    def file_info(self, value):
+    def file_info(self, value: dict[str, str]) -> None:
         self._file_info = value
 
     @property
-    def date(self):
+    def date(self) -> datetime:
         """
         # Summary
 
@@ -317,7 +316,7 @@ class ConvertFileInfoToTarget:
         - `date` is not in the `file_info` dictionary.
         - `date` cannot be converted to a datetime object.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         try:
             _date = datetime.strptime(self._get("date"), self.timestamp_format)
         except (TypeError, ValueError) as error:
@@ -329,7 +328,7 @@ class ConvertFileInfoToTarget:
         return _date
 
     @property
-    def device_name(self):
+    def device_name(self) -> str:
         """
         # Summary
 
@@ -345,7 +344,7 @@ class ConvertFileInfoToTarget:
         return self._get("deviceName")
 
     @property
-    def filename(self):
+    def filename(self) -> str:
         """
         # Summary
 
@@ -361,7 +360,7 @@ class ConvertFileInfoToTarget:
         return self._get("fileName")
 
     @property
-    def filepath(self):
+    def filepath(self) -> str:
         """
         # Summary
 
@@ -377,7 +376,7 @@ class ConvertFileInfoToTarget:
         return self._get("filePath")
 
     @property
-    def ip_address(self):
+    def ip_address(self) -> str:
         """
         # Summary
 
@@ -393,7 +392,7 @@ class ConvertFileInfoToTarget:
         return self._get("ipAddr").strip()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         # Summary
 
@@ -409,7 +408,7 @@ class ConvertFileInfoToTarget:
         return self._get("name")
 
     @property
-    def serial_number(self):
+    def serial_number(self) -> str:
         """
         # Summary
 
@@ -425,7 +424,7 @@ class ConvertFileInfoToTarget:
         return self._get("serialNumber")
 
     @property
-    def size(self):
+    def size(self) -> str:
         """
         # Summary
 
@@ -441,7 +440,7 @@ class ConvertFileInfoToTarget:
         return self._get("size")
 
     @property
-    def target(self):
+    def target(self) -> dict[str, str]:
         """
         # Summary
 
@@ -453,18 +452,18 @@ class ConvertFileInfoToTarget:
 
         - `commit()` has not been called before accessing.
         """
-        if self._target is None:
+        if not self._target:
             msg = f"{self.class_name}.target: "
             msg += "target has not been built. Call commit() before accessing."
             raise ValueError(msg)
         return self._target
 
     @target.setter
-    def target(self, value):
+    def target(self, value: dict[str, str]):
         self._target = value
 
     @property
-    def supervisor(self):
+    def supervisor(self) -> str:
         """
         # Summary
 
