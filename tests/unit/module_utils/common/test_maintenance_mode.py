@@ -1235,7 +1235,8 @@ def test_maintenance_mode_01100(monkeypatch, maintenance_mode) -> None:
 
     ## Test
 
-    - Verify MaintenanceMode().commit() raises `ValueError` when MaintenanceMode().deploy_switches() raises `ControllerResponseError` when the RETURN_CODE in the response is not 200
+    - Verify MaintenanceMode().commit() raises `ValueError` when MaintenanceMode().deploy_switches() raises `ControllerResponseError`
+      when the RETURN_CODE in the response is not 200
 
     ## Code Flow - Setup
 
