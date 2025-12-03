@@ -914,7 +914,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_ip_addr_info,
     dcnm_get_url,
     dcnm_send,
-    get_fabric_details,
+    get_nd_fabric_details,
     get_nd_fabric_inventory_details,
     get_ip_sn_dict,
     get_ip_sn_fabric_dict,
@@ -1031,7 +1031,8 @@ class DcnmNetwork:
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
         
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
-        self.fabric_det = get_fabric_details(module, self.fabric)
+        # Use get_nd_fabric_details for ND/multicluster support (handles proxy paths for child fabrics)
+        self.fabric_det = get_nd_fabric_details(module, self.dcnm_version, self.fabric, self.fabric_details)
 
         msg = "self.fabric_det: "
         msg += f"{json.dumps(self.fabric_det, indent=4, sort_keys=True)}"
@@ -1370,6 +1371,7 @@ class DcnmNetwork:
 
         attach.update({"fabric": self.fabric})
         attach.update({"networkName": net_name})
+        attach.update({"displayName": net_name})
         attach.update({"serialNumber": serial})
         attach.update({"switchPorts": ",".join(attach["ports"])})
         attach.update({"detachSwitchPorts": ""})  # Is this supported??Need to handle correct
@@ -2045,6 +2047,7 @@ class DcnmNetwork:
                 "fabric": self.fabric,
                 "vrf": net.get("vrf_name"),
                 "networkName": net["net_name"],
+                "displayName": net["net_name"],
                 "networkId": net.get("net_id", None),  # Network id will be auto generated in get_diff_merge()
                 "networkTemplate": n_template,
                 "networkExtensionTemplate": ne_template,
@@ -4118,11 +4121,6 @@ class DcnmNetwork:
 
         state = self.params["state"]
 
-        if state == "query":
-
-            mcast_group_addr = self.get_fabric_multicast_group_address()
-        state = self.params["state"]
-
         # Check for invalid state combinations with MSD child
         if self.fabric_type in ["multisite_child", "multicluster_child"]:
             if state in ["overridden", "deleted"]:
@@ -4314,7 +4312,7 @@ class DcnmNetwork:
         if op == "attach" and "Invalid interfaces" in str(res.values()):
             fail = True
             changed = True
-        if op == "deploy" and "No switches PENDING for deployment" in str(res.values()) and "multisite_" not in self.fabric_type:
+        if op == "deploy" and "No switches PENDING for deployment" in str(res.values()) and "multi" not in self.fabric_type:
             # For parent fabrics, don't set changed=False as they will never have switches
             changed = False
 
