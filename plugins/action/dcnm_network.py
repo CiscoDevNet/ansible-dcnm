@@ -56,6 +56,15 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.action_logger im
     ActionLogger as Logger,
 )
 import json
+import traceback
+
+# Import new utility functions from dcnm module_utils
+
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    get_nd_version,
+    obtain_federated_fabric_associations,
+    obtain_fabric_associations
+)
 
 # Import new utility functions from dcnm module_utils
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
