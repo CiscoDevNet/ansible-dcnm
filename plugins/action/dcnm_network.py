@@ -150,7 +150,7 @@ class ActionModule(ActionBase):
 
         if not isinstance(config, list) or not config:
             # For 'query' and 'deleted', allow empty config (interpreted as all networks)
-            if state in ['query', 'deleted']:
+            if state in ['query', 'deleted', 'overridden']:
                 config = []
             else:
                 result['failed'] = True
