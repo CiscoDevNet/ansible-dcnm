@@ -45,7 +45,7 @@ class MaintenanceMode:
     - `config` property setter: config contains invalid content.
     - `commit()`: config, rest_send, or results are not set.
     - `commit()`: `EpMaintenanceModeEnable` or `EpMaintenanceModeDisable` raise `ValueError`.
-    - `commit()`: either `chance_system_mode()` or `deploy_switches()` raise `ControllerResponseError`.
+    - `commit()`: either `change_system_mode()` or `deploy_switches()` raise `ControllerResponseError`.
 
     ### TypeError
 
