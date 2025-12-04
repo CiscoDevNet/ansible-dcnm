@@ -1,4 +1,7 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+"""
+Unit tests for dcnm_maintenance_mode Query class.
+"""
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,9 +24,9 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
@@ -47,16 +50,19 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mod
 
 def test_dcnm_maintenance_mode_query_00000() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - __init__()
+    # Summary
 
-    ### Summary
-    - Verify the class attributes are initialized to expected values.
+    Verify the class attributes are initialized to expected values.
 
-    ### Test
+    ## Test
+
     - Class attributes are initialized to expected values.
     - Exception is not raised.
+
+    ## Classes and Methods
+
+    - Common
+        - `__init__()`
     """
     with does_not_raise():
         instance = Query(params_query)
@@ -83,14 +89,17 @@ def test_dcnm_maintenance_mode_query_00000() -> None:
 
 def test_dcnm_maintenance_mode_query_00100() -> None:
     """
-    ### Classes and Methods
-    - Query()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``commit()`` happy path.
-    -   No exceptions are raised.
-    -   want contains expected structure and values.
+    Verify `commit()` happy path.
+
+    - No exceptions are raised.
+    - want contains expected structure and values.
+
+    ## Classes and Methods
+
+    - Query()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -175,13 +184,15 @@ def test_dcnm_maintenance_mode_query_00100() -> None:
 
 def test_dcnm_maintenance_mode_query_00200() -> None:
     """
-    ### Classes and Methods
-    - Query()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``commit()`` raises ``ValueError`` when rest_send has not
-        been set.
+    Verify `commit()` raises `ValueError` when `rest_send` has not
+    been set.
+
+    ## Classes and Methods
+
+    - Query()
+        - `commit()`
     """
     with does_not_raise():
         instance = Query(params_query)
@@ -198,14 +209,16 @@ def test_dcnm_maintenance_mode_query_00200() -> None:
 
 def test_dcnm_maintenance_mode_query_00300(monkeypatch) -> None:
     """
-    ### Classes and Methods
-    - Query()
-        - get_need()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``get_need()`` raises ``ValueError`` when ip_address
-        does not exist in self.have.
+    Verify `get_need()` raises `ValueError` when `ip_address`
+    does not exist in `self.have`.
+
+    ## Classes and Methods
+
+    - Query()
+        - `get_need()`
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -253,14 +266,16 @@ def test_dcnm_maintenance_mode_query_00300(monkeypatch) -> None:
 
 def test_dcnm_maintenance_mode_query_00400(monkeypatch) -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - get_want()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``commit`` re-raises ``ValueError`` when ``get_want()``
-        raises ``ValueError``.
+    Verify `commit()` re-raises `ValueError` when `get_want()`
+    raises `ValueError`.
+
+    ## Classes and Methods
+
+    - Query()
+        - `get_want()`
+        - `commit()`
     """
     params_test = copy.deepcopy(params_query)
     params_test.update({"config": {}})
@@ -288,13 +303,15 @@ def test_dcnm_maintenance_mode_query_00400(monkeypatch) -> None:
 
 def test_dcnm_maintenance_mode_query_00500() -> None:
     """
-    ### Classes and Methods
-    - Query()
-        - __init__()
+    # Summary
 
-    ### Summary
-    -   Verify ``__init__`` re-raises ``ValueError`` when ``Common().__init__``
-        raises ``ValueError``.
+    Verify `__init__()` re-raises `ValueError` when `Common().__init__()`
+    raises `ValueError`.
+
+    ## Classes and Methods
+
+    - Query()
+        - `__init__()`
     """
     params_test = copy.deepcopy(params_query)
     params_test.update({"config": {}})
@@ -310,13 +327,15 @@ def test_dcnm_maintenance_mode_query_00500() -> None:
 
 def test_dcnm_maintenance_mode_query_00600(monkeypatch) -> None:
     """
-    ### Classes and Methods
-    - Query()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``commit`` re-raises ``ValueError`` when ``get_have()``
-        raises ``ValueError``.
+    Verify `commit()` re-raises `ValueError` when `get_have()`
+    raises `ValueError`.
+
+    ## Classes and Methods
+
+    - Query()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
