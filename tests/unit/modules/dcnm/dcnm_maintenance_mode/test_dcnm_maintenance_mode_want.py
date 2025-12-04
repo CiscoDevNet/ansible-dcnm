@@ -1,3 +1,6 @@
+"""
+Unit tests for dcnm_maintenance_mode Want class.
+"""
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +24,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -38,16 +41,19 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mod
 
 def test_dcnm_maintenance_mode_want_00000() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - __init__()
+    # Summary
 
-    ### Summary
-    - Verify the class attributes are initialized to expected values.
+    Verify the class attributes are initialized to expected values.
 
-    ### Test
+    ## Test
+
     - Class attributes are initialized to expected values
-    - ``ValueError`` is not called
+    - `ValueError` is not called
+
+    ## Classes and Methods
+
+    - Common
+        - `__init__()`
     """
     with does_not_raise():
         instance = Want()
@@ -64,14 +70,17 @@ def test_dcnm_maintenance_mode_want_00000() -> None:
 
 def test_dcnm_maintenance_mode_want_00100() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``commit()`` happy path.
-    -   No exceptions are raised.
-    -   want contains expected structure and values.
+    Verify `commit()` happy path.
+
+    - No exceptions are raised.
+    - want contains expected structure and values.
+
+    ## Classes and Methods
+
+    - Want()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -104,13 +113,16 @@ def test_dcnm_maintenance_mode_want_00100() -> None:
 
 def test_dcnm_maintenance_mode_want_00110() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``ValueError`` is raised.
-    -   Want().validator is not set prior to calling commit().
+    Verify `ValueError` is raised.
+
+    - `Want().validator` is not set prior to calling `commit()`.
+
+    ## Classes and Methods
+
+    - Want()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -137,14 +149,17 @@ def test_dcnm_maintenance_mode_want_00110() -> None:
 
 def test_dcnm_maintenance_mode_want_00120() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify Want().commit() catches and re-raises ``ValueError``.
-    -   Want().generate_params_spec() raises ``ValueError`` because
-        ``params`` is not set.
+    Verify `Want().commit()` catches and re-raises `ValueError`.
+
+    - `Want().generate_params_spec()` raises `ValueError` because
+      `params` is not set.
+
+    ## Classes and Methods
+
+    - Want()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -174,14 +189,17 @@ def test_dcnm_maintenance_mode_want_00120() -> None:
 
 def test_dcnm_maintenance_mode_want_00121() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify Want().commit() catches and re-raises ``ValueError``.
-    -   Want().generate_params_spec() raises ``ValueError`` because
-        ``params_spec`` is not set.
+    Verify `Want().commit()` catches and re-raises `ValueError`.
+
+    - `Want().generate_params_spec()` raises `ValueError` because
+      `params_spec` is not set.
+
+    ## Classes and Methods
+
+    - Want()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -211,14 +229,17 @@ def test_dcnm_maintenance_mode_want_00121() -> None:
 
 def test_dcnm_maintenance_mode_want_00130() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify Want().commit() catches and re-raises ``ValueError``.
-    -   Want()._merge_global_and_item_configs() raises ``ValueError``
-        because ``config`` is not set.
+    Verify `Want().commit()` catches and re-raises `ValueError`.
+
+    - `Want()._merge_global_and_item_configs()` raises `ValueError`
+      because `config` is not set.
+
+    ## Classes and Methods
+
+    - Want()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -248,14 +269,17 @@ def test_dcnm_maintenance_mode_want_00130() -> None:
 
 def test_dcnm_maintenance_mode_want_00131() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify Want().commit() catches and re-raises ``ValueError``.
-    -   Want()._merge_global_and_item_configs() raises ``ValueError``
-        because ``items_key`` is not set.
+    Verify `Want().commit()` catches and re-raises `ValueError`.
+
+    - `Want()._merge_global_and_item_configs()` raises `ValueError`
+      because `items_key` is not set.
+
+    ## Classes and Methods
+
+    - Want()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -285,14 +309,17 @@ def test_dcnm_maintenance_mode_want_00131() -> None:
 
 def test_dcnm_maintenance_mode_want_00132() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify Want().commit() catches and re-raises ``ValueError``.
-    -   Want()._merge_global_and_item_configs() raises ``ValueError``
-        because ``config`` is missing the key specified by items_key.
+    Verify `Want().commit()` catches and re-raises `ValueError`.
+
+    - `Want()._merge_global_and_item_configs()` raises `ValueError`
+      because `config` is missing the key specified by `items_key`.
+
+    ## Classes and Methods
+
+    - Want()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -323,14 +350,17 @@ def test_dcnm_maintenance_mode_want_00132() -> None:
 
 def test_dcnm_maintenance_mode_want_00133(monkeypatch) -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify Want().commit() catches and re-raises ``ValueError``.
-    -   Want()._merge_global_and_item_configs() raises ``ValueError``
-        because MergeDict().commit() raises ``ValueError``.
+    Verify `Want().commit()` catches and re-raises `ValueError`.
+
+    - `Want()._merge_global_and_item_configs()` raises `ValueError`
+      because `MergeDict().commit()` raises `ValueError`.
+
+    ## Classes and Methods
+
+    - Want()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -351,11 +381,13 @@ def test_dcnm_maintenance_mode_want_00133(monkeypatch) -> None:
         @staticmethod
         def commit():
             """
-            ### Summary
-            Mock method for MergeDicts().commit().
+            # Summary
 
-            ### Raises
-            ValueError: Always
+            Mock method for `MergeDicts().commit()`.
+
+            ## Raises
+
+            - `ValueError`: Always
             """
             raise ValueError("MergeDicts().commit(). ValueError.")
 
@@ -378,14 +410,17 @@ def test_dcnm_maintenance_mode_want_00133(monkeypatch) -> None:
 
 def test_dcnm_maintenance_mode_want_00140(monkeypatch) -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify Want().commit() catches and re-raises ``ValueError``
-        when Want().validate_configs() raises ``ValueError``.
-    -   Want().validate_configs() is mocked to raise ``ValueError``.
+    Verify `Want().commit()` catches and re-raises `ValueError`
+    when `Want().validate_configs()` raises `ValueError`.
+
+    - `Want().validate_configs()` is mocked to raise `ValueError`.
+
+    ## Classes and Methods
+
+    - Want()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -418,12 +453,14 @@ def test_dcnm_maintenance_mode_want_00140(monkeypatch) -> None:
 
 def test_dcnm_maintenance_mode_want_00200() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - config.setter
+    # Summary
 
-    ### Summary
-    -   Verify Want().config raises ``TypeError`` when config is not a dict.
+    Verify `Want().config` raises `TypeError` when `config` is not a dict.
+
+    ## Classes and Methods
+
+    - Want()
+        - `config.setter`
     """
     with does_not_raise():
         instance = Want()
@@ -436,13 +473,15 @@ def test_dcnm_maintenance_mode_want_00200() -> None:
 
 def test_dcnm_maintenance_mode_want_00300() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - items_key.setter
+    # Summary
 
-    ### Summary
-    -   Verify Want().items_key raises ``TypeError`` when items_key is not
-        a string.
+    Verify `Want().items_key` raises `TypeError` when `items_key` is not
+    a string.
+
+    ## Classes and Methods
+
+    - Want()
+        - `items_key.setter`
     """
     with does_not_raise():
         instance = Want()
@@ -455,12 +494,14 @@ def test_dcnm_maintenance_mode_want_00300() -> None:
 
 def test_dcnm_maintenance_mode_want_00400() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - params.setter
+    # Summary
 
-    ### Summary
-    Verify Want().params happy path.
+    Verify `Want().params` happy path.
+
+    ## Classes and Methods
+
+    - Want()
+        - `params.setter`
     """
     with does_not_raise():
         instance = Want()
@@ -469,12 +510,14 @@ def test_dcnm_maintenance_mode_want_00400() -> None:
 
 def test_dcnm_maintenance_mode_want_00410() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - params.setter
+    # Summary
 
-    ### Summary
-    -   Verify Want().params raises ``TypeError`` when params is not a dict.
+    Verify `Want().params` raises `TypeError` when `params` is not a dict.
+
+    ## Classes and Methods
+
+    - Want()
+        - `params.setter`
     """
     with does_not_raise():
         instance = Want()
@@ -487,12 +530,14 @@ def test_dcnm_maintenance_mode_want_00410() -> None:
 
 def test_dcnm_maintenance_mode_want_00500() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - params_spec.setter
+    # Summary
 
-    ### Summary
-    Verify Want().params_spec happy path.
+    Verify `Want().params_spec` happy path.
+
+    ## Classes and Methods
+
+    - Want()
+        - `params_spec.setter`
     """
     with does_not_raise():
         instance = Want()
@@ -501,13 +546,15 @@ def test_dcnm_maintenance_mode_want_00500() -> None:
 
 def test_dcnm_maintenance_mode_want_00510() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - params_spec.setter
+    # Summary
 
-    ### Summary
-    -   Verify Want().params_spec raises ``TypeError`` when params_spec
-        is not an instance of ParamsSpec().
+    Verify `Want().params_spec` raises `TypeError` when `params_spec`
+    is not an instance of `ParamsSpec()`.
+
+    ## Classes and Methods
+
+    - Want()
+        - `params_spec.setter`
     """
     with does_not_raise():
         instance = Want()
@@ -522,14 +569,16 @@ def test_dcnm_maintenance_mode_want_00510() -> None:
 
 def test_dcnm_maintenance_mode_want_00520() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - params_spec.setter
+    # Summary
 
-    ### Summary
-    Verify Want().params_spec raises ``TypeError`` when params_spec
-    is not an instance of ParamsSpec(), but IS an instance of another
+    Verify `Want().params_spec` raises `TypeError` when `params_spec`
+    is not an instance of `ParamsSpec()`, but IS an instance of another
     class.
+
+    ## Classes and Methods
+
+    - Want()
+        - `params_spec.setter`
     """
     with does_not_raise():
         instance = Want()
@@ -543,12 +592,14 @@ def test_dcnm_maintenance_mode_want_00520() -> None:
 
 def test_dcnm_maintenance_mode_want_00600() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - validator.setter
+    # Summary
 
-    ### Summary
-    Verify Want().validator happy path.
+    Verify `Want().validator` happy path.
+
+    ## Classes and Methods
+
+    - Want()
+        - `validator.setter`
     """
     with does_not_raise():
         instance = Want()
@@ -557,13 +608,15 @@ def test_dcnm_maintenance_mode_want_00600() -> None:
 
 def test_dcnm_maintenance_mode_want_00610() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - validator.setter
+    # Summary
 
-    ### Summary
-    -   Verify Want().validator raises ``TypeError`` when validator
-        is not an instance of ParamsValidate().
+    Verify `Want().validator` raises `TypeError` when `validator`
+    is not an instance of `ParamsValidate()`.
+
+    ## Classes and Methods
+
+    - Want()
+        - `validator.setter`
     """
     with does_not_raise():
         instance = Want()
@@ -578,14 +631,16 @@ def test_dcnm_maintenance_mode_want_00610() -> None:
 
 def test_dcnm_maintenance_mode_want_00620() -> None:
     """
-    ### Classes and Methods
-    - Want()
-        - validator.setter
+    # Summary
 
-    ### Summary
-    Verify Want().validator raises ``TypeError`` when validator
-    is not an instance of ParamsValidate(), but IS an instance of
+    Verify `Want().validator` raises `TypeError` when `validator`
+    is not an instance of `ParamsValidate()`, but IS an instance of
     another class.
+
+    ## Classes and Methods
+
+    - Want()
+        - `validator.setter`
     """
     with does_not_raise():
         instance = Want()
