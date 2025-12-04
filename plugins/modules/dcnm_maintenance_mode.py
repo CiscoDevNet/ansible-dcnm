@@ -1,6 +1,9 @@
 #!/usr/bin/python
+"""
+Ansible module to manage Maintenance Mode Configuration of NX-OS Switches.
+"""
 #
-# Copyright (c) 2020-2024 Cisco and/or its affiliates.
+# Copyright (c) 2020-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +16,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=too-many-lines
 
 from __future__ import absolute_import, division, print_function
+from typing import Any
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 DOCUMENTATION = """
@@ -169,7 +174,6 @@ def json_pretty(msg):
     """
     return json.dumps(msg, indent=4, sort_keys=True)
 
-
 class ParamsSpec:
     """
     # Summary
@@ -211,18 +215,18 @@ class ParamsSpec:
     ```
     """
 
-    def __init__(self):
-        self.class_name = self.__class__.__name__
+    def __init__(self) -> None:
+        self.class_name: str = self.__class__.__name__
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ParamsSpec()")
 
-        self._params = None
-        self._params_spec: dict = {}
+        self._params: dict[str, Any] = {}
+        self._params_spec: dict[str, Any] = {}
 
-        self.valid_states = ["merged", "query"]
+        self._valid_states: list[str] = ["merged", "query"]
 
-    def commit(self):
+    def commit(self) -> None:
         """
         # Summary
 
@@ -233,22 +237,34 @@ class ParamsSpec:
         ### ValueError
 
         - params is not set
+        - params["state"] is not a valid state (merged or query)
         """
-        if self._params is None:
+        if not self._params:
             msg = f"{self.class_name}.commit: "
             msg += "params must be set before calling commit()."
             raise ValueError(msg)
 
-        if self.params["state"] == "merged":
+        if self.params.get("state") == "merged":
             self._build_params_spec_for_merged_state()
-        if self.params["state"] == "query":
+        elif self.params.get("state") == "query":
             self._build_params_spec_for_query_state()
+        else:
+            msg = f"{self.class_name}.commit: "
+            msg += f"Invalid state {self.params.get('state')}."
+            raise ValueError(msg)
+
 
     def _build_params_spec_for_merged_state(self) -> None:
         """
+        # Summary
+
         Build the parameter specifications for ``merged`` state.
+
+        ## Raises
+
+        None
         """
-        self._params_spec: dict = {}
+        self._params_spec = {}
         self._params_spec["ip_address"] = {}
         self._params_spec["ip_address"]["required"] = True
         self._params_spec["ip_address"]["type"] = "ipv4"
@@ -271,22 +287,28 @@ class ParamsSpec:
 
     def _build_params_spec_for_query_state(self) -> None:
         """
+        # Summary
+
         Build the parameter specifications for ``query`` state.
+
+        ## Raises
+
+        None
         """
-        self._params_spec: dict = {}
+        self._params_spec = {}
         self._params_spec["ip_address"] = {}
         self._params_spec["ip_address"]["required"] = True
         self._params_spec["ip_address"]["type"] = "ipv4"
 
     @property
-    def params_spec(self) -> dict:
+    def params_spec(self) -> dict[str, Any]:
         """
         return the parameter specification
         """
         return self._params_spec
 
     @property
-    def params(self) -> dict:
+    def params(self) -> dict[str, Any]:
         """
         # Summary
 
@@ -312,11 +334,11 @@ class ParamsSpec:
         return self._params
 
     @params.setter
-    def params(self, value: dict) -> None:
+    def params(self, value: dict[str, Any]) -> None:
         """
         -   setter: set the params
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}.setter: "
             msg += "Invalid type. Expected dict but "
@@ -329,10 +351,10 @@ class ParamsSpec:
             msg += "params.state is required but missing."
             raise ValueError(msg)
 
-        if value["state"] not in self.valid_states:
+        if value["state"] not in self._valid_states:
             msg = f"{self.class_name}.{method_name}.setter: "
             msg += f"params.state is invalid: {value['state']}. "
-            msg += f"Expected one of {', '.join(self.valid_states)}."
+            msg += f"Expected one of {', '.join(self._valid_states)}."
             raise ValueError(msg)
 
         self._params = value
@@ -397,22 +419,22 @@ class Want:
     ```
     """
 
-    def __init__(self):
-        self.class_name = self.__class__.__name__
+    def __init__(self) -> None:
+        self.class_name: str = self.__class__.__name__
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED Want()")
 
-        self._config = None
-        self._items_key = None
-        self._params = None
-        self._params_spec = None
-        self._validator = None
-        self._want = []
+        self._config: dict[str, Any] = {}
+        self._items_key: str = ""
+        self._params: dict[str, Any] = {}
+        self._params_spec: ParamsSpec = ParamsSpec()
+        self._validator: ParamsValidate = ParamsValidate()
+        self._want: list[dict[str, Any]] = []
 
-        self.merge_dicts = MergeDicts()
-        self.merged_configs = []
-        self.item_configs = []
+        self.merge_dicts: MergeDicts = MergeDicts()
+        self.merged_configs: list[dict[str, Any]] = []
+        self.item_configs: list[dict[str, Any]] = []
 
     def generate_params_spec(self) -> None:
         """
@@ -428,11 +450,11 @@ class Want:
         - self.params_spec is not set
         """
         # Generate the params_spec used to validate the configs
-        if self.params is None:
+        if not self.params:
             msg = f"{self.class_name}.generate_params_spec(): "
             msg += "params is not set, and is required."
             raise ValueError(msg)
-        if self.params_spec is None:
+        if not self.params_spec:
             msg = f"{self.class_name}.generate_params_spec(): "
             msg += "params_spec is not set, and is required."
             raise ValueError(msg)
@@ -457,13 +479,13 @@ class Want:
 
         ## Notes
 
-        validator is already verified in commit()s
+        validator is already verified in commit()
         """
-        self.validator.params_spec = self.params_spec.params_spec
+        self._validator.params_spec = self._params_spec.params_spec
         for config in self.merged_configs:
-            self.validator.parameters = config
-            self.validator.commit()
-            self.want.append(copy.deepcopy(config))
+            self._validator.parameters = config
+            self._validator.commit()
+            self._want.append(copy.deepcopy(config))
 
     def build_merged_configs(self) -> None:
         """
@@ -478,7 +500,7 @@ class Want:
         None
         """
         self.merged_configs = []
-        merge_defaults = ParamsMergeDefaults()
+        merge_defaults: ParamsMergeDefaults = ParamsMergeDefaults()
         merge_defaults.params_spec = self.params_spec.params_spec
         for config in self.item_configs:
             merge_defaults.parameters = config
@@ -521,9 +543,9 @@ class Want:
 
         See class docstring.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        if self.validator is None:
+        if self._validator is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"self.validator must be set before calling {method_name}."
             raise ValueError(msg)
@@ -583,9 +605,9 @@ class Want:
           from global_config.
         - If item_config has a parameter, use it.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        if self.config is None:
+        if not self.config:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is not set, and is required."
             raise ValueError(msg)
@@ -754,7 +776,7 @@ class Want:
         self._params = value
 
     @property
-    def params_spec(self):
+    def params_spec(self) -> ParamsSpec:
         """
         # Summary
 
@@ -780,8 +802,8 @@ class Want:
         return self._params_spec
 
     @params_spec.setter
-    def params_spec(self, value) -> None:
-        method_name = inspect.stack()[0][3]
+    def params_spec(self, value: ParamsSpec) -> None:
+        method_name: str = inspect.stack()[0][3]
         _class_have = None
         _class_need = "ParamsSpec"
         msg = f"{self.class_name}.{method_name}: "
@@ -798,7 +820,7 @@ class Want:
         self._params_spec = value
 
     @property
-    def validator(self):
+    def validator(self) -> ParamsValidate:
         """
         # Summary
 
@@ -811,7 +833,7 @@ class Want:
 
         setter:
 
-        - value is not an instance of ``ParamsValidate()``
+        - value is not an instance of `ParamsValidate()`
 
         ## Details
 
@@ -821,8 +843,8 @@ class Want:
         return self._validator
 
     @validator.setter
-    def validator(self, value) -> None:
-        method_name = inspect.stack()[0][3]
+    def validator(self, value: ParamsValidate) -> None:
+        method_name: str = inspect.stack()[0][3]
         _class_have = None
         _class_need = "ParamsValidate"
         msg = f"{self.class_name}.{method_name}: "
@@ -845,7 +867,7 @@ class Common:
     Common methods, properties, and resources for all states.
     """
 
-    def __init__(self, params):
+    def __init__(self, params: dict[str, Any]):
         """
         # Summary
 
@@ -855,7 +877,6 @@ class Common:
 
         ### ValueError
 
-        - `params` does not contain `check_mode`
         - `params` does not contain `state`
         - `params` does not contain `config`
 
@@ -863,26 +884,22 @@ class Common:
 
         - `config` is not a dict
         """
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
 
         self.params = params
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "check_mode is required."
-            raise ValueError(msg)
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.state = self.params.get("state", None)
-        if self.state is None:
+        self._check_mode: bool = self.params.get("check_mode", False)
+        self.state: str = self.params.get("state", "")
+        if not self.state:
             msg = f"{self.class_name}.{method_name}: "
             msg += "state is required."
             raise ValueError(msg)
 
-        self.config = self.params.get("config", None)
-        if self.config is None:
+        self.config: dict[str, Any] = self.params.get("config", {})
+        if not self.config:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is required."
             raise ValueError(msg)
@@ -892,11 +909,11 @@ class Common:
             msg += f"Got {type(self.config).__name__}"
             raise TypeError(msg)
 
-        self._rest_send = None
+        self._rest_send: RestSend = RestSend({})
 
-        self.results = Results()
+        self.results: Results = Results()
         self.results.state = self.state
-        self.results.check_mode = self.check_mode
+        self.results.check_mode = self._check_mode
 
         self.have = {}
         # populated in self.validate_input()
@@ -906,7 +923,7 @@ class Common:
 
         msg = f"ENTERED Common().{method_name}: "
         msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
+        msg += f"check_mode: {self._check_mode}"
         self.log.debug(msg)
 
     def get_want(self) -> None:
@@ -971,8 +988,8 @@ class Merged(Common):
 
         - Common().__init__() raises `TypeError`
         """
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -987,7 +1004,7 @@ class Merged(Common):
 
         msg = f"ENTERED Merged.{method_name}: "
         msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
+        msg += f"check_mode: {self._check_mode}"
         self.log.debug(msg)
 
         self.need = []
@@ -1051,7 +1068,7 @@ class Merged(Common):
         }
         ```
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         try:
             instance = MaintenanceModeInfo(self.params)
@@ -1082,7 +1099,7 @@ class Merged(Common):
 
         - any of the above cases are true
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         for ip_address, value in self.have.items():
             fabric_name = value.get("fabric_name")
             mode = value.get("mode")
@@ -1177,7 +1194,7 @@ class Merged(Common):
         ]
         ```
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.need = []
         for want in self.want:
             ip_address = want.get("ip_address", None)
@@ -1213,7 +1230,7 @@ class Merged(Common):
         - `get_have()` raises `ValueError`
         - `send_need()` raises `ValueError`
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
 
@@ -1266,7 +1283,7 @@ class Merged(Common):
 
         - MaintenanceMode() raises `TypeError`
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         if len(self.need) == 0:
             msg = f"{self.class_name}.{method_name}: "
@@ -1302,7 +1319,7 @@ class Query(Common):
     - Common().__init__() raises `TypeError`
     """
 
-    def __init__(self, params):
+    def __init__(self, params: dict[str, Any]) -> None:
         """
         # Summary
 
@@ -1318,8 +1335,8 @@ class Query(Common):
 
         - Common().__init__() raises `TypeError`
         """
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -1328,16 +1345,16 @@ class Query(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.maintenance_mode_info = MaintenanceModeInfo(self.params)
+        self.maintenance_mode_info: MaintenanceModeInfo = MaintenanceModeInfo(self.params)
 
         msg = "ENTERED Query(): "
         msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
+        msg += f"check_mode: {self._check_mode}"
         self.log.debug(msg)
 
-    def get_have(self):
+    def get_have(self) -> None:
         """
         # Summary
 
@@ -1395,7 +1412,7 @@ class Query(Common):
         }
         ```
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         try:
             self.maintenance_mode_info.rest_send = self.rest_send
@@ -1424,7 +1441,7 @@ class Query(Common):
         - `get_want()` raises `ValueError`
         - `get_have()` raises `ValueError`
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
 
@@ -1469,7 +1486,7 @@ class Query(Common):
 def main():
     """main entry point for module execution"""
 
-    argument_spec = {}
+    argument_spec: dict[str, Any] = {}
     argument_spec["config"] = {
         "required": True,
         "type": "dict",
@@ -1481,8 +1498,8 @@ def main():
         "type": "str",
     }
 
-    ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
-    params = copy.deepcopy(ansible_module.params)
+    ansible_module: AnsibleModule = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
+    params: dict[str, Any] = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
 
     # Logging setup
@@ -1492,9 +1509,9 @@ def main():
     except ValueError as error:
         ansible_module.fail_json(str(error))
 
-    sender = Sender()
+    sender: Sender = Sender()
     sender.ansible_module = ansible_module
-    rest_send = RestSend(params)
+    rest_send: RestSend = RestSend(params)
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
 
