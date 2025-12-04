@@ -1,3 +1,6 @@
+"""
+Unit tests for dcnm_maintenance_mode Common class
+"""
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,11 +19,11 @@
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 # Due to the above, we also need to disable unused-import
 # Also, fixtures need to use *args to match the signature of the function they are mocking
-# pylint: disable=unused-import
+# pylint: disable=unused-import,protected-access
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -51,7 +54,7 @@ def test_dcnm_maintenance_mode_common_00000(common) -> None:
         instance = common
     assert instance.class_name == "Common"
     assert instance.state == "merged"
-    assert instance.check_mode is False
+    assert instance._check_mode is False
     assert instance.have == {}
     assert instance.payloads == {}
     assert instance.query == []
@@ -63,30 +66,42 @@ def test_dcnm_maintenance_mode_common_00000(common) -> None:
 
 def test_dcnm_maintenance_mode_common_00010() -> None:
     """
-    ### Classes and Methods
+    # Summary
+
+    Verify check_mode is False if not set in params.
+
+    ## Setup - Code
+
+    - `check_mode` is removed from params to simulate missing `check_mode` key/value.
+
+    ## Expected Results
+
+    - check_mode is False if not set in params.
+
+    ## Classes and Methods
+
     - Common
         - __init__()
 
-    ### Summary
-    -   Verify ``ValueError`` is raised.
-    -   params is missing ``check_mode`` key/value.
     """
     params_test = copy.deepcopy(params)
     params_test.pop("check_mode", None)
-    match = r"Common\.__init__: check_mode is required"
-    with pytest.raises(ValueError, match=match):
-        Common(params_test)
+    instance = Common(params_test)
 
+    assert instance._check_mode is False
 
 def test_dcnm_maintenance_mode_common_00020() -> None:
     """
-    ### Classes and Methods
+    # Summary
+
+    -   Verify ``ValueError`` is raised.
+    -   params is missing ``state`` key/value.
+
+    ## Classes and Methods
+
     - Common
         - __init__()
 
-    ### Summary
-    -   Verify ``ValueError`` is raised.
-    -   params is missing ``state`` key/value.
     """
     params_test = copy.deepcopy(params)
     params_test.pop("state", None)
@@ -97,13 +112,14 @@ def test_dcnm_maintenance_mode_common_00020() -> None:
 
 def test_dcnm_maintenance_mode_common_00030() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - __init__()
+    # Summary
 
-    ### Summary
     -   Verify ``ValueError`` is raised.
     -   params is missing ``config`` key/value.
+
+    ## Classes and Methods
+    - Common
+        - __init__()
     """
     params_test = copy.deepcopy(params)
     params_test.pop("config", None)
@@ -114,13 +130,15 @@ def test_dcnm_maintenance_mode_common_00030() -> None:
 
 def test_dcnm_maintenance_mode_common_00040() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - __init__()
+    # Summary
 
-    ### Summary
     -   Verify ``TypeError`` is raised.
     -   config is not a dict.
+
+    ## Classes and Methods
+
+    - Common
+        - __init__()
     """
     params_test = copy.deepcopy(params)
     params_test.update({"config": 10})
@@ -131,13 +149,14 @@ def test_dcnm_maintenance_mode_common_00040() -> None:
 
 def test_dcnm_maintenance_mode_common_00100() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - get_want()
+    # Summary
 
-    ### Summary
     -   Verify Common().get_want() builds expected want contents.
     -   All switches inherit top-level config.
+
+    ## Classes and Methods
+    - Common
+        - get_want()
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -165,14 +184,16 @@ def test_dcnm_maintenance_mode_common_00100() -> None:
 
 def test_dcnm_maintenance_mode_common_00110() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - get_want()
+    # Summary
 
-    ### Summary
     -   Verify Common().get_want() builds expected want contents.
     -   192.168.1.2 inherits top-level config.
     -   192.168.1.3 overrides top-level config.
+
+    ## Classes and Methods
+
+    - Common
+        - get_want()
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -200,15 +221,18 @@ def test_dcnm_maintenance_mode_common_00110() -> None:
 
 def test_dcnm_maintenance_mode_common_00120() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - get_want()
+    # Summary
 
-    ### Summary
     -   Verify Common().get_want() builds expected want contents.
     -   top-level config is missing.
     -   192.168.1.2 uses switch-level config.
     -   192.168.1.3 uses switch-level config.
+
+    ## Classes and Methods
+
+    - Common
+        - get_want()
+
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -236,11 +260,8 @@ def test_dcnm_maintenance_mode_common_00120() -> None:
 
 def test_dcnm_maintenance_mode_common_00130() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - get_want()
+    # Summary
 
-    ### Summary
     -   Verify Common().get_want() builds expected want contents.
     -   192.168.1.2 missing all optional parameters, so default values
         are provided.
@@ -248,6 +269,12 @@ def test_dcnm_maintenance_mode_common_00130() -> None:
             - mode default value is "normal".
             - wait_for_mode_change default value is False.
     -   192.168.1.3 uses switch-level config.
+
+    ## Classes and Methods
+
+    - Common
+        - get_want()
+
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -275,13 +302,15 @@ def test_dcnm_maintenance_mode_common_00130() -> None:
 
 def test_dcnm_maintenance_mode_common_00140() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - get_want()
+    # Summary
 
-    ### Summary
     -   Verify ``ValueError`` is raised.
     -   switch is missing mandatory parameter ip_address
+
+    ## Classes and Methods
+
+    - Common
+        - get_want()
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -304,13 +333,16 @@ def test_dcnm_maintenance_mode_common_00140() -> None:
 
 def test_dcnm_maintenance_mode_common_00150() -> None:
     """
-    ### Classes and Methods
+    # Summary
+
+    -   Verify ``ValueError`` is raised.
+    -   192.168.1.2 contains invalid choice for mode
+
+    ## Classes and Methods
+
     - Common
         - get_want()
 
-    ### Summary
-    -   Verify ``ValueError`` is raised.
-    -   192.168.1.2 contains invalid choice for mode
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -334,13 +366,15 @@ def test_dcnm_maintenance_mode_common_00150() -> None:
 
 def test_dcnm_maintenance_mode_common_00160() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - get_want()
+    # Summary
 
-    ### Summary
     -   Verify ``ValueError`` is raised.
     -   192.168.1.2 contains non-boolean value for deploy
+
+    ## Classes and Methods
+
+    - Common
+        - get_want()
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -364,13 +398,14 @@ def test_dcnm_maintenance_mode_common_00160() -> None:
 
 def test_dcnm_maintenance_mode_common_00170() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - get_want()
+    # Summary
 
-    ### Summary
     -   Verify ``ValueError`` is raised.
     -   192.168.1.2 contains non-boolean value for wait_for_mode_change
+
+    ## Classes and Methods
+    - Common
+        - get_want()
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -394,13 +429,15 @@ def test_dcnm_maintenance_mode_common_00170() -> None:
 
 def test_dcnm_maintenance_mode_common_00180() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - get_want()
+    # Summary
 
-    ### Summary
     -   Verify ``ValueError`` is raised.
     -   params contains invalid value for ``state``
+
+    ## Classes and Methods
+
+    - Common
+        - get_want()
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
