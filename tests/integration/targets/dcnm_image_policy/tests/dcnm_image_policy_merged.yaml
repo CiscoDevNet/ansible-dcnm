@@ -316,7 +316,7 @@
 # ],
 #                 "sequence_number": 1
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -326,7 +326,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-# ],
+#         ],
 #         "response": [
 #         "response": [
 #             {
