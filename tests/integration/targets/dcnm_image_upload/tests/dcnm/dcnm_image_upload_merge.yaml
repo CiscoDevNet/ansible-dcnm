@@ -38,7 +38,7 @@
             source: sftp                          # choose from [local, scp, sftp], default is local
             remote_server: "{{ SERVER_IP }}"      # mandatory when the source is scp or sftp
             username: "{{ USERNAME }}"            # mandatory when source is scp or sftp
-            password: "{{ PASSWORD }}"            # mandatory when source is scp o sftp
+            password: "{{ PASSWORD }}"            # mandatory when source is scp or sftp
       register: result
 
     - name: ASSERT - Upload result structure
