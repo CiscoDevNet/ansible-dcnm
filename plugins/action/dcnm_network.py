@@ -56,7 +56,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.action_logger im
     ActionLogger as Logger,
 )
 import json
-import traceback
 
 # Import new utility functions from dcnm module_utils
 

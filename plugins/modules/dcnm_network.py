@@ -915,8 +915,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     validate_list_of_dicts,
 )
 
-from ..module_utils.common.log_v2 import Log
-
 
 class DcnmNetwork:
 
@@ -1728,7 +1726,7 @@ class DcnmNetwork:
             if "VLAN_NETFLOW_MONITOR" not in skipped_template_keys:
                 vlan_nf_diff = vlan_nfen_have != vlan_nfen_want
                 comparisons.append(vlan_nf_diff)
-            
+
             if "networkName" not in skipped_template_keys:
                 net_name_diff = net_name_have != net_name_want
                 comparisons.append(net_name_diff)
@@ -3465,7 +3463,7 @@ class DcnmNetwork:
                 deploy_started = False
                 while not state and retry >= 0:
                     retry -= 1
-                    resp = dcnm_send(self.module, method, path)      
+                    resp = dcnm_send(self.module, method, path)
                     state = True
 
                     # For multicluster_parent with GET_NET_ATTACH, response structure is different

@@ -467,7 +467,7 @@ class ActionModule(ActionNetworkModule):
                             child_fabric_configs = vrf.get("child_fabric_config")
                             if not child_fabric_configs:
                                 error_msg = (
-                                    f"Config[{vrf_idx+1}]: child_fabric_config is required for "
+                                    f"Config[{vrf_idx + 1}]: child_fabric_config is required for "
                                     f"{log_type.capitalize()} Parent fabrics. It can be optionally removed when state is query/deleted."
                                 )
                                 return self.error_handler.handle_failure(error_msg)
@@ -477,7 +477,7 @@ class ActionModule(ActionNetworkModule):
                                 fabric_name = child_config.get("fabric")
                                 if not fabric_name:
                                     error_msg = (
-                                        f"Config[{vrf_idx+1}].child_fabric_config[{child_idx+1}]: "
+                                        f"Config[{vrf_idx + 1}].child_fabric_config[{child_idx + 1}]: "
                                         "fabric is required"
                                     )
                                     return self.error_handler.handle_failure(error_msg)
