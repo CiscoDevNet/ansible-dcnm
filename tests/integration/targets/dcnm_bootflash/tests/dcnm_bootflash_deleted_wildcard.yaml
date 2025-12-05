@@ -172,8 +172,7 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": "File(s) Deleted Successfully.",
-#                 "DATA_CONT": "Deleted files: [air.ndfc_ut, earth.ndfc_ut, water.ndfc_ut, fire.ndfc_ut]",
+#                 "DATA": "File(s) Deleted Successfully. \nDeleted files:  [air.ndfc_ut, earth.ndfc_ut, water.ndfc_ut, fire.ndfc_ut][green.ndfc_ut, blue.ndfc_ut, black.ndfc_ut, red.ndfc_ut]",
 #                 "DATA_CONT": "[green.ndfc_ut, blue.ndfc_ut, black.ndfc_ut, red.ndfc_ut]",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -181,14 +180,14 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-# ],
+#         ],
 #         "result": [
 #             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################
@@ -258,7 +257,7 @@
 #             {
 #                 "sequence_number": 1
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #             {
@@ -267,21 +266,21 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-# ],
+#         ],
 #         "response": [
 #             {
 #                 "MESSAGE": "No files to delete.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-# ],
+#         ],
 #         "result": [
 #             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 #################################################################################

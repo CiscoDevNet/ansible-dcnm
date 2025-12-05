@@ -112,7 +112,7 @@
 #                 "policyType": "PLATFORM",
 #                 "sequence_number": 2
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -128,7 +128,7 @@
 #                 "sequence_number": 2,
 #                 "state": "merged"
 #             }
-# ],
+#         ],
 #         "response": [
 #         "response": [
 #             {
@@ -147,7 +147,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-# ],
+#         ],
 #         "result": [
 #         "result": [
 #             {
@@ -160,7 +160,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################
@@ -313,7 +313,7 @@
 #                 "policyNames": [
 #                     "NR1F",
 #                     "KR5M"
-# ],
+#                 ],
 #                 "sequence_number": 1
 #             }
 #         ],
@@ -337,7 +337,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-# ],
+#         ],
 #         "result": [
 #         "result": [
 #             {
@@ -350,7 +350,7 @@
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 

@@ -100,7 +100,7 @@
 #                 "IS_READ_ONLY": false,
 #                 "sequence_number": 3
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -122,7 +122,7 @@
 #                 "sequence_number": 3,
 #                 "state": "merged"
 #             }
-# ],
+#         ],
 #         "response": [
 #         "response": [
 #             {
@@ -164,7 +164,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-# ],
+#         ],
 #         "result": [
 #         "result": [
 #             {
@@ -182,7 +182,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################
@@ -716,7 +716,7 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -726,7 +726,7 @@
 #                 "sequence_number": 1,
 #                 "state": "query"
 #             }
-# ],
+#         ],
 #         "response": [
 #         "response": [
 #             {
@@ -1194,14 +1194,14 @@
 #                         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
 #                         "vrfTemplate": "Default_VRF_Universal"
 #                     }
-# ],
+#                 ],
 #                 "MESSAGE": "OK",
 #                 "METHOD": "GET",
 #                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-# ],
+#         ],
 #         "result": [
 #         "result": [
 #             {
@@ -1209,7 +1209,7 @@
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################
@@ -1270,7 +1270,7 @@
 #                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "sequence_number": 3
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -1292,7 +1292,7 @@
 #                 "sequence_number": 3,
 #                 "state": "deleted"
 #             }
-# ],
+#         ],
 #         "response": [
 #         "response": [
 #             {
@@ -1319,7 +1319,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-# ],
+#                 ],
 #         "result": [
 #         "result": [
 #             {
@@ -1337,7 +1337,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################

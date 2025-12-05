@@ -132,7 +132,7 @@
 #                                    "serialNumber": "FOX2109PGCS",
 #                                    "size": "2"
 #                                }
-# ]
+#                             ]
 #                         },
 #                         "bootFlashSpaceMap": {
 #                             "bootflash:": {
@@ -172,7 +172,7 @@
 #                                     "serialNumber": "FOX2109PGD0",
 #                                     "size": "2"
 #                                 }
-# ]
+#                             ]
 #                         },
 #                         "bootFlashSpaceMap": {
 #                             "bootflash:": {
@@ -188,7 +188,7 @@
 #                         },
 #                         "partitions": [
 #                             "bootflash:"
-# ],
+#                         ],
 #                         "requiredSpace": "NA"
 #                     },
 #                     "MESSAGE": "OK",
@@ -199,7 +199,7 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-# ],
+#         ],
 #         "result": [
 #             {
 #                 "172.22.150.112": {
@@ -212,7 +212,7 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-# ]
+#         ]
 #     }
 # }
 

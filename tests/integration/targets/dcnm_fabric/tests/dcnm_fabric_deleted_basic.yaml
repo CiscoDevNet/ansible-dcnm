@@ -101,7 +101,7 @@
 #                 "IS_READ_ONLY": false,
 #                 "sequence_number": 3
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #             {
@@ -122,7 +122,7 @@
 #                 "sequence_number": 3,
 #                 "state": "merged"
 #             }
-# ],
+#         ],
 #         "response": [
 #             {
 #                 "DATA": {
@@ -163,7 +163,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-# ],
+#         ],
 #         "result": [
 #             {
 #                 "changed": true,
@@ -180,7 +180,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################
@@ -290,7 +290,7 @@
 #                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
 #                 "sequence_number": 2
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #             {
@@ -305,7 +305,7 @@
 #                 "sequence_number": 2,
 #                 "state": "deleted"
 #             }
-# ],
+#         ],
 #         "response": [
 #             {
 #                 "DATA": "Invalid JSON response: Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
@@ -323,7 +323,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-# ],
+#         ],
 #         "result": [
 #             {
 #                 "changed": true,
@@ -335,7 +335,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ###############################################################################################
@@ -405,7 +405,7 @@
 #                 "FABRIC_NAME": "ISN_Fabric",
 #                 "sequence_number": 2
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #             {
@@ -420,7 +420,7 @@
 #                 "sequence_number": 2,
 #                 "state": "deleted"
 #             }
-# ],
+#         ],
 #         "response": [
 #             {
 #                 "DATA": "Invalid JSON response: Fabric 'LAN_CLASSIC_Fabric' is deleted successfully!",
@@ -438,7 +438,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-# ],
+#         ],
 #         "result": [
 #             {
 #                 "changed": true,
@@ -450,7 +450,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################
@@ -524,21 +524,21 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-# ],
+#         ],
 #         "response": [
 #             {
 #                 "MESSAGE": "No fabrics to delete",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-# ],
+#         ],
 #         "result": [
 #             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################

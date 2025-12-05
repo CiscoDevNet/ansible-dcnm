@@ -123,7 +123,7 @@
 #                 "policyType": "PLATFORM",
 #                 "sequence_number": 2
 #             }
-# ],
+#                 ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -139,7 +139,7 @@
 #                 "sequence_number": 2,
 #                 "state": "merged"
 #             }
-# ],
+#                 ],
 #         "response": [
 #         "response": [
 #             {
@@ -158,7 +158,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-# ],
+#                 ],
 #         "result": [
 #         "result": [
 #             {
@@ -171,7 +171,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################
@@ -265,7 +265,7 @@
 #                 "rpmimages": "",
 #                 "sequence_number": 1
 #             }
-# ],
+#                 ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -275,7 +275,7 @@
 #                 "sequence_number": 1,
 #                 "state": "replaced"
 #             }
-# ],
+#                 ],
 #         "response": [
 #         "response": [
 #             {
@@ -286,7 +286,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-# ],
+#                 ],
 #         "result": [
 #         "result": [
 #             {
@@ -294,7 +294,7 @@
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################
@@ -392,7 +392,7 @@
 #                 "sequence_number": 2,
 #                 "unInstall": false
 #             }
-# ],
+#                 ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -408,7 +408,7 @@
 #                 "sequence_number": 2,
 #                 "state": "query"
 #             }
-# ],
+#                 ],
 #         "response": [
 #         "response": [
 #             {
@@ -451,7 +451,7 @@
 #                             "rpmimages": null,
 #                             "unInstall": false
 #                         }
-# ],
+#                     ],
 #                     "message": "",
 #                     "status": "SUCCESS"
 #                 },
@@ -501,7 +501,7 @@
 #                             "rpmimages": null,
 #                             "unInstall": false
 #                         }
-# ],
+#                     ],
 #                     "message": "",
 #                     "status": "SUCCESS"
 #                 },
@@ -511,7 +511,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-# ],
+#                 ],
 #         "result": [
 #         "result": [
 #             {
@@ -524,7 +524,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################
@@ -600,10 +600,10 @@
 #                 "policyNames": [
 #                     "KR5M",
 #                     "NR1F"
-#         ],
+#                 ],
 #                 "sequence_number": 1
 #             }
-# ],
+#                 ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -613,7 +613,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-# ],
+#                 ],
 #         "response": [
 #         "response": [
 #             {
@@ -624,7 +624,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-# ],
+#                 ],
 #         "result": [
 #         "result": [
 #             {
@@ -632,7 +632,7 @@
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################

@@ -115,7 +115,7 @@
 #                 "policyType": "PLATFORM",
 #                 "sequence_number": 2
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -131,7 +131,7 @@
 #                 "sequence_number": 2,
 #                 "state": "merged"
 #             }
-# ],
+#         ],
 #         "response": [
 #         "response": [
 #             {
@@ -150,7 +150,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
-# ],
+#         ],
 #         "result": [
 #         "result": [
 #             {
@@ -168,7 +168,7 @@
 #                 "sequence_number": 2,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 
@@ -241,10 +241,10 @@
 #                 "policyNames": [
 #                     "KR5M",
 #                     "NR1F"
-# ],
+#                 ],
 #                 "sequence_number": 1
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -254,7 +254,7 @@
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-# ],
+#         ],
 #         "response": [
 #         "response": [
 #             {
@@ -265,7 +265,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-# ],
+#                 ],
 #         "result": [
 #         "result": [
 #             {
@@ -273,7 +273,7 @@
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-# ]
+#         ]
 #     }
 # }
 - name: DELETED - TEST - Delete all image policies and verify the result

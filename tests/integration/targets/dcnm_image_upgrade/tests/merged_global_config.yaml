@@ -175,7 +175,7 @@
 #             {
 #                 "sequence_number": 3
 #             }
-# ],
+#         ],
 #         "failed": false,
 #         "metadata": [
 #         "metadata": [
@@ -197,7 +197,7 @@
 #                 "sequence_number": 3,
 #                 "state": "merged"
 #             }
-# ],
+#         ],
 #         "response": [
 #         "response": [
 #             {
@@ -207,7 +207,7 @@
 #                         "key": "ALL",
 #                         "value": "No images to stage."
 #                     }
-# ],
+#                 ],
 #                 "sequence_number": 1
 #             },
 #             {
@@ -217,7 +217,7 @@
 #             {
 #                 "sequence_number": 3
 #             }
-# ],
+#         ],
 #         "result": [
 #         "result": [
 #             {
@@ -233,7 +233,7 @@
 #             {
 #                 "sequence_number": 3
 #             }
-# ]
+#         ]
 #     }
 # }
 ################################################################################
