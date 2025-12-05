@@ -65,7 +65,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "ADVERTISE_PIP_BGP": true,
 #                 "ANYCAST_GW_MAC": "00aa.bbcc.ddee",
@@ -79,7 +78,6 @@
 #         ],
 #         "failed": false,
 #         "metadata": [
-#         "metadata": [
 #             {
 #                 "action": "fabric_create",
 #                 "check_mode": false,
@@ -87,7 +85,6 @@
 #                 "state": "merged"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": {
@@ -108,7 +105,6 @@
 #                 "sequence_number": 1
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,
@@ -177,7 +173,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "ADVERTISE_PIP_BGP": "false",
 #                 "ANYCAST_GW_MAC": "2020.0000.00aa",
@@ -194,7 +189,6 @@
 #             }
 #         ],
 #         "failed": false,
-#         "metadata": [
 #         "metadata": [
 #             {
 #                 "action": "fabric_replace",
@@ -215,7 +209,6 @@
 #                 "state": "replaced"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": {
@@ -244,7 +237,6 @@
 #                 "sequence_number": 3
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,
@@ -340,13 +332,11 @@
 #     "result": {
 #         "changed": false,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "sequence_number": 1
 #             }
 #         ],
 #         "failed": false,
-#         "metadata": [
 #         "metadata": [
 #             {
 #                 "action": "fabric_replace",
@@ -356,14 +346,12 @@
 #             }
 #         ],
 #         "response": [
-#         "response": [
 #             {
 #                 "MESSAGE": "No fabrics to update for replaced state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": false,
@@ -408,14 +396,12 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
 #             }
 #         ],
 #         "failed": false,
-#         "metadata": [
 #         "metadata": [
 #             {
 #                 "action": "fabric_delete",
@@ -424,7 +410,6 @@
 #                 "state": "deleted"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
@@ -435,7 +420,6 @@
 #                 "sequence_number": 1
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,

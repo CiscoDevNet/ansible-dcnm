@@ -126,7 +126,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "172.22.150.103": {
 #                     "action": "image_policy_detach",
@@ -149,7 +148,6 @@
 #         ],
 #         "failed": false,
 #         "metadata": [
-#         "metadata": [
 #             {
 #                 "action": "image_policy_detach",
 #                 "check_mode": false,
@@ -157,7 +155,6 @@
 #                 "state": "deleted"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": "Successfully detach the policy from device.",
@@ -169,7 +166,6 @@
 #                 "sequence_number": 1
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,
@@ -226,7 +222,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "172.22.150.113": {
 #                     "action": "image_policy_detach",
@@ -241,7 +236,6 @@
 #         ],
 #         "failed": false,
 #         "metadata": [
-#         "metadata": [
 #             {
 #                 "action": "image_policy_detach",
 #                 "check_mode": false,
@@ -249,7 +243,6 @@
 #                 "state": "deleted"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": "Successfully detach the policy from device.",
@@ -261,7 +254,6 @@
 #                 "sequence_number": 1
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,

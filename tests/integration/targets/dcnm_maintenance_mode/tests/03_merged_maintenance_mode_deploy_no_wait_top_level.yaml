@@ -57,7 +57,6 @@
 #     "result": {
 #         "changed": false,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "sequence_number": 1
 #             },
@@ -115,7 +114,6 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
 #         "diff": [
 #             {
 #                 "sequence_number": 1

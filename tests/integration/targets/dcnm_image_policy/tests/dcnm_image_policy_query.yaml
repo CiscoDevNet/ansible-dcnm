@@ -97,7 +97,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "agnostic": false,
 #                 "epldImgName": "n9000-epld.10.2.5.M.img",
@@ -121,7 +120,6 @@
 #         ],
 #         "failed": false,
 #         "metadata": [
-#         "metadata": [
 #             {
 #                 "action": "create",
 #                 "check_mode": false,
@@ -135,7 +133,6 @@
 #                 "state": "merged"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": "Policy created successfully.",
@@ -154,7 +151,6 @@
 #                 "sequence_number": 2
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,
@@ -246,7 +242,6 @@
 #     "result": {
 #         "changed": false,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "agnostic": false,
 #                 "epldImgName": "n9000-epld.10.2.5.M.img",
@@ -288,7 +283,6 @@
 #         ],
 #         "failed": false,
 #         "metadata": [
-#         "metadata": [
 #             {
 #                 "action": "query",
 #                 "check_mode": false,
@@ -303,10 +297,8 @@
 #             }
 #         ],
 #         "response": [
-#         "response": [
 #             {
 #                 "DATA": {
-#                     "lastOperDataObject": [
 #                     "lastOperDataObject": [
 #             {
 #                             "agnostic": false,
@@ -344,7 +336,7 @@
 #                             "rpmimages": null,
 #                             "unInstall": false
 #                         }
-#                     ],
+#         ],
 #                     "message": "",
 #                     "status": "SUCCESS"
 #                 },
@@ -357,7 +349,6 @@
 #             {
 #                 "DATA": {
 #                     "lastOperDataObject": [
-#                     "lastOperDataObject": [
 #             {
 #                             "agnostic": false,
 #                             "epldImgName": "n9000-epld.10.2.5.M.img",
@@ -394,7 +385,7 @@
 #                             "rpmimages": null,
 #                             "unInstall": false
 #                         }
-#                     ],
+#         ],
 #                     "message": "",
 #                     "status": "SUCCESS"
 #                 },
@@ -405,7 +396,6 @@
 #                 "sequence_number": 2
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "found": true,
@@ -487,7 +477,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "policyNames": [
 #                     "KR5M",
@@ -498,7 +487,6 @@
 #         ],
 #         "failed": false,
 #         "metadata": [
-#         "metadata": [
 #             {
 #                 "action": "delete",
 #                 "check_mode": false,
@@ -506,7 +494,6 @@
 #                 "state": "deleted"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
@@ -516,8 +503,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#                     ],
-#         "result": [
+#         ],
 #         "result": [
 #             {
 #                 "changed": true,

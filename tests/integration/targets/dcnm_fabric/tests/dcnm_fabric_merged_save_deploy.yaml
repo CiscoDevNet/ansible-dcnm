@@ -89,7 +89,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "BGP_AS": 65535,
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
@@ -104,7 +103,6 @@
 #         ],
 #         "failed": false,
 #         "metadata": [
-#         "metadata": [
 #             {
 #                 "action": "create",
 #                 "check_mode": false,
@@ -118,7 +116,6 @@
 #                 "state": "merged"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": {
@@ -148,7 +145,6 @@
 #                 "sequence_number": 2
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,
@@ -267,7 +263,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
@@ -301,7 +296,6 @@
 #             }
 #         ],
 #         "failed": false,
-#         "metadata": [
 #         "metadata": [
 #             {
 #                 "action": "update",
@@ -340,7 +334,6 @@
 #                 "state": "merged"
 #             },
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": {
@@ -418,7 +411,6 @@
 #                 "sequence_number": 6
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,
@@ -572,13 +564,11 @@
 #     "result": {
 #         "changed": false,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "sequence_number": 1
 #             }
 #         ],
 #         "failed": false,
-#         "metadata": [
 #         "metadata": [
 #             {
 #                 "action": "update",
@@ -588,14 +578,12 @@
 #             }
 #         ],
 #         "response": [
-#         "response": [
 #             {
 #                 "MESSAGE": "No fabrics to update for merged state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": false,
@@ -679,7 +667,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
@@ -690,7 +677,6 @@
 #             }
 #         ],
 #         "failed": false,
-#         "metadata": [
 #         "metadata": [
 #             {
 #                 "action": "delete",
@@ -705,7 +691,6 @@
 #                 "state": "deleted"
 #             },
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
@@ -724,7 +709,6 @@
 #                 "sequence_number": 2
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,

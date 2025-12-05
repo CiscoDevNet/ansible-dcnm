@@ -69,7 +69,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "BGP_AS": 65535,
 #                 "FABRIC_NAME": "ISN_Fabric",
@@ -78,7 +77,6 @@
 #         ],
 #         "failed": false,
 #         "metadata": [
-#         "metadata": [
 #             {
 #                 "action": "fabric_create",
 #                 "check_mode": false,
@@ -86,7 +84,6 @@
 #                 "state": "merged"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": {
@@ -105,7 +102,6 @@
 #                 "sequence_number": 1
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,
@@ -161,7 +157,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "DCI_SUBNET_RANGE": "10.20.1.0/24",
 #                 "FABRIC_NAME": "ISN_Fabric",
@@ -176,7 +171,6 @@
 #             }
 #         ],
 #         "failed": false,
-#         "metadata": [
 #         "metadata": [
 #             {
 #                 "action": "fabric_update",
@@ -197,7 +191,6 @@
 #                 "state": "merged"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": {
@@ -237,7 +230,6 @@
 #                 "sequence_number": 3
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,
@@ -333,13 +325,11 @@
 #     "result": {
 #         "changed": false,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "sequence_number": 1
 #             }
 #         ],
 #         "failed": false,
-#         "metadata": [
 #         "metadata": [
 #             {
 #                 "action": "fabric_update",
@@ -349,14 +339,12 @@
 #             }
 #         ],
 #         "response": [
-#         "response": [
 #             {
 #                 "MESSAGE": "No fabrics to update for merged state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": false,
@@ -401,14 +389,12 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "FABRIC_NAME": "ISN_Fabric",
 #                 "sequence_number": 1
 #             }
 #         ],
 #         "failed": false,
-#         "metadata": [
 #         "metadata": [
 #             {
 #                 "action": "fabric_delete",
@@ -417,7 +403,6 @@
 #                 "state": "deleted"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": "Invalid JSON response: Fabric 'ISN_Fabric' is deleted successfully!",
@@ -428,7 +413,6 @@
 #                 "sequence_number": 1
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": true,

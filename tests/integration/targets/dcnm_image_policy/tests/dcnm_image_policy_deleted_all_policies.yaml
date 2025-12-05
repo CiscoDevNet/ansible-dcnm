@@ -94,7 +94,6 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "agnostic": false,
 #                 "epldImgName": "n9000-epld.10.2.5.M.img",
@@ -118,7 +117,6 @@
 #         ],
 #         "failed": false,
 #         "metadata": [
-#         "metadata": [
 #             {
 #                 "action": "create",
 #                 "check_mode": false,
@@ -132,7 +130,6 @@
 #                 "state": "merged"
 #             }
 #         ],
-#         "response": [
 #         "response": [
 #             {
 #                 "DATA": "Policy created successfully.",
@@ -151,7 +148,6 @@
 #                 "sequence_number": 2
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "found": true,
@@ -236,17 +232,15 @@
 #     "result": {
 #         "changed": true,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "policyNames": [
 #                     "KR5M",
 #                     "NR1F"
-#                 ],
+#         ],
 #                 "sequence_number": 1
 #             }
 #         ],
 #         "failed": false,
-#         "metadata": [
 #         "metadata": [
 #             {
 #                 "action": "delete",
@@ -256,7 +250,6 @@
 #             }
 #         ],
 #         "response": [
-#         "response": [
 #             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
@@ -265,8 +258,7 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#                 ],
-#         "result": [
+#         ],
 #         "result": [
 #             {
 #                 "changed": true,

@@ -165,7 +165,6 @@
 #     "result": {
 #         "changed": false,
 #         "diff": [
-#         "diff": [
 #             {
 #                 "sequence_number": 1
 #             },
@@ -177,7 +176,6 @@
 #             }
 #         ],
 #         "failed": false,
-#         "metadata": [
 #         "metadata": [
 #             {
 #                 "action": "image_stage",
@@ -199,9 +197,7 @@
 #             }
 #         ],
 #         "response": [
-#         "response": [
 #             {
-#                 "DATA": [
 #                 "DATA": [
 #             {
 #                         "key": "ALL",
@@ -218,7 +214,6 @@
 #                 "sequence_number": 3
 #             }
 #         ],
-#         "result": [
 #         "result": [
 #             {
 #                 "changed": false,

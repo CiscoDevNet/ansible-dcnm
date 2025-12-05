@@ -148,7 +148,7 @@
 #                         },
 #                         "partitions": [
 #                             "bootflash:"
-#                         ],
+#         ],
 #                         "requiredSpace": "NA"
 #                     },
 #                     "MESSAGE": "OK",
@@ -188,7 +188,7 @@
 #                         },
 #                         "partitions": [
 #                             "bootflash:"
-#                         ],
+#         ],
 #                         "requiredSpace": "NA"
 #                     },
 #                     "MESSAGE": "OK",
@@ -199,8 +199,7 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-#                         ],
-#         "result": [
+#         ],
 #         "result": [
 #             {
 #                 "172.22.150.112": {
