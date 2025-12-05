@@ -240,11 +240,14 @@ class TestDcnmModule(ModuleTestCase):
             if module_args:
                 set_module_args(module_args)
 
-            # Execute the module using the standard test flow
-            if failed:
-                return self.failed()
-            else:
-                return self.changed(changed)
+            # Execute the module and return the actual result without validation
+            # The action plugin needs the actual result, not a validated one
+            try:
+                self.module.main()
+            except AnsibleExitJson as exc:
+                return exc.args[0]
+            except AnsibleFailJson as exc:
+                return exc.args[0]
 
         # Patch _execute_module to use our mock
         with patch.object(action, '_execute_module', side_effect=mock_execute_module):

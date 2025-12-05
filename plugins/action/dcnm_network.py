@@ -66,6 +66,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     obtain_fabric_associations
 )
 
+# Import new utility functions from dcnm module_utils
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    get_nd_version,
+    obtain_federated_fabric_associations,
+    obtain_fabric_associations
+)
+
 display = Display()
 
 
@@ -167,7 +174,7 @@ class ActionModule(ActionBase):
         # Get ND version for API path selection (similar to dcnm_vrf)
         ndfc_version = get_nd_version(self, task_vars, tmp)
         display.vvv(f"ND version: {ndfc_version}")
-        
+
         if ndfc_version is None:
             result['failed'] = True
             result['msg'] = (
@@ -192,7 +199,7 @@ class ActionModule(ActionBase):
 
         if not isinstance(config, list) or not config:
             # For 'query' and 'deleted', allow empty config (interpreted as all networks)
-            if state in ['query', 'deleted','overridden']:
+            if state in ['query', 'deleted', 'overridden']:
                 config = []
             else:
                 result['failed'] = True
@@ -211,13 +218,13 @@ class ActionModule(ActionBase):
         # Step 1: Get MFD fabrics from OneManage API (federated fabrics)
         # Only call federated fabrics API if login domain is not 'local'
         login_domain = task_vars.get('ansible_httpapi_login_domain', 'local')
-        
+
         federated_fabrics = {}
         if login_domain and login_domain.lower() != 'local':
-            display.vvv("="*80)
+            display.vvv("=" * 80)
             display.vvv(f"Login domain '{login_domain}' detected - getting MFD fabrics from OneManage API")
-            display.vvv("="*80)
-            
+            display.vvv("=" * 80)
+
             federated_fabrics = obtain_federated_fabric_associations(self, task_vars, tmp)
             if federated_fabrics is None:
                 result['failed'] = True
@@ -226,16 +233,16 @@ class ActionModule(ActionBase):
 
             display.vvv(f"Found {len(federated_fabrics)} MFD fabrics from OneManage API")
         else:
-            display.vvv("="*80)
+            display.vvv("=" * 80)
             display.vvv("Login domain is 'local' - skipping MFD fabrics API call")
-            display.vvv("="*80)
+            display.vvv("=" * 80)
 
         # Build initial fabrics dict from MFD data
         fabrics = {}
         for fabric_name_key, fabric_data in federated_fabrics.items():
             fabric_type = fabric_data.get('fabricType')
             fabric_state = fabric_data.get('fabricState')
-            
+
             # Determine fabric type based on fabricType and fabricState
             if fabric_type == 'MFD':
                 # MFD parent fabric
@@ -256,7 +263,7 @@ class ActionModule(ActionBase):
                                 break
                     if parent_fabric:
                         break
-                
+
                 fabrics[fabric_name_key] = {
                     'type': 'multicluster_child',
                     'fabricParent': parent_fabric if parent_fabric else 'None',
@@ -276,11 +283,11 @@ class ActionModule(ActionBase):
 
         # Step 2: If any fabrics are missing, check MSD fabric associations API
         if missing_fabrics:
-            display.vvv("="*80)
+            display.vvv("=" * 80)
             display.vvv(f"Missing {len(missing_fabrics)} fabrics from MFD: {missing_fabrics}")
             display.vvv("Checking MSD fabric associations API")
-            display.vvv("="*80)
-            
+            display.vvv("=" * 80)
+
             msd_fabrics = obtain_fabric_associations(self, task_vars, tmp)
             if msd_fabrics is None:
                 result['failed'] = True
@@ -294,7 +301,7 @@ class ActionModule(ActionBase):
                 if fabric_name_key in missing_fabrics:
                     fabric_type = fabric_data.get('fabricType')
                     fabric_state = fabric_data.get('fabricState')
-                    
+
                     # Determine fabric type based on fabricType and fabricState
                     if fabric_type == 'MSD' and fabric_state == 'msd':
                         # MSD parent fabric
@@ -315,7 +322,7 @@ class ActionModule(ActionBase):
                                         break
                             if parent_fabric:
                                 break
-                        
+
                         fabrics[fabric_name_key] = {
                             'type': 'multisite_child',
                             'fabricParent': parent_fabric if parent_fabric else 'None',
@@ -335,11 +342,11 @@ class ActionModule(ActionBase):
 
             # Step 3: Mark any remaining missing fabrics as standalone
             if still_missing:
-                display.vvv("="*80)
+                display.vvv("=" * 80)
                 display.vvv(f"Fabrics not found in MFD or MSD APIs: {still_missing}")
                 display.vvv("Marking them as standalone fabrics")
-                display.vvv("="*80)
-                
+                display.vvv("=" * 80)
+
                 for missing_fabric in still_missing:
                     fabrics[missing_fabric] = {
                         'type': 'standalone',
@@ -348,10 +355,10 @@ class ActionModule(ActionBase):
                     }
 
         # Log final fabric mapping
-        display.vvv("="*80)
+        display.vvv("=" * 80)
         display.vvv("Final fabric mapping:")
         display.vvv(json.dumps(fabrics, indent=2))
-        display.vvv("="*80)
+        display.vvv("=" * 80)
 
         # Validate fabric hierarchy before processing
         configs, error_msg = self._split_config(fabrics, fabric_name, config, state, result, ndfc_version)
@@ -372,7 +379,7 @@ class ActionModule(ActionBase):
         """
         Get fabric details from the unified fabric information dictionary.
 
-        This method retrieves the fabric details (type and cluster_name) from the combined 
+        This method retrieves the fabric details (type and cluster_name) from the combined
         fabric info dictionary which may contain data from OneManage API or fabric associations API.
 
         Classification Types:
@@ -548,7 +555,8 @@ class ActionModule(ActionBase):
                         child_net_config[key] = value
 
                 # Log the child network config with deploy attribute
-                display.vvv(f"Child network config for '{child_fabric_name}' - Network '{net_config['net_name']}': deploy={child_net_config.get('deploy', 'NOT SET')}")
+                display.vvv(f"Child network config for '{child_fabric_name}' - Network ' \
+                            '{net_config['net_name']}':deploy={child_net_config.get('deploy', 'NOT SET')}")
 
                 child_fabric_configs_by_fabric[child_fabric_name].append(child_net_config)
 
@@ -662,7 +670,7 @@ class ActionModule(ActionBase):
         for fabric_config in configs:
             fabric_details = fabric_config['_fabric_details']
             fabric_type = fabric_details['fabric_type']
-            
+
             # Prepare module arguments for this fabric
             fabric_module_args = module_args.copy()
             fabric_module_args['fabric'] = fabric_config['fabric']

@@ -25,7 +25,7 @@
             {
                 "fabricId": 100,
                 "fabricName": "msd-parent",
-                "fabricType": "MFD",
+                "fabricType": "MSD",
                 "fabricState": "msd",
                 "fabricParent": "None",
                 "fabricTechnology": "VXLANFabric"
@@ -1110,6 +1110,36 @@
         "createdOn": 1749530399770,
         "modifiedOn": 1749531013275
     },
+    "nd_version": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "MESSAGE": "OK",
+        "DATA": {
+            "version": "12.2.1.321",
+            "mode": "",
+            "isMediaController": false,
+            "dev": false,
+            "isHaEnabled": false,
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": false
+        }
+    },
+    "nd_version_11": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "MESSAGE": "OK",
+        "DATA": {
+            "version": "11.1",
+            "mode": "",
+            "isMediaController": false,
+            "dev": false,
+            "isHaEnabled": false,
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": false
+        }
+    },
     "fabric_details": {
         "createdOn": 1613750822779,
         "deviceType": "n9k",
@@ -1260,6 +1290,7 @@
             "fabricTechnology": "VXLANFabric",
             "templateFabricType": "Data Center VXLAN EVPN",
             "fabricTechnologyFriendly": "VXLAN EVPN",
+            "fabricParent": "msd-parent",
             "provisionMode": "DCNMTopDown",
             "deviceType": "n9k",
             "replicationMode": "Multicast",
@@ -1340,7 +1371,7 @@
                 "networkId": 8001,
                 "networkTemplate": "Default_Network_Universal",
                 "networkExtensionTemplate": "Default_Network_Extension_Universal",
-                "networkTemplateConfig": "{\"vlanId\":\"2101\",\"gatewayIpAddress\":\"192.168.101.1/24\",\"isLayer2Only\":false,\"tag\":\"12345\",\"vlanName\":\"\",\"intfDescription\":\"MSD Network managed by Ansible\",\"mtu\":\"9214\",\"suppressArp\":false,\"dhcpServerAddr1\":\"192.168.1.101\",\"dhcpServerAddr2\":\"\",\"dhcpServerAddr3\":\"\",\"vrfDhcp\":\"management\",\"vrfDhcp2\":\"\",\"vrfDhcp3\":\"\",\"loopbackId\":\"204\",\"mcastGroup\":\"239.1.1.1\",\"gatewayIpV6Address\":\"\",\"secondaryGW1\":\"\",\"secondaryGW2\":\"\",\"secondaryGW3\":\"\",\"secondaryGW4\":\"\",\"trmEnabled\":false,\"rtBothAuto\":false,\"enableL3OnBorder\":true,\"ENABLE_NETFLOW\":false,\"SVI_NETFLOW_MONITOR\":\"\",\"VLAN_NETFLOW_MONITOR\":\"monitor1\"}",
+                "networkTemplateConfig": "{\"vlanId\":\"2101\",\"gatewayIpAddress\":\"192.168.101.1/24\",\"isLayer2Only\":false,\"tag\":\"12345\",\"vlanName\":\"\",\"intfDescription\":\"MSD Network managed by Ansible\",\"mtu\":\"9214\",\"suppressArp\":false,\"dhcpServerAddr1\":\"192.168.1.100\",\"dhcpServerAddr2\":\"\",\"dhcpServerAddr3\":\"\",\"vrfDhcp\":\"management\",\"vrfDhcp2\":\"\",\"vrfDhcp3\":\"\",\"loopbackId\":\"203\",\"mcastGroup\":\"239.1.1.0\",\"gatewayIpV6Address\":\"\",\"secondaryGW1\":\"\",\"secondaryGW2\":\"\",\"secondaryGW3\":\"\",\"secondaryGW4\":\"\",\"trmEnabled\":false,\"rtBothAuto\":false,\"enableL3OnBorder\":false,\"ENABLE_NETFLOW\":true,\"SVI_NETFLOW_MONITOR\":\"\",\"VLAN_NETFLOW_MONITOR\":\"monitor1\"}",
                 "vrf": "Tenant-1",
                 "tenantName": null,
                 "serviceNetworkTemplate": null,
@@ -1363,7 +1394,7 @@
                         "fabricName": "msd-child-1",
                         "serialNumber": "9R518K2AT3R",
                         "switchPorts": "Ethernet1/15,Ethernet1/16",
-                        "ipAddress": "10.10.10.217",
+                        "ipAddress": "192.168.10.203",
                         "lanAttachState": "OUT-OF-SYNC",
                         "isLanAttached": true,
                         "deployment": false
@@ -1373,7 +1404,7 @@
                         "fabricName": "msd-child-1",
                         "serialNumber": "915KQ8P3NS8",
                         "switchPorts": "Ethernet1/15,Ethernet1/16",
-                        "ipAddress": "10.10.10.218",
+                        "ipAddress": "192.168.10.204",
                         "lanAttachState": "OUT-OF-SYNC",
                         "isLanAttached": true,
                         "deployment": false
@@ -1708,6 +1739,41 @@
                         "instanceValues": "{\"isVPC\":\"false\"}",
                         "entityName": "ansible-msd-dhcp-net",
                         "interfaceGroups": null
+                    }
+                ]
+            }
+        ]
+    },
+    "multicluster_fabric_associations": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "id": 100,
+                "clusterName": "",
+                "fabricId": "FABRIC-100",
+                "fabricName": "msd-parent",
+                "fabricType": "MFD",
+                "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
+                "fabricTechnology": "VXLANFabric",
+                "fabricTechnologyFriendly": "VXLAN EVPN",
+                "fabricState": "msd",
+                "templateName": "MSD_Fabric",
+                "members": [
+                    {
+                        "clusterName": "",
+                        "fabricId": 101,
+                        "fabricName": "msd-child-1",
+                        "templateName": "Easy_Fabric",
+                        "fabricType": "Switch_Fabric",
+                        "fabricState": "member",
+                        "fabricParent": "msd-parent",
+                        "fabricTechnology": "VXLANFabric",
+                        "fabricTypeFriendly": "Data Center VXLAN EVPN",
+                        "fabricTechnologyFriendly": "VXLAN EVPN",
+                        "asn": "40000",
+                        "operStatus": "MINOR"
                     }
                 ]
             }

@@ -37,11 +37,14 @@ class TestDcnmNetworkModule(TestDcnmModule):
 
     version = 11
 
+    nd_version = test_data.get("nd_version")
+    nd_version_11 = test_data.get("nd_version_11")
     mock_ip_sn = test_data.get("mock_ip_sn")
     net_inv_data = test_data.get("net_inv_data")
     fabric_details = test_data.get("fabric_details")
     fabric_details_vxlan_fabric = test_data.get("fabric_details_vxlan_fabric")
     fabric_associations = test_data.get("fabric_associations")
+    multicluster_fabric_associations = test_data.get("multicluster_fabric_associations")
 
     playbook_config = test_data.get("playbook_config")
     playbook_config_incorrect_netid = test_data.get("playbook_config_incorrect_netid")
@@ -118,7 +121,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         super(TestDcnmNetworkModule, self).setUp()
 
         self.mock_dcnm_ip_sn = patch(
-            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_network.get_fabric_inventory_details"
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_network.get_nd_fabric_inventory_details"
         )
         self.run_dcnm_ip_sn = self.mock_dcnm_ip_sn.start()
 
@@ -128,14 +131,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.run_dcnm_send = self.mock_dcnm_send.start()
 
         self.mock_dcnm_fabric_details = patch(
-            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_network.get_fabric_details"
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_network.get_nd_fabric_details"
         )
         self.run_dcnm_fabric_details = self.mock_dcnm_fabric_details.start()
-
-        self.mock_dcnm_version_supported = patch(
-            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_network.dcnm_version_supported"
-        )
-        self.run_dcnm_version_supported = self.mock_dcnm_version_supported.start()
 
         self.mock_dcnm_get_url = patch(
             "ansible_collections.cisco.dcnm.plugins.modules.dcnm_network.dcnm_get_url"
@@ -147,15 +145,14 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.mock_dcnm_send.stop()
         self.mock_dcnm_ip_sn.stop()
         self.mock_dcnm_fabric_details.stop()
-        self.mock_dcnm_version_supported.stop()
         self.mock_dcnm_get_url.stop()
 
     def load_fixtures(self, response=None, device=""):
 
         if self.version == 12:
-            self.run_dcnm_version_supported.return_value = 12
+            self.nd_support_version = self.nd_version
         else:
-            self.run_dcnm_version_supported.return_value = 11
+            self.nd_support_version = self.nd_version_11
 
         if "net_blank_fabric" in self._testMethodName:
             self.run_dcnm_ip_sn.side_effect = [{}]
@@ -467,7 +464,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
             ]
             self.run_dcnm_send.side_effect = [
                 self.mock_msd_vrf_object,
-                self.blank_data,
+                self.empty_network_list,
                 self.mock_msd_net_create_response,
                 self.mock_msd_net_attach_response,
                 self.deploy_success_resp,
@@ -491,7 +488,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
             ]
             self.run_dcnm_send.side_effect = [
                 self.mock_msd_vrf_object,
-                self.blank_data,
+                self.empty_network_list,
                 self.mock_msd_dhcp_net_create_response,
                 self.mock_msd_dhcp_net_attach_response,
                 self.deploy_success_resp,
