@@ -2096,7 +2096,7 @@ class DcnmNetwork:
             "rtBothAuto": net.get("route_target_both", False),
             "enableL3OnBorder": net.get("l3gw_on_border", False),
             "networkName": net.get("net_name", False),
-        }
+        })
 
         if self.dcnm_version > 11:
             template_conf.update(ENABLE_NETFLOW=net.get("netflow_enable", False))
