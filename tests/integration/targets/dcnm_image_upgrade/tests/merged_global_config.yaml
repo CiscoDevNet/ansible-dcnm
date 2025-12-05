@@ -164,7 +164,9 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "sequence_number": 1
 #             },
 #             {
@@ -175,7 +177,9 @@
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "image_stage",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -194,8 +198,12 @@
 #                 "state": "merged"
 #             }
 # ],
-#         "response": [#             {
-#                 "DATA": [#                     {
+#         "response": [
+#         "response": [
+#             {
+#                 "DATA": [
+#                 "DATA": [
+#             {
 #                         "key": "ALL",
 #                         "value": "No images to stage."
 #                     }
@@ -210,7 +218,9 @@
 #                 "sequence_number": 3
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true

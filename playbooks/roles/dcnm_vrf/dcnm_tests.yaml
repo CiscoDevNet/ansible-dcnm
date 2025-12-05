@@ -37,11 +37,11 @@
   # for example, do not use interface_1.
   #   vars:
   # fabric_1: f1
-  # fabric_1: f1
   # switch_1: 10.1.1.2
+  # switch_2: 10.1.1.3
   # switch_3: 10.1.1.4
-  # switch_3: 10.1.1.4
-  # switch_4: 10.1.1.5
+  # interface_1: Ethernet1/1
+  # interface_2: Ethernet1/2
   # interface_3: Ethernet1/3
   ## Uncomment ONE of the following testcases
   # testcase: deleted

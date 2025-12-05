@@ -119,7 +119,9 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "172.22.150.103": {
 #                     "action": "image_policy_detach",
 #                     "device_name": "cvd-1312-leaf",
@@ -132,14 +134,18 @@
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "image_policy_detach",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "DATA": "Successfully detach the policy from device.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -151,7 +157,9 @@
 #                 "sequence_number": 1
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true

@@ -96,7 +96,9 @@
 # ok: [dcnm] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "agnostic": false,
 #                 "epldImgName": "n9000-epld.10.2.5.M.img",
 #                 "nxosVersion": "10.2.5_nxos64-cs_64bit",
@@ -118,7 +120,9 @@
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -131,7 +135,9 @@
 #                 "state": "merged"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "DATA": "Policy created successfully.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
@@ -148,7 +154,9 @@
 #                 "sequence_number": 2
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -237,7 +245,9 @@
 # ok: [dcnm] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "agnostic": false,
 #                 "epldImgName": "n9000-epld.10.2.5.M.img",
 #                 "fabricPolicyName": null,
@@ -277,7 +287,9 @@
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "query",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -290,9 +302,13 @@
 #                 "state": "query"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "DATA": {
-#                     "lastOperDataObject": [#                         {
+#                     "lastOperDataObject": [
+#                     "lastOperDataObject": [
+#             {
 #                             "agnostic": false,
 #                             "epldImgName": "n9000-epld.10.2.5.M.img",
 #                             "fabricPolicyName": null,
@@ -340,7 +356,9 @@
 #             },
 #             {
 #                 "DATA": {
-#                     "lastOperDataObject": [#                         {
+#                     "lastOperDataObject": [
+#                     "lastOperDataObject": [
+#             {
 #                             "agnostic": false,
 #                             "epldImgName": "n9000-epld.10.2.5.M.img",
 #                             "fabricPolicyName": null,
@@ -387,7 +405,9 @@
 #                 "sequence_number": 2
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "found": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -466,22 +486,29 @@
 # ok: [dcnm] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [#             {
-#                 "policyNames": [#                     "KR5M",
+#         "diff": [
+#         "diff": [
+#             {
+#                 "policyNames": [
+#                     "KR5M",
 #                     "NR3F"
 # ],
 #                 "sequence_number": 1
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -490,7 +517,9 @@
 #                 "sequence_number": 1
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true

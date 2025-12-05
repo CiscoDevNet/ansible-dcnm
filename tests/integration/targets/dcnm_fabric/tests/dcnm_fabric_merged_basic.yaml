@@ -85,7 +85,9 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "BGP_AS": 65535,
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
@@ -102,7 +104,9 @@
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -121,7 +125,9 @@
 #                 "state": "merged"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "BGP_AS": "65535",
@@ -161,7 +167,9 @@
 #                 "sequence_number": 3
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -245,7 +253,9 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "REPLICATION_MODE": "Ingress",
@@ -271,7 +281,9 @@
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -308,7 +320,9 @@
 #                 "state": "merged"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
@@ -357,7 +371,9 @@
 #                 "sequence_number": 6
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -504,7 +520,9 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "SUBINTERFACE_RANGE": "2-101",
 #                 "sequence_number": 1
@@ -517,7 +535,9 @@
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -536,7 +556,9 @@
 #                 "state": "merged"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "BOOTSTRAP_ENABLE": "false",
@@ -562,7 +584,9 @@
 #                 "sequence_number": 3
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -639,25 +663,33 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "sequence_number": 1
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "MESSAGE": "No fabrics to update for merged state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -699,7 +731,9 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
 #             },
@@ -713,7 +747,9 @@
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -732,7 +768,9 @@
 #                 "state": "deleted"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -757,7 +795,9 @@
 #                 "sequence_number": 3
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true

@@ -64,7 +64,9 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "BGP_AS": 65005,
 #                 "DCI_SUBNET_RANGE": "10.20.1.0/24",
 #                 "FABRIC_NAME": "ISN_Fabric",
@@ -73,14 +75,18 @@
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "DATA": {
 #                     "asn": "65005",
 #                     "deviceType": "n9k",
@@ -106,7 +112,9 @@
 #                 "sequence_number": 1
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -168,7 +176,9 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "DCI_SUBNET_RANGE": "10.10.1.0/24",
 #                 "FABRIC_NAME": "ISN_Fabric",
 #                 "LOOPBACK0_IP_RANGE": "10.1.0.0/22",
@@ -182,7 +192,9 @@
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "fabric_replace",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -201,7 +213,9 @@
 #                 "state": "replaced"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "DATA": {
 #                     "asn": "65005",
 #                     "createdOn": 1725068607212,
@@ -239,7 +253,9 @@
 #                 "sequence_number": 3
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -330,25 +346,33 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "sequence_number": 1
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "fabric_replace",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "replaced"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "MESSAGE": "No fabrics to update for replaced state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -390,20 +414,26 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [#             {
+#         "diff": [
+#         "diff": [
+#             {
 #                 "FABRIC_NAME": "ISN_Fabric",
 #                 "sequence_number": 1
 #             }
 # ],
 #         "failed": false,
-#         "metadata": [#             {
+#         "metadata": [
+#         "metadata": [
+#             {
 #                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
 # ],
-#         "response": [#             {
+#         "response": [
+#         "response": [
+#             {
 #                 "DATA": "Invalid JSON response: Fabric 'ISN_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -412,7 +442,9 @@
 #                 "sequence_number": 1
 #             }
 # ],
-#         "result": [#             {
+#         "result": [
+#         "result": [
+#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true

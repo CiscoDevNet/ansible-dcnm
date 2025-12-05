@@ -677,16 +677,16 @@ class DcnmNetwork:
 
                                                     torconfig = tor_w["switch"] + "(" + ",".join(atch_tor_ports) + ")"
                                                     want.update({"torPorts": torconfig})
-        # Update torports_configured to True. If there is no other config change for attach
-        # We will still append this attach to attach_list as there is tor port change
+                                                    # Update torports_configured to True. If there is no other config change for attach
+                                                    # We will still append this attach to attach_list as there is tor port change
                                                     if sorted(atch_tor_ports) != sorted(h_tor_ports):
                                                         torports_configured = True
 
                                         if not torports_present:
                                             torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
                                             want.update({"torPorts": torconfig})
-        # Update torports_configured to True. If there is no other config change for attach
-        # We will still append this attach to attach_list as there is tor port change
+                                            # Update torports_configured to True. If there is no other config change for attach
+                                            # We will still append this attach to attach_list as there is tor port change
                                             torports_configured = True
 
                                     if have.get("torports"):
