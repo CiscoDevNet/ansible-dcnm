@@ -18,8 +18,8 @@ Ansible module to manage Maintenance Mode Configuration of NX-OS Switches.
 # limitations under the License.
 # pylint: disable=too-many-lines
 
-from __future__ import absolute_import, division, print_function
-from typing import Any
+from __future__ import absolute_import, annotations, division, print_function
+from typing import Any, Literal
 
 __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
@@ -161,7 +161,6 @@ from ..module_utils.common.maintenance_mode_info import MaintenanceModeInfo
 from ..module_utils.common.merge_dicts_v2 import MergeDicts
 from ..module_utils.common.params_merge_defaults_v2 import ParamsMergeDefaults
 from ..module_utils.common.params_validate_v2 import ParamsValidate
-from ..module_utils.common.properties import Properties
 from ..module_utils.common.response_handler import ResponseHandler
 from ..module_utils.common.rest_send_v2 import RestSend
 from ..module_utils.common.results import Results
@@ -390,9 +389,7 @@ class Want:
         instance = Want()
         instance.config = playbook_config
         instance.params = ansible_module.params
-        instance.params_spec = ParamsSpec()
         instance.items_key = "switches"
-        instance.validator = ParamsValidate()
         instance.commit()
         want = instance.want
     except (TypeError, ValueError) as error:
@@ -447,16 +444,11 @@ class Want:
         ### ValueError
 
         - self.params is not set
-        - self.params_spec is not set
         """
         # Generate the params_spec used to validate the configs
         if not self.params:
             msg = f"{self.class_name}.generate_params_spec(): "
             msg += "params is not set, and is required."
-            raise ValueError(msg)
-        if not self.params_spec:
-            msg = f"{self.class_name}.generate_params_spec(): "
-            msg += "params_spec is not set, and is required."
             raise ValueError(msg)
 
         try:
@@ -524,8 +516,6 @@ class Want:
         - self.config is not set
         - self.item_key is not set
         - self.params is not set
-        - self.params_spec is not set
-        - self.validator is not set
         - self.params_spec raises `ValueError`
         - _merge_global_and_switch_configs() raises `ValueError`
         - merge_dicts() raises `ValueError`
@@ -544,11 +534,6 @@ class Want:
         See class docstring.
         """
         method_name: str = inspect.stack()[0][3]
-
-        if self._validator is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"self.validator must be set before calling {method_name}."
-            raise ValueError(msg)
 
         try:
             self.generate_params_spec()
@@ -590,7 +575,7 @@ class Want:
         ### ValueError
 
         - self.config is not set
-        - self.items_key is not set
+        - self._items_key is not set
         - playbook is missing list of items
         - merge_dicts raises `ValueError`
 
@@ -611,23 +596,22 @@ class Want:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is not set, and is required."
             raise ValueError(msg)
-        if self.items_key is None:
+        if not self._items_key:
             msg = f"{self.class_name}.{method_name}: "
             msg += "items_key is not set, and is required."
             raise ValueError(msg)
-        if not self.config.get(self.items_key):
+        if not self.config.get(self._items_key):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"playbook is missing list of {self.items_key}."
+            msg += f"playbook is missing list of {self._items_key}."
             raise ValueError(msg)
 
         self.item_configs = []
-        merged_configs = []
-        for item in self.config[self.items_key]:
+        merged_configs: list[dict[str, Any]] = []
+        for item in self.config[self._items_key]:
             # we need to rebuild global_config in this loop
             # because merge_dicts modifies it in place
             global_config = copy.deepcopy(self.config)
-            global_config.pop(self.items_key, None)
-
+            global_config.pop(self._items_key, None)
             msg = f"{self.class_name}.{method_name}: "
             msg += "global_config: "
             msg += f"{json.dumps(global_config, indent=4, sort_keys=True)}"
@@ -658,7 +642,7 @@ class Want:
         self.item_configs = copy.copy(merged_configs)
 
     @property
-    def config(self):
+    def config(self) -> dict[str, Any]:
         """
         # Summary
 
@@ -683,7 +667,7 @@ class Want:
         return self._config
 
     @config.setter
-    def config(self, value) -> None:
+    def config(self, value: dict[str, Any]) -> None:
         if not isinstance(value, dict):
             msg = f"{self.class_name}.config.setter: "
             msg += "expected dict but got "
@@ -727,7 +711,7 @@ class Want:
         self._items_key = value
 
     @property
-    def want(self) -> list:
+    def want(self) -> list[dict[str, Any]]:
         """
         # Summary
 
@@ -740,7 +724,7 @@ class Want:
         return self._want
 
     @property
-    def params(self) -> dict:
+    def params(self) -> dict[str, Any]:
         """
         # Summary
 
@@ -764,7 +748,7 @@ class Want:
         return self._params
 
     @params.setter
-    def params(self, value: dict) -> None:
+    def params(self, value: dict[str, Any]) -> None:
         """
         -   setter: set the params
         """
@@ -783,16 +767,15 @@ class Want:
         The parameter specification used to validate the playbook config.
         Expects value to be an instance of `ParamsSpec()`.
 
-        `params_spec` is passed to `validator` to validate the
-        playbook config.
+        `params_spec` is passed to `validator` to validate the playbook config.
+
+        `params_spec` is optional. If not set, a default instance of `ParamsSpec()` is used.
 
         ## Raises
 
         ### TypeError
 
-        setter:
-
-        - value is not an instance of ParamsSpec()
+        - setter: value is not an instance of ParamsSpec()
 
         ## Details
 
@@ -827,13 +810,13 @@ class Want:
         `validator` is used to validate the playbook config.
         Expects value to be an instance of `ParamsValidate()`.
 
+        `validator` is optional. If not set, a default instance of `ParamsValidate()` is used.
+
         ## Raises
 
         ### TypeError
 
-        setter:
-
-        - value is not an instance of `ParamsValidate()`
+        - setter: value is not an instance of `ParamsValidate()`
 
         ## Details
 
@@ -861,7 +844,6 @@ class Want:
         self._validator = value
 
 
-@Properties.add_rest_send
 class Common:
     """
     Common methods, properties, and resources for all states.
@@ -877,8 +859,9 @@ class Common:
 
         ### ValueError
 
-        - `params` does not contain `state`
+        - `params` does not contain `check_mode`
         - `params` does not contain `config`
+        - `params` does not contain `state`
 
         ### TypeError
 
@@ -887,11 +870,16 @@ class Common:
         self.class_name: str = self.__class__.__name__
         method_name: str = inspect.stack()[0][3]
 
-        self.params = params
+        self.params: dict[str, Any] = params
 
         self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self._check_mode: bool = self.params.get("check_mode", False)
+        self._check_mode: bool | None = self.params.get("check_mode", None)
+        if self._check_mode is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "check_mode is required."
+            raise ValueError(msg)
+
         self.state: str = self.params.get("state", "")
         if not self.state:
             msg = f"{self.class_name}.{method_name}: "
@@ -899,10 +887,11 @@ class Common:
             raise ValueError(msg)
 
         self.config: dict[str, Any] = self.params.get("config", {})
-        if not self.config:
+        if not self.config and self.state != "query":
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is required."
             raise ValueError(msg)
+
         if not isinstance(self.config, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "Expected dict type for self.config. "
@@ -912,6 +901,9 @@ class Common:
         self._rest_send: RestSend = RestSend({})
 
         self.results: Results = Results()
+        self.results.state = self.state
+        self.results.check_mode = self._check_mode
+
         self.results.state = self.state
         self.results.check_mode = self._check_mode
 
@@ -954,6 +946,41 @@ class Common:
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
 
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        # Summary
+
+        Get/set an instance of the RestSend class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of RestSend.
+        -   setter: `ValueError` if RestSend.params is not set.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["RestSend"] = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set."
+            raise ValueError(msg)
+        self._rest_send = value
+
 
 class Merged(Common):
     """
@@ -972,7 +999,7 @@ class Merged(Common):
     - Common().__init__() raises `TypeError`
     """
 
-    def __init__(self, params):
+    def __init__(self, params: dict[str, Any]) -> None:
         """
         # Summary
 
@@ -998,18 +1025,19 @@ class Merged(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.maintenance_mode = MaintenanceMode(params)
+        self.maintenance_mode: MaintenanceMode = MaintenanceMode(params)
 
         msg = f"ENTERED Merged.{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self._check_mode}"
         self.log.debug(msg)
 
-        self.need = []
+        self.have: dict[str, Any] = {}
+        self.need: list[dict[str, Any]] = []
 
-    def get_have(self):
+    def get_have(self) -> None:
         """
         # Summary
 
@@ -1159,7 +1187,7 @@ class Merged(Common):
                 msg += additional_info
                 raise ValueError(msg)
 
-    def get_need(self):
+    def get_need(self) -> None:
         """
         # Summary
 
@@ -1215,7 +1243,7 @@ class Merged(Common):
                 need.update({"wait_for_mode_change": want.get("wait_for_mode_change")})
                 self.need.append(copy.copy(need))
 
-    def commit(self):
+    def commit(self) -> None:
         """
         # Summary
 
@@ -1234,7 +1262,7 @@ class Merged(Common):
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
 
-        if self.rest_send is None:
+        if not self.rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling commit."
             raise ValueError(msg)
@@ -1445,7 +1473,7 @@ class Query(Common):
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
 
-        if self.rest_send is None:
+        if not self.rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling commit."
             raise ValueError(msg)
@@ -1537,15 +1565,22 @@ def main():
         msg = f"Unknown state {params['state']}"
         ansible_module.fail_json(msg)
 
-    task.results.build_final_result()
+    if params["state"] == "merged":
+        task.results.build_final_result()
+        final_result = task.results.final_result
+        failed = task.results.failed
+    else:
+        task.results.build_final_result()
+        final_result = task.results.final_result
+        failed = task.results.failed
 
     # Results().failed is a property that returns a set()
     # of boolean values.  pylint doesn't seem to understand this so we've
     # disabled the unsupported-membership-test warning.
-    if True in task.results.failed:  # pylint: disable=unsupported-membership-test
+    if True in failed:  # pylint: disable=unsupported-membership-test
         msg = "Module failed."
-        ansible_module.fail_json(msg, **task.results.final_result)
-    ansible_module.exit_json(**task.results.final_result)
+        ansible_module.fail_json(msg, **final_result)
+    ansible_module.exit_json(**final_result)
 
 
 if __name__ == "__main__":

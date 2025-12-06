@@ -1,3 +1,6 @@
+"""
+Retrieve the maintenance mode state of switches.
+"""
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +16,7 @@
 # limitations under the License.
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 # Required for class decorators
@@ -22,16 +25,19 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import logging
+from typing import Any, Literal
 
+# TODO: import fabric_details_v3 when SwitchDetails (v2) has been merged.
 from ..fabric.fabric_details_v2 import FabricDetailsByName
 from .conversion import ConversionUtils
+from .enums import MaintenanceModeGetEnum
 from .exceptions import ControllerResponseError
-from .properties import Properties
+from .rest_send_v2 import RestSend
+# TODO: import results_v2 when SwitchDetails (v2) has been merged.
+from .results import Results
+# TODO: import switch_details_v2 when SwitchDetails (v2) has been merged.
 from .switch_details import SwitchDetails
 
-
-@Properties.add_rest_send
-@Properties.add_results
 class MaintenanceModeInfo:
     """
     # Summary
@@ -50,7 +56,6 @@ class MaintenanceModeInfo:
 
     - `refresh()`: `config` has not been set.
     - `refresh()`: `rest_send` has not been set.
-    - `refresh()`: `results` has not been set.
 
     ## Details
 
@@ -125,22 +130,23 @@ class MaintenanceModeInfo:
     ```
     """
 
-    def __init__(self, params):
+    def __init__(self, params: dict[str, Any]) -> None:
         self.class_name = self.__class__.__name__
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.action = "maintenance_mode_info"
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
+        self.action: str = "maintenance_mode_info"
 
-        self.params = params
-        self.conversion = ConversionUtils()
-        self.fabric_details = FabricDetailsByName()
-        self.switch_details = SwitchDetails()
+        self.params: dict[str, Any] = params
+        self._conversion: ConversionUtils = ConversionUtils()
+        self._fabric_details: FabricDetailsByName = FabricDetailsByName()
+        self._switch_details: SwitchDetails = SwitchDetails()
 
-        self._config = None
-        self._filter = None
-        self._info = None
-        self._rest_send = None
-        self._results = None
+        self._config: list[str] = []
+        self._filter: str = ""
+        self._info: dict[str, Any] = {}
+        self._rest_send: RestSend = RestSend(params={})
+        self._results: Results = Results()
+        self._valid_modes: list[str] = MaintenanceModeGetEnum.values()
 
         msg = "ENTERED MaintenanceModeInfo(): "
         self.log.debug(msg)
@@ -160,19 +166,15 @@ class MaintenanceModeInfo:
         - `results` is not set.
         """
         method_name = inspect.stack()[0][3]
-        if self.config is None:
+        if not self.config:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.config must be set "
             msg += "before calling refresh."
             raise ValueError(msg)
-        if self.rest_send is None:
+
+        if not self.rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.rest_send must be set "
-            msg += "before calling refresh."
-            raise ValueError(msg)
-        if self.results is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.class_name}.results must be set "
             msg += "before calling refresh."
             raise ValueError(msg)
 
@@ -233,31 +235,31 @@ class MaintenanceModeInfo:
         self.verify_refresh_parameters()
 
         try:
-            self.switch_details.rest_send = self.rest_send
-            self.fabric_details.rest_send = self.rest_send
+            self._switch_details.rest_send = self.rest_send
+            self._fabric_details.rest_send = self.rest_send
 
-            self.switch_details.results = self.results
-            self.fabric_details.results = self.results
+            self._switch_details.results = self.results
+            self._fabric_details.results = self.results
         except TypeError as error:
             raise ValueError(error) from error
 
         try:
-            self.switch_details.refresh()
+            self._switch_details.refresh()
         except (ControllerResponseError, ValueError) as error:
             raise ValueError(error) from error
 
         try:
-            self.fabric_details.refresh()
+            self._fabric_details.refresh()
         except (ControllerResponseError, ValueError) as error:
             raise ValueError(error) from error
 
         info = {}
         # Populate info dict
         for ip_address in self.config:
-            self.switch_details.filter = ip_address
+            self._switch_details.filter = ip_address
 
             try:
-                serial_number = self.switch_details.serial_number
+                serial_number = self._switch_details.serial_number
             except ValueError as error:
                 raise ValueError(error) from error
 
@@ -269,10 +271,10 @@ class MaintenanceModeInfo:
                 raise ValueError(msg)
 
             try:
-                fabric_name = self.switch_details.fabric_name
-                freeze_mode = self.switch_details.freeze_mode
-                mode = self.switch_details.maintenance_mode
-                role = self.switch_details.switch_role
+                fabric_name = self._switch_details.fabric_name
+                freeze_mode = self._switch_details.freeze_mode
+                mode = self._switch_details.maintenance_mode
+                role = self._switch_details.switch_role
             except ValueError as error:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Error setting properties for switch with ip_address "
@@ -281,11 +283,11 @@ class MaintenanceModeInfo:
                 raise ValueError(msg) from error
 
             try:
-                self.fabric_details.filter = fabric_name
+                self._fabric_details.filter = fabric_name
             except ValueError as error:
                 raise ValueError(error) from error
 
-            fabric_read_only = self.fabric_details.is_read_only
+            fabric_read_only = self._fabric_details.is_read_only
 
             info[ip_address] = {}
             info[ip_address].update({"fabric_name": fabric_name})
@@ -316,7 +318,7 @@ class MaintenanceModeInfo:
 
         self.info = copy.deepcopy(info)
 
-    def _get(self, item):
+    def _get(self, item: str) -> Any:
         """
         # Summary
 
@@ -336,22 +338,22 @@ class MaintenanceModeInfo:
         """
         method_name = inspect.stack()[0][3]
 
-        if self.filter is None:
+        if not self._filter:
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter before accessing "
             msg += f"property {item}."
             raise ValueError(msg)
 
-        if self.filter not in self._info:
+        if self._filter not in self._info:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Switch with ip_address {self.filter} does not exist on "
+            msg += f"Switch with ip_address {self._filter} does not exist on "
             msg += "the controller."
             raise ValueError(msg)
 
-        return self.conversion.make_boolean(self.conversion.make_none(self._info[self.filter].get(item)))
+        return self._conversion.make_boolean(self._conversion.make_none(self._info[self._filter].get(item)))
 
     @property
-    def filter(self):
+    def filter(self) -> str:
         """
         # Summary
 
@@ -376,11 +378,11 @@ class MaintenanceModeInfo:
         return self._filter
 
     @filter.setter
-    def filter(self, value):
+    def filter(self, value: str) -> None:
         self._filter = value
 
     @property
-    def config(self) -> list:
+    def config(self) -> list[str]:
         """
         # Summary
 
@@ -417,7 +419,7 @@ class MaintenanceModeInfo:
         return self._config
 
     @config.setter
-    def config(self, value):
+    def config(self, value: list[str]) -> None:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
@@ -437,7 +439,7 @@ class MaintenanceModeInfo:
         self._config = value
 
     @property
-    def fabric_deployment_disabled(self):
+    def fabric_deployment_disabled(self) -> bool:
         """
         # Summary
 
@@ -459,10 +461,13 @@ class MaintenanceModeInfo:
         - `False`: The fabric is in a state where configuration changes
           can be made.
         """
-        return self._get("fabric_deployment_disabled")
+        value = self._get("fabric_deployment_disabled")
+        if value is None:
+            return False
+        return value
 
     @property
-    def fabric_freeze_mode(self):
+    def fabric_freeze_mode(self) -> bool:
         """
         # Summary
 
@@ -484,10 +489,13 @@ class MaintenanceModeInfo:
         - `False`: The fabric is in a state where configuration changes
           can be made.
         """
-        return self._get("fabric_freeze_mode")
+        value = self._get("fabric_freeze_mode")
+        if value is None:
+            return False
+        return value
 
     @property
-    def fabric_name(self):
+    def fabric_name(self) -> str:
         """
         # Summary
 
@@ -502,10 +510,13 @@ class MaintenanceModeInfo:
         - `filter` is not in the controller response.
         - `fabric_name` is not in the filtered switch dict.
         """
-        return self._get("fabric_name")
+        value = self._get("fabric_name")
+        if value is None:
+            return ""
+        return value
 
     @property
-    def fabric_read_only(self):
+    def fabric_read_only(self) -> bool:
         """
         # Summary
 
@@ -527,10 +538,13 @@ class MaintenanceModeInfo:
         - `False`: The fabric is in a state where configuration changes
           can be made.
         """
-        return self._get("fabric_read_only")
+        value = self._get("fabric_read_only")
+        if value is None:
+            return False
+        return value
 
     @property
-    def info(self) -> dict:
+    def info(self) -> dict[str, Any]:
         """
         # Summary
 
@@ -597,7 +611,7 @@ class MaintenanceModeInfo:
         ```
         """
         method_name = inspect.stack()[0][3]
-        if self._info is None:
+        if not self._info:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.refresh() must be called before "
             msg += f"accessing {self.class_name}.{method_name}."
@@ -605,7 +619,7 @@ class MaintenanceModeInfo:
         return copy.deepcopy(self._info)
 
     @info.setter
-    def info(self, value: dict):
+    def info(self, value: dict[str, Any]) -> None:
         if not isinstance(value, dict):
             msg = f"{self.class_name}.info.setter: "
             msg += "value must be a dict. "
@@ -627,8 +641,100 @@ class MaintenanceModeInfo:
         - `filter` is not set.
         - `filter` is not in the controller response.
         - `mode` is not in the filtered switch dict.
+
+        ## Example values
+
+        - `maintenance`
+        - `normal`
         """
-        return self._get("mode")
+        value = self._get("mode")
+        if value not in self._valid_modes:
+            msg = f"{self.class_name}.mode: "
+            msg += f"Invalid mode value: {value}."
+            raise ValueError(msg)
+        return value
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        # Summary
+
+        An instance of the RestSend class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of RestSend.
+        -   setter: `ValueError` if RestSend.params is not set.
+
+        ## getter
+
+        Return an instance of the RestSend class.
+
+        ## setter
+
+        Set an instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["RestSend"] = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set."
+            raise ValueError(msg)
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        # Summary
+
+        An instance of the Results class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of Results.
+
+        ## getter
+
+        Return an instance of the Results class.
+
+        ## setter
+
+        Set an instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["Results"] = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._results = value
+        self._results.action = self.action
 
     @property
     def role(self):

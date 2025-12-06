@@ -86,9 +86,8 @@ def test_dcnm_maintenance_mode_common_00010() -> None:
     """
     params_test = copy.deepcopy(params)
     params_test.pop("check_mode", None)
-    instance = Common(params_test)
-
-    assert instance._check_mode is False
+    with pytest.raises(ValueError, match=r"Common\.__init__: check_mode is required."):
+        Common(params_test)
 
 def test_dcnm_maintenance_mode_common_00020() -> None:
     """

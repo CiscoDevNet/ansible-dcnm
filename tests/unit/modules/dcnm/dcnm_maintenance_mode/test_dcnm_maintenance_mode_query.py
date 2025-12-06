@@ -71,7 +71,7 @@ def test_dcnm_maintenance_mode_query_00000() -> None:
     assert instance.class_name == "Query"
     assert instance.log.name == "dcnm.Query"
 
-    assert instance.check_mode is False
+    assert instance._check_mode is False
     assert instance.state == "query"
 
     assert isinstance(instance.config, dict)
@@ -268,8 +268,7 @@ def test_dcnm_maintenance_mode_query_00400(monkeypatch) -> None:
     """
     # Summary
 
-    Verify `commit()` re-raises `ValueError` when `get_want()`
-    raises `ValueError`.
+    Verify `commit()` re-raises `ValueError` when `get_want()` raises `ValueError`.
 
     ## Classes and Methods
 

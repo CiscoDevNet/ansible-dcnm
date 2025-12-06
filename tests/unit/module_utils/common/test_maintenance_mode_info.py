@@ -1,4 +1,7 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+"""
+Unit tests for MaintenanceModeInfo class in tests/unit/module_utils/common/maintenance_mode_info.py
+"""
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,12 +24,13 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
+# pylint: disable=too-many-lines
 
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import inspect
@@ -89,18 +93,15 @@ def test_maintenance_mode_info_00000(maintenance_mode_info) -> None:
     """
     with does_not_raise():
         instance = maintenance_mode_info
-    assert instance._config is None
-    assert instance._info is None
-    assert instance._rest_send is None
-    assert instance._results is None
-
+    assert instance._config == []
+    assert instance._info == {}
+    assert instance._rest_send.class_name == "RestSend"
+    assert instance._results.class_name == "Results"
+    assert instance._valid_modes == ["inconsistent", "maintenance", "normal"]
     assert instance.action == "maintenance_mode_info"
     assert instance.class_name == "MaintenanceModeInfo"
-    assert instance.config is None
-    assert instance.rest_send is None
-    assert instance.results is None
 
-    assert isinstance(instance.conversion, ConversionUtils)
+    assert isinstance(instance._conversion, ConversionUtils)
 
 
 def test_maintenance_mode_info_00100(maintenance_mode_info) -> None:
@@ -141,7 +142,7 @@ def test_maintenance_mode_info_00100(maintenance_mode_info) -> None:
     """
     with does_not_raise():
         instance = maintenance_mode_info
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=PARAMS)
         instance.results = Results()
 
     match = r"MaintenanceModeInfo\.verify_refresh_parameters: "
@@ -193,53 +194,6 @@ def test_maintenance_mode_info_00110(maintenance_mode_info) -> None:
 
     match = r"MaintenanceModeInfo\.verify_refresh_parameters: "
     match += r"MaintenanceModeInfo\.rest_send must be set before calling\s+"
-    match += r"refresh\."
-    with pytest.raises(ValueError, match=match):
-        instance.refresh()
-
-
-def test_maintenance_mode_info_00120(maintenance_mode_info) -> None:
-    """
-    # Summary
-
-    Verify `refresh()` raises `ValueError` when `results` is not set.
-
-    ## Classes and Methods
-
-    - MaintenanceModeInfo.verify_refresh_parameters()
-    - MaintenanceModeInfo.refresh()
-
-    ## Test
-
-    - `ValueError` is raised.
-    - Exception message matches expectations.
-
-    ## Setup - Data
-
-    - None
-
-    ## Setup - Code
-
-    - `MaintenanceModeInfo()` is instantiated.
-    - Other required attributes are set.
-
-    ## Trigger
-
-    - `refresh()` is called without having first set `results`.
-
-    ## Expected Result
-
-    - `ValueError` is raised.
-    - Exception message matches expectations.
-
-    """
-    with does_not_raise():
-        instance = maintenance_mode_info
-        instance.rest_send = RestSend({})
-        instance.config = CONFIG
-
-    match = r"MaintenanceModeInfo\.verify_refresh_parameters: "
-    match += r"MaintenanceModeInfo\.results must be set before calling\s+"
     match += r"refresh\."
     with pytest.raises(ValueError, match=match):
         instance.refresh()
@@ -364,8 +318,8 @@ def test_maintenance_mode_info_00200(
     mock_switch_details.mock_message = mock_message
     mock_switch_details.mock_property = mock_property
 
-    monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
-    monkeypatch.setattr(instance, "switch_details", mock_switch_details)
+    monkeypatch.setattr(instance, "_fabric_details", mock_fabric_details)
+    monkeypatch.setattr(instance, "_switch_details", mock_switch_details)
 
     with does_not_raise():
         instance.config = CONFIG
@@ -455,7 +409,7 @@ def test_maintenance_mode_info_00210(
     mock_switch_details.mock_message = mock_message
     mock_switch_details.mock_property = mock_property
 
-    monkeypatch.setattr(instance, "switch_details", mock_switch_details)
+    monkeypatch.setattr(instance, "_switch_details", mock_switch_details)
 
     with does_not_raise():
         instance.config = CONFIG
@@ -709,7 +663,7 @@ def test_maintenance_mode_info_00400(
     mock_fabric_details.mock_message = mock_message
     mock_fabric_details.mock_property = mock_property
 
-    monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
+    monkeypatch.setattr(instance, "_fabric_details", mock_fabric_details)
 
     with does_not_raise():
         instance.config = CONFIG
@@ -942,6 +896,8 @@ def test_maintenance_mode_info_00520() -> None:
         instance.refresh()
         instance.filter = CONFIG[0]
     assert instance.mode == "inconsistent"
+    assert instance.results.response is not None
+    assert instance.results.result is not None
     assert instance.results.response[0]["DATA"][0]["mode"] == "Normal"
     assert instance.results.response[0]["DATA"][0]["systemMode"] == "Maintenance"
     assert instance.results.result[0]["success"] is True
@@ -1023,6 +979,7 @@ def test_maintenance_mode_info_00600() -> None:
         instance.results = Results()
         instance.refresh()
         instance.filter = CONFIG[0]
+    assert instance.results.result is not None
     assert instance.fabric_read_only is True
     assert instance.results.result[0]["success"] is True
     assert instance.results.result[1]["success"] is True
@@ -1109,6 +1066,7 @@ def test_maintenance_mode_info_00700() -> None:
         instance.refresh()
         instance.filter = CONFIG[0]
     assert instance.role == "na"
+    assert instance.results.result is not None
     assert instance.results.result[0]["success"] is True
     assert instance.results.result[1]["success"] is True
     assert instance.results.result[0]["found"] is True
@@ -1359,7 +1317,7 @@ def test_maintenance_mode_info_00900() -> None:
     match += r"MaintenanceModeInfo\.config must be a list\.\s+"
     match += r"Got type: str\."
     with pytest.raises(TypeError, match=match):
-        instance.config = "NOT_A_LIST"
+        instance.config = "NOT_A_LIST"  # type: ignore[arg-type]
 
 
 def test_maintenance_mode_info_00910() -> None:
@@ -1405,7 +1363,7 @@ def test_maintenance_mode_info_00910() -> None:
     match += r"value contains element of type int.\s+"
     match += r"value:.*\."
     with pytest.raises(TypeError, match=match):
-        instance.config = ["192.168.1.1", 10, "192.168.1.2"]
+        instance.config = ["192.168.1.1", 10, "192.168.1.2"]  # type: ignore[list-item]
 
 
 def test_maintenance_mode_info_01000() -> None:
@@ -1569,4 +1527,4 @@ def test_maintenance_mode_info_01020() -> None:
     match += r"value must be a dict\.\s+"
     match += r"Got value NOT_A_DICT of type str\."
     with pytest.raises(TypeError, match=match):
-        instance.info = "NOT_A_DICT"
+        instance.info = "NOT_A_DICT"  # type: ignore[assignment]

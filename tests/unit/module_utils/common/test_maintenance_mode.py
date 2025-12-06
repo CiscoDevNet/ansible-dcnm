@@ -1,3 +1,6 @@
+"""
+Unit tests for MaintenanceMode class in module_utils/common/maintenance_mode.py
+"""
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +24,7 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
+# pylint: disable=too-many-lines
 
 from __future__ import absolute_import, division, print_function
 
@@ -84,31 +88,30 @@ def test_maintenance_mode_00000(maintenance_mode) -> None:
     with does_not_raise():
         instance = maintenance_mode
 
-    assert instance._config is None
-    assert instance._rest_send is None
-    assert instance._results is None
+    assert instance._config == []
+    assert instance._endpoints == []
+    assert instance._rest_send.class_name == "RestSend"
+    assert instance._rest_send.params == {}
+    assert instance._results.class_name == "Results"
 
     assert instance.action == "maintenance_mode"
-    assert instance.check_mode is False
+    assert instance._check_mode is False
     assert instance.class_name == "MaintenanceMode"
-    assert instance.config is None
-    assert instance.deploy_dict == {}
-    assert instance.rest_send is None
-    assert instance.results is None
+    assert instance._deploy_dict == {}
     assert instance.serial_number_to_ip_address == {}
     assert instance.state == "merged"
-    assert instance.valid_modes == ["maintenance", "normal"]
+    assert instance._valid_modes == ["maintenance", "normal"]
 
-    assert isinstance(instance.conversion, ConversionUtils)
-    assert isinstance(instance.ep_maintenance_mode_disable, EpMaintenanceModeDisable)
-    assert isinstance(instance.ep_maintenance_mode_enable, EpMaintenanceModeEnable)
+    assert isinstance(instance._conversion, ConversionUtils)
+    assert isinstance(instance._ep_maintenance_mode_disable, EpMaintenanceModeDisable)
+    assert isinstance(instance._ep_maintenance_mode_enable, EpMaintenanceModeEnable)
 
 
 def test_maintenance_mode_00010() -> None:
     """
     # Summary
 
-    Verify `ValueError` is raised when params is missing check_mode key.
+    Verify check_mode is set to False when params is missing check_mode key.
 
     ## Classes and Methods
 
@@ -116,13 +119,12 @@ def test_maintenance_mode_00010() -> None:
 
     ## Test
 
-    - `ValueError` is raised when params is missing check_mode key
+    - check_mode is set to False when params is missing check_mode key
     """
     params = {"state": "merged"}
-    match = r"MaintenanceMode\.__init__:\s+"
-    match += r"params is missing mandatory parameter: check_mode\."
-    with pytest.raises(ValueError, match=match):
-        instance = MaintenanceMode(params)  # pylint: disable=unused-variable
+    with does_not_raise():
+        instance = MaintenanceMode(params)
+    assert instance._check_mode is False
 
 
 def test_maintenance_mode_00020() -> None:
@@ -174,7 +176,7 @@ def test_maintenance_mode_00030(maintenance_mode) -> None:
     """
     with does_not_raise():
         instance = maintenance_mode
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params)
         instance.results = Results()
 
     match = r"MaintenanceMode\.verify_commit_parameters: "
@@ -217,44 +219,6 @@ def test_maintenance_mode_00040(maintenance_mode) -> None:
 
     match = r"MaintenanceMode\.verify_commit_parameters: "
     match += r"MaintenanceMode\.rest_send must be set before calling\s+"
-    match += r"commit\."
-    with pytest.raises(ValueError, match=match):
-        instance.commit()
-
-
-def test_maintenance_mode_00050(maintenance_mode) -> None:
-    """
-    # Summary
-
-    Verify MaintenanceMode().commit() raises `ValueError` when `results` is not set.
-
-    ## Classes and Methods
-
-    - MaintenanceMode.__init__()
-    - MaintenanceMode.verify_commit_parameters()
-    - MaintenanceMode.commit()
-
-    ## Code Flow - Setup
-
-    - MaintenanceMode() is instantiated
-    - Other required attributes are set
-
-    ## Code Flow - Test
-
-    - MaintenanceMode().commit() is called without having first set MaintenanceMode().results
-
-    ## Expected Result
-
-    - `ValueError` is raised
-    - Exception message matches expected
-    """
-    with does_not_raise():
-        instance = maintenance_mode
-        instance.rest_send = RestSend({})
-        instance.config = CONFIG
-
-    match = r"MaintenanceMode\.verify_commit_parameters: "
-    match += r"MaintenanceMode\.results must be set before calling\s+"
     match += r"commit\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -309,7 +273,7 @@ def test_maintenance_mode_00200(monkeypatch, maintenance_mode, mock_exception, e
     with does_not_raise():
         instance = maintenance_mode
         instance.config = CONFIG
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params)
         instance.results = Results()
 
     monkeypatch.setattr(instance, "change_system_mode", mock_change_system_mode)
@@ -368,7 +332,7 @@ def test_maintenance_mode_00210(monkeypatch, maintenance_mode, mock_exception, e
     with does_not_raise():
         instance = maintenance_mode
         instance.config = CONFIG
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params)
         instance.results = Results()
 
     monkeypatch.setattr(instance, "change_system_mode", mock_change_system_mode)
@@ -926,10 +890,10 @@ def test_maintenance_mode_00700(maintenance_mode, param, raises) -> None:
 @pytest.mark.parametrize(
     "endpoint_instance, mock_exception, expected_exception, mock_message",
     [
-        ("ep_maintenance_mode_disable", TypeError, ValueError, "Bad type"),
-        ("ep_maintenance_mode_disable", ValueError, ValueError, "Bad value"),
-        ("ep_maintenance_mode_enable", TypeError, ValueError, "Bad type"),
-        ("ep_maintenance_mode_enable", ValueError, ValueError, "Bad value"),
+        ("_ep_maintenance_mode_disable", TypeError, ValueError, "Bad type"),
+        ("_ep_maintenance_mode_disable", ValueError, ValueError, "Bad value"),
+        ("_ep_maintenance_mode_enable", TypeError, ValueError, "Bad type"),
+        ("_ep_maintenance_mode_enable", ValueError, ValueError, "Bad value"),
     ],
 )
 def test_maintenance_mode_00800(
@@ -1008,10 +972,10 @@ def test_maintenance_mode_00800(
     with does_not_raise():
         instance = maintenance_mode
         config = copy.deepcopy(CONFIG[0])
-        if endpoint_instance == "ep_maintenance_mode_disable":
+        if endpoint_instance == "_ep_maintenance_mode_disable":
             config["mode"] = "normal"
         instance.config = [config]
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params)
         instance.results = Results()
 
     monkeypatch.setattr(instance, endpoint_instance, MockEndpoint())
@@ -1022,8 +986,8 @@ def test_maintenance_mode_00800(
 @pytest.mark.parametrize(
     "endpoint_instance, mock_exception, expected_exception, mock_message",
     [
-        ("ep_maintenance_mode_deploy", TypeError, ValueError, "Bad type"),
-        ("ep_maintenance_mode_deploy", ValueError, ValueError, "Bad value"),
+        ("_ep_maintenance_mode_deploy", TypeError, ValueError, "Bad type"),
+        ("_ep_maintenance_mode_deploy", ValueError, ValueError, "Bad value"),
     ],
 )
 def test_maintenance_mode_00900(

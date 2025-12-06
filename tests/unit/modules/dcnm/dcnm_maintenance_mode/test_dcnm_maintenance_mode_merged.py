@@ -74,7 +74,7 @@ def test_dcnm_maintenance_mode_merged_00000() -> None:
     assert instance.class_name == "Merged"
     assert instance.log.name == "dcnm.Merged"
 
-    assert instance.check_mode is False
+    assert instance._check_mode is False
     assert instance.state == "merged"
 
     assert isinstance(instance.config, dict)
@@ -89,7 +89,7 @@ def test_dcnm_maintenance_mode_merged_00000() -> None:
 
     assert instance.maintenance_mode.class_name == "MaintenanceMode"
     assert instance.maintenance_mode.state == "merged"
-    assert instance.maintenance_mode.check_mode is False
+    assert instance.maintenance_mode._check_mode is False
 
     assert instance.results.class_name == "Results"
     assert instance.results.state == "merged"

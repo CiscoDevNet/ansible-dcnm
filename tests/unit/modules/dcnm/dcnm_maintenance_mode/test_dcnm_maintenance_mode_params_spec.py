@@ -58,9 +58,9 @@ def test_dcnm_maintenance_mode_params_spec_00000() -> None:
     with does_not_raise():
         instance = ParamsSpec()
     assert instance.class_name == "ParamsSpec"
-    assert instance._params is None
+    assert instance._params == {}
     assert instance._params_spec == {}
-    assert instance.valid_states == ["merged", "query"]
+    assert instance._valid_states == ["merged", "query"]
 
 
 def test_dcnm_maintenance_mode_params_spec_00100() -> None:
@@ -84,7 +84,7 @@ def test_dcnm_maintenance_mode_params_spec_00100() -> None:
     match = r"ParamsSpec\.params.setter:\s+"
     match += r"Invalid type\. Expected dict but got type str, value foo\."
     with pytest.raises(TypeError, match=match):
-        instance.params = params_test
+        instance.params = params_test  # type: ignore
 
 
 def test_dcnm_maintenance_mode_params_spec_00110() -> None:

@@ -1,3 +1,6 @@
+"""
+Modify the maintenance mode state of switches and optionally deploy the changes
+"""
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,26 +14,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, annotations, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
-
-# Required for class decorators
-# pylint: disable=no-member
 
 import copy
 import inspect
 import logging
+from typing import Any, Literal
 
-from .api.v1.lan_fabric.rest.control.fabrics.fabrics import EpFabricConfigDeploy, EpMaintenanceModeDeploy, EpMaintenanceModeDisable, EpMaintenanceModeEnable
+from .api.v1.lan_fabric.rest.control.fabrics.fabrics import EpMaintenanceModeDeploy, EpMaintenanceModeDisable, EpMaintenanceModeEnable
 from .conversion import ConversionUtils
+from .enums import MaintenanceModeSetEnum
 from .exceptions import ControllerResponseError
-from .properties import Properties
+from .rest_send_v2 import RestSend
+from .results import Results
 
 
-@Properties.add_rest_send
-@Properties.add_results
 class MaintenanceMode:
     """
     # Summary
@@ -41,11 +42,12 @@ class MaintenanceMode:
 
     ### ValueError
 
-    - `__init__()`: params is missing mandatory parameters `check_mode` or `state`.
+    - `__init__()`: params is missing mandatory parameter `state`.
     - `config` property setter: config contains invalid content.
-    - `commit()`: config, rest_send, or results are not set.
+    - `commit()`: config or rest_send.params are not set.
     - `commit()`: `EpMaintenanceModeEnable` or `EpMaintenanceModeDisable` raise `ValueError`.
     - `commit()`: either `change_system_mode()` or `deploy_switches()` raise `ControllerResponseError`.
+    - `rest_send` property setter: rest_send.params is not set.
 
     ### TypeError
 
@@ -107,50 +109,45 @@ class MaintenanceMode:
     ```
     """
 
-    def __init__(self, params):
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+    def __init__(self, params: dict[str, Any]) -> None:
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.params = params
-        self.action = "maintenance_mode"
-        self.endpoints = []
+        self.params: dict[str, Any] = params
+        self.action: str = "maintenance_mode"
+        self._endpoints: list[dict[str, str]] = []
 
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "params is missing mandatory parameter: check_mode."
-            raise ValueError(msg)
+        self._check_mode: bool = self.params.get("check_mode", False)
 
-        self.state = self.params.get("state", None)
-        if self.state is None:
+        self.state = self.params.get("state", "")
+        if not self.state:
             msg = f"{self.class_name}.{method_name}: "
             msg += "params is missing mandatory parameter: state."
             raise ValueError(msg)
 
         # Populated in build_deploy_dict()
-        self.deploy_dict = {}
-        self.serial_number_to_ip_address = {}
+        self._deploy_dict: dict[str, Any] = {}
+        self.serial_number_to_ip_address: dict[str, str] = {}
 
-        self.valid_modes = ["maintenance", "normal"]
+        self._valid_modes: list[str] = MaintenanceModeSetEnum.values()
 
-        self.conversion = ConversionUtils()
-        self.ep_maintenance_mode_deploy = EpMaintenanceModeDeploy()
-        self.ep_maintenance_mode_disable = EpMaintenanceModeDisable()
-        self.ep_maintenance_mode_enable = EpMaintenanceModeEnable()
-        self.ep_fabric_config_deploy = EpFabricConfigDeploy()
+        self._conversion = ConversionUtils()
+        self._ep_maintenance_mode_deploy = EpMaintenanceModeDeploy()
+        self._ep_maintenance_mode_disable = EpMaintenanceModeDisable()
+        self._ep_maintenance_mode_enable = EpMaintenanceModeEnable()
 
-        self._config = None
-        self._rest_send = None
-        self._results = None
+        self._config: list[dict[str, Any]] = []
+        self._rest_send: RestSend = RestSend({})
+        self._results: Results = Results()
 
         msg = "ENTERED MaintenanceMode(): "
-        msg += f"check_mode: {self.check_mode}, "
+        msg += f"check_mode: {self._check_mode}, "
         msg += f"state: {self.state}"
         self.log.debug(msg)
 
-    def verify_config_parameters(self, value) -> None:
+    def verify_config_parameters(self, value: list[dict[str, Any]]) -> None:
         """
         # Summary
 
@@ -176,7 +173,7 @@ class MaintenanceMode:
         - verify_mode()
         - verify_serial_number()
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.config must be a list. "
@@ -194,7 +191,7 @@ class MaintenanceMode:
             except (TypeError, ValueError) as error:
                 raise ValueError(error) from error
 
-    def verify_deploy(self, item) -> None:
+    def verify_deploy(self, item: dict[str, Any]) -> None:
         """
         # Summary
 
@@ -210,7 +207,7 @@ class MaintenanceMode:
 
         - `deploy` is not a boolean.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if item.get("deploy", None) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is missing mandatory key: deploy."
@@ -222,7 +219,7 @@ class MaintenanceMode:
             msg += f"value {item.get('deploy', None)}."
             raise TypeError(msg)
 
-    def verify_fabric_name(self, item) -> None:
+    def verify_fabric_name(self, item: dict[str, Any]) -> None:
         """
         # Summary
 
@@ -235,17 +232,17 @@ class MaintenanceMode:
         - `fabric_name` is not present.
         - `fabric_name` is not a valid fabric name.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if item.get("fabric_name", None) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is missing mandatory key: fabric_name."
             raise ValueError(msg)
         try:
-            self.conversion.validate_fabric_name(item.get("fabric_name", None))
+            self._conversion.validate_fabric_name(item.get("fabric_name", None))
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
 
-    def verify_ip_address(self, item) -> None:
+    def verify_ip_address(self, item: dict[str, Any]) -> None:
         """
         # Summary
 
@@ -257,13 +254,13 @@ class MaintenanceMode:
 
         - `ip_address` is not present.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if item.get("ip_address", None) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is missing mandatory key: ip_address."
             raise ValueError(msg)
 
-    def verify_mode(self, item) -> None:
+    def verify_mode(self, item: dict[str, Any]) -> None:
         """
         # Summary
 
@@ -276,18 +273,18 @@ class MaintenanceMode:
         - `mode` is not present.
         - `mode` is not one of "maintenance" or "normal".
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if item.get("mode", None) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is missing mandatory key: mode."
             raise ValueError(msg)
-        if item.get("mode", None) not in self.valid_modes:
+        if item.get("mode", None) not in self._valid_modes:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"mode must be one of {' or '.join(self.valid_modes)}. "
+            msg += f"mode must be one of {' or '.join(list(self._valid_modes))}. "
             msg += f"Got {item.get('mode', None)}."
             raise ValueError(msg)
 
-    def verify_serial_number(self, item) -> None:
+    def verify_serial_number(self, item: dict[str, Any]) -> None:
         """
         # Summary
 
@@ -299,13 +296,13 @@ class MaintenanceMode:
 
         - `serial_number` is not present.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if item.get("serial_number", None) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is missing mandatory key: serial_number."
             raise ValueError(msg)
 
-    def verify_wait_for_mode_change(self, item) -> None:
+    def verify_wait_for_mode_change(self, item: dict[str, Any]) -> None:
         """
         # Summary
 
@@ -321,7 +318,7 @@ class MaintenanceMode:
 
         - `wait_for_mode_change` is not a boolean.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if item.get("wait_for_mode_change", None) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is missing mandatory key: wait_for_mode_change."
@@ -344,23 +341,17 @@ class MaintenanceMode:
         ### ValueError
 
         - `config` is not set.
-        - `rest_send` is not set.
-        - `results` is not set.
+        - `rest_send.params` is not set.
         """
-        method_name = inspect.stack()[0][3]
-        if self.config is None:
+        method_name: str = inspect.stack()[0][3]
+        if not self.config:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.config must be set "
             msg += "before calling commit."
             raise ValueError(msg)
-        if self.rest_send is None:
+        if not self.rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.rest_send must be set "
-            msg += "before calling commit."
-            raise ValueError(msg)
-        if self.results is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.class_name}.results must be set "
             msg += "before calling commit."
             raise ValueError(msg)
 
@@ -415,7 +406,7 @@ class MaintenanceMode:
 
         - `serial_number` is not a string.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         for item in self.config:
             # Build endpoint
@@ -423,10 +414,10 @@ class MaintenanceMode:
             fabric_name = item.get("fabric_name")
             ip_address = item.get("ip_address")
             serial_number = item.get("serial_number")
-            if mode == "normal":
-                endpoint = self.ep_maintenance_mode_disable
+            if mode == MaintenanceModeSetEnum.NORMAL.value:
+                endpoint = self._ep_maintenance_mode_disable
             else:
-                endpoint = self.ep_maintenance_mode_enable
+                endpoint = self._ep_maintenance_mode_enable
 
             try:
                 endpoint.fabric_name = fabric_name
@@ -458,7 +449,7 @@ class MaintenanceMode:
             # register result
             try:
                 self.results.action = "change_sytem_mode"
-                self.results.check_mode = self.check_mode
+                self.results.check_mode = self._check_mode
                 self.results.state = self.state
                 self.results.response_current = copy.deepcopy(self.rest_send.response_current)
                 self.results.result_current = copy.deepcopy(self.rest_send.result_current)
@@ -518,19 +509,19 @@ class MaintenanceMode:
         }
         ```
         """
-        self.deploy_dict = {}
+        self._deploy_dict = {}
         for item in self.config:
             fabric_name = item.get("fabric_name")
             serial_number = item.get("serial_number")
             deploy = item.get("deploy")
             wait_for_mode_change = item.get("wait_for_mode_change")
-            if fabric_name not in self.deploy_dict:
-                self.deploy_dict[fabric_name] = []
+            if fabric_name not in self._deploy_dict:
+                self._deploy_dict[fabric_name] = []
             item_dict = {}
             if deploy is True:
                 item_dict["serial_number"] = serial_number
                 item_dict["wait_for_mode_change"] = wait_for_mode_change
-                self.deploy_dict[fabric_name].append(item_dict)
+                self._deploy_dict[fabric_name].append(item_dict)
 
     def build_serial_number_to_ip_address(self) -> None:
         """
@@ -573,32 +564,32 @@ class MaintenanceMode:
 
         - endpoint configuration fails.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         endpoints = []
-        for fabric_name, switches in self.deploy_dict.items():
+        for fabric_name, switches in self._deploy_dict.items():
             for item in switches:
                 endpoint = {}
                 try:
-                    self.ep_maintenance_mode_deploy.fabric_name = fabric_name
-                    self.ep_maintenance_mode_deploy.serial_number = item["serial_number"]
-                    self.ep_maintenance_mode_deploy.wait_for_mode_change = item["wait_for_mode_change"]
+                    self._ep_maintenance_mode_deploy.fabric_name = fabric_name
+                    self._ep_maintenance_mode_deploy.serial_number = item["serial_number"]
+                    self._ep_maintenance_mode_deploy.wait_for_mode_change = item["wait_for_mode_change"]
                 except (KeyError, TypeError, ValueError) as error:
                     msg = f"{self.class_name}.{method_name}: "
                     msg += "Error resolving endpoint: "
                     msg += f"Error details: {error}."
                     raise ValueError(msg) from error
-                endpoint["path"] = self.ep_maintenance_mode_deploy.path
-                endpoint["verb"] = self.ep_maintenance_mode_deploy.verb
-                endpoint["serial_number"] = self.ep_maintenance_mode_deploy.serial_number
+                endpoint["path"] = self._ep_maintenance_mode_deploy.path
+                endpoint["verb"] = self._ep_maintenance_mode_deploy.verb
+                endpoint["serial_number"] = self._ep_maintenance_mode_deploy.serial_number
                 endpoint["fabric_name"] = fabric_name
                 endpoints.append(copy.copy(endpoint))
-        self.endpoints = copy.copy(endpoints)
+        self._endpoints = copy.copy(endpoints)
 
     def deploy_switches(self) -> None:
         """
         # Summary
 
-        Initiate config-deploy for the switches in `self.deploy_dict`.
+        Initiate config-deploy for the switches in `self._deploy_dict`.
 
         ## Raises
 
@@ -610,7 +601,7 @@ class MaintenanceMode:
 
         - endpoint cannot be resolved.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.build_deploy_dict()
         self.build_serial_number_to_ip_address()
         try:
@@ -621,7 +612,7 @@ class MaintenanceMode:
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        for endpoint in self.endpoints:
+        for endpoint in self._endpoints:
             # Send request
             self.rest_send.path = endpoint["path"]
             self.rest_send.verb = endpoint["verb"]
@@ -641,7 +632,7 @@ class MaintenanceMode:
                 self.results.diff_current = diff
 
             self.results.action = action
-            self.results.check_mode = self.check_mode
+            self.results.check_mode = self._check_mode
             self.results.state = self.state
             self.results.response_current = copy.deepcopy(self.rest_send.response_current)
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
@@ -657,7 +648,7 @@ class MaintenanceMode:
                 raise ControllerResponseError(msg)
 
     @property
-    def config(self) -> list:
+    def config(self) -> list[dict[str, Any]]:
         """
         # Summary
 
@@ -705,9 +696,91 @@ class MaintenanceMode:
         return self._config
 
     @config.setter
-    def config(self, value):
+    def config(self, value: list[dict[str, Any]]) -> None:
         try:
             self.verify_config_parameters(value)
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
         self._config = value
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        # Summary
+
+        An instance of the RestSend class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of RestSend.
+        -   setter: `ValueError` if RestSend.params is not set.
+
+        ## getter
+
+        Return an instance of the RestSend class.
+
+        ## setter
+
+        Set an instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["RestSend"] = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set."
+            raise ValueError(msg)
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        # Summary
+
+        An instance of the Results class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of Results.
+
+        ## getter
+
+        Return an instance of the Results class.
+
+        ## setter
+
+        Set an instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["Results"] = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._results = value
+        self._results.action = self.action
