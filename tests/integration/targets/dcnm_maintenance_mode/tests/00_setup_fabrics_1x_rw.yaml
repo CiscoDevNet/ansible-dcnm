@@ -17,11 +17,11 @@
 # SETUP
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - fabric_name_1
-#    - fabric_type_1  # VXLAN_EVPN
+#    - fabric_name_00
+#    - fabric_type_00  # VXLAN_EVPN
 # 2. Create fabrics if they do not exist
-#    - fabric_name_1
-# 3. Add switches to fabric_name_1 if they do not exist.
+#    - fabric_name_00
+# 3. Add switches to fabric_name_00 if they do not exist.
 #    - leaf_1
 #    - leaf_2
 # CLEANUP
@@ -35,8 +35,8 @@
 # vars:
 #   # This testcase field can run any test in the tests directory for the role
 #   testcase: merged_normal_to_maintenance
-#   fabric_name_1: VXLAN_EVPN_Fabric
-#   fabric_type_1: VXLAN_EVPN
+#   fabric_name_00: VXLAN_EVPN_Fabric
+#   fabric_type_00: VXLAN_EVPN
 #   leaf_1: 172.22.150.103
 #   leaf_2: 172.22.150.104
 #   nxos_username: admin
@@ -44,12 +44,12 @@
 ################################################################################
 # 00_SETUP - Create fabrics if they do not exist.
 ################################################################################
-- name: 00_SETUP - Create fabrics
+- name: 00_SETUP - Create fabric {{ fabric_name_00 }} if it does not exist
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-        FABRIC_TYPE: "{{ fabric_type_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+        FABRIC_TYPE: "{{ fabric_type_00 }}"
         BGP_AS: "65535.65534"
         DEPLOY: true
   register: result
@@ -64,11 +64,11 @@
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 ################################################################################
-# 00_SETUP - Merge leaf_1 and leaf_2 into fabric_1
+# 00_SETUP - Merge leaf_1 and leaf_2 into fabric_name_00
 ################################################################################
-- name: Merge leaf_1 and leaf_2 into fabric_1
+- name: Merge leaf_1 and leaf_2 into fabric {{ fabric_name_00 }}
   cisco.dcnm.dcnm_inventory:
-    fabric: "{{ fabric_name_1 }}"
+    fabric: "{{ fabric_name_00 }}"
     state: merged
     config:
       - seed_ip: "{{ leaf_1 }}"
