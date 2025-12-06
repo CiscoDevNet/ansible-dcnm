@@ -1,6 +1,7 @@
 """
 Retrieve the maintenance mode state of switches.
 """
+
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,18 +28,14 @@ import inspect
 import logging
 from typing import Any, Literal
 
-# TODO: import fabric_details_v3 when SwitchDetails (v2) has been merged.
-from ..fabric.fabric_details_v2 import FabricDetailsByName
+from ..fabric.fabric_details_v3 import FabricDetailsByName
 from .conversion import ConversionUtils
 from .enums import MaintenanceModeGetEnum
 from .exceptions import ControllerResponseError
+from .operation_type import OperationType
 from .rest_send_v2 import RestSend
-
-# TODO: import results_v2 when SwitchDetails (v2) has been merged.
-from .results import Results
-
-# TODO: import switch_details_v2 when SwitchDetails (v2) has been merged.
-from .switch_details import SwitchDetails
+from .results_v2 import Results
+from .switch_details_v2 import SwitchDetails
 
 
 class MaintenanceModeInfo:
@@ -149,6 +146,8 @@ class MaintenanceModeInfo:
         self._info: dict[str, Any] = {}
         self._rest_send: RestSend = RestSend(params={})
         self._results: Results = Results()
+        self._results.action = self.action
+        self._results.operation_type = OperationType.QUERY
         self._valid_modes: list[str] = MaintenanceModeGetEnum.values()
 
         msg = "ENTERED MaintenanceModeInfo(): "
@@ -168,20 +167,20 @@ class MaintenanceModeInfo:
         - `rest_send` is not set.
         - `results` is not set.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not self.config:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.config must be set "
             msg += "before calling refresh."
             raise ValueError(msg)
 
-        if not self.rest_send.params:
+        if not self._rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.rest_send must be set "
             msg += "before calling refresh."
             raise ValueError(msg)
 
-    def refresh(self):
+    def refresh(self) -> None:
         """
         # Summary
 
@@ -233,16 +232,16 @@ class MaintenanceModeInfo:
         }
         ```
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.verify_refresh_parameters()
 
         try:
-            self._switch_details.rest_send = self.rest_send
-            self._fabric_details.rest_send = self.rest_send
+            self._switch_details.rest_send = self._rest_send
+            self._fabric_details.rest_send = self._rest_send
 
-            self._switch_details.results = self.results
-            self._fabric_details.results = self.results
+            self._switch_details.results = self._results
+            self._fabric_details.results = self._results
         except TypeError as error:
             raise ValueError(error) from error
 
@@ -256,7 +255,7 @@ class MaintenanceModeInfo:
         except (ControllerResponseError, ValueError) as error:
             raise ValueError(error) from error
 
-        info = {}
+        info: dict[str, dict[str, Any]] = {}
         # Populate info dict
         for ip_address in self.config:
             self._switch_details.filter = ip_address
@@ -266,7 +265,7 @@ class MaintenanceModeInfo:
             except ValueError as error:
                 raise ValueError(error) from error
 
-            if serial_number is None:
+            if not serial_number:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Switch with ip_address {ip_address} "
                 msg += "does not exist on the controller, or is missing its "
@@ -339,7 +338,7 @@ class MaintenanceModeInfo:
         We do not need to check that `item` exists in the filtered
         switch dict, since `refresh()` has already done so.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         if not self._filter:
             msg = f"{self.class_name}.{method_name}: "
@@ -423,7 +422,7 @@ class MaintenanceModeInfo:
 
     @config.setter
     def config(self, value: list[str]) -> None:
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.config must be a list. "
@@ -613,7 +612,7 @@ class MaintenanceModeInfo:
         }
         ```
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not self._info:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.refresh() must be called before "
@@ -631,7 +630,7 @@ class MaintenanceModeInfo:
         self._info = value
 
     @property
-    def mode(self):
+    def mode(self) -> str:
         """
         # Summary
 
@@ -738,13 +737,16 @@ class MaintenanceModeInfo:
             raise TypeError(msg)
         self._results = value
         self._results.action = self.action
+        self._results.operation_type = OperationType.QUERY
 
     @property
-    def role(self):
+    def role(self) -> str:
         """
         # Summary
 
         The role of the filtered switch in the hosting fabric.
+
+        If the role is not set, "na" is returned.
 
         ## Raises
 
@@ -754,10 +756,13 @@ class MaintenanceModeInfo:
         - `filter` is not in the controller response.
         - `role` is not in the filtered switch dict.
         """
-        return self._get("role")
+        value = self._get("role")
+        if value is None:
+            return "na"
+        return value
 
     @property
-    def serial_number(self):
+    def serial_number(self) -> str:
         """
         # Summary
 

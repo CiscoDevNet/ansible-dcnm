@@ -41,7 +41,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions impor
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode_info import MaintenanceModeInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
 from ansible_collections.cisco.dcnm.tests.unit.mocks.mock_fabric_details_by_name import MockFabricDetailsByName
 from ansible_collections.cisco.dcnm.tests.unit.mocks.mock_switch_details import MockSwitchDetails
@@ -502,7 +502,7 @@ def test_maintenance_mode_info_00310() -> None:
     # Summary
 
     Verify `refresh()` raises `ValueError` when
-    `switch_details.serial_number` is `None`.
+    `switch_details.serial_number` is "".
 
     This happens when the switch exists on the controller but its
     serial_number is null.  This is a negative test case since we

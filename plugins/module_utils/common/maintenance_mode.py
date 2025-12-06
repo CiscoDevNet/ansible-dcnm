@@ -29,8 +29,9 @@ from .api.v1.lan_fabric.rest.control.fabrics.fabrics import EpMaintenanceModeDep
 from .conversion import ConversionUtils
 from .enums import MaintenanceModeSetEnum
 from .exceptions import ControllerResponseError
+from .operation_type import OperationType
 from .rest_send_v2 import RestSend
-from .results import Results
+from .results_v2 import Results
 
 
 class MaintenanceMode:
@@ -142,6 +143,8 @@ class MaintenanceMode:
         self._config: list[dict[str, Any]] = []
         self._rest_send: RestSend = RestSend({})
         self._results: Results = Results()
+        self._results.action = self.action
+        self._results.operation_type = OperationType.UPDATE
 
         msg = "ENTERED MaintenanceMode(): "
         msg += f"check_mode: {self._check_mode}, "
@@ -415,6 +418,7 @@ class MaintenanceMode:
             fabric_name = item.get("fabric_name")
             ip_address = item.get("ip_address")
             serial_number = item.get("serial_number")
+            endpoint: EpMaintenanceModeDisable | EpMaintenanceModeEnable
             if mode == MaintenanceModeSetEnum.NORMAL.value:
                 endpoint = self._ep_maintenance_mode_disable
             else:
@@ -512,8 +516,8 @@ class MaintenanceMode:
         """
         self._deploy_dict = {}
         for item in self.config:
-            fabric_name = item.get("fabric_name")
-            serial_number = item.get("serial_number")
+            fabric_name = item.get("fabric_name", "")
+            serial_number = item.get("serial_number", "")
             deploy = item.get("deploy")
             wait_for_mode_change = item.get("wait_for_mode_change")
             if fabric_name not in self._deploy_dict:
@@ -549,8 +553,8 @@ class MaintenanceMode:
         `deploy_switches()` method.
         """
         for item in self.config:
-            serial_number = item.get("serial_number")
-            ip_address = item.get("ip_address")
+            serial_number = item.get("serial_number", "")
+            ip_address = item.get("ip_address", "")
             self.serial_number_to_ip_address[serial_number] = ip_address
 
     def build_endpoints(self) -> None:
@@ -785,3 +789,4 @@ class MaintenanceMode:
             raise TypeError(msg)
         self._results = value
         self._results.action = self.action
+        self._results.operation_type = OperationType.UPDATE

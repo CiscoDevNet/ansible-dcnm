@@ -163,7 +163,7 @@ from ..module_utils.common.params_merge_defaults_v2 import ParamsMergeDefaults
 from ..module_utils.common.params_validate_v2 import ParamsValidate
 from ..module_utils.common.response_handler import ResponseHandler
 from ..module_utils.common.rest_send_v2 import RestSend
-from ..module_utils.common.results import Results
+from ..module_utils.common.results_v2 import Results
 from ..module_utils.common.sender_dcnm import Sender
 
 
@@ -1500,9 +1500,9 @@ class Query(Common):
 
         # If we got this far, the requests were successful.
         self.results.action = "maintenance_mode_info"
-        self.results.changed = False
+        self.results.add_changed(False)
         self.results.diff_current = self.have
-        self.results.failed = False
+        self.results.add_failed(False)
         self.results.response_current = {"MESSAGE": "MaintenanceModeInfo OK."}
         self.results.response_current.update({"METHOD": "NA"})
         self.results.response_current.update({"REQUEST_PATH": "NA"})
