@@ -16,21 +16,21 @@
 ################################################################################
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - fabric_name_4
-#    - fabric_type_4  # IPFM
+#    - fabric_name_40
+#    - fabric_type_40  # IPFM
 # 3. Delete fabrics under test, if they exist
-#    - fabric_name_4
+#    - fabric_name_40
 ################################################################################
 # TEST
 ################################################################################
 # 4. Create fabrics and verify result
-#    - fabric_name_4
+#    - fabric_name_40
 # 5. Merge additional configs into fabric_4 and verify result
 ################################################################################
 # CLEANUP
 ################################################################################
 # 6. Delete fabrics under test
-#    - fabric_name_4
+#    - fabric_name_40
 ################################################################################
 # REQUIREMENTS
 ################################################################################
@@ -45,8 +45,8 @@
 #
 # vars:
 #   testcase: dcnm_fabric_merged_save_deploy_ipfm
-#   fabric_name_4: IPFM_Fabric
-#   fabric_type_4: IPFM
+#   fabric_name_40: IPFM
+#   fabric_type_40: IPFM
 #   leaf_1: 172.22.150.103
 #   nxos_username: admin
 #   nxos_password: mypassword
@@ -57,7 +57,7 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_4 }}"
+      - FABRIC_NAME: "{{ fabric_name_40 }}"
   register: result
 - debug:
     var: result
@@ -72,7 +72,7 @@
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "FABRIC_NAME": "IPFM_Fabric",
+#                 "FABRIC_NAME": "IPFM",
 #                 "sequence_number": 1
 #             }
 #         ],
@@ -89,12 +89,12 @@
 #             {
 #                 "DATA": {
 #                     "nvPairs": {
-#                         "FABRIC_NAME": "IPFM_Fabric"
+#                         "FABRIC_NAME": "IPFM"
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM_Fabric/Easy_Fabric_IPFM",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM/Easy_Fabric_IPFM",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
@@ -109,12 +109,12 @@
 #     }
 # }
 ################################################################################
-- name: MERGED - TEST - Create IPFM fabric_4 with minimal config
+- name: MERGED - TEST - Create IPFM {{ fabric_name_40 }} with minimal config
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_4 }}"
-        FABRIC_TYPE: "{{ fabric_type_4 }}"
+      - FABRIC_NAME: "{{ fabric_name_40 }}"
+        FABRIC_TYPE: "{{ fabric_type_40 }}"
         DEPLOY: true
   register: result
 - debug:
@@ -124,7 +124,7 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 1
-      - result.diff[0].FABRIC_NAME == fabric_name_4
+      - result.diff[0].FABRIC_NAME == fabric_name_40
       - result.diff[0].sequence_number == 1
       - result.metadata[0].action == "fabric_create"
       - result.metadata[0].check_mode == False
@@ -136,11 +136,11 @@
       - result.response[0].METHOD == "POST"
       - result.response[0].RETURN_CODE == 200
 ################################################################################
-# MERGED - TEST - Add one leaf switch to fabric_4
+# MERGED - TEST - Add one leaf switch to fabric_name_40
 ################################################################################
-- name: Merge leaf_1 into fabric_4
+- name: Merge leaf_1 into {{ fabric_name_40 }}
   cisco.dcnm.dcnm_inventory:
-    fabric: "{{ fabric_name_4 }}"
+    fabric: "{{ fabric_name_40 }}"
     state: merged
     config:
       - seed_ip: "{{ leaf_1 }}"
@@ -154,7 +154,7 @@
 - debug:
     var: result
 ################################################################################
-# MERGED - TEST - Merge additional valid configs into fabric_4 with DEPLOY true
+# MERGED - TEST - Merge additional valid configs into fabric_name_40 with DEPLOY true
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -165,16 +165,16 @@
 #         "diff": [
 #             {
 #                 "FABRIC_MTU: "1500",
-#                 "FABRIC_NAME": "IPFM_Fabric",
+#                 "FABRIC_NAME": "IPFM",
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "FABRIC_NAME": "IPFM_Fabric",
+#                 "FABRIC_NAME": "IPFM",
 #                 "config_save": "OK",
 #                 "sequence_number": 2
 #             },
 #             {
-#                 "FABRIC_NAME": "IPFM_Fabric",
+#                 "FABRIC_NAME": "IPFM",
 #                 "config_deploy": "OK",
 #                 "sequence_number": 3
 #             },
@@ -205,12 +205,12 @@
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "FABRIC_MTU: "1500",
-#                         "FABRIC_NAME": "IPFM_Fabric",
+#                         "FABRIC_NAME": "IPFM",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "PUT",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM_Fabric/Easy_Fabric_IPFM",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM/Easy_Fabric_IPFM",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             },
@@ -220,7 +220,7 @@
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM_Fabric/config-save",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM/config-save",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             },
@@ -230,7 +230,7 @@
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM_Fabric/config-deploy?forceShowRun=false",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM/config-deploy?forceShowRun=false",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
@@ -255,12 +255,12 @@
 #     }
 # }
 ################################################################################
-- name: MERGED - TEST - Merge additional configs into fabric_4 with DEPLOY true
-  cisco.dcnm.dcnm_fabric: &merge_fabric_4
+- name: MERGED - TEST - Merge additional configs into {{ fabric_name_40 }} with DEPLOY true
+  cisco.dcnm.dcnm_fabric: &merge_fabric_name_40
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_4 }}"
-        FABRIC_TYPE: "{{ fabric_type_4 }}"
+      - FABRIC_NAME: "{{ fabric_name_40 }}"
+        FABRIC_TYPE: "{{ fabric_type_40 }}"
         FABRIC_MTU: 1500
         DEPLOY: true
   register: result
@@ -271,13 +271,13 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 3
-      - result.diff[0].FABRIC_NAME == fabric_name_4
+      - result.diff[0].FABRIC_NAME == fabric_name_40
       - result.diff[0].FABRIC_MTU == "1500"
       - result.diff[0].sequence_number == 1
-      - result.diff[1].FABRIC_NAME == fabric_name_4
+      - result.diff[1].FABRIC_NAME == fabric_name_40
       - result.diff[1].config_save == "OK"
       - result.diff[1].sequence_number == 2
-      - result.diff[2].FABRIC_NAME == fabric_name_4
+      - result.diff[2].FABRIC_NAME == fabric_name_40
       - result.diff[2].config_deploy == "OK"
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
@@ -318,7 +318,7 @@
       - result.result[2].success == true
       - result.result[2].sequence_number == 3
 ################################################################################
-# MERGED - TEST - Merge additional valid configs into fabric_4 - idempotence
+# MERGED - TEST - Merge additional valid configs into fabric_name_40 - idempotence
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -357,8 +357,8 @@
 #     }
 # }
 ################################################################################
-- name: MERGED - TEST - Merge additional config into fabric_4 - idempotence
-  cisco.dcnm.dcnm_fabric: *merge_fabric_4
+- name: MERGED - TEST - Merge additional config into {{ fabric_name_40 }} - idempotence
+  cisco.dcnm.dcnm_fabric: *merge_fabric_name_40
   register: result
 - debug:
     var: result
@@ -382,11 +382,11 @@
       - result.result[0].success == true
       - result.result[0].sequence_number == 1
 ################################################################################
-# MERGED - CLEANUP - Delete switch from fabric_4
+# MERGED - CLEANUP - Delete switch from fabric_name_40
 ################################################################################
-- name: Delete switch from fabric_4
+- name: Delete switch from {{ fabric_name_40 }}
   cisco.dcnm.dcnm_inventory:
-    fabric: "{{ fabric_name_4 }}"
+    fabric: "{{ fabric_name_40 }}"
     state: deleted
     config:
   register: result
@@ -401,7 +401,7 @@
       - result.response[0].METHOD == "DELETE"
       - result.response[0].RETURN_CODE == 200
 ################################################################################
-# MERGED - CLEANUP - Delete fabric_4
+# MERGED - CLEANUP - Delete fabric_name_40
 ################################################################################
 # Expected result
 # ok: [ndfc1] => {
@@ -409,7 +409,7 @@
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "FABRIC_NAME": "IPFM_Fabric",
+#                 "FABRIC_NAME": "IPFM",
 #                 "sequence_number": 1
 #             }
 #         ],
@@ -424,10 +424,10 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": "Fabric 'IPFM_Fabric' is deleted successfully!",
+#                 "DATA": "Fabric 'IPFM' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
@@ -442,11 +442,11 @@
 #     }
 # }
 ################################################################################
-- name: MERGED - CLEANUP - Delete fabric_4
+- name: MERGED - CLEANUP - Delete {{ fabric_name_40 }}
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_4 }}"
+      - FABRIC_NAME: "{{ fabric_name_40 }}"
   register: result
 - debug:
     var: result
@@ -455,7 +455,7 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 1
-      - result.diff[0].FABRIC_NAME == fabric_name_4
+      - result.diff[0].FABRIC_NAME == fabric_name_40
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
       - result.metadata[0].action == "fabric_delete"

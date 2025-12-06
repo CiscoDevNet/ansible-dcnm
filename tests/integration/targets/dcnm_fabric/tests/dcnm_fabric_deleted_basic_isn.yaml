@@ -15,14 +15,14 @@
 # SETUP
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - fabric_name_5
-#    - fabric_type_5  # ISN
+#    - fabric_name_30
+#    - fabric_type_30  # ISN
 # 2. Delete fabrics under test, if they exist
-#    - fabric_name_5
+#    - fabric_name_30
 # TEST
 # 3. Create fabrics and verify result
-#    - fabric_name_5
-# 4. Delete fabric_name_5. Verify result
+#    - fabric_name_30
+# 4. Delete fabric_name_30. Verify result
 # CLEANUP
 # 7. No cleanup required
 ################################################################################
@@ -39,8 +39,8 @@
 #
 # vars:
 #   testcase: dcnm_fabric_deleted_basic_ISN
-#   fabric_name_5: ISN_Fabric
-#   fabric_type_5: ISN
+#   fabric_name_30: ISN
+#   fabric_type_30: ISN
 ################################################################################
 # SETUP
 ################################################################################
@@ -48,7 +48,7 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_5 }}"
+      - FABRIC_NAME: "{{ fabric_name_30 }}"
   register: result
 - debug:
     var: result
@@ -64,7 +64,7 @@
 #         "diff": [
 #             {
 #                 "BGP_AS": 65535,
-#                 "FABRIC_NAME": "ISN_Fabric",
+#                 "FABRIC_NAME": "ISN",
 #                 "sequence_number": 1
 #             }
 #         ],
@@ -82,13 +82,13 @@
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "BGP_AS": "65535",
-#                         "FABRIC_NAME": "ISN_Fabric",
+#                         "FABRIC_NAME": "ISN",
 #                         "FABRIC_TYPE": "External"
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/ISN_Fabric/External_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/ISN/External_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
@@ -107,8 +107,8 @@
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_5 }}"
-        FABRIC_TYPE: "{{ fabric_type_5 }}"
+      - FABRIC_NAME: "{{ fabric_name_30 }}"
+        FABRIC_TYPE: "{{ fabric_type_30 }}"
         BGP_AS: 65535
         DEPLOY: true
   register: result
@@ -119,9 +119,9 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 1
-      - result.diff[0].FABRIC_NAME == fabric_name_5
+      - result.diff[0].FABRIC_NAME == fabric_name_30
       - result.response[0].DATA.nvPairs.BGP_AS == "65535"
-      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_5
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_30
       - result.response[0].DATA.nvPairs.FABRIC_TYPE == "External"
       - (result.response | length) == 1
       - result.response[0].sequence_number == 1
@@ -129,7 +129,7 @@
       - result.response[0].METHOD == "POST"
       - result.response[0].RETURN_CODE == 200
 ###############################################################################################
-# DELETED - TEST - Delete ISN Fabric (fabric_name_5) and verify
+# DELETED - TEST - Delete ISN Fabric (fabric_name_30) and verify
 ###############################################################################################
 # Expected result
 # ok: [172.22.150.244] => {
@@ -137,7 +137,7 @@
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "FABRIC_NAME": "ISN_Fabric",
+#                 "FABRIC_NAME": "ISN",
 #                 "sequence_number": 1
 #             }
 #         ],
@@ -152,10 +152,10 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": "Invalid JSON response: Fabric 'ISN_Fabric' is deleted successfully!",
+#                 "DATA": "Invalid JSON response: Fabric 'ISN' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/ISN_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/ISN",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
@@ -170,11 +170,11 @@
 #     }
 # }
 ###############################################################################################
-- name: DELETED - TEST - Delete ISN fabric (fabric_name_5) and verify
+- name: DELETED - TEST - Delete ISN fabric (fabric_name_30) and verify
   cisco.dcnm.dcnm_fabric: &fabric_deleted
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_5 }}"
+      - FABRIC_NAME: "{{ fabric_name_30 }}"
   register: result
 - debug:
     var: result
@@ -183,7 +183,7 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 1
-      - result.diff[0].FABRIC_NAME == fabric_name_5
+      - result.diff[0].FABRIC_NAME == fabric_name_30
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
       - result.metadata[0].action == "fabric_delete"
@@ -191,7 +191,7 @@
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"
       - (result.response | length) == 1
-      - result.response[0].DATA == "Invalid JSON response: Fabric 'ISN_Fabric' is deleted successfully!"
+      - "result.response[0].DATA == \"Invalid JSON response: Fabric 'ISN' is deleted successfully!\""
       - result.response[0].MESSAGE == "OK"
       - result.response[0].METHOD == "DELETE"
       - result.response[0].RETURN_CODE == 200
@@ -200,7 +200,7 @@
       - result.result[0].success == true
       - result.result[0].sequence_number == 1
 ################################################################################
-# DELETED - TEST - Delete ISN Fabric (fabric_name_5) and verify idempotence
+# DELETED - TEST - Delete ISN Fabric (fabric_name_30) and verify idempotence
 ################################################################################
 # Expected result
 # ok: [172.22.150.244] => {
@@ -237,7 +237,7 @@
 #     }
 # }
 ################################################################################
-- name: DELETED - TEST - Delete ISN Fabric (fabric_name_5) and verify idempotence
+- name: DELETED - TEST - Delete ISN Fabric (fabric_name_30) and verify idempotence
   cisco.dcnm.dcnm_fabric: *fabric_deleted
   register: result
 - debug:

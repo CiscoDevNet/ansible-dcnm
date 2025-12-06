@@ -13,20 +13,19 @@
 # STEPS
 ################################################################################
 # SETUP
-# 1. The following fabrics must be empty on the controller
+# 1. The following fabric must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - fabric_name_1
-#    - fabric_type_1  # VXLAN_EVPN
-# 3. Delete fabrics under test, if they exist
-#    - fabric_name_1
+#    - fabric_name_00
+#    - fabric_type_00  # VXLAN_EVPN
+# 3. Delete fabric under test, if it exists
+#    - fabric_name_00
 # TEST
-# 4. Create fabrics with non-default configs and verify result
-#    - fabric_name_1
-# 5. Replace configs for fabric_1 and fabric_2 and verify result
-# 6. Replace config for fabric_3 and verify result
+# 4. Create fabric with non-default configs and verify result
+#    - fabric_name_00
+# 5. Replace fabric fabric_name_00 config with default config and verify result
 # CLEANUP
-# 7. Delete fabrics under test
-#    - fabric_name_1
+# 7. Delete fabric fabric_name_00
+#    - fabric_name_00
 ################################################################################
 # REQUIREMENTS
 ################################################################################
@@ -41,21 +40,21 @@
 #
 # vars:
 #   testcase: dcnm_fabric_replaced_basic_vxlan
-#   fabric_name_1: VXLAN_EVPN_Fabric
-#   fabric_type_1: VXLAN_EVPN
+#   fabric_name_00: VXLAN_EVPN
+#   fabric_type_00: VXLAN_EVPN
 ################################################################################
-# REPLACED - SETUP - Delete fabrics
+# REPLACED - SETUP - Delete fabric_name_00 if it exists
 ################################################################################
-- name: REPLACED - SETUP - Delete fabrics
+- name: REPLACED - SETUP - Delete fabric {{ fabric_name_00 }} if it exists
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
   register: result
 - debug:
     var: result
 ################################################################################
-# REPLACED - TEST - Create fabric_name_1 with non-default config
+# REPLACED - TEST - Create fabric_name_00 with non-default config
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -68,7 +67,7 @@
 #                 "ADVERTISE_PIP_BGP": true,
 #                 "ANYCAST_GW_MAC": "00aa.bbcc.ddee",
 #                 "BGP_AS": 65535,
-#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "FABRIC_NAME": "VXLAN_EVPN",
 #                 "REPLICATION_MODE": "Ingress",
 #                 "sequence_number": 1
 #             }
@@ -89,13 +88,13 @@
 #                         "ADVERTISE_PIP_BGP": "true",
 #                         "ANYCAST_GW_MAC": "00aa.bbcc.ddee",
 #                         "BGP_AS": "65535",
-#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                         "FABRIC_NAME": "VXLAN_EVPN",
 #                         "REPLICATION_MODE": "Ingress",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN/Easy_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
@@ -110,12 +109,12 @@
 #     }
 # }
 ################################################################################
-- name: REPLACED - TEST - Create fabric_name_1 with non-default config
+- name: REPLACED - TEST - Create fabric {{ fabric_name_00 }} with non-default config
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-        FABRIC_TYPE: "{{ fabric_type_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+        FABRIC_TYPE: "{{ fabric_type_00 }}"
         ADVERTISE_PIP_BGP: true
         ANYCAST_GW_MAC: 00:aa:bb:cc:dd:ee
         BGP_AS: 65535
@@ -130,7 +129,7 @@
       - result.failed == false
       - (result.diff | length) == 1
       - result.diff[0].BGP_AS == 65535
-      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_00
       - result.diff[0].sequence_number == 1
       - result.diff[0].ADVERTISE_PIP_BGP == true
       - result.diff[0].ANYCAST_GW_MAC == "00aa.bbcc.ddee"
@@ -148,10 +147,10 @@
       - result.response[0].DATA.nvPairs.ADVERTISE_PIP_BGP == "true"
       - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "00aa.bbcc.ddee"
       - result.response[0].DATA.nvPairs.BGP_AS == "65535"
-      - result.response[0].DATA.nvPairs.FABRIC_NAME == "VXLAN_EVPN_Fabric"
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_00
       - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Ingress"
 ################################################################################
-# REPLACED - TEST - Replace config for fabric_1 with default config
+# REPLACED - TEST - Replace config for fabric_name_00 with default config
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -163,7 +162,7 @@
 #             {
 #                 "ADVERTISE_PIP_BGP": "false",
 #                 "ANYCAST_GW_MAC": "2020.0000.00aa",
-#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "FABRIC_NAME": "VXLAN_EVPN",
 #                 "REPLICATION_MODE": "Multicast",
 #                 "sequence_number": 1
 #             },
@@ -201,23 +200,23 @@
 #                     "nvPairs": {
 #                         "ADVERTISE_PIP_BGP": "false",
 #                         "ANYCAST_GW_MAC": "2020.0000.00aa",
-#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                         "FABRIC_NAME": "VXLAN_EVPN",
 #                         "REPLICATION_MODE": "Multicast",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "PUT",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/VXLAN_EVPN/Easy_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "MESSAGE": "Fabric VXLAN_EVPN_Fabric DEPLOY is False or None. Skipping config-save.",
+#                 "MESSAGE": "Fabric VXLAN_EVPN DEPLOY is False or None. Skipping config-save.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             },
 #             {
-#                 "MESSAGE": "FabricConfigDeploy._can_fabric_be_deployed: Fabric VXLAN_EVPN_Fabric DEPLOY is False or None. Skipping config-deploy.",
+#                 "MESSAGE": "FabricConfigDeploy._can_fabric_be_deployed: Fabric VXLAN_EVPN DEPLOY is False or None. Skipping config-deploy.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
@@ -242,12 +241,12 @@
 #     }
 # }
 ################################################################################
-- name: REPLACED - TEST - Replace config for fabric_1 with default config
-  cisco.dcnm.dcnm_fabric: &replace_fabric_1
+- name: REPLACED - TEST - Replace fabric {{ fabric_name_00 }} config with default config
+  cisco.dcnm.dcnm_fabric: &replace_fabric_name_00
     state: replaced
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-        FABRIC_TYPE: "{{ fabric_type_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+        FABRIC_TYPE: "{{ fabric_type_00 }}"
         BGP_AS: 65535
         DEPLOY: false
   register: result
@@ -260,7 +259,7 @@
       - (result.diff | length) == 3
       - result.diff[0].ADVERTISE_PIP_BGP == "false"
       - result.diff[0].ANYCAST_GW_MAC == "2020.0000.00aa"
-      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_00
       - result.diff[0].REPLICATION_MODE == "Multicast"
       - result.diff[0].sequence_number == 1
       - result.diff[1].sequence_number == 2
@@ -285,7 +284,7 @@
       - result.response[0].RETURN_CODE == 200
       - result.response[0].DATA.nvPairs.ADVERTISE_PIP_BGP == "false"
       - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "2020.0000.00aa"
-      - result.response[0].DATA.nvPairs.FABRIC_NAME == "VXLAN_EVPN_Fabric"
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_00
       - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Multicast"
       - result.response[1].sequence_number == 2
       - result.response[1].RETURN_CODE == 200
@@ -305,7 +304,7 @@
       - result.result[2].sequence_number == 3
 
 ################################################################################
-# REPLACED - TEST - Replace config for fabric_1 with default config omnipotence
+# REPLACED - TEST - Replace fabric fabric_name_00 config with default config idempotence
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -344,8 +343,8 @@
 #     }
 # }
 ################################################################################
-- name: REPLACED - TEST - Replace config for fabric_1 with default config - idempotence
-  cisco.dcnm.dcnm_fabric: *replace_fabric_1
+- name: REPLACED - TEST - Replace fabric {{ fabric_name_00 }} config with default config - idempotence
+  cisco.dcnm.dcnm_fabric: *replace_fabric_name_00
   register: result
 - debug:
     var: result
@@ -369,7 +368,7 @@
       - result.result[0].success == true
       - result.result[0].sequence_number == 1
 ################################################################################
-# REPLACED - CLEANUP - Delete the fabrics
+# REPLACED - CLEANUP - Delete fabric_name_00
 ################################################################################
 # Expected result
 # ok: [ndfc1] => {
@@ -377,7 +376,7 @@
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "FABRIC_NAME": "VXLAN_EVPN",
 #                 "sequence_number": 1
 #             }
 #         ],
@@ -392,10 +391,10 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
+#                 "DATA": "Fabric 'VXLAN_EVPN' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
@@ -410,11 +409,11 @@
 #     }
 # }
 ################################################################################
-- name: MERGED - CLEANUP - Delete the fabrics
+- name: MERGED - CLEANUP - Delete fabric {{ fabric_name_00 }}
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
   register: result
 - debug:
     var: result
@@ -423,7 +422,7 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 1
-      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_00
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
       - result.metadata[0].action == "fabric_delete"
