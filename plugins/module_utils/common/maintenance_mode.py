@@ -1,6 +1,7 @@
 """
 Modify the maintenance mode state of switches and optionally deploy the changes
 """
+
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

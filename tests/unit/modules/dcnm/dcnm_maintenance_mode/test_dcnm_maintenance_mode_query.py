@@ -1,6 +1,7 @@
 """
 Unit tests for dcnm_maintenance_mode Query class.
 """
+
 # Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

@@ -1,6 +1,7 @@
 """
 Unit tests for dcnm_maintenance_mode Common class
 """
+
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,6 +89,7 @@ def test_dcnm_maintenance_mode_common_00010() -> None:
     params_test.pop("check_mode", None)
     with pytest.raises(ValueError, match=r"Common\.__init__: check_mode is required."):
         Common(params_test)
+
 
 def test_dcnm_maintenance_mode_common_00020() -> None:
     """

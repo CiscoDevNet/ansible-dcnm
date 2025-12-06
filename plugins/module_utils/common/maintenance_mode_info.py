@@ -33,10 +33,13 @@ from .conversion import ConversionUtils
 from .enums import MaintenanceModeGetEnum
 from .exceptions import ControllerResponseError
 from .rest_send_v2 import RestSend
+
 # TODO: import results_v2 when SwitchDetails (v2) has been merged.
 from .results import Results
+
 # TODO: import switch_details_v2 when SwitchDetails (v2) has been merged.
 from .switch_details import SwitchDetails
+
 
 class MaintenanceModeInfo:
     """

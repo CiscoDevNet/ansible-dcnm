@@ -19,7 +19,6 @@ Ansible module to manage Maintenance Mode Configuration of NX-OS Switches.
 # pylint: disable=too-many-lines
 
 from __future__ import absolute_import, annotations, division, print_function
-from typing import Any, Literal
 
 __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
@@ -152,6 +151,7 @@ import copy
 import inspect
 import json
 import logging
+from typing import Any, Literal
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -172,6 +172,7 @@ def json_pretty(msg):
     Return a pretty-printed JSON string for logging messages
     """
     return json.dumps(msg, indent=4, sort_keys=True)
+
 
 class ParamsSpec:
     """
@@ -251,7 +252,6 @@ class ParamsSpec:
             msg = f"{self.class_name}.commit: "
             msg += f"Invalid state {self.params.get('state')}."
             raise ValueError(msg)
-
 
     def _build_params_spec_for_merged_state(self) -> None:
         """
