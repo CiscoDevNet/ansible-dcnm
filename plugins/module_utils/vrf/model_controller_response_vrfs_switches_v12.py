@@ -39,14 +39,6 @@ class ControllerResponseVrfsSwitchesVrfLiteConnProtoItem(BaseModel):
     peer_vrf_name: Optional[str] = Field(default="", alias="PEER_VRF_NAME")
     vrf_lite_jython_template: Optional[str] = Field(default="", alias="VRF_LITE_JYTHON_TEMPLATE")
 
-    # @classmethod
-    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-    #     if HAS_PYDANTIC:
-    #         return super().model_construct(*args, **kwargs)
-    #     # Fallback: return self when pydantic is not available
-    #     return cls()
-
 
 class ControllerResponseVrfsSwitchesExtensionPrototypeValue(BaseModel):
     dest_interface_name: Optional[str] = Field(default="", alias="destInterfaceName")
@@ -76,14 +68,6 @@ class ControllerResponseVrfsSwitchesExtensionPrototypeValue(BaseModel):
             data = ControllerResponseVrfsSwitchesVrfLiteConnProtoItem(**data)
         return data
 
-    # @classmethod
-    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-    #     if HAS_PYDANTIC:
-    #         return super().model_construct(*args, **kwargs)
-    #     # Fallback: return self when pydantic is not available
-    #     return cls()
-
 
 class ControllerResponseVrfsSwitchesInstanceValues(BaseModel):
     """
@@ -104,24 +88,9 @@ class ControllerResponseVrfsSwitchesInstanceValues(BaseModel):
     switch_route_target_export_evpn: Optional[str] = Field(default="", alias="switchRouteTargetExportEvpn")
     switch_route_target_import_evpn: Optional[str] = Field(default="", alias="switchRouteTargetImportEvpn")
 
-    # @classmethod
-    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-    #     if HAS_PYDANTIC:
-    #         return super().model_construct(*args, **kwargs)
-    #     # Fallback: return self when pydantic is not available
-    #     return cls()
-
 
 class ControllerResponseVrfsSwitchesMultisiteConnOuterItem(BaseModel):
     pass
-    # @classmethod
-    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-    #     if HAS_PYDANTIC:
-    #         return super().model_construct(*args, **kwargs)
-    #     # Fallback: return self when pydantic is not available
-    #     return cls()
 
 
 class VrfLiteConnOuterItem(BaseModel):
@@ -138,39 +107,15 @@ class VrfLiteConnOuterItem(BaseModel):
     peer_vrf_name: Optional[str] = Field(default="", alias="PEER_VRF_NAME")
     vrf_lite_jython_template: Optional[str] = Field(default="", alias="VRF_LITE_JYTHON_TEMPLATE")
 
-    # @classmethod
-    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-    #     if HAS_PYDANTIC:
-    #         return super().model_construct(*args, **kwargs)
-    #     # Fallback: return self when pydantic is not available
-    #     return cls()
-
 
 class ControllerResponseVrfsSwitchesMultisiteConnOuter(BaseModel):
     multisite_conn: Optional[List[ControllerResponseVrfsSwitchesMultisiteConnOuterItem]] = Field(
         default=[ControllerResponseVrfsSwitchesMultisiteConnOuterItem().model_construct()], alias="MULTISITE_CONN"
     )
 
-    # @classmethod
-    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-    #     if HAS_PYDANTIC:
-    #         return super().model_construct(*args, **kwargs)
-    #     # Fallback: return self when pydantic is not available
-    #     return cls()
-
 
 class ControllerResponseVrfsSwitchesVrfLiteConnOuter(BaseModel):
     vrf_lite_conn: Optional[List[VrfLiteConnOuterItem]] = Field(default=[VrfLiteConnOuterItem().model_construct()], alias="VRF_LITE_CONN")
-
-    # @classmethod
-    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-    #     if HAS_PYDANTIC:
-    #         return super().model_construct(*args, **kwargs)
-    #     # Fallback: return self when pydantic is not available
-    #     return cls()
 
 
 class ControllerResponseVrfsSwitchesExtensionValuesOuter(BaseModel):
@@ -217,14 +162,6 @@ class ControllerResponseVrfsSwitchesExtensionValuesOuter(BaseModel):
             data = ControllerResponseVrfsSwitchesVrfLiteConnOuter(**data)
         return data
 
-    # @classmethod
-    # def model_construct(cls, *args, **kwargs):  # pylint: disable=signature-differs
-    #     """For ansible-sanity import tests. Construct model instance, with fallback for when pydantic is not available."""
-    #     if HAS_PYDANTIC:
-    #         return super().model_construct(*args, **kwargs)
-    #     # Fallback: return self when pydantic is not available
-    #     return cls()
-
 
 class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
     error_message: str | None = Field(alias="errorMessage")
@@ -255,7 +192,7 @@ class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
 
         - If data is a JSON string, use json.loads() to convert to a dict.
         - If data is a list, convert it to a list of ControllerResponseVrfsSwitchesExtensionPrototypeValue instance.
-        - If data is already an ControllerResponseVrfsSwitchesExtensionPrototypeValue model, return as-is.
+        - If data is already a ControllerResponseVrfsSwitchesExtensionPrototypeValue model, return as-is.
         """
         if isinstance(data, str):
             if data == "":
