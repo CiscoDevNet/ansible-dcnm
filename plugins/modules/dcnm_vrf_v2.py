@@ -589,10 +589,10 @@ HAS_FIRST_PARTY_IMPORTS: set[bool] = set()
 HAS_THIRD_PARTY_IMPORTS: set[bool] = set()
 
 FIRST_PARTY_IMPORT_ERROR: Union[str, None]
-THIRD_PARTY_IMPORT_ERROR: Union[str, None]
+# THIRD_PARTY_IMPORT_ERROR: Union[str, None]
 
 FIRST_PARTY_FAILED_IMPORT: set[str] = set()
-THIRD_PARTY_FAILED_IMPORT: set[str] = set()
+# THIRD_PARTY_FAILED_IMPORT: set[str] = set()
 
 # try:
 #     import pydantic  # pylint: disable=unused-import
@@ -677,8 +677,8 @@ def main() -> None:
 
     module: AnsibleModule = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
-    if False in HAS_THIRD_PARTY_IMPORTS:
-        module.fail_json(msg=missing_required_lib(f"3rd party: {','.join(THIRD_PARTY_FAILED_IMPORT)}"), exception=THIRD_PARTY_IMPORT_ERROR)
+    # if False in HAS_THIRD_PARTY_IMPORTS:
+    #     module.fail_json(msg=missing_required_lib(f"3rd party: {','.join(THIRD_PARTY_FAILED_IMPORT)}"), exception=THIRD_PARTY_IMPORT_ERROR)
 
     if False in HAS_FIRST_PARTY_IMPORTS:
         module.fail_json(msg=missing_required_lib(f"1st party: {','.join(FIRST_PARTY_FAILED_IMPORT)}"), exception=FIRST_PARTY_IMPORT_ERROR)
