@@ -27,10 +27,11 @@ def validate_ipv4_host(value: str) -> bool:
     - value: "10.10.10.0"     -> True
     - value: 1                -> False (is not a string)
     """
-    prefixlen: str = ""
     try:
-        __, prefixlen = value.split("/")
+        __, __ = value.split("/")
     except (AttributeError, ValueError):
+        # Value is not a string or does not contain a prefix.
+        # Let downstream validation handle it.
         pass
 
     if isinstance(value, int):
@@ -39,7 +40,7 @@ def validate_ipv4_host(value: str) -> bool:
         return False
 
     try:
-        addr = IPv4Address(value)  # pylint: disable=unused-variable
+        __ = IPv4Address(value)  # pylint: disable=unused-variable
     except AddressValueError:
         return False
 
