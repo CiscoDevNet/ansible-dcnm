@@ -589,20 +589,7 @@ HAS_FIRST_PARTY_IMPORTS: set[bool] = set()
 HAS_THIRD_PARTY_IMPORTS: set[bool] = set()
 
 FIRST_PARTY_IMPORT_ERROR: Union[str, None]
-# THIRD_PARTY_IMPORT_ERROR: Union[str, None]
-
 FIRST_PARTY_FAILED_IMPORT: set[str] = set()
-# THIRD_PARTY_FAILED_IMPORT: set[str] = set()
-
-# try:
-#     import pydantic  # pylint: disable=unused-import
-
-#     HAS_THIRD_PARTY_IMPORTS.add(True)
-#     THIRD_PARTY_IMPORT_ERROR = None
-# except ImportError as import_error:
-#     HAS_THIRD_PARTY_IMPORTS.add(False)
-#     THIRD_PARTY_FAILED_IMPORT.add("pydantic")
-#     THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
 
 from ..module_utils.common.enums.ansible import AnsibleStates
 from ..module_utils.common.log_v2 import Log
@@ -661,6 +648,7 @@ def main() -> None:
         log: Log = Log()
         log.commit()
     except (TypeError, ValueError):
+        # Logging setup failed, continue without logging
         pass
 
     argument_spec: dict = {}
@@ -676,9 +664,6 @@ def main() -> None:
     argument_spec["state"]["default"] = AnsibleStates.MERGED.value
 
     module: AnsibleModule = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
-
-    # if False in HAS_THIRD_PARTY_IMPORTS:
-    #     module.fail_json(msg=missing_required_lib(f"3rd party: {','.join(THIRD_PARTY_FAILED_IMPORT)}"), exception=THIRD_PARTY_IMPORT_ERROR)
 
     if False in HAS_FIRST_PARTY_IMPORTS:
         module.fail_json(msg=missing_required_lib(f"1st party: {','.join(FIRST_PARTY_FAILED_IMPORT)}"), exception=FIRST_PARTY_IMPORT_ERROR)
