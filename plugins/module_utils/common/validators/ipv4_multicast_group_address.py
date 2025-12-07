@@ -28,10 +28,11 @@ def validate_ipv4_multicast_group_address(value: str) -> bool:
     - value: "10.10.10.0"     -> False
     - value: 1                -> False (is not a string)
     """
-    prefixlen: str = ""  # pylint: disable=unused-variable
     try:
-        __, prefixlen = value.split("/")
+        __, __ = value.split("/")
     except (AttributeError, ValueError):
+        # Value is not a string or does not contain a prefix.
+        # Let downstream validation handle it.
         pass
 
     if isinstance(value, int):
