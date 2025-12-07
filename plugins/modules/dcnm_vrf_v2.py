@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # mypy: disable-error-code="import-untyped"
 #
-# Copyright (c) 2020-2023 Cisco and/or its affiliates.
+# Copyright (c) 2020-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -594,15 +594,15 @@ THIRD_PARTY_IMPORT_ERROR: Union[str, None]
 FIRST_PARTY_FAILED_IMPORT: set[str] = set()
 THIRD_PARTY_FAILED_IMPORT: set[str] = set()
 
-try:
-    import pydantic  # pylint: disable=unused-import
+# try:
+#     import pydantic  # pylint: disable=unused-import
 
-    HAS_THIRD_PARTY_IMPORTS.add(True)
-    THIRD_PARTY_IMPORT_ERROR = None
-except ImportError as import_error:
-    HAS_THIRD_PARTY_IMPORTS.add(False)
-    THIRD_PARTY_FAILED_IMPORT.add("pydantic")
-    THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
+#     HAS_THIRD_PARTY_IMPORTS.add(True)
+#     THIRD_PARTY_IMPORT_ERROR = None
+# except ImportError as import_error:
+#     HAS_THIRD_PARTY_IMPORTS.add(False)
+#     THIRD_PARTY_FAILED_IMPORT.add("pydantic")
+#     THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
 
 from ..module_utils.common.enums.ansible import AnsibleStates
 from ..module_utils.common.log_v2 import Log
