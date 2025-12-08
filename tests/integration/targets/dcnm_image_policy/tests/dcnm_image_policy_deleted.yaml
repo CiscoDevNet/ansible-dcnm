@@ -249,6 +249,7 @@
 #         ],
 #         "response": [
 #             {
+#             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",

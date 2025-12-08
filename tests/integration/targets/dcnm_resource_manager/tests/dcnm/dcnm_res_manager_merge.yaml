@@ -246,7 +246,7 @@
             scope_type: "device"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
             resource: "200"                          # The value of the resource being created
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - ansible.builtin.assert:
         that:
@@ -265,7 +265,7 @@
               - "{{ ansible_switch2 }}"
             resource: "200"                          # The value of the resource being created
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - ansible.builtin.assert:
         that:
@@ -284,7 +284,7 @@
               - "{{ ansible_switch2 }}"
             resource: "200"                          # The value of the resource being created
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - ansible.builtin.assert:
         that:
@@ -303,7 +303,7 @@
               - "{{ ansible_switch2 }}"
             resource: "200"                          # The value of the resource being created
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - ansible.builtin.assert:
         that:
@@ -322,7 +322,7 @@
               - "{{ ansible_switch2 }}"
             resource: "200"                          # The value of the resource being created
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - ansible.builtin.assert:
         that:
@@ -341,7 +341,7 @@
               - "{{ ansible_switch1 }}"
               - "{{ ansible_switch2 }}"
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - ansible.builtin.assert:
         that:

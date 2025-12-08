@@ -132,10 +132,7 @@
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": (
-#                     "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/"
-#                     "fabrics/VXLAN_EVPN_Fabric/Easy_Fabric"
-#                 ),
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             },
@@ -149,10 +146,7 @@
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": (
-#                     "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/"
-#                     "fabrics/LAN_CLASSIC_Fabric/LAN_Classic"
-#                 ),
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/LAN_Classic",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             }
@@ -364,10 +358,7 @@
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": (
-#                     "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/"
-#                     "fabrics/VXLAN_EVPN_Fabric/config-deploy?forceShowRun=false"
-#                 ),
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/config-deploy?forceShowRun=false",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
