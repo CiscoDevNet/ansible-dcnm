@@ -17,7 +17,21 @@
 Pydantic mocks for environments where pydantic is not installed.
 """
 
-BaseModel = object
+
+class BaseModel:
+    """Pydantic BaseModel fallback when pydantic is not available."""
+
+    @classmethod
+    def model_construct(cls, **kwargs):
+        """
+        Construct a model instance without validation.
+
+        This is a bare-bones implementation for Ansible sanity test compatibility.
+        """
+        instance = cls()
+        for key, value in kwargs.items():
+            setattr(instance, key, value)
+        return instance
 
 
 def AfterValidator(func):  # pylint: disable=invalid-name
@@ -35,7 +49,7 @@ def ConfigDict(**kwargs):  # pylint: disable=unused-argument,invalid-name
     return {}
 
 
-def Field(**kwargs):  # pylint: disable=unused-argument,invalid-name
+def Field(*args, **kwargs):  # pylint: disable=unused-argument,invalid-name
     """Pydantic Field fallback when pydantic is not available."""
     return None
 

@@ -19,38 +19,21 @@ URL query strings. Supports endpoint-specific parameters and Lucene-style
 filtering with type safety via Pydantic.
 """
 
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, annotations, division, print_function
 
 __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import traceback
 from abc import ABC, abstractmethod
-from typing import Optional, Union
+from typing import Optional
 
 try:
     from pydantic import BaseModel, Field, field_validator
 except ImportError:
     HAS_PYDANTIC = False
-    PYDANTIC_IMPORT_ERROR: Union[str, None] = traceback.format_exc()  # pylint: disable=invalid-name
-
-    # Fallback: object base class
-    BaseModel = object  # type: ignore[assignment,misc]
-
-    # Fallback: Field that does nothing
-    def Field(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic Field fallback when pydantic is not available."""
-        return None
-
-    # Fallback: field_validator decorator that does nothing
-    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
-        """Pydantic field_validator fallback when pydantic is not available."""
-
-        def decorator(func):
-            return func
-
-        return decorator
-
+    PYDANTIC_IMPORT_ERROR: str | None = traceback.format_exc()  # pylint: disable=invalid-name
+    from ...common.third_party.pydantic import BaseModel, Field, field_validator
 else:
     HAS_PYDANTIC = True
     PYDANTIC_IMPORT_ERROR = None  # pylint: disable=invalid-name
@@ -246,9 +229,9 @@ class CompositeQueryParams:
     """
 
     def __init__(self) -> None:
-        self._param_groups: list[Union[EndpointQueryParams, LuceneQueryParams]] = []
+        self._param_groups: list[EndpointQueryParams | LuceneQueryParams] = []
 
-    def add(self, params: Union[EndpointQueryParams, LuceneQueryParams]) -> "CompositeQueryParams":
+    def add(self, params: EndpointQueryParams | LuceneQueryParams) -> "CompositeQueryParams":
         """
         Add a query parameter group to the composite.
 
