@@ -471,9 +471,6 @@ class DcnmVrf11:
                             if found:
                                 break
 
-                            if interface_match and not found:
-                                break
-
                         if interface_match and not found:
                             break
 
