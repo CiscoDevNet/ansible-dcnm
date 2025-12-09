@@ -124,6 +124,10 @@ class ActionModule(ActionNetworkModule):
 
         # Discover fabric associations from NDFC
         fabric_association_data = obtain_federated_fabric_associations(self, task_vars, tmp)
+        # Special handling for cases where federation manager does not exist which is the case for
+        # standalone or MSD fabrics in a non-clustered environment
+        if fabric_association_data == 'A federation manager does not exist':
+            fabric_association_data = obtain_fabric_associations(self, task_vars, tmp)
 
         # Log fabric processing initiation
         self.logger.info(f"Processing fabric: {fabric_name}", fabric=fabric_name)

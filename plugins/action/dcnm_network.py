@@ -171,10 +171,10 @@ class ActionModule(ActionBase):
             return result
 
         # Get ND version for API path selection (similar to dcnm_vrf)
-        ndfc_version = get_nd_version(self, task_vars, tmp)
-        display.vvv(f"ND version: {ndfc_version}")
+        self.ndfc_version = get_nd_version(self, task_vars, tmp)
+        display.vvv(f"ND version: {self.ndfc_version}")
 
-        if ndfc_version is None:
+        if self.ndfc_version is None:
             result['failed'] = True
             result['msg'] = (
                 "Failed to get ND version from NDFC controller. "
@@ -216,25 +216,36 @@ class ActionModule(ActionBase):
 
         # Step 1: Get MFD fabrics from OneManage API (federated fabrics)
         # Only call federated fabrics API if login domain is not 'local'
-        login_domain = task_vars.get('ansible_httpapi_login_domain', 'local')
+        # login_domain = task_vars.get('ansible_httpapi_login_domain', 'local')
+        # login_domain = 'local'
 
-        federated_fabrics = {}
-        if login_domain and login_domain.lower() != 'local':
-            display.vvv("=" * 80)
-            display.vvv(f"Login domain '{login_domain}' detected - getting MFD fabrics from OneManage API")
-            display.vvv("=" * 80)
+        # federated_fabrics = {}
+        # if login_domain and login_domain.lower() != 'local':
+        #     display.vvv("=" * 80)
+        #     display.vvv(f"Login domain '{login_domain}' detected - getting MFD fabrics from OneManage API")
+        #     display.vvv("=" * 80)
 
-            federated_fabrics = obtain_federated_fabric_associations(self, task_vars, tmp)
-            if federated_fabrics is None:
-                result['failed'] = True
-                result['msg'] = "Failed to get federated fabric associations from OneManage API"
-                return result
+        #     federated_fabrics = obtain_federated_fabric_associations(self, task_vars, tmp)
+        #     if federated_fabrics is None:
+        #         result['failed'] = True
+        #         result['msg'] = "Failed to get federated fabric associations from OneManage API"
+        #         return result
 
-            display.vvv(f"Found {len(federated_fabrics)} MFD fabrics from OneManage API")
-        else:
+        #     display.vvv(f"Found {len(federated_fabrics)} MFD fabrics from OneManage API")
+        # else:
+        #     display.vvv("=" * 80)
+        #     display.vvv("Login domain is 'local' - skipping MFD fabrics API call")
+        #     display.vvv("=" * 80)
+
+        federated_fabrics = obtain_federated_fabric_associations(self, task_vars, tmp)
+        if federated_fabrics is None:
+            result['failed'] = True
+            result['msg'] = "Failed to get federated fabric associations from OneManage API"
+            return result
+        elif federated_fabrics == 'A federation manager does not exist':
+            federated_fabrics = {}
             display.vvv("=" * 80)
-            display.vvv("Login domain is 'local' - skipping MFD fabrics API call")
-            display.vvv("=" * 80)
+            display.vvv("NonClustered Setup - skipping MFD fabric Setup")
 
         # Build initial fabrics dict from MFD data
         fabrics = {}
@@ -360,7 +371,7 @@ class ActionModule(ActionBase):
         display.vvv("=" * 80)
 
         # Validate fabric hierarchy before processing
-        configs, error_msg = self._split_config(fabrics, fabric_name, config, state, result, ndfc_version)
+        configs, error_msg = self._split_config(fabrics, fabric_name, config, state, result, self.ndfc_version)
 
         if configs is None:
             result['failed'] = True
