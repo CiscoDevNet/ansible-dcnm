@@ -1322,6 +1322,13 @@ def obtain_federated_fabric_associations(action_module, task_vars, tmp):
             tmp=tmp
         )
 
+        # Special handling for cases where federation manager does not exist which is the case for
+        # standalone or MSD fabrics in a non-clustered environment
+        if federated_fabric_associations.get('failed') and federated_fabric_associations.get('msg'):
+            error_msg = federated_fabric_associations.get('msg').get('DATA').get('error')
+            if error_msg == 'A federation manager does not exist':
+                return obtain_fabric_associations(action_module, task_vars, tmp)
+
         # Validate API response structure and extract data
         response_data = action_module.error_handler.validate_api_response(
             federated_fabric_associations,
