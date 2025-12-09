@@ -197,9 +197,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_targe
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import SwitchDetails
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details_v2 import SwitchDetails
 
 
 class Common:
