@@ -9,17 +9,17 @@
 # SETUP
 ################################################################################
 #
-# 1. Two switches are required for this test; switch1 and switch2.
+# 1. Two switches are required for this test; switch_1 and switch_2.
 # 2. Files must be created on bootflash manually as NDFC does not
 #    provide a quick way to create files on bootflash. To create
 #    the files manually, we have two choices.
 #    A. Do the following directly on the switches:
-#       - On switch1, create a file named foo.txt
+#       - On switch_1, create a file named foo.txt
 #         switch# echo 1 > air.ndfc_ut
 #         switch# echo 1 > earth.ndfc_ut
 #         switch# echo 1 > fire.ndfc_ut
 #         switch# echo 1 > water.ndfc_ut
-#       - On switch2, create a file named bar.txt
+#       - On switch_2, create a file named bar.txt
 #         switch# echo 1 > black.ndfc_ut
 #         switch# echo 1 > blue.ndfc_ut
 #         switch# echo 1 > green.ndfc_ut
@@ -28,7 +28,7 @@
 #       ./playbooks/dcnm_bootflash/create_files.yaml
 #       This uses the cisco.nxos.nxos_command module to create the files.
 #       See the example inventory file in playbooks/roles/dcnm_bootflash/dcnm_hosts.yaml
-#       which includes inventory entries for switch1 and switch2 and change to
+#       which includes inventory entries for switch_1 and switch_2 and change to
 #       match your setup.
 # TEST
 # 3. Ensure dcnm_tests.yaml has uncommented the following:
@@ -222,8 +222,8 @@
           - filepath: "{{ wildcard_filepath }}"
             supervisor: active
         switches:
-          - ip_address: "{{ switch1 }}"
-          - ip_address: "{{ switch2 }}"
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
   register: result
 
 - debug:
@@ -240,30 +240,30 @@
 
 - assert:
     that:
-    - result.diff[0][switch1][0].filepath == switch1_filepath1
-    - result.diff[0][switch1][1].filepath == switch1_filepath2
-    - result.diff[0][switch1][2].filepath == switch1_filepath3
-    - result.diff[0][switch2][0].filepath == switch2_filepath1
-    - result.diff[0][switch2][1].filepath == switch2_filepath2
-    - result.diff[0][switch2][2].filepath == switch2_filepath3
+    - result.diff[0][switch_1][0].filepath == switch1_filepath1
+    - result.diff[0][switch_1][1].filepath == switch1_filepath2
+    - result.diff[0][switch_1][2].filepath == switch1_filepath3
+    - result.diff[0][switch_2][0].filepath == switch2_filepath1
+    - result.diff[0][switch_2][1].filepath == switch2_filepath2
+    - result.diff[0][switch_2][2].filepath == switch2_filepath3
     - result.changed == false
     - result.failed == false
     - (result.diff | length) == 1
     - (result.diff[0] | length) == 3
     - (result.response | length) == 1
-    - result.response[0][switch1].RETURN_CODE == 200
-    - result.response[0][switch2].RETURN_CODE == 200
-    - result.response[0][switch1].MESSAGE == "OK"
-    - result.response[0][switch2].MESSAGE == "OK"
-    - result.response[0][switch1].METHOD == "GET"
-    - result.response[0][switch2].METHOD == "GET"
+    - result.response[0][switch_1].RETURN_CODE == 200
+    - result.response[0][switch_2].RETURN_CODE == 200
+    - result.response[0][switch_1].MESSAGE == "OK"
+    - result.response[0][switch_2].MESSAGE == "OK"
+    - result.response[0][switch_1].METHOD == "GET"
+    - result.response[0][switch_2].METHOD == "GET"
     - (result.metadata | length) == 1
     - result.metadata[0].action == "bootflash_info"
     - result.metadata[0].check_mode == false
     - result.metadata[0].sequence_number == 1
     - result.metadata[0].state == "query"
     - (result.result | length) == 1
-    - result.result[0][switch1].found == true
-    - result.result[0][switch2].found == true
-    - result.result[0][switch1].success == true
-    - result.result[0][switch2].success == true
+    - result.result[0][switch_1].found == true
+    - result.result[0][switch_2].found == true
+    - result.result[0][switch_1].success == true
+    - result.result[0][switch_2].success == true
