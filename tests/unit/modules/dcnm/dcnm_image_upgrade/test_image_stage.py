@@ -32,26 +32,17 @@ __author__ = "Allen Robel"
 
 
 import inspect
-
-import pytest
 from typing import Any, Generator
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 
-from .utils import (MockAnsibleModule, does_not_raise, image_stage_fixture,
-                    params, responses_ep_image_stage, responses_ep_issu,
-                    responses_ep_version)
+from .utils import MockAnsibleModule, does_not_raise, image_stage_fixture, params, responses_ep_image_stage, responses_ep_issu, responses_ep_version
 
 
 def test_image_stage_00000(image_stage) -> None:
@@ -814,11 +805,8 @@ def test_image_stage_00920(image_stage) -> None:
     When len(serial_numbers) == 0, commit() will set result and
     response properties, and return without doing anything else.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
     def responses() -> Generator[dict[str, Any], None, None]:
-        yield None
+        yield {}
 
     gen_responses = ResponseGenerator(responses())
 

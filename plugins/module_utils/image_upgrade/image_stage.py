@@ -147,14 +147,14 @@ class ImageStage:
         self.serial_numbers_todo: set[str] = set()
 
         self._controller_version_instance: ControllerVersion = ControllerVersion()
-        self.ep_image_stage = EpImageStage()
-        self.issu_detail = SwitchIssuDetailsBySerialNumber()
-        self.wait_for_controller_done = WaitForControllerDone()
+        self.ep_image_stage: EpImageStage = EpImageStage()
+        self.issu_detail: SwitchIssuDetailsBySerialNumber = SwitchIssuDetailsBySerialNumber()
+        self.wait_for_controller_done: WaitForControllerDone = WaitForControllerDone()
 
-        self._check_interval = 10  # seconds
-        self._check_timeout = 1800  # seconds
-        self._rest_send = RestSend({})
-        self._results = Results()
+        self._check_interval: int = 10  # seconds
+        self._check_timeout: int = 1800  # seconds
+        self._rest_send: RestSend = RestSend({})
+        self._results: Results = Results()
         self._serial_numbers: list[str] = []
 
         msg = f"ENTERED {self.class_name}().{method_name}"
@@ -176,7 +176,7 @@ class ImageStage:
         self.diff: dict = {}
         for serial_number in self.serial_numbers_done:
             self.issu_detail.filter = serial_number
-            ipv4 = self.issu_detail.ip_address
+            ipv4: str = self.issu_detail.ip_address
 
             if ipv4 not in self.diff:
                 self.diff[ipv4] = {}
@@ -214,7 +214,7 @@ class ImageStage:
         msg += f"self.serial_numbers {self.serial_numbers}"
         self.log.debug(msg)
 
-        serial_numbers = copy.copy(self.serial_numbers)
+        serial_numbers: list[str] = copy.copy(self.serial_numbers)
         self.issu_detail.refresh()
         for serial_number in serial_numbers:
             self.issu_detail.filter = serial_number
