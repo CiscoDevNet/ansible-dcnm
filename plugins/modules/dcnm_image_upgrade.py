@@ -415,9 +415,9 @@ from ..module_utils.common.params_validate_v2 import ParamsValidate
 from ..module_utils.common.properties import Properties
 from ..module_utils.common.response_handler import ResponseHandler
 from ..module_utils.common.rest_send_v2 import RestSend
-from ..module_utils.common.results import Results
+from ..module_utils.common.results_v2 import Results
 from ..module_utils.common.sender_dcnm import Sender
-from ..module_utils.common.switch_details import SwitchDetails
+from ..module_utils.common.switch_details_v2 import SwitchDetails
 from ..module_utils.image_upgrade.image_policy_attach import ImagePolicyAttach
 from ..module_utils.image_upgrade.image_policy_detach import ImagePolicyDetach
 from ..module_utils.image_upgrade.image_stage import ImageStage

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, annotations, division, print_function
 
 __metaclass__ = type
 __author__ = "Allen Robel"
@@ -23,19 +23,18 @@ import inspect
 import json
 import logging
 from time import sleep
+from typing import Any
 
 from ..common.api.v1.imagemanagement.rest.stagingmanagement.stagingmanagement import \
     EpImageStage
 from ..common.controller_version import ControllerVersion
 from ..common.exceptions import ControllerResponseError
-from ..common.properties import Properties
-from ..common.results import Results
+from ..common.rest_send_v2 import RestSend
+from ..common.results_v2 import Results
 from .switch_issu_details import SwitchIssuDetailsBySerialNumber
 from .wait_for_controller_done import WaitForControllerDone
 
 
-@Properties.add_rest_send
-@Properties.add_results
 class ImageStage:
     """
     ### Summary
@@ -131,32 +130,32 @@ class ImageStage:
 
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.action = "image_stage"
-        self.controller_version = None
+        self.action: str = "image_stage"
+        self._controller_version: str = ""
         self.diff: dict = {}
-        self.payload = None
+        self.payload: dict[str, Any] = {}
         self.saved_response_current: dict = {}
         self.saved_result_current: dict = {}
         # _wait_for_image_stage_to_complete() populates these
-        self.serial_numbers_done = set()
-        self.serial_numbers_todo = set()
+        self.serial_numbers_done: set[str] = set()
+        self.serial_numbers_todo: set[str] = set()
 
-        self.controller_version_instance = ControllerVersion()
+        self._controller_version_instance: ControllerVersion = ControllerVersion()
         self.ep_image_stage = EpImageStage()
         self.issu_detail = SwitchIssuDetailsBySerialNumber()
         self.wait_for_controller_done = WaitForControllerDone()
 
         self._check_interval = 10  # seconds
         self._check_timeout = 1800  # seconds
-        self._rest_send = None
-        self._results = None
-        self._serial_numbers = None
+        self._rest_send = RestSend({})
+        self._results = Results()
+        self._serial_numbers: list[str] = []
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
@@ -169,7 +168,7 @@ class ImageStage:
         ### Raises
         None
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
@@ -194,22 +193,22 @@ class ImageStage:
 
     def _populate_controller_version(self) -> None:
         """
-        Populate self.controller_version with the running controller version.
+        Populate self._controller_version with the running controller version.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
 
-        self.controller_version_instance.refresh()
-        self.controller_version = self.controller_version_instance.version
+        self._controller_version_instance.refresh()
+        self._controller_version = self._controller_version_instance.version
 
     def prune_serial_numbers(self) -> None:
         """
         If the image is already staged on a switch, remove that switch's
         serial number from the list of serial numbers to stage.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED: {self.class_name}.{method_name}: "
         msg += f"self.serial_numbers {self.serial_numbers}"
@@ -227,22 +226,21 @@ class ImageStage:
         ### Summary
         Register a successful unchanged result with the results object.
         """
-        # pylint: disable=no-member
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
 
-        self.results.action = self.action
-        self.results.check_mode = self.rest_send.check_mode
-        self.results.diff_current = {}
-        self.results.response_current = {
+        self._results.action = self.action
+        self._results.check_mode = self._rest_send.check_mode
+        self._results.diff_current = {}
+        self._results.response_current = {
             "DATA": [{"key": "ALL", "value": response_message}]
         }
-        self.results.result_current = {"success": True, "changed": False}
-        self.results.response_data = {"response": response_message}
-        self.results.state = self.rest_send.state
-        self.results.register_task_result()
+        self._results.result_current = {"success": True, "changed": False}
+        self._results.add_response_data({"response": response_message})
+        self._results.state = self._rest_send.state
+        self._results.register_task_result()
 
     def validate_serial_numbers(self) -> None:
         """
@@ -253,7 +251,7 @@ class ImageStage:
         -   ``ControllerResponseError`` if:
                 -   "imageStaged" is "Failed" for any serial_number.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}: "
         msg += f"self.serial_numbers: {self.serial_numbers}"
@@ -277,24 +275,14 @@ class ImageStage:
         """
         Verify mandatory parameters are set before calling commit.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
 
-        # pylint: disable=no-member
-        if self.rest_send is None:
+        if not self._rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling commit()."
-            raise ValueError(msg)
-        if self.results is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "results must be set before calling commit()."
-            raise ValueError(msg)
-        # pylint: enable=no-member
-        if self.serial_numbers is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "serial_numbers must be set before calling commit()."
             raise ValueError(msg)
 
     def build_payload(self) -> None:
@@ -302,7 +290,7 @@ class ImageStage:
         ### Summary
         Build the payload for the image stage request.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
@@ -310,7 +298,7 @@ class ImageStage:
         self.payload = {}
         self._populate_controller_version()
 
-        if self.controller_version == "12.1.2e":
+        if self._controller_version == "12.1.2e":
             # Yes, version 12.1.2e wants serialNum to be misspelled
             self.payload["sereialNum"] = self.serial_numbers
         else:
@@ -330,7 +318,7 @@ class ImageStage:
         -   ``ControllerResponseError`` if:
                 -   The controller response is unsuccessful.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
@@ -346,10 +334,8 @@ class ImageStage:
             self.register_unchanged_result(msg)
             return
 
-        # pylint: disable=no-member
-        self.issu_detail.rest_send = self.rest_send
-        self.controller_version_instance.rest_send = self.rest_send
-        # pylint: enable=no-member
+        self.issu_detail.rest_send = self._rest_send
+        self._controller_version_instance.rest_send = self._rest_send
         # We don't want the results to show up in the user's result output.
         self.issu_detail.results = Results()
 
@@ -362,36 +348,35 @@ class ImageStage:
         msg += "Calling RestSend().commit()"
         self.log.debug(msg)
 
-        # pylint: disable=no-member
         try:
-            self.rest_send.verb = self.ep_image_stage.verb
-            self.rest_send.path = self.ep_image_stage.path
-            self.rest_send.payload = self.payload
-            self.rest_send.commit()
+            self._rest_send.verb = self.ep_image_stage.verb
+            self._rest_send.path = self.ep_image_stage.path
+            self._rest_send.payload = self.payload
+            self._rest_send.commit()
         except (TypeError, ValueError) as error:
-            self.results.diff_current = {}
-            self.results.action = self.action
-            self.results.response_current = copy.deepcopy(
-                self.rest_send.response_current
+            self._results.diff_current = {}
+            self._results.action = self.action
+            self._results.response_current = copy.deepcopy(
+                self._rest_send.response_current
             )
-            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-            self.results.register_task_result()
+            self._results.result_current = copy.deepcopy(self._rest_send.result_current)
+            self._results.register_task_result()
             msg = f"{self.class_name}.{method_name}: "
             msg += "Error while sending request. "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        if not self.rest_send.result_current["success"]:
-            self.results.diff_current = {}
-            self.results.action = self.action
-            self.results.response_current = copy.deepcopy(
-                self.rest_send.response_current
+        if not self._rest_send.result_current["success"]:
+            self._results.diff_current = {}
+            self._results.action = self.action
+            self._results.response_current = copy.deepcopy(
+                self._rest_send.response_current
             )
-            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-            self.results.register_task_result()
+            self._results.result_current = copy.deepcopy(self._rest_send.result_current)
+            self._results.register_task_result()
             msg = f"{self.class_name}.{method_name}: "
             msg += "failed. "
-            msg += f"Controller response: {self.rest_send.response_current}"
+            msg += f"Controller response: {self._rest_send.response_current}"
             raise ControllerResponseError(msg)
 
         # Save response_current and result_current so they aren't overwritten
@@ -399,17 +384,17 @@ class ImageStage:
         # before we can build the diff, since the diff is based on the
         # serial_numbers_done set, which isn't populated until image
         # stage is complete.
-        self.saved_response_current = copy.deepcopy(self.rest_send.response_current)
-        self.saved_result_current = copy.deepcopy(self.rest_send.result_current)
+        self.saved_response_current = copy.deepcopy(self._rest_send.response_current)
+        self.saved_result_current = copy.deepcopy(self._rest_send.result_current)
 
         self._wait_for_image_stage_to_complete()
         self.build_diff()
 
-        self.results.action = self.action
-        self.results.diff_current = copy.deepcopy(self.diff)
-        self.results.response_current = copy.deepcopy(self.saved_response_current)
-        self.results.result_current = copy.deepcopy(self.saved_result_current)
-        self.results.register_task_result()
+        self._results.action = self.action
+        self._results.diff_current = copy.deepcopy(self.diff)
+        self._results.response_current = copy.deepcopy(self.saved_response_current)
+        self._results.result_current = copy.deepcopy(self.saved_result_current)
+        self._results.register_task_result()
 
     def wait_for_controller(self) -> None:
         """
@@ -422,7 +407,7 @@ class ImageStage:
                 -   ``item_type`` is not a valid item type.
                 -   The action times out.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
@@ -431,7 +416,7 @@ class ImageStage:
             self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
             self.wait_for_controller_done.item_type = "serial_number"
             self.wait_for_controller_done.rest_send = (
-                self.rest_send  # pylint: disable=no-member
+                self._rest_send
             )
             self.wait_for_controller_done.commit()
         except (TypeError, ValueError) as error:
@@ -451,7 +436,7 @@ class ImageStage:
                     seconds.
                 -   Image stage fails for any switch.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
@@ -461,7 +446,7 @@ class ImageStage:
         self.serial_numbers_todo = set(copy.copy(self.serial_numbers))
 
         while self.serial_numbers_done != self.serial_numbers_todo and timeout > 0:
-            if self.rest_send.unit_test is False:  # pylint: disable=no-member
+            if self._rest_send.unit_test is False:
                 sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()
@@ -502,7 +487,7 @@ class ImageStage:
             raise ValueError(msg)
 
     @property
-    def serial_numbers(self) -> list:
+    def serial_numbers(self) -> list[str]:
         """
         ### Summary
         Set the serial numbers of the switches to stage.
@@ -516,8 +501,8 @@ class ImageStage:
         return self._serial_numbers
 
     @serial_numbers.setter
-    def serial_numbers(self, value) -> None:
-        method_name = inspect.stack()[0][3]
+    def serial_numbers(self, value: list[str]) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
             msg += "must be a python list of switch serial numbers."
@@ -545,8 +530,8 @@ class ImageStage:
         return self._check_interval
 
     @check_interval.setter
-    def check_interval(self, value) -> None:
-        method_name = inspect.stack()[0][3]
+    def check_interval(self, value: int) -> None:
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += "must be a positive integer or zero. "
         msg += f"Got value {value} of type {type(value)}."
@@ -573,8 +558,8 @@ class ImageStage:
         return self._check_timeout
 
     @check_timeout.setter
-    def check_timeout(self, value) -> None:
-        method_name = inspect.stack()[0][3]
+    def check_timeout(self, value: int) -> None:
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += "must be a positive integer or zero. "
         msg += f"Got value {value} of type {type(value)}."
@@ -586,3 +571,73 @@ class ImageStage:
         if value < 0:
             raise ValueError(msg)
         self._check_timeout = value
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        ### Summary
+        An instance of the RestSend class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of RestSend.
+
+        ### getter
+        Return an instance of the RestSend class.
+
+        ### setter
+        Set an instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            raise ValueError(f"{self.class_name}.{method_name}: RestSend.params must be set.")
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        ### Summary
+        An instance of the Results class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of Results.
+
+        ### getter
+        Return an instance of the Results class.
+
+        ### setter
+        Set an instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._results = value
