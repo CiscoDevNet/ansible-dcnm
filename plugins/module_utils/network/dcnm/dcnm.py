@@ -1322,12 +1322,23 @@ def obtain_federated_fabric_associations(action_module, task_vars, tmp):
             tmp=tmp
         )
 
-        # Special handling for cases where federation manager does not exist which is the case for
-        # standalone or MSD fabrics in a non-clustered environment
+        # Special handling for the following cases:
+        #   * Federation manager does not exist (standalone or MSD fabrics in a non-clustered environment)
+        #   * ND3.2 returns an invalid JSON response for remote users
         if federated_fabric_associations.get('failed') and federated_fabric_associations.get('msg'):
-            error_msg = federated_fabric_associations.get('msg').get('DATA').get('error')
-            if error_msg == 'A federation manager does not exist':
-                return error_msg
+            error_msg = federated_fabric_associations.get('msg').get('DATA')
+            # For ND3.2 error_msg will be a string
+            # For ND4.X error_msg will be a dict
+            if isinstance(error_msg, dict):
+                error_msg = error_msg.get('error')
+
+            if not isinstance(error_msg, str):
+                raise Exception("Unexpected error message format received from federated fabric associations API.")
+
+            error_messages = ['Invalid JSON response: this API is allowed only for remote user', 'A federation manager does not exist']
+            if error_msg in error_messages:
+                # Return the same error message for both ND3.2 and ND4.X for consistency
+                return 'A federation manager does not exist'
 
         # Validate API response structure and extract data
         response_data = action_module.error_handler.validate_api_response(
