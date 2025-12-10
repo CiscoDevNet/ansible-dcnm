@@ -100,7 +100,7 @@ class ImagePolicyDetach:
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
 
-    def build_diff(self)-> None:
+    def build_diff(self) -> None:
         """
         ### Summary
         Build the diff of the detach policy operation.
@@ -133,7 +133,7 @@ class ImagePolicyDetach:
             msg += f"self.diff[{ipv4}]: {json.dumps(self.diff[ipv4], indent=4)}"
             self.log.debug(msg)
 
-    def validate_commit_parameters(self)-> None:
+    def validate_commit_parameters(self) -> None:
         """
         ### Summary
         Validations prior to commit() should be added here.
