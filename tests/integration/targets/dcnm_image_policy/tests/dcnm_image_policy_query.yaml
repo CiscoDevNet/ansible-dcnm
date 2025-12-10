@@ -300,7 +300,7 @@
 #             {
 #                 "DATA": {
 #                     "lastOperDataObject": [
-#             {
+#                         {
 #                             "agnostic": false,
 #                             "epldImgName": "n9000-epld.10.2.5.M.img",
 #                             "fabricPolicyName": null,
@@ -336,7 +336,7 @@
 #                             "rpmimages": null,
 #                             "unInstall": false
 #                         }
-#         ],
+#                     ],
 #                     "message": "",
 #                     "status": "SUCCESS"
 #                 },
@@ -349,7 +349,7 @@
 #             {
 #                 "DATA": {
 #                     "lastOperDataObject": [
-#             {
+#                         {
 #                             "agnostic": false,
 #                             "epldImgName": "n9000-epld.10.2.5.M.img",
 #                             "fabricPolicyName": null,
@@ -385,7 +385,7 @@
 #                             "rpmimages": null,
 #                             "unInstall": false
 #                         }
-#         ],
+#                     ],
 #                     "message": "",
 #                     "status": "SUCCESS"
 #                 },

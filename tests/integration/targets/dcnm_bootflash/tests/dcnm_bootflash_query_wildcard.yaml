@@ -148,7 +148,7 @@
 #                         },
 #                         "partitions": [
 #                             "bootflash:"
-#         ],
+#                         ],
 #                         "requiredSpace": "NA"
 #                     },
 #                     "MESSAGE": "OK",
@@ -188,7 +188,7 @@
 #                         },
 #                         "partitions": [
 #                             "bootflash:"
-#         ],
+#                         ],
 #                         "requiredSpace": "NA"
 #                     },
 #                     "MESSAGE": "OK",

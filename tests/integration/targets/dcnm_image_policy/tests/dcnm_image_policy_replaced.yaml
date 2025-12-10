@@ -403,7 +403,7 @@
 #             {
 #                 "DATA": {
 #                     "lastOperDataObject": [
-#             {
+#                         {
 #                             "agnostic": false,
 #                             "epldImgName": "n9000-epld.10.2.5.M.img",
 #                             "fabricPolicyName": null,
@@ -452,7 +452,7 @@
 #             {
 #                 "DATA": {
 #                     "lastOperDataObject": [
-#             {
+#                         {
 #                             "agnostic": false,
 #                             "epldImgName": "n9000-epld.10.2.5.M.img",
 #                             "fabricPolicyName": null,
@@ -585,7 +585,7 @@
 #                 "policyNames": [
 #                     "KR5M",
 #                     "NR1F"
-#         ],
+#                 ],
 #                 "sequence_number": 1
 #             }
 #         ],
