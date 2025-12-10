@@ -1138,7 +1138,7 @@ class DcnmNetwork:
             found = False
             if have_a:
                 for have in have_a:
-                    if want["serialNumber"] == have["serialNumber"]:
+                    if want["serialNumber"] == have["serialNumber"] and want["networkName"] == have["networkName"]:
                         found = True
 
                         if want.get("isAttached") is not None:
