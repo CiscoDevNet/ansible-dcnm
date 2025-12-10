@@ -37,7 +37,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender
@@ -83,8 +83,8 @@ def test_image_validate_00000(image_validate) -> None:
     assert instance.check_interval == 10
     assert instance.check_timeout == 1800
     assert instance.non_disruptive is False
-    assert instance.rest_send is None
-    assert instance.results is None
+    assert instance._rest_send.class_name == "RestSend"
+    assert instance._results.class_name == "Results"
     assert instance.serial_numbers is None
 
 
