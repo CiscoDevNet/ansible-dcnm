@@ -14,15 +14,16 @@
 
   vars:
     # testcase: "*merge*"
+    testcase: "*delete*"
     it_context: true
     test_data_common:
       switch_username: admin
-      switch_password: "password"
-      fabric: fabric-stage
-      sw1: 192.168.10.1
-      sw2: 192.168.10.2
-      peer1_ip: 192.168.10.1
-      peer2_ip: 192.168.10.2
+      switch_password: "admin!@#"
+      fabric: cisco_test_fabric
+      sw1: 192.168.10.211
+      sw2: 192.168.10.212
+      peer1_ip: 192.168.10.211
+      peer2_ip: 192.168.10.212
       vpc_domain_id: 1000
 
   roles:

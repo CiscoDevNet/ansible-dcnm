@@ -21,13 +21,13 @@
     # testcase: replaced_net_all
     test_data_common:
       # ---
-      fabric: fabric-stage
+      fabric: cisco_test_fabric
       deploy: false
       # ---
       # Resources
       # ---
-      sw1: 192.168.1.1
-      sw2: 192.168.1.2
+      sw1: 192.168.10.211
+      sw2: 192.168.10.212
       # ---
       # Common VRF setup
       # ---
@@ -62,14 +62,14 @@
       net1_default_net_template: Default_Network_Universal
       net1_net_extension_template: Default_Network_Extension_Universal
       net1_vlan_id: 1500
-      net1_gw_ip_subnet: '192.168.30.1/24'
+      net1_gw_ip_subnet: '192.168.10.1/24'
       # ---
       net2: ansible-net12
       net2_net_id: 7002
       net2_default_net_template: Default_Network_Universal
       net2_net_extension_template: Default_Network_Extension_Universal
       net2_vlan_id: 151
-      net2_gw_ip_subnet: '192.168.40.1/24'
+      net2_gw_ip_subnet: '192.168.10.1/24'
       # ---
       net1_vrf: Tenant-1
       net2_vrf: Tenant-2
