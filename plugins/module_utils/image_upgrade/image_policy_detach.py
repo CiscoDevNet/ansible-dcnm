@@ -26,14 +26,12 @@ import logging
 from ..common.api.v1.imagemanagement.rest.policymgnt.policymgnt import EpPolicyDetach
 from ..common.exceptions import ControllerResponseError
 from ..common.image_policies import ImagePolicies
-from ..common.properties import Properties
-from ..common.results import Results
+from ..common.rest_send_v2 import RestSend
+from ..common.results_v2 import Results
 from .switch_issu_details import SwitchIssuDetailsBySerialNumber
 from .wait_for_controller_done import WaitForControllerDone
 
 
-@Properties.add_rest_send
-@Properties.add_results
 class ImagePolicyDetach:
     """
     ### Summary
@@ -77,9 +75,9 @@ class ImagePolicyDetach:
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy
     """
 
-    def __init__(self):
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+    def __init__(self) -> None:
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -95,13 +93,14 @@ class ImagePolicyDetach:
 
         self._check_interval = 10  # seconds
         self._check_timeout = 1800  # seconds
-        self._rest_send = None
-        self._results = None
+        self._rest_send: RestSend = RestSend({})
+        self._results: Results = Results()
+        self._serial_numbers: list[str] = []
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
 
-    def build_diff(self):
+    def build_diff(self)-> None:
         """
         ### Summary
         Build the diff of the detach policy operation.
@@ -109,7 +108,7 @@ class ImagePolicyDetach:
         ### Raises
         -   ValueError: if the switch is not managed by the controller.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
@@ -134,7 +133,7 @@ class ImagePolicyDetach:
             msg += f"self.diff[{ipv4}]: {json.dumps(self.diff[ipv4], indent=4)}"
             self.log.debug(msg)
 
-    def validate_commit_parameters(self):
+    def validate_commit_parameters(self)-> None:
         """
         ### Summary
         Validations prior to commit() should be added here.
@@ -143,7 +142,7 @@ class ImagePolicyDetach:
         -   ValueError: if:
                 -   ``serial_numbers`` is not set.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = "ENTERED"
         self.log.debug(msg)
@@ -164,7 +163,7 @@ class ImagePolicyDetach:
             msg += "calling commit()"
             raise ValueError(msg)
 
-    def commit(self):
+    def commit(self) -> None:
         """
         ### Summary
         Attach image policy to switches.
@@ -178,7 +177,7 @@ class ImagePolicyDetach:
                     to complete.
                 -   The result of the DELETE request is not successful.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
@@ -208,7 +207,7 @@ class ImagePolicyDetach:
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-    def wait_for_controller(self):
+    def wait_for_controller(self) -> None:
         """
         ### Summary
         Wait for any actions on the controller to complete.
@@ -232,7 +231,7 @@ class ImagePolicyDetach:
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-    def detach_policy(self):
+    def detach_policy(self) -> None:
         """
         ### Summary
         Detach image policy from the switch(es) associated with
@@ -242,7 +241,7 @@ class ImagePolicyDetach:
         -   ``ControllerResponseError`` if:
                 -   The result of the DELETE request is not successful.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
@@ -283,7 +282,7 @@ class ImagePolicyDetach:
             raise ControllerResponseError(msg)
 
     @property
-    def serial_numbers(self):
+    def serial_numbers(self) -> list[str]:
         """
         ### Summary
         Set the serial numbers of the switches from which
@@ -298,8 +297,8 @@ class ImagePolicyDetach:
         return self._serial_numbers
 
     @serial_numbers.setter
-    def serial_numbers(self, value):
-        method_name = inspect.stack()[0][3]
+    def serial_numbers(self, value: list[str]) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_numbers must be a "
@@ -314,7 +313,7 @@ class ImagePolicyDetach:
         self._serial_numbers = value
 
     @property
-    def check_interval(self):
+    def check_interval(self) -> int:
         """
         ### Summary
         The validate check interval, in seconds.
@@ -326,8 +325,8 @@ class ImagePolicyDetach:
         return self._check_interval
 
     @check_interval.setter
-    def check_interval(self, value):
-        method_name = inspect.stack()[0][3]
+    def check_interval(self, value: int) -> None:
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += "must be a positive integer or zero. "
         msg += f"Got value {value} of type {type(value)}."
@@ -341,7 +340,7 @@ class ImagePolicyDetach:
         self._check_interval = value
 
     @property
-    def check_timeout(self):
+    def check_timeout(self) -> int:
         """
         ### Summary
         The validate check timeout, in seconds.
@@ -353,8 +352,8 @@ class ImagePolicyDetach:
         return self._check_timeout
 
     @check_timeout.setter
-    def check_timeout(self, value):
-        method_name = inspect.stack()[0][3]
+    def check_timeout(self, value: int) -> None:
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += "must be a positive integer or zero. "
         msg += f"Got value {value} of type {type(value)}."
@@ -366,3 +365,73 @@ class ImagePolicyDetach:
         if value < 0:
             raise ValueError(msg)
         self._check_timeout = value
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        ### Summary
+        An instance of the RestSend class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of RestSend.
+
+        ### getter
+        Return an instance of the RestSend class.
+
+        ### setter
+        Set an instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            raise ValueError(f"{self.class_name}.{method_name}: RestSend.params must be set.")
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        ### Summary
+        An instance of the Results class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of Results.
+
+        ### getter
+        Return an instance of the Results class.
+
+        ### setter
+        Set an instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._results = value
