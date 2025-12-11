@@ -152,9 +152,9 @@ jobs:
       - name: Install ansible-lint (25.9.2)
         run: pip install ansible-lint==25.9.2
 
-      - name: Set Ansible roles path in environment
-        run: export ANSIBLE_ROLES_PATH="./tests/integration/targets"
-        working-directory: "${GITHUB_WORKSPACE}"
+      # - name: Set Ansible roles path in environment
+      #  run: export ANSIBLE_ROLES_PATH="./tests/integration/targets"
+      #  working-directory: "${GITHUB_WORKSPACE}"
 
       - name: Run ansible-lint
         run: ansible-lint --profile=production --force-color --strict -v
