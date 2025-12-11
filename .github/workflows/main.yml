@@ -118,14 +118,11 @@ jobs:
       - name: Install pytest (v7.4.4)
         run: pip install pytest==7.4.4
 
-      - name: Install requests
-        run: pip install requests
-
-      - name: Download migrated collection artifacts
-        uses: actions/download-artifact@v4.1.7
-        with:
-          name: collection_v${{ matrix.ansible }}
-          path: .cache/v${{ matrix.ansible }}/collection-tarballs
+    - name: Download migrated collection artifacts
+      uses: actions/download-artifact@v4.1.7
+      with:
+        name: collection_v${{ matrix.ansible }}
+        path: .cache/v${{ matrix.ansible }}/collection-tarballs
 
       - name: Install the collection tarball
         run: ansible-galaxy collection install .cache/v${{ matrix.ansible }}/collection-tarballs/*.tar.gz
