@@ -153,7 +153,7 @@ jobs:
         run: pip install ansible-lint==25.9.2
 
       - name: Set Ansible roles path in environment
-        run: export ANSIBLE_ROLES_PATH="${GITHUB_WORKSPACE}/tests/integration/targets"
+        run: export ANSIBLE_ROLES_PATH="./tests/integration/targets"
         working-directory: "${GITHUB_WORKSPACE}"
 
       - name: Run ansible-lint
