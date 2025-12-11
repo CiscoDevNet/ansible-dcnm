@@ -105,10 +105,19 @@ jobs:
 
       - name: Install Pydantic (v2)
         run: pip install pydantic==2.11.10
+      - name: Install ansible-base (v${{ matrix.ansible }})
+        run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      - name: Install Pydantic (v2)
+        run: pip install pydantic==2.11.10
 
       - name: Install Requests
         run: pip install requests==2.32.5
+      - name: Install Requests
+        run: pip install requests==2.32.5
 
+      - name: Install DeepDiff (v8.5.0)
+        run: pip install deepdiff==8.5.0
       - name: Install DeepDiff (v8.5.0)
         run: pip install deepdiff==8.5.0
 
@@ -118,11 +127,11 @@ jobs:
       - name: Install pytest (v7.4.4)
         run: pip install pytest==7.4.4
 
-    - name: Download migrated collection artifacts
-      uses: actions/download-artifact@v4.1.7
-      with:
-        name: collection_v${{ matrix.ansible }}
-        path: .cache/v${{ matrix.ansible }}/collection-tarballs
+      - name: Download migrated collection artifacts
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: collection_v${{ matrix.ansible }}
+          path: .cache/v${{ matrix.ansible }}/collection-tarballs
 
       - name: Install the collection tarball
         run: ansible-galaxy collection install .cache/v${{ matrix.ansible }}/collection-tarballs/*.tar.gz
@@ -153,8 +162,8 @@ jobs:
         run: pip install ansible-lint==25.9.2
 
       - name: Set Ansible roles path in environment
-        run: export ANSIBLE_ROLES_PATH=/home/runner/.ansible/collections/ansible_collections/cisco/dcnm/tests/integration/targets
-        working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/dcnm
+        run: export ANSIBLE_ROLES_PATH=./tests/integration/targets
+        working-directory: "${GITHUB_WORKSPACE}"
 
       - name: Run ansible-lint
         run: ansible-lint --profile=production --force-color --strict -v
