@@ -45,7 +45,7 @@
             dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-      register: delete_result
+      register: result
 
     - name: ASSERT - Baseline delete RETURN_CODE
       ansible.builtin.assert:
@@ -59,7 +59,7 @@
     - name: XE MERGE - Create numbered link
       cisco.dcnm.dcnm_links: &links_merge
         state: merged
-        src_fabric: "{{ ansible_xe_fabric }}"
+        src_fabric: "{{ ansible_num_fabric }}"
         config:
           - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
             src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric

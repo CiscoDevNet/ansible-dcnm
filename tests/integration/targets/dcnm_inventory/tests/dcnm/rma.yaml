@@ -36,9 +36,8 @@
 
 - name: RMA - Setup Rest Variables
   ansible.builtin.set_fact:
-    ndfc_switch_base: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ test_data.sw1_serial }}"
-    mode_maintenance: "{{ ndfc_switch_base }}/maintenance-mode"
-    mode_deploy: "{{ ndfc_switch_base }}/deploy-maintenance-mode"
+    mode_maintenance: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ test_data.sw1_serial }}/maintenance-mode"
+    mode_deploy: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ test_data.sw1_serial }}/deploy-maintenance-mode"
   tags: rma
 #  when: controller_version >= "12"
 
@@ -65,7 +64,7 @@
 - name: RMA Base Task - Assert Fabric Existence
   ansible.builtin.assert:
     that:
-      - 'fabric_data is defined'
+      - found_fabric == true
     fail_msg: "Fabric '{{ test_data.test_fabric }}' not found."
   tags: rma
 
@@ -165,7 +164,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-      - 'query_result.response is defined'
+      - 'query_result.response != None'
     when: rma_enabled == True
   tags: rma
 
@@ -221,13 +220,11 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
+        - 'result.changed == true'
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-        - ansible.builtin.assert:
-            - 'item["RETURN_CODE"] == 200'
+        - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
   when: (rma_enabled == True and rma_switch_present == True)
   tags: rma

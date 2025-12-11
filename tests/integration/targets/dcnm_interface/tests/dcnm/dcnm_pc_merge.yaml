@@ -1,6 +1,13 @@
 ##############################################
 ##               SETUP                      ##
 ##############################################
+- name: PC MERGE - Test Entry Point - [ndfc_interface]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [ndfc_interface]               +"
+      - "+                     PC MERGE Tests                           +"
+      - "----------------------------------------------------------------"
 
 - name: Remove local log file
   local_action: command rm -f dcnm_intf.log

@@ -10,16 +10,6 @@
     ##############################################
     ##               DELETE                     ##
     ##############################################
-    - name: Initial setup - Delete Links
-      cisco.dcnm.dcnm_links: &links_delete_simple
-        state: deleted
-
-    - name: Delete Links
-      cisco.dcnm.dcnm_links: *links_delete_simple
-    ##############################################
-    ##           BASELINE DELETE               ##
-    ##############################################
-
     - name: XE DELETE - Baseline delete (ensure clean start)
       cisco.dcnm.dcnm_links: &links_delete
         state: deleted
@@ -54,7 +44,7 @@
             dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
-      register: baseline_delete
+      register: result
 
     - name: ASSERT - Baseline delete RETURN_CODE
       ansible.builtin.assert:

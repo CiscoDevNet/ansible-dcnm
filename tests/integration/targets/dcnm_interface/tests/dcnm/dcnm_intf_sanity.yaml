@@ -70,9 +70,6 @@
     ##              MERGED                      ##
     ##############################################
 
-    - name: Load Interface Config File
-      ansible.builtin.set_fact:
-
     - name: Load Ethernet Interface Config File
       ansible.builtin.set_fact:
         dcnm_interface_sanity_eth_merge_conf: "{{ lookup('file', test_data_interfaces.sanity_eth_merge_conf_file) | from_yaml }}"

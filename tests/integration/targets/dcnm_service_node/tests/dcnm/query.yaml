@@ -376,7 +376,7 @@
     that:
       - 'result.changed == false'
       - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
-      - 'result.response[0].attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[0].attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
       - 'result.response[0].fabricName == "{{ ansible_ext_fabric }}"'
       - 'result.response[0].formFactor == "Virtual"'
       - 'result.response[0].interfaceName == "svc1"'

@@ -153,8 +153,7 @@
 #                     },
 #                     "MESSAGE": "OK",
 #                     "METHOD": "GET",
-#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/",
-#                     "REQUEST_PATH_CONT": "bootflash-info?serialNumber=FOX2109PGCS",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
 #                     "RETURN_CODE": 200
 #                 },
 #                 "172.22.150.113": {
@@ -193,8 +192,7 @@
 #                     },
 #                     "MESSAGE": "OK",
 #                     "METHOD": "GET",
-#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/",
-#                     "REQUEST_PATH_CONT": "bootflash-info?serialNumber=FOX2109PGD0",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGD0",
 #                     "RETURN_CODE": 200
 #                 },
 #                 "sequence_number": 1

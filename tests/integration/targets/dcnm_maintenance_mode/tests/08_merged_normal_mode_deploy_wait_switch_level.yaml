@@ -101,6 +101,7 @@
     config:
       deploy: false
       mode: maintenance
+      wait_for_mode_change: false
       switches:
         - ip_address: "{{ leaf_1 }}"
           deploy: true

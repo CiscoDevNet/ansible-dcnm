@@ -191,11 +191,6 @@
         that:
           - '(result.response | length) == 0'
 
-    - name: ASSERT - Check condition
-      ansible.builtin.assert:
-        that:
-          - '(result.response | length) == 0'
-
   ##############################################
   ##             CLEANUP                      ##
   ##############################################

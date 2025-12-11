@@ -106,6 +106,10 @@
           - 'result_delete_idem.response is defined'
           - 'result_delete_idem.response | length >= 0'
 
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
+
   always:
 
     - name: Put fabric to default state (cleanup)

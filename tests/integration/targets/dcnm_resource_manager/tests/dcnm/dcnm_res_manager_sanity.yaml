@@ -159,7 +159,7 @@
       that:
         - '(result["response"] | length) != 0'
 
-        - name: SANITY- Creating entity_names
+    - name: SANITY- Creating entity_names
       ansible.builtin.set_fact:
       entity_names:
         - "l3_vni_fabric"
