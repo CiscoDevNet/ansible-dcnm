@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,34 +20,29 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
-
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__metaclass__ = type  # pylint: disable=invalid-name
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
-    BootflashInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-    SwitchDetails
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import BootflashInfo
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-    MockAnsibleModule, configs_query, does_not_raise, params_query,
-    responses_ep_all_switches, responses_ep_bootflash_discovery,
-    responses_ep_bootflash_info)
+    MockAnsibleModule,
+    configs_query,
+    does_not_raise,
+    params_query,
+    responses_ep_all_switches,
+    responses_ep_bootflash_discovery,
+    responses_ep_bootflash_info,
+)
 
 
 def test_bootflash_info_00000() -> None:
@@ -78,14 +73,15 @@ def test_bootflash_info_00000() -> None:
     assert instance.response_dict == {}
     assert instance.result_dict == {}
 
-    assert instance._rest_send is None
-    assert instance._results is None
-    assert instance.switch_details is None
-    assert instance.switches is None
+    assert instance._rest_send.params == {}
+    assert instance._rest_send.class_name == "RestSend"
+    assert instance._results.class_name == "Results"
+    assert instance.switch_details.class_name == "SwitchDetails"
+    assert instance.switches == []
 
-    assert instance.filter_filepath is None
-    assert instance.filter_supervisor is None
-    assert instance.filter_switch is None
+    assert instance.filter_filepath == ""
+    assert instance.filter_supervisor == ""
+    assert instance.filter_switch == ""
 
     assert instance.valid_supervisor == ["active", "standby"]
 
@@ -139,7 +135,6 @@ def test_bootflash_info_00100() -> None:
         instance = BootflashInfo()
         instance.rest_send = rest_send
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
         instance.switches = ["172.22.150.112", "172.22.150.113"]
         instance.refresh()
         instance.filter_switch = "172.22.150.112"
@@ -179,61 +174,10 @@ def test_bootflash_info_00110() -> None:
     with does_not_raise():
         instance = BootflashInfo()
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
         instance.switches = ["192.168.1.1"]
 
-    match = r"BootflashInfo\.validate_refresh_parameters: "
-    match += r"rest_send must be set prior to calling refresh\."
-    with pytest.raises(ValueError, match=match):
-        instance.refresh()
-
-
-def test_bootflash_info_00120() -> None:
-    """
-    ### Classes and Methods
-    - BootflashInfo()
-        - refresh()
-        - validate_refresh_parameters()
-
-    ### Summary
-    - Verify exception is raised if ``results`` is not set.
-
-    ### Test
-    -   ValueError is raised when ``results`` is not set.
-    """
-    with does_not_raise():
-        instance = BootflashInfo()
-        instance.rest_send = RestSend({})
-        instance.switch_details = SwitchDetails()
-        instance.switches = ["192.168.1.1"]
-
-    match = r"BootflashInfo\.validate_refresh_parameters: "
-    match += r"results must be set prior to calling refresh\."
-    with pytest.raises(ValueError, match=match):
-        instance.refresh()
-
-
-def test_bootflash_info_00130() -> None:
-    """
-    ### Classes and Methods
-    - BootflashInfo()
-        - refresh()
-        - validate_refresh_parameters()
-
-    ### Summary
-    - Verify exception is raised if ``switch_details`` is not set.
-
-    ### Test
-    -   ValueError is raised when ``switch_details`` is not set.
-    """
-    with does_not_raise():
-        instance = BootflashInfo()
-        instance.rest_send = RestSend({})
-        instance.results = Results()
-        instance.switches = ["192.168.1.1"]
-
-    match = r"BootflashInfo\.validate_refresh_parameters: "
-    match += r"switch_details must be set prior to calling refresh\."
+    match = r"BootflashInfo\.rest_send: "
+    match += r"RestSend.params must be set before accessing\."
     with pytest.raises(ValueError, match=match):
         instance.refresh()
 
@@ -253,9 +197,8 @@ def test_bootflash_info_00140() -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
 
     match = r"BootflashInfo\.validate_refresh_parameters: "
     match += r"switches must be set prior to calling refresh\."
@@ -307,7 +250,6 @@ def test_bootflash_info_00150() -> None:
         instance = BootflashInfo()
         instance.rest_send = rest_send
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
         instance.switches = ["172.22.150.112", "172.22.150.113"]
     match = r"BootflashInfo\.refresh_bootflash_info:\s+"
     match += r"serial_number not found for switch 172.22.150.112.\s+"
@@ -336,7 +278,6 @@ def test_bootflash_info_00200() -> None:
         instance = BootflashInfo()
         instance.rest_send = RestSend({})
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
         instance.switches = ["172.22.150.112", "172.22.150.113"]
 
     match = r"BootflashInfo\.validate_prerequisites_for_build_matches:\s+"
@@ -395,7 +336,6 @@ def test_bootflash_info_00210() -> None:
         instance = BootflashInfo()
         instance.rest_send = rest_send
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
         instance.switches = ["172.22.150.112"]
         instance.refresh()
         instance.filter_switch = "172.22.150.113"
@@ -455,7 +395,6 @@ def test_bootflash_info_00220() -> None:
         instance = BootflashInfo()
         instance.rest_send = rest_send
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
         instance.switches = ["172.22.150.112", "172.22.150.113"]
         instance.refresh()
     with does_not_raise():
@@ -518,7 +457,6 @@ def test_bootflash_info_00230() -> None:
         instance = BootflashInfo()
         instance.rest_send = rest_send
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
         instance.switches = ["172.22.150.112"]
         instance.refresh()
     with does_not_raise():
@@ -573,7 +511,6 @@ def test_bootflash_info_00300(filter_filepath, filepath, expected) -> None:
         instance = BootflashInfo()
         instance.rest_send = RestSend({})
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
         instance.switches = ["172.22.150.112"]
         if filter_filepath is not None:
             instance.filter_filepath = filter_filepath
@@ -614,7 +551,6 @@ def test_bootflash_info_00310(filter_supervisor, supervisor, expected) -> None:
         instance = BootflashInfo()
         instance.rest_send = RestSend({})
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
         instance.switches = ["172.22.150.112"]
         if filter_supervisor is not None:
             instance.filter_supervisor = filter_supervisor
@@ -658,7 +594,6 @@ def test_bootflash_info_00320(filter_switch, switch, expected) -> None:
         instance = BootflashInfo()
         instance.rest_send = RestSend({})
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
         instance.switches = ["172.22.150.112"]
         if filter_switch is not None:
             instance.filter_switch = filter_switch
@@ -689,7 +624,6 @@ def test_bootflash_info_00400() -> None:
         instance = BootflashInfo()
         instance.rest_send = RestSend({})
         instance.results = Results()
-        instance.switch_details = SwitchDetails()
         instance.switches = ["172.22.150.112"]
     match = r"BootflashInfo\.filter_supervisor\.setter:\s+"
     match += r"value foo is not a valid value for supervisor\.\s+"
@@ -775,7 +709,7 @@ def test_bootflash_info_00600() -> None:
     match = r"BootflashInfo\.switches:\s+"
     match += r"switches must be a list\. got str for value foo\."
     with pytest.raises(TypeError, match=match):
-        instance.switches = "foo"
+        instance.switches = "foo"  # type: ignore
 
 
 def test_bootflash_info_00610() -> None:
@@ -825,4 +759,4 @@ def test_bootflash_info_00620() -> None:
     match += r"switches must be a list of ip addresses\.\s+"
     match += r"got type int for value 10\."
     with pytest.raises(TypeError, match=match):
-        instance.switches = ["192.168.1.1", 10]
+        instance.switches = ["192.168.1.1", 10]  # type: ignore
