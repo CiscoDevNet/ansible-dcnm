@@ -32,17 +32,18 @@
             tags: "internal policy 101"
             content: |
               telemetry
-              certificate /bootflash/telegraf.crt telegraf
-              destination-profile
-                use-vrf management
-              destination-group 1
-                ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
-              sensor-group 1
-                data-source DME
-                path sys/ch depth unbounded
-              subscription 1
-                dst-grp 1
-                snsr-grp 1 sample-interval 10000
+                certificate /bootflash/telegraf.crt telegraf
+                destination-profile
+                  use-vrf management
+                destination-group 1
+                  ip address 10.195.225.176 port 57000 protocol gRPC encoding GPB
+                sensor-group 1
+                  data-source DME
+                  path sys/ch depth unbounded
+                subscription 1
+                  dst-grp 1
+                  snsr-grp 1 sample-interval 10000
+
           - name: template_102
             description: "Template_102"
             tags: "internal policy 102"

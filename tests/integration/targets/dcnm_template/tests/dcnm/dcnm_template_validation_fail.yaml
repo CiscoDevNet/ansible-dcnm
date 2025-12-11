@@ -5,6 +5,7 @@
 
 - name: Initialize template test context
   cisco.dcnm.dcnm_template:
+    state: deleted       # only choose form [merged, deleted, query]
     config:
       - name: template_101
       - name: template_102
