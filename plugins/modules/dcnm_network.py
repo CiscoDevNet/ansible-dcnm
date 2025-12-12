@@ -913,6 +913,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     get_ip_sn_fabric_dict,
     has_partial_dhcp_config,
     validate_list_of_dicts,
+    sanitize_lan_attach_list
 )
 
 
@@ -2341,6 +2342,11 @@ class DcnmNetwork:
         if not net_attach_objects["DATA"]:
             return
 
+        if self.fabric_type == "multicluster_parent":
+            net_attach_objects["DATA"] = sanitize_lan_attach_list(
+                net_attach_objects.get("DATA")
+            )
+
         for net_attach in net_attach_objects["DATA"]:
             if not net_attach.get("lanAttachList"):
                 continue
@@ -3360,6 +3366,11 @@ class DcnmNetwork:
                         if not net_attach_objects["DATA"]:
                             return
 
+                        if self.fabric_type == "multicluster_parent":
+                            net_attach_objects["DATA"] = sanitize_lan_attach_list(
+                                net_attach_objects.get("DATA")
+                            )
+
                         for net_attach in net_attach_objects["DATA"]:
                             if want_c["networkName"] == net_attach["networkName"]:
                                 if not net_attach.get("lanAttachList"):
@@ -3391,6 +3402,11 @@ class DcnmNetwork:
 
                 if not net_attach_objects["DATA"]:
                     return
+
+                if self.fabric_type == "multicluster_parent":
+                    net_attach_objects["DATA"] = sanitize_lan_attach_list(
+                        net_attach_objects.get("DATA")
+                    )
 
                 for net_attach in net_attach_objects["DATA"]:
                     if not net_attach.get("lanAttachList"):
@@ -3475,9 +3491,12 @@ class DcnmNetwork:
 
                         # GET_NET_ATTACH returns: [{'networkName': 'name', 'lanAttachList': [attachments]}]
                         if isinstance(resp["DATA"], list) and len(resp["DATA"]) > 0:
+                            # Sanitize the lanAttachList entries
+                            sanitized_data = sanitize_lan_attach_list(
+                                resp["DATA"]
+                            )
                             # Get the lanAttachList from the first element
-                            attach_list = resp["DATA"][0].get("lanAttachList", [])
-
+                            attach_list = sanitized_data[0].get("lanAttachList", [])
                             # Check for PENDING state and trigger detach/deploy if needed
                             for attach in attach_list:
                                 if attach.get("lanAttachState") == "PENDING" and not deploy_started:

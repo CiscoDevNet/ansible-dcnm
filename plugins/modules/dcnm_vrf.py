@@ -981,7 +981,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
     get_nd_fabric_details, get_nd_fabric_inventory_details, get_ip_sn_dict,
     get_sn_fabric_dict, validate_list_of_dicts, search_nested_json,
-    find_dict_in_list_by_key_value)
+    find_dict_in_list_by_key_value, sanitize_lan_attach_list)
 
 from ..module_utils.common.log_v2 import Log
 
@@ -2066,6 +2066,11 @@ class DcnmVrf:
 
         if not vrf_attach_objects["DATA"]:
             return
+
+        if self.action_fabric_type == "multicluster_parent":
+            vrf_attach_objects["DATA"] = sanitize_lan_attach_list(
+                vrf_attach_objects.get("DATA")
+            )
 
         for vrf in vrf_objects["DATA"]:
             json_to_dict = json.loads(vrf["vrfTemplateConfig"])
@@ -3249,6 +3254,11 @@ class DcnmVrf:
                         if not vrf_attach_objects["DATA"]:
                             return
 
+                        if self.action_fabric_type == "multicluster_parent":
+                            vrf_attach_objects["DATA"] = sanitize_lan_attach_list(
+                                vrf_attach_objects.get("DATA")
+                            )
+
                         for vrf_attach in vrf_attach_objects["DATA"]:
                             if want_c["vrfName"] == vrf_attach["vrfName"]:
                                 if not vrf_attach.get("lanAttachList"):
@@ -3298,6 +3308,11 @@ class DcnmVrf:
 
                 if not vrf_attach_objects["DATA"]:
                     return
+
+                if self.action_fabric_type == "multicluster_parent":
+                    vrf_attach_objects["DATA"] = sanitize_lan_attach_list(
+                        vrf_attach_objects.get("DATA")
+                    )
 
                 for vrf_attach in vrf_attach_objects["DATA"]:
                     if not vrf_attach.get("lanAttachList"):
@@ -4594,7 +4609,15 @@ class DcnmVrf:
                     time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
                     continue
 
-                attach_list = resp["DATA"][0]["lanAttachList"]
+                if self.action_fabric_type == "multicluster_parent":
+                    # Sanitize the lanAttachList entries
+                    sanitized_data = sanitize_lan_attach_list(
+                        resp["DATA"]
+                    )
+                    attach_list = sanitized_data[0]["lanAttachList"]
+                else:
+                    attach_list = resp["DATA"][0]["lanAttachList"]
+
                 msg = f"ok_to_delete: {ok_to_delete}, "
                 msg += f"attach_list: {json.dumps(attach_list, indent=4)}"
                 self.log.debug(msg)
