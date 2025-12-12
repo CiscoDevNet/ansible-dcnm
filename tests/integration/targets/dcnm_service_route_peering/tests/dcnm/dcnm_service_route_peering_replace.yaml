@@ -12,7 +12,8 @@
     state: deleted
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
@@ -257,8 +258,9 @@
         state: replaced
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 7'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -266,8 +268,9 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 7'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -508,8 +511,9 @@
         state: replaced
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -517,8 +521,9 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 3'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -526,8 +531,9 @@
       cisco.dcnm.dcnm_service_route_peering: *dcnm_srp_rep_13
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -774,8 +780,9 @@
         state: replaced
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -783,8 +790,9 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 4'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -792,8 +800,9 @@
       cisco.dcnm.dcnm_service_route_peering: *dcnm_srp_rep_47
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -837,8 +846,9 @@
       register: result
       when: IT_CONTEXT is not defined
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

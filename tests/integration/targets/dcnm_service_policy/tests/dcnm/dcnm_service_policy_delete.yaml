@@ -27,7 +27,8 @@
         node_name: "{{ ansible_snode_2 }}"                # mandatory
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
@@ -87,8 +88,9 @@
               reverse_route_map_num: 202  # optional, default value will be auto-generated
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 2'
         - '(result["diff"][0]["deleted"] | length) == 0'
@@ -96,8 +98,9 @@
         - '(result["diff"][0]["query"] | length) == 0'
         - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
         - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -118,8 +121,9 @@
             node_name: "{{ ansible_snode_2 }}"  # mandatory
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 0'
         - '(result["diff"][0]["deleted"] | length) == 2'
@@ -127,8 +131,9 @@
         - '(result["diff"][0]["query"] | length) == 0'
         - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
         - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -136,8 +141,9 @@
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_del
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
         - 'result.changed == false'
         - '(result["diff"][0]["merged"] | length) == 0'
         - '(result["diff"][0]["deleted"] | length) == 0'
@@ -267,8 +273,9 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 5'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -286,8 +293,9 @@
           - node_name: "{{ ansible_snode_2 }}"                # mandatory
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 5'
@@ -295,8 +303,9 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -413,8 +422,9 @@
               reverse_route_map_num: 502  # optional, default value will be auto-generated
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 5'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -422,8 +432,9 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 5'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -444,8 +455,9 @@
             rp_name: "{{ ansible_adc_rp6 }}"                  # mandatory
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 3'
@@ -453,8 +465,9 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -531,8 +544,9 @@
               reverse_route_map_num: 502  # optional, default value will be auto-generated
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 3'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -540,8 +554,9 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 3'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -556,8 +571,9 @@
         state: deleted                                        # optional, default merged
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 5'
@@ -565,7 +581,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'

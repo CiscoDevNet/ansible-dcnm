@@ -63,7 +63,7 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 5'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -71,8 +71,9 @@
           - '(result["diff"][0]["deploy"] | length) == 5'
 
     # Assert for Create responses
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
@@ -83,7 +84,7 @@
     # Assert for deploy responses
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
+        that:
         - 'item["RETURN_CODE"] == 200'
         - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
@@ -123,7 +124,7 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
+        that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 1'
         - '(result["diff"][0]["deleted"] | length) == 0'
@@ -148,7 +149,7 @@
     # Assert for description being non-empty
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
+        that:
         - 'item["description"] != ""'
       when: (my_idx < (result.results[0]["diff"][0]["merged"] | length))
     loop: '{{ result.results[0]["diff"][0]["merged"] }}'
@@ -158,7 +159,7 @@
     # Assert for Create responses
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
+        that:
         - 'item["RETURN_CODE"] == 200'
       when: (my_idx < (result.results[0]["diff"][0]["merged"] | length))
     loop: '{{ result.results[0].response }}'
@@ -168,7 +169,7 @@
     # Assert for deploy responses
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
+        that:
         - 'item["RETURN_CODE"] == 200'
         - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
       when: (my_idx == (result.results[0]["diff"][0]["merged"] | length))
@@ -196,8 +197,9 @@
               - ip: "{{ ansible_switch1 }}"
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
     loop: '{{ result.response }}'

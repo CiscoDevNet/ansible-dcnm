@@ -150,8 +150,9 @@
               reverse_route_map_num: 502                      # optional, default value will be auto-generated
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 5'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -181,8 +182,9 @@
             node_name: "{{ ansible_snode_2 }}"                # mandatory
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -202,8 +204,9 @@
         state: overridden                                     # optional, default merged
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 5'
@@ -266,8 +269,9 @@
 
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -329,8 +333,9 @@
               reverse_route_map_num: 2202                     # optional, default value will be auto-generated
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
         - 'result.changed == true'
         - '(result["diff"][0]["merged"] | length) == 0'
         - '(result["diff"][0]["deleted"] | length) == 0'
@@ -338,8 +343,9 @@
         - '(result["diff"][0]["query"] | length) == 0'
         - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -347,8 +353,9 @@
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_replace_all
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -368,8 +375,9 @@
       when: IT_CONTEXT is not defined
       tags: sanity
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

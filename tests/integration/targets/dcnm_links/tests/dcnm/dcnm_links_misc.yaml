@@ -98,8 +98,9 @@
       #     ext_evpn_multisite_overlay_setup ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -128,8 +129,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '("Monitoring mode" in result["msg"])'
           - '("No changes are allowed on the fabric" in result["msg"])'
           - '("{{ ansible_extmon_fabric }}" in result["msg"])'
@@ -155,8 +157,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -173,8 +176,9 @@
       cisco.dcnm.dcnm_links: *links_create1
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -202,8 +206,9 @@
       #     ext_evpn_multisite_overlay_setup ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '(result["response"] | length) >= 1'
 
     #############################################
@@ -233,8 +238,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -266,8 +272,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 1'
@@ -299,8 +306,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 1'
@@ -317,8 +325,9 @@
       cisco.dcnm.dcnm_links: *links_create2
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 1'
@@ -346,8 +355,9 @@
       #     ext_evpn_multisite_overlay_setup ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '(result["response"] | length) >= 1'
 
     #############################################
@@ -375,8 +385,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -393,8 +404,9 @@
       cisco.dcnm.dcnm_links: *links_create3
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -422,8 +434,9 @@
       #     ext_evpn_multisite_overlay_setup ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '(result["response"] | length) >= 1'
 
     #############################################
@@ -451,8 +464,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -469,8 +483,9 @@
       cisco.dcnm.dcnm_links: *links_create4
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -498,8 +513,9 @@
       #     ext_evpn_multisite_overlay_setup ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '(result["response"] | length) >= 1'
 
     #############################################
@@ -527,8 +543,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -545,8 +562,9 @@
       cisco.dcnm.dcnm_links: *links_create5
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -574,8 +592,9 @@
       #     ext_evpn_multisite_overlay_setup ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '(result["response"] | length) >= 1'
 
     #############################################
@@ -603,8 +622,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -621,8 +641,9 @@
       cisco.dcnm.dcnm_links: *links_create6
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -650,8 +671,9 @@
       #     ext_evpn_multisite_overlay_setup ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '(result["response"] | length) >= 1'
 
     #############################################
@@ -679,8 +701,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -697,8 +720,9 @@
       cisco.dcnm.dcnm_links: *links_create7
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -726,8 +750,9 @@
       #     ext_evpn_multisite_overlay_setup ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '(result["response"] | length) >= 1'
 
     #############################################
@@ -755,8 +780,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -773,8 +799,9 @@
       cisco.dcnm.dcnm_links: *links_create8
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -802,8 +829,9 @@
       #     ext_evpn_multisite_overlay_setup ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '(result["response"] | length) >= 1'
 
     #############################################
@@ -831,8 +859,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -849,8 +878,9 @@
       cisco.dcnm.dcnm_links: *links_create9
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -878,8 +908,9 @@
       #     ext_evpn_multisite_overlay_setup ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '(result["response"] | length) >= 1'
 
   #############################################
@@ -893,8 +924,9 @@
       register: result
       when: IT_CONTEXT is not defined
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

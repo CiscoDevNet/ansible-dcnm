@@ -54,8 +54,9 @@
 
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -115,8 +116,9 @@
                 - no shutdown                                    # optional, default is ""
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -126,8 +128,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -246,8 +249,9 @@
       register: result
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 4'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -258,8 +262,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
@@ -320,8 +325,9 @@
                 - no shutdown                                    # optional, default is ""
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 2'
@@ -331,8 +337,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -344,8 +351,9 @@
       cisco.dcnm.dcnm_links: *links_replace1
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -355,8 +363,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -468,8 +477,9 @@
       register: result
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 4'
@@ -495,8 +505,9 @@
       register: result
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -507,8 +518,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
@@ -525,7 +537,7 @@
 
     - name: ASSERT - Cleanup return codes
       ansible.builtin.assert:
-      that:
+        that:
           - item.RETURN_CODE == 200
     loop: "{{ cleanup_result.response | default([]) }}"
       when: it_context is not defined

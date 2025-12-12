@@ -56,7 +56,8 @@
           - "{{ ansible_switch1 }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -125,15 +126,17 @@
             resource: "fe:80:0505::05/64"            # The value of the resource being created
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 9'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["response"] | length) == 9'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -146,14 +149,16 @@
       cisco.dcnm.dcnm_resource_manager: *rm_merge
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -219,15 +224,17 @@
             resource: "fe:81:0505::05/64"            # The value of the resource being modified
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 9'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["response"] | length) == 9'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -248,8 +255,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '"switch : Required parameter not found" in result["msg"]'
 
     - name: Create Resources - Missing scope_type
@@ -267,8 +275,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result["msg"] == "Mandatory parameter ''scope_type'' missing"'
 
     - name: Create Resources - Missing pool_type
@@ -286,8 +295,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result["msg"] == "Mandatory parameter ''pool_type'' missing"'
 
     - name: Create Resources - Missing pool_name
@@ -305,8 +315,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result["msg"] == "Mandatory parameter ''pool_name'' missing"'
 
     - name: Create Resources - Missing entity_name
@@ -324,8 +335,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result["msg"] == "Mandatory parameter ''entity_name'' missing"'
 
     - name: Create Resources - Missing resource value
@@ -343,8 +355,9 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - '"resource : Required parameter not found" in result["msg"]'
 
   ##############################################
@@ -358,16 +371,18 @@
       register: result
       when: IT_CONTEXT is not defined
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 9'
           - '(result["response"][0]["DATA"]["successList"] | length) == 9'
       when: IT_CONTEXT is not defined
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

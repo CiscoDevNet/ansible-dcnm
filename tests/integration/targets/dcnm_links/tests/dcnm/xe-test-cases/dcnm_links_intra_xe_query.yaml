@@ -50,7 +50,7 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
+        that:
         - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 

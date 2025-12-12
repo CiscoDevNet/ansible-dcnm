@@ -51,6 +51,6 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-      that:
+        that:
         - 'result.changed == false'
         - 'result["msg"] == "value of state must be one of: merged, deleted, query, got: replaced"'

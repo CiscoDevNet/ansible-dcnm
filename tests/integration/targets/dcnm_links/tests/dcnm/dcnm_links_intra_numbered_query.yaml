@@ -48,8 +48,9 @@
 
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -89,8 +90,9 @@
       #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -98,8 +100,9 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 2'
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 
@@ -113,8 +116,9 @@
         src_fabric: "{{ ansible_num_fabric }}"
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           '(result["response"] | length) >= 2'
 
     - name: Query Links - with Src & Dst Fabric
@@ -125,8 +129,9 @@
           - dst_fabric: "{{ ansible_num_fabric }}"               # optional, Destination fabric
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           '(result["response"] | length) >= 2'
 
     - name: Query Links - with Src & Dst Fabric, Src Intf
@@ -138,8 +143,9 @@
             src_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Source fabric
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
@@ -152,8 +158,9 @@
             dst_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Destination fabric
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
@@ -167,8 +174,9 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
@@ -183,8 +191,9 @@
             dst_device: "{{ ansible_num_switch2 }}"              # optional, Device on the Destination fabric
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
@@ -213,8 +222,9 @@
       #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           '(result["response"] | length) >= 2'
 
   ###############################################
@@ -228,8 +238,9 @@
       register: result
       when: IT_CONTEXT is not defined
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

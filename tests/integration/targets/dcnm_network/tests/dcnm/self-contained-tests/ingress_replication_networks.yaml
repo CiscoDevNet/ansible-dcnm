@@ -16,8 +16,9 @@
         path: "{{ rest_path }}"
       register: result
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
         - 'result.response.DATA != None'
 
     - name: ING_REP - Remove all existing networks to start with a clean state
@@ -68,8 +69,9 @@
       retries: 5
       delay: 2
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
         - 'result.changed == true'
         - 'result.response[0].RETURN_CODE == 200'
         - 'result.diff[0].attach|length == 0'
@@ -110,8 +112,9 @@
       retries: 30
       delay: 2
 
-    - ansible.builtin.assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
         - 'result.changed == true'
         - 'result.response[0].RETURN_CODE == 200'
         - 'result.response[1].RETURN_CODE == 200'

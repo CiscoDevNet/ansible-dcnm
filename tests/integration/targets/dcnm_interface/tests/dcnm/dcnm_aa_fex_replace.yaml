@@ -111,7 +111,7 @@
 
     - name: ASSERT - Idempotence checks (replace)
       ansible.builtin.assert:
-      that:
+        that:
         - 'result_replace_idem.changed == false'
         - 'result_replace_idem.response is defined'
         - 'result_replace_idem.response | length >= 0'

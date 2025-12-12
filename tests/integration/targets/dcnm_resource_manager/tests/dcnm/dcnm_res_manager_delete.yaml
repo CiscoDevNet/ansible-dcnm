@@ -276,6 +276,7 @@
       register: result
       ignore_errors: true
 
-    - ansible.builtin.assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - '"switch : Required parameter not found" in result["msg"]'
