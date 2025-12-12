@@ -1192,6 +1192,87 @@ def has_partial_dhcp_config(server):
     vrf = server.get("srvr_vrf")
     return bool(ip) != bool(vrf)
 
+def sanitize_lan_attach_list(attach_objects: list) -> list:
+    """
+    # Summary
+
+    Remove cross-entity attachments from lanAttachList.
+
+    ## Description
+
+    In multicluster deployments, the lanAttachList for an entity 
+    (VRF, Network, etc.) can contain attachments belonging to other entities. 
+    This method removes those cross-entity attachments to ensure each entity 
+    only contains its own attachments.
+
+    ## Parameters
+
+    - attach_objects: List of attachment objects from the controller.
+      Each object should have:
+        - A parent identifier key (e.g., "vrfName", "networkName")
+        - "lanAttachList": List of attachment dictionaries
+        Each attachment in lanAttachList should have the same identifier key
+
+    ## Returns
+
+    Modified attach_objects with cross-entity attachments removed
+
+    ## Example
+
+    Before:
+    ```json
+    [
+        {
+            "vrfName": "vrf-bulk2",
+            "lanAttachList": [
+                {"vrfName": "vrf-bulk2", "serialNumber": "ABC123"},
+                {"vrfName": "vrf-bulk1", "serialNumber": "DEF456"}  # <- Remove this
+            ]
+        }
+    ]
+    ```
+
+    After:
+    ```json
+    [
+        {
+            "vrfName": "vrf-bulk2",
+            "lanAttachList": [
+                {"vrfName": "vrf-bulk2", "serialNumber": "ABC123"}
+            ]
+        }
+    ]
+    ```
+    """
+
+    if not attach_objects:
+        return attach_objects
+
+    for attach_dict in attach_objects:
+        if not attach_dict.get("lanAttachList"):
+            continue
+
+        # Find the parent identifier key (e.g., "vrfName", "networkName")
+        # by looking for keys that are not "lanAttachList"
+        parent_key = None
+        parent_value = None
+        
+        for key in attach_dict.keys():
+            if key != "lanAttachList":
+                parent_key = key
+                parent_value = attach_dict.get(key)
+                break
+
+        if not parent_key or not parent_value:
+            continue
+
+        # Filter out attachments where the identifier doesn't match the parent
+        attach_dict["lanAttachList"] = [
+            attach for attach in attach_dict["lanAttachList"]
+            if attach.get(parent_key) == parent_value
+        ]
+
+    return attach_objects
 
 # Action plugin utilities
 
