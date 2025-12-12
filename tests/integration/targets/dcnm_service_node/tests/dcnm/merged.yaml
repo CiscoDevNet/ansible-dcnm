@@ -2,12 +2,14 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set rest_path
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
     rest_ext_path: "/rest/control/fabrics/{{ ansible_ext_fabric }}"
   when: controller_version == "11"
 
-- set_fact:
+- name: Set rest_path
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
     rest_ext_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_ext_fabric }}"
   when: controller_version >= "12"
@@ -18,7 +20,8 @@
     path: "{{ rest_path }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 1
+  ansible.builtin.assert:
     that:
       - 'result.response.DATA != None'
 
@@ -28,7 +31,8 @@
     path: "{{ rest_ext_path }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 2
+  ansible.builtin.assert:
     that:
       - 'result.response.DATA != None'
 
@@ -69,7 +73,8 @@
           - "{{ ansible_switch1 }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 3
+  ansible.builtin.assert:
     that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
@@ -86,7 +91,8 @@
   cisco.dcnm.dcnm_service_node: *conf
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 4
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
@@ -124,7 +130,8 @@
           - "{{ ansible_switch1 }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 5
+  ansible.builtin.assert:
     that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
@@ -141,7 +148,8 @@
   cisco.dcnm.dcnm_service_node: *conf1
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 6
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
@@ -179,7 +187,8 @@
           - "{{ ansible_switch1 }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 7
+  ansible.builtin.assert:
     that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
@@ -196,7 +205,8 @@
   cisco.dcnm.dcnm_service_node: *conf2
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 8
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
@@ -234,7 +244,8 @@
           - "{{ ansible_switch1 }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 9
+  ansible.builtin.assert:
     that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
@@ -251,7 +262,8 @@
   cisco.dcnm.dcnm_service_node: *conf3
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 10
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
@@ -290,7 +302,8 @@
           - "{{ ansible_switch5 }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 11
+  ansible.builtin.assert:
     that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
@@ -307,7 +320,8 @@
   cisco.dcnm.dcnm_service_node: *conf4
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 12
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
@@ -334,7 +348,8 @@
           - "{{ ansible_switch5 }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 13
+  ansible.builtin.assert:
     that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
@@ -351,7 +366,8 @@
   cisco.dcnm.dcnm_service_node: *conf5
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 14
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
@@ -378,7 +394,8 @@
           - "{{ ansible_switch5 }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 15
+  ansible.builtin.assert:
     that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
@@ -395,7 +412,8 @@
   cisco.dcnm.dcnm_service_node: *conf6
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 16
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - 'result.response|length == 0'
@@ -421,7 +439,8 @@
           - "{{ ansible_switch5 }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 17
+  ansible.builtin.assert:
     that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
@@ -472,7 +491,8 @@
           - "{{ ansible_switch5 }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 18
+  ansible.builtin.assert:
     that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
@@ -541,7 +561,8 @@
           - "{{ ansible_switch5 }}"
   register: result
 
-- ansible.builtin.assert:
+- name: Assert conditions 19
+  ansible.builtin.assert:
     that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
@@ -596,7 +617,8 @@
   ignore_errors: true
   when: controller_version == "11"
 
-- ansible.builtin.assert:
+- name: Assert conditions 20
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
   when: controller_version == "11"
@@ -618,7 +640,8 @@
   register: result
   ignore_errors: true
 
-- ansible.builtin.assert:
+- name: Assert conditions 21
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - '"if two switches are provided, vpc is only interface option" in result.msg'
@@ -639,7 +662,8 @@
   register: result
   ignore_errors: true
 
-- ansible.builtin.assert:
+- name: Assert conditions 22
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - '"For 1 switch, vpc is not the interface option" in result.msg'
@@ -662,7 +686,8 @@
   register: result
   ignore_errors: true
 
-- ansible.builtin.assert:
+- name: Assert conditions 23
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - '"Upto 2 switches only allowed" in result.msg'
@@ -683,7 +708,8 @@
   register: result
   ignore_errors: true
 
-- ansible.builtin.assert:
+- name: Assert conditions 24
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - '"Required parameter not found" in result.msg'
@@ -704,7 +730,8 @@
   register: result
   ignore_errors: true
 
-- ansible.builtin.assert:
+- name: Assert conditions 25
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - '"Invalid choice provided" in result.msg'
@@ -725,7 +752,8 @@
   register: result
   ignore_errors: true
 
-- ansible.builtin.assert:
+- name: Assert conditions 26
+  ansible.builtin.assert:
     that:
       - 'result.changed == false'
       - '"Invalid choice provided" in result.msg'

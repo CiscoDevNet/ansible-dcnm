@@ -50,7 +50,7 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -59,11 +59,11 @@
 
     # Assert for Create responses
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -74,7 +74,7 @@
         - 'item["RETURN_CODE"] == 200'
         - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
       when: (my_idx >= (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
       index_var: my_idx
 
@@ -84,7 +84,7 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -93,11 +93,11 @@
 
     # Assert for Create responses
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -108,7 +108,7 @@
         - 'item["RETURN_CODE"] == 200'
         - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
       when: (my_idx >= (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
       index_var: my_idx
 
@@ -130,7 +130,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'

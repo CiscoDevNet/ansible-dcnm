@@ -169,7 +169,7 @@
   ansible.builtin.assert:
     that:
       - 'query_result.response != None'
-    when: rma_enabled == True
+  when: rma_enabled == True
   tags: rma
 
 - name: RMA TC2 - Check Query for POAP enabled swicthes

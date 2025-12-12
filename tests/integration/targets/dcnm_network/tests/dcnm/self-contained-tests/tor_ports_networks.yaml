@@ -18,8 +18,8 @@
       register: result
 
     - assert:
-        that:
-          - 'result.response.DATA != None'
+      that:
+        - 'result.response.DATA != None'
 
     - name: TOR - Clean up any existing networks
       cisco.dcnm.dcnm_network:

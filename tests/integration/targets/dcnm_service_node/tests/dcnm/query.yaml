@@ -142,13 +142,13 @@
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == ""'
-    when: controller_version == "11"
+  when: controller_version == "11"
 
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == "OK"'
-    when: controller_version >= "12"
+  when: controller_version >= "12"
 
 - name: QUERY -  Query fabric state before proceeding
   cisco.dcnm.dcnm_service_node:

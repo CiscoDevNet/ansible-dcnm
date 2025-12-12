@@ -118,13 +118,13 @@
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == ""'
-    when: controller_version == "11"
+  when: controller_version == "11"
 
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == "OK"'
-    when: controller_version == "12"
+  when: controller_version == "12"
 
 - name: DELETED - sleep for 40 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -211,13 +211,13 @@
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == ""'
-    when: controller_version == "11"
+  when: controller_version == "11"
 
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == "OK"'
-    when: controller_version >= "12"
+  when: controller_version >= "12"
 
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -296,13 +296,13 @@
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == ""'
-    when: controller_version == "11"
+  when: controller_version == "11"
 
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == "OK"'
-    when: controller_version >= "12"
+  when: controller_version >= "12"
 
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -380,13 +380,13 @@
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == ""'
-    when: controller_version == "11"
+  when: controller_version == "11"
 
 - name: Assert
   ansible.builtin.assert:
     that:
       - 'result.response[0].MESSAGE == "OK"'
-    when: controller_version >= "12"
+  when: controller_version >= "12"
 
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:

@@ -126,16 +126,16 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 9'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["response"] | length) == 9'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 
     ##############################################
@@ -147,15 +147,15 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##       MODIFY EXISTING RESOURCES          ##
@@ -220,16 +220,16 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 9'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["response"] | length) == 9'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##       MERGE - MISSING PARAMS             ##
@@ -249,7 +249,7 @@
       ignore_errors: true
 
     - ansible.builtin.assert:
-        that:
+      that:
           - '"switch : Required parameter not found" in result["msg"]'
 
     - name: Create Resources - Missing scope_type
@@ -268,7 +268,7 @@
       ignore_errors: true
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result["msg"] == "Mandatory parameter ''scope_type'' missing"'
 
     - name: Create Resources - Missing pool_type
@@ -287,7 +287,7 @@
       ignore_errors: true
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result["msg"] == "Mandatory parameter ''pool_type'' missing"'
 
     - name: Create Resources - Missing pool_name
@@ -306,7 +306,7 @@
       ignore_errors: true
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result["msg"] == "Mandatory parameter ''pool_name'' missing"'
 
     - name: Create Resources - Missing entity_name
@@ -325,7 +325,7 @@
       ignore_errors: true
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result["msg"] == "Mandatory parameter ''entity_name'' missing"'
 
     - name: Create Resources - Missing resource value
@@ -344,7 +344,7 @@
       ignore_errors: true
 
     - ansible.builtin.assert:
-        that:
+      that:
           - '"resource : Required parameter not found" in result["msg"]'
 
   ##############################################
@@ -359,7 +359,7 @@
       when: IT_CONTEXT is not defined
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 9'
@@ -367,7 +367,7 @@
       when: IT_CONTEXT is not defined
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

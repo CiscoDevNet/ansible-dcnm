@@ -56,9 +56,9 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -118,7 +118,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -129,9 +129,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
 
     - assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 
     ###############################################
@@ -143,7 +143,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -154,9 +154,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ###############################################
     ###                IDEMPOTENCE               ##
@@ -167,7 +167,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -176,9 +176,9 @@
           - '(result["diff"][0]["deploy"] | length) == 0'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -296,7 +296,7 @@
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 4'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -308,9 +308,9 @@
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     ###############################################
@@ -323,7 +323,7 @@
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -335,9 +335,9 @@
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     ###############################################
@@ -350,7 +350,7 @@
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -360,7 +360,7 @@
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)

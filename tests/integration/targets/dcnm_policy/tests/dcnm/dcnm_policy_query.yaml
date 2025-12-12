@@ -64,7 +64,7 @@
 
     - name: ASSERT - Check condition
       ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 5'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -73,11 +73,11 @@
 
     # Assert for Create responses
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -88,7 +88,7 @@
         - 'item["RETURN_CODE"] == 200'
         - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
       index_var: my_idx
 
@@ -96,7 +96,7 @@
       ansible.builtin.set_fact:
         query_policy_list: "{{ (query_policy_list | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
       when: (my_idx < (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
       index_var: my_idx
 
@@ -192,7 +192,7 @@
         - 'item["RETURN_CODE"] == 200'
         - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
       index_var: my_idx
 
@@ -203,7 +203,7 @@
         - 'item["RETURN_CODE"] == 200'
         - '(item["DATA"][0]["successPTIList"].split(",") | length) == 4'
       when: (my_idx == (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
       index_var: my_idx
 
@@ -237,7 +237,7 @@
           - name: "{{ item }}"  # Pick the policy Ids from the facts
           - switch:
               - ip: "{{ ansible_switch1 }}"
-      loop: '{{ query_policy_list }}'
+    loop: '{{ query_policy_list }}'
       register: result
 
     - name: ASSERT - Check condition
@@ -249,7 +249,7 @@
         - '(item["diff"][0]["query"] | length) == 1'
         - '(item["diff"][0]["deploy"] | length) == 0'
         - '(item["response"] | length) == 1'
-      loop: '{{ result.results }}'
+    loop: '{{ result.results }}'
 
   ##############################################
   ##                CLEANUP                   ##
@@ -272,7 +272,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'

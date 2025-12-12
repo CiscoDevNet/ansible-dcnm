@@ -51,9 +51,9 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -130,7 +130,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 3'
@@ -140,9 +140,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 2'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 
     ##############################################
@@ -220,7 +220,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 2'
@@ -229,9 +229,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 2'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##               CLEANUP                    ##
@@ -243,7 +243,7 @@
       when: IT_CONTEXT is not defined
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

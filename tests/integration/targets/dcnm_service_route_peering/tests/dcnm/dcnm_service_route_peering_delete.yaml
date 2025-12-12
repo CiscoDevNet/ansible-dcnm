@@ -258,7 +258,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 7'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -267,9 +267,9 @@
           - '(result["diff"][0]["deploy"] | length) == 7'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##                DELETE                    ##
@@ -305,7 +305,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 7'
@@ -314,16 +314,16 @@
           - '(result["diff"][0]["deploy"] | length) == 0'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     - name: Delete route peerings - Idempotence
       cisco.dcnm.dcnm_service_route_peering: *dncm_srp_delete_all
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -332,9 +332,9 @@
           - '(result["diff"][0]["deploy"] | length) == 0'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -471,7 +471,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 4'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -480,9 +480,9 @@
           - '(result["diff"][0]["deploy"] | length) == 4'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##                DELETE                    ##
@@ -498,7 +498,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 2'
@@ -507,9 +507,9 @@
           - '(result["diff"][0]["deploy"] | length) == 0'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     - name: Delete route peerings with node name - 2
       cisco.dcnm.dcnm_service_route_peering:
@@ -521,7 +521,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 2'
@@ -530,6 +530,6 @@
           - '(result["diff"][0]["deploy"] | length) == 0'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'

@@ -49,9 +49,9 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -81,7 +81,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -90,9 +90,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 2'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##               MODIFY                     ##
@@ -115,7 +115,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 1'
@@ -124,9 +124,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 2'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 
   ###############################################
@@ -141,7 +141,7 @@
       when: IT_CONTEXT is not defined
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

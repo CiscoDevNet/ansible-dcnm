@@ -86,11 +86,11 @@
 
     # Assert for Create responses
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -101,7 +101,7 @@
         - 'item["RETURN_CODE"] == 200'
         - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
       when: (my_idx == (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
       index_var: my_idx
 
@@ -146,7 +146,7 @@
         - 'item["RETURN_CODE"] == 200'
         - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
       index_var: my_idx
 
@@ -157,7 +157,7 @@
         - 'item["RETURN_CODE"] == 200'
         - '(item["DATA"][0]["successPTIList"].split(",") | length) >= 2'
       when: (my_idx == (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
       index_var: my_idx
 
@@ -165,7 +165,7 @@
       ansible.builtin.set_fact:
         mergev_policy_list: "{{ (mergev_policy_list | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
       when: (my_idx < (result["diff"][0]["merged"] | length))
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       loop_control:
       index_var: my_idx
 
@@ -192,7 +192,7 @@
           - switch:
               - ip: "{{ ansible_switch1 }}"
 
-      loop: '{{ mergev_policy_list }}'
+    loop: '{{ mergev_policy_list }}'
       loop_control:
       index_var: my_idx
       register: result
@@ -203,7 +203,7 @@
       that:
         - 'item["RETURN_CODE"] == 200'
       when: (my_idx < (result.results[0]["diff"][0]["merged"] | length))
-      loop: '{{ result.results[0].response }}'
+    loop: '{{ result.results[0].response }}'
       loop_control:
       index_var: my_idx
 
@@ -214,7 +214,7 @@
         - 'item["RETURN_CODE"] == 200'
         - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
       when: (my_idx == (result.results[0]["diff"][0]["merged"] | length))
-      loop: '{{ result.results[0].response }}'
+    loop: '{{ result.results[0].response }}'
       loop_control:
       index_var: my_idx
 
@@ -235,7 +235,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'

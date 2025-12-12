@@ -55,9 +55,9 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -86,7 +86,7 @@
       register: result
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
@@ -96,9 +96,9 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
     - name: Modify Links changing template to ext_multisite_underlay_setup
       cisco.dcnm.dcnm_links:
@@ -124,7 +124,7 @@
       when: (ansible_num_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 1'
@@ -135,9 +135,9 @@
       when: (ansible_num_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - name: Modify Links changing template to ext_evpn_multisite_overlay_setup
@@ -164,7 +164,7 @@
       when: (ansible_num_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 1'
@@ -175,9 +175,9 @@
       when: (ansible_num_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
   ##############################################
@@ -192,7 +192,7 @@
       when: IT_CONTEXT is not defined
 
     - ansible.builtin.assert:
-        that:
+      that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
