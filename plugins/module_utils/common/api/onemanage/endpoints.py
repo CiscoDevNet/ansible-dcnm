@@ -25,6 +25,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
+from enum import Enum
 import traceback
 from typing import Literal, Optional, Union
 
@@ -59,11 +60,55 @@ from ..base_paths import BasePath
 from ..query_params import EndpointQueryParams
 
 # ============================================================================
-# Endpoint-Specific Query Parameter Classes
+# Enums for common parameter values
 # ============================================================================
 
+class BooleanStringEnum(str, Enum):
+    """Enum for boolean string values used in query parameters."""
+    TRUE = "true"
+    FALSE = "false"
 
-class FabricConfigDeployQueryParams(EndpointQueryParams):
+# ============================================================================
+# Field Mixin Classes - Reusable field definitions
+# ============================================================================
+
+class ForceShowRunMixin(BaseModel):
+    """Mixin for endpoints that require force_show_run parameter."""
+    force_show_run: BooleanStringEnum = Field(default=BooleanStringEnum.FALSE.value, description="Force show running config")
+
+class InclAllMsdSwitchesMixin(BaseModel):
+    """Mixin for endpoints that require incl_all_msd_switches parameter."""
+    incl_all_msd_switches: BooleanStringEnum = Field(default=BooleanStringEnum.FALSE.value, description="Include all MSD switches")
+
+class FabricNameMixin(BaseModel):
+    """Mixin for endpoints that require fabric_name parameter."""
+    fabric_name: Optional[str] = Field(default=None, min_length=1, max_length=64, description="Fabric name")
+
+
+class SwitchSerialNumberMixin(BaseModel):
+    """Mixin for endpoints that require switch_sn parameter."""
+    switch_sn: Optional[str] = Field(default=None, min_length=1, description="Switch serial number")
+
+
+class NetworkNameMixin(BaseModel):
+    """Mixin for endpoints that require network_name parameter."""
+    network_name: Optional[str] = Field(default=None, min_length=1, max_length=64, description="Network name")
+
+
+class VrfNameMixin(BaseModel):
+    """Mixin for endpoints that require vrf_name parameter."""
+    vrf_name: Optional[str] = Field(default=None, min_length=1, max_length=64, description="VRF name")
+
+
+class LinkUuidMixin(BaseModel):
+    """Mixin for endpoints that require link_uuid parameter."""
+    link_uuid: Optional[str] = Field(default=None, min_length=1, description="Link UUID")
+
+# ============================================================================
+# Endpoint-Specific Query Parameter Classes
+# ============================================================================  
+
+class FabricConfigDeployQueryParams(EndpointQueryParams, ForceShowRunMixin, InclAllMsdSwitchesMixin):
     """
     Query parameters for fabric config deploy endpoints.
 
@@ -71,9 +116,12 @@ class FabricConfigDeployQueryParams(EndpointQueryParams):
     - force_show_run: If true, fetch latest running config from device; if false, use cached version (default: "false")
     - incl_all_msd_switches: If true and MSD fabric, deploy all child fabric changes; if false, skip child fabrics (default: "false")
     """
+    class Config:
+        validate_assignment = True
+        use_enum_values = True
 
-    force_show_run: Literal["false", "true"] = Field(default="false", description="Fetch latest running config from device")
-    incl_all_msd_switches: Literal["false", "true"] = Field(default="false", description="Deploy all MSD child fabric changes")
+    # force_show_run: BooleanStringEnum = Field(default=BooleanStringEnum.FALSE.value, description="Fetch latest running config from device")
+    # incl_all_msd_switches: BooleanStringEnum = Field(default=BooleanStringEnum.FALSE.value, description="Deploy all MSD child fabric changes")
 
     def to_query_string(self) -> str:
         """Build query string with forceShowRun and inclAllMSDSwitches parameters."""
@@ -85,7 +133,7 @@ class FabricConfigDeployQueryParams(EndpointQueryParams):
         return "&".join(params)
 
 
-class FabricConfigPreviewQueryParams(EndpointQueryParams):
+class FabricConfigPreviewQueryParams(EndpointQueryParams, ForceShowRunMixin):
     """
     Query parameters for fabric config preview endpoints.
 
@@ -94,8 +142,8 @@ class FabricConfigPreviewQueryParams(EndpointQueryParams):
     - show_brief: Show brief output (default: "false")
     """
 
-    force_show_run: Literal["false", "true"] = Field(default="false", description="Force show running config")
-    show_brief: Literal["false", "true"] = Field(default="false", description="Show brief output")
+    # force_show_run: BooleanStringEnum = Field(default=BooleanStringEnum.FALSE.value, description="Force show running config")
+    show_brief: BooleanStringEnum = Field(default=BooleanStringEnum.FALSE.value, description="Show brief output")
 
     def to_query_string(self) -> str:
         """Build query string with forceShowRun and showBrief parameters."""
@@ -172,7 +220,7 @@ class VrfNamesQueryParams(EndpointQueryParams):
         return ""
 
 
-class EpOneManageFabricConfigDeploy(BaseModel):
+class EpOneManageFabricConfigDeploy(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -203,8 +251,10 @@ class EpOneManageFabricConfigDeploy(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigDeploy", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
     query_params: FabricConfigDeployQueryParams = Field(default_factory=FabricConfigDeployQueryParams)
 
     @property
@@ -238,7 +288,7 @@ class EpOneManageFabricConfigDeploy(BaseModel):
         return "POST"
 
 
-class EpOneManageFabricConfigDeploySwitch(BaseModel):
+class EpOneManageFabricConfigDeploySwitch(FabricNameMixin, SwitchSerialNumberMixin, BaseModel):
     """
     # Summary
 
@@ -270,9 +320,11 @@ class EpOneManageFabricConfigDeploySwitch(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+        use_enum_values = True
+
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigDeploySwitch", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
-    switch_sn: Optional[str] = Field(default=None, min_length=1, description="Switch serial number")
     query_params: FabricConfigDeployQueryParams = Field(default_factory=FabricConfigDeployQueryParams)
 
     @property
@@ -308,7 +360,7 @@ class EpOneManageFabricConfigDeploySwitch(BaseModel):
         return "POST"
 
 
-class EpOneManageFabricConfigPreview(BaseModel):
+class EpOneManageFabricConfigPreview(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -339,8 +391,10 @@ class EpOneManageFabricConfigPreview(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigPreview", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
     query_params: FabricConfigPreviewQueryParams = Field(default_factory=FabricConfigPreviewQueryParams)
 
     @property
@@ -374,7 +428,7 @@ class EpOneManageFabricConfigPreview(BaseModel):
         return "GET"
 
 
-class EpOneManageFabricConfigPreviewSwitch(BaseModel):
+class EpOneManageFabricConfigPreviewSwitch(FabricNameMixin, SwitchSerialNumberMixin, BaseModel):
     """
     # Summary
 
@@ -406,9 +460,10 @@ class EpOneManageFabricConfigPreviewSwitch(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigPreviewSwitch", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
-    switch_sn: Optional[str] = Field(default=None, min_length=1, description="Switch serial number")
     query_params: FabricConfigPreviewQueryParams = Field(default_factory=FabricConfigPreviewQueryParams)
 
     @property
@@ -444,7 +499,7 @@ class EpOneManageFabricConfigPreviewSwitch(BaseModel):
         return "GET"
 
 
-class EpOneManageFabricConfigSave(BaseModel):
+class EpOneManageFabricConfigSave(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -473,8 +528,10 @@ class EpOneManageFabricConfigSave(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigSave", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -530,6 +587,9 @@ class EpOneManageFabricCreate(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageFabricCreate", description="Class name for backward compatibility")
 
     @property
@@ -543,7 +603,7 @@ class EpOneManageFabricCreate(BaseModel):
         return "POST"
 
 
-class EpOneManageFabricDelete(BaseModel):
+class EpOneManageFabricDelete(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -576,8 +636,10 @@ class EpOneManageFabricDelete(BaseModel):
     not the onemanage-specific API endpoint. This is required for multi-cluster fabrics.
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageFabricDelete", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -605,7 +667,7 @@ class EpOneManageFabricDelete(BaseModel):
         return "DELETE"
 
 
-class EpOneManageFabricDetails(BaseModel):
+class EpOneManageFabricDetails(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -633,8 +695,10 @@ class EpOneManageFabricDetails(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageFabricDetails", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -650,7 +714,7 @@ class EpOneManageFabricDetails(BaseModel):
         return "GET"
 
 
-class EpOneManageFabricGroupMembersGet(BaseModel):
+class EpOneManageFabricGroupMembersGet(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -679,8 +743,10 @@ class EpOneManageFabricGroupMembersGet(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageFabricGroupMembersGet", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric group name")
 
     @property
     def path(self) -> str:
@@ -708,7 +774,7 @@ class EpOneManageFabricGroupMembersGet(BaseModel):
         return "GET"
 
 
-class EpOneManageFabricGroupMembersUpdate(BaseModel):
+class EpOneManageFabricGroupMembersUpdate(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -746,8 +812,10 @@ class EpOneManageFabricGroupMembersUpdate(BaseModel):
       - "remove": Remove fabricName from clusterName
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageFabricGroupMembersUpdate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric group name")
 
     @property
     def path(self) -> str:
@@ -775,7 +843,7 @@ class EpOneManageFabricGroupMembersUpdate(BaseModel):
         return "PUT"
 
 
-class EpOneManageFabricGroupUpdate(BaseModel):
+class EpOneManageFabricGroupUpdate(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -861,8 +929,10 @@ class EpOneManageFabricGroupUpdate(BaseModel):
     - vrf_extension_template
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageFabricGroupUpdate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -917,6 +987,9 @@ class EpOneManageFabricsGet(BaseModel):
     verb = request.verb
     ```
     """
+
+    class Config:
+        validate_assignment = True
 
     class_name: Optional[str] = Field(default="EpOneManageFabricsGet", description="Class name for backward compatibility")
 
@@ -995,6 +1068,9 @@ class EpOneManageLinkCreate(BaseModel):
     - ENABLE_BGP_BFD
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageLinkCreate", description="Class name for backward compatibility")
 
     @property
@@ -1008,7 +1084,7 @@ class EpOneManageLinkCreate(BaseModel):
         return "POST"
 
 
-class EpOneManageLinkGetByUuid(BaseModel):
+class EpOneManageLinkGetByUuid(LinkUuidMixin, BaseModel):
     """
     # Summary
 
@@ -1039,8 +1115,10 @@ class EpOneManageLinkGetByUuid(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageLinkGetByUuid", description="Class name for backward compatibility")
-    link_uuid: Optional[str] = Field(default=None, min_length=1, description="Link UUID")
     query_params: LinkByUuidQueryParams = Field(default_factory=LinkByUuidQueryParams)
 
     @property
@@ -1070,7 +1148,7 @@ class EpOneManageLinkGetByUuid(BaseModel):
         return "GET"
 
 
-class EpOneManageLinkUpdate(BaseModel):
+class EpOneManageLinkUpdate(LinkUuidMixin, BaseModel):
     """
     # Summary
 
@@ -1137,8 +1215,10 @@ class EpOneManageLinkUpdate(BaseModel):
     - ENABLE_BGP_BFD
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageLinkUpdate", description="Class name for backward compatibility")
-    link_uuid: Optional[str] = Field(default=None, min_length=1, description="Link UUID")
     query_params: LinkByUuidQueryParams = Field(default_factory=LinkByUuidQueryParams)
 
     @property
@@ -1204,6 +1284,9 @@ class EpOneManageLinksDelete(BaseModel):
     - sourceClusterName: str - Source cluster name (e.g., "nd-cluster-2")
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageLinksDelete", description="Class name for backward compatibility")
 
     @property
@@ -1217,7 +1300,7 @@ class EpOneManageLinksDelete(BaseModel):
         return "PUT"
 
 
-class EpOneManageLinksGetByFabric(BaseModel):
+class EpOneManageLinksGetByFabric(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -1246,8 +1329,10 @@ class EpOneManageLinksGetByFabric(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageLinksGetByFabric", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -1271,7 +1356,7 @@ class EpOneManageLinksGetByFabric(BaseModel):
         return "GET"
 
 
-class EpOneManageNetworkCreate(BaseModel):
+class EpOneManageNetworkCreate(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -1311,8 +1396,10 @@ class EpOneManageNetworkCreate(BaseModel):
     - networkTemplateConfig: str - Network extension template config
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageNetworkCreate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -1336,7 +1423,7 @@ class EpOneManageNetworkCreate(BaseModel):
         return "POST"
 
 
-class EpOneManageNetworkUpdate(BaseModel):
+class EpOneManageNetworkUpdate(FabricNameMixin, NetworkNameMixin, BaseModel):
     """
     # Summary
 
@@ -1366,9 +1453,10 @@ class EpOneManageNetworkUpdate(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageNetworkUpdate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
-    network_name: Optional[str] = Field(default=None, min_length=1, description="Network name")
 
     @property
     def path(self) -> str:
@@ -1398,7 +1486,7 @@ class EpOneManageNetworkUpdate(BaseModel):
         return "PUT"
 
 
-class EpOneManageNetworksDelete(BaseModel):
+class EpOneManageNetworksDelete(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -1428,8 +1516,10 @@ class EpOneManageNetworksDelete(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageNetworksDelete", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
     query_params: NetworkNamesQueryParams = Field(default_factory=NetworkNamesQueryParams)
 
     @property
@@ -1463,7 +1553,7 @@ class EpOneManageNetworksDelete(BaseModel):
         return "DELETE"
 
 
-class EpOneManageNetworksGet(BaseModel):
+class EpOneManageNetworksGet(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -1492,8 +1582,10 @@ class EpOneManageNetworksGet(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageNetworksGet", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -1517,7 +1609,7 @@ class EpOneManageNetworksGet(BaseModel):
         return "GET"
 
 
-class EpOneManageVrfCreate(BaseModel):
+class EpOneManageVrfCreate(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -1557,8 +1649,10 @@ class EpOneManageVrfCreate(BaseModel):
     - vrfTemplateConfig: str - JSON string representing the VRF configuration
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageVrfCreate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -1582,7 +1676,7 @@ class EpOneManageVrfCreate(BaseModel):
         return "POST"
 
 
-class EpOneManageVrfUpdate(BaseModel):
+class EpOneManageVrfUpdate(FabricNameMixin, VrfNameMixin, BaseModel):
     """
     # Summary
 
@@ -1612,9 +1706,10 @@ class EpOneManageVrfUpdate(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageVrfUpdate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
-    vrf_name: Optional[str] = Field(default=None, min_length=1, description="VRF name")
 
     @property
     def path(self) -> str:
@@ -1640,7 +1735,7 @@ class EpOneManageVrfUpdate(BaseModel):
         return "PUT"
 
 
-class EpOneManageVrfsDelete(BaseModel):
+class EpOneManageVrfsDelete(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -1670,8 +1765,10 @@ class EpOneManageVrfsDelete(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageVrfsDelete", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
     query_params: VrfNamesQueryParams = Field(default_factory=VrfNamesQueryParams)
 
     @property
@@ -1705,7 +1802,7 @@ class EpOneManageVrfsDelete(BaseModel):
         return "DELETE"
 
 
-class EpOneManageVrfsGet(BaseModel):
+class EpOneManageVrfsGet(FabricNameMixin, BaseModel):
     """
     # Summary
 
@@ -1734,8 +1831,10 @@ class EpOneManageVrfsGet(BaseModel):
     ```
     """
 
+    class Config:
+        validate_assignment = True
+
     class_name: Optional[str] = Field(default="EpOneManageVrfsGet", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(default=None, min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
