@@ -512,7 +512,8 @@ class Common:
         method_name: str = inspect.stack()[0][3]
 
         self.config: dict[str, Any] = self.params.get("config", {})
-        self.log.debug(f"{self.class_name}.{method_name}: config: {json_pretty(self.config)}")
+        msg = f"{self.class_name}.{method_name}: config: {json_pretty(self.config)}"
+        self.log.debug(msg)
         if not isinstance(self.config, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "expected dict type for self.config. "
