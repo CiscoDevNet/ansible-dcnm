@@ -1489,9 +1489,8 @@ def main() -> None:
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
 
-    # pylint: disable=attribute-defined-outside-init
+    task = None
     try:
-        task = None
         if params["state"] == "deleted":
             task = Deleted(params)
         if params["state"] == "merged":
