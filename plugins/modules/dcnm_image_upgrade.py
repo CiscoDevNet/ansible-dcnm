@@ -1258,7 +1258,7 @@ class Deleted(Common):
         -   ``commit()`` is issued before setting mandatory properties
     """
 
-    def __init__(self, params)-> None:
+    def __init__(self, params) -> None:
         self.class_name: str = self.__class__.__name__
         method_name: str = inspect.stack()[0][3]
         try:
