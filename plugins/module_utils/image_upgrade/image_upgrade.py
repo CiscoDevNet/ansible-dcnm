@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, annotations, division, print_function
 
 __metaclass__ = type
 __author__ = "Allen Robel"
@@ -301,11 +301,13 @@ class ImageUpgrade:
         self.install_options.serial_number = self.issu_detail.serial_number
         # install_options will fail_json if any of these are invalid
         # so no need to validate these here.
+        # TODO: device does not contain policy, or upgrade keys.  It contains only ip_address key. Revisit this!
+        # TODO: install_options.nxos property does not exist.  Revisit this!
         self.install_options.policy_name = device.get("policy", None)
         self.install_options.epld = device.get("upgrade", {}).get("epld", None)
         self.install_options.nxos = device.get("upgrade", {}).get("nxos", None)
         self.install_options.package_install = (
-            device.get("options", {}).get("package", {}).get("install", None)
+            device.get("options", {}).get("package", {}).get("install", False)
         )
         self.log.debug("Calling install_options.refresh()")
         self.install_options.refresh()
