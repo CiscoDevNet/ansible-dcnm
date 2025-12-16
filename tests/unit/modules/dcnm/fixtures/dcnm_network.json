@@ -1579,32 +1579,8 @@
     ],
     "mock_msd_override_parent_net_object": {
         "MESSAGE": "OK",
-        "METHOD": "GET",
-        "RETURN_CODE": 200,
-        "DATA": [
-            {
-                "id": 3277,
-                "fabric": "msd-parent",
-                "networkName": "ansible-msd-dhcp-net",
-                "displayName": "ansible-msd-dhcp-net",
-                "networkId": 8004,
-                "networkTemplate": "Default_Network_Universal",
-                "networkExtensionTemplate": "Default_Network_Extension_Universal",
-                "networkTemplateConfig": "{\"suppressArp\":\"false\",\"secondaryGW3\":\"\",\"secondaryGW2\":\"\",\"secondaryGW1\":\"\",\"vlanId\":\"2104\",\"gatewayIpAddress\":\"192.168.104.1/24\",\"vlanName\":\"\",\"type\":\"Normal\",\"mtu\":\"9216\",\"rtBothAuto\":\"false\",\"isLayer2Only\":\"false\",\"intfDescription\":\"MSD DHCP Network\",\"segmentId\":\"8004\",\"gatewayIpV6Address\":\"\",\"tag\":\"12347\",\"nveId\":\"1\",\"secondaryGW4\":\"\",\"vrfName\":\"Tenant-1\"}",
-                "vrf": "Tenant-1",
-                "tenantName": null,
-                "serviceNetworkTemplate": null,
-                "source": null,
-                "interfaceGroups": null,
-                "primaryNetworkId": -1,
-                "type": "Normal",
-                "primaryNetworkName": null,
-                "vlanId": null,
-                "vlanName": null,
-                "networkStatus": "DEPLOYED",
-                "hierarchicalKey": "msd-parent"
-            }
-        ]
+        "METHOD": "POST",
+        "RETURN_CODE": 200
     },
     "mock_msd_override_parent_net_attach_object": {
         "MESSAGE": "OK",

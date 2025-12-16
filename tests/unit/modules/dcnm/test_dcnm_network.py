@@ -512,6 +512,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
             ]
             self.run_dcnm_send.side_effect = [
                 self.mock_msd_vrf_object,
+                self.empty_network_list,
                 self.mock_msd_override_parent_net_object,
                 self.mock_msd_override_attach_response,
                 self.deploy_success_resp,
@@ -1269,10 +1270,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
 
         # Verify parent fabric response includes attachment update and deploy
         parent_response = parent.get("response")
-        self.assertEqual(len(parent_response), 2)
+        self.assertEqual(len(parent_response), 3)
 
-        # Verify attachment update response (index 0)
-        attach_resp = parent_response[0]
+        # Verify attachment update response (index 1)
+        attach_resp = parent_response[1]
         self.assertEqual(attach_resp["RETURN_CODE"], 200)
         self.assertEqual(attach_resp["METHOD"], "POST")
         self.assertIn("ansible-msd-dhcp-net-[9R518K2AT3R/leaf3]", attach_resp["DATA"])
@@ -1280,8 +1281,8 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertIn("ansible-msd-dhcp-net-[915KQ8P3NS8/leaf4]", attach_resp["DATA"])
         self.assertEqual(attach_resp["DATA"]["ansible-msd-dhcp-net-[915KQ8P3NS8/leaf4]"], "SUCCESS")
 
-        # Verify deploy response (index 1)
-        deploy_resp = parent_response[1]
+        # Verify deploy response (index 2)
+        deploy_resp = parent_response[2]
         self.assertEqual(deploy_resp["RETURN_CODE"], 200)
         self.assertEqual(deploy_resp["METHOD"], "POST")
         self.assertIn("status", deploy_resp["DATA"])
