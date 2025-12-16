@@ -1200,9 +1200,9 @@ def sanitize_lan_attach_list(attach_objects: list) -> list:
 
     ## Description
 
-    In multicluster deployments, the lanAttachList for an entity 
-    (VRF, Network, etc.) can contain attachments belonging to other entities. 
-    This method removes those cross-entity attachments to ensure each entity 
+    In multicluster deployments, the lanAttachList for an entity
+    (VRF, Network, etc.) can contain attachments belonging to other entities.
+    This method removes those cross-entity attachments to ensure each entity
     only contains its own attachments.
 
     ## Parameters
@@ -1256,7 +1256,7 @@ def sanitize_lan_attach_list(attach_objects: list) -> list:
         # by looking for keys that are not "lanAttachList"
         parent_key = None
         parent_value = None
-        
+
         for key in attach_dict.keys():
             if key != "lanAttachList":
                 parent_key = key
