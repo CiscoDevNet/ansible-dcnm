@@ -298,9 +298,9 @@
       vrf_description: "VRF with new Child config"
       child_fabric_config:
       - fabric: "{{ child_fabric }}"
-        adv_default_routes: true
-        adv_host_routes: false
-        static_default_route: true
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
       attach:
       - ip_address: "{{ child_switch_1 }}"
       - ip_address: "{{ child_switch_2 }}"
@@ -326,9 +326,9 @@
     - result_3.child_fabrics | length == 1
     - result_3.child_fabrics[0].fabric == "{{ child_fabric }}"
     - result_3.child_fabrics[0].diff[0].vrf_name == "ansible-msd-replace-2"
-    - result_3.child_fabrics[0].diff[0].adv_default_routes == true
-    - result_3.child_fabrics[0].diff[0].adv_host_routes == false
-    - result_3.child_fabrics[0].diff[0].static_default_route == true
+    - result_3.child_fabrics[0].diff[0].adv_default_routes == false
+    - result_3.child_fabrics[0].diff[0].adv_host_routes == true
+    - result_3.child_fabrics[0].diff[0].static_default_route == false
 
 - name: TEST.3b - MSD REPLACED - [query] Query replaced VRFs
   cisco.dcnm.dcnm_vrf:
@@ -356,9 +356,9 @@
     - result_3b.child_fabrics[0].response | length == 1
     - result_3b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-replace-2"
     - result_3b.child_fabrics[0].response[0].parent.vrfStatus == "DEPLOYED"
-    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "true"
-    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "false"
-    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "true"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
     - result_3b.workflow == "Multisite Parent with Child Fabric Processing"
 
 - name: TEST.3d - MSD REPLACED - [replaced] Replace VRF - Idempotence
@@ -394,9 +394,9 @@
       vrf_description: "VRF with VRF-Lite after replacement"
       child_fabric_config:
       - fabric: "{{ child_fabric }}"
-        adv_default_routes: true
-        adv_host_routes: false
-        static_default_route: true
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
       attach:
       - ip_address: "{{ child_switch_1 }}"
       - ip_address: "{{ child_switch_2 }}"
@@ -456,7 +456,7 @@
     - result_4b.child_fabrics[0].response | length == 1
     - result_4b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-replace-1"
     - result_4b.child_fabrics[0].response[0].parent.vrfId == 9008021
-    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "true"
+    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
     - result_4b.workflow == "Multisite Parent with Child Fabric Processing"
 
 - name: TEST.4d - MSD REPLACED - [replaced] Replace VRF - Idempotence
@@ -472,7 +472,7 @@
 
 - assert:
     that:
-    - result_4d.changed == true
+    - result_4d.changed == false
     - result_4d.workflow == "Multisite Parent with Child Fabric Processing"
     - result_4d.parent_fabric.changed == false
     - result_4d.parent_fabric.diff | length == 0

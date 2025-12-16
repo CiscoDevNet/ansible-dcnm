@@ -63,9 +63,9 @@
     timeout: 60
   when: result_setup_2.changed == true
 
-###############################################
-###            MSD SANITY TESTS             ##
-###############################################
+# ###############################################
+# ###            MSD SANITY TESTS             ##
+# ###############################################
 
 - name: TEST.1 - MSD SANITY - [merged] Basic VRF creation without Child config
   cisco.dcnm.dcnm_vrf:
@@ -161,9 +161,9 @@
       vrf_description: "MSD sanity test VRF with Child config"
       child_fabric_config:
       - fabric: "{{ child_fabric }}"
-        adv_default_routes: true
-        adv_host_routes: false
-        static_default_route: true
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
       attach:
       - ip_address: "{{ child_switch_1 }}"
       deploy: true
@@ -187,9 +187,9 @@
     - result_2.child_fabrics | length == 1
     - result_2.child_fabrics[0].fabric == "{{ child_fabric }}"
     - result_2.child_fabrics[0].diff[0].vrf_name == "ansible-msd-sanity-child"
-    - result_2.child_fabrics[0].diff[0].adv_default_routes == true
-    - result_2.child_fabrics[0].diff[0].adv_host_routes == false
-    - result_2.child_fabrics[0].diff[0].static_default_route == true
+    - result_2.child_fabrics[0].diff[0].adv_default_routes == false
+    - result_2.child_fabrics[0].diff[0].adv_host_routes == true
+    - result_2.child_fabrics[0].diff[0].static_default_route == false
 
 - name: TEST.2b - MSD SANITY - [query] Query created VRFs
   cisco.dcnm.dcnm_vrf:
@@ -218,9 +218,9 @@
     - result_2b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-sanity-child"
     - result_2b.child_fabrics[0].response[0].parent.vrfId == 9008202
     - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).vrfVlanId == "2202"
-    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "true"
-    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "false"
-    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "true"
+    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
+    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
+    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
 
 - name: TEST.2d - MSD SANITY - [merged] VRF creation with Child config - Idempotence
   cisco.dcnm.dcnm_vrf:
@@ -330,10 +330,10 @@
       vrf_description: "Updated MSD sanity test VRF with Child config"
       child_fabric_config:
       - fabric: "{{ child_fabric }}"
-        adv_default_routes: false  # Changed
-        adv_host_routes: true     # Changed
-        static_default_route: false # Changed
-        # l3vni_wo_vlan: true       # Added
+        adv_default_routes: true  # Changed
+        adv_host_routes: false     # Changed
+        static_default_route: true # Changed
+        l3vni_wo_vlan: true       # Added
       attach:
       - ip_address: "{{ child_switch_1 }}"
       - ip_address: "{{ child_switch_2 }}"  # Added attachment
@@ -358,10 +358,10 @@
     - result_4.child_fabrics | length == 1
     - result_4.child_fabrics[0].fabric == "{{ child_fabric }}"
     - result_4.child_fabrics[0].diff[0].vrf_name == "ansible-msd-sanity-child"
-    - result_4.child_fabrics[0].diff[0].adv_default_routes == false
-    - result_4.child_fabrics[0].diff[0].adv_host_routes == true
-    - result_4.child_fabrics[0].diff[0].static_default_route == false
-    # - result_4.child_fabrics[0].diff[0].l3vni_wo_vlan == true
+    - result_4.child_fabrics[0].diff[0].adv_default_routes == true
+    - result_4.child_fabrics[0].diff[0].adv_host_routes == false
+    - result_4.child_fabrics[0].diff[0].static_default_route == true
+    - result_4.child_fabrics[0].diff[0].l3vni_wo_vlan == true
 
 - name: TEST.4b - MSD SANITY - [query] Query created VRFs
   cisco.dcnm.dcnm_vrf:
@@ -388,10 +388,10 @@
     - result_4b.child_fabrics[0].response | length >= 1
     - result_4b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-sanity-child"
     - result_4b.child_fabrics[0].response[0].parent.vrfId == 9008202
-    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
-    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
-    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
-    # - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).enableL3VniNoVlan == "true"
+    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "true"
+    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "false"
+    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "true"
+    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).enableL3VniNoVlan == "true"
 
 - name: TEST.4d - MSD SANITY - [replaced] Replace VRF with Child config - Idempotence
   cisco.dcnm.dcnm_vrf:
@@ -427,9 +427,9 @@
       vrf_description: "MSD sanity test VRF with VRF-Lite"
       child_fabric_config:
       - fabric: "{{ child_fabric }}"
-        adv_default_routes: true
-        adv_host_routes: false
-        static_default_route: true
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
       attach:
       - ip_address: "{{ child_switch_2 }}"
         vrf_lite:
@@ -523,9 +523,9 @@
       vrf_description: "MSD sanity override test VRF"
       child_fabric_config:
       - fabric: "{{ child_fabric }}"
-        adv_default_routes: true
-        adv_host_routes: false
-        static_default_route: true
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
         bgp_password: "SANITYPASS123"
         bgp_passwd_encrypt: 7
       attach:
@@ -550,9 +550,9 @@
     - result_6.child_fabrics | length == 1
     - result_6.child_fabrics[0].fabric == "{{ child_fabric }}"
     - result_6.child_fabrics[0].diff[0].vrf_name == "ansible-msd-sanity-override"
-    - result_6.child_fabrics[0].diff[0].adv_default_routes == true
-    - result_6.child_fabrics[0].diff[0].adv_host_routes == false
-    - result_6.child_fabrics[0].diff[0].static_default_route == true
+    - result_6.child_fabrics[0].diff[0].adv_default_routes == false
+    - result_6.child_fabrics[0].diff[0].adv_host_routes == true
+    - result_6.child_fabrics[0].diff[0].static_default_route == false
     - result_6.child_fabrics[0].diff[0].bgp_password == "SANITYPASS123"
     - result_6.child_fabrics[0].diff[0].bgp_passwd_encrypt == 7
 
@@ -685,9 +685,9 @@
       vrf_description: "Bulk delete test VRF 2"
       child_fabric_config:
       - fabric: "{{ child_fabric }}"
-        adv_default_routes: true
-        adv_host_routes: false
-        static_default_route: true
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
       attach:
       - ip_address: "{{ child_switch_2 }}"
       deploy: true
