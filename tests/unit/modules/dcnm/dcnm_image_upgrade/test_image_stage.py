@@ -112,7 +112,7 @@ def test_image_stage_00100(image_stage, key, expected) -> None:
     correctly-spelled "serialNumbers" key/value (12.1.3b).
     """
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage()._populate_controller_version
         yield responses_ep_version(key)
 
@@ -162,7 +162,7 @@ def test_image_stage_00200(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().prune_serial_numbers
         yield responses_ep_issu(key)
 
@@ -225,7 +225,7 @@ def test_image_stage_00300(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().validate_serial_numbers
         yield responses_ep_issu(key)
 
@@ -288,7 +288,7 @@ def test_image_stage_00400(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage()._wait_for_image_stage_to_complete
         yield responses_ep_issu(key)
 
@@ -351,7 +351,7 @@ def test_image_stage_00410(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage()._wait_for_image_stage_to_complete
         yield responses_ep_issu(key)
 
@@ -418,7 +418,7 @@ def test_image_stage_00420(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage()._wait_for_image_stage_to_complete
         yield responses_ep_issu(key)
 
@@ -493,7 +493,7 @@ def test_image_stage_00500(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().wait_for_controller
         yield responses_ep_issu(key)
 
@@ -558,7 +558,7 @@ def test_image_stage_00510(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().wait_for_controller
         yield responses_ep_issu(key)
 
@@ -873,7 +873,7 @@ def test_image_stage_00930(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().prune_serial_numbers
         yield responses_ep_issu(key)
         # ImageStage().validate_serial_numbers
@@ -938,7 +938,7 @@ def test_image_stage_00940(image_stage) -> None:
     key_a = f"{method_name}a"
     key_b = f"{method_name}b"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().prune_serial_numbers()
         yield responses_ep_issu(key_a)
         # ImageStage().validate_serial_numbers()

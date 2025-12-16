@@ -31,13 +31,15 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from typing import Any, Generator
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender
@@ -67,7 +69,7 @@ def test_image_upgrade_00000(image_upgrade) -> None:
     assert instance.class_name == "ImageUpgrade"
     assert instance.action == "image_upgrade"
     assert instance.diff == {}
-    assert instance.payload is None
+    assert instance.payload == {}
     assert instance.saved_response_current == {}
     assert instance.saved_result_current == {}
     assert isinstance(instance.ipv4_done, set)
@@ -87,8 +89,8 @@ def test_image_upgrade_00000(image_upgrade) -> None:
     assert instance.check_interval == 10
     assert instance.check_timeout == 1800
     assert instance.non_disruptive is False
-    assert instance.rest_send is None
-    assert instance.results is None
+    assert instance.rest_send.class_name == "RestSend"
+    assert instance.results.class_name == "Results"
 
 
 def test_image_upgrade_00010(image_upgrade) -> None:
@@ -107,7 +109,7 @@ def test_image_upgrade_00010(image_upgrade) -> None:
     assert instance.check_interval == 10
     assert instance.check_timeout == 1800
     assert instance.config_reload is False
-    assert instance.devices is None
+    assert instance.devices == []
     assert instance.disruptive is True
     assert instance.epld_golden is False
     assert instance.epld_module == "ALL"
@@ -151,7 +153,7 @@ def test_image_upgrade_00100(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -191,8 +193,8 @@ def test_image_upgrade_01000(image_upgrade) -> None:
     - ``ValueError`` is called because ``devices`` is None.
     """
 
-    def responses():
-        yield None
+    def responses() -> Generator[dict[str, str], Any, Any]:
+        yield {}
 
     gen_responses = ResponseGenerator(responses())
 
@@ -244,12 +246,12 @@ def test_image_upgrade_01010(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters.
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -318,12 +320,12 @@ def test_image_upgrade_01020(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -391,12 +393,12 @@ def test_image_upgrade_01030(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -461,12 +463,12 @@ def test_image_upgrade_01040(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -537,12 +539,12 @@ def test_image_upgrade_01050(image_upgrade) -> None:
     key_a = f"{method_name}a"
     key_b = f"{method_name}b"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key_a)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key_a)
         # ImageUpgrade.wait_for_controller
@@ -616,12 +618,12 @@ def test_image_upgrade_01060(image_upgrade) -> None:
     key_a = f"{method_name}a"
     key_b = f"{method_name}b"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key_a)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key_a)
         # ImageUpgrade.wait_for_controller
@@ -689,12 +691,12 @@ def test_image_upgrade_01070(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -757,12 +759,12 @@ def test_image_upgrade_01080(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -827,12 +829,12 @@ def test_image_upgrade_01090(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -893,12 +895,12 @@ def test_image_upgrade_01100(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -960,12 +962,12 @@ def test_image_upgrade_01110(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -1028,12 +1030,12 @@ def test_image_upgrade_01120(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -1097,12 +1099,12 @@ def test_image_upgrade_01130(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -1173,12 +1175,12 @@ def test_image_upgrade_01140(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -1248,12 +1250,12 @@ def test_image_upgrade_01150(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -1314,12 +1316,12 @@ def test_image_upgrade_01160(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -1383,12 +1385,12 @@ def test_image_upgrade_02000(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def devices():
+    def devices() -> Generator[dict[str, str], Any, Any]:
         yield devices_image_upgrade(key)
 
     gen_devices = ResponseGenerator(devices())
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
         # ImageUpgrade.wait_for_controller
@@ -2024,7 +2026,7 @@ def test_image_upgrade_04000(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.wait_for_controller.
         yield responses_ep_issu(key)
 
@@ -2101,7 +2103,7 @@ def test_image_upgrade_04100(image_upgrade) -> None:
     key_b = f"{method_name}b"
     key_c = f"{method_name}c"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.wait_for_controller.
         yield responses_ep_issu(key_a)
         yield responses_ep_issu(key_b)
@@ -2159,7 +2161,7 @@ def test_image_upgrade_04110(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade.wait_for_controller.
         yield responses_ep_issu(key)
 
@@ -2233,7 +2235,7 @@ def test_image_upgrade_04120(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade._wait_for_image_upgrade_to_complete.
         yield responses_ep_issu(key)
 
@@ -2307,7 +2309,7 @@ def test_image_upgrade_04130(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade._wait_for_image_upgrade_to_complete.
         yield responses_ep_issu(key)
         # SwitchIssuDetailsByIpAddress.refresh_super
@@ -2401,7 +2403,7 @@ def test_image_upgrade_04140(image_upgrade) -> None:
     key_b = f"{method_name}b"
     key_c = f"{method_name}c"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageUpgrade._wait_for_image_upgrade_to_complete.
         yield responses_ep_issu(key_a)
         # ImageUpgrade._wait_for_image_upgrade_to_complete.

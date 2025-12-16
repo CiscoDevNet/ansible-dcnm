@@ -24,7 +24,7 @@ import logging
 from time import sleep
 
 from ..common.rest_send_v2 import RestSend
-from ..common.results import Results
+from ..common.results_v2 import Results
 from .switch_issu_details import (
     SwitchIssuDetailsByDeviceName,
     SwitchIssuDetailsByIpAddress,
