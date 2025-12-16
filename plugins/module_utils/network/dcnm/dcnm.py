@@ -1387,7 +1387,7 @@ def obtain_federated_fabric_associations(action_module, task_vars, tmp):
     )
 
     proxy = ""
-    if action_module.ndfc_version >= 12.4:
+    if action_module.ndfc_version >= 12.2:
         proxy = "/onemanage"
 
     try:
