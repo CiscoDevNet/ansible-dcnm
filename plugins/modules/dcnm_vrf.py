@@ -1143,7 +1143,7 @@ class DcnmVrf:
                 self.resource_paths[path] = proxy + self.action_fabric_cluster + self.resource_paths[path]
         elif self.action_fabric_type == "multicluster_parent":
             # onemanage proxy path
-            if self.dcnm_version >= 12.4:
+            if self.dcnm_version >= 12.2:
                 proxy = "/onemanage"
             for path in self.paths:
                 self.paths[path] = proxy + self.paths[path].replace("lan-fabric/rest", "onemanage")
