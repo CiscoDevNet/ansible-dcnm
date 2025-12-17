@@ -52,7 +52,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -104,7 +104,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
 
     ###############################################
@@ -129,7 +129,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##                IDEMPOTENCE               ##
@@ -153,7 +153,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
   ##############################################
   ##              CLEANUP                     ##
@@ -169,4 +169,4 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'

@@ -3,7 +3,8 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f srp.log
+  ansible.builtin.command: rm -f srp.log
+  delegate_to: localhost
 
 - name: Delete route peerings
   cisco.dcnm.dcnm_service_route_peering:
@@ -272,7 +273,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##                DELETE                    ##
@@ -321,7 +322,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     - name: Delete route peerings - Idempotence
       cisco.dcnm.dcnm_service_route_peering: *dncm_srp_delete_all
@@ -341,7 +342,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -491,7 +492,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##                DELETE                    ##
@@ -520,7 +521,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     - name: Delete route peerings with node name - 2
       cisco.dcnm.dcnm_service_route_peering:
@@ -545,4 +546,4 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'

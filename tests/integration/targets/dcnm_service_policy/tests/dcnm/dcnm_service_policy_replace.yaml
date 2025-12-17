@@ -31,7 +31,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+  loop: '{{ result.response }}'
 
 - block:
 
@@ -99,7 +99,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##               REPLACE                    ##
@@ -164,7 +164,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     - name: Replace service policies  - Idempotence
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_replace_all
@@ -195,5 +195,5 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

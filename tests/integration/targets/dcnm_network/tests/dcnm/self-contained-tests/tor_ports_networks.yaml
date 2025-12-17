@@ -20,7 +20,7 @@
     - name: Assert conditions
       ansible.builtin.assert:
         that:
-        - 'result.response.DATA != None'
+          - 'result.response.DATA != None'
 
     - name: TOR - Clean up any existing networks
       cisco.dcnm.dcnm_network:

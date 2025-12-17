@@ -3,7 +3,9 @@
 ##############################################
 
 - name: SANITY- Remove local log file
-  local_action: command rm -f srp.log
+  ansible.builtin.command:
+    cmd: rm -f srp.log
+  delegate_to: localhost
   tags: sanity
 
 - name: SANITY- Delete route peerings
@@ -276,7 +278,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     - name: SANITY- Create service route peerings  - Idempotence
       cisco.dcnm.dcnm_service_route_peering: *dcnm_srp_all
@@ -333,5 +335,5 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

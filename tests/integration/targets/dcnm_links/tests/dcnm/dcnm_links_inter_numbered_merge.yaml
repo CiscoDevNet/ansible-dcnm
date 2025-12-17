@@ -59,7 +59,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -111,10 +111,11 @@
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_unnum_fabric }}" ] | length) == 1'
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_ipv6_fabric }}" ] | length) == 1'
 
-    - assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ###############################################
     ###                IDEMPOTENCE               ##
@@ -140,7 +141,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ###############################################
     ###              DELETE                      ##
@@ -166,7 +167,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -252,7 +253,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     ###############################################
@@ -281,7 +282,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     ###############################################
@@ -310,7 +311,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
     ##############################################
     ##                MERGE                     ##
@@ -384,7 +385,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ###############################################
     ###                IDEMPOTENCE               ##
@@ -410,7 +411,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -544,7 +545,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
     ###############################################
@@ -573,7 +574,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       when: (ansible_num_fabric in ms_fabric_list  or ansible_ipv6_fabric in ms_fabric_list or ansible_unnum_fabric in ms_fabric_list)
 
   ##############################################
@@ -589,6 +590,6 @@
     - name: ASSERT - Cleanup return codes
       ansible.builtin.assert:
         that:
-          - item.RETURN_CODE == 200
-    loop: "{{ cleanup_result.response | default([]) }}"
+          - 'item["RETURN_CODE"] == 200'
+      loop: "{{ cleanup_result.response | default([]) }}"
       when: it_context is not defined

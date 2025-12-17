@@ -16,12 +16,12 @@
     # testcase: dcnm_intf_sani*
     # it_context: true
     test_data_common:
-      fabric: fabric_name
+      fabric: cisco_test_fabric1
       # svi_fabric: svi_fabric_name  # Define this for dcnm_svi_* tests
       deploy: false
       check_deploy: false
-      switch1: 192.168.10.203
-      switch2: 192.168.10.204
+      switch1: 192.168.10.211
+      switch2: 192.168.10.212
       # sw_sn mapping will be automatically populated from switch inventory
       eth_intf2: Ethernet1/2
       eth_intf3: Ethernet1/3

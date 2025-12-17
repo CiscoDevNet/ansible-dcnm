@@ -164,7 +164,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     - name: Create service policies  - Idempotence
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_create_all
@@ -210,7 +210,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     - name: Create service policies without optional elements
       cisco.dcnm.dcnm_service_policy:
@@ -265,7 +265,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+        loop: '{{ result.response }}'
 
     - name: Create service policies without deploy
       cisco.dcnm.dcnm_service_policy:
@@ -310,7 +310,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+        loop: '{{ result.response }}'
 
     - name: Create service policies with deploy
       cisco.dcnm.dcnm_service_policy:
@@ -355,7 +355,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+        loop: '{{ result.response }}'
 
     - name: Merge with existing service policy
       cisco.dcnm.dcnm_service_policy:
@@ -394,7 +394,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+        loop: '{{ result.response }}'
 
   ##############################################
   ##                CLEANUP                   ##
@@ -411,5 +411,5 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

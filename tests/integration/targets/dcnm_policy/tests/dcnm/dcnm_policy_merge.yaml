@@ -3,7 +3,9 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f policy.log
+  ansible.builtin.command:
+    cmd: rm -f policy.log
+  delegate_to: localhost
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_policy:
@@ -23,7 +25,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+  loop: '{{ result.response }}'
 
 
 - block:
@@ -78,7 +80,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -89,7 +91,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -113,7 +115,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -124,7 +126,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -152,7 +154,7 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     - name: Create a mixture of existing and non-existing policies
       cisco.dcnm.dcnm_policy:
@@ -200,7 +202,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -211,7 +213,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 5'
       when: (my_idx == (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -239,7 +241,7 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     - name: Create policies without mentioning state
       cisco.dcnm.dcnm_policy:
@@ -273,7 +275,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -284,7 +286,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
       when: (my_idx == (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -312,7 +314,7 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     - name: Create same policy with create_additional_policy flag set
       cisco.dcnm.dcnm_policy:
@@ -349,7 +351,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -360,7 +362,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
       when: (my_idx == (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -388,7 +390,7 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     - name: Create policy without deploy flag
       cisco.dcnm.dcnm_policy:
@@ -420,7 +422,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -431,7 +433,7 @@
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 0'
       when: (my_idx == (result["diff"][0]["merged"] | length))
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
 
@@ -454,7 +456,7 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
 
     - name: Create policies - checking for policies under switch block
@@ -513,7 +515,7 @@
                 ((item["serialNumber"] == "{{ ansible_sw2_sno }}") and
                  ((item["templateName"] == "template_101") or (item["templateName"] == "template_102") or (item["templateName"] == "template_103") or
                  (item["templateName"] == "template_104") or (item["templateName"] == "template_105"))))'
-    loop: '{{ result["diff"][0]["merged"] }}'
+      loop: '{{ result["diff"][0]["merged"] }}'
 
   ##############################################
   ##                CLEANUP                   ##
@@ -540,4 +542,4 @@
         that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'

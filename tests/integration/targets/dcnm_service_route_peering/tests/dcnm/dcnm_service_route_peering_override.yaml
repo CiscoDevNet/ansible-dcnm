@@ -3,7 +3,8 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f srp.log
+  ansible.builtin.command: rm -f srp.log
+  delegate_to: localhost
 
 - name: Delete route peerings
   cisco.dcnm.dcnm_service_route_peering:
@@ -272,7 +273,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##              OVERRIDDEN                  ##
@@ -354,7 +355,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##              OVERRIDDEN                  ##
@@ -409,7 +410,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##              OVERRIDDEN                  ##
@@ -463,7 +464,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##              OVERRIDDEN                  ##
@@ -518,7 +519,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##              OVERRIDDEN                  ##
@@ -549,7 +550,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
   ##############################################
   ##                CLEANUP                   ##
@@ -598,5 +599,5 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

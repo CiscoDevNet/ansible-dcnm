@@ -31,7 +31,7 @@
   ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+  loop: '{{ result.response }}'
 
 - block:
 
@@ -91,18 +91,18 @@
     - name: Assert conditions
       ansible.builtin.assert:
         that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 2'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["modified"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"] | length) == 2'
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 2'
 
     - name: Assert conditions
       ansible.builtin.assert:
         that:
-        - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##               DELETE                     ##
@@ -124,18 +124,18 @@
     - name: Assert conditions
       ansible.builtin.assert:
         that:
-        - 'result.changed == true'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 2'
-        - '(result["diff"][0]["modified"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"] | length) == 0'
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 2'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
 
     - name: Assert conditions
       ansible.builtin.assert:
         that:
-        - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
 
     - name: Delete service policies  - Idempotence
       cisco.dcnm.dcnm_service_policy: *dcnm_sp_del
@@ -144,12 +144,12 @@
     - name: Assert conditions
       ansible.builtin.assert:
         that:
-        - 'result.changed == false'
-        - '(result["diff"][0]["merged"] | length) == 0'
-        - '(result["diff"][0]["deleted"] | length) == 0'
-        - '(result["diff"][0]["modified"] | length) == 0'
-        - '(result["diff"][0]["query"] | length) == 0'
-        - '(result["diff"][0]["deploy"] | length) == 0'
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
 
     ##############################################
     ##                MERGE                     ##
@@ -264,8 +264,9 @@
               reverse_route_map_num: 502  # optional, default value will be auto-generated
       register: result
 
-    - assert:
-      that:
+    - name: Assert conditions
+      ansible.builtin.assert:
+        that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 5'
           - '(result["diff"][0]["deleted"] | length) == 0'
@@ -277,7 +278,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##               DELETE                     ##
@@ -307,7 +308,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -436,7 +437,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##               DELETE                     ##
@@ -469,7 +470,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -558,7 +559,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##               DELETE                     ##
@@ -585,4 +586,4 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'

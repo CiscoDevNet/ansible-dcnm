@@ -7,3 +7,15 @@ profile: production
 # Exclude paths from linting - GitHub workflows should not be linted
 exclude_paths:
   - .github/workflows/main.yml
+  - tests/integration/targets/dcnm_vpc_pair/files/*
+  - tests/integration/targets/dcnm_network/files/*
+  - tests/integration/targets/dcnm_vrf/files/*
+  - tests/integration/targets/dcnm_interface/files/*
+  - playbooks/roles/dcnm_vrf/tests/*
+  - playbooks/roles/dcnm_network/tests/*
+  - playbooks/roles/dcnm_interface/tests/*
+  - playbooks/roles/dcnm_fabric/tests/*
+  - playbooks/roles/dcnm_template/tests/*
+  - playbooks/roles/dcnm_image_policy/tests/*
+  - playbooks/roles/dcnm_resource_manager/tests/*
+  - playbooks/roles/dcnm_policy/tests/*

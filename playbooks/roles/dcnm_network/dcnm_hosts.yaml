@@ -1,7 +1,7 @@
 all:
   vars:
     ansible_user: "admin"
-    ansible_password: "password-secret"
+    ansible_password: "admin!@#"
     ansible_python_interpreter: python
     ansible_httpapi_validate_certs: false
     ansible_httpapi_use_ssl: true
@@ -12,4 +12,4 @@ all:
         ansible_network_os: cisco.dcnm.dcnm
       hosts:
         nac-ndfc1:
-          ansible_host: 10.10.5.1
+          ansible_host: 10.78.210.187

@@ -3,7 +3,8 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f dcnm_links.log
+  ansible.builtin.command: rm -f dcnm_links.log
+  delegate_to: localhost
 
 - block:
 
@@ -52,7 +53,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##                MERGE                     ##
@@ -95,7 +96,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
     ##############################################
     ##               MODIFY                     ##
@@ -131,7 +132,7 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
 
 
   ###############################################
@@ -149,5 +150,5 @@
       ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-    loop: '{{ result.response }}'
+      loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
