@@ -22,12 +22,17 @@ __author__ = "Allen Robel"
 
 import inspect
 import logging
+from typing import Any, Literal
 
 from ..common.conversion import ConversionUtils
+from ..common.operation_type import OperationType
+from ..common.response_handler import ResponseHandler
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
 from .config_deploy_v2 import FabricConfigDeploy
 from .config_save_v2 import FabricConfigSave
+from .fabric_details_v3 import FabricDetailsByName
+from .fabric_summary_v2 import FabricSummary
 from .fabric_types import FabricTypes
 
 
@@ -45,12 +50,12 @@ class FabricCommon:
     """
 
     def __init__(self):
-        self.class_name = self.__class__.__name__
-        self.action = None
+        self.class_name: str = self.__class__.__name__
+        self.action = "fabric_common_v2"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.conversion = ConversionUtils()
+        self._conversion: ConversionUtils = ConversionUtils()
         self.config_save = FabricConfigSave()
         self.config_deploy = FabricConfigDeploy()
         self.fabric_types = FabricTypes()
@@ -84,18 +89,19 @@ class FabricCommon:
         # - self._fabric_needs_update_for_replaced_state()
         self._fabric_update_required = set()
 
-        self._payloads_to_commit: list = []
+        self._payloads_to_commit: list[dict[str, Any]] = []
 
         # path and verb cannot be defined here because endpoints.fabric name
-        # must be set first.  Set these to None here and define them later in
+        # must be set first.  Set these to "" here and define them later in
         # the commit() method.
-        self.path = None
-        self.verb = None
+        self.path: str = ""
+        self.verb: str = ""
 
-        self._fabric_details = None
-        self._fabric_summary = None
+        self._fabric_details: FabricDetailsByName = FabricDetailsByName()
+        self._fabric_summary: FabricSummary = FabricSummary()
         self._fabric_type = "VXLAN_EVPN"
         self._rest_send: RestSend = RestSend({})
+        self._rest_send.response_handler = ResponseHandler()
         self._results: Results = Results()
 
         self._init_key_translations()
@@ -126,7 +132,7 @@ class FabricCommon:
             Raise ``ValueError`` if payload is missing FABRIC_NAME.
         -   Raise ``ValueError`` if the endpoint assignment fails.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         fabric_name = payload.get("FABRIC_NAME", None)
         if fabric_name is None:
@@ -142,13 +148,13 @@ class FabricCommon:
 
         self.config_save.payload = payload
         # pylint: disable=no-member
-        self.config_save.rest_send = self.rest_send
-        self.config_save.results = self.results
+        self.config_save.rest_send = self._rest_send
+        self.config_save.results = self._results
         try:
             self.config_save.commit()
         except ValueError as error:
             raise ValueError(error) from error
-        result = self.rest_send.result_current["success"]
+        result = self._rest_send.result_current["success"]
         self.config_save_result[fabric_name] = result
 
     def _config_deploy(self, payload):
@@ -158,9 +164,9 @@ class FabricCommon:
         -   Re-raise ``ValueError`` from FabricConfigDeploy(), if any.
         -   Raise ``ValueError`` if the payload is missing the FABRIC_NAME key.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         fabric_name = payload.get("FABRIC_NAME")
-        if fabric_name is None:
+        if not fabric_name:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload is missing mandatory parameter: FABRIC_NAME."
             raise ValueError(msg)
@@ -169,12 +175,9 @@ class FabricCommon:
             return
 
         try:
-            self.config_deploy.fabric_details = self.fabric_details
             self.config_deploy.payload = payload
-            self.config_deploy.fabric_summary = self.fabric_summary
-            # pylint: disable=no-member
-            self.config_deploy.rest_send = self.rest_send
-            self.config_deploy.results = self.results
+            self.config_deploy.rest_send = self._rest_send
+            self.config_deploy.results = self._results
         except TypeError as error:
             raise ValueError(error) from error
         try:
@@ -213,14 +216,14 @@ class FabricCommon:
             -   Register the task result
             -   raise ``ValueError``
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         try:
-            mac_address = self.conversion.translate_mac_address(mac_address)
+            mac_address = self._conversion.translate_mac_address(mac_address)
         except ValueError as error:
             # pylint: disable=no-member
-            self.results.add_failed(True)
-            self.results.add_changed(False)
-            self.results.register_task_result()
+            self._results.add_failed(True)
+            self._results.add_changed(False)
+            self._results.register_task_result()
 
             msg = f"{self.class_name}.{method_name}: "
             msg += "Error translating ANYCAST_GW_MAC: "
@@ -249,9 +252,9 @@ class FabricCommon:
             self._fixup_bgp_as()
         except ValueError as error:
             # pylint: disable=no-member
-            self.results.add_failed(True)
-            self.results.add_changed(False)
-            self.results.register_task_result()
+            self._results.add_failed(True)
+            self._results.add_changed(False)
+            self._results.register_task_result()
             raise ValueError(error) from error
 
     def _fixup_anycast_gw_mac(self) -> None:
@@ -260,12 +263,12 @@ class FabricCommon:
             controller expects.
         -   Raise ``ValueError`` if the translation fails.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         for payload in self._payloads_to_commit:
             if "ANYCAST_GW_MAC" not in payload:
                 continue
             try:
-                payload["ANYCAST_GW_MAC"] = self.conversion.translate_mac_address(payload["ANYCAST_GW_MAC"])
+                payload["ANYCAST_GW_MAC"] = self._conversion.translate_mac_address(payload["ANYCAST_GW_MAC"])
             except ValueError as error:
                 fabric_name = payload.get("FABRIC_NAME", "UNKNOWN")
                 anycast_gw_mac = payload.get("ANYCAST_GW_MAC", "UNKNOWN")
@@ -281,27 +284,27 @@ class FabricCommon:
         """
         Raise ``ValueError`` if BGP_AS is not a valid BGP ASN.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         for payload in self._payloads_to_commit:
             if "BGP_AS" not in payload:
                 continue
             bgp_as = payload["BGP_AS"]
-            if not self.conversion.bgp_as_is_valid(bgp_as):
+            if not self._conversion.bgp_as_is_valid(bgp_as):
                 fabric_name = payload.get("FABRIC_NAME", "UNKNOWN")
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Invalid BGP_AS {bgp_as} "
                 msg += f"for fabric {fabric_name}, "
-                msg += f"Error detail: {self.conversion.bgp_as_invalid_reason}"
+                msg += f"Error detail: {self._conversion.bgp_as_invalid_reason}"
                 raise ValueError(msg)
 
-    def _verify_payload(self, payload) -> None:
+    def _verify_payload(self, payload: dict[str, Any]) -> None:
         """
         - Verify that the payload is a dict and contains all mandatory keys
         - raise ``ValueError`` if the payload is not a dict
         - raise ``ValueError`` if the payload is missing mandatory keys
         """
-        method_name = inspect.stack()[0][3]
-        if self.action not in {"fabric_create", "fabric_replace", "fabric_update"}:
+        method_name: str = inspect.stack()[0][3]
+        if self.action not in {"fabric_create", "fabric_replace", "fabric_update", "fabric_update_bulk"}:
             return
         msg = f"{self.class_name}.{method_name}: "
         msg += f"payload: {payload}"
@@ -337,7 +340,7 @@ class FabricCommon:
             raise ValueError(msg)
 
         try:
-            self.conversion.validate_fabric_name(fabric_name)
+            self._conversion.validate_fabric_name(fabric_name)
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Playbook configuration for fabric {fabric_name} "
@@ -400,7 +403,7 @@ class FabricCommon:
 
     @fabric_type.setter
     def fabric_type(self, value):
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if value not in self.fabric_types.valid_fabric_types:
             msg = f"{self.class_name}.{method_name}: "
             msg += "FABRIC_TYPE must be one of "
@@ -412,26 +415,82 @@ class FabricCommon:
     @property
     def rest_send(self) -> RestSend:
         """
+        # Summary
+
         An instance of the RestSend class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of RestSend.
+        -   setter: `ValueError` if RestSend.params is not set.
+
+        ## getter
+
+        Return an instance of the RestSend class.
+
+        ## setter
+
+        Set an instance of the RestSend class.
         """
         return self._rest_send
 
     @rest_send.setter
     def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["RestSend"] = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
         if not value.params:
-            method_name = inspect.stack()[0][3]
             msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must have params set."
+            msg += "RestSend.params must be set."
             raise ValueError(msg)
         self._rest_send = value
 
     @property
     def results(self) -> Results:
         """
+        # Summary
+
         An instance of the Results class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of Results.
+
+        ## getter
+
+        Return an instance of the Results class.
+
+        ## setter
+
+        Set an instance of the Results class.
         """
         return self._results
 
     @results.setter
     def results(self, value: Results) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["Results"] = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
         self._results = value
+        self._results.action = self.action
+        self._results.operation_type = OperationType.QUERY

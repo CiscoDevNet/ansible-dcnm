@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,32 +21,33 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
-
+"""
+Unit tests for FabricConfigDeploy class in module_utils/fabric/config_deploy_v2.py
+"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, fabric_config_deploy_fixture,
-    fabric_details_by_name_v2_fixture, fabric_summary_fixture, params,
-    responses_ep_fabric_config_deploy, responses_fabric_details_by_name_v2,
-    responses_fabric_summary)
+    MockAnsibleModule,
+    does_not_raise,
+    fabric_config_deploy_fixture,
+    params,
+    responses_ep_fabric_config_deploy,
+    responses_fabric_details_by_name_v2,
+    responses_fabric_summary_v2,
+)
 
 
 def test_fabric_config_deploy_00010(fabric_config_deploy) -> None:
@@ -64,9 +65,10 @@ def test_fabric_config_deploy_00010(fabric_config_deploy) -> None:
     assert instance.class_name == "FabricConfigDeploy"
     assert instance.action == "config_deploy"
     assert instance.config_deploy_result == {}
-    assert instance.fabric_name is None
-    assert instance.rest_send is None
-    assert instance.results is None
+    assert instance.fabric_name == ""
+    assert instance.rest_send.class_name == "RestSend"
+    assert instance.rest_send.params == {}
+    assert instance.results.class_name == "Results"
     assert instance.conversion.class_name == "ConversionUtils"
     assert instance.ep_config_deploy.class_name == "EpFabricConfigDeploy"
 
@@ -99,9 +101,7 @@ MATCH_00020b += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\."
         ("My*Fabric", pytest.raises(ValueError, match=MATCH_00020b), True),
     ],
 )
-def test_fabric_config_deploy_00020(
-    fabric_config_deploy, fabric_name, expected, does_raise
-) -> None:
+def test_fabric_config_deploy_00020(fabric_config_deploy, fabric_name, expected, does_raise) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
@@ -151,9 +151,7 @@ MATCH_00030 += r"value must be an instance of RestSend\."
         ({10}, True, pytest.raises(TypeError, match=MATCH_00030)),
     ],
 )
-def test_fabric_config_deploy_00030(
-    fabric_config_deploy, value, does_raise, expected
-) -> None:
+def test_fabric_config_deploy_00030(fabric_config_deploy, value, does_raise, expected) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
@@ -191,9 +189,7 @@ MATCH_00040 += r"value must be an instance of Results\."
         ({10}, True, pytest.raises(TypeError, match=MATCH_00040)),
     ],
 )
-def test_fabric_config_deploy_00040(
-    fabric_config_deploy, value, does_raise, expected
-) -> None:
+def test_fabric_config_deploy_00040(fabric_config_deploy, value, does_raise, expected) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
@@ -215,9 +211,7 @@ def test_fabric_config_deploy_00040(
         assert instance.results == value
 
 
-def test_fabric_config_deploy_00120(
-    fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
-) -> None:
+def test_fabric_config_deploy_00120(fabric_config_deploy) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
@@ -235,8 +229,6 @@ def test_fabric_config_deploy_00120(
 
     with does_not_raise():
         instance = fabric_config_deploy
-        instance.fabric_details = fabric_details_by_name_v2
-        instance.fabric_summary = fabric_summary
         instance.rest_send = RestSend(params)
         instance.results = Results()
 
@@ -248,9 +240,7 @@ def test_fabric_config_deploy_00120(
         instance.commit()
 
 
-def test_fabric_config_deploy_00130(
-    fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
-) -> None:
+def test_fabric_config_deploy_00130(fabric_config_deploy) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
@@ -267,9 +257,9 @@ def test_fabric_config_deploy_00130(
     """
     with does_not_raise():
         instance = fabric_config_deploy
-        instance.fabric_details = fabric_details_by_name_v2
+        # instance.fabric_details = fabric_details_by_name_v2
         instance.payload = {"FABRIC_NAME": "MyFabric"}
-        instance.fabric_summary = fabric_summary
+        # instance.fabric_summary = fabric_summary_v2
         instance.results = Results()
 
     match = r"FabricConfigDeploy\.commit: "
@@ -280,103 +270,12 @@ def test_fabric_config_deploy_00130(
         instance.commit()
 
 
-def test_fabric_config_deploy_00140(
-    fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
-) -> None:
-    """
-    Classes and Methods
-    - FabricConfigDeploy
-        - __init__()
-        - results setter
-        - commit()
-
-    Summary
-    -   Verify behavior when results is not set before calling commit()
-
-    Test
-    -   ValueError is raised because results is not set before
-        calling commit()
-    """
-    with does_not_raise():
-        instance = fabric_config_deploy
-        instance.fabric_details = fabric_details_by_name_v2
-        instance.payload = {"FABRIC_NAME": "MyFabric"}
-        instance.fabric_summary = fabric_summary
-        instance.rest_send = RestSend(params)
-
-    match = r"FabricConfigDeploy\.commit: "
-    match += r"FabricConfigDeploy\.results must be set "
-    match += r"before calling commit\."
-
-    with pytest.raises(ValueError, match=match):
-        instance.commit()
+# test_fabric_config_deploy_00140 removed since results is now set in FabricConfigDeploy.__init__()
+# test_fabric_config_deploy_00150 removed since fabric_details is now set in FabricConfigDeploy.__init__()
+# test_fabric_config_deploy_00160 removed since fabric_summary is now set in FabricConfigDeploy.__init__()
 
 
-def test_fabric_config_deploy_00150(fabric_config_deploy, fabric_summary) -> None:
-    """
-    Classes and Methods
-    - FabricConfigDeploy
-        - __init__()
-        - fabric_details setter
-        - commit()
-
-    Summary
-    -   Verify behavior when fabric_details is not set before calling commit()
-
-    Test
-    -   ValueError is raised because results is not set before
-        calling commit()
-    """
-
-    with does_not_raise():
-        instance = fabric_config_deploy
-        instance.payload = {"FABRIC_NAME": "MyFabric"}
-        instance.fabric_summary = fabric_summary
-        instance.rest_send = RestSend(params)
-        instance.results = Results()
-
-    match = r"FabricConfigDeploy\.commit: "
-    match += r"FabricConfigDeploy\.fabric_details must be set "
-    match += r"before calling commit\."
-
-    with pytest.raises(ValueError, match=match):
-        instance.commit()
-
-
-def test_fabric_config_deploy_00160(
-    fabric_config_deploy, fabric_details_by_name_v2
-) -> None:
-    """
-    Classes and Methods
-    - FabricConfigDeploy
-        - __init__()
-        - fabric_summary setter
-        - commit()
-
-    Summary
-    -   Verify behavior when fabric_summary is not set before calling commit()
-
-    Test
-    -   ValueError is raised because fabric_summary is not set before
-        calling commit()
-    """
-    with does_not_raise():
-        instance = fabric_config_deploy
-        instance.fabric_details = fabric_details_by_name_v2
-        instance.payload = {"FABRIC_NAME": "MyFabric"}
-        instance.rest_send = RestSend(params)
-
-    match = r"FabricConfigDeploy\.commit: "
-    match += r"FabricConfigDeploy\.fabric_summary must be set "
-    match += r"before calling commit\."
-
-    with pytest.raises(ValueError, match=match):
-        instance.commit()
-
-
-def test_fabric_config_deploy_00200(
-    monkeypatch, fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
-) -> None:
+def test_fabric_config_deploy_00200(monkeypatch, fabric_config_deploy) -> None:
     """
     ### Classes and Methods
 
@@ -410,7 +309,7 @@ def test_fabric_config_deploy_00200(
             raise ValueError(msg)
 
     def responses():
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
         yield responses_fabric_details_by_name_v2(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -432,11 +331,7 @@ def test_fabric_config_deploy_00200(
     with does_not_raise():
         instance = fabric_config_deploy
         monkeypatch.setattr(instance, "ep_config_deploy", MockEpFabricConfigDeploy())
-        instance.fabric_details = fabric_details_by_name_v2
-        instance.fabric_details.rest_send = rest_send
         instance.payload = payload
-        instance.fabric_summary = fabric_summary
-        instance.fabric_summary.rest_send = rest_send
         instance.rest_send = rest_send
         instance.results = Results()
 
@@ -445,9 +340,7 @@ def test_fabric_config_deploy_00200(
         instance.commit()
 
 
-def test_fabric_config_deploy_00210(
-    fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
-) -> None:
+def test_fabric_config_deploy_00210(fabric_config_deploy) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
@@ -506,7 +399,7 @@ def test_fabric_config_deploy_00210(
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
         yield responses_fabric_details_by_name_v2(key)
         yield responses_ep_fabric_config_deploy(key)
 
@@ -529,11 +422,7 @@ def test_fabric_config_deploy_00210(
     with does_not_raise():
         instance = fabric_config_deploy
         instance.rest_send = rest_send
-        instance.fabric_details = fabric_details_by_name_v2
-        instance.fabric_details.rest_send = instance.rest_send
         instance.payload = payload
-        instance.fabric_summary = fabric_summary
-        instance.fabric_summary.rest_send = instance.rest_send
         instance.results = Results()
         instance.commit()
 
@@ -561,9 +450,7 @@ def test_fabric_config_deploy_00210(
     assert False not in instance.results.changed
 
 
-def test_fabric_config_deploy_00220(
-    fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
-) -> None:
+def test_fabric_config_deploy_00220(fabric_config_deploy) -> None:
     """
     Classes and Methods
     - FabricConfigDeploy
@@ -612,7 +499,7 @@ def test_fabric_config_deploy_00220(
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
         yield responses_fabric_details_by_name_v2(key)
         yield responses_ep_fabric_config_deploy(key)
 
@@ -637,11 +524,7 @@ def test_fabric_config_deploy_00220(
     with does_not_raise():
         instance = fabric_config_deploy
         instance.rest_send = rest_send
-        instance.fabric_details = fabric_details_by_name_v2
-        instance.fabric_details.rest_send = rest_send
         instance.payload = payload
-        instance.fabric_summary = fabric_summary
-        instance.fabric_summary.rest_send = rest_send
         instance.results = Results()
         instance.commit()
 

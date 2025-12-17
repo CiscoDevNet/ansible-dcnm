@@ -25,8 +25,7 @@ import copy
 import inspect
 import logging
 
-from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabrics
+from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import EpFabrics
 from ..common.conversion import ConversionUtils
 from ..common.properties import Properties
 
@@ -457,7 +456,7 @@ class FabricDetailsByName(FabricDetails):
 
     ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
 
     params = {"check_mode": False, "state": "merged"}
@@ -487,7 +486,7 @@ class FabricDetailsByName(FabricDetails):
 
     ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
 
     params = {"check_mode": False, "state": "merged"}
@@ -681,7 +680,7 @@ class FabricDetailsByNvPair(FabricDetails):
     ### Usage
     ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
 
     params = {"check_mode": False, "state": "query"}

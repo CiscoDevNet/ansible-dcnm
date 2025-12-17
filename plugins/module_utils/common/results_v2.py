@@ -505,13 +505,13 @@ class Results:
         self.add_diff(self.diff_current)
 
         if self.did_anything_change() is False:
-            self.changed.add(False)
+            self.add_changed(False)
         else:
-            self.changed.add(True)
+            self.add_changed(True)
         if self.result_current.get("success") is True:
-            self._failed.add(False)
+            self.add_failed(False)
         elif self.result_current.get("success") is False:
-            self._failed.add(True)
+            self.add_failed(True)
         else:
             msg = f"{self.class_name}.{method_name}: "
             msg += "self.result_current['success'] is not a boolean. "
@@ -585,22 +585,6 @@ class Results:
         self.final_result["response"] = self.response
         self.final_result["result"] = self.result
         self.final_result["metadata"] = self.metadata
-
-    def add_to_failed(self, value: bool) -> None:
-        """
-        # Summary
-
-        Add a boolean value to the failed set.
-
-        ## Raises
-
-        -   `ValueError`: if value is not a bool
-        """
-        if not isinstance(value, bool):
-            msg = f"{self.class_name}.add_to_failed: "
-            msg += f"instance.add_to_failed must be a bool. Got {value}"
-            raise ValueError(msg)
-        self._failed.add(value)
 
     @property
     def failed_result(self) -> dict:

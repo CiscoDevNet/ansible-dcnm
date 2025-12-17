@@ -21,7 +21,9 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
-
+"""
+Unit tests for FabricUpdateBulk class in module_utils/fabric/update.py
+"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -32,25 +34,22 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
-    FabricSummary
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, fabric_update_bulk_fixture,
-    payloads_fabric_update_bulk, responses_config_deploy,
-    responses_config_save, responses_fabric_details_by_name_v2,
-    responses_fabric_summary, responses_fabric_update_bulk)
+    MockAnsibleModule,
+    does_not_raise,
+    fabric_update_bulk_fixture,
+    payloads_fabric_update_bulk,
+    responses_config_deploy,
+    responses_config_save,
+    responses_fabric_details_by_name_v2,
+    responses_fabric_summary_v2,
+    responses_fabric_update_bulk,
+)
 
 PARAMS = {"state": "merged", "check_mode": False}
 
@@ -69,10 +68,9 @@ def test_fabric_update_bulk_00000(fabric_update_bulk) -> None:
     """
     with does_not_raise():
         instance = fabric_update_bulk
-        instance.fabric_details = FabricDetailsByName()
     assert instance.class_name == "FabricUpdateBulk"
-    assert instance.action == "fabric_update"
-    assert instance.ep_fabric_update.class_name == "EpFabricUpdate"
+    assert instance.action == "fabric_update_bulk"
+    assert instance._ep_fabric_update.class_name == "EpFabricUpdate"
     assert instance.fabric_details.class_name == "FabricDetailsByName"
     assert instance.fabric_types.class_name == "FabricTypes"
 
@@ -93,15 +91,14 @@ def test_fabric_update_bulk_00020(fabric_update_bulk) -> None:
 
     ### Test
 
-    -   ``payloads`` is set to expected value.
-    -   ``ValueError`` is not raised.
+    -   `payloads` is set to expected value.
+    -   `ValueError` is not raised.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
     with does_not_raise():
         instance = fabric_update_bulk
-        instance.fabric_details = FabricDetailsByName()
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
     assert instance.payloads == payloads_fabric_update_bulk(key)
@@ -118,23 +115,22 @@ def test_fabric_update_bulk_00021(fabric_update_bulk) -> None:
         - __init__()
 
     ### Summary
-    ``payloads`` setter is presented with input that is not a list.
+    `payloads` setter is presented with input that is not a list.
 
     ### Test
 
-    -   ``ValueError`` is raised because payloads is not a list,
-    -   ``payloads`` retains its initial value of None,
+    -   `ValueError` is raised because payloads is not a list,
+    -   `payloads` retains its initial value of None,
     """
     match = r"FabricUpdateBulk\.payloads: "
     match += r"payloads must be a list of dict\."
 
     with does_not_raise():
         instance = fabric_update_bulk
-        instance.fabric_details = FabricDetailsByName()
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.payloads = "NOT_A_LIST"
-    assert instance.payloads is None
+    assert instance.payloads == []
 
 
 def test_fabric_update_bulk_00022(fabric_update_bulk) -> None:
@@ -148,14 +144,14 @@ def test_fabric_update_bulk_00022(fabric_update_bulk) -> None:
         - __init__()
 
     ### Summary
-    ``payloads`` setter is presented with a list that contains a
+    `payloads` setter is presented with a list that contains a
     non-dict element.
 
     ### Test
 
-    -   ``ValueError`` is raised because payloads is a list with
+    -   `ValueError` is raised because payloads is a list with
         non-dict elements
-    -   ``payloads`` retains its initial value of None.
+    -   `payloads` retains its initial value of None.
     """
     match = r"FabricUpdateBulk._verify_payload:\s+"
     match += r"Playbook configuration for fabrics must be a dict\.\s+"
@@ -163,11 +159,10 @@ def test_fabric_update_bulk_00022(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
-        instance.fabric_details = FabricDetailsByName()
         instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.payloads = [1, 2, 3]
-    assert instance.payloads is None
+    assert instance.payloads == []
 
 
 def test_fabric_update_bulk_00023(fabric_update_bulk) -> None:
@@ -181,25 +176,21 @@ def test_fabric_update_bulk_00023(fabric_update_bulk) -> None:
         - __init__()
 
     ### Summary
-    Verify behavior when ``payloads`` is not set prior to calling commit.
+    Verify behavior when `payloads` is not set prior to calling commit.
 
     ### Test
 
-    -   ``ValueError`` is raised because payloads is not set
-        prior to calling commit
-    -   ``payloads`` retains its initial value of None.
+    -   `ValueError` is raised because payloads is not set prior to calling commit
+    -   `payloads` retains its initial value of None.
     """
     match = r"FabricUpdateBulk\.commit: "
     match += r"payloads must be set prior to calling commit\."
 
     with does_not_raise():
         instance = fabric_update_bulk
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_summary = FabricSummary()
-        instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.commit()
-    assert instance.payloads is None
+    assert instance.payloads == []
 
 
 def test_fabric_update_bulk_00024(fabric_update_bulk) -> None:
@@ -213,16 +204,16 @@ def test_fabric_update_bulk_00024(fabric_update_bulk) -> None:
         - __init__()
 
     ### Summary
-    Verify behavior when ``payloads`` is set to an empty list.
+    Verify behavior when `payloads` is set to an empty list.
 
     ### Setup
 
-    -   ``payloads`` is set to an empty list.
+    -   `payloads` is set to an empty list.
 
     ### Test
 
-    -   ``ValueError`` is not raised
-    -   ``payloads`` is set to an empty list.
+    - `ValueError` is not raised
+    - `payloads` is set to an empty list.
 
     ### NOTES
 
@@ -233,7 +224,6 @@ def test_fabric_update_bulk_00024(fabric_update_bulk) -> None:
     """
     with does_not_raise():
         instance = fabric_update_bulk
-        instance.results = Results()
         instance.payloads = []
     assert instance.payloads == []
 
@@ -254,18 +244,17 @@ def test_fabric_update_bulk_00025(fabric_update_bulk, mandatory_parameter) -> No
 
     ### Summary
 
-    -   Verify ``payloads`` setter re-raises ``ValueError``
-        raised by FabricCommon()._verify_payload() when ``payloads`` is
+    -   Verify `payloads` setter re-raises `ValueError`
+        raised by FabricCommon()._verify_payload() when `payloads` is
         missing mandatory keys.
-    -   Verify ``payloads`` retains its initial value of None.
+    -   Verify `payloads` retains its initial value of None.
 
     """
-    method_name = inspect.stack()[0][3]
+    method_name: str = inspect.stack()[0][3]
     key = f"{method_name}a"
 
     with does_not_raise():
         instance = fabric_update_bulk
-        instance.fabric_details = FabricDetailsByName()
         instance.results = Results()
 
     payloads = payloads_fabric_update_bulk(key)
@@ -276,7 +265,7 @@ def test_fabric_update_bulk_00025(fabric_update_bulk, mandatory_parameter) -> No
     match += r"parameter.*"
     with pytest.raises(ValueError, match=match):
         instance.payloads = payloads
-    assert instance.payloads is None
+    assert instance.payloads == []
 
 
 def test_fabric_update_bulk_00030(fabric_update_bulk) -> None:
@@ -340,14 +329,6 @@ def test_fabric_update_bulk_00030(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
 
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = rest_send
-        instance.fabric_details.results = Results()
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = rest_send
-        instance.fabric_summary.results = Results()
-
         instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
@@ -364,16 +345,13 @@ def test_fabric_update_bulk_00030(fabric_update_bulk) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
 
-    assert instance.results.metadata[0].get("action", None) == "fabric_update"
+    assert instance.results.metadata[0].get("action", None) == "fabric_update_bulk"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert (
-        instance.results.response[0].get("MESSAGE", None)
-        == "No fabrics to update for merged state."
-    )
+    assert instance.results.response[0].get("MESSAGE", None) == "No fabrics to update for merged state."
 
     assert instance.results.result[0].get("changed", None) is False
     assert instance.results.result[0].get("success", None) is True
@@ -412,8 +390,7 @@ def test_fabric_update_bulk_00031(fabric_update_bulk) -> None:
     -   The fabric payload includes ANYCAST_GW_MAC, formatted to be incompatible
         with the controller's requirements, but able to be fixed by
         FabricUpdateCommon()._fixup_payloads_to_commit().
-    -   The fabric payload also contains keys that include ``bool`
-        and ``int`` values.
+    -   The fabric payload also contains keys that include bool and int values.
     -   The fabric is empty, so is updated, but not deployed/saved.
 
     ### See Also
@@ -424,8 +401,7 @@ def test_fabric_update_bulk_00031(fabric_update_bulk) -> None:
 
     -   FabricUpdateBulk.payloads is set to contain one payload for a fabric
         (f1) that exists on the controller.
-    -   The payload keys contain values that would result in changes to
-        the fabric.
+    -   The payload keys contain values that would result in changes to the fabric.
     -   FabricUpdateBulk.commit() calls
         FabricUpdateCommon()._build_payloads_for_merged_state()
     -   FabricUpdateCommon()._build_payloads_for_merged_state() calls
@@ -435,7 +411,7 @@ def test_fabric_update_bulk_00031(fabric_update_bulk) -> None:
         _fabric_update_required to an empty set() and calls
         FabricUpdateCommon()._fabric_needs_update_for_merged_state() with
         the payload.
-    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() updates
+    -   FabricUpdateCommon()._fabric_needs_update_for_merged_state()
         compares the payload to the fabric details and determines that changes
         are required.  Hence, it adds True to _fabric_update_required.
     -   FabricUpdateCommon()._build_payloads_for_merged_state() finds True in
@@ -470,7 +446,7 @@ def test_fabric_update_bulk_00031(fabric_update_bulk) -> None:
         yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_update_bulk(key)
         yield responses_config_save(key)
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -485,15 +461,6 @@ def test_fabric_update_bulk_00031(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
-
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = rest_send
-        instance.fabric_details.results = Results()
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = rest_send
-        instance.fabric_summary.results = Results()
-
         instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
@@ -519,7 +486,7 @@ def test_fabric_update_bulk_00031(fabric_update_bulk) -> None:
 
     assert instance.results.diff[2].get("sequence_number", None) == 3
 
-    assert instance.results.metadata[0].get("action", None) == "fabric_update"
+    assert instance.results.metadata[0].get("action", None) == "fabric_update_bulk"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
@@ -545,13 +512,7 @@ def test_fabric_update_bulk_00031(fabric_update_bulk) -> None:
     assert instance.results.response[0].get("METHOD", None) == "PUT"
     assert instance.results.response[1].get("METHOD", None) == "POST"
 
-    assert (
-        instance.results.response[0]
-        .get("DATA", {})
-        .get("nvPairs", {})
-        .get("BGP_AS", None)
-        == "65001"
-    )
+    assert instance.results.response[0].get("DATA", {}).get("nvPairs", {}).get("BGP_AS", None) == "65001"
 
     msg = "Config save is completed"
     assert instance.results.response[1].get("DATA", {}).get("status") == msg
@@ -617,14 +578,14 @@ def test_fabric_update_bulk_00032(fabric_update_bulk) -> None:
     -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() calls
         Results().register_task_result()
     -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() raises
-        ``ValueError`` because the payload contains an invalid key.
+        `ValueError` because the payload contains an invalid key.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
     def responses():
         yield responses_fabric_details_by_name_v2(key)
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
         yield responses_fabric_update_bulk(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -640,15 +601,6 @@ def test_fabric_update_bulk_00032(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
-
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = rest_send
-        instance.fabric_details.results = Results()
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = rest_send
-        instance.fabric_summary.results = Results()
-
         instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
@@ -670,7 +622,7 @@ def test_fabric_update_bulk_00032(fabric_update_bulk) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
 
-    assert instance.results.metadata[0].get("action", None) == "fabric_update"
+    assert instance.results.metadata[0].get("action", None) == "fabric_update_bulk"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
@@ -736,7 +688,7 @@ def test_fabric_update_bulk_00033(fabric_update_bulk) -> None:
         ``ANYCAST_GW_MAC`` key is present in the payload.
     -   FabricCommon().translate_anycast_gw_mac():
         -   Updates Results()
-        -   raises ``ValueError`` because the mac address is not convertable.
+        -   raises `ValueError` because the mac address is not convertable.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -746,7 +698,7 @@ def test_fabric_update_bulk_00033(fabric_update_bulk) -> None:
 
     def responses():
         yield responses_fabric_details_by_name_v2(key)
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -761,15 +713,6 @@ def test_fabric_update_bulk_00033(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
-
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = rest_send
-        instance.fabric_details.results = Results()
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = rest_send
-        instance.fabric_summary.results = Results()
-
         instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
@@ -790,7 +733,7 @@ def test_fabric_update_bulk_00033(fabric_update_bulk) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
 
-    assert instance.results.metadata[0].get("action", None) == "fabric_update"
+    assert instance.results.metadata[0].get("action", None) == "fabric_update_bulk"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
@@ -860,7 +803,7 @@ def test_fabric_update_bulk_00034(fabric_update_bulk) -> None:
 
     def responses():
         yield responses_fabric_details_by_name_v2(key)
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
         yield responses_fabric_update_bulk(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -876,15 +819,6 @@ def test_fabric_update_bulk_00034(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
-
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = rest_send
-        instance.fabric_details.results = Results()
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = rest_send
-        instance.fabric_summary.results = Results()
-
         instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
@@ -901,16 +835,13 @@ def test_fabric_update_bulk_00034(fabric_update_bulk) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
 
-    assert instance.results.metadata[0].get("action", None) == "fabric_update"
+    assert instance.results.metadata[0].get("action", None) == "fabric_update_bulk"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert (
-        instance.results.response[0].get("MESSAGE", None)
-        == "No fabrics to update for merged state."
-    )
+    assert instance.results.response[0].get("MESSAGE", None) == "No fabrics to update for merged state."
     assert instance.results.response[0].get("sequence_number", None) == 1
 
     assert instance.results.result[0].get("changed", None) is False
@@ -1017,7 +948,7 @@ def test_fabric_update_bulk_00035(fabric_update_bulk) -> None:
         yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_update_bulk(key)
         yield responses_config_save(key)
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
         yield responses_fabric_details_by_name_v2(key)
         yield responses_config_deploy(key)
 
@@ -1034,15 +965,6 @@ def test_fabric_update_bulk_00035(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
-
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = rest_send
-        instance.fabric_details.results = Results()
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = rest_send
-        instance.fabric_summary.results = Results()
-
         instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
@@ -1069,7 +991,7 @@ def test_fabric_update_bulk_00035(fabric_update_bulk) -> None:
     assert instance.results.diff[2].get("config_deploy", None) == "OK"
     assert instance.results.diff[2].get("FABRIC_NAME", None) == "f1"
 
-    assert instance.results.metadata[0].get("action", None) == "fabric_update"
+    assert instance.results.metadata[0].get("action", None) == "fabric_update_bulk"
     assert instance.results.metadata[1].get("action", None) == "config_save"
     assert instance.results.metadata[2].get("action", None) == "config_deploy"
 
@@ -1097,31 +1019,13 @@ def test_fabric_update_bulk_00035(fabric_update_bulk) -> None:
     assert instance.results.response[1].get("RETURN_CODE", None) == 200
     assert instance.results.response[2].get("RETURN_CODE", None) == 200
 
-    assert (
-        instance.results.response[0]
-        .get("DATA", {})
-        .get("nvPairs", {})
-        .get("VPC_DELAY_RESTORE_TIME", None)
-        == "300"
-    )
+    assert instance.results.response[0].get("DATA", {}).get("nvPairs", {}).get("VPC_DELAY_RESTORE_TIME", None) == "300"
 
-    assert (
-        instance.results.response[0]
-        .get("DATA", {})
-        .get("nvPairs", {})
-        .get("ANYCAST_GW_MAC", None)
-        == "0001.aabb.ccdd"
-    )
+    assert instance.results.response[0].get("DATA", {}).get("nvPairs", {}).get("ANYCAST_GW_MAC", None) == "0001.aabb.ccdd"
 
-    assert (
-        instance.results.response[1].get("DATA", {}).get("status", None)
-        == "Config save is completed"
-    )
+    assert instance.results.response[1].get("DATA", {}).get("status", None) == "Config save is completed"
 
-    assert (
-        instance.results.response[2].get("DATA", {}).get("status", None)
-        == "Configuration deployment completed."
-    )
+    assert instance.results.response[2].get("DATA", {}).get("status", None) == "Configuration deployment completed."
 
     assert instance.results.result[0].get("changed", None) is True
     assert instance.results.result[1].get("changed", None) is True
@@ -1186,14 +1090,14 @@ def test_fabric_update_bulk_00036(fabric_update_bulk) -> None:
     -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() calls
         Results().register_task_result()
     -   FabricUpdateCommon()._fabric_needs_update_for_merged_state() raises
-        ``ValueError`` because the payload contains an invalid key.
+        `ValueError` because the payload contains an invalid key.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
     def responses():
         yield responses_fabric_details_by_name_v2(key)
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
         yield responses_fabric_update_bulk(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -1209,15 +1113,6 @@ def test_fabric_update_bulk_00036(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
-
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = rest_send
-        instance.fabric_details.results = Results()
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = rest_send
-        instance.fabric_summary.results = Results()
-
         instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
@@ -1239,7 +1134,7 @@ def test_fabric_update_bulk_00036(fabric_update_bulk) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
 
-    assert instance.results.metadata[0].get("action", None) == "fabric_update"
+    assert instance.results.metadata[0].get("action", None) == "fabric_update_bulk"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
@@ -1343,7 +1238,7 @@ def test_fabric_update_bulk_00040(fabric_update_bulk) -> None:
         yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_update_bulk(key)
         yield responses_config_save(key)
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -1358,15 +1253,6 @@ def test_fabric_update_bulk_00040(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
-
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = rest_send
-        instance.fabric_details.results = Results()
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = rest_send
-        instance.fabric_summary.results = Results()
-
         instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_update_bulk(key)
@@ -1390,7 +1276,7 @@ def test_fabric_update_bulk_00040(fabric_update_bulk) -> None:
     assert instance.results.diff[1].get("config_save", None) == "OK"
     assert instance.results.diff[1].get("FABRIC_NAME", None) == "f1"
 
-    assert instance.results.metadata[0].get("action", None) == "fabric_update"
+    assert instance.results.metadata[0].get("action", None) == "fabric_update_bulk"
     assert instance.results.metadata[1].get("action", None) == "config_save"
     assert instance.results.metadata[2].get("action", None) == "config_deploy"
 
@@ -1418,18 +1304,9 @@ def test_fabric_update_bulk_00040(fabric_update_bulk) -> None:
     assert instance.results.response[1].get("RETURN_CODE", None) == 200
     assert instance.results.response[2].get("RETURN_CODE", None) == 200
 
-    assert (
-        instance.results.response[0]
-        .get("DATA", {})
-        .get("nvPairs", {})
-        .get("ANYCAST_GW_MAC", None)
-        == "0001.aabb.ccdd"
-    )
+    assert instance.results.response[0].get("DATA", {}).get("nvPairs", {}).get("ANYCAST_GW_MAC", None) == "0001.aabb.ccdd"
 
-    assert (
-        instance.results.response[1].get("DATA", {}).get("status", None)
-        == "Config save is completed"
-    )
+    assert instance.results.response[1].get("DATA", {}).get("status", None) == "Config save is completed"
 
     msg = "FabricConfigDeploy._can_fabric_be_deployed: "
     msg += "Error during FabricSummary().refresh(). "
@@ -1452,90 +1329,8 @@ def test_fabric_update_bulk_00040(fabric_update_bulk) -> None:
     assert False in instance.results.changed
 
 
-def test_fabric_update_bulk_00050(fabric_update_bulk) -> None:
-    """
-    ### Classes and Methods
-
-    - FabricCommon()
-        - __init__()
-    - FabricUpdateBulk()
-        - __init__()
-        - commit()
-
-    ### Summary
-
-    -   Verify commit() raises ``ValueError`` if ``fabric_details`` is not set.
-
-    ### Setup
-
-    -   Set everything that FabricUpdateBulk() expects to be set, prior to
-        calling commit(), EXCEPT fabric_details.
-    """
-    with does_not_raise():
-        instance = fabric_update_bulk
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = RestSend(PARAMS)
-        instance.fabric_summary.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(PARAMS)
-        instance.results = Results()
-        instance.payloads = [
-            {
-                "BGP_AS": "65001",
-                "DEPLOY": "true",
-                "FABRIC_NAME": "f1",
-                "FABRIC_TYPE": "VXLAN_EVPN",
-            }
-        ]
-
-    match = r"FabricUpdateBulk\.commit:\s+"
-    match += r"fabric_details must be set prior to calling commit\."
-    with pytest.raises(ValueError, match=match):
-        fabric_update_bulk.commit()
-
-
-def test_fabric_update_bulk_00060(fabric_update_bulk) -> None:
-    """
-    ### Classes and Methods
-
-    - FabricCommon()
-        - __init__()
-    - FabricUpdateBulk()
-        - __init__()
-        - commit()
-
-    ### Summary
-
-    -   Verify commit() raises ``ValueError`` if ``fabric_summary`` is not set.
-
-    ### Setup
-
-    -   Set everything that FabricUpdateBulk() expects to be set, prior to
-        calling commit(), EXCEPT fabric_summary.
-    """
-    with does_not_raise():
-        instance = fabric_update_bulk
-
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = RestSend(PARAMS)
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(PARAMS)
-        instance.results = Results()
-        instance.payloads = [
-            {
-                "BGP_AS": "65001",
-                "DEPLOY": "true",
-                "FABRIC_NAME": "f1",
-                "FABRIC_TYPE": "VXLAN_EVPN",
-            }
-        ]
-
-    match = r"FabricUpdateBulk\.commit:\s+"
-    match += r"fabric_summary must be set prior to calling commit\."
-    with pytest.raises(ValueError, match=match):
-        fabric_update_bulk.commit()
+# test_fabric_update_bulk_00050 removed because fabric_details is now already set within FabricUpdateBulk()
+# test_fabric_update_bulk_00060 removed because fabric_summary is now already set within FabricUpdateBulk()
 
 
 def test_fabric_update_bulk_00070(fabric_update_bulk) -> None:
@@ -1550,7 +1345,7 @@ def test_fabric_update_bulk_00070(fabric_update_bulk) -> None:
 
     ### Summary
 
-    -   Verify commit() raises ``ValueError`` if ``rest_send`` is not set.
+    -   Verify commit() raises `ValueError` if ``rest_send`` is not set.
 
     ### Setup
 
@@ -1559,15 +1354,6 @@ def test_fabric_update_bulk_00070(fabric_update_bulk) -> None:
     """
     with does_not_raise():
         instance = fabric_update_bulk
-
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = RestSend(PARAMS)
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = RestSend(PARAMS)
-        instance.fabric_summary.rest_send.unit_test = True
-
         instance.results = Results()
         instance.payloads = [
             {
@@ -1597,9 +1383,7 @@ def test_fabric_update_bulk_00070(fabric_update_bulk) -> None:
         (None, None),
     ],
 )
-def test_fabric_update_bulk_00100(
-    value, expected_return_value, fabric_update_bulk
-) -> None:
+def test_fabric_update_bulk_00100(value, expected_return_value, fabric_update_bulk) -> None:
     """
     ### Classes and Methods
 
@@ -1649,13 +1433,13 @@ def test_fabric_update_bulk_00110(monkeypatch, fabric_update_bulk) -> None:
     ### Summary
 
     -   Verify FabricUpdateCommon()._send_payloads() catches and
-        re-raises ``ValueError`` raised by
+        re-raises `ValueError` raised by
         FabricCommon()._fixup_payloads_to_commit()
 
     ### Setup
 
     -   Mock FabricCommon()._fixup_payloads_to_commit() method to
-        raise ``ValueError``.
+        raise `ValueError`.
     -   Monkeypatch FabricCommon()._fixup_payloads_to_commit()
         to the mocked method.
     -   Populate FabricUpdateCommon._payloads_to_commit with a payload
@@ -1665,7 +1449,7 @@ def test_fabric_update_bulk_00110(monkeypatch, fabric_update_bulk) -> None:
     def mock_fixup_payloads_to_commit() -> None:
         """
         Mock the FabricUpdateCommon._fixup_payloads_to_commit()
-        to raise ``ValueError``.
+        to raise `ValueError`.
         """
         msg = "raised FabricUpdateCommon._fixup_payloads_to_commit exception."
         raise ValueError(msg)
@@ -1686,9 +1470,7 @@ def test_fabric_update_bulk_00110(monkeypatch, fabric_update_bulk) -> None:
             }
         ]
 
-    monkeypatch.setattr(
-        instance, "_fixup_payloads_to_commit", mock_fixup_payloads_to_commit
-    )
+    monkeypatch.setattr(instance, "_fixup_payloads_to_commit", mock_fixup_payloads_to_commit)
 
     match = r"raised FabricUpdateCommon\._fixup_payloads_to_commit exception\."
     with pytest.raises(ValueError, match=match):
@@ -1710,13 +1492,13 @@ def test_fabric_update_bulk_00120(monkeypatch, fabric_update_bulk) -> None:
     ### Summary
 
     -   Verify FabricUpdateCommon()._send_payloads() catches and
-        re-raises ``ValueError`` raised by
+        re-raises `ValueError` raised by
         FabricCommon()._send_payload()
 
     ### Setup
 
     -   Mock FabricCommon()._send_payload() method to
-        raise ``ValueError``.
+        raise `ValueError`.
     -   Monkeypatch FabricCommon()._send_payload() to the mocked method.
     -   Populate FabricUpdateCommon._payloads_to_commit with a payload
         which contains a valid payload.
@@ -1724,7 +1506,7 @@ def test_fabric_update_bulk_00120(monkeypatch, fabric_update_bulk) -> None:
 
     def mock_send_payload(payload) -> None:
         """
-        Mock the FabricCommon()._send_payload() ``ValueError``.
+        Mock the FabricCommon()._send_payload() `ValueError`.
         """
         raise ValueError("raised FabricCommon.self_payload exception.")
 
@@ -1765,13 +1547,13 @@ def test_fabric_update_bulk_00130(monkeypatch, fabric_update_bulk) -> None:
     ### Summary
 
     -   Verify FabricUpdateCommon()._send_payloads() catches and
-        re-raises ``ValueError`` raised by
+        re-raises `ValueError` raised by
         FabricCommon()._config_save()
 
     ### Setup
 
     -   Mock FabricCommon()._config_save() method to
-        raise ``ValueError``.
+        raise `ValueError`.
     -   Monkeypatch FabricCommon()._config_save() to the mocked method.
     -   Populate FabricUpdateCommon._payloads_to_commit with a payload
         which contains a valid payload.
@@ -1781,14 +1563,14 @@ def test_fabric_update_bulk_00130(monkeypatch, fabric_update_bulk) -> None:
 
     def mock_config_save(payload) -> None:
         """
-        Mock FabricCommon()._config_save() ``ValueError``.
+        Mock FabricCommon()._config_save() `ValueError`.
         """
         fabric_name = payload.get("FABRIC_NAME", "unknown")
         raise ValueError(f"raised FabricCommon._config_save {fabric_name} exception.")
 
     def responses():
         yield responses_fabric_details_by_name_v2(key)
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -1803,15 +1585,6 @@ def test_fabric_update_bulk_00130(monkeypatch, fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
-
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = rest_send
-        instance.fabric_details.results = Results()
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = rest_send
-        instance.fabric_summary.results = Results()
-
         instance.rest_send = rest_send
         instance.results = Results()
         instance._payloads_to_commit = [
@@ -1845,13 +1618,13 @@ def test_fabric_update_bulk_00140(monkeypatch, fabric_update_bulk) -> None:
     ### Summary
 
     -   Verify FabricUpdateCommon()._send_payloads() catches and
-        re-raises ``ValueError`` raised by
+        re-raises `ValueError` raised by
         FabricCommon()._config_deploy()
 
     ### Setup
 
     -   Mock FabricCommon()._config_deploy() method to
-        raise ``ValueError``.
+        raise `ValueError`.
     -   Monkeypatch FabricCommon()._config_deploy() to the mocked method.
     -   Populate FabricUpdateCommon._payloads_to_commit with a payload
         which contains a valid payload.
@@ -1861,7 +1634,7 @@ def test_fabric_update_bulk_00140(monkeypatch, fabric_update_bulk) -> None:
 
     def mock_config_deploy(payload) -> None:
         """
-        Mock FabricCommon()._config_deploy() ``ValueError``.
+        Mock FabricCommon()._config_deploy() `ValueError`.
         """
         fabric_name = payload.get("FABRIC_NAME", "unknown")
         msg = f"raised FabricCommon._config_deploy {fabric_name} exception."
@@ -1869,7 +1642,7 @@ def test_fabric_update_bulk_00140(monkeypatch, fabric_update_bulk) -> None:
 
     def responses():
         yield responses_fabric_details_by_name_v2(key)
-        yield responses_fabric_summary(key)
+        yield responses_fabric_summary_v2(key)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -1884,15 +1657,6 @@ def test_fabric_update_bulk_00140(monkeypatch, fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
-
-        instance.fabric_details = FabricDetailsByName()
-        instance.fabric_details.rest_send = rest_send
-        instance.fabric_details.results = Results()
-
-        instance.fabric_summary = FabricSummary()
-        instance.fabric_summary.rest_send = rest_send
-        instance.fabric_summary.results = Results()
-
         instance.rest_send = rest_send
         instance.results = Results()
         instance._payloads_to_commit = [
@@ -1913,7 +1677,19 @@ def test_fabric_update_bulk_00140(monkeypatch, fabric_update_bulk) -> None:
 
 def test_fabric_update_bulk_00150(monkeypatch, fabric_update_bulk) -> None:
     """
-    ### Classes and Methods
+    # Summary
+
+    Verify FabricUpdateCommon()._send_payload() catches and re-raises `ValueError` raised by
+    EpFabricUpdate().fabric_name setter.
+
+    ## Setup
+
+    -   Mock EpFabricUpdate().fabric_name property to raise `ValueError`.
+    -   Monkeypatch EpFabricUpdate().fabric_name to the mocked method.
+    -   Populate FabricUpdateCommon._payloads_to_commit with a payload
+        which contains a valid payload.
+
+    ## Classes and Methods
 
     - EpFabricUpdate().fabric_name setter
     - FabricCommon()
@@ -1921,25 +1697,11 @@ def test_fabric_update_bulk_00150(monkeypatch, fabric_update_bulk) -> None:
     - FabricUpdateCommon()
         - __init__()
         - _send_payload()
-
-
-    ### Summary
-
-    -   Verify FabricUpdateCommon()._send_payload() catches and
-        re-raises ``ValueError`` raised by
-        EpFabricUpdate().fabric_name setter.
-
-    ### Setup
-
-    -   Mock EpFabricUpdate().fabric_name property to raise ``ValueError``.
-    -   Monkeypatch EpFabricUpdate().fabric_name to the mocked method.
-    -   Populate FabricUpdateCommon._payloads_to_commit with a payload
-        which contains a valid payload.
     """
 
     class MockEpFabricUpdate:  # pylint: disable=too-few-public-methods
         """
-        Mock the MockEpFabricUpdate.fabric_name property to raise ``ValueError``.
+        Mock the MockEpFabricUpdate.fabric_name property to raise `ValueError`.
         """
 
         @property
@@ -1953,14 +1715,12 @@ def test_fabric_update_bulk_00150(monkeypatch, fabric_update_bulk) -> None:
             """
             Mocked property setter
             """
-            raise ValueError(
-                "mocked MockEpFabricUpdate().fabric_name setter exception."
-            )
+            raise ValueError("mocked MockEpFabricUpdate().fabric_name setter exception.")
 
     with does_not_raise():
         instance = fabric_update_bulk
 
-    monkeypatch.setattr(instance, "ep_fabric_update", MockEpFabricUpdate())
+    monkeypatch.setattr(instance, "_ep_fabric_update", MockEpFabricUpdate())
 
     payload = {
         "BGP_AS": "65001",

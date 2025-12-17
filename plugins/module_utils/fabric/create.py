@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,20 +12,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Common methods and properties for:
+
+- FabricCreate
+- FabricCreateBulk
+"""
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import copy
 import inspect
 import json
 import logging
+from typing import Any, Literal
 
-from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabricCreate
-from .common import FabricCommon
+from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import EpFabricCreate
+from ..common.operation_type import OperationType
+from ..common.rest_send_v2 import RestSend
+from ..common.results_v2 import Results
+from .common_v2 import FabricCommon
+from .fabric_details_v3 import FabricDetailsByName
 from .fabric_types import FabricTypes
 
 
@@ -36,30 +46,38 @@ class FabricCreateCommon(FabricCommon):
     - FabricCreateBulk
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.class_name = self.__class__.__name__
-        self.action = "fabric_create"
+        self.class_name: str = self.__class__.__name__
+        self.action: str = "fabric_create"
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.ep_fabric_create = EpFabricCreate()
-        self.fabric_types = FabricTypes()
+        self._ep_fabric_create: EpFabricCreate = EpFabricCreate()
+        self._fabric_details_by_name: FabricDetailsByName = FabricDetailsByName()
+        self._rest_send: RestSend = RestSend({})
+        self._results: Results = Results()
+        self._results.operation_type = OperationType.CREATE
+        self._results.action = self.action
+
+        self.fabric_types: FabricTypes = FabricTypes()
 
         # path and verb cannot be defined here because
         # EpFabricCreate().fabric_name must be set first.
         # Set these to None here and define them later in
         # _set_fabric_create_endpoint().
-        self.path: str = None
-        self.verb: str = None
+        self.path: str = ""
+        self.verb: str = ""
 
-        self._payloads_to_commit: list = []
+        self._payloads_to_commit: list[dict[str, Any]] = []
 
         msg = "ENTERED FabricCreateCommon()"
         self.log.debug(msg)
 
     def _build_payloads_to_commit(self) -> None:
         """
+        # Summary
+
         Build a list of payloads to commit.  Skip any payloads that
         already exist on the controller.
 
@@ -68,49 +86,62 @@ class FabricCreateCommon(FabricCommon):
 
         Populates self._payloads_to_commit with a list of payloads
         to commit.
-        """
-        self.fabric_details.refresh()
 
-        self._payloads_to_commit: list = []
+        ## Raises
+
+        None
+        """
+        self._fabric_details_by_name.rest_send = self._rest_send
+        self._fabric_details_by_name.results = Results()
+        self._fabric_details_by_name.refresh()
+
+        self._payloads_to_commit = []
         for payload in self.payloads:
-            if payload.get("FABRIC_NAME", None) in self.fabric_details.all_data:
+            if payload.get("FABRIC_NAME", None) in self._fabric_details_by_name.all_data:
                 continue
             self._payloads_to_commit.append(copy.deepcopy(payload))
 
-    def _set_fabric_create_endpoint(self, payload):
+    def _set_fabric_create_endpoint(self, payload: dict[str, Any]) -> None:
         """
-        - Set the endpoint for the fabric create API call.
-        - raise ``ValueError`` if FABRIC_TYPE in the payload is invalid
-        - raise ``ValueError`` if the fabric_type to template_name mapping fails
-        - raise ``ValueError`` if the fabric_create endpoint assignment fails
+        # Summary
+
+        Set the endpoint for the fabric create API call.
+
+        ## Raises
+
+        ### ValueError
+
+        - FABRIC_TYPE in the payload is invalid
+        - fabric_type to template_name mapping fails
+        - _ep_fabric_create endpoint assignment fails
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
         try:
-            self.ep_fabric_create.fabric_name = payload.get("FABRIC_NAME")
+            self._ep_fabric_create.fabric_name = payload.get("FABRIC_NAME")
         except ValueError as error:
             raise ValueError(error) from error
 
         try:
-            self.fabric_type = copy.copy(payload.get("FABRIC_TYPE"))
+            _fabric_type = copy.copy(payload.get("FABRIC_TYPE"))
         except ValueError as error:
             raise ValueError(error) from error
 
         try:
-            self.fabric_types.fabric_type = self.fabric_type
-            template_name = self.fabric_types.template_name
+            self.fabric_types.fabric_type = _fabric_type
+            _template_name = self.fabric_types.template_name
         except ValueError as error:
             raise ValueError(error) from error
 
         try:
-            self.ep_fabric_create.template_name = template_name
+            self._ep_fabric_create.template_name = _template_name
         except ValueError as error:
             raise ValueError(error) from error
 
         payload.pop("FABRIC_TYPE", None)
-        self.path = self.ep_fabric_create.path
-        self.verb = self.ep_fabric_create.verb
+        self.path = self._ep_fabric_create.path
+        self.verb = self._ep_fabric_create.verb
 
-    def _add_ext_fabric_type_to_payload(self, payload: dict) -> dict:
+    def _add_ext_fabric_type_to_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
         """
         # Summary
 
@@ -123,7 +154,7 @@ class FabricCreateCommon(FabricCommon):
 
         None
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         fabric_type = payload.get("FABRIC_TYPE")
         if fabric_type not in self.fabric_types.external_fabric_types:
@@ -142,16 +173,24 @@ class FabricCreateCommon(FabricCommon):
         self.log.debug(msg)
         return payload
 
-    def _send_payloads(self):
+    def _send_payloads(self) -> None:
         """
+        # Summary
+
         -   If ``check_mode`` is ``False``, send the payloads
             to the controller.
         -   If ``check_mode`` is ``True``, do not send the payloads
             to the controller.
         -   In both cases, register results.
-        -   raise ``ValueError`` if the fabric_create endpoint assignment fails
 
-        NOTES:
+        ## Raises
+
+        ### ValueError
+
+        - fabric_create endpoint assignment fails
+
+        ## NOTES
+
         -   This overrides the parent class method.
         """
         for payload in self._payloads_to_commit:
@@ -171,45 +210,50 @@ class FabricCreateCommon(FabricCommon):
             # timeout error when creating a fabric is low, and there are many cases
             # of permanent errors for which we don't want to retry.
             # pylint: disable=no-member
-            self.rest_send.timeout = 1
+            self._rest_send.timeout = 1
 
-            self.rest_send.path = self.path
-            self.rest_send.verb = self.verb
-            self.rest_send.payload = payload
-            self.rest_send.commit()
+            self._rest_send.path = self.path
+            self._rest_send.verb = self.verb
+            self._rest_send.payload = payload
+            self._rest_send.commit()
 
-            if self.rest_send.result_current["success"] is False:
-                self.results.diff_current = {}
+            if self._rest_send.result_current["success"] is False:
+                self._results.diff_current = {}
             else:
-                self.results.diff_current = copy.deepcopy(payload)
-            self.results.action = self.action
-            self.results.state = self.rest_send.state
-            self.results.check_mode = self.rest_send.check_mode
-            self.results.response_current = copy.deepcopy(
-                self.rest_send.response_current
-            )
-            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-            self.results.register_task_result()
+                self._results.diff_current = copy.deepcopy(payload)
+            self._results.state = self._rest_send.state
+            self._results.check_mode = self._rest_send.check_mode
+            self._results.response_current = copy.deepcopy(self._rest_send.response_current)
+            self._results.result_current = copy.deepcopy(self._rest_send.result_current)
+            self._results.register_task_result()
 
-            msg = f"self.results.diff: {json.dumps(self.results.diff, indent=4, sort_keys=True)}"
+            msg = f"self._results.diff: {json.dumps(self._results.diff, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
     @property
     def payloads(self):
         """
-        Payloads must be a ``list`` of ``dict`` of payloads for the
-        ``fabric_create`` endpoint.
+        # Summary
+
+        Get or set the fabric create payloads.
+
+        Payloads must be a `list` of `dict` of payloads for the `fabric_create` endpoint.
 
         - getter: Return the fabric create payloads
         - setter: Set the fabric create payloads
-        - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
-        - setter: raise ``ValueError`` if any payload is missing mandatory keys
+
+        ## Raises
+
+        ### ValueError
+
+        - setter: `payloads` is not a `list` of `dict`
+        - setter: Any payload is missing mandatory keys
         """
         return self._payloads
 
     @payloads.setter
-    def payloads(self, value):
-        method_name = inspect.stack()[0][3]
+    def payloads(self, value: list[dict[str, Any]]) -> None:
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"value: {value}"
@@ -228,6 +272,90 @@ class FabricCreateCommon(FabricCommon):
                 raise ValueError(error) from error
         self._payloads = value
 
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        # Summary
+
+        An instance of the RestSend class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of RestSend.
+        -   setter: `ValueError` if RestSend.params is not set.
+
+        ## getter
+
+        Return an instance of the RestSend class.
+
+        ## setter
+
+        Set an instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["RestSend"] = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set before assigning "
+            msg += "to FabricConfigDeploy.rest_send."
+            raise ValueError(msg)
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        # Summary
+
+        An instance of the Results class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of Results.
+
+        ## getter
+
+        Return an instance of the Results class.
+
+        ## setter
+
+        Set an instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["Results"] = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._results = value
+        self._results.action = self.action
+        self._results.operation_type = OperationType.CREATE
+
 
 class FabricCreateBulk(FabricCreateCommon):
     """
@@ -238,7 +366,7 @@ class FabricCreateBulk(FabricCreateCommon):
     ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import \
         FabricCreateBulk
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
         Results
 
     payloads = [
@@ -270,15 +398,15 @@ class FabricCreateBulk(FabricCreateCommon):
     ```
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.class_name = self.__class__.__name__
+        self.class_name: str = self.__class__.__name__
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._payloads = None
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
+        self._payloads: list[dict[str, Any]] = []
         self.log.debug("ENTERED FabricCreateBulk()")
 
-    def commit(self):
+    def commit(self) -> None:
         """
         # create fabrics.
 
@@ -287,15 +415,14 @@ class FabricCreateBulk(FabricCreateCommon):
         - raise ``ValueError`` if payload fixup fails.
         - raise ``ValueError`` if sending the payloads fails.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        # pylint: disable=no-member
-        if self.rest_send is None:
+        if not self._rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit. "
             raise ValueError(msg)
 
-        if self.payloads is None:
+        if not self.payloads:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be set prior to calling commit."
             raise ValueError(msg)
@@ -328,15 +455,15 @@ class FabricCreate(FabricCreateCommon):
     -   FabricCreateBulk is used instead.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.class_name = self.__class__.__name__
+        self.class_name: str = self.__class__.__name__
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._payload = None
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
+        self._payload: dict[str, Any] = {}
         self.log.debug("ENTERED FabricCreate()")
 
-    def commit(self):
+    def commit(self) -> None:
         """
         -   Send the fabric create request to the controller.
         -   raise ``ValueError`` if ``rest_send`` is not set.
@@ -351,13 +478,14 @@ class FabricCreate(FabricCreateCommon):
             to a list and leverage the processing that already exists
             in FabricCreateCommom()
         """
-        method_name = inspect.stack()[0][3]
-        if self.rest_send is None:  # pylint: disable=no-member
+        method_name: str = inspect.stack()[0][3]
+
+        if not self._rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit. "
             raise ValueError(msg)
 
-        if self.payload is None:
+        if not self.payload:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload must be set prior to calling commit. "
             raise ValueError(msg)
@@ -377,15 +505,15 @@ class FabricCreate(FabricCreateCommon):
             raise ValueError(error) from error
 
     @property
-    def payload(self):
+    def payload(self) -> dict[str, Any]:
         """
         Return a fabric create payload.
         """
         return self._payload
 
     @payload.setter
-    def payload(self, value):
-        method_name = inspect.stack()[0][3]
+    def payload(self, value: dict[str, Any]) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload must be a dict. "
