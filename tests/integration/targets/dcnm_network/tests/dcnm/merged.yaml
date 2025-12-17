@@ -741,7 +741,7 @@
     fabric: "{{ test_data_common.fabric }}"
     state: merged
     config:
-      - net_name: ""
+      - net_name:
         vrf_name: Tenant-1
         net_id: 7005
         net_template: Default_Network_Universal

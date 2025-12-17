@@ -14,9 +14,9 @@
   vars:
     # Uncomment testcase to run a specific test
     testcase: ndfc_pc_members
-    ansible_it_fabric: cisco_test_fabric1
-    ansible_switch1: 192.168.10.211
-    ansible_switch2: 192.168.10.212
+    ansible_it_fabric: test_fabric
+    ansible_switch1: 192.168.1.13
+    ansible_switch2: 192.168.1.14
     ansible_eth_intf2: Ethernet1/2
     ansible_eth_intf3: Ethernet1/3
     ansible_eth_intf4: Ethernet1/4

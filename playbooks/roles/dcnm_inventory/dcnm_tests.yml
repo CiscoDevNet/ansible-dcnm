@@ -5,13 +5,13 @@
   connection: ansible.netcommon.httpapi
 
   vars:
-    ansible_switch1: 192.168.10.211
-    ansible_switch2: 192.168.10.212
-    ansible_switch3: 192.168.10.213
-    ansible_it_fabric: cisco_test_fabric1
+    ansible_switch1: 192.168.2.4
+    ansible_switch2: 192.168.2.5
+    ansible_switch3: 192.168.2.6
+    ansible_it_fabric: test-fabric
     deploy: false
     switch_username: admin
-    switch_password: admin!@#
+    switch_password: password
 
   roles:
     - dcnm_inventory
