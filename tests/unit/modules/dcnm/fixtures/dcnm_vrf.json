@@ -769,8 +769,8 @@
       ],
       "child_fabric_config": [
         {
-          "adv_host_routes": true,
-          "adv_default_routes": true,
+          "adv_host_routes": false,
+          "adv_default_routes": false,
           "l3vni_wo_vlan": false,
           "fabric": "child_fabric"
         }
@@ -793,7 +793,7 @@
       "child_fabric_config": [
         {
           "fabric": "child_fabric",
-          "static_default_route": true,
+          "static_default_route": false,
           "l3vni_wo_vlan": true
         }
       ],
@@ -919,8 +919,8 @@
       "child_fabric_config": [
         {
           "fabric": "child_fabric",
-          "adv_host_routes": true,
-          "adv_default_routes": true,
+          "adv_host_routes": false,
+          "adv_default_routes": false,
           "l3vni_wo_vlan": false
         }
       ],
@@ -1177,8 +1177,16 @@
         "vrfName": "test_vrf_1",
         "lanAttachList": [
           {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
             "lanAttachState": "DEPLOYED",
-            "isLanAttached": false
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "child_fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "2000",
+            "vrfId": "9008011"
           }
         ]
       }
@@ -1231,8 +1239,16 @@
         "vrfName": "test_vrf_1",
         "lanAttachList": [
           {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
             "lanAttachState": "NA",
-            "isLanAttached": false
+            "isLanAttached": false,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "child_fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "2000",
+            "vrfId": "9008011"
           }
         ]
       }
