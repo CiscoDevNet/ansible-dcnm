@@ -9,20 +9,20 @@
   cisco.dcnm.dcnm_interface:
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
-    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+    state: overridden
+  register: result
 
 - name: ASSERT - Check return codes for setup
-  assert:
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
-  loop: '{{ result.response }}'
+      - 'item["RETURN_CODE"] == 200'
+    loop: '{{ result.response }}'
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -39,15 +39,15 @@
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - multi_intf_merge
         - multi_intf_merge_modified
         - pc_merge
       delegate_to: localhost
 
-##############################################
-##              MERGE                       ##
-##############################################
+    ##############################################
+    ##              MERGE                       ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
@@ -58,16 +58,16 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        state: merged
         config: "{{ dcnm_interface_multi_intf_merge_conf }}"
       register: result
 
-    - name: ASSERT - Check changed flag is true and return codes
-      assert:
+    - name: ASSERT - Verify interface creation results
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC
       cisco.dcnm.dcnm_interface:
@@ -100,7 +100,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC after modify
@@ -117,9 +117,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              MERGE                       ##
-##############################################
+    ##############################################
+    ##              MERGE                       ##
+    ##############################################
 
     - name: Load PC Interface Config File
       ansible.builtin.set_fact:
@@ -138,7 +138,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for PC
@@ -155,9 +155,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -165,13 +165,13 @@
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+        state: overridden
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - name: ASSERT - Check return codes for cleanup
-      assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

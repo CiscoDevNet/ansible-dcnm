@@ -340,35 +340,35 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged
     config:
-    - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 150
-      gw_ip_subnet: '192.168.30.1/24'
-      attach:
-      - ip_address: 192.168.1.224
-        ports: [Ethernet1/13, Ethernet1/14]
-      - ip_address: 192.168.1.225
-        ports: [Ethernet1/13, Ethernet1/14]
-      deploy: true
-    - net_name: ansible-net12
-      vrf_name: Tenant-2
-      net_id: 7002
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 151
-      gw_ip_subnet: '192.168.40.1/24'
-      attach:
-      - ip_address: 192.168.1.224
-        ports: [Ethernet1/11, Ethernet1/12]
-        tor_ports:
-        - ip_address: 192.168.1.120
-          ports: [Ethernet1/14, Ethernet1/15]
-      - ip_address: 192.168.1.225
-        ports: [Ethernet1/11, Ethernet1/12]
-      deploy: false
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 150
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+          - ip_address: 192.168.1.224
+            ports: [Ethernet1/13, Ethernet1/14]
+          - ip_address: 192.168.1.225
+            ports: [Ethernet1/13, Ethernet1/14]
+        deploy: true
+      - net_name: ansible-net12
+        vrf_name: Tenant-2
+        net_id: 7002
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 151
+        gw_ip_subnet: '192.168.40.1/24'
+        attach:
+          - ip_address: 192.168.1.224
+            ports: [Ethernet1/11, Ethernet1/12]
+            tor_ports:
+              - ip_address: 192.168.1.120
+                ports: [Ethernet1/14, Ethernet1/15]
+          - ip_address: 192.168.1.225
+            ports: [Ethernet1/11, Ethernet1/12]
+        deploy: false
 
 - name: Replace networks
   cisco.dcnm.dcnm_network:
@@ -383,32 +383,32 @@ EXAMPLES = """
         vlan_id: 150
         gw_ip_subnet: '192.168.30.1/24'
         dhcp_servers:
-        - srvr_ip: 192.168.1.1
-          srvr_vrf: vrf_01
-        - srvr_ip: 192.168.2.1
-          srvr_vrf: vrf_02
-        - srvr_ip: 192.168.3.1
-          srvr_vrf: vrf_03
-        - srvr_ip: 192.168.4.1
-          srvr_vrf: vrf_04
-        - srvr_ip: 192.168.5.1
-          srvr_vrf: vrf_05
-        - srvr_ip: 192.168.6.1
-          srvr_vrf: vrf_06
-        - srvr_ip: 192.168.7.1
-          srvr_vrf: vrf_07
-        - srvr_ip: 192.168.8.1
-          srvr_vrf: vrf_08
-        - srvr_ip: 192.168.9.1
-          srvr_vrf: vrf_09
-        - srvr_ip: 192.168.10.1
-          srvr_vrf: vrf_10
+          - srvr_ip: 192.168.1.1
+            srvr_vrf: vrf_01
+          - srvr_ip: 192.168.2.1
+            srvr_vrf: vrf_02
+          - srvr_ip: 192.168.3.1
+            srvr_vrf: vrf_03
+          - srvr_ip: 192.168.4.1
+            srvr_vrf: vrf_04
+          - srvr_ip: 192.168.5.1
+            srvr_vrf: vrf_05
+          - srvr_ip: 192.168.6.1
+            srvr_vrf: vrf_06
+          - srvr_ip: 192.168.7.1
+            srvr_vrf: vrf_07
+          - srvr_ip: 192.168.8.1
+            srvr_vrf: vrf_08
+          - srvr_ip: 192.168.9.1
+            srvr_vrf: vrf_09
+          - srvr_ip: 192.168.10.1
+            srvr_vrf: vrf_10
         attach:
-        - ip_address: 192.168.1.224
-          # Replace the ports with new ports
-          # ports: [Ethernet1/13, Ethernet1/14]
-          ports: [Ethernet1/16, Ethernet1/17]
-          # Delete this attachment
+          - ip_address: 192.168.1.224
+            # Replace the ports with new ports
+            # ports: [Ethernet1/13, Ethernet1/14]
+            ports: [Ethernet1/16, Ethernet1/17]
+        # Delete this attachment
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
         deploy: true
@@ -432,57 +432,57 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: overridden
     config:
-    - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 150
-      gw_ip_subnet: '192.168.30.1/24'
-      attach:
-      - ip_address: 192.168.1.224
-        # Replace the ports with new ports
-        # ports: [Ethernet1/13, Ethernet1/14]
-        ports: [Ethernet1/16, Ethernet1/17]
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 150
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+          - ip_address: 192.168.1.224
+            # Replace the ports with new ports
+            # ports: [Ethernet1/13, Ethernet1/14]
+            ports: [Ethernet1/16, Ethernet1/17]
         # Delete this attachment
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
-      deploy: true
-      # Delete this network
-      # - net_name: ansible-net12
-      #   vrf_name: Tenant-2
-      #   net_id: 7002
-      #   net_template: Default_Network_Universal
-      #   net_extension_template: Default_Network_Extension_Universal
-      #   vlan_id: 151
-      #   gw_ip_subnet: '192.168.40.1/24'
-      #   attach:
-      #   - ip_address: 192.168.1.224
-      #     ports: [Ethernet1/11, Ethernet1/12]
-      #   - ip_address: 192.168.1.225
-      #     ports: [Ethernet1/11, Ethernet1/12]
-      #   deploy: false
+        deploy: true
+# Delete this network
+# - net_name: ansible-net12
+#   vrf_name: Tenant-2
+#   net_id: 7002
+#   net_template: Default_Network_Universal
+#   net_extension_template: Default_Network_Extension_Universal
+#   vlan_id: 151
+#   gw_ip_subnet: '192.168.40.1/24'
+#   attach:
+#   - ip_address: 192.168.1.224
+#     ports: [Ethernet1/11, Ethernet1/12]
+#   - ip_address: 192.168.1.225
+#     ports: [Ethernet1/11, Ethernet1/12]
+#   deploy: false
 
 - name: Delete selected networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
     state: deleted
     config:
-    - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 150
-      gw_ip_subnet: '192.168.30.1/24'
-    - net_name: ansible-net12
-      vrf_name: Tenant-2
-      net_id: 7002
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 151
-      gw_ip_subnet: '192.168.40.1/24'
-      deploy: false
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 150
+        gw_ip_subnet: '192.168.30.1/24'
+      - net_name: ansible-net12
+        vrf_name: Tenant-2
+        net_id: 7002
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 151
+        gw_ip_subnet: '192.168.40.1/24'
+        deploy: false
 
 - name: Delete all the networkss
   cisco.dcnm.dcnm_network:
@@ -494,8 +494,8 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: query
     config:
-    - net_name: ansible-net13
-    - net_name: ansible-net12
+      - net_name: ansible-net13
+      - net_name: ansible-net12
 """
 
 import copy
@@ -938,6 +938,7 @@ class DcnmNetwork:
         trm_en_changed = False
         rt_both_changed = False
         l3gw_onbd_changed = False
+        net_name_changed = False
         nf_en_changed = False
         intvlan_nfmon_changed = False
         vlan_nfmon_changed = False
@@ -1002,6 +1003,8 @@ class DcnmNetwork:
         rt_both_have = json_to_dict_have.get("rtBothAuto", "")
         l3gw_onbd_want = str(json_to_dict_want.get("enableL3OnBorder", "")).lower()
         l3gw_onbd_have = json_to_dict_have.get("enableL3OnBorder", "")
+        net_name_want = json_to_dict_want.get("networkName", "")
+        net_name_have = json_to_dict_have.get("networkName", "")
         nf_en_want = str(json_to_dict_want.get("ENABLE_NETFLOW", "")).lower()
         nf_en_have = json_to_dict_have.get("ENABLE_NETFLOW", "")
         intvlan_nfen_want = json_to_dict_want.get("SVI_NETFLOW_MONITOR", "")
@@ -1048,6 +1051,7 @@ class DcnmNetwork:
                 or trmen_have != trmen_want
                 or rt_both_have != rt_both_want
                 or l3gw_onbd_have != l3gw_onbd_want
+                or net_name_have != net_name_want
                 or nf_en_have != nf_en_want
                 or intvlan_nfen_have != intvlan_nfen_want
                 or vlan_nfen_have != vlan_nfen_want
@@ -1106,6 +1110,8 @@ class DcnmNetwork:
                     rt_both_changed = True
                 if l3gw_onbd_have != l3gw_onbd_want:
                     l3gw_onbd_changed = True
+                if net_name_have != net_name_want:
+                    net_name_changed = True
                 if self.dcnm_version > 11:
                     if nf_en_have != nf_en_want:
                         nf_en_changed = True
@@ -1146,6 +1152,7 @@ class DcnmNetwork:
                 or trmen_have != trmen_want
                 or rt_both_have != rt_both_want
                 or l3gw_onbd_have != l3gw_onbd_want
+                or net_name_have != net_name_want
                 or nf_en_have != nf_en_want
                 or intvlan_nfen_have != intvlan_nfen_want
                 or vlan_nfen_have != vlan_nfen_want
@@ -1201,6 +1208,8 @@ class DcnmNetwork:
                     rt_both_changed = True
                 if l3gw_onbd_have != l3gw_onbd_want:
                     l3gw_onbd_changed = True
+                if net_name_have != net_name_want:
+                    net_name_changed = True
                 if self.dcnm_version > 11:
                     if nf_en_have != nf_en_want:
                         nf_en_changed = True
@@ -1239,6 +1248,7 @@ class DcnmNetwork:
             trm_en_changed,
             rt_both_changed,
             l3gw_onbd_changed,
+            net_name_changed,
             nf_en_changed,
             intvlan_nfmon_changed,
             vlan_nfmon_changed,
@@ -1300,6 +1310,7 @@ class DcnmNetwork:
             "trmEnabled": net.get("trm_enable", False),
             "rtBothAuto": net.get("route_target_both", False),
             "enableL3OnBorder": net.get("l3gw_on_border", False),
+            "networkName": net.get("net_name", False),
         }
 
         if self.dcnm_version > 11:
@@ -1457,6 +1468,7 @@ class DcnmNetwork:
                     "trmEnabled": json_to_dict.get("trmEnabled", False),
                     "rtBothAuto": json_to_dict.get("rtBothAuto", False),
                     "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+                    "networkName": json_to_dict.get("networkName", False),
                 }
 
                 if self.dcnm_version > 11:
@@ -1511,6 +1523,7 @@ class DcnmNetwork:
                             "trmEnabled": json_to_dict.get("trmEnabled", False),
                             "rtBothAuto": json_to_dict.get("rtBothAuto", False),
                             "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+                            "networkName": json_to_dict.get("networkName", ""),
                         }
 
                         if self.dcnm_version > 11:
@@ -1952,6 +1965,7 @@ class DcnmNetwork:
         trm_en_changed = {}
         rt_both_changed = {}
         l3gw_onbd_changed = {}
+        net_name_changed = {}
         nf_en_changed = {}
         intvlan_nfmon_changed = {}
         vlan_nfmon_changed = {}
@@ -1989,6 +2003,7 @@ class DcnmNetwork:
                         trm_en_chg,
                         rt_both_chg,
                         l3gw_onbd_chg,
+                        net_name_chg,
                         nf_en_chg,
                         intvlan_nfmon_chg,
                         vlan_nfmon_chg,
@@ -2018,6 +2033,7 @@ class DcnmNetwork:
                     trm_en_changed.update({want_c["networkName"]: trm_en_chg})
                     rt_both_changed.update({want_c["networkName"]: rt_both_chg})
                     l3gw_onbd_changed.update({want_c["networkName"]: l3gw_onbd_chg})
+                    net_name_changed.update({want_c["networkName"]: net_name_chg})
                     nf_en_changed.update({want_c["networkName"]: nf_en_chg})
                     intvlan_nfmon_changed.update({want_c["networkName"]: intvlan_nfmon_chg})
                     vlan_nfmon_changed.update({want_c["networkName"]: vlan_nfmon_chg})
@@ -2130,6 +2146,7 @@ class DcnmNetwork:
                             or trm_en_changed.get(want_a["networkName"], False)
                             or rt_both_changed.get(want_a["networkName"], False)
                             or l3gw_onbd_changed.get(want_a["networkName"], False)
+                            or net_name_changed.get(want_a["networkName"], False)
                             or nf_en_changed.get(want_a["networkName"], False)
                             or intvlan_nfmon_changed.get(want_a["networkName"], False)
                             or vlan_nfmon_changed.get(want_a["networkName"], False)
@@ -2239,6 +2256,7 @@ class DcnmNetwork:
             found_c.update({"trm_enable": json_to_dict.get("trmEnabled", False)})
             found_c.update({"route_target_both": json_to_dict.get("rtBothAuto", False)})
             found_c.update({"l3gw_on_border": json_to_dict.get("enableL3OnBorder", False)})
+            found_c.update({"net_name": json_to_dict.get("networkName", False)})
             if self.dcnm_version > 11:
                 found_c.update({"netflow_enable": json_to_dict.get("ENABLE_NETFLOW", False)})
                 found_c.update({"intfvlan_nf_monitor": json_to_dict.get("SVI_NETFLOW_MONITOR", "")})
@@ -2620,6 +2638,7 @@ class DcnmNetwork:
                     "trmEnabled": json_to_dict.get("trmEnabled", False),
                     "rtBothAuto": json_to_dict.get("rtBothAuto", False),
                     "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+                    "networkName": json_to_dict.get("networkName", False),
                 }
 
                 if self.dcnm_version > 11:
@@ -3150,6 +3169,9 @@ class DcnmNetwork:
                 json_to_dict_want["enableL3OnBorder"] = True
             else:
                 json_to_dict_want["enableL3OnBorder"] = False
+
+        if cfg.get("net_name", None) is None:
+            json_to_dict_want["networkName"] = json_to_dict_have["networkName"]
 
         if self.dcnm_version > 11:
             if cfg.get("netflow_enable", None) is None:

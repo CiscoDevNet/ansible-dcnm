@@ -4,12 +4,12 @@ all:
     ansible_password: "password-ndfc"
     switch_password: "password-switch"
     ansible_python_interpreter: python
-    ansible_httpapi_validate_certs: False
-    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: false
+    ansible_httpapi_use_ssl: true
   children:
     ndfc:
       vars:
         ansible_connection: ansible.netcommon.httpapi
         ansible_network_os: cisco.dcnm.dcnm
       hosts:
-        192.168.1.1:
+          192.168.1.1:

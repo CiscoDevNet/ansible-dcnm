@@ -441,23 +441,23 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
-    - vrf_name: ansible-vrf-r2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
 
 # VRF LITE Extension attached
 - name: Merge vrfs
@@ -465,14 +465,14 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
       - ip_address: 192.168.1.225
         vrf_lite:
           - peer_vrf: test_vrf_1 # optional
@@ -496,26 +496,26 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: replaced
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
       # Delete this attachment
       # - ip_address: 192.168.1.225
       # Create the following attachment
       - ip_address: 192.168.1.226
-    # Dont touch this if its present on DCNM
-    # - vrf_name: ansible-vrf-r2
-    #   vrf_id: 9008012
-    #   vrf_template: Default_VRF_Universal
-    #   vrf_extension_template: Default_VRF_Extension_Universal
-    #   attach:
-    #   - ip_address: 192.168.1.224
-    #   - ip_address: 192.168.1.225
+      # Dont touch this if its present on DCNM
+      # - vrf_name: ansible-vrf-r2
+      #   vrf_id: 9008012
+      #   vrf_template: Default_VRF_Universal
+      #   vrf_extension_template: Default_VRF_Extension_Universal
+      #   attach:
+      #   - ip_address: 192.168.1.224
+      #   - ip_address: 192.168.1.225
 
 # The two VRFs below will be overridden in the target fabric.
 - name: Override vrfs
@@ -523,46 +523,46 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: overridden
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
       # Delete this attachment
       # - ip_address: 192.168.1.225
       # Create the following attachment
       - ip_address: 192.168.1.226
-    # Delete this vrf
-    # - vrf_name: ansible-vrf-r2
-    #   vrf_id: 9008012
-    #   vrf_template: Default_VRF_Universal
-    #   vrf_extension_template: Default_VRF_Extension_Universal
-    #   vlan_id: 2000
-    #   service_vrf_template: null
-    #   attach:
-    #   - ip_address: 192.168.1.224
-    #   - ip_address: 192.168.1.225
+      # Delete this vrf
+      # - vrf_name: ansible-vrf-r2
+      #   vrf_id: 9008012
+      #   vrf_template: Default_VRF_Universal
+      #   vrf_extension_template: Default_VRF_Extension_Universal
+      #   vlan_id: 2000
+      #   service_vrf_template: null
+      #   attach:
+      #   - ip_address: 192.168.1.224
+      #   - ip_address: 192.168.1.225
 
 - name: Delete selected vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: deleted
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-    - vrf_name: ansible-vrf-r2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+      - vrf_name: ansible-vrf-r2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
 
 - name: Delete all the vrfs
   cisco.dcnm.dcnm_vrf:
@@ -574,8 +574,8 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: query
     config:
-    - vrf_name: ansible-vrf-r1
-    - vrf_name: ansible-vrf-r2
+      - vrf_name: ansible-vrf-r1
+      - vrf_name: ansible-vrf-r2
 """
 import ast
 import copy
