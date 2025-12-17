@@ -1192,6 +1192,7 @@ def has_partial_dhcp_config(server):
     vrf = server.get("srvr_vrf")
     return bool(ip) != bool(vrf)
 
+
 def sanitize_lan_attach_list(attach_objects: list) -> list:
     """
     # Summary
@@ -1274,8 +1275,8 @@ def sanitize_lan_attach_list(attach_objects: list) -> list:
 
     return attach_objects
 
-# Action plugin utilities
 
+# Action plugin utilities
 def get_nd_version(action_module, task_vars, tmp):
     """
     Query NDFC and return the exact software version

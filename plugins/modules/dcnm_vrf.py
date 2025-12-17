@@ -1859,6 +1859,18 @@ class DcnmVrf:
         if vrfSegmentId_want is None:
             skip_keys.append("vrfSegmentId")
 
+        # BGP password/key type special handling
+        bgp_password_want = json_to_dict_want.get("bgpPassword")
+        bgp_password_have = json_to_dict_have.get("bgpPassword")
+        bgp_key_type_have = json_to_dict_have.get("bgpPasswordKeyType")
+
+        # Some ND versions give empty bgpPasswordKeyType. Skip comparison if:
+        # 1. Have keytype is empty/None (ND has no password configured)
+        # 2. Both passwords are empty (no password in want or have)
+        if ((bgp_key_type_have == "") or
+           (bgp_password_want == "") and bgp_password_have == ""):
+            skip_keys.append("bgpPasswordKeyType")
+
         template_skip_keys = self.get_template_skip_keys()
         if template_skip_keys:
             skip_keys.extend(template_skip_keys)
