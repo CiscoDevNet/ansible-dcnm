@@ -31,11 +31,7 @@
 - name: Set fact
   ansible.builtin.set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
-  when: >
-    result.response is defined and
-    result.response.DATA is defined and
-    result.response.DATA.version is defined and
-    result.response.DATA.version is search("\d\d.\d+")
+  when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
   failed_when: false
   tags: sanity
 
