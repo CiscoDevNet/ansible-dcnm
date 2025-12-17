@@ -200,10 +200,10 @@ class ImageUpgrade:
         self._check_interval: int = 10  # seconds
         self._check_timeout: int = 1800  # seconds
         self._config_reload: bool = False
-        self._devices: list[dict[str, str]] = []
+        self._devices: list[dict[str, str]] | None = None
         self._disruptive: bool = True
         self._epld_golden: bool = False
-        self._epld_module: str = "ALL"
+        self._epld_module: str | int = "ALL"
         self._epld_upgrade: bool = False
         self._force_non_disruptive: bool = False
         self._non_disruptive: bool = False
@@ -265,7 +265,7 @@ class ImageUpgrade:
         msg = f"self.devices: {json.dumps(self.devices, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.devices:
+        if self.devices is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "call instance.devices before calling commit."
             raise ValueError(msg)
@@ -550,7 +550,6 @@ class ImageUpgrade:
         """
         Verify mandatory parameters are set before calling commit.
         """
-        # pylint: disable=no-member
         method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED: {self.class_name}.{method_name}."
@@ -580,12 +579,10 @@ class ImageUpgrade:
 
         self.validate_commit_parameters()
 
-        # pylint: disable=no-member
         self.issu_detail.rest_send = self.rest_send
         self.install_options.rest_send = self.rest_send
 
         self.install_options.results = self.results
-        # pylint: enable=no-member
         # We don't want issu_detail results to show up in the user's result output.
         self.issu_detail.results = Results()
 
@@ -594,6 +591,12 @@ class ImageUpgrade:
 
         self.saved_response_current = {}
         self.saved_result_current = {}
+
+        if self.devices is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "instance.devices must be set before calling commit()."
+            raise ValueError(msg)
+
         for device in self.devices:
             ipv4 = device.get("ip_address")
             if ipv4 not in self.saved_response_current:
@@ -613,7 +616,6 @@ class ImageUpgrade:
             msg += f"path: {self.ep_upgrade_image.path}."
             self.log.debug(msg)
 
-            # pylint: disable=no-member
             try:
                 self.rest_send.path = self.ep_upgrade_image.path
                 self.rest_send.verb = self.ep_upgrade_image.verb
@@ -651,7 +653,6 @@ class ImageUpgrade:
         self._wait_for_image_upgrade_to_complete()
 
         self.build_diff()
-        # pylint: disable=no-member
         self.results.action = self.action
         self.results.diff_current = copy.deepcopy(self.diff)
         self.results.response_current = copy.deepcopy(self.saved_response_current)
@@ -678,7 +679,7 @@ class ImageUpgrade:
             self.wait_for_controller_done.items = set(copy.copy(self.ip_addresses))
             self.wait_for_controller_done.item_type = "ipv4_address"
             self.wait_for_controller_done.rest_send = (
-                self.rest_send  # pylint: disable=no-member
+                self.rest_send
             )
             self.wait_for_controller_done.commit()
         except (TypeError, ValueError) as error:
@@ -704,13 +705,13 @@ class ImageUpgrade:
         self.log.debug(msg)
 
         self.ipv4_todo = set(copy.copy(self.ip_addresses))
-        if self.rest_send.unit_test is False:  # pylint: disable=no-member
+        if self.rest_send.unit_test is False:
             # See unit test test_image_upgrade_upgrade_00240
             self.ipv4_done = set()
         timeout = self.check_timeout
 
         while self.ipv4_done != self.ipv4_todo and timeout > 0:
-            if self.rest_send.unit_test is False:  # pylint: disable=no-member
+            if self.rest_send.unit_test is False:
                 sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()
@@ -795,7 +796,7 @@ class ImageUpgrade:
         self._config_reload = value
 
     @property
-    def devices(self) -> list[dict[str, str]]:
+    def devices(self) -> list[dict[str, str]] | None:
         """
         Set the devices to upgrade.
 
@@ -900,10 +901,8 @@ class ImageUpgrade:
     @epld_module.setter
     def epld_module(self, value: str | int) -> None:
         method_name: str = inspect.stack()[0][3]
-        try:
+        if isinstance(value, str):
             value = value.upper()
-        except AttributeError:
-            pass
         try:
             value = int(value)
         except ValueError:
