@@ -4,29 +4,28 @@
 
 - name: Initialize the setup
   cisco.dcnm.dcnm_template:
-    state: deleted       # only choose form [merged, deleted, query]
+    state: deleted
     config:
       - name: template_101
       - name: template_102
       - name: template_103
       - name: template_104
-
   register: result
 
-- assert:
+- name: ASSERT - Initial response codes
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 - block:
-
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create templates
-      cisco.dcnm.dcnm_template: &temp_merge
-        state: merged        # only choose form [merged, deleted, query]
+      cisco.dcnm.dcnm_template: &create_templates
+        state: merged
         config:
           - name: template_101
             description: "Template_101"
@@ -61,7 +60,6 @@
                 subscription 2
                   dst-grp 2
                   snsr-grp 2 sample-interval 20000
-
           - name: template_103
             description: "Template_103"
             tags: "internal policy 103"
@@ -78,7 +76,6 @@
                 subscription 3
                   dst-grp 3
                   snsr-grp 2 sample-interval 30000
-
           - name: template_104
             description: "Template_104"
             tags: "internal policy 104"
@@ -96,24 +93,28 @@
                   dst-grp 4
                   snsr-grp 4 sample-interval 40000
       register: result
-    - assert:
+
+    - name: ASSERT - Creation diff
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 4'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
 
-    - assert:
+    - name: ASSERT - Creation response codes
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
 
     - name: Create templates again - Idempotence
-      cisco.dcnm.dcnm_template: *temp_merge
+      cisco.dcnm.dcnm_template: *create_templates
       register: result
 
-    - assert:
+    - name: ASSERT - Idempotence diff
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
@@ -123,6 +124,7 @@
     # This task will generate an error and return code 500 since the template
     # is in use.  We ignore the error for the task to continue running the
     # playbook but still check the error data returned by the module.
+
     - name: Modify existing template which is in use
       cisco.dcnm.dcnm_template:
         config:
@@ -143,15 +145,15 @@
                   dst-grp 1
                   snsr-grp 1 sample-interval 10000
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
-#   - assert:
-#       that:
-#         - 'result.changed == false'
-#         - 'result.msg["RETURN_CODE"] == 500'
-#         - '"Template is already in use" in result.msg["DATA"]'
+    #   - assert:
+    #       that:
+    #         - 'result.changed == false'
+    #         - 'result.msg["RETURN_CODE"] == 500'
+    #         - '"Template is already in use" in result.msg["DATA"]'
 
-    - name: Create templates without mentioning state
+    - name: Create template 105 without mentioning state
       cisco.dcnm.dcnm_template:
         config:
           - name: template_105
@@ -172,48 +174,42 @@
                   snsr-grp 105 sample-interval 10105
       register: result
 
-    - assert:
+    - name: ASSERT - Template_105 creation
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
 
-    - assert:
+    - name: ASSERT - Response codes template_105
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
 
-##############################################
-##             CLEANUP                      ##
-##############################################
-
   always:
-
     - name: Delete all templates created
       cisco.dcnm.dcnm_template:
-        state: deleted       # only choose form [merged, deleted, query]
+        state: deleted
         config:
           - name: template_101
-
           - name: template_102
-
           - name: template_103
-
           - name: template_104
-
           - name: template_105
-
       register: result
 
-    - assert:
+    - name: ASSERT - Deletion response codes
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Template deletion successful" in item["DATA"]'
       loop: '{{ result.response }}'
 
-    - assert:
+    - name: ASSERT - Deletion diff
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'

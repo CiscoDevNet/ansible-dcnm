@@ -3,7 +3,8 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f srp.log
+  ansible.builtin.command: rm -f srp.log
+  delegate_to: localhost
 
 - name: Delete route peerings
   cisco.dcnm.dcnm_service_route_peering:
@@ -12,7 +13,8 @@
     state: deleted
   register: result
 
-- assert:
+- name: Assert conditions
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -20,9 +22,9 @@
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create Intertenant Firewall SRP with Static Peering
       cisco.dcnm.dcnm_service_route_peering:
@@ -69,7 +71,8 @@
         state: merged
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
@@ -78,14 +81,15 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 1'
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                CONVERT                   ##
-##############################################
+    ##############################################
+    ##                CONVERT                   ##
+    ##############################################
 
     - name: Convert Intertenant Firewall SRP with Static Peering to eBGP peering
       cisco.dcnm.dcnm_service_route_peering:
@@ -142,7 +146,8 @@
         state: merged
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
@@ -151,14 +156,15 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 1'
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                CONVERT                   ##
-##############################################
+    ##############################################
+    ##                CONVERT                   ##
+    ##############################################
 
     - name: Convert Intertenant Firewall SRP with eBGP Peering back to Static Peering
       cisco.dcnm.dcnm_service_route_peering:
@@ -205,7 +211,8 @@
         state: merged
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
@@ -214,14 +221,15 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 1'
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                CLEANUP                   ##
-##############################################
+  ##############################################
+  ##                CLEANUP                   ##
+  ##############################################
 
   always:
 
@@ -256,7 +264,8 @@
       register: result
       when: IT_CONTEXT is not defined
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

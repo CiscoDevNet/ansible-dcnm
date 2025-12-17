@@ -5,7 +5,7 @@
 # 00:49.83
 ################################################################################
 # DESCRIPTION - BASIC FABRIC DELETED STATE TEST
-# 
+#
 # Test basic deletion of fabrics verify results.
 # - Deletion of populated fabrics not tested here.
 ################################################################################
@@ -50,7 +50,8 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_2 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # DELETED - TEST - Create all supported fabric types
@@ -155,9 +156,11 @@
         FABRIC_TYPE: "{{ fabric_type_2 }}"
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -217,9 +220,11 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_2 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -280,9 +285,11 @@
 - name: DELETED - TEST - Delete fabric_name_2 idempotence
   cisco.dcnm.dcnm_fabric: *fabric_deleted
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
