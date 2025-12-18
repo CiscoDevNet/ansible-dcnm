@@ -17,27 +17,27 @@
   ansible.builtin.set_fact:
     # MSD fabric should not deploy by default in tests
     deploy_local: false
-    
+
     test_data_msd_merged:
-      #----------------------------------  
+      # ----------------------------------
       # MSD config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       # MSD TC1 - Basic MSD Network with Child Fabric Config
       msd_basic_net_conf_template: "msd_merged/dcnm_network_msd_basic_net_conf.j2"
       msd_basic_net_conf_file: "{{ role_path }}/files/dcnm_network_msd_basic_net_conf.yaml"
-      
+
       # MSD TC2 - MSD Network with Multiple Child Fabrics
       msd_multi_child_conf_template: "msd_merged/dcnm_network_msd_multi_child_conf.j2"
       msd_multi_child_conf_file: "{{ role_path }}/files/dcnm_network_msd_multi_child_conf.yaml"
-      
+
       # MSD TC3 - MSD L2-only Network
       msd_l2_only_conf_template: "msd_merged/dcnm_network_msd_l2_only_conf.j2"
       msd_l2_only_conf_file: "{{ role_path }}/files/dcnm_network_msd_l2_only_conf.yaml"
-      
+
       # MSD TC4 - MSD Network with DHCP Configuration
       msd_dhcp_conf_template: "msd_merged/dcnm_network_msd_dhcp_conf.j2"
       msd_dhcp_conf_file: "{{ role_path }}/files/dcnm_network_msd_dhcp_conf.yaml"
-      
+
   delegate_to: localhost
   tags: msd_merged
 

@@ -16,19 +16,19 @@
 - name: MSD_DELETED - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     deploy_local: false
-    
+
     test_data_msd_deleted:
-      #----------------------------------  
+      # ----------------------------------
       # MSD deleted config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       # MSD TC1 - Delete single MSD network
       msd_deleted_net_conf_template: "msd_deleted/dcnm_network_msd_deleted_net_conf.j2"
       msd_deleted_net_conf_file: "{{ role_path }}/files/dcnm_network_msd_deleted_net_conf.yaml"
-      
+
       # MSD TC2 - Delete multiple MSD networks
       msd_deleted_multi_conf_template: "msd_deleted/dcnm_network_msd_deleted_multi_conf.j2"
       msd_deleted_multi_conf_file: "{{ role_path }}/files/dcnm_network_msd_deleted_multi_conf.yaml"
-      
+
   delegate_to: localhost
   tags: msd_deleted
 
@@ -115,7 +115,7 @@
         child_fabric_config:
           - fabric: "{{ test_data_common.child_fabric }}"
             netflow_enable: false
-            l3gw_on_border: True
+            l3gw_on_border: true
             dhcp_loopback_id: 204
             multicast_group_address: '239.1.1.1'
         attach:
@@ -238,7 +238,7 @@
         child_fabric_config:
           - fabric: "{{ test_data_common.child_fabric }}"
             netflow_enable: false
-            l3gw_on_border: True
+            l3gw_on_border: true
             dhcp_loopback_id: 204
         attach:
           - ip_address: "{{ test_data_common.sw1 }}"
@@ -258,7 +258,7 @@
         child_fabric_config:
           - fabric: "{{ test_data_common.child_fabric }}"
             netflow_enable: false
-            l3gw_on_border: True
+            l3gw_on_border: true
             dhcp_loopback_id: 205
         attach:
           - ip_address: "{{ test_data_common.sw1 }}"
@@ -383,7 +383,7 @@
         child_fabric_config:
           - fabric: "{{ test_data_common.child_fabric }}"
             netflow_enable: false
-            l3gw_on_border: True
+            l3gw_on_border: true
             dhcp_loopback_id: 204
         attach:
           - ip_address: "{{ test_data_common.sw1 }}"

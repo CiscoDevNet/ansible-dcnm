@@ -1,86 +1,95 @@
 ---
-- name: debug testcase variable
-  debug:
+- name: Debug testcase variable
+  ansible.builtin.debug:
     var: testcase
   tags: sanity
 
 # Handle wildcard patterns
-- name: run all tests
+- name: Run all tests
+  when: testcase == "*"
+  tags: sanity
   block:
-    - name: set patterns for all tests
-      set_fact:
+    - name: Set patterns for all tests
+      ansible.builtin.set_fact:
         msd_pattern: "*.yaml"
         standalone_pattern: "*.yaml"
         mcfg_pattern: "*.yaml"
-    - import_tasks: dcnm_mcfg.yaml
-    - import_tasks: dcnm_msd.yaml
-    - import_tasks: dcnm_standalone.yaml
-  when: testcase == "*"
-  tags: sanity
+    - name: Import MCFG tasks
+      ansible.builtin.import_tasks: dcnm_mcfg.yaml
+    - name: Import MSD tasks
+      ansible.builtin.import_tasks: dcnm_msd.yaml
+    - name: Import standalone tasks
+      ansible.builtin.import_tasks: dcnm_standalone.yaml
 
 # Handle MCFG wildcard
-- name: run all MCFG tests
-  block:
-    - name: set pattern for all MCFG tests
-      set_fact:
-        mcfg_pattern: "*.yaml"
-    - import_tasks: dcnm_mcfg.yaml
+- name: Run all MCFG tests
   when: testcase == "mcfg/*"
   tags: sanity
+  block:
+    - name: Set pattern for all MCFG tests
+      ansible.builtin.set_fact:
+        mcfg_pattern: "*.yaml"
+    - name: Import MCFG tasks
+      ansible.builtin.import_tasks: dcnm_mcfg.yaml
 
 # Handle MSD wildcard
-- name: run all MSD tests
-  block:
-    - name: set pattern for all MSD tests
-      set_fact:
-        msd_pattern: "*.yaml"
-    - import_tasks: dcnm_msd.yaml
+- name: Run all MSD tests
   when: testcase == "msd/*"
   tags: sanity
+  block:
+    - name: Set pattern for all MSD tests
+      ansible.builtin.set_fact:
+        msd_pattern: "*.yaml"
+    - name: Import MSD tasks
+      ansible.builtin.import_tasks: dcnm_msd.yaml
 
 # Handle standalone wildcard
-- name: run all standalone tests
-  block:
-    - name: set pattern for all standalone tests
-      set_fact:
-        standalone_pattern: "{{ testcase }}"
-    - import_tasks: dcnm_standalone.yaml
+- name: Run all standalone tests
   when: testcase is match("standalone/.*")
   tags: sanity
+  block:
+    - name: Set pattern for all standalone tests
+      ansible.builtin.set_fact:
+        standalone_pattern: "{{ testcase }}"
+    - name: Import standalone tasks
+      ansible.builtin.import_tasks: dcnm_standalone.yaml
 
 # Handle specific MCFG test
-- name: run specific MCFG test
-  block:
-    - name: extract MCFG test name
-      set_fact:
-        mcfg_test_name: "{{ testcase | regex_replace('^mcfg/', '') }}"
-    - name: set pattern for specific MCFG test
-      set_fact:
-        mcfg_pattern: "{{ mcfg_test_name }}.yaml"
-    - import_tasks: dcnm_mcfg.yaml
+- name: Run specific MCFG test
   when: testcase.startswith("mcfg/") and testcase != "mcfg/*"
   tags: sanity
+  block:
+    - name: Extract MCFG test name
+      ansible.builtin.set_fact:
+        mcfg_test_name: "{{ testcase | regex_replace('^mcfg/', '') }}"
+    - name: Set pattern for specific MCFG test
+      ansible.builtin.set_fact:
+        mcfg_pattern: "{{ mcfg_test_name }}.yaml"
+    - name: Import MCFG tasks
+      ansible.builtin.import_tasks: dcnm_mcfg.yaml
 
 # Handle specific MSD test
-- name: run specific MSD test
-  block:
-    - name: extract MSD test name
-      set_fact:
-        msd_test_name: "{{ testcase | regex_replace('^msd/', '') }}"
-    - name: set pattern for specific MSD test
-      set_fact:
-        msd_pattern: "{{ msd_test_name }}.yaml"
-    - import_tasks: dcnm_msd.yaml
+- name: Run specific MSD test
   when: testcase.startswith("msd/") and testcase != "msd/*"
   tags: sanity
+  block:
+    - name: Extract MSD test name
+      ansible.builtin.set_fact:
+        msd_test_name: "{{ testcase | regex_replace('^msd/', '') }}"
+    - name: Set pattern for specific MSD test
+      ansible.builtin.set_fact:
+        msd_pattern: "{{ msd_test_name }}.yaml"
+    - name: Import MSD tasks
+      ansible.builtin.import_tasks: dcnm_msd.yaml
 
 # Handle specific standalone test
-- name: run specific standalone test
-  block:
-    - name: set pattern for specific standalone test
-      set_fact:
-        standalone_pattern: "{{ testcase }}"
-    - import_tasks: dcnm_standalone.yaml
-  when: 
+- name: Run specific standalone test
+  when:
     - testcase is match("standalone/[^/]+\.yaml$")
   tags: sanity
+  block:
+    - name: Set pattern for specific standalone test
+      ansible.builtin.set_fact:
+        standalone_pattern: "{{ testcase }}"
+    - name: Import standalone tasks
+      ansible.builtin.import_tasks: dcnm_standalone.yaml

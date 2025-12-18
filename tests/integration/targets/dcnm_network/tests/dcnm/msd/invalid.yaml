@@ -16,21 +16,21 @@
 - name: MSD_INVALID - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data_msd_invalid:
-      #----------------------------------  
+      # ----------------------------------
       # MSD Invalid config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       # Invalid TC1 - Parent fabric restrictions
       msd_invalid_parent_conf_template: "msd_invalid/dcnm_network_msd_invalid_parent_conf.j2"
       msd_invalid_parent_conf_file: "{{ role_path }}/files/dcnm_network_msd_invalid_parent_conf.yaml"
-      
+
       # Invalid TC2 - Child fabric errors
       msd_invalid_child_conf_template: "msd_invalid/dcnm_network_msd_invalid_child_conf.j2"
       msd_invalid_child_conf_file: "{{ role_path }}/files/dcnm_network_msd_invalid_child_conf.yaml"
-      
+
       # Invalid TC3 - Parameter range errors
       msd_invalid_params_conf_template: "msd_invalid/dcnm_network_msd_invalid_params_conf.j2"
       msd_invalid_params_conf_file: "{{ role_path }}/files/dcnm_network_msd_invalid_params_conf.yaml"
-      
+
   delegate_to: localhost
   tags: msd_invalid
 
@@ -117,7 +117,7 @@
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: merged
-    config: 
+    config:
       - "{{ dcnm_network_msd_invalid_parent_conf[0] }}"
   register: result
   ignore_errors: true
@@ -134,7 +134,7 @@
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: merged
-    config: 
+    config:
       - "{{ dcnm_network_msd_invalid_parent_conf[1] }}"
   register: result
   ignore_errors: true
@@ -151,7 +151,7 @@
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: merged
-    config: 
+    config:
       - "{{ dcnm_network_msd_invalid_parent_conf[2] }}"
   register: result
   ignore_errors: true
@@ -172,7 +172,7 @@
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: merged
-    config: 
+    config:
       - "{{ dcnm_network_msd_invalid_child_conf[0] }}"
   register: result
   ignore_errors: true
@@ -193,7 +193,7 @@
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: merged
-    config: 
+    config:
       - "{{ dcnm_network_msd_invalid_params_conf[0] }}"
   register: result
   ignore_errors: true
@@ -210,7 +210,7 @@
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
     state: merged
-    config: 
+    config:
       - "{{ dcnm_network_msd_invalid_params_conf[1] }}"
   register: result
   ignore_errors: true
