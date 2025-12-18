@@ -72,7 +72,7 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ parent_fabric }}"
     state: merged
-    config: &conf2
+    config:
       - vrf_name: ansible-msd-sanity-basic
         vrf_id: 9008201
         vrf_template: Default_VRF_Universal
@@ -153,7 +153,7 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ parent_fabric }}"
     state: merged
-    config:
+    config: &conf2
       - vrf_name: ansible-msd-sanity-child
         vrf_id: 9008202
         vrf_template: Default_VRF_Universal

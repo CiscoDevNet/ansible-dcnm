@@ -41,7 +41,7 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-      - "result.response.DATA != None"
+      - 'result.response.DATA != None'
 
 - name: OVERRIDDEN_ALL - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
@@ -62,8 +62,8 @@
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
-        source:
-        service_vrf_template:
+        source: null
+        service_vrf_template: null
         vrf_vlan_name: "test"
         vrf_intf_desc: "test vrf interface"
         vrf_description: "test vrf"
@@ -96,14 +96,14 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-      - "result.changed == true"
-      - "result.response[0].RETURN_CODE == 200"
-      - "result.response[1].RETURN_CODE == 200"
-      - "result.response[2].RETURN_CODE == 200"
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[2].RETURN_CODE == 200'
       - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
       - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-      - "result.diff[0].attach[0].deploy == true"
-      - "result.diff[0].attach[1].deploy == true"
+      - 'result.diff[0].attach[0].deploy == true'
+      - 'result.diff[0].attach[1].deploy == true'
       - '"{{ switch_1 }}" or "{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
       - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
       - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
@@ -115,8 +115,8 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-      - "result.changed == false"
-      - "result.response|length == 0"
+      - 'result.changed == false'
+      - 'result.response|length == 0'
 
 - name: OVERRIDDEN_ALL - Override a existing VRF with a new one
   cisco.dcnm.dcnm_vrf: &conf1
@@ -128,8 +128,8 @@
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
-        source:
-        service_vrf_template:
+        source: null
+        service_vrf_template: null
         vrf_vlan_name: "testvlan"
         vrf_intf_desc: "test interface"
         vrf_description: "vrf"
@@ -161,22 +161,22 @@
 
 - assert:
     that:
-      - "result.changed == true"
-      - "result.response[0].RETURN_CODE == 200"
-      - "result.response[1].RETURN_CODE == 200"
-      - "result.response[2].RETURN_CODE == 200"
-      - "result.response[3].RETURN_CODE == 200"
-      - "result.response[4].RETURN_CODE == 200"
-      - "result.response[5].RETURN_CODE == 200"
-      - "result.response[6].RETURN_CODE == 200"
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[2].RETURN_CODE == 200'
+      - 'result.response[3].RETURN_CODE == 200'
+      - 'result.response[4].RETURN_CODE == 200'
+      - 'result.response[5].RETURN_CODE == 200'
+      - 'result.response[6].RETURN_CODE == 200'
       - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
       - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
       - '(result.response[5].DATA|dict2items)[0].value == "SUCCESS"'
       - '(result.response[5].DATA|dict2items)[1].value == "SUCCESS"'
-      - "result.diff[0].attach[0].deploy == true"
-      - "result.diff[0].attach[1].deploy == true"
-      - "result.diff[1].attach[0].deploy == false"
-      - "result.diff[1].attach[1].deploy == false"
+      - 'result.diff[0].attach[0].deploy == true'
+      - 'result.diff[0].attach[1].deploy == true'
+      - 'result.diff[1].attach[0].deploy == false'
+      - 'result.diff[1].attach[1].deploy == false'
       - '"{{ switch_1 }}" or "{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
       - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
       - '"{{ switch_1 }}" or "{{ switch_2 }}" in result.diff[1].attach[0].ip_address'
@@ -191,8 +191,8 @@
 - name: Assert
   ansible.builtin.assert:
     that:
-      - "result.changed == false"
-      - "result.response|length == 0"
+      - 'result.changed == false'
+      - 'result.response|length == 0'
 
 ###############################################
 ###                 CLEAN-UP                 ##
