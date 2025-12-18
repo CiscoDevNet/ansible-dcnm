@@ -109,7 +109,7 @@ def test_image_upgrade_00010(image_upgrade) -> None:
     assert instance.check_interval == 10
     assert instance.check_timeout == 1800
     assert instance.config_reload is False
-    assert instance.devices == []
+    assert instance.devices is None
     assert instance.disruptive is True
     assert instance.epld_golden is False
     assert instance.epld_module == "ALL"
@@ -192,9 +192,11 @@ def test_image_upgrade_01000(image_upgrade) -> None:
 
     - ``ValueError`` is called because ``devices`` is None.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def responses() -> Generator[dict[str, str], Any, Any]:
-        yield {}
+    def responses() -> Generator[dict[str, Any], Any, Any]:
+        yield responses_ep_image_upgrade(key)
 
     gen_responses = ResponseGenerator(responses())
 
