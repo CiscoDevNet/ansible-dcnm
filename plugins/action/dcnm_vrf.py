@@ -533,21 +533,22 @@ class ActionModule(ActionNetworkModule):
 
                 for child_task in child_tasks_dict.values():
                     if state != "query":
-                        # Wait for VRF readiness on child fabric before processing
-                        all_vrf_ready, vrf_not_ready = self.wait_for_vrf_ready(
-                            child_task["vrf_list"],
-                            child_task["fabric"],
-                            child_task["fabric_details"],
-                            task_vars,
-                            tmp
-                        )
-                        if not all_vrf_ready:
-                            error_msg = (
-                                f"VRF(s) {', '.join(vrf_not_ready)} not in a deployable state on fabric "
-                                f"{child_task['fabric']}. Please ensure VRF(s) are in DEPLOYED/PENDING/NA "
-                                "state before proceeding."
+                        if child_task["deploy_wait"]:
+                            # Wait for VRF readiness on child fabric before processing
+                            all_vrf_ready, vrf_not_ready = self.wait_for_vrf_ready(
+                                child_task["vrf_list"],
+                                child_task["fabric"],
+                                child_task["fabric_details"],
+                                task_vars,
+                                tmp
                             )
-                            return self.error_handler.handle_failure(error_msg, changed=True)
+                            if not all_vrf_ready:
+                                error_msg = (
+                                    f"VRF(s) {', '.join(vrf_not_ready)} not in a deployable state on fabric "
+                                    f"{child_task['fabric']}. Please ensure VRF(s) are in DEPLOYED/PENDING/NA "
+                                    "state before proceeding."
+                                )
+                                return self.error_handler.handle_failure(error_msg, changed=True)
 
                     # Execute child fabric task
                     self.logger.info("Executing child task", fabric=child_task["fabric"], operation="child_execution")
@@ -770,13 +771,17 @@ class ActionModule(ActionNetworkModule):
                 # Append to existing child fabric task
                 child_tasks_dict[child_fabric_name]["config"].append(child_config)
                 child_tasks_dict[child_fabric_name]["vrf_list"].append(child_config["vrf_name"])
+                # Update deploy_wait if any VRF requires deployment
+                if not child_tasks_dict[child_fabric_name]["deploy_wait"]:
+                    child_tasks_dict[child_fabric_name]["deploy_wait"] = child_config.get("deploy", True)
             else:
                 # Create new child fabric task
                 child_task = {
                     "fabric": child_fabric_name,
                     "state": parent_module_args.get("state"),
                     "config": [child_config],
-                    "vrf_list": [child_config["vrf_name"]]
+                    "vrf_list": [child_config["vrf_name"]],
+                    "deploy_wait": child_config.get("deploy", True)
                 }
                 child_tasks_dict[child_fabric_name] = child_task
 

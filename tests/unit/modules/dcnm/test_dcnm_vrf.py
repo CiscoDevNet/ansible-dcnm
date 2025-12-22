@@ -1709,8 +1709,8 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertTrue(result.get("parent_fabric").get("response")[1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result.get("parent_fabric").get("response")[2]["DATA"]["status"], "")
         self.assertEqual(result.get("parent_fabric").get("response")[2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
-        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
-        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
+        self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
+        self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
         self.assertTrue(result.get("child_fabrics")[0]["response"][0]["MESSAGE"], "OK")
         self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
@@ -1726,7 +1726,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result.get("parent_fabric").get("response")[1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
-        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["static_default_route"])
+        self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["static_default_route"])
         self.assertTrue(result.get("child_fabrics")[0]["response"][0]["MESSAGE"], "OK")
         self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
@@ -1816,8 +1816,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             result.get("parent_fabric").get("response")[6]["DATA"]["test-vrf-2--XYZKSJHSMK1(leaf1)"], "SUCCESS"
         )
         self.assertEqual(result.get("child_fabrics")[0]["diff"][0]["vrf_name"], "test_vrf_2")
-        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
-        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
+        self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
+        self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["l3vni_wo_vlan"])
         self.assertEqual(result.get("child_fabrics")[0]["response"][1]["DATA"]["status"], "")
         self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
@@ -1927,6 +1927,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["static_default_route"])
+        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["l3vni_wo_vlan"])
         self.assertTrue(result.get("child_fabrics")[0]["response"][0]["MESSAGE"], "OK")
         self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 

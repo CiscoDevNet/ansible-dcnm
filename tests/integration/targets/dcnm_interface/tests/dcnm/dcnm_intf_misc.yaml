@@ -10,19 +10,19 @@
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+  register: result
 
 - name: ASSERT - Check return codes for setup
-  assert:
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
-  loop: '{{ result.response }}'
+      - 'item["RETURN_CODE"] == 200'
+    loop: '{{ result.response }}'
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -43,7 +43,7 @@
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - misc_merge
         - misc_delete_no_deploy
         - misc_delete
@@ -51,9 +51,9 @@
         - misc_non_manageable
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
@@ -66,14 +66,14 @@
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_merge_conf }}"
-      register: result
+        register: result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC
       cisco.dcnm.dcnm_interface:
@@ -89,9 +89,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##                DELETE                    ##
-##############################################
+    ##############################################
+    ##                DELETE                    ##
+    ##############################################
 
     - name: Load Delete No Deploy Interface Config File
       ansible.builtin.set_fact:
@@ -103,18 +103,18 @@
         fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_delete_no_deploy_conf }}"
-      register: result
+        register: result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ result.response }}'
 
-##############################################
-##                DELETE                    ##
-##############################################
+    ##############################################
+    ##                DELETE                    ##
+    ##############################################
 
     - name: Load Delete Interface Config File
       ansible.builtin.set_fact:
@@ -127,18 +127,18 @@
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_delete_conf }}"
-      register: result
+        register: result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ result.response }}'
 
-##############################################
-##                DELETE                    ##
-##############################################
+    ##############################################
+    ##                DELETE                    ##
+    ##############################################
 
     - name: Delete interface again (already deployed) with deploy set to True
       cisco.dcnm.dcnm_interface:
@@ -146,21 +146,21 @@
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_delete_conf }}"
-      register: result
+        register: result
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+          # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##                MERGE                     ##
-##############################################
+          ##############################################
+          ##                MERGE                     ##
+          ##############################################
 
-    - name: Load Monitoring Mode Interface Config File
+          - name: Load Monitoring Mode Interface Config File
       ansible.builtin.set_fact:
         dcnm_interface_misc_monitoring_mode_conf: "{{ lookup('file', test_data_interfaces.misc_monitoring_mode_conf_file) | from_yaml }}"
       delegate_to: localhost
@@ -171,8 +171,8 @@
         fabric: "{{ test_data_common.ext_fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_monitoring_mode_conf }}"
-      register: result
-      ignore_errors: yes
+        register: result
+        ignore_errors: true
 
     # - assert:
     #     that:
@@ -180,9 +180,9 @@
     #       - '("No changes are allowed on the fabric" in result["msg"])'
     #       - '("{{ test_data_common.ext_fabric }}" in result["msg"])'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Non-Manageable Interface Config File
       ansible.builtin.set_fact:
@@ -195,18 +195,18 @@
         fabric: "mmudigon-unnumbered"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_misc_non_manageable_conf }}"
-      register: result
-      ignore_errors: yes
+        register: result
+        ignore_errors: true
 
-    # - assert:
-    #     that:
-    #       - '("are not managable in Fabric" in result["msg"])'
-    #       - '("No changes are allowed on these switches" in result["msg"])'
-    #       - '("n9kv-test-sw2" in result["msg"])'
+  # - assert:
+  #     that:
+  #       - '("are not managable in Fabric" in result["msg"])'
+  #       - '("No changes are allowed on these switches" in result["msg"])'
+  #       - '("n9kv-test-sw2" in result["msg"])'
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -215,12 +215,12 @@
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-      register: result
-      when: IT_CONTEXT is not defined
+        register: result
+        when: it_context is not defined
 
     - name: ASSERT - Check return codes for cleanup
-      assert:
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+          - 'item["RETURN_CODE"] == 200'
+        loop: '{{ result.response }}'
+        when: it_context is not defined

@@ -1192,6 +1192,7 @@ def has_partial_dhcp_config(server):
     vrf = server.get("srvr_vrf")
     return bool(ip) != bool(vrf)
 
+
 def sanitize_lan_attach_list(attach_objects: list) -> list:
     """
     # Summary
@@ -1200,9 +1201,9 @@ def sanitize_lan_attach_list(attach_objects: list) -> list:
 
     ## Description
 
-    In multicluster deployments, the lanAttachList for an entity 
-    (VRF, Network, etc.) can contain attachments belonging to other entities. 
-    This method removes those cross-entity attachments to ensure each entity 
+    In multicluster deployments, the lanAttachList for an entity
+    (VRF, Network, etc.) can contain attachments belonging to other entities.
+    This method removes those cross-entity attachments to ensure each entity
     only contains its own attachments.
 
     ## Parameters
@@ -1256,7 +1257,7 @@ def sanitize_lan_attach_list(attach_objects: list) -> list:
         # by looking for keys that are not "lanAttachList"
         parent_key = None
         parent_value = None
-        
+
         for key in attach_dict.keys():
             if key != "lanAttachList":
                 parent_key = key
@@ -1274,8 +1275,8 @@ def sanitize_lan_attach_list(attach_objects: list) -> list:
 
     return attach_objects
 
-# Action plugin utilities
 
+# Action plugin utilities
 def get_nd_version(action_module, task_vars, tmp):
     """
     Query NDFC and return the exact software version

@@ -152,9 +152,9 @@
       vrf_description: "MCFG merged test VRF with Child config"
       child_fabric_config:
       - fabric: "{{ child_fabric }}"
-        adv_default_routes: true
-        adv_host_routes: false
-        static_default_route: true
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
       attach:
       - ip_address: "{{ child_switch_1 }}"
       deploy: true
@@ -205,9 +205,9 @@
     - result_2b.child_fabrics | length == 1
     - result_2b.child_fabrics[0].response | length >= 1
     - result_2b.child_fabrics[0].response[0].parent.vrfName == "ansible-mcfg-merged-child"
-    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "true"
-    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "false"
-    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "true"
+    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
+    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
+    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
 
 - name: TEST.2d - MCFG MERGED - [merged] VRF with child config - Idempotence
   cisco.dcnm.dcnm_vrf:
@@ -242,9 +242,9 @@
       vrf_description: "MCFG merged test VRF with VRF-Lite"
       child_fabric_config:
       - fabric: "{{ child_fabric }}"
-        adv_default_routes: true
-        adv_host_routes: false
-        static_default_route: true
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
       attach:
       - ip_address: "{{ child_switch_2 }}"
         vrf_lite:
@@ -302,9 +302,9 @@
     - result_3b.child_fabrics | length == 1
     - result_3b.child_fabrics[0].response | length >= 1
     - result_3b.child_fabrics[0].response[0].parent.vrfName == "ansible-mcfg-merged-lite"
-    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "true"
-    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "false"
-    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "true"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
 
 - name: TEST.3d - MCFG MERGED - [merged] VRF with VRF-Lite - Idempotence
   cisco.dcnm.dcnm_vrf:
@@ -348,9 +348,9 @@
       vrf_description: "Bulk merged test VRF 2"
       child_fabric_config:
       - fabric: "{{ child_fabric }}"
-        adv_default_routes: true
-        adv_host_routes: false
-        static_default_route: true
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
       attach:
       - ip_address: "{{ child_switch_2 }}"
       deploy: true
@@ -399,9 +399,9 @@
     - result_4b.child_fabrics | length == 1
     - result_4b.child_fabrics[0].response | length >= 1
     - result_4b.child_fabrics[0].response[0].parent.vrfName == "ansible-mcfg-merged-bulk2"
-    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "true"
-    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "false"
-    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "true"
+    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
+    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
+    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
 
 - name: TEST.4d - MCFG MERGED - [merged] Multiple VRFs creation - Idempotence
   cisco.dcnm.dcnm_vrf:

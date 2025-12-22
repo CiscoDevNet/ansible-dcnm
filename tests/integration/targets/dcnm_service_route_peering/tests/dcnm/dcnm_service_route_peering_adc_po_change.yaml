@@ -3,7 +3,8 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f srp.log
+  ansible.builtin.command: rm -f srp.log
+  delegate_to: localhost
 
 - name: Delete route peerings
   cisco.dcnm.dcnm_service_route_peering:
@@ -12,7 +13,8 @@
     state: deleted
   register: result
 
-- assert:
+- name: Assert conditions
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -20,9 +22,9 @@
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create Loadbalancer One ARM Static and eBGP peerings
       cisco.dcnm.dcnm_service_route_peering:
@@ -85,7 +87,8 @@
         state: merged
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
@@ -94,14 +97,15 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                CONVERT                   ##
-##############################################
+    ##############################################
+    ##                CONVERT                   ##
+    ##############################################
 
     - name: Convert Loadbalancer One ARM Static to eBGP and eBGP to Static peerings
       cisco.dcnm.dcnm_service_route_peering:
@@ -164,7 +168,8 @@
         state: merged
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
@@ -173,14 +178,15 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create Loadbalancer Two ARM Static and eBGP peerings
       cisco.dcnm.dcnm_service_route_peering:
@@ -258,7 +264,8 @@
         state: merged
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
@@ -267,14 +274,15 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                CONVERT                   ##
-##############################################
+    ##############################################
+    ##                CONVERT                   ##
+    ##############################################
 
     - name: Convert Loadbalancer Two ARM Static to eBGP and eBGP to Static peerings
       cisco.dcnm.dcnm_service_route_peering:
@@ -352,7 +360,8 @@
         state: merged
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
@@ -361,14 +370,15 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 2'
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                CLEANUP                   ##
-##############################################
+  ##############################################
+  ##                CLEANUP                   ##
+  ##############################################
 
   always:
 
@@ -403,7 +413,8 @@
       register: result
       when: IT_CONTEXT is not defined
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

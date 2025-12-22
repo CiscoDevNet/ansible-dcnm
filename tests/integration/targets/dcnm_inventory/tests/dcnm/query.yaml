@@ -1,6 +1,6 @@
 ---
 - name: Import DCNM Inventory Base Tasks
-  import_tasks: ../base_tasks.yaml
+  ansible.builtin.import_tasks: ../base_tasks.yaml
   tags: query
 
 # ----------------------------------------------
@@ -17,7 +17,7 @@
   register: create_result
   tags: query
 
-- name: Query TC1 - Query Inventory State in Fabric 
+- name: Query TC1 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -125,14 +125,15 @@
     fabric: "{{ test_data.test_fabric }}"
     state: query
     config:
-    - seed_ip: "{{ test_data.sw1 }}"
-      role: spine
+      - seed_ip: "{{ test_data.sw1 }}"
+        role: spine
   register: query_result
   tags: query
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - '"The queried switch is not part of the fabric configured" in query_result.response'
+      - '"The queried switch is not part of the fabric configured" in query_result.response'
   tags: query
 
 # TC - 7
@@ -171,35 +172,36 @@
     fabric: "{{ test_data.test_fabric }}"
     state: query
     config:
-    - seed_ip: "{{ test_data.sw1 }}"
-      role: leaf
+      - seed_ip: "{{ test_data.sw1 }}"
+        role: leaf
   register: query_result
   tags: query
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - '"The queried switch is not part of the fabric configured" in query_result.response'
+      - '"The queried switch is not part of the fabric configured" in query_result.response'
   tags: query
 
 # TC - 9
 - name: Query TC9 - Prepare Config
   ansible.builtin.set_fact:
     switch_conf:
-    - seed_ip: "{{ test_data.sw1 }}"
-      max_hops: 0
-      auth_proto: MD5
-      role: border_gateway
-    - seed_ip: "{{ test_data.sw2 }}"
-      max_hops: 0
-      auth_proto: MD5
-      role: border_gateway
+      - seed_ip: "{{ test_data.sw1 }}"
+        max_hops: 0
+        auth_proto: MD5
+        role: border_gateway
+      - seed_ip: "{{ test_data.sw2 }}"
+        max_hops: 0
+        auth_proto: MD5
+        role: border_gateway
   delegate_to: localhost
   tags: query
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: query
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: query
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: query
 
 - name: Query TC9 - Add Switch with Border Gateways to Fabric

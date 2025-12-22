@@ -7,8 +7,9 @@
 # Modify the hosts and vars sections with details for your testing
 # setup and uncomment the testcase you want to run.
 #
-- hosts: dcnm
-  gather_facts: no
+- name: Play for dcnm
+  hosts: dcnm
+  gather_facts: false
   connection: ansible.netcommon.httpapi
 
   vars:
