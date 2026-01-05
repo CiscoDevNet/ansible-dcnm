@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -69,7 +70,10 @@ EXAMPLES = """
   dcnm_rest:
     method: POST
     path: /rest/top-down/fabrics/fabric1/vrfs/attachments
-    json_data: '[{"vrfName":"sales66_vrf1","lanAttachList":[{"fabric":"fabric1","vrfName":"sales66_vrf1","serialNumber":"FDO21392QKM","vlan":2000,"freeformConfig":"","deployment":false,"extensionValues":"","instanceValues":"{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\"}"}]}]'
+    json_data: >
+      [{"vrfName":"sales66_vrf1","lanAttachList":[{"fabric":"fabric1","vrfName":"sales66_vrf1",
+      "serialNumber":"FDO21392QKM","vlan":2000,"freeformConfig":"","deployment":false,
+      "extensionValues":"","instanceValues":"{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\"}"}]}]
 
 - name: Save Robot Credentials - (urlencoded)
   dcnm_rest:
@@ -87,7 +91,6 @@ EXAMPLES = """
     path: /fm/fmrest/config/templates/validate
     json_data: "{{ data }}"
     register: result
-
 """  # noqa
 
 RETURN = """

@@ -1,32 +1,95 @@
 ---
-- name: collect dcnm test cases
-  find:
-    paths: ["{{ role_path }}/tests/dcnm", "{{ role_path }}/tests/dcnm/self-contained-tests"]
-    patterns: "{{ testcase }}.yaml"
-  connection: local
-  register: dcnm_cases
+- name: Debug testcase variable
+  ansible.builtin.debug:
+    var: testcase
   tags: sanity
 
-- set_fact:
-    test_cases:
-      files: "{{ dcnm_cases.files }}"
+# Handle wildcard patterns
+- name: Run all tests
+  when: testcase == "*"
   tags: sanity
+  block:
+    - name: Set patterns for all tests
+      ansible.builtin.set_fact:
+        msd_pattern: "*.yaml"
+        standalone_pattern: "*.yaml"
+        mcfg_pattern: "*.yaml"
+    - name: Import MCFG tasks
+      ansible.builtin.import_tasks: dcnm_mcfg.yaml
+    - name: Import MSD tasks
+      ansible.builtin.import_tasks: dcnm_msd.yaml
+    - name: Import standalone tasks
+      ansible.builtin.import_tasks: dcnm_standalone.yaml
 
-- name: set test_items
-  set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+# Handle MCFG wildcard
+- name: Run all MCFG tests
+  when: testcase == "mcfg/*"
   tags: sanity
+  block:
+    - name: Set pattern for all MCFG tests
+      ansible.builtin.set_fact:
+        mcfg_pattern: "*.yaml"
+    - name: Import MCFG tasks
+      ansible.builtin.import_tasks: dcnm_mcfg.yaml
 
-- name: debug
-  debug:
-     var: test_items
-
-- name: debug
-  debug:
-     var: testcase
-
-- name: run test cases (connection=httpapi)
-  include_tasks: "{{ test_case_to_run }}"
-  with_items: "{{ test_items }}"
-  loop_control:
-    loop_var: test_case_to_run
+# Handle MSD wildcard
+- name: Run all MSD tests
+  when: testcase == "msd/*"
   tags: sanity
+  block:
+    - name: Set pattern for all MSD tests
+      ansible.builtin.set_fact:
+        msd_pattern: "*.yaml"
+    - name: Import MSD tasks
+      ansible.builtin.import_tasks: dcnm_msd.yaml
+
+# Handle standalone wildcard
+- name: Run all standalone tests
+  when: testcase is match("standalone/.*")
+  tags: sanity
+  block:
+    - name: Set pattern for all standalone tests
+      ansible.builtin.set_fact:
+        standalone_pattern: "{{ testcase }}"
+    - name: Import standalone tasks
+      ansible.builtin.import_tasks: dcnm_standalone.yaml
+
+# Handle specific MCFG test
+- name: Run specific MCFG test
+  when: testcase.startswith("mcfg/") and testcase != "mcfg/*"
+  tags: sanity
+  block:
+    - name: Extract MCFG test name
+      ansible.builtin.set_fact:
+        mcfg_test_name: "{{ testcase | regex_replace('^mcfg/', '') }}"
+    - name: Set pattern for specific MCFG test
+      ansible.builtin.set_fact:
+        mcfg_pattern: "{{ mcfg_test_name }}.yaml"
+    - name: Import MCFG tasks
+      ansible.builtin.import_tasks: dcnm_mcfg.yaml
+
+# Handle specific MSD test
+- name: Run specific MSD test
+  when: testcase.startswith("msd/") and testcase != "msd/*"
+  tags: sanity
+  block:
+    - name: Extract MSD test name
+      ansible.builtin.set_fact:
+        msd_test_name: "{{ testcase | regex_replace('^msd/', '') }}"
+    - name: Set pattern for specific MSD test
+      ansible.builtin.set_fact:
+        msd_pattern: "{{ msd_test_name }}.yaml"
+    - name: Import MSD tasks
+      ansible.builtin.import_tasks: dcnm_msd.yaml
+
+# Handle specific standalone test
+- name: Run specific standalone test
+  when:
+    - testcase is match("standalone/[^/]+\.yaml$")
+  tags: sanity
+  block:
+    - name: Set pattern for specific standalone test
+      ansible.builtin.set_fact:
+        standalone_pattern: "{{ testcase }}"
+    - name: Import standalone tasks
+      ansible.builtin.import_tasks: dcnm_standalone.yaml

@@ -1,0 +1,9 @@
+---
+# Ansible-lint configuration file
+# See https://ansible.readthedocs.io/projects/lint/configuring/
+
+profile: production
+
+# Exclude paths from linting - GitHub workflows should not be linted
+exclude_paths:
+  - .github/workflows/main.yml

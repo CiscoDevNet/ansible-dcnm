@@ -51,7 +51,8 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_4 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # REPLACED - TEST - Create IPFM Fabric with non-default configs
@@ -112,9 +113,11 @@
         FABRIC_MTU: 1500
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -233,9 +236,11 @@
         FABRIC_TYPE: "{{ fabric_type_4 }}"
         DEPLOY: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -323,9 +328,11 @@
 - name: REPLACED - TEST - Replace config for fabric_4 with default config omnipotence
   cisco.dcnm.dcnm_fabric: *replace_fabric_4
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -392,9 +399,11 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_4 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

@@ -1,7 +1,7 @@
 ---
 
 - name: Import DCNM Inventory Base Tasks
-  import_tasks: ../base_tasks.yaml
+  ansible.builtin.import_tasks: ../base_tasks.yaml
   tags: merged
 
 # ----------------------------------------------
@@ -17,7 +17,7 @@
   register: merged_result
   tags: merged
 
-- name: Merged TC1 - Query Inventory State in Fabric 
+- name: Merged TC1 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -38,10 +38,11 @@
   register: result
   tags: merged
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result.changed == false'
-    - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
+      - 'result.changed == false'
+      - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: merged
 
 # TC - 3
@@ -54,11 +55,11 @@
 
 - name: Merged TC3 - Prepare Test Data
   ansible.builtin.set_fact:
-    ndfc_fabric_delete_conf: 
+    ndfc_fabric_delete_conf:
   delegate_to: localhost
   tags: merged
 
-- name: Merged TC3 - Query Inventory State in Fabric 
+- name: Merged TC3 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -87,8 +88,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: merge
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: merge
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: merged
 
 - name: Merged TC4 - Merge a Switch using BrownField Deployment
@@ -100,7 +101,7 @@
   register: merged_result
   tags: merged
 
-- name: Merged TC4 - Query Inventory State in Fabric 
+- name: Merged TC4 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -121,10 +122,11 @@
   register: result
   tags: merged
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result.changed == false'
-    - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
+      - 'result.changed == false'
+      - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: merged
 
 # TC - 6
@@ -145,8 +147,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: merge
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: merge
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: merged
 
 - name: Merged TC6 - Merge a Switch using GreenField Deployment - Using default role/auth_proto
@@ -166,7 +168,7 @@
   delegate_to: localhost
   tags: merged
 
-- name: Merged TC6 - Query Inventory State in Fabric 
+- name: Merged TC6 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -187,10 +189,11 @@
   register: result
   tags: merged
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result.changed == false'
-    - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
+      - 'result.changed == false'
+      - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: merged
 
 # TC - 8
@@ -217,8 +220,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: merge
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: merge
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: merged
 
 - name: Merged TC8 - Add Switch with Border Gateways and MD5 to Fabric
@@ -230,7 +233,7 @@
   register: merged_result
   tags: merged
 
-- name: Merged TC8 - Query Inventory State in Fabric 
+- name: Merged TC8 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -251,10 +254,11 @@
   register: result
   tags: merged
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result.changed == false'
-    - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
+      - 'result.changed == false'
+      - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: merged
 
 # TC - 10
@@ -277,8 +281,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: merge
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: merge
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: merged
 
 - name: Merged TC10 - Merge a Switch using GreenField Deployment - Non-Zero Max Hop Config
@@ -290,7 +294,7 @@
   register: merged_result
   tags: merged
 
-- name: Merged TC10 - Query Inventory State in Fabric 
+- name: Merged TC10 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -311,10 +315,11 @@
   register: merged_result
   tags: merged
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'merged_result.changed == false'
-    - 'merged_result.response == "The switch provided is already part of the fabric and cannot be created again"'
+      - 'merged_result.changed == false'
+      - 'merged_result.response == "The switch provided is already part of the fabric and cannot be created again"'
   tags: merged
 
 # TC - 12
@@ -329,17 +334,17 @@
 - name: Merged TC13 - Prepare Config
   ansible.builtin.set_fact:
     switch_conf:
-    - seed_ip:
-      max_hops: 0
-      role: leaf
-      auth_proto: MD5
+      - seed_ip:
+        max_hops: 0
+        role: leaf
+        auth_proto: MD5
   delegate_to: localhost
   tags: merged
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: merge
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: merge
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: merged
 
 - name: Merged TC13 - Merge a Switch without seed_ip
@@ -348,31 +353,32 @@
     state: merged
     config: "{{ ndfc_fabric_merge_conf }}"
     deploy: "{{ test_data.deploy }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: merged_result
   tags: merged
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'merged_result.changed == false'
-    - '"Invalid parameters in playbook: seed_ip : Required parameter not found" in merged_result.msg'
+      - 'merged_result.changed == false'
+      - '"Invalid parameters in playbook: seed_ip : Required parameter not found" in merged_result.msg'
   tags: merged
 
 # TC - 14
 - name: Merged TC14 - Prepare Config
   ansible.builtin.set_fact:
     switch_conf:
-    - seed_ip: "{{ test_data.sw1 }}"
-      auth_proto: MD5
-      max_hops: 0
-      role: invalid
+      - seed_ip: "{{ test_data.sw1 }}"
+        auth_proto: MD5
+        max_hops: 0
+        role: invalid
   delegate_to: localhost
   tags: merged
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: merge
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: merge
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: merged
 
 - name: Merged TC14 - Merge a Switch with Invalid Role
@@ -382,30 +388,31 @@
     config: "{{ ndfc_fabric_merge_conf }}"
     deploy: "{{ test_data.deploy }}"
   register: merged_result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'merged_result.changed == false'
-    - '"Invalid choice " in merged_result.msg'
+      - 'merged_result.changed == false'
+      - '"Invalid choice " in merged_result.msg'
   tags: merged
 
 # TC - 15
 - name: Merged TC15 - Prepare Config
   ansible.builtin.set_fact:
     switch_conf:
-    - seed_ip: "{{ test_data.sw1 }}"
-      auth_proto: MD55DM
-      max_hops: 0
-      role: leaf
+      - seed_ip: "{{ test_data.sw1 }}"
+        auth_proto: MD55DM
+        max_hops: 0
+        role: leaf
   delegate_to: localhost
   tags: merged
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: merge
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: merge
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: merged
 
 - name: Merged TC15 - Merge a Switch with invalid auth choice
@@ -415,13 +422,14 @@
     config: "{{ ndfc_fabric_merge_conf }}"
     deploy: "{{ test_data.deploy }}"
   register: merged_result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'merged_result.changed == false'
-    - '"Invalid choice " in merged_result.msg'
+      - 'merged_result.changed == false'
+      - '"Invalid choice " in merged_result.msg'
   tags: merged
 
 # TC - 16
@@ -430,13 +438,14 @@
     fabric: "{{ test_data.test_fabric }}"
     state: merged
   register: merged_result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'merged_result.changed == false'
-    - '"config: element is mandatory for this state merged" in merged_result.msg'
+      - 'merged_result.changed == false'
+      - '"config: element is mandatory for this state merged" in merged_result.msg'
   tags: merged
 
 # ----------------------------------------------

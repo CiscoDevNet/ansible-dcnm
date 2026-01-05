@@ -1,3 +1,5 @@
 ---
-- { include: fabric_setup.yaml, tags: ['dcnm_setup'] }
-- { include: dcnm.yaml, tags: ['dcnm_integration_tests'] }
+- name: Include tasks
+  ansible.builtin.include_tasks:
+    file: dcnm.yaml
+  tags: ['dcnm']

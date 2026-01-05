@@ -15,17 +15,18 @@
           - ip: "{{ ansible_switch1 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
 
 
 - block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Create policy without including required variables
       cisco.dcnm.dcnm_policy:
@@ -40,10 +41,11 @@
           - switch:
               - ip: "{{ ansible_switch1 }}"
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     # Assert for Create responses
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
           - 'result["msg"]["RETURN_CODE"] != 200'
           - '"OSPF_TAG" in result["msg"]["DATA"]["failureList"][0]["message"]'
@@ -73,7 +75,8 @@
               - ip: "{{ ansible_switch1 }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
@@ -82,7 +85,8 @@
           - '(result["diff"][0]["deploy"] | length) == 2'
 
     # Assert for Create responses
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
@@ -92,7 +96,8 @@
         index_var: my_idx
 
     # Assert for deploy responses
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
@@ -127,7 +132,8 @@
               - ip: "{{ ansible_switch1 }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
@@ -136,7 +142,8 @@
           - '(result["diff"][0]["deploy"] | length) == 2'
 
     # Assert for Create responses
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
@@ -146,7 +153,8 @@
         index_var: my_idx
 
     # Assert for deploy responses
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) >= 2'
@@ -156,19 +164,19 @@
         index_var: my_idx
 
     - name: Setting fact
-      set_fact:
+      ansible.builtin.set_fact:
         mergev_policy_list: "{{ (mergev_policy_list | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
-        index_var: my_idx
+      index_var: my_idx
 
     - name: Show the policy_list information
-      debug:
+      ansible.builtin.debug:
         var: mergev_policy_list
 
     - name: Setting fact
-      set_fact:
+      ansible.builtin.set_fact:
         list_len: "{{ mergev_policy_list | length }}"
 
     - name: Modify policy with variables - using policy IDs
@@ -192,7 +200,8 @@
       register: result
 
     # Assert for Create responses
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       when: (my_idx < (result.results[0]["diff"][0]["merged"] | length))
@@ -201,7 +210,8 @@
         index_var: my_idx
 
     # Assert for deploy responses
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
@@ -210,9 +220,9 @@
       loop_control:
         index_var: my_idx
 
-##############################################
-##                CLEANUP                   ##
-##############################################
+  ##############################################
+  ##                CLEANUP                   ##
+  ##############################################
 
   always:
 
@@ -223,10 +233,11 @@
         config:
           - name: my_base_ospf  # This can either be a policy name like POLICY-xxxxx or template name
           - switch:
-             - ip: "{{ ansible_switch1 }}"
+              - ip: "{{ ansible_switch1 }}"
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - 'item["MESSAGE"] == "OK"'
