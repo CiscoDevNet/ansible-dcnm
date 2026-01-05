@@ -2,25 +2,24 @@
 ##               SETUP                      ##
 ##############################################
 
-- name: Remove local log file
+- name: XE DELETE - Remove local log file
   local_action: command rm -f dcnm_links.log
 
 - block:
 
-##############################################
-##               DELETE                     ##
-##############################################
-
-    - name: Initial setup - Delete Links 
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
+    - name: XE DELETE - Baseline delete (ensure clean start)
       cisco.dcnm.dcnm_links: &links_delete
-        state: deleted                                           # choose from [merged, replaced, deleted, query]
+        state: deleted
         src_fabric: "{{ ansible_xe_fabric }}"
         config:
-          - dst_fabric: "{{ ansible_xe_fabric }}"                # Destination fabric
-            src_interface: "{{ intf_1_1 }}"                      # Interface on the Source fabric
-            dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
-            src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
-            dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
+          - dst_fabric: "{{ ansible_xe_fabric }}"
+            src_interface: "{{ intf_1_1 }}"
+            dst_interface: "{{ intf_1_1 }}"
+            src_device: "{{ ansible_xe_switch1 }}"
+            dst_device: "{{ ansible_xe_switch2 }}"
 
           - dst_fabric: "{{ ansible_xe_fabric }}"                # Destination fabric
             src_interface: "{{ intf_1_2 }}"                      # Interface on the Source fabric
@@ -45,17 +44,16 @@
             dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
-
       register: result
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+    - name: ASSERT - Baseline delete RETURN_CODE
+      ansible.builtin.assert:
+        that: "item['RETURN_CODE'] == 200"
+        loop: '{{ result.response }}'
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                    ##
+    ##############################################
 
     - name: Create Links without including optional parameters
       cisco.dcnm.dcnm_links: &links_merge_no_opt
@@ -67,38 +65,38 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
-            template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+            template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
+            #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+            #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+            #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+
             profile:
               peer1_ipv4_addr: 192.168.2.1                       # IPV4 address of the Source interface
               peer2_ipv4_addr: 192.168.2.2                       # IPV4 address of the Destination interface
               admin_state: true                                  # choose from [true, false]
+      register: create_result
 
-      register: result
-
-    - assert:
+    - name: ASSERT - Create diff
+      ansible.builtin.assert:
         that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_xe_fabric }}" ] | length) == 1'
+          - "create_result.changed == true"
+          - "(create_result.diff[0].merged | length) == 1"
+          - "(create_result.diff[0].modified | length) == 0"
+          - "(create_result.diff[0].deleted | length) == 0"
+          - "(create_result.diff[0].query | length) == 0"
+          - '(create_result["diff"][0]["deploy"][0][ "{{ ansible_xe_fabric }}" ] | length) == 1'
 
-    - assert:
+    - name: ASSERT - response
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+        loop: '{{ create_result.response }}'
 
+    ###############################################
+    ###              DELETE                      ##
+    ###############################################
 
-###############################################
-###              DELETE                      ##
-###############################################
-
-    - name: Delete Links 
+    - name: Delete Links
       cisco.dcnm.dcnm_links: *links_delete
       register: result
 
@@ -116,9 +114,9 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##                IDEMPOTENCE               ##
-##############################################
+    ##############################################
+    ##                IDEMPOTENCE               ##
+    ##############################################
 
     - name: Delete Links - Idempotence
       cisco.dcnm.dcnm_links: *links_delete
@@ -138,13 +136,13 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-##############################################
-##              CLEANUP                     ##
-##############################################
+  ##############################################
+  ##              CLEANUP                     ##
+  ##############################################
 
   always:
 
-    - name: Delete Links 
+    - name: Delete Links
       cisco.dcnm.dcnm_links: *links_delete
       register: result
 

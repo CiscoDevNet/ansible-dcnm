@@ -325,7 +325,7 @@ EXAMPLES = """
   cisco.dcnm.dcnm_fabric_group:
     state: merged
     config:
-    -   FABRIC_NAME: MCFG
+      - FABRIC_NAME: MCFG
   register: result
 - debug:
     var: result
@@ -336,7 +336,7 @@ EXAMPLES = """
   cisco.dcnm.dcnm_fabric_group:
     state: merged
     config:
-    -   FABRIC_NAME: MCFG
+      - FABRIC_NAME: MCFG
         FABRIC_TYPE: MCFG
         ANYCAST_GW_MAC: 0001.aabb.ccdd
         BGP_RP_ASN: 65002
@@ -355,9 +355,9 @@ EXAMPLES = """
 - name: Update fabrics
   cisco.dcnm.dcnm_fabric:
     state: merged
-    skip_validation: True
+    skip_validation: true
     config:
-    -   FABRIC_NAME: MCFG
+      - FABRIC_NAME: MCFG
         FABRIC_TYPE: MCFG
         ANYCAST_GW_MAC: 0001.aabb.ccdd
         DEPLOY: false
@@ -368,7 +368,7 @@ EXAMPLES = """
   cisco.dcnm.dcnm_fabric:
     state: query
     config:
-    -   FABRIC_NAME: MCFG
+      - FABRIC_NAME: MCFG
   register: result
 - debug:
     var: result
@@ -379,7 +379,7 @@ EXAMPLES = """
   cisco.dcnm.dcnm_fabric_group:
     state: deleted
     config:
-    -   FABRIC_NAME: MCFG
+      - FABRIC_NAME: MCFG
   register: result
 - debug:
     var: result
@@ -392,19 +392,17 @@ EXAMPLES = """
 # the ability to modify the PVLAN option.  Hence, even a valid value for
 # ENABLE_PVLAN in the playbook will generate an error.
 
--   name: merge fabric MyFabric
-    cisco.dcnm.dcnm_fabric_group:
-        state: merged
-        skip_validation: false
-        config:
-        -   FABRIC_NAME: MCFG
-            FABRIC_TYPE: MCFG
-            ENABLE_SGT: true
-            ENABLE_PVLAN: false
-
+- name: merge fabric MyFabric
+  cisco.dcnm.dcnm_fabric_group:
+    state: merged
+    skip_validation: false
+    config:
+      - FABRIC_NAME: MCFG
+        FABRIC_TYPE: MCFG
+        ENABLE_SGT: true
+        ENABLE_PVLAN: false
 # Resulting error message (edited for brevity)
 # "The following parameter(value) combination(s) are invalid and need to be reviewed: Fabric: f3, ENABLE_PVLAN(False) requires ENABLE_SGT != True."
-
 """
 # pylint: disable=wrong-import-position, too-many-lines, too-many-instance-attributes, too-many-statements
 import copy

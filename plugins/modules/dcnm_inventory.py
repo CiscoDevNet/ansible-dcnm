@@ -266,20 +266,20 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # merged / deleted / overridden / query
     config:
-    - seed_ip: 192.168.0.1
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: switch_username
-      password: switch_password
-      max_hops: 0
-      role: spine
-      preserve_config: False # boolean, default is  true
-    - seed_ip: 192.168.0.2
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: switch_username
-      password: switch_password
-      max_hops: 0
-      role: leaf
-      preserve_config: False # boolean, default is true
+      - seed_ip: 192.168.0.1
+        auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+        user_name: switch_username
+        password: switch_password
+        max_hops: 0
+        role: spine
+        preserve_config: false # boolean, default is  true
+      - seed_ip: 192.168.0.2
+        auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+        user_name: switch_username
+        password: switch_password
+        max_hops: 0
+        role: leaf
+        preserve_config: false # boolean, default is true
 
 # The following two switches will be added or updated in the existing fabric and all other
 # switches will be removed from the fabric
@@ -288,20 +288,20 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: overridden # merged / deleted / overridden / query
     config:
-    - seed_ip: 192.168.0.1
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: switch_username
-      password: switch_password
-      max_hops: 0
-      role: spine
-      preserve_config: False # boolean, default is  true
-    - seed_ip: 192.168.0.2
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: switch_username
-      password: switch_password
-      max_hops: 0
-      role: leaf
-      preserve_config: False # boolean, default is true
+      - seed_ip: 192.168.0.1
+        auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+        user_name: switch_username
+        password: switch_password
+        max_hops: 0
+        role: spine
+        preserve_config: false # boolean, default is  true
+      - seed_ip: 192.168.0.2
+        auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+        user_name: switch_username
+        password: switch_password
+        max_hops: 0
+        role: leaf
+        preserve_config: false # boolean, default is true
 
 # The following two switches will be deleted in the existing fabric
 - name: Delete selected switches
@@ -309,8 +309,8 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: deleted # merged / deleted / overridden / query
     config:
-    - seed_ip: 192.168.0.1
-    - seed_ip: 192.168.0.2
+      - seed_ip: 192.168.0.1
+      - seed_ip: 192.168.0.2
 
 # All the switches will be deleted in the existing fabric
 - name: Delete all the switches
@@ -324,10 +324,10 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: query # merged / deleted / overridden / query
     config:
-    - seed_ip: 192.168.0.1
-      role: spine
-    - seed_ip: 192.168.0.2
-      role: leaf
+      - seed_ip: 192.168.0.1
+        role: spine
+      - seed_ip: 192.168.0.2
+        role: leaf
 
 # All the existing switches will be queried in the existing fabric
 - name: Query all the switches in the fabric
@@ -342,7 +342,12 @@ EXAMPLES = """
   cisco.dcnm.dcnm_rest:
     method: PUT
     path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/vxlan-fabric
-    json_data: '{"fabricId": "FABRIC-7","fabricName": "vxlan-fabric","id": 7,"nvPairs":{...,"BOOTSTRAP_ENABLE": true,"DHCP_ENABLE": true,"DHCP_IPV6_ENABLE": "DHCPv4","DHCP_START": "192.168.1.10", "DHCP_END": "192.168.1.20","MGMT_GW": "192.168.123.1","MGMT_PREFIX": "24",...},"templateName": "Easy_Fabric"}' # noqa
+    json_data: >
+      {"fabricId":"FABRIC-7","fabricName":"vxlan-fabric","id":7,
+      "nvPairs":{...,"BOOTSTRAP_ENABLE":true,"DHCP_ENABLE":true,
+      "DHCP_IPV6_ENABLE":"DHCPv4","DHCP_START":"192.168.1.10",
+      "DHCP_END":"192.168.1.20","MGMT_GW":"192.168.123.1",
+      "MGMT_PREFIX":"24",...},"templateName":"Easy_Fabric"}
 
 # The following switch will be Bootstrapped and merged into the existing fabric
 - name: Poap switch Configuration
@@ -350,19 +355,21 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # Only 2 options supported merged/query for poap config
     config:
-    # All the values below are mandatory if poap configuration is being done - state is merged
-    - seed_ip: 192.168.0.5
-      user_name: switch_username
-      password: switch_password
-      role: border_gateway
-      poap:
-        - serial_number: 2A3BCDEFJKL
-          model: 'N9K-C9300v'
-          version: '9.3(7)'
-          hostname: 'POAP_SWITCH'
-          image_policy: "poap_image_policy"
-          config_data:
-            modulesModel: [N9K-X9364v, N9K-vSUP]
+      # All the values below are mandatory if poap configuration is being done - state is merged
+      - seed_ip: 192.168.0.5
+        user_name: switch_username
+        password: switch_password
+        role: border_gateway
+        poap:
+          - serial_number: 2A3BCDEFJKL
+            model: 'N9K-C9300v'
+            version: '9.3(7)'
+            hostname: 'POAP_SWITCH'
+            image_policy: "poap_image_policy"
+            config_data:
+              modulesModel:
+                - N9K-X9364v
+                - N9K-vSUP
             gateway: 192.168.0.1/24
 
 # The following switch will be Pre-provisioned and merged into the existing fabric
@@ -371,19 +378,21 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # Only 2 options supported merged/query for poap config
     config:
-    # All the values below are mandatory if poap configuration is being done - state is merged
-    - seed_ip: 192.168.0.4
-      user_name: switch_username
-      password: switch_password
-      role: border
-      poap:
-        - preprovision_serial: 1A2BCDEFGHI
-          model: 'N9K-C9300v'
-          version: '9.3(7)'
-          hostname: 'PREPRO_SWITCH'
-          image_policy: "prepro_image_policy"
-          config_data:
-            modulesModel: [N9K-X9364v, N9K-vSUP]
+      # All the values below are mandatory if poap configuration is being done - state is merged
+      - seed_ip: 192.168.0.4
+        user_name: switch_username
+        password: switch_password
+        role: border
+        poap:
+          - preprovision_serial: 1A2BCDEFGHI
+            model: 'N9K-C9300v'
+            version: '9.3(7)'
+            hostname: 'PREPRO_SWITCH'
+            image_policy: "prepro_image_policy"
+            config_data:
+              modulesModel:
+                - N9K-X9364v
+                - N9K-vSUP
             gateway: 192.168.0.1/24
 
 - name: Poap, Pre-provision and existing switch Configuration
@@ -391,38 +400,42 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # Only 2 options supported merged/query for poap config
     config:
-    - seed_ip: 192.168.0.2
-      user_name: switch_username
-      password: switch_password
-      role: border_gateway
-      poap:
-        - serial_number: 2A3BCDEFGHI
-          model: 'N9K-C9300v'
-          version: '9.3(7)'
-          hostname: 'POAP_SWITCH'
-          image_policy: "poap_image_policy"
-          config_data:
-            modulesModel: [N9K-X9364v, N9K-vSUP]
+      - seed_ip: 192.168.0.2
+        user_name: switch_username
+        password: switch_password
+        role: border_gateway
+        poap:
+          - serial_number: 2A3BCDEFGHI
+            model: 'N9K-C9300v'
+            version: '9.3(7)'
+            hostname: 'POAP_SWITCH'
+            image_policy: "poap_image_policy"
+            config_data:
+              modulesModel:
+                - N9K-X9364v
+                - N9K-vSUP
             gateway: 192.168.0.1/24
-    - seed_ip: 192.168.0.3
-      user_name: switch_username
-      password: switch_password
-      auth_proto: MD5
-      max_hops: 0
-      preserve_config: False
-      role: spine
-    - seed_ip: 192.168.0.4
-      user_name: switch_username
-      password: switch_password
-      role: border
-      poap:
-        - preprovision_serial: 1A2BCDEFGHI
-          model: 'N9K-C9300v'
-          version: '9.3(7)'
-          hostname: 'PREPRO_SWITCH'
-          image_policy: "prepro_image_policy"
-          config_data:
-            modulesModel: [N9K-X9364v, N9K-vSUP]
+      - seed_ip: 192.168.0.3
+        user_name: switch_username
+        password: switch_password
+        auth_proto: MD5
+        max_hops: 0
+        preserve_config: false
+        role: spine
+      - seed_ip: 192.168.0.4
+        user_name: switch_username
+        password: switch_password
+        role: border
+        poap:
+          - preprovision_serial: 1A2BCDEFGHI
+            model: 'N9K-C9300v'
+            version: '9.3(7)'
+            hostname: 'PREPRO_SWITCH'
+            image_policy: "prepro_image_policy"
+            config_data:
+              modulesModel:
+                - N9K-X9364v
+                - N9K-vSUP
             gateway: 192.168.0.1/24
 
 # The following pre-provisioned switch will be swapped with actual switch in the existing fabric
@@ -434,14 +447,14 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # Only 2 options supported merged/query for poap config
     config:
-    # All the values below are mandatory if poap configuration is being done - state is merged
-    - seed_ip: 192.168.0.4
-      user_name: switch_username
-      password: switch_password
-      role: border
-      poap:
-        - preprovision_serial: 1A2BCDEFGHI
-          serial_number: 2A3BCDEFGHI
+      # All the values below are mandatory if poap configuration is being done - state is merged
+      - seed_ip: 192.168.0.4
+        user_name: switch_username
+        password: switch_password
+        role: border
+        poap:
+          - preprovision_serial: 1A2BCDEFGHI
+            serial_number: 2A3BCDEFGHI
 
 # All the existing switches along with available Bootstrap(POAP)
 # will be queried in the existing fabric
@@ -449,7 +462,7 @@ EXAMPLES = """
   cisco.dcnm.dcnm_inventory:
     fabric: vxlan-fabric
     state: query # merged / query
-    query_poap: True
+    query_poap: true
 
 # The following switch which is part of fabric will be replaced with a new switch
 # with same configurations through RMA.
@@ -459,17 +472,17 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # Only merged is supported for rma config
     config:
-    - seed_ip: 192.168.0.4
-      user_name: switch_username
-      password: switch_password
-      rma:
-        - serial_number: 2A3BCDEFJKL
-          old_serial: 2A3BCDEFGHI
-          model: 'N9K-C9300v'
-          version: '9.3(7)'
-          image_policy: "rma_image_policy"
-          config_data:
-            modulesModel: [N9K-X9364v, N9K-vSUP]
+      - seed_ip: 192.168.0.4
+        user_name: switch_username
+        password: switch_password
+        rma:
+          - serial_number: 2A3BCDEFJKL
+            old_serial: 2A3BCDEFGHI
+            model: 'N9K-C9300v'
+            version: '9.3(7)'
+            image_policy: "rma_image_policy"
+            config_data:
+              modulesModel: [N9K-X9364v, N9K-vSUP]
             gateway: 192.168.0.1/24
 """
 

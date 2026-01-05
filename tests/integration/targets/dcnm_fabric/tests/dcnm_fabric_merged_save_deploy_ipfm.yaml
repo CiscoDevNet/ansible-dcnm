@@ -59,7 +59,8 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_4 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # MERGED - TEST - Create IPFM fabric type with basic config
@@ -117,9 +118,11 @@
         FABRIC_TYPE: "{{ fabric_type_4 }}"
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -151,7 +154,8 @@
         role: leaf
         preserve_config: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # MERGED - TEST - Merge additional valid configs into fabric_4 with DEPLOY true
@@ -264,9 +268,11 @@
         FABRIC_MTU: 1500
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -360,9 +366,11 @@
 - name: MERGED - TEST - Merge additional config into fabric_4 - idempotence
   cisco.dcnm.dcnm_fabric: *merge_fabric_4
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -390,9 +398,11 @@
     state: deleted
     config:
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -448,9 +458,11 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_4 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

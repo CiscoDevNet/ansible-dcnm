@@ -353,3 +353,13 @@ def responses_switch_details(key: str) -> dict[str, str]:
     response = load_fixture(response_file).get(key)
     print(f"responses_switch_details: {key} : {response}")
     return response
+
+
+def responses_switch_details_v2(key: str) -> dict[str, str]:
+    """
+    Return data in responses_SwitchDetails_V2.json
+    """
+    response_file = "responses_SwitchDetails_V2"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_switch_details_v2: {key} : {response}")
+    return response
