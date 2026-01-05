@@ -631,8 +631,8 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: query
     config:
-    - net_name: ansible-net13
-    - net_name: ansible-net12
+      - net_name: ansible-net13
+      - net_name: ansible-net12
 
 # ===========================================================================
 # MSD (Multi-Site Domain) Fabric Examples
