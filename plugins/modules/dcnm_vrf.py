@@ -2343,7 +2343,7 @@ class DcnmVrf:
                 if vrf.get("vlan_id"):
                     vlan_id = vrf.get("vlan_id")
                 else:
-                    # Todo: When DCNM 11.x support is ended, change the default vlan_id to ""
+                    # TODO: After DCNM 11.x support is ended, change the default vlan_id to ""
                     vlan_id = 0
 
             vrf_deploy = vrf.get("deploy", True)
@@ -2799,6 +2799,7 @@ class DcnmVrf:
                     }
 
                     if self.dcnm_version > 11:
+                        # TODO: After DCNM 11.x support is ended, the following line can be removed
                         vrf_vlan_id = "" if template_conf["vrfVlanId"] in [0, None] else template_conf["vrfVlanId"]
                         template_conf.update(
                             vrfVlanId=vrf_vlan_id
