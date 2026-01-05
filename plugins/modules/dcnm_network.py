@@ -4285,7 +4285,7 @@ class DcnmNetwork:
                             dict(srvr_ip=net.get("dhcp_srvr2_ip"), srvr_vrf=net.get("dhcp_srvr2_vrf")),
                             dict(srvr_ip=net.get("dhcp_srvr3_ip"), srvr_vrf=net.get("dhcp_srvr3_vrf")),
                         ]):
-                            invalid_params.append("DHCP server VRF should be specified along with DHCP server IP")
+                            invalid_params.append("DHCP server IP should be specified when DHCP server VRF is provided")
 
                         if net.get("dhcp_servers"):
                             dhcp_servers = net.get("dhcp_servers")
