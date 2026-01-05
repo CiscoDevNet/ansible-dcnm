@@ -15,7 +15,7 @@ authors:
   - Neil John <neiljohn-gh>
   - Sivakami Sivaraman <sivakasi-cisco>
 description: Ansible collection for the Cisco Nexus® Dashboard Fabric Controller (NDFC) - formerly DCNM
-license: Apache-2.0
+license: [Apache-2.0]
 tags: [cisco, ndfc, dcnm, nxos, networking, vxlan]
 dependencies:
   "ansible.netcommon": ">=4.1.0"

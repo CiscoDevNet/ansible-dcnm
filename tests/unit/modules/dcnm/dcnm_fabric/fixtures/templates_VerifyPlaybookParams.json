@@ -5119,6 +5119,4578 @@
         "importedTemplates": null,
         "implements": ""
     },
+    "easy_fabric_ebgp": {
+        "TEST_NOTES": [
+            "Easy_Fabric_eBGP full template parameters"
+        ],
+        "instanceClassId": 1015,
+        "assignedInstanceClassId": 0,
+        "instanceName": "com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=Easy_Fabric_eBGP:type=true",
+        "name": "Easy_Fabric_eBGP",
+        "description": " Fabric for an eBGP based deployment with Nexus 9000 and 3000 switches. Optionally VXLAN EVPN can be enabled on top of the eBGP underlay.",
+        "userDefined": true,
+        "tags": "[BGP Fabric]",
+        "supportedPlatforms": "All",
+        "content": "",
+        "fileName": "Easy_Fabric_eBGP.template",
+        "templateType": "FABRIC",
+        "contentType": "PYTHON",
+        "templateSubType": "NA",
+        "_implements": "",
+        "dependencies": "",
+        "referenceCount": 0,
+        "published": false,
+        "timestamp": "2025-07-12 08:13:24",
+        "importedTemplates": null,
+        "implements": "",
+        "parameters": [
+            {
+                "name": "FABRIC_TYPE",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Switch_Fabric"
+                },
+                "annotations": {
+                    "ReadOnly": "true",
+                    "DisplayName": "Fabric Type",
+                    "IsFabricType": "true",
+                    "IsMandatory": "true",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "EXT_FABRIC_TYPE",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "FABRIC_TECHNOLOGY",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "EBGPVXLANFabric"
+                },
+                "annotations": {
+                    "ReadOnly": "true",
+                    "DisplayName": "Fabric Technology",
+                    "IsMandatory": "true",
+                    "Section": "\"Hidden\"",
+                    "IsFabricTechnology": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "default_asn_template",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "bgp_asn"
+                },
+                "annotations": {
+                    "ReadOnly": "true",
+                    "IsAsnTemplate": "true",
+                    "IsMandatory": "true",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "FABRIC_NAME",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "minLength": "1",
+                    "maxLength": "64"
+                },
+                "annotations": {
+                    "DisplayName": "Fabric Name",
+                    "Description": "Please provide the fabric name to create it (Max Size 64)",
+                    "IsMandatory": "true",
+                    "IsFabricName": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "BGP_AS",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "regularExpr": "^(((\\+)?[1-9]{1}[0-9]{0,8}|(\\+)?[1-3]{1}[0-9]{1,9}|(\\+)?[4]{1}([0-1]{1}[0-9]{8}|[2]{1}([0-8]{1}[0-9]{7}|[9]{1}([0-3]{1}[0-9]{6}|[4]{1}([0-8]{1}[0-9]{5}|[9]{1}([0-5]{1}[0-9]{4}|[6]{1}([0-6]{1}[0-9]{3}|[7]{1}([0-1]{1}[0-9]{2}|[2]{1}([0-8]{1}[0-9]{1}|[9]{1}[0-5]{1})))))))))|([1-5]\\d{4}|[1-9]\\d{0,3}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5])(\\.([1-5]\\d{4}|[1-9]\\d{0,3}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5]|0))?)$",
+                    "minLength": "1",
+                    "maxLength": "11"
+                },
+                "annotations": {
+                    "DisplayName": "BGP ASN for Spines",
+                    "Description": "1-4294967295 | 1-65535[.0-65535]",
+                    "IsAsn": "true",
+                    "IsMandatory": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "SUPER_SPINE_BGP_AS",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "regularExpr": "^(((\\+)?[1-9]{1}[0-9]{0,8}|(\\+)?[1-3]{1}[0-9]{1,9}|(\\+)?[4]{1}([0-1]{1}[0-9]{8}|[2]{1}([0-8]{1}[0-9]{7}|[9]{1}([0-3]{1}[0-9]{6}|[4]{1}([0-8]{1}[0-9]{5}|[9]{1}([0-5]{1}[0-9]{4}|[6]{1}([0-6]{1}[0-9]{3}|[7]{1}([0-1]{1}[0-9]{2}|[2]{1}([0-8]{1}[0-9]{1}|[9]{1}[0-5]{1})))))))))|([1-5]\\d{4}|[1-9]\\d{0,3}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5])(\\.([1-5]\\d{4}|[1-9]\\d{0,3}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5]|0))?)$",
+                    "minLength": "1",
+                    "maxLength": "11"
+                },
+                "annotations": {
+                    "DisplayName": "BGP ASN for Super Spines",
+                    "Description": "1-4294967295 | 1-65535[.0-65535]",
+                    "IsMandatory": "false"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "LEAF_BGP_AS",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "regularExpr": "^(((\\+)?[1-9]{1}[0-9]{0,8}|(\\+)?[1-3]{1}[0-9]{1,9}|(\\+)?[4]{1}([0-1]{1}[0-9]{8}|[2]{1}([0-8]{1}[0-9]{7}|[9]{1}([0-3]{1}[0-9]{6}|[4]{1}([0-8]{1}[0-9]{5}|[9]{1}([0-5]{1}[0-9]{4}|[6]{1}([0-6]{1}[0-9]{3}|[7]{1}([0-1]{1}[0-9]{2}|[2]{1}([0-8]{1}[0-9]{1}|[9]{1}[0-5]{1})))))))))|([1-5]\\d{4}|[1-9]\\d{0,3}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5])(\\.([1-5]\\d{4}|[1-9]\\d{0,3}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5]|0))?)$",
+                    "minLength": "1",
+                    "maxLength": "11"
+                },
+                "annotations": {
+                    "DisplayName": "BGP ASN for Leafs",
+                    "IsShow": "\"BGP_AS_MODE==Same-Tier-AS\"",
+                    "Description": "1-4294967295 | 1-65535[.0-65535], applicable when &#39;BGP AS Mode&#39; is Same-Tier-AS",
+                    "IsMandatory": "false"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BORDER_BGP_AS",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "regularExpr": "^(((\\+)?[1-9]{1}[0-9]{0,8}|(\\+)?[1-3]{1}[0-9]{1,9}|(\\+)?[4]{1}([0-1]{1}[0-9]{8}|[2]{1}([0-8]{1}[0-9]{7}|[9]{1}([0-3]{1}[0-9]{6}|[4]{1}([0-8]{1}[0-9]{5}|[9]{1}([0-5]{1}[0-9]{4}|[6]{1}([0-6]{1}[0-9]{3}|[7]{1}([0-1]{1}[0-9]{2}|[2]{1}([0-8]{1}[0-9]{1}|[9]{1}[0-5]{1})))))))))|([1-5]\\d{4}|[1-9]\\d{0,3}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5])(\\.([1-5]\\d{4}|[1-9]\\d{0,3}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5]|0))?)$",
+                    "minLength": "1",
+                    "maxLength": "11"
+                },
+                "annotations": {
+                    "DisplayName": "BGP ASN for Border and Border Gateway switches",
+                    "IsShow": "\"BGP_AS_MODE==Same-Tier-AS\"",
+                    "Description": "1-4294967295 | 1-65535[.0-65535], applicable when &#39;BGP AS Mode&#39; is Same-Tier-AS",
+                    "IsMandatory": "false"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BGP_AS_MODE",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Multi-AS"
+                },
+                "annotations": {
+                    "Enum": "\"Multi-AS,Same-Tier-AS\"",
+                    "DisplayName": "BGP AS Mode",
+                    "Description": "Multi-AS: Unique ASN per Leaf/Border/Border Gateway (Borders and border gateways are allowed to share ASN). Same-Tier-AS: Leafs share one ASN, Borders/border gateways share one ASN.",
+                    "IsMandatory": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "BGP_AS_MODE_PREV",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ALLOW_LEAF_SAME_AS",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Allow Same ASN On Leafs",
+                    "IsShow": "\"BGP_AS_MODE==Multi-AS\"",
+                    "Description": "Leafs can have same BGP ASN even when AS mode is Multi-AS",
+                    "IsMandatory": "false"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "UNDERLAY_IS_V6",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable IPv6 routed fabric, or VXLAN with IPv6 underlay",
+                    "Description": "If not enabled, IPv4 underlay/routed fabric is used.",
+                    "IsMandatory": "false"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "UNDERLAY_IS_V6_PREV",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "USE_LINK_LOCAL",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "Enable IPv6 Link-Local Address",
+                    "IsShow": "\"UNDERLAY_IS_V6==true\"",
+                    "Description": "If not enabled, intra interfaces will use global IPv6 addresses",
+                    "IsMandatory": "false",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "SUBNET_TARGET_MASK",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "30",
+                    "max": "31",
+                    "defaultValue": "30"
+                },
+                "annotations": {
+                    "Enum": "\"30,31\"",
+                    "DisplayName": "Underlay Subnet IP Mask",
+                    "IsShow": "\"UNDERLAY_IS_V6!=true\"",
+                    "Description": "Mask for Underlay Subnet IP Range",
+                    "IsMandatory": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "STATIC_UNDERLAY_IP_ALLOC",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Manual Underlay IP <br />Address Allocation",
+                    "NoConfigChg": "true",
+                    "Description": "Checking this will disable Dynamic Underlay IP Address Allocations",
+                    "IsMandatory": "false"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "LOOPBACK0_IP_RANGE",
+                "description": null,
+                "parameterType": "ipV4AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "10.2.0.0/22"
+                },
+                "annotations": {
+                    "DisplayName": "Underlay Routing Loopback IP <br />Range",
+                    "IsShow": "\"STATIC_UNDERLAY_IP_ALLOC!=true\"",
+                    "NoConfigChg": "true",
+                    "Description": "Typically Loopback0 IP Address Range",
+                    "IsMandatory": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "SUBNET_RANGE",
+                "description": null,
+                "parameterType": "ipV4AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "10.4.0.0/16"
+                },
+                "annotations": {
+                    "DisplayName": "Underlay Subnet IP Range",
+                    "IsShow": "\"UNDERLAY_IS_V6!=true && STATIC_UNDERLAY_IP_ALLOC!=true\"",
+                    "NoConfigChg": "true",
+                    "Description": "Address range to assign Numbered and Peer Link SVI IPs",
+                    "IsMandatory": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "LOOPBACK0_IPV6_RANGE",
+                "description": null,
+                "parameterType": "ipV6AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "fd00::a02:0/119"
+                },
+                "annotations": {
+                    "DisplayName": "Underlay Routing Loopback IPv6 <br />Range",
+                    "IsShow": "\"UNDERLAY_IS_V6==true && STATIC_UNDERLAY_IP_ALLOC!=true\"",
+                    "NoConfigChg": "true",
+                    "Description": "Typically Loopback0 IPv6 Address Range",
+                    "IsMandatory": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "DISABLE_ROUTE_MAP_TAG",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Disable Route-Map Tag",
+                    "Description": "No match tag for Route Map FABRIC-RMAP-REDIST-SUBNET",
+                    "IsMandatory": "false"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ROUTE_MAP_TAG",
+                "description": null,
+                "parameterType": "long",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "4294967295",
+                    "defaultValue": "12345"
+                },
+                "annotations": {
+                    "DisplayName": "Route-Map Tag",
+                    "IsShow": "\"DISABLE_ROUTE_MAP_TAG!=true\"",
+                    "Description": "Tag for Route Map FABRIC-RMAP-REDIST-SUBNET. (Min:0, Max:4294967295)",
+                    "IsMandatory": "false"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "SUBINTERFACE_RANGE",
+                "description": null,
+                "parameterType": "integerRange",
+                "metaProperties": {
+                    "min": "2",
+                    "max": "4093",
+                    "defaultValue": "2-511"
+                },
+                "annotations": {
+                    "DisplayName": "Subinterface Dot1q Range",
+                    "NoConfigChg": "true",
+                    "Description": "Per Border Dot1q Range For VRF Lite Connectivity (Min:2, Max:4093)",
+                    "IsMandatory": "true",
+                    "IsDot1qIdRange": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "PM_ENABLE",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable Performance Monitoring",
+                    "NoConfigChg": "true",
+                    "IsMandatory": "false"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "PM_ENABLE_PREV",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_EVPN",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "Enable EVPN VXLAN Overlay",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "FHRP_PROTOCOL",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "hsrp"
+                },
+                "annotations": {
+                    "Enum": "\"hsrp,vrrp\"",
+                    "Description": "HSRP or VRRP",
+                    "IsMandatory": "true",
+                    "DisplayName": "First Hop Redundancy Protocol",
+                    "IsRedundancyProtocol": "true",
+                    "IsShow": "\"ENABLE_EVPN==false\"",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "ANYCAST_GW_MAC",
+                "description": null,
+                "parameterType": "macAddress",
+                "metaProperties": {
+                    "defaultValue": "2020.0000.00aa"
+                },
+                "annotations": {
+                    "Description": "Shared MAC address for all leafs (xxxx.xxxx.xxxx)",
+                    "IsMandatory": "true",
+                    "DisplayName": "Anycast Gateway MAC",
+                    "IsAnycastGatewayMac": "true",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "ENABLE_NGOAM",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "Enable VXLAN OAM",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Description": "Enable the Next Generation (NG) OAM feature for all switches in the fabric to aid in trouble-shooting VXLAN EVPN fabrics",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_TENANT_DHCP",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "Enable Tenant DHCP",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ADVERTISE_PIP_BGP",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "vPC advertise-pip",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Description": "For Primary VTEP IP Advertisement As Next-Hop Of Prefix Routes",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ADVERTISE_PIP_ON_BORDER",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "vPC advertise-pip on Border only",
+                    "IsShow": "\"ENABLE_EVPN==true && ADVERTISE_PIP_BGP!=true\"",
+                    "Description": "Enable advertise-pip on vPC borders and border gateways only. Applicable only when vPC advertise-pip is not enabled",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "REPLICATION_MODE",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Multicast"
+                },
+                "annotations": {
+                    "Enum": "\"Multicast,Ingress\"",
+                    "Description": "Replication Mode for BUM Traffic",
+                    "IsMandatory": "true",
+                    "DisplayName": "Replication Mode",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "IsReplicationMode": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "MULTICAST_GROUP_SUBNET",
+                "description": null,
+                "parameterType": "ipV4AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "239.1.1.0/25"
+                },
+                "annotations": {
+                    "IsMulticastGroupSubnet": "true",
+                    "Description": "Multicast address with prefix 16 to 30",
+                    "IsMandatory": "true",
+                    "DisplayName": "Multicast Group Subnet",
+                    "IsShow": "\"ENABLE_EVPN==true && REPLICATION_MODE==Multicast && UNDERLAY_IS_V6!=true\"",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "IPv6_MULTICAST_GROUP_SUBNET",
+                "description": null,
+                "parameterType": "ipV6AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "ff1e::/121"
+                },
+                "annotations": {
+                    "DisplayName": "IPv6 Multicast Group Subnet",
+                    "IsShow": "\"ENABLE_EVPN==true && REPLICATION_MODE==Multicast && UNDERLAY_IS_V6==true\"",
+                    "Description": "IPv6 Multicast address with prefix 112 to 128",
+                    "IsMandatory": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "ENABLE_TRM",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable IPv4 Tenant Routed Multicast",
+                    "IsShow": "\"ENABLE_EVPN==true && REPLICATION_MODE==Multicast\"",
+                    "Description": "For Overlay IPv4 Multicast Support In VXLAN Fabrics",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_TRMv6",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable IPv6 Tenant Routed Multicast (TRMv6)",
+                    "IsShow": "\"ENABLE_EVPN==true && REPLICATION_MODE==Multicast\"",
+                    "Description": "For Overlay IPv6 Multicast Support In VXLAN Fabrics",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "L3VNI_MCAST_GROUP",
+                "description": null,
+                "parameterType": "ipV4Address",
+                "metaProperties": {
+                    "defaultValue": "239.1.1.0"
+                },
+                "annotations": {
+                    "Description": "Default Underlay  Multicast group IPv4 address assigned for every overlay VRF",
+                    "IsMandatory": "true",
+                    "DisplayName": "Default MDT Address for TRM VRFs",
+                    "IsShow": "\"($$ENABLE_TRM$$==true && $$UNDERLAY_IS_V6$$!=true) || ($$ENABLE_TRMv6$$==true && $$UNDERLAY_IS_V6$$!=true)\"",
+                    "Section": "\"EVPN\"",
+                    "IsMcastUnderlay": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "L3VNI_IPv6_MCAST_GROUP",
+                "description": null,
+                "parameterType": "ipV6Address",
+                "metaProperties": {
+                    "defaultValue": "ff1e::"
+                },
+                "annotations": {
+                    "DisplayName": "Default MDT IPv6 Address for TRM VRFs",
+                    "IsShow": "\"($$ENABLE_TRM$$==true && $$UNDERLAY_IS_V6$$==true) || ($$ENABLE_TRMv6$$==true && $$UNDERLAY_IS_V6$$==true)\"",
+                    "Description": "Default Underlay Multicast group IP6 address assigned for every overlay VRF",
+                    "IsMandatory": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "RP_COUNT",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "defaultValue": "2"
+                },
+                "annotations": {
+                    "Enum": "\"2,4\"",
+                    "Description": "Number of spines acting as Rendezvous-Point (RP)",
+                    "IsMandatory": "true",
+                    "DisplayName": "Rendezvous-Points",
+                    "IsShow": "\"ENABLE_EVPN==true && REPLICATION_MODE==Multicast\"",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "RP_MODE",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "asm"
+                },
+                "annotations": {
+                    "Enum": "\"asm,bidir\"",
+                    "Description": "Multicast RP Mode",
+                    "IsMandatory": "true",
+                    "DisplayName": "RP Mode",
+                    "IsShow": "\"ENABLE_EVPN==true && REPLICATION_MODE==Multicast\"",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "RP_LB_ID",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "1023",
+                    "defaultValue": "254"
+                },
+                "annotations": {
+                    "DisplayName": "Underlay RP Loopback Id",
+                    "IsShow": "\"ENABLE_EVPN==true && REPLICATION_MODE==Multicast\"",
+                    "Description": "(Min:0, Max:1023)",
+                    "IsMandatory": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "PHANTOM_RP_LB_ID1",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "1023",
+                    "defaultValue": "2"
+                },
+                "annotations": {
+                    "DisplayName": "Underlay Primary <br />RP Loopback Id",
+                    "IsShow": "\"ENABLE_EVPN==true && REPLICATION_MODE==Multicast && RP_MODE==bidir\"",
+                    "Description": "Used for Bidir-PIM Phantom RP (Min:0, Max:1023)",
+                    "IsMandatory": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "PHANTOM_RP_LB_ID2",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "1023",
+                    "defaultValue": "3"
+                },
+                "annotations": {
+                    "DisplayName": "Underlay Backup <br />RP Loopback Id",
+                    "IsShow": "\"ENABLE_EVPN==true && REPLICATION_MODE==Multicast && RP_MODE==bidir\"",
+                    "Description": "Used for Fallback Bidir-PIM Phantom RP (Min:0, Max:1023)",
+                    "IsMandatory": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "PHANTOM_RP_LB_ID3",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "1023",
+                    "defaultValue": "4"
+                },
+                "annotations": {
+                    "DisplayName": "Underlay Second Backup <br />RP Loopback Id",
+                    "IsShow": "\"ENABLE_EVPN==true && REPLICATION_MODE==Multicast && RP_MODE==bidir && RP_COUNT==4\"",
+                    "Description": "Used for second Fallback Bidir-PIM Phantom RP (Min:0, Max:1023)",
+                    "IsMandatory": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "PHANTOM_RP_LB_ID4",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "1023",
+                    "defaultValue": "5"
+                },
+                "annotations": {
+                    "DisplayName": "Underlay Third Backup <br />RP Loopback Id",
+                    "IsShow": "\"ENABLE_EVPN==true && REPLICATION_MODE==Multicast && RP_MODE==bidir && RP_COUNT==4\"",
+                    "Description": "Used for third Fallback Bidir-PIM Phantom RP (Min:0, Max:1023)",
+                    "IsMandatory": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "MVPN_VRI_ID_RANGE",
+                "description": null,
+                "parameterType": "integerRange",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "MVPN VRI ID Range",
+                    "IsShow": "\"($$ENABLE_TRM$$=='true' || $$ENABLE_TRMv6$$=='true') && ($$UNDERLAY_IS_V6$$=='true' || $$ALLOW_L3VNI_NO_VLAN$$=='true')\"",
+                    "Description": "MVPN VRI ID for vPC (Min:1, Max:65535), applicable when TRM enabled with IPv6 underlay, or TRM enabled with IPv4 underlay while fabric allows L3VNI w/o VLAN option",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_VRI_ID_REALLOC",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable MVPN VRI ID Re-allocation",
+                    "IsShow": "\"MVPN_VRI_ID_RANGE!=null\"",
+                    "Description": "One time VRI ID re-allocation based on &#39;MVPN VRI ID Range&#39;",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "default_vrf",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Default_VRF_Universal"
+                },
+                "annotations": {
+                    "Enum": "\"%TEMPLATES.vrf\"",
+                    "IsVrfTemplate": "true",
+                    "Description": "Default Overlay VRF Template For Leafs",
+                    "IsMandatory": "true",
+                    "DisplayName": "VRF Template",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Section": "\"EVPN\"",
+                    "AlwaysSetDefault": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "default_network",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Default_Network_Universal"
+                },
+                "annotations": {
+                    "Enum": "\"%TEMPLATES.network,%TEMPLATES.routedNetwork\"",
+                    "Description": "Default Overlay Network Template For Leafs",
+                    "IsMandatory": "true",
+                    "DisplayName": "Network Template",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "IsNetworkTemplate": "true",
+                    "Section": "\"EVPN\"",
+                    "AlwaysSetDefault": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "vrf_extension_template",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Default_VRF_Extension_Universal"
+                },
+                "annotations": {
+                    "Enum": "\"%TEMPLATES.vrfExtension\"",
+                    "IsVrfExtensionTemplate": "true",
+                    "Description": "Default Overlay VRF Template For Borders",
+                    "IsMandatory": "true",
+                    "DisplayName": "VRF Extension Template",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Section": "\"EVPN\"",
+                    "AlwaysSetDefault": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "network_extension_template",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Default_Network_Extension_Universal"
+                },
+                "annotations": {
+                    "Enum": "\"%TEMPLATES.networkExtension,%TEMPLATES.routedNetwork\"",
+                    "Description": "Default Overlay Network Template For Borders",
+                    "IsMandatory": "true",
+                    "DisplayName": "Network Extension Template",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "IsNetworkExtensionTemplate": "true",
+                    "Section": "\"EVPN\"",
+                    "AlwaysSetDefault": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "OVERLAY_MODE",
+                "description": null,
+                "parameterType": "enum",
+                "metaProperties": {
+                    "defaultValue": "cli",
+                    "validValues": "config-profile,cli"
+                },
+                "annotations": {
+                    "DisplayName": "Overlay Mode",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Description": "VRF/Network configuration using config-profile or CLI",
+                    "IsMandatory": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "OVERLAY_MODE_PREV",
+                "description": null,
+                "parameterType": "enum",
+                "metaProperties": {
+                    "validValues": "config-profile,cli"
+                },
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ALLOW_L3VNI_NO_VLAN",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "Allow L3VNI w/o VLAN",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Description": "Whether allows L3 VNI configuration without VLAN configuration. Appicable to EVPN fabric only",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ALLOW_L3VNI_NO_VLAN_PREV",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_L3VNI_NO_VLAN",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable L3VNI w/o VLAN",
+                    "IsShow": "\"ENABLE_EVPN==true && ALLOW_L3VNI_NO_VLAN!=false\"",
+                    "Description": "L3 VNI configuration without VLAN configuration. This value is propagated on vrf creation as the default value of &#39;Enable L3VNI w/o VLAN&#39; in vrf",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "SITE_ID",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "regularExpr": "^(((\\+)?[1-9]{1}[0-9]{0,13}|(\\+)?[1]{1}[0-9]{1,14}|(\\+)?[2]{1}([0-7]{1}[0-9]{13}|[8]{1}([0-0]{1}[0-9]{12}|[1]{1}([0-3]{1}[0-9]{11}|[4]{1}([0-6]{1}[0-9]{10}|[7]{1}([0-3]{1}[0-9]{9}|[4]{1}([0-8]{1}[0-9]{8}|[9]{1}([0-6]{1}[0-9]{7}|[7]{1}([0-5]{1}[0-9]{6}|[6]{1}([0-6]{1}[0-9]{5}|[7]{1}([0-0]{1}[0-9]{4}|[1]{1}([0]{0}[0-9]{3}|[0]{1}([0-5]{1}[0-9]{2}|[6]{1}([0-4]{1}[0-9]{1}|[5]{1}[0-5]{1}))))))))))))))|([1-5]\\d{4}|[1-9]\\d{0,3}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5])(\\.([1-5]\\d{4}|[1-9]\\d{0,3}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5]|0))?)$",
+                    "minLength": "1",
+                    "maxLength": "15"
+                },
+                "annotations": {
+                    "Description": "For EVPN Multi-Site Support (Min:1, Max: 281474976710655). Defaults to Fabric ASN",
+                    "IsMandatory": "false",
+                    "DisplayName": "Site Id",
+                    "Section": "\"EVPN\"",
+                    "IsSiteId": "true",
+                    "AutoPopulate": "\"BGP_AS\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ANYCAST_BGW_ADVERTISE_PIP",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Anycast Border Gateway advertise-pip",
+                    "Description": "To advertise Anycast Border Gateway PIP as VTEP. Effective on MSD fabric &#39;Recalculate Config&#39;",
+                    "IsMandatory": "false",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "VPC_PEER_LINK_VLAN",
+                "description": null,
+                "parameterType": "integerRange",
+                "metaProperties": {
+                    "min": "2",
+                    "max": "4094",
+                    "defaultValue": "3600"
+                },
+                "annotations": {
+                    "DisplayName": "vPC Peer Link VLAN Range",
+                    "Description": "VLAN range for vPC Peer Link SVI (Min:2, Max:4094)",
+                    "IsMandatory": "true",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "ENABLE_VPC_PEER_LINK_NATIVE_VLAN",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Make vPC Peer Link VLAN as Native VLAN",
+                    "IsMandatory": "false",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "VPC_PEER_KEEP_ALIVE_OPTION",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "management"
+                },
+                "annotations": {
+                    "Enum": "\"loopback,management\"",
+                    "DisplayName": "vPC Peer Keep Alive option",
+                    "Description": "Use vPC Peer Keep Alive with Loopback or Management",
+                    "IsMandatory": "true",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "VPC_AUTO_RECOVERY_TIME",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "240",
+                    "max": "3600",
+                    "defaultValue": "360"
+                },
+                "annotations": {
+                    "DisplayName": "vPC Auto Recovery Time",
+                    "Description": "Auto Recovery Time In Seconds (Min:240, Max:3600)",
+                    "IsMandatory": "true",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "VPC_DELAY_RESTORE",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "3600",
+                    "defaultValue": "150"
+                },
+                "annotations": {
+                    "DisplayName": "vPC Delay Restore Time",
+                    "Description": "vPC Delay Restore Time For vPC links in seconds (Min:1, Max:3600)",
+                    "IsMandatory": "true",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "VPC_PEER_LINK_PO",
+                "description": null,
+                "parameterType": "integerRange",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "4096",
+                    "defaultValue": "500"
+                },
+                "annotations": {
+                    "DisplayName": "vPC Peer Link Port Channel Number",
+                    "Description": "Port Channel ID for vPC Peer Link (Min:1, Max:4096)",
+                    "IsMandatory": "false",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "VPC_ENABLE_IPv6_ND_SYNC",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "vPC IPv6 ND Synchronize",
+                    "Description": "Enable IPv6 ND synchronization between vPC peers",
+                    "IsMandatory": "false",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_FABRIC_VPC_DOMAIN_ID",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Fabric wide vPC Domain Id",
+                    "Description": "Enable to use same vPC Domain Id on all vPC pairs in the fabric",
+                    "IsMandatory": "false",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_FABRIC_VPC_DOMAIN_ID_PREV",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "FABRIC_VPC_DOMAIN_ID",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "1000",
+                    "defaultValue": "1"
+                },
+                "annotations": {
+                    "DisplayName": "vPC Domain Id",
+                    "IsShow": "\"ENABLE_FABRIC_VPC_DOMAIN_ID==true\"",
+                    "Description": "vPC Domain Id to be used on all vPC pairs in the fabric",
+                    "IsMandatory": "true",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "FABRIC_VPC_DOMAIN_ID_PREV",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "1000"
+                },
+                "annotations": {
+                    "DisplayName": "Internal Fabric Wide vPC Domain Id",
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "VPC_DOMAIN_ID_RANGE",
+                "description": null,
+                "parameterType": "integerRange",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "1000",
+                    "defaultValue": "1-1000"
+                },
+                "annotations": {
+                    "DisplayName": "vPC Domain Id Range",
+                    "IsShow": "\"ENABLE_FABRIC_VPC_DOMAIN_ID!=true\"",
+                    "Description": "vPC Domain id range to use for new pairings",
+                    "IsMandatory": "false",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "FABRIC_VPC_QOS",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable Qos for Fabric vPC-Peering",
+                    "IsShow": "\"ENABLE_DEFAULT_QUEUING_POLICY!=true && ENABLE_AI_ML_QOS_POLICY!=true\"",
+                    "Description": "Qos on spines for guaranteed delivery of vPC Fabric Peering communication",
+                    "IsMandatory": "false",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "FABRIC_VPC_QOS_POLICY_NAME",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "spine_qos_for_fabric_vpc_peering",
+                    "minLength": "1",
+                    "maxLength": "40"
+                },
+                "annotations": {
+                    "DisplayName": "Qos Policy Name",
+                    "IsShow": "\"FABRIC_VPC_QOS==true\"",
+                    "Description": "Qos Policy name should be same on all spines",
+                    "IsMandatory": "true",
+                    "Section": "\"vPC\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "BGP_LB_ID",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "1023",
+                    "defaultValue": "0"
+                },
+                "annotations": {
+                    "DisplayName": "Routing Loopback Id",
+                    "Description": "(Min:0, Max:1023)",
+                    "IsMandatory": "true",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "NVE_LB_ID",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "1023",
+                    "defaultValue": "1"
+                },
+                "annotations": {
+                    "DisplayName": "VTEP Loopback Id",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Description": "(Min:0, Max:1023)",
+                    "IsMandatory": "true",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "ANYCAST_LB_ID",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "1023",
+                    "defaultValue": "10"
+                },
+                "annotations": {
+                    "DisplayName": "Underlay Anycast Loopback Id",
+                    "IsShow": "\"UNDERLAY_IS_V6==true\"",
+                    "Description": "Used for vPC Peering in VXLANv6 Fabrics (Min:0, Max:1023)",
+                    "IsMandatory": "true",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "BGP_MAX_PATH",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "64",
+                    "defaultValue": "4"
+                },
+                "annotations": {
+                    "DisplayName": "BGP Maximum Paths",
+                    "Description": "(Min:1, Max:64)",
+                    "IsMandatory": "true",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "BGP_AUTH_ENABLE",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable BGP Authentication",
+                    "IsShow": "\"UNDERLAY_IS_V6!=true || ENABLE_EVPN==false\"",
+                    "IsMandatory": "false",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BGP_AUTH_KEY_TYPE",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "3"
+                },
+                "annotations": {
+                    "Enum": "\"3,6,7\"",
+                    "Description": "BGP Key Encryption Type: 3 - 3DES, 6 - Cisco type 6, 7 - Cisco type 7",
+                    "IsMandatory": "true",
+                    "DisplayName": "BGP Authentication Key <br />Encryption Type",
+                    "IsShow": "\"BGP_AUTH_ENABLE==true\"",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "BGP_AUTH_KEY",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "minLength": "1",
+                    "maxLength": "256"
+                },
+                "annotations": {
+                    "DisplayName": "BGP Authentication Key",
+                    "IsShow": "\"BGP_AUTH_ENABLE==true\"",
+                    "Description": "Encrypted BGP Authentication Key based on type",
+                    "IsMandatory": "true",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "PIM_HELLO_AUTH_ENABLE",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable PIM Hello Authentication",
+                    "IsShow": "\"REPLICATION_MODE==Multicast && ENABLE_EVPN==true && UNDERLAY_IS_V6!=true\"",
+                    "IsMandatory": "false",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "PIM_HELLO_AUTH_KEY",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "minLength": "1",
+                    "maxLength": "256"
+                },
+                "annotations": {
+                    "DisplayName": "PIM Hello Authentication Key",
+                    "IsShow": "\"PIM_HELLO_AUTH_ENABLE==true\"",
+                    "Description": "3DES Encrypted",
+                    "IsMandatory": "true",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "BFD_ENABLE",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable BFD",
+                    "IsShow": "\"UNDERLAY_IS_V6!=true || ENABLE_EVPN==false\"",
+                    "IsMandatory": "false",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BFD_ENABLE_PREV",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BFD_IBGP_ENABLE",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable BFD For BGP",
+                    "IsShow": "\"BFD_ENABLE==true\"",
+                    "IsMandatory": "false",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BFD_AUTH_ENABLE",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable BFD Authentication",
+                    "IsShow": "\"FABRIC_INTERFACE_TYPE==p2p && BFD_ENABLE==true\"",
+                    "IsMandatory": "false",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BFD_AUTH_KEY_ID",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "255",
+                    "defaultValue": "100"
+                },
+                "annotations": {
+                    "DisplayName": "BFD Authentication Key ID",
+                    "IsShow": "\"FABRIC_INTERFACE_TYPE==p2p && BFD_ENABLE==true && BFD_AUTH_ENABLE==true\"",
+                    "IsMandatory": "\"BFD_AUTH_ENABLE==true\"",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BFD_AUTH_KEY",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "minLength": "1",
+                    "maxLength": "40"
+                },
+                "annotations": {
+                    "DisplayName": "BFD Authentication Key",
+                    "IsShow": "\"FABRIC_INTERFACE_TYPE==p2p && BFD_ENABLE==true && BFD_AUTH_ENABLE==true\"",
+                    "Description": "Encrypted SHA1 secret value",
+                    "IsMandatory": "\"BFD_AUTH_ENABLE==true\"",
+                    "Section": "\"Protocols\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_MACSEC",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable MACsec",
+                    "IsShow": "\"UNDERLAY_IS_V6==false || ENABLE_EVPN==false\"",
+                    "Description": "Enable MACsec in the fabric",
+                    "IsMandatory": "false",
+                    "Section": "\"Security\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "MACSEC_CIPHER_SUITE",
+                "description": null,
+                "parameterType": "enum",
+                "metaProperties": {
+                    "defaultValue": "GCM-AES-XPN-256",
+                    "validValues": "GCM-AES-128,GCM-AES-256,GCM-AES-XPN-128,GCM-AES-XPN-256"
+                },
+                "annotations": {
+                    "DisplayName": "MACsec Cipher Suite",
+                    "IsShow": "\"ENABLE_MACSEC==true\"",
+                    "Description": "Configure Cipher Suite",
+                    "IsMandatory": "true",
+                    "Section": "\"Security\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "MACSEC_KEY_STRING",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "regularExpr": "^[a-fA-F0-9]+$",
+                    "minLength": "1",
+                    "maxLength": "130"
+                },
+                "annotations": {
+                    "DisplayName": "MACsec Primary Key String",
+                    "IsShow": "\"ENABLE_MACSEC==true\"",
+                    "Description": "Cisco Type 7 Encrypted Octet String",
+                    "IsMandatory": "true",
+                    "Section": "\"Security\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "MACSEC_ALGORITHM",
+                "description": null,
+                "parameterType": "enum",
+                "metaProperties": {
+                    "defaultValue": "AES_128_CMAC",
+                    "validValues": "AES_128_CMAC,AES_256_CMAC"
+                },
+                "annotations": {
+                    "DisplayName": "MACsec Primary Cryptographic <br />Algorithm",
+                    "IsShow": "\"ENABLE_MACSEC==true\"",
+                    "Description": "AES_128_CMAC or AES_256_CMAC",
+                    "IsMandatory": "true",
+                    "Section": "\"Security\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "MACSEC_FALLBACK_KEY_STRING",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "regularExpr": "^[a-fA-F0-9]+$",
+                    "minLength": "1",
+                    "maxLength": "130"
+                },
+                "annotations": {
+                    "DisplayName": "MACsec Fallback Key String",
+                    "IsShow": "\"ENABLE_MACSEC==true\"",
+                    "Description": "Cisco Type 7 Encrypted Octet String",
+                    "IsMandatory": "true",
+                    "Section": "\"Security\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "MACSEC_FALLBACK_ALGORITHM",
+                "description": null,
+                "parameterType": "enum",
+                "metaProperties": {
+                    "defaultValue": "AES_128_CMAC",
+                    "validValues": "AES_128_CMAC,AES_256_CMAC"
+                },
+                "annotations": {
+                    "DisplayName": "MACsec Fallback Cryptographic <br />Algorithm",
+                    "IsShow": "\"ENABLE_MACSEC==true\"",
+                    "Description": "AES_128_CMAC or AES_256_CMAC",
+                    "IsMandatory": "true",
+                    "Section": "\"Security\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "MACSEC_REPORT_TIMER",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "5",
+                    "max": "60",
+                    "defaultValue": "5"
+                },
+                "annotations": {
+                    "DisplayName": "MACsec Status Report Timer",
+                    "IsShow": "\"ENABLE_MACSEC==true\"",
+                    "Description": "MACsec Operational Status periodic report timer in minutes",
+                    "IsMandatory": "true",
+                    "Section": "\"Security\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "FABRIC_MTU",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "576",
+                    "max": "9216",
+                    "defaultValue": "9216"
+                },
+                "annotations": {
+                    "DisplayName": "Intra Fabric Interface MTU",
+                    "Description": "(Min:576, Max:9216). Must be an even number",
+                    "IsMandatory": "true",
+                    "Section": "\"Advanced\"",
+                    "IsMTU": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "FABRIC_MTU_PREV",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "576",
+                    "max": "9216",
+                    "defaultValue": "9216"
+                },
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "L2_HOST_INTF_MTU",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "1500",
+                    "max": "9216",
+                    "defaultValue": "9216"
+                },
+                "annotations": {
+                    "DisplayName": "Layer 2 Host Interface MTU",
+                    "Description": "(Min:1500, Max:9216). Must be an even number",
+                    "IsMandatory": "true",
+                    "Section": "\"Advanced\"",
+                    "IsMTU": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "L2_HOST_INTF_MTU_PREV",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "1500",
+                    "max": "9216",
+                    "defaultValue": "9216"
+                },
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_PVLAN",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable Private VLAN (PVLAN)",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Description": "Enable PVLAN on VTEPs in VXLAN EVPN fabric",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_PVLAN_PREV",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "default_pvlan_sec_network",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Pvlan_Secondary_Network"
+                },
+                "annotations": {
+                    "Enum": "\"%TEMPLATES.pvlanSecNetwork\"",
+                    "Description": "Default PVLAN Secondary Network Template",
+                    "IsMandatory": "\"ENABLE_PVLAN==true\"",
+                    "DisplayName": "PVLAN Secondary Network Template",
+                    "IsShow": "\"ENABLE_PVLAN==true\"",
+                    "Section": "\"Advanced\"",
+                    "AlwaysSetDefault": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "POWER_REDUNDANCY_MODE",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "ps-redundant"
+                },
+                "annotations": {
+                    "Enum": "\"ps-redundant,combined,insrc-redundant\"",
+                    "DisplayName": "Power Supply Mode",
+                    "Description": "Default Power Supply Mode For The Fabric",
+                    "IsMandatory": "true",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "COPP_POLICY",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "strict"
+                },
+                "annotations": {
+                    "Enum": "\"dense,lenient,moderate,strict,manual\"",
+                    "DisplayName": "CoPP Profile",
+                    "Description": "Fabric Wide CoPP Policy. Customized CoPP policy should be <br /> seperately defined, when &#39;manual&#39; is selected",
+                    "IsMandatory": "true",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "HD_TIME",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "1500",
+                    "defaultValue": "180"
+                },
+                "annotations": {
+                    "DisplayName": "VTEP HoldDown Time",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Description": "NVE Source Inteface HoldDown Time (Min:1, Max:1500) in seconds",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "DCI_SUBNET_RANGE",
+                "description": null,
+                "parameterType": "ipV4AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "10.33.0.0/16"
+                },
+                "annotations": {
+                    "DisplayName": "VRF Lite Subnet IP Range",
+                    "Description": "Address range to assign P2P DCI Links",
+                    "IsMandatory": "true",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "DCI_SUBNET_TARGET_MASK",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "8",
+                    "max": "31",
+                    "defaultValue": "30"
+                },
+                "annotations": {
+                    "DisplayName": "VRF Lite Subnet Mask",
+                    "Description": "Mask for Subnet Range (Min:8, Max:31)",
+                    "IsMandatory": "true",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "AUTO_UNIQUE_VRF_LITE_IP_PREFIX",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Auto Allocation of Unique IP on VRF Extension over VRF Lite IFC",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Description": "When enabled, IP prefix allocated to the VRF LITE IFC is not reused on VRF extension over VRF LITE IFC. Instead, unique IP Subnet is allocated for each VRF extension over VRF LITE IFC.",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "AUTO_UNIQUE_VRF_LITE_IP_PREFIX_PREV",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "NoConfigChg": "true",
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "PER_VRF_LOOPBACK_AUTO_PROVISION",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Per VRF Per VTEP Loopback Auto-Provisioning",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Description": "Auto provision a loopback IPv4 on a VTEP on VRF attachment. <br /> Note: Enabling this option auto-provisions loopback on existing VRF attachments also when Edit, QuickAttach, or Multiattach actions are performed. <br /> Provisioned loopbacks cannot be deleted until VRFs are unattached.",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "PER_VRF_LOOPBACK_AUTO_PROVISION_PREV",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "NoConfigChg": "true",
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "PER_VRF_LOOPBACK_IP_RANGE",
+                "description": null,
+                "parameterType": "ipV4AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "10.5.0.0/22"
+                },
+                "annotations": {
+                    "DisplayName": "Per VRF Per VTEP IP Pool for Loopbacks",
+                    "IsShow": "\"PER_VRF_LOOPBACK_AUTO_PROVISION==true\"",
+                    "Description": "Prefix pool to assign IP addresses to loopbacks on VTEPs on a per VRF basis",
+                    "IsMandatory": "true",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "PER_VRF_LOOPBACK_AUTO_PROVISION_V6",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Per VRF Per VTEP Loopback IPv6 Auto-Provisioning",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Description": "Auto provision a loopback IPv6 on a VTEP on VRF attachment",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "PER_VRF_LOOPBACK_AUTO_PROVISION_V6_PREV",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "IsMandatory": "false",
+                    "Section": "\"Hidden\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "PER_VRF_LOOPBACK_IP_RANGE_V6",
+                "description": null,
+                "parameterType": "ipV6AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "fd00::a05:0/112"
+                },
+                "annotations": {
+                    "DisplayName": "Per VRF Per VTEP IPv6 Pool for Loopbacks",
+                    "IsShow": "\"PER_VRF_LOOPBACK_AUTO_PROVISION_V6==true\"",
+                    "Description": "Prefix pool to assign IPv6 addresses to loopbacks on VTEPs on a per VRF basis",
+                    "IsMandatory": "\"PER_VRF_LOOPBACK_AUTO_PROVISION_V6==true\"",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "CDP_ENABLE",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable CDP for Bootstrapped Switch",
+                    "Description": "Enable CDP on management interface",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_NXAPI",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "Enable NX-API",
+                    "Description": "Enable HTTPS NX-API",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "NXAPI_HTTPS_PORT",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "65535",
+                    "defaultValue": "443"
+                },
+                "annotations": {
+                    "DisplayName": "NX-API HTTPS Port Number",
+                    "IsShow": "\"ENABLE_NXAPI==true\"",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_NXAPI_HTTP",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "Enable HTTP NX-API",
+                    "IsShow": "\"ENABLE_NXAPI==true\"",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "NXAPI_HTTP_PORT",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "65535",
+                    "defaultValue": "80"
+                },
+                "annotations": {
+                    "DisplayName": "NX-API HTTP Port Number",
+                    "IsShow": "\"ENABLE_NXAPI_HTTP==true\"",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "STRICT_CC_MODE",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable Strict Config Compliance",
+                    "Description": "Enable bi-directional compliance checks to flag additional configs in the running config that are not in the intent/expected config",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "AAA_REMOTE_IP_ENABLED",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable AAA IP Authorization",
+                    "Description": "Enable only, when IP Authorization is enabled in the AAA Server",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "SNMP_SERVER_HOST_TRAP",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "Enable NDFC as Trap Host",
+                    "Description": "Configure NDFC as a receiver for SNMP traps",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "TCAM_ALLOCATION",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "Enable TCAM Allocation",
+                    "Description": "TCAM commands are automatically generated for VxLAN and vPC Fabric Peering when Enabled",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "DEPLOYMENT_FREEZE",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Disable all deployments in this fabric",
+                    "IsMandatory": "false",
+                    "Section": "\"Hidden\"",
+                    "IsFreezeMode": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "GRFIELD_DEBUG_FLAG",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Disable"
+                },
+                "annotations": {
+                    "Enum": "\"Enable,Disable\"",
+                    "Description": "Enable to clean switch configuration without reload when PreserveConfig&#61;no",
+                    "IsMandatory": "true",
+                    "DisplayName": "Greenfield Cleanup Option",
+                    "IsShow": "\"AAA_REMOTE_IP_ENABLED!=true\"",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "FEATURE_PTP",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable Precision Time Protocol (PTP)",
+                    "IsShow": "\"UNDERLAY_IS_V6!=true\"",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "PTP_LB_ID",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "1023",
+                    "defaultValue": "0"
+                },
+                "annotations": {
+                    "DisplayName": "PTP Source Loopback Id",
+                    "IsShow": "\"FEATURE_PTP==true\"",
+                    "Description": "(Min:0, Max:1023)",
+                    "IsMandatory": "true",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "PTP_DOMAIN_ID",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "0",
+                    "max": "127",
+                    "defaultValue": "0"
+                },
+                "annotations": {
+                    "DisplayName": "PTP Domain Id",
+                    "IsShow": "\"FEATURE_PTP==true\"",
+                    "Description": "Multiple Independent PTP Clocking Subdomains <br />on a Single Network (Min:0, Max:127)",
+                    "IsMandatory": "true",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "ENABLE_DEFAULT_QUEUING_POLICY",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable Default Queuing Policies",
+                    "IsShow": "\"FABRIC_VPC_QOS!=true && ENABLE_AI_ML_QOS_POLICY!=true\"",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "DEAFULT_QUEUING_POLICY_CLOUDSCALE",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "queuing_policy_default_8q_cloudscale"
+                },
+                "annotations": {
+                    "Enum": "\"%TEMPLATES.QoS_Cloud\"",
+                    "Description": "Queuing Policy for all 92xx, -EX, -FX, -FX2, -FX3, -GX <br />series switches in the fabric",
+                    "IsMandatory": "true",
+                    "DisplayName": "N9K Cloud Scale Platform <br />Queuing Policy",
+                    "IsShow": "\"ENABLE_DEFAULT_QUEUING_POLICY==true\"",
+                    "Section": "\"Advanced\"",
+                    "AlwaysSetDefault": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "DEAFULT_QUEUING_POLICY_R_SERIES",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "queuing_policy_default_r_series"
+                },
+                "annotations": {
+                    "Enum": "\"%TEMPLATES.QoS_R_Series\"",
+                    "Description": "Queuing Policy for all R-Series <br />switches in the fabric",
+                    "IsMandatory": "true",
+                    "DisplayName": "N9K R-Series Platform <br />Queuing Policy",
+                    "IsShow": "\"ENABLE_DEFAULT_QUEUING_POLICY==true\"",
+                    "Section": "\"Advanced\"",
+                    "AlwaysSetDefault": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "DEAFULT_QUEUING_POLICY_OTHER",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "queuing_policy_default_other"
+                },
+                "annotations": {
+                    "Enum": "\"%TEMPLATES.QoS_Other\"",
+                    "Description": "Queuing Policy for all other <br />switches in the fabric",
+                    "IsMandatory": "true",
+                    "DisplayName": "Other N9K Platform <br />Queuing Policy",
+                    "IsShow": "\"ENABLE_DEFAULT_QUEUING_POLICY==true\"",
+                    "Section": "\"Advanced\"",
+                    "AlwaysSetDefault": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "ENABLE_AI_ML_QOS_POLICY",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable AI/ML QoS and Queuing Policies",
+                    "IsShow": "\"FABRIC_VPC_QOS!=true && ENABLE_DEFAULT_QUEUING_POLICY!=true\"",
+                    "Description": "Configures QoS and Queuing Policies specific to N9K Cloud Scale switch fabric for AI/ML network loads",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_AI_ML_QOS_POLICY_FLAP",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "AI_ML_QOS_POLICY",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "AI_Fabric_QOS_400G"
+                },
+                "annotations": {
+                    "Enum": "\"%TEMPLATES.QoS_AIML\"",
+                    "Description": "Queuing Policy <br />based on predominant fabric link speed: 800G / 400G / 100G / 25G",
+                    "IsMandatory": "true",
+                    "DisplayName": "AI/ML <br />QoS &amp; Queuing Policy",
+                    "IsShow": "\"ENABLE_AI_ML_QOS_POLICY==true\"",
+                    "Section": "\"Advanced\"",
+                    "AlwaysSetDefault": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "PFC_WATCH_INT",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "101",
+                    "max": "1000"
+                },
+                "annotations": {
+                    "DisplayName": "Priority flow control watch-dog interval",
+                    "IsShow": "\"ENABLE_AI_ML_QOS_POLICY==true\"",
+                    "Description": "Acceptable values from 101 to 1000 (milliseconds).  Leave blank for system default (100ms).",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "PFC_WATCH_INT_PREV",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "101",
+                    "max": "1000"
+                },
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_RT_INTF_STATS",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable Real Time Interface Statistics Collection",
+                    "Description": "Valid for NX-OS only and External Non-ND Telemetry Receiver",
+                    "IsMandatory": "false",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "INTF_STAT_LOAD_INTERVAL",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "5",
+                    "max": "300",
+                    "defaultValue": "10"
+                },
+                "annotations": {
+                    "DisplayName": "Interface Statistics Load Interval",
+                    "IsShow": "\"ENABLE_RT_INTF_STATS==true\"",
+                    "Description": "Time in seconds<br />(Min:5, Max:300)",
+                    "IsMandatory": "\"ENABLE_RT_INTF_STATS==true\"",
+                    "Section": "\"Advanced\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "preInterfaceConfigLeaf",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Leaf Pre-Interfaces Freeform Config",
+                    "IsMultiLineString": "true",
+                    "Description": "Additional CLIs, added before interface configurations, for all Leafs as captured from Show Running Configuration",
+                    "IsMandatory": "false",
+                    "Section": "\"Freeform\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "preInterfaceConfigSpine",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Spine Pre-Interfaces Freeform Config",
+                    "IsMultiLineString": "true",
+                    "Description": "Additional CLIs, added before interface configurations, for all Spines as captured from Show Running Configuration",
+                    "IsMandatory": "false",
+                    "Section": "\"Freeform\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "EXTRA_CONF_LEAF",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Leaf Post-Interfaces Freeform Config",
+                    "IsMultiLineString": "true",
+                    "Description": "Additional CLIs, added after interface configurations, for all Leafs as captured from Show Running Configuration",
+                    "IsMandatory": "false",
+                    "Section": "\"Freeform\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "EXTRA_CONF_SPINE",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Spine Post-Interfaces Freeform Config",
+                    "IsMultiLineString": "true",
+                    "Description": "Additional CLIs, added after interface configurations, for all Spines as captured from Show Running Configuration",
+                    "IsMandatory": "false",
+                    "Section": "\"Freeform\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "EXTRA_CONF_INTRA_LINKS",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Intra-fabric Links Additional Config",
+                    "IsMultiLineString": "true",
+                    "Description": "Additional CLIs for all Intra-Fabric links",
+                    "IsMandatory": "false",
+                    "Section": "\"Freeform\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "LOOPBACK1_IP_RANGE",
+                "description": null,
+                "parameterType": "ipV4AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "10.3.0.0/22"
+                },
+                "annotations": {
+                    "Description": "Typically Loopback1 IP Address Range",
+                    "IsMandatory": "true",
+                    "DisplayName": "Underlay VTEP Loopback IP Range",
+                    "IsShow": "\"ENABLE_EVPN==true && STATIC_UNDERLAY_IP_ALLOC!=true && UNDERLAY_IS_V6!=true\"",
+                    "NoConfigChg": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "ANYCAST_RP_IP_RANGE",
+                "description": null,
+                "parameterType": "ipV4AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "10.254.254.0/24"
+                },
+                "annotations": {
+                    "Description": "Anycast or Phantom RP IP Address Range",
+                    "IsMandatory": "true",
+                    "DisplayName": "Underlay RP Loopback IP Range",
+                    "IsShow": "\"ENABLE_EVPN==true && STATIC_UNDERLAY_IP_ALLOC!=true && REPLICATION_MODE==Multicast && UNDERLAY_IS_V6!=true\"",
+                    "NoConfigChg": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "IPv6_ANYCAST_RP_IP_RANGE",
+                "description": null,
+                "parameterType": "ipV6AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "fd00::254:254:0/118"
+                },
+                "annotations": {
+                    "Description": "Anycast IPv6 Address Range",
+                    "IsMandatory": "true",
+                    "DisplayName": "Underlay RP Loopback IPv6 Range",
+                    "IsShow": "\"ENABLE_EVPN==true && STATIC_UNDERLAY_IP_ALLOC!=true && REPLICATION_MODE==Multicast && UNDERLAY_IS_V6==true\"",
+                    "NoConfigChg": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "LOOPBACK1_IPV6_RANGE",
+                "description": null,
+                "parameterType": "ipV6AddressWithSubnet",
+                "metaProperties": {
+                    "defaultValue": "fd00::a03:0/118"
+                },
+                "annotations": {
+                    "Description": "Typically Loopback1 and Anycast Loopback IPv6 Address Range",
+                    "IsMandatory": "true",
+                    "DisplayName": "Underlay VTEP Loopback IPv6 <br />Range",
+                    "IsShow": "\"ENABLE_EVPN==true && UNDERLAY_IS_V6==true && STATIC_UNDERLAY_IP_ALLOC!=true\"",
+                    "NoConfigChg": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "L2_SEGMENT_ID_RANGE",
+                "description": null,
+                "parameterType": "integerRange",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "16777214",
+                    "defaultValue": "30000-49000"
+                },
+                "annotations": {
+                    "Description": "Overlay Network Identifier Range (Min:1, Max:16777214)",
+                    "IsMandatory": "true",
+                    "DisplayName": "Layer 2 VXLAN VNI Range",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "NoConfigChg": "true",
+                    "IsL2VniRange": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "L3_PARTITION_ID_RANGE",
+                "description": null,
+                "parameterType": "integerRange",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "16777214",
+                    "defaultValue": "50000-59000"
+                },
+                "annotations": {
+                    "Description": "Overlay VRF Identifier Range (Min:1, Max:16777214)",
+                    "IsMandatory": "true",
+                    "DisplayName": "Layer 3 VXLAN VNI Range",
+                    "IsL3VniRange": "true",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "NoConfigChg": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "NETWORK_VLAN_RANGE",
+                "description": null,
+                "parameterType": "integerRange",
+                "metaProperties": {
+                    "min": "2",
+                    "max": "4094",
+                    "defaultValue": "2300-2999"
+                },
+                "annotations": {
+                    "Description": "Per Switch Overlay Network VLAN Range (Min:2, Max:4094)",
+                    "IsMandatory": "true",
+                    "IsNetworkVlanRange": "true",
+                    "DisplayName": "Network VLAN Range",
+                    "NoConfigChg": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "VRF_VLAN_RANGE",
+                "description": null,
+                "parameterType": "integerRange",
+                "metaProperties": {
+                    "min": "2",
+                    "max": "4094",
+                    "defaultValue": "2000-2299"
+                },
+                "annotations": {
+                    "Description": "Per Switch Overlay VRF VLAN Range (Min:2, Max:4094)",
+                    "IsMandatory": "true",
+                    "DisplayName": "VRF VLAN Range",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "NoConfigChg": "true",
+                    "IsVrfVlanRange": "true",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "VRF_LITE_AUTOCONFIG",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Manual"
+                },
+                "annotations": {
+                    "Enum": "\"Manual\"",
+                    "Description": "VRF Lite Inter-Fabric Connection Deployment Options",
+                    "IsMandatory": "true",
+                    "DisplayName": "VRF Lite Deployment",
+                    "IsShow": "\"ENABLE_EVPN==true\"",
+                    "Section": "\"EVPN\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "DNS_SERVER_IP_LIST",
+                "description": null,
+                "parameterType": "ipAddressList",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "DNS Server IPs",
+                    "Description": "Comma separated list of IP Addresses(v4/v6)",
+                    "IsMandatory": "false",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "DNS_SERVER_VRF",
+                "description": null,
+                "parameterType": "string[]",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "DNS Server VRFs",
+                    "IsShow": "\"DNS_SERVER_IP_LIST!=null\"",
+                    "Description": "One VRF for all DNS servers or a comma separated<br />list of VRFs, one per DNS server",
+                    "IsMandatory": "\"DNS_SERVER_IP_LIST!=null\"",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "NTP_SERVER_IP_LIST",
+                "description": null,
+                "parameterType": "ipAddressList",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "NTP Server IPs",
+                    "Description": "Comma separated list of IP Addresses(v4/v6)",
+                    "IsMandatory": "false",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "NTP_SERVER_VRF",
+                "description": null,
+                "parameterType": "string[]",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "NTP Server VRFs",
+                    "IsShow": "\"NTP_SERVER_IP_LIST!=null\"",
+                    "Description": "One VRF for all NTP servers or a comma separated<br />list of VRFs, one per NTP server",
+                    "IsMandatory": "\"NTP_SERVER_IP_LIST!=null\"",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "SYSLOG_SERVER_IP_LIST",
+                "description": null,
+                "parameterType": "ipAddressList",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Syslog Server IPs",
+                    "Description": "Comma separated list of IP Addresses(v4/v6)",
+                    "IsMandatory": "false",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "SYSLOG_SEV",
+                "description": null,
+                "parameterType": "string[]",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Syslog Server Severity",
+                    "IsShow": "\"SYSLOG_SERVER_IP_LIST!=null\"",
+                    "Description": "Comma separated list of Syslog severity values,<br />one per Syslog server (Min:0, Max:7)",
+                    "IsMandatory": "\"SYSLOG_SERVER_IP_LIST!=null\"",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "SYSLOG_SERVER_VRF",
+                "description": null,
+                "parameterType": "string[]",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Syslog Server VRFs",
+                    "IsShow": "\"SYSLOG_SERVER_IP_LIST!=null\"",
+                    "Description": "One VRF for all Syslog servers or a comma separated<br />list of VRFs, one per Syslog server",
+                    "IsMandatory": "\"SYSLOG_SERVER_IP_LIST!=null\"",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "AAA_SERVER_CONF",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "AAA Freeform Config",
+                    "IsMultiLineString": "true",
+                    "Description": "AAA Configurations",
+                    "IsMandatory": "false",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BANNER",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Banner",
+                    "IsMultiLineString": "true",
+                    "Description": "Message of the Day (motd) banner. Delimiter char (very first char is delimiter char) followed by message ending with delimiter",
+                    "IsMandatory": "false",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BOOTSTRAP_ENABLE",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "Description": "Automatic IP Assignment For POAP",
+                    "IsMandatory": "false",
+                    "IsDhcpFlag": "true",
+                    "DisplayName": "Enable Bootstrap",
+                    "NoConfigChg": "true",
+                    "Section": "\"Bootstrap\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "DHCP_ENABLE",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "Description": "Automatic IP Assignment For POAP From Local DHCP Server",
+                    "IsMandatory": "false",
+                    "DisplayName": "Enable Local DHCP Server",
+                    "NoConfigChg": "true",
+                    "IsShow": "\"BOOTSTRAP_ENABLE==true\"",
+                    "Section": "\"Bootstrap\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "DHCP_IPV6_ENABLE",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "DHCPv4"
+                },
+                "annotations": {
+                    "Enum": "\"DHCPv4,DHCPv6\"",
+                    "IsMandatory": "false",
+                    "DisplayName": "DHCP Version",
+                    "NoConfigChg": "true",
+                    "IsShow": "\"DHCP_ENABLE==true && BOOTSTRAP_ENABLE==true\"",
+                    "Section": "\"Bootstrap\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "DHCP_START",
+                "description": null,
+                "parameterType": "ipAddress",
+                "metaProperties": {},
+                "annotations": {
+                    "Description": "Start Address For Switch Out-of-Band POAP",
+                    "IsMandatory": "true",
+                    "DisplayName": "DHCP Scope Start Address",
+                    "NoConfigChg": "true",
+                    "IsShow": "\"DHCP_ENABLE==true && BOOTSTRAP_ENABLE==true\"",
+                    "Section": "\"Bootstrap\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "DHCP_END",
+                "description": null,
+                "parameterType": "ipAddress",
+                "metaProperties": {},
+                "annotations": {
+                    "Description": "End Address For Switch Out-of-Band POAP",
+                    "IsMandatory": "true",
+                    "DisplayName": "DHCP Scope End Address",
+                    "NoConfigChg": "true",
+                    "IsShow": "\"DHCP_ENABLE==true && BOOTSTRAP_ENABLE==true\"",
+                    "Section": "\"Bootstrap\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "MGMT_GW",
+                "description": null,
+                "parameterType": "ipAddress",
+                "metaProperties": {},
+                "annotations": {
+                    "Description": "Default Gateway For Management VRF On The Switch",
+                    "IsMandatory": "true",
+                    "DisplayName": "Switch Mgmt Default Gateway",
+                    "NoConfigChg": "true",
+                    "IsShow": "\"DHCP_ENABLE==true && BOOTSTRAP_ENABLE==true\"",
+                    "Section": "\"Bootstrap\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "MGMT_PREFIX",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "8",
+                    "max": "30",
+                    "defaultValue": "24"
+                },
+                "annotations": {
+                    "Description": "(Min:8, Max:30)",
+                    "IsMandatory": "true",
+                    "DisplayName": "Switch Mgmt IP Subnet Prefix",
+                    "NoConfigChg": "true",
+                    "IsShow": "\"DHCP_ENABLE==true && BOOTSTRAP_ENABLE==true && DHCP_IPV6_ENABLE==DHCPv4\"",
+                    "Section": "\"Bootstrap\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "MGMT_V6PREFIX",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "64",
+                    "max": "126",
+                    "defaultValue": "64"
+                },
+                "annotations": {
+                    "Description": "(Min:64, Max:126)",
+                    "IsMandatory": "false",
+                    "DisplayName": "Switch Mgmt IPv6 Subnet Prefix",
+                    "NoConfigChg": "true",
+                    "IsShow": "\"DHCP_ENABLE==true && BOOTSTRAP_ENABLE==true && DHCP_IPV6_ENABLE==DHCPv6\"",
+                    "Section": "\"Bootstrap\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_AAA",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "Description": "Include AAA configs from Manageability tab during device bootup",
+                    "IsMandatory": "false",
+                    "DisplayName": "Enable AAA Config",
+                    "NoConfigChg": "true",
+                    "IsShow": "\"BOOTSTRAP_ENABLE==true\"",
+                    "Section": "\"Bootstrap\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BOOTSTRAP_CONF",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMultiLineString": "true",
+                    "Description": "Additional CLIs required during device bootup/login e.g. AAA/Radius",
+                    "IsMandatory": "false",
+                    "DisplayName": "Bootstrap Freeform Config",
+                    "IsShow": "\"BOOTSTRAP_ENABLE==true\"",
+                    "Section": "\"Bootstrap\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BOOTSTRAP_MULTISUBNET",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix"
+                },
+                "annotations": {
+                    "IsMultiLineString": "true",
+                    "Warning": "\"Enter One Subnet Scope per line. <br/> Start_IP, End_IP, Gateway, Prefix <br/> e.g. <br>10.6.0.2, 10.6.0.9, 10.6.0.1, 24 <br>10.7.0.2, 10.7.0.9, 10.7.0.1, 24\"",
+                    "Description": "lines with # prefix are ignored here",
+                    "IsMandatory": "false",
+                    "DisplayName": "DHCPv4 Multi Subnet Scope",
+                    "NoConfigChg": "true",
+                    "IsShow": "\"DHCP_ENABLE==true && BOOTSTRAP_ENABLE==true\"",
+                    "Section": "\"Bootstrap\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "FEATURE_PTP_INTERNAL",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "IsMandatory": "true",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "SSPINE_COUNT",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "defaultValue": "0"
+                },
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "SPINE_COUNT",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "defaultValue": "0"
+                },
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "abstract_feature_leaf",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "base_feature_leaf_upg"
+                },
+                "annotations": {
+                    "Enum": "\"base_feature_leaf_upg\"",
+                    "Description": "Feature Configuration for Leaf",
+                    "IsMandatory": "true",
+                    "DisplayName": "base_feature_leaf",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_feature_spine",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "base_feature_spine_upg"
+                },
+                "annotations": {
+                    "Enum": "\"base_feature_spine_upg\"",
+                    "Description": "Feature Configuration for Spine",
+                    "IsMandatory": "true",
+                    "DisplayName": "base_feature_spine",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_dhcp",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "base_dhcp"
+                },
+                "annotations": {
+                    "Enum": "\"base_dhcp\"",
+                    "Description": "DHCP Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "base_dhcp",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_multicast",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "base_multicast_11_1"
+                },
+                "annotations": {
+                    "Enum": "\"base_multicast_11_1\"",
+                    "Description": "Multicast Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "base_multicast",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_anycast_rp",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "anycast_rp"
+                },
+                "annotations": {
+                    "Enum": "\"anycast_rp\"",
+                    "Description": "Anycast RP Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "anycast_rp",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_loopback_interface",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "int_fabric_loopback_11_1"
+                },
+                "annotations": {
+                    "Enum": "\"int_fabric_loopback_11_1\"",
+                    "Description": "Primary Loopback Interface Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "loopback_interface",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_vpc_domain",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "base_vpc_domain_11_1"
+                },
+                "annotations": {
+                    "Enum": "\"base_vpc_domain_11_1\"",
+                    "Description": "vPC Domain Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "base_vpc_domain",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_vlan_interface",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "int_fabric_vlan_11_1"
+                },
+                "annotations": {
+                    "Enum": "\"int_fabric_vlan_11_1\"",
+                    "Description": "VLAN Interface Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "vlan_interface",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_pim_interface",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "pim_interface"
+                },
+                "annotations": {
+                    "Enum": "\"pim_interface\"",
+                    "Description": "PIM Interface Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "pim_interface",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_route_map",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "route_map"
+                },
+                "annotations": {
+                    "Enum": "\"route_map\"",
+                    "Description": "Route-Map Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "abstract_route_map",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_bgp",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "base_bgp"
+                },
+                "annotations": {
+                    "Enum": "\"base_bgp\"",
+                    "Description": "BGP Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "base_bgp",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_extra_config_leaf",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "extra_config_leaf"
+                },
+                "annotations": {
+                    "Enum": "\"extra_config_leaf\"",
+                    "Description": "Add Extra Configuration for Leaf",
+                    "IsMandatory": "true",
+                    "DisplayName": "extra_config_leaf",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_extra_config_bootstrap",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "extra_config_bootstrap_11_1"
+                },
+                "annotations": {
+                    "Enum": "\"extra_config_bootstrap\"",
+                    "Description": "Add Extra Configuration for Bootstrap",
+                    "IsMandatory": "true",
+                    "DisplayName": "extra_config_bootstrap",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_extra_config_spine",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "extra_config_spine"
+                },
+                "annotations": {
+                    "Enum": "\"extra_config_spine\"",
+                    "Description": "Add Extra Configuration for Spine",
+                    "IsMandatory": "true",
+                    "DisplayName": "extra_config_spine",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "temp_anycast_gateway",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "anycast_gateway"
+                },
+                "annotations": {
+                    "Enum": "\"anycast_gateway\"",
+                    "Description": "Anycast Gateway MAC Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "anycast_gateway",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "temp_vpc_domain_mgmt",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "vpc_domain_mgmt"
+                },
+                "annotations": {
+                    "Enum": "\"vpc_domain_mgmt\"",
+                    "Description": "vPC Keep-alive Configuration using Management VRF",
+                    "IsMandatory": "true",
+                    "DisplayName": "vpc_domain_mgmt",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "temp_vpc_peer_link",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "int_vpc_peer_link_po"
+                },
+                "annotations": {
+                    "Enum": "\"vpc_peer_link\"",
+                    "Description": "vPC Peer-Link Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "vpc_peer_link",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_routed_host",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "int_routed_host"
+                },
+                "annotations": {
+                    "Enum": "\"int_routed_host\"",
+                    "Description": "Routed Host Port Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "routed_host",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "abstract_trunk_host",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "int_trunk_host"
+                },
+                "annotations": {
+                    "Enum": "\"int_trunk_host\"",
+                    "Description": "trunk Host Port Configuration",
+                    "IsMandatory": "true",
+                    "DisplayName": "trunk_host",
+                    "Section": "\"Policy Templates\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "SSPINE_ADD_DEL_DEBUG_FLAG",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Disable"
+                },
+                "annotations": {
+                    "Enum": "\"Enable,Disable\"",
+                    "DisplayName": "Super Spine Force Add Del",
+                    "Description": "Allow First Super Spine Add or Last Super Spine Delete From Topology",
+                    "IsMandatory": "false",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BRFIELD_DEBUG_FLAG",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Disable"
+                },
+                "annotations": {
+                    "Enum": "\"Enable,Disable\"",
+                    "DisplayName": "!!! Only for brf debugging purpose !!!",
+                    "Description": "Dont&#39; use until you are aware about it",
+                    "IsMandatory": "false",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ACTIVE_MIGRATION",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Active Migration",
+                    "IsMandatory": "true",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "FF",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "Easy_Fabric_eBGP"
+                },
+                "annotations": {
+                    "DisplayName": "Template Family",
+                    "IsMandatory": "true",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "DHCP_START_INTERNAL",
+                "description": null,
+                "parameterType": "ipAddress",
+                "metaProperties": {},
+                "annotations": {
+                    "NoConfigChg": "true",
+                    "IsMandatory": "false",
+                    "Section": "\"Bootstrap\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "DHCP_END_INTERNAL",
+                "description": null,
+                "parameterType": "ipAddress",
+                "metaProperties": {},
+                "annotations": {
+                    "NoConfigChg": "true",
+                    "IsMandatory": "false",
+                    "Section": "\"Bootstrap\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "MGMT_GW_INTERNAL",
+                "description": null,
+                "parameterType": "ipAddress",
+                "metaProperties": {},
+                "annotations": {
+                    "NoConfigChg": "true",
+                    "IsMandatory": "false",
+                    "Section": "\"Bootstrap\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "MGMT_PREFIX_INTERNAL",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {},
+                "annotations": {
+                    "NoConfigChg": "true",
+                    "IsMandatory": "false",
+                    "Section": "\"Bootstrap\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "BOOTSTRAP_MULTISUBNET_INTERNAL",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "NoConfigChg": "true",
+                    "IsMandatory": "false",
+                    "Section": "\"Bootstrap\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "MGMT_V6PREFIX_INTERNAL",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {},
+                "annotations": {
+                    "NoConfigChg": "true",
+                    "IsMandatory": "false",
+                    "Section": "\"Bootstrap\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "DHCP_IPV6_ENABLE_INTERNAL",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "NoConfigChg": "true",
+                    "IsMandatory": "false",
+                    "Section": "\"Bootstrap\"",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "enableRealTimeBackup",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Hourly Fabric Backup",
+                    "NoConfigChg": "true",
+                    "Description": "Backup hourly only if there is any config deployment since last backup",
+                    "IsMandatory": "false",
+                    "Section": "\"Configuration Backup\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "enableScheduledBackup",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Scheduled Fabric Backup",
+                    "NoConfigChg": "true",
+                    "Description": "Backup at the specified time",
+                    "IsMandatory": "false",
+                    "Section": "\"Configuration Backup\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "scheduledTime",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "regularExpr": "^([01]\\d|2[0-3]):([0-5]\\d)$"
+                },
+                "annotations": {
+                    "Description": "Time (UTC) in 24hr format. (00:00 to 23:59)",
+                    "IsMandatory": "true",
+                    "DisplayName": "Scheduled Time",
+                    "NoConfigChg": "true",
+                    "IsShow": "\"enableScheduledBackup==true\"",
+                    "Section": "\"Configuration Backup\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "ENABLE_NETFLOW",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Enable Netflow",
+                    "IsShow": "\"UNDERLAY_IS_V6!=true || ENABLE_EVPN==false\"",
+                    "Description": "Enable Netflow on VTEPs",
+                    "IsMandatory": "false",
+                    "Section": "\"Flow Monitor\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ENABLE_NETFLOW_PREV",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "NETFLOW_EXPORTER_LIST",
+                "description": null,
+                "parameterType": "structureArray",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Netflow Exporter",
+                    "IsShow": "\"ENABLE_NETFLOW==true\"",
+                    "Description": "One or Multiple Netflow Exporters",
+                    "IsMandatory": "true",
+                    "Section": "\"Flow Monitor\""
+                },
+                "structureParameters": {
+                    "EXPORTER_NAME": {
+                        "name": "EXPORTER_NAME",
+                        "description": null,
+                        "parameterType": "string",
+                        "metaProperties": {},
+                        "annotations": {
+                            "IsMandatory": "true",
+                            "DisplayName": "\"Exporter Name\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": false
+                    },
+                    "IP": {
+                        "name": "IP",
+                        "description": null,
+                        "parameterType": "ipV4Address",
+                        "metaProperties": {},
+                        "annotations": {
+                            "IsMandatory": "true",
+                            "DisplayName": "\"IP\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": false
+                    },
+                    "VRF": {
+                        "name": "VRF",
+                        "description": null,
+                        "parameterType": "string",
+                        "metaProperties": {},
+                        "annotations": {
+                            "IsMandatory": "false",
+                            "DisplayName": "\"VRF\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": true
+                    },
+                    "SRC_IF_NAME": {
+                        "name": "SRC_IF_NAME",
+                        "description": null,
+                        "parameterType": "interface",
+                        "metaProperties": {},
+                        "annotations": {
+                            "IsMandatory": "true",
+                            "DisplayName": "\"Source Interface\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": false
+                    },
+                    "UDP_PORT": {
+                        "name": "UDP_PORT",
+                        "description": null,
+                        "parameterType": "integer",
+                        "metaProperties": {
+                            "min": "1",
+                            "max": "65535"
+                        },
+                        "annotations": {
+                            "IsMandatory": "true",
+                            "DisplayName": "\"UDP Port\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": false
+                    }
+                },
+                "parameterTypeStructure": true,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "NETFLOW_RECORD_LIST",
+                "description": null,
+                "parameterType": "structureArray",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Netflow Record",
+                    "IsShow": "\"ENABLE_NETFLOW==true\"",
+                    "Description": "One or Multiple Netflow Records",
+                    "IsMandatory": "true",
+                    "Section": "\"Flow Monitor\""
+                },
+                "structureParameters": {
+                    "RECORD_NAME": {
+                        "name": "RECORD_NAME",
+                        "description": null,
+                        "parameterType": "string",
+                        "metaProperties": {},
+                        "annotations": {
+                            "IsMandatory": "true",
+                            "DisplayName": "\"Record Name\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": false
+                    },
+                    "RECORD_TEMPLATE": {
+                        "name": "RECORD_TEMPLATE",
+                        "description": null,
+                        "parameterType": "string",
+                        "metaProperties": {
+                            "defaultValue": "netflow_ipv4_record"
+                        },
+                        "annotations": {
+                            "IsMandatory": "true",
+                            "DisplayName": "\"Record Template\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": false
+                    },
+                    "LAYER2_RECORD": {
+                        "name": "LAYER2_RECORD",
+                        "description": null,
+                        "parameterType": "boolean",
+                        "metaProperties": {
+                            "defaultValue": "false"
+                        },
+                        "annotations": {
+                            "IsMandatory": "false",
+                            "DisplayName": "\"Is Layer2 Record\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": true
+                    }
+                },
+                "parameterTypeStructure": true,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "NETFLOW_MONITOR_LIST",
+                "description": null,
+                "parameterType": "structureArray",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Netflow Monitor",
+                    "IsShow": "\"ENABLE_NETFLOW==true\"",
+                    "Description": "One or Multiple Netflow Monitors",
+                    "IsMandatory": "true",
+                    "Section": "\"Flow Monitor\""
+                },
+                "structureParameters": {
+                    "MONITOR_NAME": {
+                        "name": "MONITOR_NAME",
+                        "description": null,
+                        "parameterType": "string",
+                        "metaProperties": {},
+                        "annotations": {
+                            "IsMandatory": "true",
+                            "DisplayName": "\"Monitor Name\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": false
+                    },
+                    "RECORD_NAME": {
+                        "name": "RECORD_NAME",
+                        "description": null,
+                        "parameterType": "string",
+                        "metaProperties": {},
+                        "annotations": {
+                            "IsMandatory": "true",
+                            "DisplayName": "\"Record Name\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": false
+                    },
+                    "EXPORTER1": {
+                        "name": "EXPORTER1",
+                        "description": null,
+                        "parameterType": "string",
+                        "metaProperties": {},
+                        "annotations": {
+                            "IsMandatory": "true",
+                            "DisplayName": "\"Exporter1 Name\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": false
+                    },
+                    "EXPORTER2": {
+                        "name": "EXPORTER2",
+                        "description": null,
+                        "parameterType": "string",
+                        "metaProperties": {},
+                        "annotations": {
+                            "IsMandatory": "false",
+                            "DisplayName": "\"Exporter2 Name\""
+                        },
+                        "structureParameters": {},
+                        "parameterTypeStructure": false,
+                        "defaultValue": null,
+                        "optional": true
+                    }
+                },
+                "parameterTypeStructure": true,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "ALLOW_NXC",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "true"
+                },
+                "annotations": {
+                    "DisplayName": "Enable Nexus Cloud",
+                    "Description": "Allow onboarding of this fabric to Nexus Cloud",
+                    "IsMandatory": "false",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ALLOW_NXC_PREV",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "OVERWRITE_GLOBAL_NXC",
+                "description": null,
+                "parameterType": "boolean",
+                "metaProperties": {
+                    "defaultValue": "false"
+                },
+                "annotations": {
+                    "DisplayName": "Overwrite Global NxCloud Settings",
+                    "IsShow": "\"ALLOW_NXC==true\"",
+                    "Description": "If enabled, Fabric NxCloud Settings will be used",
+                    "IsMandatory": "false",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "NXC_DEST_VRF",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "management",
+                    "minLength": "1",
+                    "maxLength": "32"
+                },
+                "annotations": {
+                    "DisplayName": "Intersight Destination VRF",
+                    "IsShow": "\"OVERWRITE_GLOBAL_NXC==true\"",
+                    "Description": "VRF to be used to reach Nexus Cloud, enter &#39;management&#39; for management VRF and &#39;default&#39; for default VRF",
+                    "IsMandatory": "\"OVERWRITE_GLOBAL_NXC==true\"",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "NXC_SRC_INTF",
+                "description": null,
+                "parameterType": "interface",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Intersight Source Interface",
+                    "IsShow": "\"OVERWRITE_GLOBAL_NXC==true && NXC_DEST_VRF!=management\"",
+                    "Description": "Source interface for communication to Nexus Cloud, mandatory if Destination VRF is not management, supported interfaces: loopback, port-channel, vlan",
+                    "IsMandatory": "\"OVERWRITE_GLOBAL_NXC==true && NXC_DEST_VRF!=management\"",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "NXC_PROXY_SERVER",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "Intersight Proxy Server",
+                    "IsShow": "\"OVERWRITE_GLOBAL_NXC==true\"",
+                    "Description": "IPv4 or IPv6 address, or DNS name of the proxy server",
+                    "IsMandatory": "false",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "NXC_PROXY_PORT",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "min": "1",
+                    "max": "65535",
+                    "defaultValue": "8080"
+                },
+                "annotations": {
+                    "DisplayName": "Proxy Server Port",
+                    "IsShow": "\"NXC_PROXY_SERVER!=null\"",
+                    "Description": "Proxy port number, default is 8080",
+                    "IsMandatory": "\"NXC_PROXY_SERVER!=null\"",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "LINK_STATE_ROUTING",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "ebgp"
+                },
+                "annotations": {
+                    "IsMandatory": "true",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "FABRIC_INTERFACE_TYPE",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "p2p"
+                },
+                "annotations": {
+                    "IsMandatory": "true",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "LINK_STATE_ROUTING_TAG",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "UNDERLAY"
+                },
+                "annotations": {
+                    "IsMandatory": "true",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "OSPF_AREA_ID",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {
+                    "defaultValue": "0.0.0.0"
+                },
+                "annotations": {
+                    "IsMandatory": "true",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": false
+            },
+            {
+                "name": "PREV_EVPN_FLAG",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "PREV_FHRP_PROTOCOL",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "ANYCAST_RP_IP_RANGE_INTERNAL",
+                "description": null,
+                "parameterType": "ipV4AddressWithSubnet",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "IPv6_ANYCAST_RP_IP_RANGE_INTERNAL",
+                "description": null,
+                "parameterType": "ipV6AddressWithSubnet",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "Section": "\"Hidden\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "RR_COUNT",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {
+                    "defaultValue": "2"
+                },
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "UPGRADE_FROM_VERSION",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "TOPDOWN_CONFIG_RM_TRACKING",
+                "description": null,
+                "parameterType": "string",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "SITE_ID_POLICY_ID",
+                "description": null,
+                "parameterType": "integer",
+                "metaProperties": {},
+                "annotations": {
+                    "IsMandatory": "false",
+                    "IsInternal": "true"
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            }
+        ]
+    },
     "test_verify_playbook_params_00032a": {
         "TEST_NOTES": [
             "parameters key is missing"

@@ -262,6 +262,67 @@ def get_fabric_inventory_details(module, fabric):
     return inventory_data
 
 
+def get_nd_fabric_inventory_details(module, nd_version, fabric, fabric_details):
+
+    inventory_data = {}
+    rc = False
+    method = "GET"
+    path = "/rest/control/fabrics/{0}/inventory".format(fabric)
+
+    conn = Connection(module._socket_path)
+    if conn.get_version() == 12:
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric" + path
+        path += "/switchesByFabric"
+        proxy = ""
+        if fabric_details.get("fabric_type") == "multicluster_parent":
+            if nd_version >= 12.4:
+                proxy = "/onemanage"
+            path = proxy + path.replace("lan-fabric/rest/control", "onemanage")
+        elif fabric_details.get("fabric_type") == "multicluster_child":
+            if nd_version >= 12.4:
+                proxy = "/fedproxy/"
+            else:
+                proxy = "/onepath/"
+            path = proxy + fabric_details.get("cluster_name") + path
+    count = 1
+    while rc is False:
+
+        response = dcnm_send(module, method, path)
+
+        if not response.get("RETURN_CODE"):
+            rc = True
+            module.fail_json(msg=response)
+
+        if response.get("RETURN_CODE") == 404:
+            # RC 404 - Object not found
+            rc = True
+            return inventory_data
+
+        if response.get("RETURN_CODE") == 401:
+            # RC 401: Server not reachable. Retry a few times
+            if count <= 20:
+                count = count + 1
+                rc = False
+                time.sleep(0.1)
+                continue
+
+            raise Exception(response)
+        elif response.get("RETURN_CODE") >= 400:
+            # Handle additional return codes as needed but for now raise
+            # for any error other then 404.
+            raise Exception(response)
+
+        for device_data in response.get("DATA"):
+
+            if device_data.get("ipAddress", "") != "":
+                key = device_data.get("ipAddress")
+            else:
+                key = device_data.get("logicalName")
+            inventory_data[key] = device_data
+        rc = True
+    return inventory_data
+
+
 def get_ip_sn_dict(inventory_data):
 
     ip_sn = {}
@@ -494,6 +555,71 @@ def get_fabric_details(module, fabric):
     return fabric_data
 
 
+def get_nd_fabric_details(module, nd_version, fabric, fabric_details):
+    """
+    Used to get the details of the given fabric from the ND
+
+    Parameters:
+        module: Data for module under execution
+        fabric: Fabric name
+
+    Returns:
+        dict: Fabric details
+    """
+    fabric_data = {}
+    rc = False
+    method = "GET"
+    path = "/rest/control/fabrics/{0}".format(fabric)
+
+    conn = Connection(module._socket_path)
+    if conn.get_version() == 12:
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric" + path
+        proxy = ""
+        if fabric_details.get("fabric_type") == "multicluster_parent":
+            if nd_version >= 12.4:
+                proxy = "/onemanage"
+            path = proxy + path.replace("lan-fabric/rest/control", "onemanage")
+        elif fabric_details.get("fabric_type") == "multicluster_child":
+            if nd_version >= 12.4:
+                proxy = "/fedproxy/"
+            else:
+                proxy = "/onepath/"
+            path = proxy + fabric_details.get("cluster_name") + path
+
+    count = 1
+    while rc is False:
+
+        response = dcnm_send(module, method, path)
+
+        if not response.get("RETURN_CODE"):
+            rc = True
+            module.fail_json(msg=response)
+
+        if response.get("RETURN_CODE") == 404:
+            # RC 404 - Object not found
+            rc = True
+            return fabric_data
+
+        if response.get("RETURN_CODE") == 401:
+            # RC 401: Server not reachable. Retry a few times
+            if count <= 20:
+                count = count + 1
+                rc = False
+                time.sleep(0.1)
+                continue
+
+            raise Exception(response)
+        elif response.get("RETURN_CODE") >= 400:
+            # Handle additional return codes as needed but for now raise
+            # for any error other then 404.
+            raise Exception(response)
+
+        fabric_data = response.get("DATA")
+        rc = True
+
+    return fabric_data
+
+
 def dcnm_send(module, method, path, data=None, data_type="json"):
 
     conn = Connection(module._socket_path)
@@ -675,34 +801,96 @@ def dcnm_get_template_details(module, version, name):
 
 
 def dcnm_update_arg_specs(mspec, arg_specs):
+    """
+    Update argument specifications based on module specification dependencies.
+
+    ## Summary
+
+    Evaluates boolean dependency expressions to determine if parameters are required.
+
+    ## Raises
+
+    - None
+    """
+    comparison_ops = {
+        "==": lambda a, b: a == b,
+        "!=": lambda a, b: a != b,
+        ">": lambda a, b: a > b,
+        "<": lambda a, b: a < b,
+        ">=": lambda a, b: a >= b,
+        "<=": lambda a, b: a <= b,
+    }
 
     pat = re.compile(r"(\w+)\s*([<>=!]{1,2})\s*(\w+)")
 
     for as_key in arg_specs:
-
         item = arg_specs[as_key]
 
         if item["required"] not in [True, False]:
+            # Parse the dependency expression
+            expr = item["required"]
 
-            # item is a dependent variable. item["required"] includes a string which specifies
-            # the variables it depends on. Parse the string and check the mspec to
-            # derive if required should be True or False.
-            dvars = re.split(r"&& | \|\|", item["required"])
+            # Normalize true/false to boolean values
+            expr = expr.replace("true", "True").replace("false", "False")
 
-            for elem in dvars:
-                match = pat.search(elem)
-                key = match[1].replace("(", "").replace(")", "")
+            # Split by && and || operators, tracking which operator was used
+            parts = []
+            operators = []
 
-                if mspec and mspec.get(key, None) == bool(match.group(3)):
-                    # Given key is included in the mspec. So mark this a 'true' in the aspec. Final 'eval'
-                    # on the item["required"] will yield the desired bool value.
-                    item["required"] = item["required"].replace("true", "True")
-                    item["required"] = item["required"].replace("false", "False")
-                    item["required"] = eval(item["required"].replace(key, "True"))
+            # Split while preserving operator information
+            if "&&" in expr and "||" in expr:
+                # Handle mixed operators (would need more complex logic)
+                # For now, fall back to simple evaluation
+                pass
+            elif "&&" in expr:
+                parts = [p.strip() for p in expr.split("&&")]
+                operators = ["and"] * (len(parts) - 1)
+            elif "||" in expr:
+                parts = [p.strip() for p in expr.split("||")]
+                operators = ["or"] * (len(parts) - 1)
+            else:
+                parts = [expr.strip()]
+
+            # Evaluate each part
+            results = []
+            for part in parts:
+                part = part.strip("() ")
+                match = pat.search(part)
+
+                if match:
+                    key = match[1]
+                    op = match[2]
+                    value_str = match[3]
+
+                    # Convert string "True"/"False" to boolean
+                    if value_str in ("True", "False"):
+                        expected_value = value_str == "True"
+                    else:
+                        expected_value = value_str
+
+                    # Get actual value from mspec
+                    actual_value = mspec.get(key) if mspec else None
+
+                    # Evaluate the comparison
+                    if op in comparison_ops:
+                        results.append(comparison_ops[op](actual_value, expected_value))
+                    else:
+                        results.append(False)
                 else:
-                    item["required"] = item["required"].replace("true", "True")
-                    item["required"] = item["required"].replace("false", "False")
-                    item["required"] = eval(item["required"].replace(key, "False"))
+                    # Direct True/False value
+                    results.append(part == "True")
+
+            # Combine results based on operators
+            if not operators:
+                item["required"] = results[0] if results else False
+            else:
+                final_result = results[0]
+                for i, op in enumerate(operators):
+                    if op == "and":
+                        final_result = final_result and results[i + 1]
+                    else:  # "or"
+                        final_result = final_result or results[i + 1]
+                item["required"] = final_result
 
 
 def dcnm_get_template_specs(module, name, version):
@@ -1005,3 +1193,375 @@ def has_partial_dhcp_config(server):
     if vrf is not None:
         return ip is None
     return False
+
+
+def sanitize_lan_attach_list(attach_objects: list) -> list:
+    """
+    # Summary
+
+    Remove cross-entity attachments from lanAttachList.
+
+    ## Description
+
+    In multicluster deployments, the lanAttachList for an entity
+    (VRF, Network, etc.) can contain attachments belonging to other entities.
+    This method removes those cross-entity attachments to ensure each entity
+    only contains its own attachments.
+
+    ## Parameters
+
+    - attach_objects: List of attachment objects from the controller.
+      Each object should have:
+        - A parent identifier key (e.g., "vrfName", "networkName")
+        - "lanAttachList": List of attachment dictionaries
+        Each attachment in lanAttachList should have the same identifier key
+
+    ## Returns
+
+    Modified attach_objects with cross-entity attachments removed
+
+    ## Example
+
+    Before:
+    ```json
+    [
+        {
+            "vrfName": "vrf-bulk2",
+            "lanAttachList": [
+                {"vrfName": "vrf-bulk2", "serialNumber": "ABC123"},
+                {"vrfName": "vrf-bulk1", "serialNumber": "DEF456"}  # <- Remove this
+            ]
+        }
+    ]
+    ```
+
+    After:
+    ```json
+    [
+        {
+            "vrfName": "vrf-bulk2",
+            "lanAttachList": [
+                {"vrfName": "vrf-bulk2", "serialNumber": "ABC123"}
+            ]
+        }
+    ]
+    ```
+    """
+
+    if not attach_objects:
+        return attach_objects
+
+    for attach_dict in attach_objects:
+        if not attach_dict.get("lanAttachList"):
+            continue
+
+        # Find the parent identifier key (e.g., "vrfName", "networkName")
+        # by looking for keys that are not "lanAttachList"
+        parent_key = None
+        parent_value = None
+
+        for key in attach_dict.keys():
+            if key != "lanAttachList":
+                parent_key = key
+                parent_value = attach_dict.get(key)
+                break
+
+        if not parent_key or not parent_value:
+            continue
+
+        # Filter out attachments where the identifier doesn't match the parent
+        attach_dict["lanAttachList"] = [
+            attach for attach in attach_dict["lanAttachList"]
+            if attach.get(parent_key) == parent_value
+        ]
+
+    return attach_objects
+
+
+# Action plugin utilities
+def get_nd_version(action_module, task_vars, tmp):
+    """
+    Query NDFC and return the exact software version
+
+    Parameters:
+        module: String representing the module
+
+    Returns:
+        float: Major software version for NDFC
+    """
+
+    method = "GET"
+    supported = None
+    data = None
+
+    paths = [
+        "/fm/fmrest/about/version",
+        "/appcenter/cisco/ndfc/api/about/version",
+    ]
+    for path in paths:
+        response = action_module._execute_module(
+            module_name="cisco.dcnm.dcnm_rest",
+            module_args={
+                "method": "GET",
+                "path": path
+            },
+            task_vars=task_vars,
+            tmp=tmp
+        )
+        if not response.get("failed"):
+            # Extract response data section
+            resp = response.get("response")
+            if isinstance(resp, dict):
+                return_code = resp.get("RETURN_CODE")
+                if return_code == 200:
+                    data = resp.get("DATA")
+                    break
+    if data:
+        # Parse version information
+        # Examples:
+        #   11.5(1), 12.0.1a, 12.4.1.321
+        # For these examples 11.5, 12.0, or 12.4 would be returned
+        raw_version = data["version"]
+
+        if raw_version == "DEVEL":
+            raw_version = "11.5(1)"
+
+        # Capture major.minor version (first two digits with dot)
+        regex = r"^(\d+\.\d+)"
+        mo = re.search(regex, raw_version)
+        if mo:
+            supported = float(mo.group(1))
+
+        if supported >= 11.0 and supported < 12.0:
+            # For versions 11.x, return only 11.0
+            supported = 11.0
+
+    if supported is None:
+        error_msg = "Failed to retrieve NDFC version from API responses."
+        return action_module.error_handler.handle_failure(error_msg)
+
+    return supported
+
+
+def obtain_federated_fabric_associations(action_module, task_vars, tmp):
+    """
+    Retrieve federated fabric associations from ND controller.
+
+    This method queries the ND controller to obtain federated fabric association data,
+    which includes fabric types, relationships (parent-child), and states.
+    This information is essential for fabric type detection and Multisite workflow
+    routing decisions.
+
+    API Endpoint:
+    - GET /onemanage/appcenter/cisco/ndfc/api/v1/onemanage/fabrics
+
+    Response Processing:
+    - Validates API response structure and success
+    - Extracts fabric data and builds lookup dictionary
+    - Indexes fabrics by name for efficient access
+    - Handles empty responses and API errors
+
+    Fabric Data Structure:
+    Each fabric entry contains:
+    - fabricName: Fabric identifier
+    - fabricType: Type (Federated, VXLAN, etc.)
+    - fabricState: State (member, parent, standalone)
+    - fabricParent: Parent fabric name (for child fabrics)
+
+    Args:
+        task_vars (dict): Ansible task variables for module execution
+        tmp (str): Temporary directory path for module operations
+    Returns:
+        dict: Fabric associations indexed by fabric name:
+            {
+                "fabric_name": {
+                    "fabricName": "fabric_name",
+                    "fabricType": "Federated",
+                    "fabricState": "parent",
+                    "fabricParent": null
+                }
+            }
+    Raises:
+        ActionError: On API failure or invalid response structure
+    """
+    # Log fabric discovery initiation
+    action_module.logger.debug(
+        "Fetching federated fabric associations from NDFC", operation="fabric_discovery"
+    )
+
+    proxy = ""
+    if action_module.ndfc_version >= 12.4:
+        proxy = "/onemanage"
+
+    try:
+        path = f"{proxy}/appcenter/cisco/ndfc/api/v1/onemanage/fabrics"
+        # Execute NDFC REST API call to get federated fabric associations
+        federated_fabric_associations = action_module._execute_module(
+            module_name="cisco.dcnm.dcnm_rest",
+            module_args={
+                "method": "GET",
+                "path": path
+            },
+            task_vars=task_vars,
+            tmp=tmp
+        )
+
+        # Special handling for the following cases:
+        #   * Federation manager does not exist (standalone or MSD fabrics in a non-clustered environment)
+        #   * ND3.2 returns an invalid JSON response for remote users
+        if federated_fabric_associations.get('failed') and federated_fabric_associations.get('msg'):
+            error_msg = federated_fabric_associations.get('msg').get('DATA')
+            # For ND3.2 error_msg will be a string
+            # For ND4.X error_msg will be a dict
+            if isinstance(error_msg, dict):
+                error_msg = error_msg.get('error')
+
+            if not isinstance(error_msg, str):
+                raise Exception("Unexpected error message format received from federated fabric associations API.")
+
+            error_messages = ['Invalid JSON response: this API is allowed only for remote user', 'A federation manager does not exist']
+            if error_msg in error_messages:
+                # Return the same error message for both ND3.2 and ND4.X for consistency
+                return 'A federation manager does not exist'
+
+        # Validate API response structure and extract data
+        response_data = action_module.error_handler.validate_api_response(
+            federated_fabric_associations,
+            "federated fabric associations retrieval"
+        )
+
+        # Build fabric data lookup dictionary
+        fabric_associations = {}
+        for fabric in response_data.get("DATA", []):
+            parent_fabric_name = fabric.get("fabricName")
+            if parent_fabric_name:
+                if parent_fabric_name not in fabric_associations:
+                    fabric_associations[parent_fabric_name] = {}
+                parent_fabric_data = {
+                    "fabricName": parent_fabric_name,
+                    "fabricType": fabric.get("fabricType"),
+                    "fabricState": fabric.get("fabricState")
+                }
+                fabric_associations[parent_fabric_name].update(parent_fabric_data)
+                for child_fabric in fabric.get("members", []):
+                    child_fabric_name = child_fabric.get("fabricName")
+                    if child_fabric_name:
+                        child_fabric_data = {
+                            "fabricName": child_fabric_name,
+                            "clusterName": child_fabric.get("clusterName"),
+                            "fabricType": child_fabric.get("fabricType"),
+                            "fabricState": child_fabric.get("fabricState")
+                        }
+                        fabric_associations[child_fabric_name] = child_fabric_data
+                        if "members" not in fabric_associations[parent_fabric_name]:
+                            fabric_associations[parent_fabric_name]["members"] = []
+                        fabric_associations[parent_fabric_name]["members"].append(child_fabric_data)
+
+        # Log successful fabric data retrieval
+        action_module.logger.info(f"Retrieved {len(fabric_associations)} federated fabric associations", operation="fabric_discovery")
+        return fabric_associations
+
+    except Exception as e:
+        # Handle fabric discovery failures
+        return action_module.error_handler.handle_exception(e, "fabric_discovery")
+
+
+def obtain_fabric_associations(action_module, task_vars, tmp):
+    """
+    Retrieve fabric associations and relationships from ND controller.
+
+    This method queries the ND controller to obtain fabric association data,
+    which includes fabric types, relationships (parent-child), and states.
+    This information is essential for fabric type detection and Multisite workflow
+    routing decisions.
+
+    API Endpoint:
+    - GET /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations
+
+    Response Processing:
+    - Validates API response structure and success
+    - Extracts fabric data and builds lookup dictionary
+    - Indexes fabrics by name for efficient access
+    - Handles empty responses and API errors
+
+    Fabric Data Structure:
+    Each fabric entry contains:
+    - fabricName: Fabric identifier
+    - fabricType: Type (MSD, VXLAN, etc.)
+    - fabricState: State (member, parent, standalone)
+    - fabricParent: Parent fabric name (for child fabrics)
+
+    Args:
+        task_vars (dict): Ansible task variables for module execution
+        tmp (str): Temporary directory path for module operations
+
+    Returns:
+        dict: Fabric associations indexed by fabric name:
+            {
+                "fabric_name": {
+                    "fabricName": "fabric_name",
+                    "fabricType": "MSD",
+                    "fabricState": "parent",
+                    "fabricParent": null
+                }
+            }
+
+    Raises:
+        ActionError: On API failure or invalid response structure
+    """
+    # Log fabric discovery initiation
+    action_module.logger.debug(
+        "Fetching fabric associations from NDFC", operation="fabric_discovery"
+    )
+
+    try:
+        # Execute NDFC REST API call to get fabric associations
+        msd_fabric_associations = action_module._execute_module(
+            module_name="cisco.dcnm.dcnm_rest",
+            module_args={
+                "method": "GET",
+                "path": (
+                    "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/"
+                    "fabrics/msd/fabric-associations"
+                ),
+            },
+            task_vars=task_vars,
+            tmp=tmp
+        )
+
+        # Validate API response structure and extract data
+        response_data = action_module.error_handler.validate_api_response(
+            msd_fabric_associations,
+            "fabric associations retrieval"
+        )
+
+        # Build fabric data lookup dictionary
+        fabric_associations = {}
+        for fabric in response_data.get("DATA", []):
+            fabric_name = fabric.get("fabricName")
+            if fabric_name:
+                if fabric_name not in fabric_associations:
+                    fabric_associations[fabric_name] = {}
+                # Index fabric data by fabric name for efficient lookups
+                fabric_data = {
+                    "fabricName": fabric_name,
+                    "fabricType": fabric.get("fabricType"),
+                    "fabricState": fabric.get("fabricState")
+                }
+                fabric_associations[fabric_name].update(fabric_data)
+                if fabric.get("fabricState") == "member":
+                    fabric_parent = fabric.get("fabricParent")
+                    if fabric_parent:
+                        if fabric_parent not in fabric_associations:
+                            fabric_associations[fabric_parent] = {}
+                        if "members" not in fabric_associations[fabric_parent]:
+                            fabric_associations[fabric_parent]["members"] = []
+                        fabric_associations[fabric_parent]["members"].append(fabric_data)
+
+        # Log successful fabric data retrieval
+        action_module.logger.info(f"Retrieved {len(fabric_associations)} fabric associations", operation="fabric_discovery")
+        return fabric_associations
+
+    except Exception as e:
+        # Handle fabric discovery failures
+        return action_module.error_handler.handle_exception(e, "fabric_discovery")

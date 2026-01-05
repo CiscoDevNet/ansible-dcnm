@@ -1,0 +1,2 @@
+pydantic==2.11.10
+requests==2.32.5

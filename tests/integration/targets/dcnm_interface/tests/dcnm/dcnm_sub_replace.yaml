@@ -10,18 +10,19 @@
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+  register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
-  loop: '{{ result.response }}'
+      - 'item["RETURN_CODE"] == 200'
+    loop: '{{ result.response }}'
 
 - block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -36,14 +37,14 @@
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - merged
         - replace
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Interface Config File
       ansible.builtin.set_fact:
@@ -59,7 +60,7 @@
       register: result
 
     - name: ASSERT - Verify sub-interface creation results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -81,9 +82,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              REPLACE                     ##
-##############################################
+    ##############################################
+    ##              REPLACE                     ##
+    ##############################################
 
     - name: Load Replace Interface Config File
       ansible.builtin.set_fact:
@@ -99,7 +100,7 @@
       register: result
 
     - name: ASSERT - Verify sub-interface replace results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -126,7 +127,7 @@
       register: result
 
     - name: ASSERT - Verify sub-interface replace idempotence results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
@@ -139,9 +140,9 @@
         success_msg: "Idempotence check for sub-interface replace succeeded"
       loop: '{{ result.response }}'
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -151,10 +152,11 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

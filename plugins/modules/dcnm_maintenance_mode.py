@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -107,13 +108,13 @@ EXAMPLES = """
   cisco.dcnm.dcnm_maintenance_mode:
     state: merged
     config:
-        deploy: true
-        wait_for_mode_change: true
-        mode: maintenance
-        switches:
-            -   ip_address: 192.168.1.2
-            -   ip_address: 192.160.1.3
-            -   ip_address: 192.160.1.4
+      deploy: true
+      wait_for_mode_change: true
+      mode: maintenance
+      switches:
+        - ip_address: 192.168.1.2
+        - ip_address: 192.160.1.3
+        - ip_address: 192.160.1.4
   register: result
 - debug:
     var: result
@@ -126,20 +127,18 @@ EXAMPLES = """
   cisco.dcnm.dcnm_maintenance_mode:
     state: merged
     config:
-        deploy: false
-        mode: maintenance
-        switches:
-            -   ip_address: 192.168.1.2
-                mode: normal
-            -   ip_address: 192.160.1.3
-                deploy: true
-                wait_for_mode_change: true
-            -   ip_address: 192.160.1.4
+      deploy: false
+      mode: maintenance
+      switches:
+        - ip_address: 192.168.1.2
+          mode: normal
+        - ip_address: 192.160.1.3
+          deploy: true
+          wait_for_mode_change: true
+        - ip_address: 192.160.1.4
   register: result
 - debug:
     var: result
-
-
 """
 # pylint: disable=wrong-import-position
 import copy

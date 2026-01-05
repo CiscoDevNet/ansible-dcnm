@@ -1,0 +1,25 @@
+---
+- name: Collect MCFG test cases
+  ansible.builtin.find:
+    paths: "{{ role_path }}/tests/dcnm/mcfg"
+    patterns: "{{ mcfg_pattern }}"
+    recurse: false
+  connection: local
+  register: mcfg_cases
+  tags: sanity
+
+- name: Set MCFG test_items
+  ansible.builtin.set_fact:
+    mcfg_test_items: "{{ mcfg_cases.files | map(attribute='path') | list }}"
+  tags: sanity
+
+- name: Debug MCFG test items
+  ansible.builtin.debug:
+    var: mcfg_test_items
+
+- name: Run MCFG test cases
+  ansible.builtin.include_tasks: "{{ test_case_to_run }}"
+  with_items: "{{ mcfg_test_items }}"
+  loop_control:
+    loop_var: test_case_to_run
+  tags: sanity
