@@ -77,7 +77,7 @@
         child_fabric_config:
           - fabric: "{{ test_data_common.child_fabric }}"
             netflow_enable: false
-            l3gw_on_border: True
+            l3gw_on_border: true
             dhcp_loopback_id: 204
             multicast_group_address: '239.1.1.1'
         deploy: false
@@ -144,7 +144,7 @@
         child_fabric_config:
           - fabric: "{{ test_data_common.child_fabric }}"
             netflow_enable: false
-            l3gw_on_border: True
+            l3gw_on_border: true
             dhcp_loopback_id: 204
         deploy: false
       - net_name: "{{ test_data_common.msd_net2 }}"
@@ -159,7 +159,7 @@
         child_fabric_config:
           - fabric: "{{ test_data_common.child_fabric }}"
             netflow_enable: false
-            l3gw_on_border: True
+            l3gw_on_border: true
             dhcp_loopback_id: 205
         deploy: false
       - net_name: "{{ test_data_common.msd_l2_net }}"

@@ -966,7 +966,6 @@ EXAMPLES = """
       # The query will return the VRF's configuration on the parent and the
       # configuration on the specified childs and its attachments at
       # the parent and child level respectively.
-
 """
 import ast
 import copy

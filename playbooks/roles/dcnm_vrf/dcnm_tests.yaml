@@ -26,9 +26,10 @@
 #
 #     ansible-playbook dcnm_tests.yaml -i ../../files/dynamic_inventory.py
 #
-# 
-- hosts: dcnm
-  gather_facts: no
+#
+- name: DCNM VRF Tests
+  hosts: dcnm
+  gather_facts: false
   connection: ansible.netcommon.httpapi
 # Uncomment and modify if not using dynamic_inventory.py
 # See the individual test yaml files for a description of
@@ -51,7 +52,7 @@
     # interface_1: Ethernet1/1
     # interface_2a: Ethernet1/2
     # interface_3: Ethernet1/3
-  
+
     ## Uncomment ONE of the following testcases
 
     # To run all tests under standalone,

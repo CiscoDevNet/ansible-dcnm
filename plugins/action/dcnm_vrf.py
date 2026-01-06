@@ -122,25 +122,27 @@ class ActionModule(ActionNetworkModule):
 
         self.logger.info(f"ND version: {self.ndfc_version}", fabric=fabric_name)
 
+        # Log fabric processing initiation
+        self.logger.info(f"Processing fabric: {fabric_name}", fabric=fabric_name)
+
         # Discover fabric associations from NDFC
         fabric_association_data = obtain_federated_fabric_associations(self, task_vars, tmp)
         # Special handling for cases where federation manager does not exist which is the case for
         # standalone or MSD fabrics in a non-clustered environment
         if fabric_association_data == 'A federation manager does not exist':
             fabric_association_data = obtain_fabric_associations(self, task_vars, tmp)
-
-        # Log fabric processing initiation
-        self.logger.info(f"Processing fabric: {fabric_name}", fabric=fabric_name)
-
-        # Detect fabric type for workflow routing
-        # Check MCFG associations first
-        fabric_type, fabric_data = self.detect_fabric_type(fabric_name, fabric_association_data, "mcfg")
-        if not fabric_type:
-            # Fallback to MSD associations if MCFG detection fails
-            fabric_association_data = obtain_fabric_associations(self, task_vars, tmp)
+            # Skip MCFG detection, go directly to MSD
             fabric_type, fabric_data = self.detect_fabric_type(fabric_name, fabric_association_data, "msd")
+        else:
+            # Try MCFG first for federated environments
+            fabric_type, fabric_data = self.detect_fabric_type(fabric_name, fabric_association_data, "mcfg")
             if not fabric_type:
-                return self.error_handler.handle_failure(f"Fabric '{fabric_name}' not found in NDFC.")
+                # Fallback to MSD associations if MCFG detection fails
+                fabric_association_data = obtain_fabric_associations(self, task_vars, tmp)
+                fabric_type, fabric_data = self.detect_fabric_type(fabric_name, fabric_association_data, "msd")
+
+        if not fabric_type:
+            return self.error_handler.handle_failure(f"Fabric '{fabric_name}' not found in NDFC.")
 
         self.logger.info(f"Detected fabric type: {fabric_type}", fabric=fabric_name)
 
