@@ -1077,6 +1077,7 @@ class DcnmVrf:
         self.diff_undeploy = {}
         self.diff_delete = {}
         self.diff_input_format = []
+        self.deploy_payload = {}
         self.query = []
 
         self.action_fabric_details = self.params.get("fabric_details")
@@ -4327,6 +4328,10 @@ class DcnmVrf:
         else:
             deploy_path = path + "/deployments"
 
+        if self.action_fabric_type == "multicluster_parent" or self.action_fabric_type == "multisite_parent":
+            self.deploy_payload = diff_deploy
+            return
+
         self.send_to_controller(
             action,
             verb,
@@ -5266,6 +5271,9 @@ def main():
         module.exit_json(**dcnm_vrf.result)
 
     dcnm_vrf.push_to_remote()
+
+    # Pass back the deploy payload to action plugin
+    dcnm_vrf.result["deploy_payload"] = dcnm_vrf.deploy_payload
 
     msg = f"dcnm_vrf.result: {dcnm_vrf.result}"
     dcnm_vrf.log.debug(msg)

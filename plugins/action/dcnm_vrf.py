@@ -31,7 +31,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.action_logger im
     ActionLogger as Logger,
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    get_nd_version, obtain_federated_fabric_associations, obtain_fabric_associations
+    get_nd_version, obtain_federated_fabric_associations, obtain_fabric_associations, deploy_fabric
 )
 from ansible.utils.display import Display
 
@@ -469,7 +469,6 @@ class ActionModule(ActionNetworkModule):
                     child_fabric_configs = vrf.get("child_fabric_config")
                     if "child_fabric_config" in vrf:
                         if state != "deleted":
-
                             child_fabric_configs = vrf.get("child_fabric_config")
                             if not child_fabric_configs:
                                 error_msg = (
@@ -534,24 +533,6 @@ class ActionModule(ActionNetworkModule):
                                  fabric=parent_fabric, operation="child_execution")
 
                 for child_task in child_tasks_dict.values():
-                    if state != "query":
-                        if child_task["deploy_wait"]:
-                            # Wait for VRF readiness on child fabric before processing
-                            all_vrf_ready, vrf_not_ready = self.wait_for_vrf_ready(
-                                child_task["vrf_list"],
-                                child_task["fabric"],
-                                child_task["fabric_details"],
-                                task_vars,
-                                tmp
-                            )
-                            if not all_vrf_ready:
-                                error_msg = (
-                                    f"VRF(s) {', '.join(vrf_not_ready)} not in a deployable state on fabric "
-                                    f"{child_task['fabric']}. Please ensure VRF(s) are in DEPLOYED/PENDING/NA "
-                                    "state before proceeding."
-                                )
-                                return self.error_handler.handle_failure(error_msg, changed=True)
-
                     # Execute child fabric task
                     self.logger.info("Executing child task", fabric=child_task["fabric"], operation="child_execution")
                     child_result = self.execute_child_task(child_task, task_vars, tmp)
@@ -563,7 +544,15 @@ class ActionModule(ActionNetworkModule):
                         self.logger.error(error_msg, fabric=child_task["fabric"], operation="child_execution")
                         break
 
-            # Step 4: Create structured results
+            # Step 4: Retrieve deployment payload from parent module
+            # result, if any
+            deploy_payload = parent_result.get("deploy_payload", {})
+
+            # Step 5: Deploy VRF(s) on parent fabric, if applicable
+            if deploy_payload:
+                parent_result["deployment"] = deploy_fabric(self, task_vars, tmp, parent_fabric, fabric_type, deploy_payload)
+
+            # Step 6: Create structured results
             result = self.create_structured_results(parent_result, child_results, parent_fabric, log_type)
             self.logger.info(f"{log_type.capitalize()} Parent workflow completed successfully", fabric=parent_fabric, operation=f"parent_{log_type}_workflow")
             return result
@@ -762,20 +751,14 @@ class ActionModule(ActionNetworkModule):
             # Inherit VRF context from parent configuration
             child_config["vrf_name"] = parent_vrf["vrf_name"]
 
-            # Inherit deploy setting from parent only
-            if "deploy" in child_config:
-                del child_config["deploy"]
-            if "deploy" in parent_vrf:
-                child_config["deploy"] = parent_vrf["deploy"]
+            # Don't deploy from child fabric tasks, handled by parent
+            child_config["deploy"] = False
 
             # Check if child fabric already has tasks (for grouping multiple VRFs)
             if child_tasks_dict.get(child_fabric_name):
                 # Append to existing child fabric task
                 child_tasks_dict[child_fabric_name]["config"].append(child_config)
                 child_tasks_dict[child_fabric_name]["vrf_list"].append(child_config["vrf_name"])
-                # Update deploy_wait if any VRF requires deployment
-                if not child_tasks_dict[child_fabric_name]["deploy_wait"]:
-                    child_tasks_dict[child_fabric_name]["deploy_wait"] = child_config.get("deploy", True)
             else:
                 # Create new child fabric task
                 child_task = {
@@ -783,7 +766,6 @@ class ActionModule(ActionNetworkModule):
                     "state": parent_module_args.get("state"),
                     "config": [child_config],
                     "vrf_list": [child_config["vrf_name"]],
-                    "deploy_wait": child_config.get("deploy", True)
                 }
                 child_tasks_dict[child_fabric_name] = child_task
 
@@ -958,139 +940,6 @@ class ActionModule(ActionNetworkModule):
             # Always restore original task arguments
             self._task.args = original_args
 
-    def wait_for_vrf_ready(self, vrf_list, fabric_name, fabric_details, task_vars, tmp):
-        """
-        Wait for VRFs to reach a deployable state on the specified fabric.
-
-        This method monitors VRF status on child fabrics to ensure they are in
-        appropriate states before child fabric operations proceed. It implements
-        a polling mechanism with configurable retry logic and handles various
-        VRF states that may occur during parent-to-child fabric propagation.
-        VRF State Monitoring:
-        - DEPLOYED: VRF is fully deployed and ready for operations
-        - PENDING: VRF deployment is in progress, acceptable for operations
-        - NA: VRF state not applicable, typically ready for operations
-        - OUT-OF-SYNC: VRF configuration drift, handled with retry logic
-
-        Polling Algorithm:
-        - Queries NDFC REST API for current VRF status on fabric
-        - Removes VRFs from wait list as they reach ready states
-        - Implements exponential backoff with configurable wait times
-        - Handles persistent OUT-OF-SYNC states with tolerance logic
-
-        Retry Logic:
-        - Maximum retry count based on MAX_RETRY_COUNT and WAIT_TIME_FOR_DELETE_LOOP
-        - OUT-OF-SYNC VRFs get additional chances before removal
-        - Persistent wait list items eventually timeout and fail
-        - Progressive logging of wait status and remaining retries
-
-        State Transition Handling:
-        - Newly created VRFs may initially show as non-existent
-        - Parent fabric changes propagate to child fabrics over time
-        - Configuration drift scenarios handled with retry tolerance
-        - Network connectivity issues accommodated with retry logic
-
-        Args:
-            vrf_list (list): List of VRF names to monitor for readiness
-            fabric_name (str): Child fabric name where VRFs should be ready
-            task_vars (dict): Ansible task variables for API calls
-            tmp (str): Temporary directory path for operations
-
-        Returns:
-            tuple: (all_ready, remaining_vrfs)
-                - all_ready (bool): True if all VRFs reached ready state
-                - remaining_vrfs (list): VRF names still not ready (if any)
-
-        Raises:
-            Exception: On API failures or critical polling errors
-        """
-        # Handle empty VRF list case
-        if not vrf_list:
-            return True, None
-
-        # Initialize retry tracking and OUT-OF-SYNC handling
-        vrf_oos_list = []
-        retry_count = max(MAX_RETRY_COUNT // WAIT_TIME_FOR_DELETE_LOOP, 1)
-
-        # Log readiness monitoring initiation
-        self.logger.info(f"Waiting for VRF(s) to be ready: {', '.join(vrf_list)}",
-                         fabric=fabric_name, operation="wait_for_vrf_ready")
-
-        path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs"
-        proxy = ""
-        if fabric_details.get("fabric_type") == "multicluster_child":
-            if self.ndfc_version >= 12.4:
-                proxy = "/fedproxy"
-            else:
-                proxy = "/onepath"
-            path = proxy + fabric_details.get("cluster_name") + path
-        # Continue polling while VRFs remain and retries available
-        while retry_count > 0 and vrf_list:
-            try:
-                # Query NDFC for current VRF status on fabric
-                resp = self._execute_module(
-                    module_name="cisco.dcnm.dcnm_rest",
-                    module_args={
-                        "method": "GET",
-                        "path": path,
-                    },
-                    task_vars=task_vars,
-                    tmp=tmp
-                )
-
-                # Validate API response and extract VRF data
-                response_data = self.error_handler.validate_api_response(resp, "VRF status check", fabric_name)
-                vrf_data = response_data.get("DATA", [])
-
-                # Process each VRF in the fabric response
-                for vrf in vrf_data:
-                    vrf_name = vrf.get("vrfName")
-                    if vrf_name in vrf_list:
-                        vrf_status = vrf.get("vrfStatus")
-
-                        # Check if VRF is in ready state
-                        if vrf_status in VALID_VRF_STATES:
-                            # VRF is ready, remove from wait list
-                            vrf_list.remove(vrf_name)
-                            self.logger.debug(f"VRF {vrf_name} is ready (status: {vrf_status})",
-                                              fabric=fabric_name, operation="wait_for_vrf_ready")
-                        elif vrf_status == "OUT-OF-SYNC":
-                            # Handle OUT-OF-SYNC state with tolerance
-                            if vrf not in vrf_oos_list:
-                                # First time seeing this VRF as OUT-OF-SYNC
-                                vrf_oos_list.append(vrf)
-                                self.logger.debug(f"VRF {vrf_name} is OUT-OF-SYNC",
-                                                  fabric=fabric_name, operation="wait_for_vrf_ready")
-                            else:
-                                # VRF has been OUT-OF-SYNC before, remove from wait list
-                                vrf_list.remove(vrf_name)
-                                self.logger.debug(f"VRF {vrf_name} removed after persistent OUT-OF-SYNC",
-                                                  fabric=fabric_name, operation="wait_for_vrf_ready")
-
-                # If VRFs still waiting, sleep and retry
-                if vrf_list:
-                    time.sleep(WAIT_TIME_FOR_DELETE_LOOP)
-                    retry_count -= 1
-                    self.logger.debug(f"VRF(s) still not ready: {', '.join(vrf_list)}, retries left: {retry_count}",
-                                      fabric=fabric_name, operation="wait_for_vrf_ready")
-
-            except Exception as e:
-                # Log API or processing errors
-                self.logger.error(f"VRF readiness check failed: {str(e)}",
-                                  fabric=fabric_name, operation="wait_for_vrf_ready")
-                raise e
-
-        # Determine final outcome
-        if vrf_list:
-            # Some VRFs never reached ready state
-            self.logger.warning(f"VRF(s) not ready after maximum retries: {', '.join(vrf_list)}",
-                                fabric=fabric_name, operation="wait_for_vrf_ready")
-            return False, vrf_list
-        else:
-            # All VRFs reached ready state
-            self.logger.info("All VRFs are ready", fabric=fabric_name, operation="wait_for_vrf_ready")
-            return True, None
-
     def create_structured_results(self, parent_result, child_results, parent_fabric, log_type):
         """
         Create structured results combining parent and child fabric operations.
@@ -1189,7 +1038,8 @@ class ActionModule(ActionNetworkModule):
                         "invocation": parent_result.get("invocation"),
                         "changed": parent_result.get("changed", False),
                         "diff": parent_result.get("diff", []),
-                        "response": parent_result.get("response", [])
+                        "response": parent_result.get("response", []),
+                        "deployment": parent_result.get("deployment", {})
                     },
                     "child_fabrics": []
                 }
