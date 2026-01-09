@@ -545,13 +545,45 @@ options:
         default: true
   fabric_details:
     description:
-    - INTERNAL PARAMETER - DO NOT USE
-    - Fabric details are constructured by the module's action plugin
-    - This parameter is used internally by the module for multisite fabric processing
-    - It will consist of the ND controller version, fabric type, members (if applicable)
-      and cluster name (if applicable)
+    - INTERNAL USE ONLY - Populated automatically by the action plugin
+    - Contains fabric metadata required for multisite and multicluster operations
+    - This parameter is constructed by the module's action plugin and should not be set manually in playbooks
+    - Includes controller version, fabric type (standalone, multisite_parent, multisite_child,
+      multicluster_parent, multicluster_child), member fabrics, and cluster information
     type: dict
     required: false
+    suboptions:
+      fabric_type:
+        description:
+        - Type of fabric deployment
+        type: str
+        required: true
+        choices:
+          - standalone
+          - multisite_parent
+          - multisite_child
+          - multicluster_parent
+          - multicluster_child
+      cluster_name:
+        description:
+        - Name of the cluster for multicluster deployments
+        - Only applicable for multicluster fabric types
+        type: str
+        required: false
+      nd_version:
+        description:
+        - Version of the ND controller
+        - Used to determine API endpoints and feature availability
+        type: float
+        required: false
+      members:
+        description:
+        - List of member fabrics for multisite_parent or multicluster_parent deployments
+        - Contains fabric details for each child fabric
+        type: list
+        elements: dict
+        required: false
+
 """
 
 EXAMPLES = """
@@ -994,7 +1026,9 @@ dcnm_vrf_paths = {
         "GET_NET_VRF": "/rest/resource-manager/fabrics/{}/networks?vrf-name={}"
     },
     12: {
+        "GET_VRF_FAB": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}",
         "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
+        "GET_VRF_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/bulk-create/vrfs",
         "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
         "GET_VRF_SWITCH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
         "GET_VRF_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfinfo",
@@ -2719,6 +2753,7 @@ class DcnmVrf:
         diff_create = []
         diff_create_update = []
         diff_create_quick = []
+        payload_list = []
 
         for want_c in self.want_create:
             vrf_found = False
@@ -2835,23 +2870,40 @@ class DcnmVrf:
 
                     want_c.update({"vrfTemplateConfig": json.dumps(template_conf)})
 
-                    create_path = self.paths["GET_VRF"].format(self.fabric)
+                    if self.action_fabric_type == "multicluster_parent" or self.dcnm_version < 12:
+                        self.log.debug("Sending individual VRF create request")
+                        create_path = self.paths["GET_VRF"].format(self.fabric)
+                        diff_create_quick.append(want_c)
 
-                    diff_create_quick.append(want_c)
+                        if self.module.check_mode:
+                            continue
 
-                    if self.module.check_mode:
-                        continue
+                        # arobel: TODO: Not covered by UT
+                        resp = dcnm_send(
+                            self.module, "POST", create_path, json.dumps(want_c)
+                        )
+                        self.result["response"].append(resp)
+                        fail, self.result["changed"] = self.handle_response(resp, "create")
 
-                    # arobel: TODO: Not covered by UT
-                    resp = dcnm_send(
-                        self.module, "POST", create_path, json.dumps(want_c)
-                    )
-                    self.result["response"].append(resp)
+                        if fail:
+                            self.failure(resp)
+                    else:
+                        payload_list.append(want_c)
 
-                    fail, self.result["changed"] = self.handle_response(resp, "create")
+        if self.action_fabric_type != "multicluster_parent" and self.dcnm_version >= 12:
+            self.log.debug("Sending bulk VRF create request")
+            create_path = self.paths["GET_VRF_BULK"]
 
-                    if fail:
-                        self.failure(resp)
+            if not self.module.check_mode and payload_list:
+                # arobel: TODO: Not covered by UT
+                resp = dcnm_send(
+                    self.module, "POST", create_path, json.dumps(payload_list)
+                )
+                self.result["response"].append(resp)
+                fail, self.result["changed"] = self.handle_response(resp, "create")
+
+                if fail:
+                    self.failure(resp)
 
         self.diff_create = diff_create
         self.diff_create_update = diff_create_update
@@ -3503,22 +3555,41 @@ class DcnmVrf:
             return
 
         action = "delete"
-        path = self.paths["GET_VRF"].format(self.fabric)
         verb = "DELETE"
 
         del_failure = ""
+        vrfs_to_delete = []
 
         self.wait_for_vrf_del_ready()
         for vrf, state in self.diff_delete.items():
             if state == "OUT-OF-SYNC":
                 del_failure += vrf + ","
                 continue
-            delete_path = f"{path}/{vrf}"
+            if self.action_fabric_type == "multicluster_parent" or self.dcnm_version < 12:
+                self.log.debug("Sending individual VRF delete request")
+                path = self.paths["GET_VRF"].format(self.fabric)
+                delete_path = f"{path}/{vrf}"
+                self.send_to_controller(
+                    action,
+                    verb,
+                    delete_path,
+                    None,
+                    log_response=True,
+                    is_rollback=is_rollback,
+                )
+            else:
+                vrfs_to_delete.append(vrf)
+
+        if self.action_fabric_type != "multicluster_parent" and vrfs_to_delete and self.dcnm_version >= 12:
+            self.log.debug("Sending Bulk VRF delete request")
+            # Build the bulk delete path with comma-separated VRF names
+            path = self.paths["GET_VRF_FAB"].format(self.fabric)
+            delete_path = f"{path}/bulk-delete/vrfs?vrf-names={','.join(vrfs_to_delete)}"
             self.send_to_controller(
                 action,
                 verb,
                 delete_path,
-                self.diff_delete,
+                None,  # Bulk delete uses query params, not payload
                 log_response=True,
                 is_rollback=is_rollback,
             )
@@ -3544,10 +3615,15 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_create, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+        payload_list = []
+
         if not self.diff_create:
             msg = "Early return. self.diff_create is empty."
             self.log.debug(msg)
             return
+
+        action = "create"
+        verb = "POST"
 
         for vrf in self.diff_create:
             json_to_dict = json.loads(vrf["vrfTemplateConfig"])
@@ -3623,14 +3699,22 @@ class DcnmVrf:
 
             vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
 
-            msg = "Sending vrf create request."
+            if self.action_fabric_type == "multicluster_parent" or self.dcnm_version < 12:
+                msg = "Sending vrf create request."
+                self.log.debug(msg)
+                path = self.paths["GET_VRF"].format(self.fabric)
+                payload = copy.deepcopy(vrf)
+                self.send_to_controller(
+                    action, verb, path, payload, log_response=True, is_rollback=is_rollback
+                )
+            else:
+                payload_list.append(vrf)
+
+        if self.action_fabric_type != "multicluster_parent" and self.dcnm_version >= 12:
+            msg = "Sending bulk vrf create request."
             self.log.debug(msg)
-
-            action = "create"
-            verb = "POST"
-            path = self.paths["GET_VRF"].format(self.fabric)
-            payload = copy.deepcopy(vrf)
-
+            path = self.paths["GET_VRF_BULK"]
+            payload = copy.deepcopy(payload_list)
             self.send_to_controller(
                 action, verb, path, payload, log_response=True, is_rollback=is_rollback
             )
@@ -4457,7 +4541,6 @@ class DcnmVrf:
             self.log.debug(msg)
             req_path = path + f"pools/{pool}"
             resp = dcnm_send(self.module, "GET", req_path)
-            self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "deploy")
             if fail:
                 if is_rollback:
@@ -5213,7 +5296,19 @@ def main():
         ),
         fabric_details=dict(
             required=False,
-            type="dict")
+            type="dict",
+            options=dict(
+                fabric_type=dict(
+                    required=True,
+                    type="str",
+                    choices=["standalone", "multicluster_parent", "multicluster_child",
+                             "multisite_parent", "multisite_child"]
+                ),
+                cluster_name=dict(required=False, type="str"),
+                nd_version=dict(required=False, type="float"),
+                members=dict(required=False, type="list", elements="dict")
+            )
+        )
     )
 
     module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
