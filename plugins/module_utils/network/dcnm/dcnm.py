@@ -1149,7 +1149,7 @@ def has_partial_dhcp_config(server):
     """
     # Summary
 
-    Check if a DHCP server has incomplete configuration (IP address set but no VRF or vice versa).
+    Check if a DHCP server has incomplete configuration (VRF set but no IP address).
 
     ## Raises
 
@@ -1179,7 +1179,7 @@ def has_partial_dhcp_config(server):
         }
     result2 = has_partial_dhcp_config(server2)
     print(result2)
-    # -> True (partial configuration)
+    # -> False (complete configuration)
 
     server3 = {
         "srvr_vrf": "vrf_name"
@@ -1190,7 +1190,10 @@ def has_partial_dhcp_config(server):
     """
     ip = server.get("srvr_ip")
     vrf = server.get("srvr_vrf")
-    return bool(ip) != bool(vrf)
+    if vrf is not None:
+        return ip is None
+    return False
+
 
 def sanitize_lan_attach_list(attach_objects: list) -> list:
     """
@@ -1615,17 +1618,17 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
 
     # Get fabric type and build appropriate path
     base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabric}/vrfs"
-    
+
     proxy = ""
-    
+
     # Determine deployment path and payload based on fabric type
     if fabric_type == "multicluster_parent":
         # Multicluster parent uses different endpoint and payload format
         if action_module.ndfc_version >= 12.4:
             proxy = "/onemanage"
-        
+
         deploy_path = proxy + base_path.replace(
-            f"lan-fabric/rest/control/fabrics/{fabric}/vrfs", 
+            f"lan-fabric/rest/control/fabrics/{fabric}/vrfs",
             "onemanage/top-down/vrfs/deploy"
         )
     else:
@@ -1656,12 +1659,12 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
             f"Successfully deployed VRF(s) to fabric: {fabric}",
             operation="vrf_deployment"
         )
-        
+
         return response_data
 
     except Exception as e:
         # Handle deployment failures
         return action_module.error_handler.handle_exception(
-            e, 
+            e,
             f"VRF deployment for fabric: {fabric}"
         )
