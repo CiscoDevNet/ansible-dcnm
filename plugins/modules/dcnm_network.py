@@ -249,7 +249,7 @@ options:
         - Enable XConnect feature. Only available for ND version > 4.1.
         type: bool
         default: false
-        required: false        
+        required: false
       attach:
         description:
         - List of network attachment details
