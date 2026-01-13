@@ -110,7 +110,7 @@ class FabricUpdateCommon(FabricCommon):
                 self.results.result_current = {"success": False, "changed": False}
                 self.results.failed = True
                 self.results.changed = False
-                self.results.failed_result["msg"] = f"Key {key} not found in fabric configuration for " f"fabric {fabric_name}"
+                self.results.failed_result["msg"] = f"Key {key} not found in fabric configuration for fabric {fabric_name}"
                 self.results.register_task_result()
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Invalid key: {key} found in payload for "
@@ -330,7 +330,7 @@ class FabricUpdateCommon(FabricCommon):
 
         ## Raises
 
-        ### ValueError
+        ### TypeError
 
         - If value is not an instance of ControllerVersion.
         """
