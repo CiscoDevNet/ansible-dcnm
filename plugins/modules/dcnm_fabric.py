@@ -559,7 +559,7 @@ options:
                     heartbeatInterval:
                         default: 190
                         description:
-                        - Xconnect HeartBeat Interval (Min: 150, Max: 5000)
+                        - Xconnect HeartBeat Interval
                         required: false
                         type: int
                     HOST_INTF_ADMIN_STATE:
