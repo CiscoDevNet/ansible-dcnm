@@ -244,6 +244,12 @@ options:
         - Netflow configs are supported on NDFC only
         type: str
         required: false
+      xconnect:
+        description:
+        - Enable XConnect feature. Only available for ND version > 4.1.
+        type: bool
+        default: false
+        required: false        
       attach:
         description:
         - List of network attachment details
@@ -1320,6 +1326,7 @@ class DcnmNetwork:
             template_conf.update(ENABLE_NETFLOW=net.get("netflow_enable", False))
             template_conf.update(SVI_NETFLOW_MONITOR=net.get("intfvlan_nf_monitor", ""))
             template_conf.update(VLAN_NETFLOW_MONITOR=net.get("vlan_nf_monitor", ""))
+            template_conf.update(XCONNECT=net.get("xconnect", False))
 
         if template_conf["vlanId"] is None:
             template_conf["vlanId"] = ""
@@ -1478,6 +1485,7 @@ class DcnmNetwork:
                     t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
                     t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                    t_conf.update(XCONNECT=json_to_dict.get("xconnect", False))
 
                 # Remove mcastGroup when Fabric is MSD
                 if "mcastGroup" not in json_to_dict:
@@ -1533,6 +1541,7 @@ class DcnmNetwork:
                             t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
                             t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
                             t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                            t_conf.update(XCONNECT=json_to_dict.get("xconnect", False))
 
                         l2net.update({"networkTemplateConfig": json.dumps(t_conf)})
                         del l2net["displayName"]
@@ -2648,6 +2657,7 @@ class DcnmNetwork:
                     t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
                     t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                    t_conf.update(XCONNECT=json_to_dict.get("xconnect", False))
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
 
@@ -2807,6 +2817,7 @@ class DcnmNetwork:
                 netflow_enable=dict(type="bool", default=False),
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
+                xconnect=dict(type="bool", default=False),
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
@@ -2874,6 +2885,7 @@ class DcnmNetwork:
                 netflow_enable=dict(type="bool", default=False),
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
+                xconnect=dict(type="bool", default=False)
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
