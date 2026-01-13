@@ -21,13 +21,15 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version == "11"
   tags:
     - sanity
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
   tags:
@@ -37,9 +39,9 @@
   ansible.builtin.debug:
     var: item
   with_items:
-     - "fabric_1 : {{ fabric_1 }}"
-     - "switch_1 : {{ switch_1 }}"
-     - "switch_2 : {{ switch_2 }}"
+    - "fabric_1 : {{ fabric_1 }}"
+    - "switch_1 : {{ switch_1 }}"
+    - "switch_2 : {{ switch_2 }}"
 
 - name: SETUP.1 - SANITY - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
@@ -48,9 +50,10 @@
   register: result_setup_1
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_setup_1.response.DATA != None'
+      - 'result_setup_1.response.DATA != None'
   tags: sanity
 
 - name: SETUP.2 - SANITY - [deleted] Delete all VRFs
@@ -60,7 +63,7 @@
   tags: sanity
 
 - name: SETUP.3 - SANITY - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -73,15 +76,15 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
-      - ip_address: "{{ switch_1 }}"
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_1
   tags: sanity
 
@@ -101,19 +104,20 @@
     var: result_1
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_1.changed == true'
-    - 'result_1.response[0].RETURN_CODE == 200'
-    - 'result_1.response[1].RETURN_CODE == 200'
-    - 'result_1.response[2].RETURN_CODE == 200'
-    - '(result_1.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_1.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_1.diff[0].attach[0].deploy == true'
-    - 'result_1.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_1.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_1.diff[0].attach[1].ip_address'
-    - 'result_1.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_1.changed == true'
+      - 'result_1.response[0].RETURN_CODE == 200'
+      - 'result_1.response[1].RETURN_CODE == 200'
+      - 'result_1.response[2].RETURN_CODE == 200'
+      - '(result_1.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_1.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_1.diff[0].attach[0].deploy == true'
+      - 'result_1.diff[0].attach[1].deploy == true'
+      - '"{{ switch_1 }}" in result_1.diff[0].attach[0].ip_address'
+      - '"{{ switch_2 }}" in result_1.diff[0].attach[1].ip_address'
+      - 'result_1.diff[0].vrf_name == "ansible-vrf-int1"'
   tags: sanity
 
 - name: TEST.1c - SANITY MERGED - conf1 - Idempotence
@@ -126,10 +130,11 @@
     var: result_1c
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_1c.changed == false'
-    - 'result_1c.response|length == 0'
+      - 'result_1c.changed == false'
+      - 'result_1c.response|length == 0'
   tags: sanity
 
 - name: TEST.1e - SANITY MERGED - [deleted] Delete all VRFs
@@ -139,7 +144,7 @@
   tags: sanity
 
 - name: TEST.1f - SANITY MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -148,15 +153,15 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      l3vni_wo_vlan: true
-      attach:
-      - ip_address: "{{ switch_1 }}"
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        l3vni_wo_vlan: true
+        attach:
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: false
+        deploy: false
   register: result_1g
   tags: sanity
 
@@ -172,17 +177,18 @@
     var: result_1g
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_1g.changed == true'
-    - 'result_1g.response[0].RETURN_CODE == 200'
-    - 'result_1g.response[1].RETURN_CODE == 200'
-    - '(result_1g.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_1g.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - '"{{ switch_1 }}" in result_1g.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_1g.diff[0].attach[1].ip_address'
-    - '"{{ switch_2 }}" in result_1g.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_1g.diff[0].attach[1].ip_address'
-    - 'result_1g.diff[0].vrf_name == "ansible-vrf-int1"'
-    - '"enableL3VniNoVlan\":\"true\"" in result_1h.response[0].parent.vrfTemplateConfig'
+      - 'result_1g.changed == true'
+      - 'result_1g.response[0].RETURN_CODE == 200'
+      - 'result_1g.response[1].RETURN_CODE == 200'
+      - '(result_1g.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_1g.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - '"{{ switch_1 }}" in result_1g.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_1g.diff[0].attach[1].ip_address'
+      - '"{{ switch_2 }}" in result_1g.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_1g.diff[0].attach[1].ip_address'
+      - 'result_1g.diff[0].vrf_name == "ansible-vrf-int1"'
+      - '"enableL3VniNoVlan\": \"true\"" in result_1h.response[0].parent.vrfTemplateConfig'
   tags: sanity
 
 - name: TEST.1j - SANITY MERGED - conf1 - Idempotence
@@ -195,10 +201,11 @@
     var: result_1j
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_1j.changed == false'
-    - 'result_1j.response|length == 0'
+      - 'result_1j.changed == false'
+      - 'result_1j.response|length == 0'
   tags: sanity
 
 - name: TEST.1k - SANITY MERGED - [deleted] Delete all VRFs
@@ -216,15 +223,15 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
-      - ip_address: "{{ switch_1 }}"
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_2
   tags: sanity
 
@@ -244,17 +251,18 @@
     var: result_2
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_2.changed == true'
-    - 'result_2.response[0].RETURN_CODE == 200'
-    - 'result_2.response[1].RETURN_CODE == 200'
-    - 'result_2.response[2].RETURN_CODE == 200'
-    - '(result_2.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_2.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_2.diff[0].attach[0].deploy == true'
-    - 'result_2.diff[0].attach[1].deploy == true'
-    - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_2.changed == true'
+      - 'result_2.response[0].RETURN_CODE == 200'
+      - 'result_2.response[1].RETURN_CODE == 200'
+      - 'result_2.response[2].RETURN_CODE == 200'
+      - '(result_2.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_2.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_2.diff[0].attach[0].deploy == true'
+      - 'result_2.diff[0].attach[1].deploy == true'
+      - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
   tags: sanity
 
 - name: TEST.2c - SANITY REPLACED - [replaced] Update existing VRF - delete attachments
@@ -262,16 +270,16 @@
     fabric: "{{ fabric_1 }}"
     state: replaced
     config:
-    - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
   register: result_2c
   tags: sanity
 
 - name: TEST.2d - SANITY REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -291,16 +299,17 @@
     var: result_2c
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_2c.changed == true'
-    - 'result_2c.response[0].RETURN_CODE == 200'
-    - 'result_2c.response[1].RETURN_CODE == 200'
-    - '(result_2c.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_2c.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_2c.diff[0].attach[0].deploy == false'
-    - 'result_2c.diff[0].attach[1].deploy == false'
-    - 'result_2c.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_2c.changed == true'
+      - 'result_2c.response[0].RETURN_CODE == 200'
+      - 'result_2c.response[1].RETURN_CODE == 200'
+      - '(result_2c.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_2c.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_2c.diff[0].attach[0].deploy == false'
+      - 'result_2c.diff[0].attach[1].deploy == false'
+      - 'result_2c.diff[0].vrf_name == "ansible-vrf-int1"'
   tags: sanity
 
 - name: TEST.2g - SANITY REPLACED - conf2c - Idempotence
@@ -313,9 +322,10 @@
     var: result_2g
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_2g.changed == false'
+      - 'result_2g.changed == false'
   tags: sanity
 
 - name: TEST.2i - SANITY REPLACED - [replaced] Update existing VRF - create attachments
@@ -323,20 +333,20 @@
     fabric: "{{ fabric_1 }}"
     state: replaced
     config:
-    - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
-      - ip_address: "{{ switch_1 }}"
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_2i
   tags: sanity
 
 - name: TEST.2j - SANITY REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -356,18 +366,19 @@
     var: result_2i
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_2i.changed == true'
-    - 'result_2i.response[0].RETURN_CODE == 200'
-    - 'result_2i.response[1].RETURN_CODE == 200'
-    - '(result_2i.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_2i.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_2i.diff[0].attach[0].deploy == true'
-    - 'result_2i.diff[0].attach[1].deploy == true'
-    - 'result_2i.diff[0].vrf_name == "ansible-vrf-int1"'
-    - 'result_2i.diff[0].attach[0].vlan_id == 500'
-    - 'result_2i.diff[0].attach[1].vlan_id == 500'
+      - 'result_2i.changed == true'
+      - 'result_2i.response[0].RETURN_CODE == 200'
+      - 'result_2i.response[1].RETURN_CODE == 200'
+      - '(result_2i.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_2i.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_2i.diff[0].attach[0].deploy == true'
+      - 'result_2i.diff[0].attach[1].deploy == true'
+      - 'result_2i.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_2i.diff[0].attach[0].vlan_id == 500'
+      - 'result_2i.diff[0].attach[1].vlan_id == 500'
   tags: sanity
 
 - name: TEST.2m - SANITY REPLACED - [replaced] conf2i - Idempotence
@@ -380,9 +391,10 @@
     var: result_2m
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_2m.changed == false'
+      - 'result_2m.changed == false'
   tags: sanity
 
 - name: TEST.2o - SANITY REPLACED - [deleted] Delete all VRFs
@@ -392,7 +404,7 @@
   tags: sanity
 
 - name: TEST.2p - SANITY REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -405,15 +417,15 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
-      - ip_address: "{{ switch_1 }}"
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_3
   tags: sanity
 
@@ -433,19 +445,20 @@
     var: result_3
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_3.changed == true'
-    - 'result_3.response[0].RETURN_CODE == 200'
-    - 'result_3.response[1].RETURN_CODE == 200'
-    - 'result_3.response[2].RETURN_CODE == 200'
-    - '(result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_3.diff[0].attach[0].deploy == true'
-    - 'result_3.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
-    - 'result_3.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_3.changed == true'
+      - 'result_3.response[0].RETURN_CODE == 200'
+      - 'result_3.response[1].RETURN_CODE == 200'
+      - 'result_3.response[2].RETURN_CODE == 200'
+      - '(result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_3.diff[0].attach[0].deploy == true'
+      - 'result_3.diff[0].attach[1].deploy == true'
+      - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
+      - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
+      - 'result_3.diff[0].vrf_name == "ansible-vrf-int1"'
   tags: sanity
 
 - name: TEST.3c - SANITY OVERRIDDEN - [overridden] Update existing VRF - delete and create
@@ -453,15 +466,15 @@
     fabric: "{{ fabric_1 }}"
     state: overridden
     config:
-    - vrf_name: ansible-vrf-int2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
-      - ip_address: "{{ switch_1 }}"
+      - vrf_name: ansible-vrf-int2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_3c
   tags: sanity
 
@@ -481,25 +494,26 @@
     var: result_3c
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_3c.changed == true'
-    - 'result_3c.response[0].RETURN_CODE == 200'
-    - 'result_3c.response[1].RETURN_CODE == 200'
-    - 'result_3c.response[2].RETURN_CODE == 200'
-    - 'result_3c.response[3].RETURN_CODE == 200'
-    - 'result_3c.response[4].RETURN_CODE == 200'
-    - 'result_3c.response[5].RETURN_CODE == 200'
-    - '(result_3c.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_3c.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - '(result_3c.response[5].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_3c.response[5].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_3c.diff[0].attach[0].deploy == true'
-    - 'result_3c.diff[0].attach[1].deploy == true'
-    - 'result_3c.diff[0].vrf_name == "ansible-vrf-int2"'
-    - 'result_3c.diff[1].attach[0].deploy == false'
-    - 'result_3c.diff[1].attach[1].deploy == false'
-    - 'result_3c.diff[1].vrf_name == "ansible-vrf-int1"'
+      - 'result_3c.changed == true'
+      - 'result_3c.response[0].RETURN_CODE == 200'
+      - 'result_3c.response[1].RETURN_CODE == 200'
+      - 'result_3c.response[2].RETURN_CODE == 200'
+      - 'result_3c.response[3].RETURN_CODE == 200'
+      - 'result_3c.response[4].RETURN_CODE == 200'
+      - 'result_3c.response[5].RETURN_CODE == 200'
+      - '(result_3c.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_3c.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+      - '(result_3c.response[5].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_3c.response[5].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_3c.diff[0].attach[0].deploy == true'
+      - 'result_3c.diff[0].attach[1].deploy == true'
+      - 'result_3c.diff[0].vrf_name == "ansible-vrf-int2"'
+      - 'result_3c.diff[1].attach[0].deploy == false'
+      - 'result_3c.diff[1].attach[1].deploy == false'
+      - 'result_3c.diff[1].vrf_name == "ansible-vrf-int1"'
   tags: sanity
 
 - name: TEST.3f - SANITY OVERRIDDEN - [overridden] conf3c - Idempotence
@@ -512,10 +526,11 @@
     var: result_3f
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_3f.changed == false'
-    - 'result_3f.response|length == 0'
+      - 'result_3f.changed == false'
+      - 'result_3f.response|length == 0'
   tags: sanity
 
 - name: TEST.3h - SANITY OVERRIDDEN - [deleted] Delete all VRFs
@@ -525,7 +540,7 @@
   tags: sanity
 
 - name: TEST.3i - SANITY OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -538,15 +553,15 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
-      - ip_address: "{{ switch_1 }}"
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_4
   tags: sanity
 
@@ -566,19 +581,20 @@
     var: result_4
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_4.changed == true'
-    - 'result_4.response[0].RETURN_CODE == 200'
-    - 'result_4.response[1].RETURN_CODE == 200'
-    - 'result_4.response[2].RETURN_CODE == 200'
-    - '(result_4.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_4.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_4.diff[0].attach[0].deploy == true'
-    - 'result_4.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_4.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_4.diff[0].attach[1].ip_address'
-    - 'result_4.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_4.changed == true'
+      - 'result_4.response[0].RETURN_CODE == 200'
+      - 'result_4.response[1].RETURN_CODE == 200'
+      - 'result_4.response[2].RETURN_CODE == 200'
+      - '(result_4.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_4.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_4.diff[0].attach[0].deploy == true'
+      - 'result_4.diff[0].attach[1].deploy == true'
+      - '"{{ switch_1 }}" in result_4.diff[0].attach[0].ip_address'
+      - '"{{ switch_2 }}" in result_4.diff[0].attach[1].ip_address'
+      - 'result_4.diff[0].vrf_name == "ansible-vrf-int1"'
   tags: sanity
 
 - name: TEST.4c - SANITY QUERY - [query] Query the VRF
@@ -603,18 +619,19 @@
     var: result_4c
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_4c.changed == false'
-    - 'result_4c.response[0].parent.vrfName == "ansible-vrf-int1"'
-    - 'result_4c.response[0].parent.vrfId == 9008011'
-    - 'result_4c.response[0].parent.vrfStatus == "DEPLOYED"'
-    - 'result_4c.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-    - 'result_4c.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result_4c.response[0].attach[0].switchDetailsList[0].vlan == 500'
-    - 'result_4c.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-    - 'result_4c.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result_4c.response[0].attach[1].switchDetailsList[0].vlan == 500'
+      - 'result_4c.changed == false'
+      - 'result_4c.response[0].parent.vrfName == "ansible-vrf-int1"'
+      - 'result_4c.response[0].parent.vrfId == 9008011'
+      - 'result_4c.response[0].parent.vrfStatus == "DEPLOYED"'
+      - 'result_4c.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+      - 'result_4c.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+      - 'result_4c.response[0].attach[0].switchDetailsList[0].vlan == 500'
+      - 'result_4c.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+      - 'result_4c.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+      - 'result_4c.response[0].attach[1].switchDetailsList[0].vlan == 500'
   tags: sanity
 
 - name: TEST.4e - SANITY QUERY - [deleted] Delete all VRFs
@@ -624,7 +641,7 @@
   tags: sanity
 
 - name: TEST.4f - SANITY QUERY - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -637,15 +654,15 @@
     fabric: "{{ fabric_1 }}"
     state: merged
     config:
-    - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
-      attach:
-      - ip_address: "{{ switch_1 }}"
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 500
+        attach:
+          - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+        deploy: true
   register: result_5
   tags: sanity
 
@@ -665,19 +682,20 @@
     var: result_5
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_5.changed == true'
-    - 'result_5.response[0].RETURN_CODE == 200'
-    - 'result_5.response[1].RETURN_CODE == 200'
-    - 'result_5.response[2].RETURN_CODE == 200'
-    - '(result_5.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_5.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_5.diff[0].attach[0].deploy == true'
-    - 'result_5.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_5.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_5.diff[0].attach[1].ip_address'
-    - 'result_5.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_5.changed == true'
+      - 'result_5.response[0].RETURN_CODE == 200'
+      - 'result_5.response[1].RETURN_CODE == 200'
+      - 'result_5.response[2].RETURN_CODE == 200'
+      - '(result_5.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_5.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_5.diff[0].attach[0].deploy == true'
+      - 'result_5.diff[0].attach[1].deploy == true'
+      - '"{{ switch_1 }}" in result_5.diff[0].attach[0].ip_address'
+      - '"{{ switch_2 }}" in result_5.diff[0].attach[1].ip_address'
+      - 'result_5.diff[0].vrf_name == "ansible-vrf-int1"'
   tags: sanity
 
 - name: TEST.5c - SANITY DELETED - [deleted] Delete the VRF
@@ -685,10 +703,10 @@
     fabric: "{{ fabric_1 }}"
     state: deleted
     config:
-    - vrf_name: ansible-vrf-int1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
+      - vrf_name: ansible-vrf-int1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
   register: result_5c
   tags: sanity
 
@@ -697,19 +715,20 @@
     var: result_5c
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_5c.changed == true'
-    - 'result_5c.response[0].RETURN_CODE == 200'
-    - 'result_5c.response[1].RETURN_CODE == 200'
-    - 'result_5c.response[1].MESSAGE == "OK"'
-    - 'result_5c.response[2].RETURN_CODE == 200'
-    - 'result_5c.response[2].METHOD == "DELETE"'
-    - '(result_5c.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_5c.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_5c.diff[0].attach[0].deploy == false'
-    - 'result_5c.diff[0].attach[1].deploy == false'
-    - 'result_5c.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result_5c.changed == true'
+      - 'result_5c.response[0].RETURN_CODE == 200'
+      - 'result_5c.response[1].RETURN_CODE == 200'
+      - 'result_5c.response[1].MESSAGE == "OK"'
+      - 'result_5c.response[2].RETURN_CODE == 200'
+      - 'result_5c.response[2].METHOD == "DELETE"'
+      - '(result_5c.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_5c.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result_5c.diff[0].attach[0].deploy == false'
+      - 'result_5c.diff[0].attach[1].deploy == false'
+      - 'result_5c.diff[0].vrf_name == "ansible-vrf-int1"'
   tags: sanity
 
 - name: TEST.5e - SANITY DELETED - conf5c - Idempotence
@@ -722,9 +741,10 @@
     var: result_5e
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-    - 'result_5e.changed == false'
-    - 'result_5e.response|length == 0'
-    - 'result_5e.diff|length == 0'
+      - 'result_5e.changed == false'
+      - 'result_5e.response|length == 0'
+      - 'result_5e.diff|length == 0'
   tags: sanity

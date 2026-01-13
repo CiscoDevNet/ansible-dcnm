@@ -75,7 +75,8 @@
       - FABRIC_NAME: "{{ fabric_name_1 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -183,9 +184,11 @@
         SUBINTERFACE_RANGE: 2-100
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -251,7 +254,8 @@
         role: leaf
         preserve_config: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -271,7 +275,8 @@
         # preserve_config must be True for LAN_CLASSIC
         preserve_config: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -353,7 +358,9 @@
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/config-deploy?forceShowRun=false",
+#                 "REQUEST_PATH": >-
+#                   https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/
+#                   rest/control/fabrics/VXLAN_EVPN_Fabric/config-deploy?forceShowRun=false
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
@@ -387,9 +394,11 @@
         BGP_AS: 65535
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -541,7 +550,9 @@
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/config-deploy?forceShowRun=false",
+#                 "REQUEST_PATH": >-
+#                   https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/
+#                   rest/control/fabrics/LAN_CLASSIC_Fabric/config-deploy?forceShowRun=false
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
@@ -576,9 +587,11 @@
         IS_READ_ONLY: false
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -678,9 +691,11 @@
 - name: REPLACED - TEST - Replace fabric_1 config with default config - idempotence
   cisco.dcnm.dcnm_fabric: *replace_fabric_1
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -743,9 +758,11 @@
 - name: REPLACED - TEST - Replace fabric_3 config with default config - idempotence
   cisco.dcnm.dcnm_fabric: *replace_fabric_3
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -774,9 +791,11 @@
     state: deleted
     config:
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -784,15 +803,17 @@
       - result.response[0].MESSAGE == "OK"
       - result.response[0].METHOD == "DELETE"
       - result.response[0].RETURN_CODE == 200
-- name: Delete switches from fabric_3
+      - name: Delete switches from fabric_3
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ fabric_name_3 }}"
     state: deleted
     config:
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -873,9 +894,11 @@
       - FABRIC_NAME: "{{ fabric_name_1 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
