@@ -81,7 +81,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_setup_3
 
 - name: SETUP.3a - QUERY - [query] Wait for vrfStatus == DEPLOYED
@@ -130,7 +130,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_1
 
 - name: TEST.1b - QUERY - [debug] print result_1
@@ -193,7 +193,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_3
 
 - name: TEST.3a - QUERY - [query] Wait for vrfStatus == DEPLOYED
@@ -293,7 +293,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_5
 
 - name: TEST.5a - QUERY - [debug] print result_5
@@ -351,7 +351,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_7
 
 - name: TEST.7a - QUERY - [debug] print result_7
@@ -394,7 +394,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # optional controller can provide
-                deploy: false
+        deploy: false
   register: result_8
 
 - name: TEST.8a - QUERY - [query] query VRF state
@@ -442,7 +442,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # optional controller can provide
-                deploy: false
+        deploy: false
   register: result_9
 
 - name: TEST.9a - QUERY - [debug] print result_9
