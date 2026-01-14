@@ -67,9 +67,9 @@
     timeout: 60
   tags: sanity
 
-###############################################
-###                MERGED                    ##
-###############################################
+##############################################
+##                MERGED                    ##
+##############################################
 
 - name: TEST.1 - SANITY MERGED - [merged] Create, Attach, Deploy VLAN+VRF - VLAN Provided by the User
   cisco.dcnm.dcnm_vrf: &conf1
@@ -83,7 +83,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_1
   tags: sanity
@@ -160,7 +160,7 @@
         l3vni_wo_vlan: true
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: false
   register: result_1g
   tags: sanity
@@ -230,7 +230,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_2
   tags: sanity
@@ -340,7 +340,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_2i
   tags: sanity
@@ -424,7 +424,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_3
   tags: sanity
@@ -473,7 +473,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_3c
   tags: sanity
@@ -560,7 +560,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_4
   tags: sanity
@@ -661,7 +661,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_5
   tags: sanity

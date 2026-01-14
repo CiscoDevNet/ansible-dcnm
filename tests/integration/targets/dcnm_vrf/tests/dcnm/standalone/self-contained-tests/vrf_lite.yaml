@@ -93,7 +93,7 @@
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # dot1q can be got from dcnm
           - ip_address: "{{ switch_3 }}"
-    deploy: true
+        deploy: true
   register: result
 
 - name: Query fabric state until vrfStatus transitions to DEPLOYED state
@@ -286,7 +286,7 @@
                 ipv6_addr: 3010::10:34:0:7/64 # optional
                 neighbor_ipv6: 3010::10:34:0:3 # optional
                 dot1q: 21 # dot1q can be got from dcnm
-    deploy: true
+        deploy: true
   register: result
 
 - name: Query fabric state until vrfStatus transitions to DEPLOYED state
