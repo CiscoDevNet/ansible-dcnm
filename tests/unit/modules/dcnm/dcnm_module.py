@@ -233,7 +233,7 @@ class TestDcnmModule(ModuleTestCase):
                         return {'response': self.fabric_associations, 'failed': False}
                 elif 'vrfs' in path:
                     if '/vrfs' in path or 'top-down' in path:
-                        return {'response': self.vrf_ready_data, 'failed': False}
+                        return {'response': self.deploy_success_resp, 'failed': False}
                 return {'failed': True, 'msg': 'Rest Module Mocks not provided'}
 
             # Set the module args if provided for dcnm_network module
