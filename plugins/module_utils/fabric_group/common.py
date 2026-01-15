@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Cisco and/or its affiliates.
+# Copyright (c) 2025-2026 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -96,19 +96,37 @@ class FabricGroupCommon:
 
     def _fixup_anycast_gw_mac(self) -> None:
         """
-        -   Translate the ANYCAST_GW_MAC address to the format the
-            controller expects.
-        -   Raise ``ValueError`` if the translation fails.
+        # Summary
+
+        Translate the ANYCAST_GW_MAC address to the format the
+        controller expects.
+
+        ## Raises
+
+        - `ValueError` if the translation fails.
+
+        ## Notes
+
+        -   For VXLAN child fabrics, ANYCAST_GW_MAC is at the top level
+            of the payload.
+        -   For MCFG parent fabrics, ANYCAST_GW_MAC is nested within
+            `payload["nvPairs"]`.
+        -   This method checks both locations to support both fabric types.
         """
         method_name: str = inspect.stack()[0][3]
         for payload in self._payloads_to_commit:
-            if "ANYCAST_GW_MAC" not in payload:
+            # Determine where ANYCAST_GW_MAC is located
+            if "ANYCAST_GW_MAC" in payload:
+                mac_container = payload
+            elif "nvPairs" in payload and "ANYCAST_GW_MAC" in payload.get("nvPairs", {}):
+                mac_container = payload["nvPairs"]
+            else:
                 continue
             try:
-                payload["ANYCAST_GW_MAC"] = self.conversion.translate_mac_address(payload["ANYCAST_GW_MAC"])
+                mac_container["ANYCAST_GW_MAC"] = self.conversion.translate_mac_address(mac_container["ANYCAST_GW_MAC"])
             except ValueError as error:
                 fabric_name = payload.get("FABRIC_NAME", "UNKNOWN")
-                anycast_gw_mac = payload.get("ANYCAST_GW_MAC", "UNKNOWN")
+                anycast_gw_mac = mac_container.get("ANYCAST_GW_MAC", "UNKNOWN")
 
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Error translating ANYCAST_GW_MAC "
