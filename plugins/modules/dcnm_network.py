@@ -1148,6 +1148,7 @@ class DcnmNetwork:
 
                                 # Handle tor ports first if configured.
                                 if want.get("torports"):
+                                    torconfig_list = []
                                     for tor_w in want["torports"]:
                                         torports_present = False
                                         if have.get("torports"):
@@ -1166,7 +1167,7 @@ class DcnmNetwork:
                                                         atch_tor_ports.extend(h_tor_ports)
 
                                                     torconfig = tor_w["switch"] + "(" + ",".join(atch_tor_ports) + ")"
-                                                    want.update({"torPorts": torconfig})
+                                                    torconfig_list.append(torconfig)
                                                     # Update torports_configured to True. If there is no other config change for attach
                                                     # We will still append this attach to attach_list as there is tor port change
                                                     if sorted(atch_tor_ports) != sorted(h_tor_ports):
@@ -1174,10 +1175,12 @@ class DcnmNetwork:
 
                                         if not torports_present:
                                             torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
-                                            want.update({"torPorts": torconfig})
+                                            torconfig_list.append(torconfig)
                                             # Update torports_configured to True. If there is no other config change for attach
                                             # We will still append this attach to attach_list as there is tor port change
                                             torports_configured = True
+
+                                    want.update({"torPorts": " ".join(torconfig_list)})
 
                                     if have.get("torports"):
                                         del have["torports"]
