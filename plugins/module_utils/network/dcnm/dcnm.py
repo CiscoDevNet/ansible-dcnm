@@ -1566,6 +1566,7 @@ def obtain_fabric_associations(action_module, task_vars, tmp):
         # Handle fabric discovery failures
         return action_module.error_handler.handle_exception(e, "fabric_discovery")
 
+
 def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_payload):
     """
     Deploy VRF configurations to fabric on ND controller.
@@ -1618,7 +1619,6 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
 
     # Get fabric type and build appropriate path
     base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabric}/vrfs"
-
     proxy = ""
 
     # Determine deployment path and payload based on fabric type

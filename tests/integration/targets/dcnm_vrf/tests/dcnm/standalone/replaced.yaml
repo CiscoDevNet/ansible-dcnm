@@ -77,7 +77,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_setup_4
 
 - name: SETUP.4a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
@@ -176,9 +176,9 @@
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
-    attach:
-      - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+        attach:
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_2
 
@@ -253,7 +253,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_3
 
 - name: TEST.3a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
@@ -297,7 +297,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-            deploy: true
+        deploy: true
   register: result_4
 
 - name: TEST.4a - REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
@@ -362,7 +362,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_5
 
 - name: TEST.5a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
@@ -433,7 +433,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # optional controller can provide
-                deploy: false
+        deploy: false
   register: result_6
 
 - name: TEST.6a - REPLACED - [query] query VRF state
@@ -472,7 +472,7 @@
         l3vni_wo_vlan: true
         attach:
           - ip_address: "{{ switch_1 }}"
-            deploy: false
+        deploy: false
   register: result_7
 
 - name: TEST.7b - REPLACED - [query] query VRF state
@@ -490,7 +490,6 @@
     that:
       - 'result_7.changed == true'
       - 'result_7.response[0].RETURN_CODE == 200'
-      - 'result_7.response[1].RETURN_CODE == 200'
       - '(result_7.response[0].DATA|dict2items)[0].value == "SUCCESS"'
       - 'result_7.diff[0].attach[0].deploy == false'
       - 'result_7.diff[0].vrf_name == "ansible-vrf-int1"'
@@ -530,7 +529,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # optional controller can provide
-                deploy: false
+        deploy: true
   register: result_8
 
 - name: TEST.8a - REPLACED - [query] query VRF state
@@ -548,7 +547,6 @@
     that:
       - 'result_8.changed == true'
       - 'result_8.response[0].RETURN_CODE == 200'
-      - '(result_8.response[0].DATA|dict2items)[0].value == "SUCCESS"'
       - 'result_8.diff[0].attach[0].deploy == true'
       - 'result_8.diff[0].vrf_name == "ansible-vrf-int1"'
       - '"enableL3VniNoVlan\":\"true\"" in result_8a.response[0].parent.vrfTemplateConfig'

@@ -117,7 +117,7 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-      - name: REPLACED_ALL - Replace VRF with all values
+- name: REPLACED_ALL - Replace VRF with all values
   cisco.dcnm.dcnm_vrf: &conf1
     fabric: "{{ fabric_1 }}"
     state: replaced
@@ -144,7 +144,7 @@
         bgp_passwd_encrypt: 7
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result
 
@@ -166,7 +166,7 @@
       - 'result.response[1].RETURN_CODE == 200'
       - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-      - name: REPLACED_ALL - conf1 - Idempotence
+- name: REPLACED_ALL - conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
   register: result
 

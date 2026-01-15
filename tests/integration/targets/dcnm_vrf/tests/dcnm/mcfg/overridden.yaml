@@ -85,9 +85,9 @@
         vrf_description: "Initial VRF 2 for override testing"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: true
-        adv_host_routes: false
-        static_default_route: true
+            adv_default_routes: true
+            adv_host_routes: false
+            static_default_route: true
         attach:
           - ip_address: "{{ child_switch_2 }}"
         deploy: true
@@ -99,13 +99,13 @@
         vrf_description: "Initial VRF 3 for override testing"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
         attach:
           - ip_address: "{{ child_switch_1 }}"
         deploy: true
-        register: result_setup_3
+  register: result_setup_3
 
 - name: SETUP.3a - MCFG OVERRIDDEN - [debug] print setup result
   ansible.builtin.debug:
@@ -143,7 +143,7 @@
         attach:
           - ip_address: "{{ child_switch_1 }}"
         deploy: true
-        register: result_1
+  register: result_1
 
 - name: TEST.1a - MCFG OVERRIDDEN - [debug] print result_1
   ansible.builtin.debug:
@@ -210,13 +210,13 @@
         vrf_description: "MCFG override test VRF with Child config"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
         attach:
           - ip_address: "{{ child_switch_1 }}"
         deploy: true
-        register: result_2
+  register: result_2
 
 - name: TEST.2a - MCFG OVERRIDDEN - [debug] print result_2
   ansible.builtin.debug:
@@ -301,13 +301,13 @@
         vrf_description: "Bulk override test VRF 2"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
         attach:
           - ip_address: "{{ child_switch_2 }}"
         deploy: true
-        register: result_3
+  register: result_3
 
 - name: TEST.3a - MCFG OVERRIDDEN - [debug] print result_3
   ansible.builtin.debug:

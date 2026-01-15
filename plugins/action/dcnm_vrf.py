@@ -18,7 +18,6 @@ __metaclass__ = type
 
 # Standard Library Imports
 import copy
-import time
 
 # Ansible Imports
 from ansible_collections.ansible.netcommon.plugins.action.network import (

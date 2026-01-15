@@ -4303,6 +4303,7 @@ class Merged(Common):
             self.log.debug(msg)
             return
 
+        self.fabric_update.controller_version = self.controller_version
         self.fabric_update.fabric_details = self.fabric_details
         self.fabric_update.fabric_summary = self.fabric_summary
         self.fabric_update.rest_send = self.rest_send
@@ -4576,9 +4577,7 @@ def main():
         "choices": ["deleted", "merged", "query", "replaced"],
     }
 
-    ansible_module = AnsibleModule(
-        argument_spec=argument_spec, supports_check_mode=True
-    )
+    ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     params = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
 

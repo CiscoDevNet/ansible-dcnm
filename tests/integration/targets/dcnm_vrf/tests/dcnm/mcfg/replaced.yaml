@@ -77,9 +77,9 @@
         vrf_int_mtu: 9000
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: true
-        adv_host_routes: false
-        static_default_route: true
+            adv_default_routes: true
+            adv_host_routes: false
+            static_default_route: true
         attach:
           - ip_address: "{{ child_switch_1 }}"
         deploy: true
@@ -91,15 +91,15 @@
         vrf_description: "Second VRF for replacement test"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
-        l3vni_wo_vlan: true
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
+            l3vni_wo_vlan: true
         attach:
           - ip_address: "{{ child_switch_1 }}"
           - ip_address: "{{ child_switch_2 }}"
         deploy: true
-        register: result_setup_3
+  register: result_setup_3
 
 - name: SETUP.3a - MCFG REPLACED - [debug] print setup result
   ansible.builtin.debug:
@@ -123,16 +123,16 @@
         vrf_int_mtu: 9216  # Changed from 9000
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false  # Changed from true
-        adv_host_routes: true     # Changed from false
-        static_default_route: false # Changed from true
-        l3vni_wo_vlan: true       # New parameter
-        netflow_enable: false     # New parameter
+            adv_default_routes: false  # Changed from true
+            adv_host_routes: true     # Changed from false
+            static_default_route: false # Changed from true
+            l3vni_wo_vlan: true       # New parameter
+            netflow_enable: false     # New parameter
         attach:
           - ip_address: "{{ child_switch_1 }}"
           - ip_address: "{{ child_switch_2 }}"  # Added new attachment
         deploy: true
-        register: result_1
+  register: result_1
 
 - name: TEST.1a - MCFG REPLACED - [debug] print result_1
   ansible.builtin.debug:
@@ -225,9 +225,9 @@
         vrf_description: "VRF with removed Child config"
         attach:
           - ip_address: "{{ child_switch_1 }}"
-      # Removed child_switch_2 attachment
+          # Removed child_switch_2 attachment
         deploy: true
-        register: result_2
+  register: result_2
 
 - name: TEST.2a - MCFG REPLACED - [debug] print result_2
   ansible.builtin.debug:
@@ -298,14 +298,14 @@
         vrf_description: "VRF with new Child config"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
         attach:
           - ip_address: "{{ child_switch_1 }}"
           - ip_address: "{{ child_switch_2 }}"
         deploy: true
-        register: result_3
+  register: result_3
 
 - name: TEST.3a - MCFG REPLACED - [debug] print result_3
   ansible.builtin.debug:
@@ -394,9 +394,9 @@
         vrf_description: "VRF with VRF-Lite after replacement"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
         attach:
           - ip_address: "{{ child_switch_1 }}"
           - ip_address: "{{ child_switch_2 }}"
@@ -406,8 +406,8 @@
                 neighbor_ipv4: 10.10.1.1
                 peer_vrf: external_replace_vrf
                 dot1q: 200
-                deploy: true
-                register: result_4
+        deploy: true
+  register: result_4
 
 - name: TEST.4a - MCFG REPLACED - [debug] print result_4
   ansible.builtin.debug:
@@ -494,9 +494,9 @@
         vrf_int_mtu: 9000
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
         attach:
           - ip_address: "{{ child_switch_1 }}"
         deploy: true
@@ -508,14 +508,14 @@
         vrf_description: "Multi-replace VRF 2"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
-        l3vni_wo_vlan: false
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
+            l3vni_wo_vlan: false
         attach:
           - ip_address: "{{ child_switch_2 }}"
         deploy: true
-        register: result_5
+  register: result_5
 
 - name: TEST.5a - MCFG REPLACED - [debug] print result_5
   ansible.builtin.debug:
