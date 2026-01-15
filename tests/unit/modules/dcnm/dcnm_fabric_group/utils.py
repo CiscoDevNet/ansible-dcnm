@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Cisco and/or its affiliates.
+# Copyright (c) 2025-2026 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ from contextlib import contextmanager
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.common import FabricGroupCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.create import FabricGroupCreate
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.delete import FabricGroupDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.fabric_groups import FabricGroups
@@ -99,6 +100,14 @@ class MockAnsibleModule:
 
 # See the following for explanation of why fixtures are explicitely named
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
+
+
+@pytest.fixture(name="fabric_group_common")
+def fabric_group_common_fixture():
+    """
+    Return FabricGroupCommon() instance.
+    """
+    return FabricGroupCommon()
 
 
 @pytest.fixture(name="fabric_group_create")
@@ -206,6 +215,16 @@ def responses_fabric_group_delete(key: str) -> dict[str, str]:
     Return responses for FabricGroupDelete endpoint
     """
     data_file = "responses_FabricGroupDelete"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def payloads_fabric_group_common(key: str) -> list[dict[str, str]]:
+    """
+    Return payloads for FabricGroupCommon
+    """
+    data_file = "payloads_FabricGroupCommon"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

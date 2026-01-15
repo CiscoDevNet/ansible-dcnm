@@ -52,6 +52,25 @@ class FabricUpdateCommon(FabricCommon):
         msg = "ENTERED FabricUpdateCommon()"
         self.log.debug(msg)
 
+    def _remove_nd4x_problematic_keys(self, payload):
+        """
+        Remove keys that cause errors on ND 4.x during fabric update.
+
+        -   Remove the following keys if present:
+            - PNP_ENABLE_INTERNAL
+            - DOMAIN_NAME_INTERNAL
+            - dcnmUser
+
+        Args:
+            payload: Dictionary containing fabric parameters
+
+        Returns:
+            None. The payload is modified in place.
+        """
+        problematic_keys = ["PNP_ENABLE_INTERNAL", "DOMAIN_NAME_INTERNAL", "dcnmUser"]
+        for key in problematic_keys:
+            payload.pop(key, None)
+
     def _fabric_needs_update_for_merged_state(self, payload):
         """
         -   Add True to self._fabric_update_required set() if the fabric needs
@@ -165,6 +184,9 @@ class FabricUpdateCommon(FabricCommon):
             full_payload = copy.deepcopy(nv_pairs)
             # Overlay the user's changes
             full_payload.update(self._fabric_changes_payload[fabric_name])
+
+            # Remove keys that cause errors on ND 4.x during fabric update
+            self._remove_nd4x_problematic_keys(full_payload)
             self._fabric_changes_payload[fabric_name] = full_payload
 
         msg = f"{self.class_name}.{method_name}: "
