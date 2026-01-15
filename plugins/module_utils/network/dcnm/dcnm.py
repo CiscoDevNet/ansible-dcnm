@@ -1279,6 +1279,7 @@ def sanitize_lan_attach_list(attach_objects: list) -> list:
 
 # Action plugin utilities
 
+
 def get_nd_version(action_module, task_vars, tmp):
     """
     Query NDFC and return the exact software version
