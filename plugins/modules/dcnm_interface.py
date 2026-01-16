@@ -4951,6 +4951,21 @@ class DcnmIntf:
                                 }
                             )
                             continue
+                        # Port-channel which are created as part of TOR uplink should not be deleted
+                        if (
+                            have["alias"] is not None
+                            and "tor-connected-to" in have["alias"]
+                        ):
+                            self.changed_dict[0]["skipped"].append(
+                                {
+                                    "Name": name,
+                                    "Alias": have["alias"],
+                                    "Underlay Policies": have[
+                                        "underlayPolicies"
+                                    ],
+                                }
+                            )
+                            continue
                         else:
                             self.changed_dict[0]["debugs"].append(
                                 {
@@ -4961,6 +4976,23 @@ class DcnmIntf:
                                     ],
                                 }
                             )
+
+                    # vPC interfaces which are created as part of TOR uplink should not be deleted
+                    if have["ifType"] == "INTERFACE_VPC":
+                        if (
+                            have["alias"] is not None
+                            and "tor-connected-to" in have["alias"]
+                        ):
+                            self.changed_dict[0]["skipped"].append(
+                                {
+                                    "Name": name,
+                                    "Alias": have["alias"],
+                                    "Underlay Policies": have[
+                                        "underlayPolicies"
+                                    ],
+                                }
+                            )
+                            continue
 
                     # Interfaces sometimes take time to get deleted from DCNM. Such interfaces will have
                     # underlayPolicies set to "None". Such interfaces need not be deleted again
