@@ -4397,7 +4397,8 @@ class DcnmNetwork:
             # DHCP servers configuration
             if cfg.get("dhcp_servers", None) is None:
                 want_dhcp_servers = json.loads(json_to_dict_have["dhcpServers"] or "{}").get("dhcpServers", [])
-                want_dhcp_servers += [None] * (16 - len(want_dhcp_servers))
+                if len(want_dhcp_servers) < 3:
+                    want_dhcp_servers += [None] * (3 - len(want_dhcp_servers))
                 if json_to_dict_have["dhcpServerAddr1"] != "":
                     want_dhcp_servers[0] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr1"], srvrVrf=json_to_dict_have["vrfDhcp"])
                 if cfg.get("dhcp_srvr1_ip", None) is not None:
