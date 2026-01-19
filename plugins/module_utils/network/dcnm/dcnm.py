@@ -1191,6 +1191,8 @@ def has_partial_dhcp_config(server):
     ip = server.get("srvr_ip")
     vrf = server.get("srvr_vrf")
     return vrf is not None and ip is None
+
+
 def sanitize_lan_attach_list(attach_objects: list) -> list:
     """
     # Summary
