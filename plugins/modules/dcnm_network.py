@@ -4397,23 +4397,28 @@ class DcnmNetwork:
             # DHCP servers configuration
             if cfg.get("dhcp_servers", None) is None:
                 want_dhcp_servers = json.loads(json_to_dict_have["dhcpServers"] or "{}").get("dhcpServers", [])
-                want_dhcp_servers += [None] * (16 - len(want_dhcp_servers))
+                if len(want_dhcp_servers) < 3:
+                    want_dhcp_servers += [None] * (3 - len(want_dhcp_servers))
+                # For backward compatibility, if individual DHCP server fields are set in have,
+                # use those values to populate want_dhcp_servers
                 if json_to_dict_have["dhcpServerAddr1"] != "":
                     want_dhcp_servers[0] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr1"], srvrVrf=json_to_dict_have["vrfDhcp"])
+                # If individual DHCP server IP field is set in cfg, override corresponding entries in want_dhcp_servers
                 if cfg.get("dhcp_srvr1_ip", None) is not None:
-                    want_dhcp_servers[0] = dict(srvrAddr=cfg.get("dhcp_srvr1_ip"), srvrVrf=json_to_dict_have["vrfDhcp"])
+                    want_dhcp_servers[0].update({"srvrAddr": cfg.get("dhcp_srvr1_ip")})
+                    # If individual DHCP server VRF field is set in cfg, override corresponding entries in want_dhcp_servers
                     if cfg.get("dhcp_srvr1_vrf", None) is not None:
                         want_dhcp_servers[0].update({"srvrVrf": cfg.get("dhcp_srvr1_vrf")})
                 if json_to_dict_have["dhcpServerAddr2"] != "":
                     want_dhcp_servers[1] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr2"], srvrVrf=json_to_dict_have["vrfDhcp2"])
                 if cfg.get("dhcp_srvr2_ip", None) is not None:
-                    want_dhcp_servers[1] = dict(srvrAddr=cfg.get("dhcp_srvr2_ip"), srvrVrf=json_to_dict_have["vrfDhcp2"])
+                    want_dhcp_servers[1].update({"srvrAddr": cfg.get("dhcp_srvr2_ip")})
                     if cfg.get("dhcp_srvr2_vrf", None) is not None:
                         want_dhcp_servers[1].update({"srvrVrf": cfg.get("dhcp_srvr2_vrf")})
                 if json_to_dict_have["dhcpServerAddr3"] != "":
                     want_dhcp_servers[2] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr3"], srvrVrf=json_to_dict_have["vrfDhcp3"])
                 if cfg.get("dhcp_srvr3_ip", None) is not None:
-                    want_dhcp_servers[2] = dict(srvrAddr=cfg.get("dhcp_srvr3_ip"), srvrVrf=json_to_dict_have["vrfDhcp3"])
+                    want_dhcp_servers[2].update({"srvrAddr": cfg.get("dhcp_srvr3_ip")})
                     if cfg.get("dhcp_srvr3_vrf", None) is not None:
                         want_dhcp_servers[2].update({"srvrVrf": cfg.get("dhcp_srvr3_vrf")})
                 want_dhcp_servers = [srvr for srvr in want_dhcp_servers[:] if srvr is not None]
