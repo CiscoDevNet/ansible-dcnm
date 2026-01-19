@@ -4421,7 +4421,7 @@ class DcnmNetwork:
                     want_dhcp_servers[2].update({"srvrAddr": cfg.get("dhcp_srvr3_ip")})
                     if cfg.get("dhcp_srvr3_vrf", None) is not None:
                         want_dhcp_servers[2].update({"srvrVrf": cfg.get("dhcp_srvr3_vrf")})
-                want_dhcp_servers = [srvr for srvr in want_dhcp_servers[:] if srvr is not None]
+                want_dhcp_servers = [srvr for srvr in want_dhcp_servers if srvr is not None]
                 if want_dhcp_servers == []:
                     json_to_dict_want["dhcpServers"] = ""
                 else:
