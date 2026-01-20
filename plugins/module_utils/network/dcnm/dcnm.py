@@ -1192,6 +1192,7 @@ def has_partial_dhcp_config(server):
     vrf = server.get("srvr_vrf")
     return bool(ip) != bool(vrf)
 
+
 def sanitize_lan_attach_list(attach_objects: list) -> list:
     """
     # Summary
@@ -1275,6 +1276,7 @@ def sanitize_lan_attach_list(attach_objects: list) -> list:
     return attach_objects
 
 # Action plugin utilities
+
 
 def get_nd_version(action_module, task_vars, tmp):
     """
@@ -1563,6 +1565,7 @@ def obtain_fabric_associations(action_module, task_vars, tmp):
         # Handle fabric discovery failures
         return action_module.error_handler.handle_exception(e, "fabric_discovery")
 
+
 def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_payload):
     """
     Deploy VRF configurations to fabric on ND controller.
@@ -1615,17 +1618,16 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
 
     # Get fabric type and build appropriate path
     base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabric}/vrfs"
-    
     proxy = ""
-    
+
     # Determine deployment path and payload based on fabric type
     if fabric_type == "multicluster_parent":
         # Multicluster parent uses different endpoint and payload format
         if action_module.ndfc_version >= 12.4:
             proxy = "/onemanage"
-        
+
         deploy_path = proxy + base_path.replace(
-            f"lan-fabric/rest/control/fabrics/{fabric}/vrfs", 
+            f"lan-fabric/rest/control/fabrics/{fabric}/vrfs",
             "onemanage/top-down/vrfs/deploy"
         )
     else:
@@ -1656,12 +1658,12 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
             f"Successfully deployed VRF(s) to fabric: {fabric}",
             operation="vrf_deployment"
         )
-        
+
         return response_data
 
     except Exception as e:
         # Handle deployment failures
         return action_module.error_handler.handle_exception(
-            e, 
+            e,
             f"VRF deployment for fabric: {fabric}"
         )

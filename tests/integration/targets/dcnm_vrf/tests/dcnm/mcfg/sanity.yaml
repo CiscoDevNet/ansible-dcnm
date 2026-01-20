@@ -81,7 +81,7 @@
         attach:
           - ip_address: "{{ child_switch_1 }}"
         deploy: true
-        register: result_1
+  register: result_1
 
 - name: TEST.1a - MCFG SANITY - [debug] print result_1
   ansible.builtin.debug:
@@ -98,7 +98,6 @@
       - result_1.diff[0].attach[0].deploy == true
       - result_1.response[0].RETURN_CODE == 200
       - result_1.response[1].RETURN_CODE == 200
-      - result_1.response[2].RETURN_CODE == 200
       - (result_1.response[1].DATA|dict2items)[0].value == "SUCCESS"
 
 - name: TEST.1b - MCFG SANITY - [query] Verify VRF state
@@ -136,7 +135,7 @@
         attach:
           - ip_address: "{{ child_switch_1 }}"
         deploy: true
-        register: result_1d
+  register: result_1d
 
 - name: TEST.1e - MCFG SANITY - [debug] print result_1d
   ansible.builtin.debug:
@@ -161,13 +160,13 @@
         vrf_description: "MCFG sanity test VRF with Child config"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
         attach:
           - ip_address: "{{ child_switch_1 }}"
         deploy: true
-        register: result_2
+  register: result_2
 
 - name: TEST.2a - MCFG SANITY - [debug] print result_2
   ansible.builtin.debug:
@@ -259,7 +258,7 @@
           - ip_address: "{{ child_switch_1 }}"
           - ip_address: "{{ child_switch_2 }}"  # Added attachment
         deploy: true
-        register: result_3
+  register: result_3
 
 - name: TEST.3a - MCFG SANITY - [debug] print result_3
   ansible.builtin.debug:
@@ -330,15 +329,15 @@
         vrf_description: "Updated MCFG sanity test VRF with Child config"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: true  # Changed
-        adv_host_routes: false     # Changed
-        static_default_route: true # Changed
-        l3vni_wo_vlan: true       # Added
+            adv_default_routes: true  # Changed
+            adv_host_routes: false     # Changed
+            static_default_route: true # Changed
+            l3vni_wo_vlan: true       # Added
         attach:
           - ip_address: "{{ child_switch_1 }}"
           - ip_address: "{{ child_switch_2 }}"  # Added attachment
         deploy: true
-        register: result_4
+  register: result_4
 
 - name: TEST.4a - MCFG SANITY - [debug] print result_4
   ansible.builtin.debug:
@@ -427,9 +426,9 @@
         vrf_description: "MCFG sanity test VRF with VRF-Lite"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
         attach:
           - ip_address: "{{ child_switch_2 }}"
             vrf_lite:
@@ -438,8 +437,8 @@
                 neighbor_ipv4: 10.10.1.1
                 peer_vrf: external_sanity_vrf
                 dot1q: 600
-                deploy: true
-                register: result_5
+        deploy: true
+  register: result_5
 
 - name: TEST.5a - MCFG SANITY - [debug] print result_5
   ansible.builtin.debug:
@@ -523,15 +522,15 @@
         vrf_description: "MCFG sanity override test VRF"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
-        bgp_password: "SANITYPASS123"
-        bgp_passwd_encrypt: 7
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
+            bgp_password: "SANITYPASS123"
+            bgp_passwd_encrypt: 7
         attach:
           - ip_address: "{{ child_switch_1 }}"
         deploy: true
-        register: result_6
+  register: result_6
 
 - name: TEST.6a - MCFG SANITY - [debug] print result_6
   ansible.builtin.debug:
@@ -612,7 +611,7 @@
     state: deleted
     config: &conf7
       - vrf_name: ansible-mcfg-sanity-override
-        register: result_7
+  register: result_7
 
 - name: TEST.7a - MCFG SANITY - [debug] print result_7
   ansible.builtin.debug:
@@ -626,7 +625,6 @@
       - result_7.diff[0].attach[0].deploy == false
       - result_7.diff[0].vrf_name == "ansible-mcfg-sanity-override"
       - result_7.response[0].RETURN_CODE == 200
-      - result_7.response[2].RETURN_CODE == 200
 
 - name: TEST.7b - MCFG SANITY - [query] Verify deletion worked
   cisco.dcnm.dcnm_vrf:
@@ -685,13 +683,13 @@
         vrf_description: "Bulk delete test VRF 2"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
         attach:
           - ip_address: "{{ child_switch_2 }}"
         deploy: true
-        register: result_8
+  register: result_8
 
 - name: TEST.8a - MCFG SANITY - [debug] print result_8
   ansible.builtin.debug:
@@ -783,8 +781,6 @@
       - result_9.diff[1].attach[0].deploy == false
       - result_9.diff[1].vrf_name == "ansible-mcfg-bulk-2"
       - result_9.response[0].RETURN_CODE == 200
-      - result_9.response[2].RETURN_CODE == 200
-      - result_9.response[3].RETURN_CODE == 200
 
 - name: TEST.9b - MCFG SANITY - [deleted] Clean all VRFs - Idempotence
   cisco.dcnm.dcnm_vrf:

@@ -1494,12 +1494,89 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>INTERNAL PARAMETER - DO NOT USE</div>
-                        <div>Fabric details are constructured by the module&#x27;s action plugin</div>
-                        <div>This parameter is used internally by the module for multisite fabric processing</div>
-                        <div>It will consist of the ND controller version, fabric type, members (if applicable) and cluster name (if applicable)</div>
+                        <div>INTERNAL USE ONLY - Populated automatically by the action plugin</div>
+                        <div>Contains fabric metadata required for multisite and multicluster operations</div>
+                        <div>This parameter is constructed by the module&#x27;s action plugin and should not be set manually in playbooks</div>
+                        <div>Includes controller version, fabric type (standalone, multisite_parent, multisite_child, multicluster_parent, multicluster_child), member fabrics, and cluster information</div>
                 </td>
             </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>cluster_name</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the cluster for multicluster deployments</div>
+                        <div>Only applicable for multicluster fabric types</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>fabric_type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>standalone</li>
+                                    <li>multisite_parent</li>
+                                    <li>multisite_child</li>
+                                    <li>multicluster_parent</li>
+                                    <li>multicluster_child</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Type of fabric deployment</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>members</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>List of member fabrics for multisite_parent or multicluster_parent deployments</div>
+                        <div>Contains fabric details for each child fabric</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>nd_version</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">float</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Version of the ND controller</div>
+                        <div>Used to determine API endpoints and feature availability</div>
+                </td>
+            </tr>
+
             <tr>
                 <td colspan="5">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
