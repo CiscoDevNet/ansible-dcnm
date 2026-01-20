@@ -1403,15 +1403,6 @@ class DcnmVrf:
                                         ]
                                     }
                                 )
-                            # Also copy switchRouteTarget fields if present in have
-                            if "switchRouteTargetImportEvpn" in have_inst_values:
-                                want_inst_values.update(
-                                    {"switchRouteTargetImportEvpn": have_inst_values["switchRouteTargetImportEvpn"]}
-                                )
-                            if "switchRouteTargetExportEvpn" in have_inst_values:
-                                want_inst_values.update(
-                                    {"switchRouteTargetExportEvpn": have_inst_values["switchRouteTargetExportEvpn"]}
-                                )
 
                             want.update(
                                 {"instanceValues": json.dumps(want_inst_values)}
@@ -1452,8 +1443,8 @@ class DcnmVrf:
                                     interface_match = True
 
                                     # Copy VRF Lite properties from have to want to ensure proper idempotence comparison
-                                    # Similar to instanceValues copying, we need to populate want with actual deployed values
                                     # This prevents false positives when user specifies minimal config (only interface name)
+                                    # Captured in merged Idempotence test case
                                     for prop in self.vrf_lite_properties:
                                         # Skip IF_NAME as it's already matched
                                         if prop != "IF_NAME" and prop in hlite:
@@ -2360,8 +2351,6 @@ class DcnmVrf:
                 self.log.debug(msg)
 
                 for sdl in lite_objects["DATA"]:
-                    if "switchDetailsList" not in sdl:
-                        continue
                     for epv in sdl["switchDetailsList"]:
                         if not epv.get("extensionValues"):
                             attach.update({"freeformConfig": ""})
@@ -3444,46 +3433,45 @@ class DcnmVrf:
 
                                     # Only call get_vrf_lite_objects() if VRF-Lite is configured
                                     # in the playbook to avoid expensive API calls
+                                    use_minimal_attach = True
                                     if self._has_vrf_lite_in_config(want_c["vrfName"]):
                                         lite_objects = self.get_vrf_lite_objects(
                                             attach_copy
                                         )
-                                        if not lite_objects.get("DATA"):
-                                            # No VRF Lite extensions found - create minimal attach
-                                            minimal_attach = {
-                                                "fabric": self.fabric,
-                                                "vrfName": want_c["vrfName"],
-                                                "serialNumber": attach["switchSerialNo"],
-                                                "switchDetailsList": []
-                                            }
-                                            item["attach"].append(minimal_attach)
+                                        # Check if DATA exists and is not empty
+                                        has_lite_data = (
+                                            lite_objects.get("DATA") is not None
+                                            and len(lite_objects.get("DATA", [])) > 0
+                                        )
+                                        if has_lite_data:
+                                            # VRF Lite extensions exist - use API response but ensure vlan field is correct
+                                            use_minimal_attach = False
+                                            lite_attach = lite_objects.get("DATA")[0]
+                                            # The vlan field should be the VRF's L3VNI vlan, not the dot1q
+                                            vlan_id = attach.get("vlanId")
+                                            vlan_str = str(vlan_id) if vlan_id is not None else ""
+                                            msg = f"Fixing vlan field in VRF lite attach for switch {attach['switchSerialNo']}: "
+                                            msg += f"vlanId={vlan_id}, setting vlan={vlan_str}"
+                                            self.log.debug(msg)
+                                            # Update vlan in all switchDetailsList entries
+                                            if lite_attach.get("switchDetailsList"):
+                                                for switch_detail in lite_attach["switchDetailsList"]:
+                                                    switch_detail["vlan"] = vlan_str
+                                            item["attach"].append(lite_attach)
                                         else:
-                                            item["attach"].append(lite_objects.get("DATA")[0])
-                                    else:
-                                        # No VRF-Lite in config, append attach without calling get_vrf_lite_objects()
-                                        # Create attach structure using data from GET_VRF_ATTACH query
-                                        # Build switchDetailsList from attach data
-                                        switch_detail = {
-                                            "serialNumber": attach["switchSerialNo"],
-                                            "switchName": attach.get("switchName", ""),
-                                            "role": attach.get("switchRole", ""),
-                                            "vlan": str(attach.get("vlanId", "")),
-                                            "lanAttachedState": attach.get("lanAttachState", ""),
-                                            "islanAttached": attach.get("isLanAttached", False),
-                                            "extensionValues": "",
-                                            "extensionPrototypeValues": [],
-                                            "freeformConfig": "",
-                                            "instanceValues": "",
-                                            "vlanModifiable": True,
-                                            "peerSerialNumber": None,
-                                            "errorMessage": None
-                                        }
+                                            # No VRF Lite extensions found - will use minimal attach
+                                            msg = f"No VRF Lite extensions found for switch {attach['switchSerialNo']}"
+                                            self.log.debug(msg)
 
+                                    # Use minimal attach structure when:
+                                    # 1. VRF-Lite is not configured in playbook, OR
+                                    # 2. VRF-Lite is configured but no extensions exist on controller
+                                    if use_minimal_attach:
                                         minimal_attach = {
                                             "fabric": self.fabric,
                                             "vrfName": want_c["vrfName"],
                                             "serialNumber": attach["switchSerialNo"],
-                                            "switchDetailsList": [switch_detail]
+                                            "switchDetailsList": [attach]
                                         }
                                         item["attach"].append(minimal_attach)
                                 query.append(item)
@@ -3540,8 +3528,13 @@ class DcnmVrf:
                         # on the controller.
                         lite_objects = self.get_vrf_lite_objects(attach_copy)
 
-                        if not lite_objects.get("DATA"):
-                            # No VRF Lite extensions exist - create minimal attach structure
+                        # Check if DATA exists and is not empty
+                        has_lite_data = (
+                            lite_objects.get("DATA") is not None
+                            and len(lite_objects.get("DATA", [])) > 0
+                        )
+                        if not has_lite_data:
+                            # No VRF Lite extensions exist - use minimal attach structure
                             minimal_attach = {
                                 "fabric": self.fabric,
                                 "vrfName": vrf["vrfName"],
@@ -3550,7 +3543,19 @@ class DcnmVrf:
                             }
                             item["attach"].append(minimal_attach)
                         else:
-                            item["attach"].append(lite_objects.get("DATA")[0])
+                            # VRF Lite extensions exist - use API response but ensure vlan field is correct
+                            lite_attach = lite_objects.get("DATA")[0]
+                            # The vlan field should be the VRF's L3VNI vlan, not the dot1q
+                            vlan_id = attach.get("vlanId")
+                            vlan_str = str(vlan_id) if vlan_id is not None else ""
+                            msg = f"Fixing vlan field in VRF lite attach for switch {attach['switchSerialNo']}: "
+                            msg += f"vlanId={vlan_id}, setting vlan={vlan_str}"
+                            self.log.debug(msg)
+                            # Update vlan in all switchDetailsList entries
+                            if lite_attach.get("switchDetailsList"):
+                                for switch_detail in lite_attach["switchDetailsList"]:
+                                    switch_detail["vlan"] = vlan_str
+                            item["attach"].append(lite_attach)
                     query.append(item)
 
         self.query = query
@@ -3950,7 +3955,8 @@ class DcnmVrf:
         self.log.debug(msg)
 
         dot1q_id = None
-        path = self.resource_paths["RESERVE_ID"]
+        # Reserve ID present in DCNM API paths
+        path = self.paths["RESERVE_ID"]
         verb = "POST"
         payload = {"scopeType": "DeviceInterface",
                    "usageType": "TOP_DOWN_L3_DOT1Q",
@@ -4034,7 +4040,8 @@ class DcnmVrf:
         self.log.debug(msg)
 
         ext_values = self.get_extension_values_from_lite_objects(lite)
-        if ext_values is None:
+        # ext_values now accepts None, empty list, empty string, empty dict etc
+        if not ext_values:
             ip_address = self.serial_number_to_ip(serial_number)
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
