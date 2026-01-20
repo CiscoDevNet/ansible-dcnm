@@ -32,25 +32,25 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
-    FabricSummary
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import FabricDetailsByName
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import FabricSummary
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, fabric_update_bulk_fixture,
-    payloads_fabric_update_bulk, responses_config_deploy,
-    responses_config_save, responses_fabric_details_by_name_v2,
-    responses_fabric_summary, responses_fabric_update_bulk)
+    MockAnsibleModule,
+    MockControllerVersion,
+    does_not_raise,
+    fabric_update_bulk_fixture,
+    payloads_fabric_update_bulk,
+    responses_config_deploy,
+    responses_config_save,
+    responses_fabric_details_by_name_v2,
+    responses_fabric_summary,
+    responses_fabric_update_bulk,
+)
 
 PARAMS = {"state": "merged", "check_mode": False}
 
@@ -194,6 +194,7 @@ def test_fabric_update_bulk_00023(fabric_update_bulk) -> None:
 
     with does_not_raise():
         instance = fabric_update_bulk
+        instance.controller_version = MockControllerVersion()
         instance.fabric_details = FabricDetailsByName()
         instance.fabric_summary = FabricSummary()
         instance.results = Results()
@@ -340,6 +341,7 @@ def test_fabric_update_bulk_00030(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
 
+        instance.controller_version = MockControllerVersion()
         instance.fabric_details = FabricDetailsByName()
         instance.fabric_details.rest_send = rest_send
         instance.fabric_details.results = Results()
@@ -370,10 +372,7 @@ def test_fabric_update_bulk_00030(fabric_update_bulk) -> None:
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert (
-        instance.results.response[0].get("MESSAGE", None)
-        == "No fabrics to update for merged state."
-    )
+    assert instance.results.response[0].get("MESSAGE", None) == "No fabrics to update for merged state."
 
     assert instance.results.result[0].get("changed", None) is False
     assert instance.results.result[0].get("success", None) is True
@@ -486,6 +485,7 @@ def test_fabric_update_bulk_00031(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
 
+        instance.controller_version = MockControllerVersion()
         instance.fabric_details = FabricDetailsByName()
         instance.fabric_details.rest_send = rest_send
         instance.fabric_details.results = Results()
@@ -545,13 +545,7 @@ def test_fabric_update_bulk_00031(fabric_update_bulk) -> None:
     assert instance.results.response[0].get("METHOD", None) == "PUT"
     assert instance.results.response[1].get("METHOD", None) == "POST"
 
-    assert (
-        instance.results.response[0]
-        .get("DATA", {})
-        .get("nvPairs", {})
-        .get("BGP_AS", None)
-        == "65001"
-    )
+    assert instance.results.response[0].get("DATA", {}).get("nvPairs", {}).get("BGP_AS", None) == "65001"
 
     msg = "Config save is completed"
     assert instance.results.response[1].get("DATA", {}).get("status") == msg
@@ -641,6 +635,7 @@ def test_fabric_update_bulk_00032(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
 
+        instance.controller_version = MockControllerVersion()
         instance.fabric_details = FabricDetailsByName()
         instance.fabric_details.rest_send = rest_send
         instance.fabric_details.results = Results()
@@ -762,6 +757,7 @@ def test_fabric_update_bulk_00033(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
 
+        instance.controller_version = MockControllerVersion()
         instance.fabric_details = FabricDetailsByName()
         instance.fabric_details.rest_send = rest_send
         instance.fabric_details.results = Results()
@@ -877,6 +873,7 @@ def test_fabric_update_bulk_00034(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
 
+        instance.controller_version = MockControllerVersion()
         instance.fabric_details = FabricDetailsByName()
         instance.fabric_details.rest_send = rest_send
         instance.fabric_details.results = Results()
@@ -907,10 +904,7 @@ def test_fabric_update_bulk_00034(fabric_update_bulk) -> None:
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert (
-        instance.results.response[0].get("MESSAGE", None)
-        == "No fabrics to update for merged state."
-    )
+    assert instance.results.response[0].get("MESSAGE", None) == "No fabrics to update for merged state."
     assert instance.results.response[0].get("sequence_number", None) == 1
 
     assert instance.results.result[0].get("changed", None) is False
@@ -1035,6 +1029,7 @@ def test_fabric_update_bulk_00035(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
 
+        instance.controller_version = MockControllerVersion()
         instance.fabric_details = FabricDetailsByName()
         instance.fabric_details.rest_send = rest_send
         instance.fabric_details.results = Results()
@@ -1097,31 +1092,13 @@ def test_fabric_update_bulk_00035(fabric_update_bulk) -> None:
     assert instance.results.response[1].get("RETURN_CODE", None) == 200
     assert instance.results.response[2].get("RETURN_CODE", None) == 200
 
-    assert (
-        instance.results.response[0]
-        .get("DATA", {})
-        .get("nvPairs", {})
-        .get("VPC_DELAY_RESTORE_TIME", None)
-        == "300"
-    )
+    assert instance.results.response[0].get("DATA", {}).get("nvPairs", {}).get("VPC_DELAY_RESTORE_TIME", None) == "300"
 
-    assert (
-        instance.results.response[0]
-        .get("DATA", {})
-        .get("nvPairs", {})
-        .get("ANYCAST_GW_MAC", None)
-        == "0001.aabb.ccdd"
-    )
+    assert instance.results.response[0].get("DATA", {}).get("nvPairs", {}).get("ANYCAST_GW_MAC", None) == "0001.aabb.ccdd"
 
-    assert (
-        instance.results.response[1].get("DATA", {}).get("status", None)
-        == "Config save is completed"
-    )
+    assert instance.results.response[1].get("DATA", {}).get("status", None) == "Config save is completed"
 
-    assert (
-        instance.results.response[2].get("DATA", {}).get("status", None)
-        == "Configuration deployment completed."
-    )
+    assert instance.results.response[2].get("DATA", {}).get("status", None) == "Configuration deployment completed."
 
     assert instance.results.result[0].get("changed", None) is True
     assert instance.results.result[1].get("changed", None) is True
@@ -1210,6 +1187,7 @@ def test_fabric_update_bulk_00036(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
 
+        instance.controller_version = MockControllerVersion()
         instance.fabric_details = FabricDetailsByName()
         instance.fabric_details.rest_send = rest_send
         instance.fabric_details.results = Results()
@@ -1359,6 +1337,7 @@ def test_fabric_update_bulk_00040(fabric_update_bulk) -> None:
     with does_not_raise():
         instance = fabric_update_bulk
 
+        instance.controller_version = MockControllerVersion()
         instance.fabric_details = FabricDetailsByName()
         instance.fabric_details.rest_send = rest_send
         instance.fabric_details.results = Results()
@@ -1418,18 +1397,9 @@ def test_fabric_update_bulk_00040(fabric_update_bulk) -> None:
     assert instance.results.response[1].get("RETURN_CODE", None) == 200
     assert instance.results.response[2].get("RETURN_CODE", None) == 200
 
-    assert (
-        instance.results.response[0]
-        .get("DATA", {})
-        .get("nvPairs", {})
-        .get("ANYCAST_GW_MAC", None)
-        == "0001.aabb.ccdd"
-    )
+    assert instance.results.response[0].get("DATA", {}).get("nvPairs", {}).get("ANYCAST_GW_MAC", None) == "0001.aabb.ccdd"
 
-    assert (
-        instance.results.response[1].get("DATA", {}).get("status", None)
-        == "Config save is completed"
-    )
+    assert instance.results.response[1].get("DATA", {}).get("status", None) == "Config save is completed"
 
     msg = "FabricConfigDeploy._can_fabric_be_deployed: "
     msg += "Error during FabricSummary().refresh(). "
@@ -1584,6 +1554,53 @@ def test_fabric_update_bulk_00070(fabric_update_bulk) -> None:
         fabric_update_bulk.commit()
 
 
+def test_fabric_update_bulk_00080(fabric_update_bulk) -> None:
+    """
+    ### Classes and Methods
+
+    - FabricCommon()
+        - __init__()
+    - FabricUpdateBulk()
+        - __init__()
+        - commit()
+
+    ### Summary
+
+    -   Verify commit() raises ``ValueError`` if ``controller_version`` is not set.
+
+    ### Setup
+
+    -   Set everything that FabricUpdateBulk() expects to be set, prior to
+        calling commit(), EXCEPT controller_version.
+    """
+    with does_not_raise():
+        instance = fabric_update_bulk
+
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.rest_send = RestSend(PARAMS)
+        instance.fabric_details.rest_send.unit_test = True
+
+        instance.fabric_summary = FabricSummary()
+        instance.fabric_summary.rest_send = RestSend(PARAMS)
+        instance.fabric_summary.rest_send.unit_test = True
+
+        instance.rest_send = RestSend(PARAMS)
+        instance.results = Results()
+        instance.payloads = [
+            {
+                "BGP_AS": "65001",
+                "DEPLOY": "true",
+                "FABRIC_NAME": "f1",
+                "FABRIC_TYPE": "VXLAN_EVPN",
+            }
+        ]
+
+    match = r"FabricUpdateBulk\.commit:\s+"
+    match += r"controller_version must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        fabric_update_bulk.commit()
+
+
 @pytest.mark.parametrize(
     "value, expected_return_value",
     [
@@ -1597,9 +1614,7 @@ def test_fabric_update_bulk_00070(fabric_update_bulk) -> None:
         (None, None),
     ],
 )
-def test_fabric_update_bulk_00100(
-    value, expected_return_value, fabric_update_bulk
-) -> None:
+def test_fabric_update_bulk_00100(value, expected_return_value, fabric_update_bulk) -> None:
     """
     ### Classes and Methods
 
@@ -1686,9 +1701,7 @@ def test_fabric_update_bulk_00110(monkeypatch, fabric_update_bulk) -> None:
             }
         ]
 
-    monkeypatch.setattr(
-        instance, "_fixup_payloads_to_commit", mock_fixup_payloads_to_commit
-    )
+    monkeypatch.setattr(instance, "_fixup_payloads_to_commit", mock_fixup_payloads_to_commit)
 
     match = r"raised FabricUpdateCommon\._fixup_payloads_to_commit exception\."
     with pytest.raises(ValueError, match=match):
@@ -1953,9 +1966,7 @@ def test_fabric_update_bulk_00150(monkeypatch, fabric_update_bulk) -> None:
             """
             Mocked property setter
             """
-            raise ValueError(
-                "mocked MockEpFabricUpdate().fabric_name setter exception."
-            )
+            raise ValueError("mocked MockEpFabricUpdate().fabric_name setter exception.")
 
     with does_not_raise():
         instance = fabric_update_bulk

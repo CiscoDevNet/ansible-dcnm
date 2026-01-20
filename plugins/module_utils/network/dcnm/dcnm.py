@@ -1275,8 +1275,9 @@ def sanitize_lan_attach_list(attach_objects: list) -> list:
 
     return attach_objects
 
-
 # Action plugin utilities
+
+
 def get_nd_version(action_module, task_vars, tmp):
     """
     Query NDFC and return the exact software version
@@ -1563,3 +1564,106 @@ def obtain_fabric_associations(action_module, task_vars, tmp):
     except Exception as e:
         # Handle fabric discovery failures
         return action_module.error_handler.handle_exception(e, "fabric_discovery")
+
+
+def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_payload):
+    """
+    Deploy VRF configurations to fabric on ND controller.
+
+    This method sends VRF deployment requests to the ND controller,
+    which triggers configuration push to switches. The deployment
+    process varies based on fabric type (standard, multicluster parent/child).
+
+    API Endpoints:
+    - Standard/MSD: POST /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabric}/vrfs/deployments
+    - Multicluster Parent: POST /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/vrfs/deploy
+
+    Request Payload:
+    - Standard/MSD: List of VRF names to deploy
+    - Multicluster Parent: Transformed payload with serial numbers
+
+    Response Processing:
+    - Validates API response structure and success
+    - Extracts deployment status and task IDs
+    - Handles multicluster parent/child fabric routing
+    - Handles deployment failures and API errors
+
+    Args:
+        action_module: Action plugin module instance
+        task_vars (dict): Ansible task variables for module execution
+        tmp (str): Temporary directory path for module operations
+        fabric (str): Fabric name to deploy to
+        fabric_details (dict): Fabric metadata including fabric_type and cluster_name
+        diff_deploy (list): List of VRFs or deployment payload to deploy
+
+    Returns:
+        dict: Deployment response from NDFC:
+            {
+                "RETURN_CODE": 200,
+                "MESSAGE": "OK",
+                "DATA": {
+                    "status": "Success",
+                    "taskId": "12345"
+                }
+            }
+
+    Raises:
+        ActionError: On API failure or invalid response structure
+    """
+    # Log deployment initiation
+    action_module.logger.debug(
+        f"Deploying VRF configurations to fabric: {fabric}",
+        operation="vrf_deployment"
+    )
+
+    # Get fabric type and build appropriate path
+    base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabric}/vrfs"
+    proxy = ""
+
+    # Determine deployment path and payload based on fabric type
+    if fabric_type == "multicluster_parent":
+        # Multicluster parent uses different endpoint and payload format
+        if action_module.ndfc_version >= 12.4:
+            proxy = "/onemanage"
+
+        deploy_path = proxy + base_path.replace(
+            f"lan-fabric/rest/control/fabrics/{fabric}/vrfs",
+            "onemanage/top-down/vrfs/deploy"
+        )
+    else:
+        # Standard fabric or MSD fabric deployment
+        deploy_path = base_path + "/deployments"
+
+    try:
+        # Execute NDFC REST API call to deploy VRF configurations
+        deployment_response = action_module._execute_module(
+            module_name="cisco.dcnm.dcnm_rest",
+            module_args={
+                "method": "POST",
+                "path": deploy_path,
+                "data": json.dumps(deploy_payload)
+            },
+            task_vars=task_vars,
+            tmp=tmp
+        )
+
+        # Validate API response structure and extract data
+        response_data = action_module.error_handler.validate_api_response(
+            deployment_response,
+            f"VRF deployment for fabric: {fabric}"
+        )
+
+        # Log successful deployment
+        action_module.logger.info(
+            f"Successfully deployed VRF(s) to fabric: {fabric}",
+            operation="vrf_deployment"
+        )
+
+        return response_data
+
+    except Exception as e:
+        # Handle deployment failures
+        return action_module.error_handler.handle_exception(
+            e,
+            f"VRF deployment for fabric: {fabric}"
+        )

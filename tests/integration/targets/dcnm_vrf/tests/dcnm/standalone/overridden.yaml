@@ -137,7 +137,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: false
+        deploy: false
   register: result_1
 
 - name: TEST.1a - OVERRIDDEN - [query] query VRF state
@@ -203,7 +203,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_2
 
 - name: TEST.2a - OVERRIDDEN - [debug] print result_2
@@ -248,7 +248,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_2c
 
 - name: TEST.2d - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
@@ -322,7 +322,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_3
 
 - name: TEST.3a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
@@ -380,7 +380,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 21 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_4
 
 - name: TEST.4a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
@@ -469,7 +469,7 @@
                 ipv6_addr: 2010::10:34:0:1/64 # optional
                 neighbor_ipv6: 2010::10:34:0:2 # optional
                 dot1q: 31 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_5
 
 - name: TEST.5a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync

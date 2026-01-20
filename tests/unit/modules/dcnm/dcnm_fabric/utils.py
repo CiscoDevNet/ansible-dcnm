@@ -1,6 +1,3 @@
-"""
-Utility functions, fixtures, and mocks for dcnm_fabric unit tests.
-"""
 # Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +11,6 @@ Utility functions, fixtures, and mocks for dcnm_fabric unit tests.
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Utilities for dcnm_fabric module unit tests
-"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type  # pylint: disable=invalid-name
@@ -98,6 +92,55 @@ class MockAnsibleModule:
         """
         Add one public method to appease pylint
         """
+
+
+class MockControllerVersion:
+    """
+    Mock the ControllerVersion class for unit tests.
+
+    ### Usage
+
+    By default, is_controller_version_4x returns False (ND 3.x behavior).
+    To test ND 4.x behavior, set is_controller_version_4x = True.
+
+    ```python
+    mock_controller_version = MockControllerVersion()
+    mock_controller_version.is_controller_version_4x = True  # For ND 4.x tests
+    instance.controller_version = mock_controller_version
+    ```
+    """
+
+    def __init__(self):
+        self._is_controller_version_4x = False
+        self._version = "12.1.3b"
+
+    @property
+    def is_controller_version_4x(self):
+        """
+        Return True if controller version is 4.x, False otherwise.
+        """
+        return self._is_controller_version_4x
+
+    @is_controller_version_4x.setter
+    def is_controller_version_4x(self, value):
+        """
+        Set is_controller_version_4x to the provided value.
+        """
+        self._is_controller_version_4x = value
+
+    @property
+    def version(self):
+        """
+        Return the controller version string.
+        """
+        return self._version
+
+    @version.setter
+    def version(self, value):
+        """
+        Set the controller version string.
+        """
+        self._version = value
 
 
 # See the following for explanation of why fixtures are explicitely named

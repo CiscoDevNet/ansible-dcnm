@@ -670,11 +670,9 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.blank_data,
                 self.blank_data,
                 self.msd_attach_success_resp,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object,
                 self.mock_msd_vrf_lite_obj,
                 self.update_success_rep,
-                self.deploy_success_resp
             ]
 
         elif "_msd_replaced" in self._testMethodName:
@@ -685,17 +683,14 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_msd_vrf_object,
                 self.mock_msd_vrf_lite_obj,
                 self.update_success_rep,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object,
                 self.mock_msd_vrf_lite_obj,
                 self.update_success_rep,
-                self.deploy_success_resp
             ]
 
         elif "_msd_merged_nochild" in self._testMethodName:
             self.init_data()
             self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_msd_dict]
-            # self.run_dcnm_get_url.side_effect = [self.mock_msd_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
                 self.blank_data,
@@ -737,11 +732,9 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_pools_top_down_dot1q,
                 self.blank_data,
                 self.msd_attach_success_resp_2,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object_2,
                 self.mock_msd_vrf_lite_obj_2,
                 self.update_success_rep,
-                self.deploy_success_resp
             ]
 
         elif "nochild_msd_query" in self._testMethodName:
@@ -790,11 +783,9 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.blank_data,
                 self.blank_data,
                 self.msd_attach_success_resp,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object,
                 self.mock_msd_vrf_lite_obj,
                 self.update_success_rep,
-                self.deploy_success_resp
             ]
 
         elif "_mcfg_replaced" in self._testMethodName:
@@ -805,11 +796,9 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_msd_vrf_object,
                 self.mock_msd_vrf_lite_obj,
                 self.update_success_rep,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object,
                 self.mock_msd_vrf_lite_obj,
                 self.update_success_rep,
-                self.deploy_success_resp
             ]
 
         elif "mcfg_delete" in self._testMethodName:
@@ -846,11 +835,9 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_pools_top_down_dot1q,
                 self.blank_data,
                 self.msd_attach_success_resp_2,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object_2,
                 self.mock_msd_vrf_lite_obj_2,
                 self.update_success_rep,
-                self.deploy_success_resp
             ]
 
         else:
@@ -1387,10 +1374,10 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result["response"][1]["DATA"]["status"], "")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertEqual(
-            result["response"][6]["DATA"]["test-vrf-2--XYZKSJHSMK2(leaf2)"], "SUCCESS"
+            result["response"][4]["DATA"]["test-vrf-2--XYZKSJHSMK2(leaf2)"], "SUCCESS"
         )
         self.assertEqual(
-            result["response"][6]["DATA"]["test-vrf-2--XYZKSJHSMK3(leaf3)"], "SUCCESS"
+            result["response"][4]["DATA"]["test-vrf-2--XYZKSJHSMK3(leaf3)"], "SUCCESS"
         )
 
     def test_dcnm_vrf_lite_override_with_deletions_interface_with_extensions(self):
@@ -1707,12 +1694,10 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertTrue(result.get("parent_fabric").get("diff")[0]["attach"][0]["ip_address"], "10.10.10.224")
         self.assertTrue(result.get("parent_fabric").get("diff")[0]["vrf_id"], 9008011)
         self.assertTrue(result.get("parent_fabric").get("response")[1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
-        self.assertEqual(result.get("parent_fabric").get("response")[2]["DATA"]["status"], "")
-        self.assertEqual(result.get("parent_fabric").get("response")[2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
-        self.assertTrue(result.get("child_fabrics")[0]["response"][0]["MESSAGE"], "OK")
-        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+        self.assertEqual(result.get("parent_fabric").get("deployment")["DATA"]["status"], "")
+        self.assertEqual(result.get("parent_fabric").get("deployment")["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_msd_replaced(self):
         self.version = 12
@@ -1722,13 +1707,11 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertTrue(result.get("workflow"), "Multisite Parent with Child Fabric Processing")
         self.assertTrue(result.get("parent_fabric").get("diff")[0]["vrf_int_mtu"], 1500)
         self.assertEqual(result.get("parent_fabric").get("response")[0]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
-        self.assertEqual(result.get("parent_fabric").get("response")[1]["DATA"]["status"], "")
-        self.assertEqual(result.get("parent_fabric").get("response")[1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["static_default_route"])
-        self.assertTrue(result.get("child_fabrics")[0]["response"][0]["MESSAGE"], "OK")
-        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+        self.assertEqual(result.get("parent_fabric").get("deployment")["DATA"]["status"], "")
+        self.assertEqual(result.get("parent_fabric").get("deployment")["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_msd_merged_nochild(self):
         self.version = 12
@@ -1744,8 +1727,8 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(
             result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS"
         )
-        self.assertEqual(result["response"][2]["DATA"]["status"], "")
-        self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+        self.assertEqual(result.get("deployment")["DATA"]["status"], "")
+        self.assertEqual(result.get("deployment")["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_msd_merged_misconfig_1(self):
         self.version = 12
@@ -1810,17 +1793,15 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(
             result.get("parent_fabric").get("response")[0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS"
         )
-        self.assertEqual(result.get("parent_fabric").get("response")[1]["DATA"]["status"], "")
-        self.assertEqual(result.get("parent_fabric").get("response")[1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertEqual(
-            result.get("parent_fabric").get("response")[6]["DATA"]["test-vrf-2--XYZKSJHSMK1(leaf1)"], "SUCCESS"
+            result.get("parent_fabric").get("response")[4]["DATA"]["test-vrf-2--XYZKSJHSMK1(leaf1)"], "SUCCESS"
         )
         self.assertEqual(result.get("child_fabrics")[0]["diff"][0]["vrf_name"], "test_vrf_2")
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["l3vni_wo_vlan"])
-        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["DATA"]["status"], "")
-        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+        self.assertEqual(result.get("parent_fabric").get("deployment")["DATA"]["status"], "")
+        self.assertEqual(result.get("parent_fabric").get("deployment")["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_nochild_msd_query(self):
         playbook = self.test_data.get("playbook_msd_config_no_child")
@@ -1907,12 +1888,10 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertTrue(result.get("parent_fabric").get("diff")[0]["attach"][0]["ip_address"], "10.10.10.224")
         self.assertTrue(result.get("parent_fabric").get("diff")[0]["vrf_id"], 9008011)
         self.assertTrue(result.get("parent_fabric").get("response")[1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
-        self.assertEqual(result.get("parent_fabric").get("response")[2]["DATA"]["status"], "")
-        self.assertEqual(result.get("parent_fabric").get("response")[2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
-        self.assertTrue(result.get("child_fabrics")[0]["response"][0]["MESSAGE"], "OK")
-        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+        self.assertEqual(result.get("parent_fabric").get("deployment")["DATA"]["status"], "")
+        self.assertEqual(result.get("parent_fabric").get("deployment")["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_mcfg_replaced(self):
         self.version = 12
@@ -1922,16 +1901,15 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertTrue(result.get("workflow"), "Multicluster Parent with Child Fabric Processing")
         self.assertTrue(result.get("parent_fabric").get("diff")[0]["vrf_int_mtu"], 1500)
         self.assertEqual(result.get("parent_fabric").get("response")[0]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
-        self.assertEqual(result.get("parent_fabric").get("response")[1]["DATA"]["status"], "")
-        self.assertEqual(result.get("parent_fabric").get("response")[1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["static_default_route"])
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["l3vni_wo_vlan"])
-        self.assertTrue(result.get("child_fabrics")[0]["response"][0]["MESSAGE"], "OK")
-        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+        self.assertEqual(result.get("parent_fabric").get("deployment")["DATA"]["status"], "")
+        self.assertEqual(result.get("parent_fabric").get("deployment")["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_mcfg_delete(self):
+        self.version = 12
         playbook = self.test_data.get("playbook_mcfg_delete_config")
         set_module_args(dict(state="deleted", fabric="parent_fabric", config=playbook))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
@@ -1947,6 +1925,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_mcfg_override(self):
+        self.version = 12
         playbook = self.test_data.get("playbook_mcfg_override_config")
         set_module_args(
             dict(
@@ -1975,11 +1954,11 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result.get("parent_fabric").get("response")[1]["DATA"]["status"], "")
         self.assertEqual(result.get("parent_fabric").get("response")[1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertEqual(
-            result.get("parent_fabric").get("response")[6]["DATA"]["test-vrf-2--XYZKSJHSMK1(leaf1)"], "SUCCESS"
+            result.get("parent_fabric").get("response")[4]["DATA"]["test-vrf-2--XYZKSJHSMK1(leaf1)"], "SUCCESS"
         )
         self.assertEqual(result.get("child_fabrics")[0]["diff"][0]["vrf_name"], "test_vrf_2")
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
         self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["l3vni_wo_vlan"])
-        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["DATA"]["status"], "")
-        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+        self.assertEqual(result.get("parent_fabric").get("deployment")["DATA"]["status"], "")
+        self.assertEqual(result.get("parent_fabric").get("deployment")["RETURN_CODE"], self.SUCCESS_RETURN_CODE)

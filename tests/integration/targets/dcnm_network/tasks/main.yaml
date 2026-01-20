@@ -55,7 +55,7 @@
   tags: always
 
 - name: MAIN - Set Full Test Case Path
-  set_fact:
+  ansible.builtin.set_fact:
     full_testcase_path: "{{ role_path }}/tests/dcnm/{{ testcase }}.yaml"
     testcase_is_glob: "{{ testcase.endswith('/*') }}"
     testcase_dir: "{{ role_path }}/tests/dcnm/{{ testcase | regex_replace('/\\*$', '') }}"
@@ -63,7 +63,7 @@
   tags: always
 
 - name: MAIN - Check if Test Case File Exists (single file)
-  stat:
+  ansible.builtin.stat:
     path: "{{ full_testcase_path }}"
   register: testcase_stat
   delegate_to: localhost
@@ -71,10 +71,10 @@
   tags: always
 
 - name: MAIN - Find Test Case Files (glob pattern)
-  find:
+  ansible.builtin.find:
     paths: "{{ testcase_dir }}"
     patterns: "*.yaml"
-    recurse: no
+    recurse: false
   register: testcase_glob
   delegate_to: localhost
   when: testcase_is_glob
@@ -83,7 +83,9 @@
 - name: MAIN - Set Test Cases Fact
   ansible.builtin.set_fact:
     test_cases:
-      files: "{{ [{'path': full_testcase_path}] if (not testcase_is_glob and testcase_stat.stat.exists) else (testcase_glob.files if testcase_is_glob else []) }}"
+      files: >-
+        {{ [{'path': full_testcase_path}] if (not testcase_is_glob and testcase_stat.stat.exists)
+        else (testcase_glob.files if testcase_is_glob else []) }}
   delegate_to: localhost
   tags: always
 

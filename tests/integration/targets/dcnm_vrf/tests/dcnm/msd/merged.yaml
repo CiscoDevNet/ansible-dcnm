@@ -11,7 +11,7 @@
 # - A switch in the child MSD fabric
 # - VRF-lite capable switch
 #
-# child_switch_2  
+# child_switch_2
 # - A switch in the child MSD fabric
 # - VRF-lite capable switch
 #
@@ -36,11 +36,11 @@
   ansible.builtin.debug:
     var: item
   with_items:
-     - "parent_fabric : {{ parent_fabric }}"
-     - "child_fabric : {{ child_fabric }}"
-     - "child_switch_1 : {{ child_switch_1 }}"
-     - "child_switch_2 : {{ child_switch_2 }}"
-     - "interface_2a : {{ interface_2a }}"
+    - "parent_fabric : {{ parent_fabric }}"
+    - "child_fabric : {{ child_fabric }}"
+    - "child_switch_1 : {{ child_switch_1 }}"
+    - "child_switch_2 : {{ child_switch_2 }}"
+    - "interface_2a : {{ interface_2a }}"
 
 - name: SETUP.1 - MSD MERGED - [dcnm_rest.GET] Verify parent fabric is deployed.
   cisco.dcnm.dcnm_rest:
@@ -50,7 +50,7 @@
 
 - assert:
     that:
-    - result.response.DATA != None
+      - result.response.DATA != None
 
 - name: SETUP.2 - MSD MERGED - [deleted] Clean slate - delete all VRFs
   cisco.dcnm.dcnm_vrf:
@@ -72,15 +72,15 @@
     fabric: "{{ parent_fabric }}"
     state: merged
     config: &conf1
-    - vrf_name: ansible-msd-merged-basic
-      vrf_id: 9008401
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2401
-      vrf_description: "Basic MSD merged test VRF"
-      attach:
-      - ip_address: "{{ child_switch_1 }}"
-      deploy: true
+      - vrf_name: ansible-msd-merged-basic
+        vrf_id: 9008401
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2401
+        vrf_description: "Basic MSD merged test VRF"
+        attach:
+          - ip_address: "{{ child_switch_1 }}"
+        deploy: true
   register: result_1
 
 - name: TEST.1a - MSD MERGED - [debug] print result_1
@@ -89,15 +89,15 @@
 
 - assert:
     that:
-    - result_1.changed == true
-    - result_1.workflow == "Multisite Parent without Child Fabric Processing"
-    - result_1.diff[0].vrf_name == "ansible-msd-merged-basic"
-    - result_1.diff[0].vrf_id == 9008401
-    - result_1.diff[0].vlan_id == 2401
-    - result_1.diff[0].attach | length >= 1
-    - result_1.diff[0].attach[0].ip_address == "{{ child_switch_1 }}"
-    - result_1.diff[0].attach[0].deploy == true
-    - result_1.response[0].RETURN_CODE == 200
+      - result_1.changed == true
+      - result_1.workflow == "Multisite Parent without Child Fabric Processing"
+      - result_1.diff[0].vrf_name == "ansible-msd-merged-basic"
+      - result_1.diff[0].vrf_id == 9008401
+      - result_1.diff[0].vlan_id == 2401
+      - result_1.diff[0].attach | length >= 1
+      - result_1.diff[0].attach[0].ip_address == "{{ child_switch_1 }}"
+      - result_1.diff[0].attach[0].deploy == true
+      - result_1.response[0].RETURN_CODE == 200
 
 - name: TEST.1b - MSD MERGED - [query] Verify VRF creation
   cisco.dcnm.dcnm_vrf:
@@ -108,7 +108,7 @@
   until:
     - "result_1b.response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 20
-  delay: 3  
+  delay: 3
 
 - name: TEST.1c - MSD MERGED - [debug] print result_1b
   ansible.builtin.debug:
@@ -116,10 +116,10 @@
 
 - assert:
     that:
-    - result_1b.response | length == 1
-    - result_1b.response[0].parent.vrfName == "ansible-msd-merged-basic"
-    - result_1b.response[0].parent.vrfId == 9008401
-    - (result_1b.response[0].parent.vrfTemplateConfig | from_json).vrfVlanId == "2401"
+      - result_1b.response | length == 1
+      - result_1b.response[0].parent.vrfName == "ansible-msd-merged-basic"
+      - result_1b.response[0].parent.vrfId == 9008401
+      - (result_1b.response[0].parent.vrfTemplateConfig | from_json).vrfVlanId == "2401"
 
 - name: TEST.1d - MSD MERGED - [merged] Basic VRF creation - Idempotence
   cisco.dcnm.dcnm_vrf:
@@ -134,30 +134,30 @@
 
 - assert:
     that:
-    - result_1d.changed == false
-    - result_1d.workflow == "Multisite Parent without Child Fabric Processing"
-    - result_1d.diff | length == 0
-    - result_1d.response | length == 0
+      - result_1d.changed == false
+      - result_1d.workflow == "Multisite Parent without Child Fabric Processing"
+      - result_1d.diff | length == 0
+      - result_1d.response | length == 0
 
 - name: TEST.2 - MSD MERGED - [merged] VRF creation with Child fabric config
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ parent_fabric }}"
     state: merged
     config: &conf2
-    - vrf_name: ansible-msd-merged-child
-      vrf_id: 9008402
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2402
-      vrf_description: "MSD merged test VRF with Child config"
-      child_fabric_config:
-      - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
-      attach:
-      - ip_address: "{{ child_switch_1 }}"
-      deploy: true
+      - vrf_name: ansible-msd-merged-child
+        vrf_id: 9008402
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2402
+        vrf_description: "MSD merged test VRF with Child config"
+        child_fabric_config:
+          - fabric: "{{ child_fabric }}"
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
+        attach:
+          - ip_address: "{{ child_switch_1 }}"
+        deploy: true
   register: result_2
 
 - name: TEST.2a - MSD MERGED - [debug] print result_2
@@ -166,19 +166,19 @@
 
 - assert:
     that:
-    - result_2.changed == true
-    - result_2.workflow == "Multisite Parent with Child Fabric Processing"
-    - result_2.parent_fabric.changed == true
-    - result_2.parent_fabric.diff[0].vrf_name == "ansible-msd-merged-child"
-    - result_2.parent_fabric.diff[0].vrf_id == 9008402
-    - result_2.parent_fabric.diff[0].vlan_id == 2402
-    - result_2.parent_fabric.diff[0].attach | length >= 1
-    - result_2.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_1 }}"
-    - result_2.parent_fabric.diff[0].attach[0].deploy == true
-    - result_2.child_fabrics | length == 1
-    - result_2.child_fabrics[0].fabric == "{{ child_fabric }}"
-    - result_2.child_fabrics[0].diff[0].vrf_name == "ansible-msd-merged-child"
-    - result_2.parent_fabric.response[0].RETURN_CODE == 200
+      - result_2.changed == true
+      - result_2.workflow == "Multisite Parent with Child Fabric Processing"
+      - result_2.parent_fabric.changed == true
+      - result_2.parent_fabric.diff[0].vrf_name == "ansible-msd-merged-child"
+      - result_2.parent_fabric.diff[0].vrf_id == 9008402
+      - result_2.parent_fabric.diff[0].vlan_id == 2402
+      - result_2.parent_fabric.diff[0].attach | length >= 1
+      - result_2.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_1 }}"
+      - result_2.parent_fabric.diff[0].attach[0].deploy == true
+      - result_2.child_fabrics | length == 1
+      - result_2.child_fabrics[0].fabric == "{{ child_fabric }}"
+      - result_2.child_fabrics[0].diff[0].vrf_name == "ansible-msd-merged-child"
+      - result_2.parent_fabric.response[0].RETURN_CODE == 200
 
 - name: TEST.2b - MSD MERGED - [query] Verify VRF with child config creation
   cisco.dcnm.dcnm_vrf:
@@ -198,16 +198,16 @@
 
 - assert:
     that:
-    - result_2b.parent_fabric.response | length == 1
-    - result_2b.parent_fabric.response[0].parent.vrfName == "ansible-msd-merged-child"
-    - result_2b.parent_fabric.response[0].parent.vrfId == 9008402
-    - (result_2b.parent_fabric.response[0].parent.vrfTemplateConfig | from_json).vrfVlanId == "2402"
-    - result_2b.child_fabrics | length == 1
-    - result_2b.child_fabrics[0].response | length >= 1
-    - result_2b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-merged-child"
-    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
-    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
-    - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
+      - result_2b.parent_fabric.response | length == 1
+      - result_2b.parent_fabric.response[0].parent.vrfName == "ansible-msd-merged-child"
+      - result_2b.parent_fabric.response[0].parent.vrfId == 9008402
+      - (result_2b.parent_fabric.response[0].parent.vrfTemplateConfig | from_json).vrfVlanId == "2402"
+      - result_2b.child_fabrics | length == 1
+      - result_2b.child_fabrics[0].response | length >= 1
+      - result_2b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-merged-child"
+      - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
+      - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
+      - (result_2b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
 
 - name: TEST.2d - MSD MERGED - [merged] VRF with child config - Idempotence
   cisco.dcnm.dcnm_vrf:
@@ -222,38 +222,38 @@
 
 - assert:
     that:
-    - result_2d.changed == false
-    - result_2d.parent_fabric.diff | length == 0
-    - result_2d.parent_fabric.response | length == 0
-    - result_2d.child_fabrics | length == 1
-    - result_2d.child_fabrics[0].diff | length == 0
-    - result_2d.child_fabrics[0].response | length == 0
+      - result_2d.changed == false
+      - result_2d.parent_fabric.diff | length == 0
+      - result_2d.parent_fabric.response | length == 0
+      - result_2d.child_fabrics | length == 1
+      - result_2d.child_fabrics[0].diff | length == 0
+      - result_2d.child_fabrics[0].response | length == 0
 
 - name: TEST.3 - MSD MERGED - [merged] VRF creation with VRF-Lite configuration
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ parent_fabric }}"
     state: merged
     config: &conf3
-    - vrf_name: ansible-msd-merged-lite
-      vrf_id: 9008403
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2403
-      vrf_description: "MSD merged test VRF with VRF-Lite"
-      child_fabric_config:
-      - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
-      attach:
-      - ip_address: "{{ child_switch_2 }}"
-        vrf_lite:
-        - interface: "{{ interface_2a }}"
-          ipv4_addr: 10.10.1.2/30
-          neighbor_ipv4: 10.10.1.1
-          peer_vrf: external_merged_vrf
-          dot1q: 800
-      deploy: true
+      - vrf_name: ansible-msd-merged-lite
+        vrf_id: 9008403
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2403
+        vrf_description: "MSD merged test VRF with VRF-Lite"
+        child_fabric_config:
+          - fabric: "{{ child_fabric }}"
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
+        attach:
+          - ip_address: "{{ child_switch_2 }}"
+            vrf_lite:
+              - interface: "{{ interface_2a }}"
+                ipv4_addr: 10.10.1.2/30
+                neighbor_ipv4: 10.10.1.1
+                peer_vrf: external_merged_vrf
+                dot1q: 800
+        deploy: true
   register: result_3
 
 - name: TEST.3a - MSD MERGED - [debug] print result_3
@@ -262,19 +262,19 @@
 
 - assert:
     that:
-    - result_3.changed == true
-    - result_3.workflow == "Multisite Parent with Child Fabric Processing"
-    - result_3.parent_fabric.changed == true
-    - result_3.parent_fabric.diff[0].vrf_name == "ansible-msd-merged-lite"
-    - result_3.parent_fabric.diff[0].vrf_id == 9008403
-    - result_3.parent_fabric.diff[0].vlan_id == 2403
-    - result_3.parent_fabric.diff[0].attach | length >= 1
-    - result_3.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
-    - result_3.parent_fabric.diff[0].attach[0].deploy == true
-    - result_3.child_fabrics | length == 1
-    - result_3.child_fabrics[0].fabric == "{{ child_fabric }}"
-    - result_3.child_fabrics[0].diff[0].vrf_name == "ansible-msd-merged-lite"
-    - result_3.parent_fabric.response[0].RETURN_CODE == 200
+      - result_3.changed == true
+      - result_3.workflow == "Multisite Parent with Child Fabric Processing"
+      - result_3.parent_fabric.changed == true
+      - result_3.parent_fabric.diff[0].vrf_name == "ansible-msd-merged-lite"
+      - result_3.parent_fabric.diff[0].vrf_id == 9008403
+      - result_3.parent_fabric.diff[0].vlan_id == 2403
+      - result_3.parent_fabric.diff[0].attach | length >= 1
+      - result_3.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
+      - result_3.parent_fabric.diff[0].attach[0].deploy == true
+      - result_3.child_fabrics | length == 1
+      - result_3.child_fabrics[0].fabric == "{{ child_fabric }}"
+      - result_3.child_fabrics[0].diff[0].vrf_name == "ansible-msd-merged-lite"
+      - result_3.parent_fabric.response[0].RETURN_CODE == 200
 
 
 - name: TEST.3b - MSD MERGED - [query] Verify VRF-Lite VRF creation
@@ -287,7 +287,7 @@
     - "result_3b.parent_fabric.response[0].parent.vrfStatus is search('DEPLOYED')"
     - "result_3b.child_fabrics[0].response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 20
-  delay: 3  
+  delay: 3
 
 - name: TEST.3c - MSD MERGED - [debug] print result_3b
   ansible.builtin.debug:
@@ -295,16 +295,16 @@
 
 - assert:
     that:
-    - result_3b.parent_fabric.response | length == 1
-    - result_3b.parent_fabric.response[0].parent.vrfName == "ansible-msd-merged-lite"
-    - result_3b.parent_fabric.response[0].parent.vrfId == 9008403
-    - (result_3b.parent_fabric.response[0].parent.vrfTemplateConfig | from_json).vrfVlanId == "2403"
-    - result_3b.child_fabrics | length == 1
-    - result_3b.child_fabrics[0].response | length >= 1
-    - result_3b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-merged-lite"
-    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
-    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
-    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
+      - result_3b.parent_fabric.response | length == 1
+      - result_3b.parent_fabric.response[0].parent.vrfName == "ansible-msd-merged-lite"
+      - result_3b.parent_fabric.response[0].parent.vrfId == 9008403
+      - (result_3b.parent_fabric.response[0].parent.vrfTemplateConfig | from_json).vrfVlanId == "2403"
+      - result_3b.child_fabrics | length == 1
+      - result_3b.child_fabrics[0].response | length >= 1
+      - result_3b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-merged-lite"
+      - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
+      - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
+      - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
 
 - name: TEST.3d - MSD MERGED - [merged] VRF with VRF-Lite - Idempotence
   cisco.dcnm.dcnm_vrf:
@@ -319,41 +319,41 @@
 
 - assert:
     that:
-    - result_3d.changed == false
-    - result_3d.parent_fabric.diff | length == 0
-    - result_3d.parent_fabric.response | length == 0
-    - result_3d.child_fabrics | length == 1
-    - result_3d.child_fabrics[0].diff | length == 0
-    - result_3d.child_fabrics[0].response | length == 0
+      - result_3d.changed == false
+      - result_3d.parent_fabric.diff | length == 0
+      - result_3d.parent_fabric.response | length == 0
+      - result_3d.child_fabrics | length == 1
+      - result_3d.child_fabrics[0].diff | length == 0
+      - result_3d.child_fabrics[0].response | length == 0
 
 - name: TEST.4 - MSD MERGED - [merged] Multiple VRFs creation
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ parent_fabric }}"
     state: merged
     config: &conf4
-    - vrf_name: ansible-msd-merged-bulk1
-      vrf_id: 9008421
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2421
-      vrf_description: "Bulk merged test VRF 1"
-      attach:
-      - ip_address: "{{ child_switch_1 }}"
-      deploy: true
-    - vrf_name: ansible-msd-merged-bulk2
-      vrf_id: 9008422
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2422
-      vrf_description: "Bulk merged test VRF 2"
-      child_fabric_config:
-      - fabric: "{{ child_fabric }}"
-        adv_default_routes: false
-        adv_host_routes: true
-        static_default_route: false
-      attach:
-      - ip_address: "{{ child_switch_2 }}"
-      deploy: true
+      - vrf_name: ansible-msd-merged-bulk1
+        vrf_id: 9008421
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2421
+        vrf_description: "Bulk merged test VRF 1"
+        attach:
+          - ip_address: "{{ child_switch_1 }}"
+        deploy: true
+      - vrf_name: ansible-msd-merged-bulk2
+        vrf_id: 9008422
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2422
+        vrf_description: "Bulk merged test VRF 2"
+        child_fabric_config:
+          - fabric: "{{ child_fabric }}"
+            adv_default_routes: false
+            adv_host_routes: true
+            static_default_route: false
+        attach:
+          - ip_address: "{{ child_switch_2 }}"
+        deploy: true
   register: result_4
 
 - name: TEST.4a - MSD MERGED - [debug] print result_4
@@ -362,18 +362,18 @@
 
 - assert:
     that:
-    - result_4.changed == true
-    - result_4.workflow == "Multisite Parent with Child Fabric Processing"
-    - result_4.parent_fabric.changed == true
-    - result_4.parent_fabric.diff | length == 2
-    - result_4.parent_fabric.diff[0].vrf_name == "ansible-msd-merged-bulk1"
-    - result_4.parent_fabric.diff[1].vrf_name == "ansible-msd-merged-bulk2"
-    - result_4.parent_fabric.diff[0].attach[0].deploy == true
-    - result_4.parent_fabric.diff[1].attach[0].deploy == true
-    - result_4.child_fabrics | length == 1
-    - result_4.child_fabrics[0].fabric == "{{ child_fabric }}"
-    - result_4.child_fabrics[0].diff[0].vrf_name == "ansible-msd-merged-bulk2"
-    - result_4.parent_fabric.response[0].RETURN_CODE == 200
+      - result_4.changed == true
+      - result_4.workflow == "Multisite Parent with Child Fabric Processing"
+      - result_4.parent_fabric.changed == true
+      - result_4.parent_fabric.diff | length == 2
+      - result_4.parent_fabric.diff[0].vrf_name == "ansible-msd-merged-bulk1"
+      - result_4.parent_fabric.diff[1].vrf_name == "ansible-msd-merged-bulk2"
+      - result_4.parent_fabric.diff[0].attach[0].deploy == true
+      - result_4.parent_fabric.diff[1].attach[0].deploy == true
+      - result_4.child_fabrics | length == 1
+      - result_4.child_fabrics[0].fabric == "{{ child_fabric }}"
+      - result_4.child_fabrics[0].diff[0].vrf_name == "ansible-msd-merged-bulk2"
+      - result_4.parent_fabric.response[0].RETURN_CODE == 200
 
 - name: TEST.4b - MSD MERGED - [query] Verify multiple VRFs creation
   cisco.dcnm.dcnm_vrf:
@@ -385,7 +385,7 @@
     - "result_4b.parent_fabric.response[0].parent.vrfStatus is search('DEPLOYED')"
     - "result_4b.parent_fabric.response[1].parent.vrfStatus is search('DEPLOYED')"
   retries: 20
-  delay: 3  
+  delay: 3
 
 - name: TEST.4c - MSD MERGED - [debug] print result_4b
   ansible.builtin.debug:
@@ -393,15 +393,15 @@
 
 - assert:
     that:
-    - result_4b.parent_fabric.response | length == 2
-    - result_4b.parent_fabric.response | selectattr('parent.vrfName', 'equalto', 'ansible-msd-merged-bulk1') | list | length == 1
-    - result_4b.parent_fabric.response | selectattr('parent.vrfName', 'equalto', 'ansible-msd-merged-bulk2') | list | length == 1
-    - result_4b.child_fabrics | length == 1
-    - result_4b.child_fabrics[0].response | length >= 1
-    - result_4b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-merged-bulk2"
-    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
-    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
-    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
+      - result_4b.parent_fabric.response | length == 2
+      - result_4b.parent_fabric.response | selectattr('parent.vrfName', 'equalto', 'ansible-msd-merged-bulk1') | list | length == 1
+      - result_4b.parent_fabric.response | selectattr('parent.vrfName', 'equalto', 'ansible-msd-merged-bulk2') | list | length == 1
+      - result_4b.child_fabrics | length == 1
+      - result_4b.child_fabrics[0].response | length >= 1
+      - result_4b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-merged-bulk2"
+      - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
+      - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
+      - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
 
 - name: TEST.4d - MSD MERGED - [merged] Multiple VRFs creation - Idempotence
   cisco.dcnm.dcnm_vrf:
@@ -416,12 +416,12 @@
 
 - assert:
     that:
-    - result_4d.changed == false
-    - result_4d.parent_fabric.diff | length == 0
-    - result_4d.parent_fabric.response | length == 0
-    - result_4d.child_fabrics | length == 1
-    - result_4d.child_fabrics[0].diff | length == 0
-    - result_4d.child_fabrics[0].response | length == 0
+      - result_4d.changed == false
+      - result_4d.parent_fabric.diff | length == 0
+      - result_4d.parent_fabric.response | length == 0
+      - result_4d.child_fabrics | length == 1
+      - result_4d.child_fabrics[0].diff | length == 0
+      - result_4d.child_fabrics[0].response | length == 0
 
 ###############################################
 ###              FINAL CLEANUP             ##
@@ -445,12 +445,12 @@
 - name: FINAL - MSD MERGED - Summary of tests completed
   ansible.builtin.debug:
     msg:
-    - "MSD Merged tests completed successfully!"
-    - "Tests covered:"
-    - "  1. Basic VRF creation (Parent-only)"
-    - "  2. VRF creation with Child fabric config"
-    - "  3. VRF-Lite configuration creation"
-    - "  4. Multiple VRF creation"
-    - "  6. Comprehensive query validation"
-    - "  7. Idempotence verification for all scenarios"
-    - "All MSD fabric merged workflows validated successfully!"
+      - "MSD Merged tests completed successfully!"
+      - "Tests covered:"
+      - "  1. Basic VRF creation (Parent-only)"
+      - "  2. VRF creation with Child fabric config"
+      - "  3. VRF-Lite configuration creation"
+      - "  4. Multiple VRF creation"
+      - "  6. Comprehensive query validation"
+      - "  7. Idempotence verification for all scenarios"
+      - "All MSD fabric merged workflows validated successfully!"
