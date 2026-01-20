@@ -62,14 +62,8 @@ import json
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     get_nd_version,
     obtain_federated_fabric_associations,
-    obtain_fabric_associations
-)
-
-# Import new utility functions from dcnm module_utils
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    get_nd_version,
-    obtain_federated_fabric_associations,
-    obtain_fabric_associations
+    obtain_fabric_associations,
+    deploy_fabric
 )
 
 display = Display()
@@ -646,6 +640,7 @@ class ActionModule(ActionBase):
         - MSD fabrics: Executes parent first, then children, with aggregated results
         - Fail-fast: Stops on first error and returns failure immediately
         - Verbose logging: Displays detailed execution information in vvv mode
+        - Deployment: Collects deploy_payload from parent fabric and deploys at the end
 
         Result Aggregation:
         - Standalone: Direct pass-through of module result
@@ -675,6 +670,9 @@ class ActionModule(ActionBase):
         # Track fabric results for new output structure
         parent_fabric_result = None
         child_fabric_results = []
+        deploy_payload = {}
+        parent_fabric_name = None
+        parent_fabric_type = None
 
         # Process each fabric config by calling the dcnm_network module
         for fabric_config in configs:
@@ -745,6 +743,33 @@ class ActionModule(ActionBase):
                     'response': fabric_result.get('response', []),
                     'diff': fabric_result.get('diff', [])
                 }
+                # Collect deploy_payload only from multicluster_parent for deployment at the end
+                if fabric_type == 'multicluster_parent':
+                    deploy_payload = fabric_result.get('deploy_payload', {})
+                    parent_fabric_name = fabric_config['fabric']
+                    parent_fabric_type = fabric_type
+                display.vvv("=" * 80)
+                display.vvv(f"Deploy payload collected from parent fabric '{parent_fabric_name}':")
+                display.vvv(json.dumps(deploy_payload, indent=2))
+                display.vvv("=" * 80)
+                # Additional vvvv logging for deploy_payload
+                if display.verbosity >= 4:
+                    display.vvvv(f"[ACTION PLUGIN] deploy_payload details for fabric '{parent_fabric_name}':")
+                    display.vvvv(json.dumps(deploy_payload, indent=4))
+                    display.vvvv(f"deploy_payload type: {type(deploy_payload)}")
+                    display.vvvv(f"deploy_payload keys: {list(deploy_payload.keys()) if isinstance(deploy_payload, dict) else 'N/A'}")
+                
+                # Write deploy_payload to dcnm.log file
+                try:
+                    with open("/tmp/dcnm.log", "a") as f:
+                        f.write("\n" + "="*80 + "\n")
+                        f.write(f"[ACTION PLUGIN] deploy_payload collected from parent fabric '{parent_fabric_name}':\n")
+                        f.write(json.dumps(deploy_payload, indent=4))
+                        f.write(f"\ndeploy_payload type: {type(deploy_payload)}\n")
+                        f.write(f"deploy_payload keys: {list(deploy_payload.keys()) if isinstance(deploy_payload, dict) else 'N/A'}\n")
+                        f.write("="*80 + "\n")
+                except Exception as e:
+                    pass  # Silently ignore file write errors
             elif fabric_type in ['multisite_child', 'multicluster_child']:
                 child_fabric_results.append({
                     'fabric_name': fabric_config['fabric'],
@@ -753,6 +778,22 @@ class ActionModule(ActionBase):
                     'response': fabric_result.get('response', []),
                     'diff': fabric_result.get('diff', [])
                 })
+
+        # Deploy networks on parent fabric if deploy_payload is present
+        if deploy_payload and parent_fabric_name:
+            display.vvv("=" * 80)
+            display.vvv(f"Calling deploy_fabric for parent fabric '{parent_fabric_name}'")
+            display.vvv(f"Fabric type: {parent_fabric_type}")
+            display.vvv(f"Deploy payload being sent:")
+            display.vvv(json.dumps(deploy_payload, indent=2))
+            display.vvv("=" * 80)
+            deployment_result = deploy_fabric(self, task_vars, tmp, parent_fabric_name, parent_fabric_type, deploy_payload, "network")
+            display.vvv("=" * 80)
+            display.vvv(f"Deployment result from fabric '{parent_fabric_name}':")
+            display.vvv(json.dumps(deployment_result, indent=2))
+            display.vvv("=" * 80)
+            if parent_fabric_result:
+                parent_fabric_result['deployment'] = deployment_result
 
         # Structure the final result based on what we processed
         if parent_fabric_result:
