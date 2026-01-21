@@ -626,12 +626,12 @@
       - 'result_4c.response[0].parent.vrfName == "ansible-vrf-int1"'
       - 'result_4c.response[0].parent.vrfId == 9008011'
       - 'result_4c.response[0].parent.vrfStatus == "DEPLOYED"'
-      - 'result_4c.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-      - 'result_4c.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-      - 'result_4c.response[0].attach[0].switchDetailsList[0].vlan == 500'
-      - 'result_4c.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-      - 'result_4c.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-      - 'result_4c.response[0].attach[1].switchDetailsList[0].vlan == 500'
+      - 'result_4c.response[0].attach[0].switchDetailsList[0].isLanAttached == true'
+      - 'result_4c.response[0].attach[0].switchDetailsList[0].lanAttachState == "DEPLOYED"'
+      - 'result_4c.response[0].attach[0].switchDetailsList[0].vlanId == 500'
+      - 'result_4c.response[0].attach[1].switchDetailsList[0].isLanAttached == true'
+      - 'result_4c.response[0].attach[1].switchDetailsList[0].lanAttachState == "DEPLOYED"'
+      - 'result_4c.response[0].attach[1].switchDetailsList[0].vlanId == 500'
   tags: sanity
 
 - name: TEST.4e - SANITY QUERY - [deleted] Delete all VRFs

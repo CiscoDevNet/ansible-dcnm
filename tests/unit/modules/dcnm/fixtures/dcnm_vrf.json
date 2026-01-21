@@ -2120,6 +2120,14 @@
     "METHOD": "POST",
     "RETURN_CODE": 200
   },
+  "mock_vrf_id_response": {
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "RETURN_CODE": 200,
+    "DATA": {
+      "l3vni": 9008011
+    }
+  },
   "update_data": {
     "MESSAGE": "OK",
     "METHOD": "PUT",
