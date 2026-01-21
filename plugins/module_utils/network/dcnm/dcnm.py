@@ -1617,17 +1617,17 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
     )
 
     # Get fabric type and build appropriate path
-    base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabric}/vrfs"
+    base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric}/vrfs"
     proxy = ""
 
     # Determine deployment path and payload based on fabric type
     if fabric_type == "multicluster_parent":
         # Multicluster parent uses different endpoint and payload format
-        if action_module.ndfc_version >= 12.4:
+        if action_module.ndfc_version >= 12.2:
             proxy = "/onemanage"
 
         deploy_path = proxy + base_path.replace(
-            f"lan-fabric/rest/control/fabrics/{fabric}/vrfs",
+            f"lan-fabric/rest/top-down/fabrics/{fabric}/vrfs",
             "onemanage/top-down/vrfs/deploy"
         )
     else:
