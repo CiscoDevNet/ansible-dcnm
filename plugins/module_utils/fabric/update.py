@@ -57,10 +57,11 @@ class FabricUpdateCommon(FabricCommon):
         Remove keys that cause errors on ND 4.x during fabric update.
 
         -   Remove the following keys if present:
-            - PNP_ENABLE_INTERNAL
-            - DOMAIN_NAME_INTERNAL
             - dcnmUser
             - DHCP_FORCE
+            - DOMAIN_NAME_INTERNAL
+            - INBAND_ENABLE_PREV
+            - PNP_ENABLE_INTERNAL
         -   Initialize STP_BRIDGE_PRIORITY to empty string if:
             - STP_ROOT_OPTION is "unmanaged"
             - STP_BRIDGE_PRIORITY is not already present in payload
