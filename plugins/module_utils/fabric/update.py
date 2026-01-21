@@ -77,7 +77,13 @@ class FabricUpdateCommon(FabricCommon):
             if "STP_BRIDGE_PRIORITY" not in payload:
                 payload["STP_BRIDGE_PRIORITY"] = ""
 
-        problematic_keys = ["PNP_ENABLE_INTERNAL", "DOMAIN_NAME_INTERNAL", "dcnmUser", "DHCP_FORCE"]
+        problematic_keys = [
+            "dcnmUser",
+            "DHCP_FORCE",
+            "DOMAIN_NAME_INTERNAL",
+            "INBAND_ENABLE_PREV",
+            "PNP_ENABLE_INTERNAL",
+        ]
         for key in problematic_keys:
             payload.pop(key, None)
 
