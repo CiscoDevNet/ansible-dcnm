@@ -3598,6 +3598,9 @@ class DcnmNetwork:
         del_failure = ""
         if self.diff_delete and self.wait_for_del_ready():
             resp = ""
+            networks_to_delete = []
+
+            # Separate networks by state
             for net, state in self.diff_delete.items():
                 if state.upper() == "OUT-OF-SYNC" or state == "TIMEOUT":
                     del_failure += net + ","
@@ -3606,25 +3609,40 @@ class DcnmNetwork:
                     if state == "OUT-OF-SYNC":
                         resp = "Network is out of sync.\n"
                     continue
-                # Use bulk-delete API for multicluster_parent, regular delete for others
+
                 if self.fabric_type == "multicluster_parent":
-                    delete_path = path.replace("/networks", "") + "/bulk-delete/networks?network-names=" + net
-                    delete_payload = None
+                    networks_to_delete.append(net)
                 else:
+                    # Non-multicluster_parent fabrics use individual delete
                     delete_path = path + "/" + net
                     delete_payload = {net: "NA"}
-
-                if delete_payload:
                     resp = dcnm_send(self.module, method, delete_path, json.dumps(delete_payload))
-                else:
+                    self.result["response"].append(resp)
+                    fail, self.result["changed"] = self.handle_response(resp, "delete")
+                    if fail:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        self.failure(resp)
+            
+            # Batch delete for multicluster_parent using bulk-delete API
+            if self.fabric_type == "multicluster_parent" and networks_to_delete:
+
+                max_batch_size = 30
+                
+                for i in range(0, len(networks_to_delete), max_batch_size):
+                    batch = networks_to_delete[i:i + max_batch_size]
+                    network_names = ','.join(batch)
+                    delete_path = path.replace("/networks", "") + "/bulk-delete/networks?network-names=" + network_names
+                    
                     resp = dcnm_send(self.module, method, delete_path)
-                self.result["response"].append(resp)
-                fail, self.result["changed"] = self.handle_response(resp, "delete")
-                if fail:
-                    if is_rollback:
-                        self.failed_to_rollback = True
-                        return
-                    self.failure(resp)
+                    self.result["response"].append(resp)
+                    fail, self.result["changed"] = self.handle_response(resp, "delete")
+                    if fail:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        self.failure(resp)
 
         if del_failure:
             fail_msg = "Deletion of Networks {0} has failed: {1}".format(del_failure[:-1], resp)
@@ -3644,6 +3662,9 @@ class DcnmNetwork:
             for attr in skipped_attributes:
                 if attr in template_mapping:
                     skipped_template_keys.add(template_mapping[attr])
+            
+            payload_list = []
+            
             for net in self.diff_create:
                 json_to_dict = json.loads(net["networkTemplateConfig"])
                 vlanId = json_to_dict.get("vlanId", "")
@@ -3696,8 +3717,26 @@ class DcnmNetwork:
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
 
+                # Send individual creates for multicluster_parent or version < 12.2
+                if self.fabric_type == "multicluster_parent" or self.dcnm_version < 12.2:
+                    method = "POST"
+                    resp = dcnm_send(self.module, method, path, json.dumps(net))
+                    self.result["response"].append(resp)
+                    fail, self.result["changed"] = self.handle_response(resp, "create")
+                    if fail:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        self.failure(resp)
+                else:
+                    # Collect for bulk create
+                    payload_list.append(net)
+            
+            # Send bulk create for non-multicluster_parent fabrics with version >= 12.2
+            if self.fabric_type != "multicluster_parent" and self.dcnm_version >= 12.2 and payload_list:
                 method = "POST"
-                resp = dcnm_send(self.module, method, path, json.dumps(net))
+                create_path = self.paths["GET_NET_BULK"]
+                resp = dcnm_send(self.module, method, create_path, json.dumps(payload_list))
                 self.result["response"].append(resp)
                 fail, self.result["changed"] = self.handle_response(resp, "create")
                 if fail:
