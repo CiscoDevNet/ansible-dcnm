@@ -3467,6 +3467,8 @@ class DcnmVrf:
                                     # 1. VRF-Lite is not configured in playbook, OR
                                     # 2. VRF-Lite is configured but no extensions exist on controller
                                     if use_minimal_attach:
+                                        # Ensure extensionValues is set to empty string when no VRF Lite
+                                        attach["extensionValues"] = ""
                                         minimal_attach = {
                                             "fabric": self.fabric,
                                             "vrfName": want_c["vrfName"],
@@ -3535,6 +3537,8 @@ class DcnmVrf:
                         )
                         if not has_lite_data:
                             # No VRF Lite extensions exist - use minimal attach structure
+                            # Ensure extensionValues is set to empty string when no VRF Lite
+                            attach["extensionValues"] = ""
                             minimal_attach = {
                                 "fabric": self.fabric,
                                 "vrfName": vrf["vrfName"],
