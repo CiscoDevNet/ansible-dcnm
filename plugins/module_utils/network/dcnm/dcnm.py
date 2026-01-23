@@ -1565,6 +1565,7 @@ def obtain_fabric_associations(action_module, task_vars, tmp):
         # Handle fabric discovery failures
         return action_module.error_handler.handle_exception(e, "fabric_discovery")
 
+
 def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_payload, entity_type):
     """
     Deploy VRF or Network configurations to fabric on ND controller.
@@ -1624,7 +1625,7 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
 
     # Get fabric type and build appropriate path
     base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabric}/{entity_type_plural}"
-    
+
     # Determine deployment path and payload based on fabric type
     if fabric_type == "multicluster_parent":
         # Multicluster parent always uses /onemanage prefix and special endpoint
@@ -1661,12 +1662,12 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
             f"Successfully deployed {entity_type} to fabric: {fabric}",
             operation=f"{entity_type}_deployment"
         )
-        
+
         return response_data
 
     except Exception as e:
         # Handle deployment failures
         return action_module.error_handler.handle_exception(
-            e, 
+            e,
             f"{entity_type} deployment for fabric: {fabric}"
         )
