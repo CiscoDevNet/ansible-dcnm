@@ -758,16 +758,16 @@ class ActionModule(ActionBase):
                     display.vvvv(json.dumps(deploy_payload, indent=4))
                     display.vvvv(f"deploy_payload type: {type(deploy_payload)}")
                     display.vvvv(f"deploy_payload keys: {list(deploy_payload.keys()) if isinstance(deploy_payload, dict) else 'N/A'}")
-                
+
                 # Write deploy_payload to dcnm.log file
                 try:
                     with open("/tmp/dcnm.log", "a") as f:
-                        f.write("\n" + "="*80 + "\n")
+                        f.write("\n" + "=" * 80 + "\n")
                         f.write(f"[ACTION PLUGIN] deploy_payload collected from parent fabric '{parent_fabric_name}':\n")
                         f.write(json.dumps(deploy_payload, indent=4))
                         f.write(f"\ndeploy_payload type: {type(deploy_payload)}\n")
                         f.write(f"deploy_payload keys: {list(deploy_payload.keys()) if isinstance(deploy_payload, dict) else 'N/A'}\n")
-                        f.write("="*80 + "\n")
+                        f.write("=" * 80 + "\n")
                 except Exception as e:
                     pass  # Silently ignore file write errors
             elif fabric_type in ['multisite_child', 'multicluster_child']:
@@ -784,7 +784,7 @@ class ActionModule(ActionBase):
             display.vvv("=" * 80)
             display.vvv(f"Calling deploy_fabric for parent fabric '{parent_fabric_name}'")
             display.vvv(f"Fabric type: {parent_fabric_type}")
-            display.vvv(f"Deploy payload being sent:")
+            display.vvv("Deploy payload being sent:")
             display.vvv(json.dumps(deploy_payload, indent=2))
             display.vvv("=" * 80)
             deployment_result = deploy_fabric(self, task_vars, tmp, parent_fabric_name, parent_fabric_type, deploy_payload, "network")

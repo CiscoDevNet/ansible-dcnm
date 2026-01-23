@@ -927,6 +927,7 @@ class DcnmNetwork:
             "GET_NET_ID": "/rest/managed-pool/fabrics/{}/segments/ids",
             "GET_NET": "/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
+            "GET_NET_BULK": "/rest/top-down/fabrics/{}/networks/bulk-create",
             "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
             "GET_NET_STATUS": "/rest/top-down/fabrics/{}/networks/{}/status",
             "GET_NET_SWITCH_DEPLOY": "/rest/top-down/fabrics/networks/deploy",
@@ -939,6 +940,7 @@ class DcnmNetwork:
             "GET_NET_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/netinfo",
             "GET_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
+            "GET_NET_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/bulk-create",
             "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
             "GET_NET_STATUS": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}/status",
             "GET_NET_SWITCH_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/networks/deploy",
@@ -1447,7 +1449,7 @@ class DcnmNetwork:
         else:
             if hasattr(self, 'have_attach') and self.have_attach:
                 attach_source = self.have_attach
-        
+
         if not attach_source:
             return deploy_payload
 
@@ -1457,7 +1459,7 @@ class DcnmNetwork:
 
         for net_attach in attach_source:
             network_name = net_attach.get("networkName")
-            
+
             # Only process networks that are in the deploy list
             if not network_name or network_name not in network_names_list:
                 continue
@@ -1465,10 +1467,10 @@ class DcnmNetwork:
             lan_attach_list = net_attach.get("lanAttachList", [])
             for attach in lan_attach_list:
                 serial = attach.get("serialNumber")
-                
+
                 if not serial:
                     continue
-                
+
                 # Add this network to the serial's list
                 if serial not in serial_to_networks:
                     serial_to_networks[serial] = []
@@ -3624,17 +3626,17 @@ class DcnmNetwork:
                             self.failed_to_rollback = True
                             return
                         self.failure(resp)
-            
+
             # Batch delete for multicluster_parent using bulk-delete API
             if self.fabric_type == "multicluster_parent" and networks_to_delete:
 
                 max_batch_size = 30
-                
+
                 for i in range(0, len(networks_to_delete), max_batch_size):
                     batch = networks_to_delete[i:i + max_batch_size]
                     network_names = ','.join(batch)
                     delete_path = path.replace("/networks", "") + "/bulk-delete/networks?network-names=" + network_names
-                    
+
                     resp = dcnm_send(self.module, method, delete_path)
                     self.result["response"].append(resp)
                     fail, self.result["changed"] = self.handle_response(resp, "delete")
@@ -3662,9 +3664,9 @@ class DcnmNetwork:
             for attr in skipped_attributes:
                 if attr in template_mapping:
                     skipped_template_keys.add(template_mapping[attr])
-            
+
             payload_list = []
-            
+
             for net in self.diff_create:
                 json_to_dict = json.loads(net["networkTemplateConfig"])
                 vlanId = json_to_dict.get("vlanId", "")
@@ -3731,11 +3733,11 @@ class DcnmNetwork:
                 else:
                     # Collect for bulk create
                     payload_list.append(net)
-            
+
             # Send bulk create for non-multicluster_parent fabrics with version >= 12.2
             if self.fabric_type != "multicluster_parent" and self.dcnm_version >= 12.2 and payload_list:
                 method = "POST"
-                create_path = self.paths["GET_NET_BULK"]
+                create_path = self.paths["GET_NET_BULK"].format(self.fabric)
                 resp = dcnm_send(self.module, method, create_path, json.dumps(payload_list))
                 self.result["response"].append(resp)
                 fail, self.result["changed"] = self.handle_response(resp, "create")
