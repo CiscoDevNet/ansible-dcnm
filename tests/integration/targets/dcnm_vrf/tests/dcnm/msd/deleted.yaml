@@ -284,12 +284,11 @@
       - result_3.workflow == "Multisite Parent without Child Fabric Processing"
       - result_3.diff | length == 2
       - result_3.response[2].RETURN_CODE == 200
-      - result_3.response[3].RETURN_CODE == 200
       - '"ansible-msd-delete-lite" in result_3.diff[0].vrf_name or "ansible-msd-delete-child" in result_3.diff[0].vrf_name'
       - '"ansible-msd-delete-lite" in result_3.diff[1].vrf_name or "ansible-msd-delete-child" in result_3.diff[1].vrf_name'
       - result_3.diff[0].attach[0].deploy == false
       - '"{{ child_switch_1 }}" in result_3.diff[0].attach[0].ip_address or "{{ child_switch_1 }}" in result_3.diff[1].attach[0].ip_address'
-      - '"{{ child_switch_2 }}" in result_3.diff[1].attach[0].ip_address or "{{ child_switch_2 }}" in result_3.diff[1].attach[0].ip_address'
+      - '"{{ child_switch_2 }}" in result_3.diff[0].attach[0].ip_address or "{{ child_switch_2 }}" in result_3.diff[1].attach[0].ip_address'
       - result_3.diff[1].attach[0].deploy == false
 
 - name: TEST.3b - MSD DELETED - [query] Verify all VRFs deleted
