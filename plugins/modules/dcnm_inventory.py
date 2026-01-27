@@ -1020,8 +1020,8 @@ class DcnmInventory:
                     choices=["MD5", "SHA", "MD5_DES", "MD5_AES", "SHA_DES", "SHA_AES"],
                     default="MD5",
                 ),
-                user_name=dict(required=True, type="str", no_log=True, length_max=32),
-                password=dict(required=True, type="str", no_log=True, length_max=32),
+                user_name=dict(required=True, type="str", no_log=True, length_max=64),
+                password=dict(required=True, type="str", no_log=True, length_max=64),
                 max_hops=dict(type="int", default=0),
                 role=dict(
                     type="str",
@@ -1049,8 +1049,8 @@ class DcnmInventory:
             )
 
             poap_spec = dict(
-                discovery_username=dict(type="str", no_log=True, length_max=32),
-                discovery_password=dict(type="str", no_log=True, length_max=32),
+                discovery_username=dict(type="str", no_log=True, length_max=64),
+                discovery_password=dict(type="str", no_log=True, length_max=64),
                 serial_number=dict(type="str", default=""),
                 preprovision_serial=dict(type="str", default=""),
                 model=dict(type="str", default=""),
@@ -1061,8 +1061,8 @@ class DcnmInventory:
             )
 
             rma_spec = dict(
-                discovery_username=dict(type="str", no_log=True, length_max=32),
-                discovery_password=dict(type="str", no_log=True, length_max=32),
+                discovery_username=dict(type="str", no_log=True, length_max=64),
+                discovery_password=dict(type="str", no_log=True, length_max=64),
                 serial_number=dict(type="str", required=True),
                 old_serial=dict(type="str", required=True),
                 model=dict(type="str", required=True),
