@@ -1897,12 +1897,14 @@ class DcnmVrf:
         bgp_password_want = json_to_dict_want.get("bgpPassword")
         bgp_password_have = json_to_dict_have.get("bgpPassword")
         bgp_key_type_have = json_to_dict_have.get("bgpPasswordKeyType")
+        bgp_key_type_want = json_to_dict_want.get("bgpPasswordKeyType")
 
         # Some ND versions give empty bgpPasswordKeyType. Skip comparison if:
         # 1. Have keytype is empty/None (ND has no password configured)
         # 2. Both passwords are empty (no password in want or have)
-        if ((bgp_key_type_have == "") or
-           (bgp_password_want == "") and bgp_password_have == ""):
+        if ((bgp_key_type_have == "" and bgp_key_type_want == 3 and
+             bgp_password_want != "") or (bgp_password_want == ""
+                                          and bgp_password_have == "")):
             skip_keys.append("bgpPasswordKeyType")
 
         template_skip_keys = self.get_template_skip_keys()
@@ -3510,7 +3512,7 @@ class DcnmVrf:
 
         if not self.diff_undeploy or self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
             msg = f"Early return. Fabric Type:{self.action_fabric_type}"
-            msg += f"diff_deploy: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
+            msg += f"diff_undeploy: {json.dumps(self.diff_undeploy, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             return
 
@@ -3793,7 +3795,7 @@ class DcnmVrf:
         self.log.debug(msg)
 
         dot1q_id = None
-        path = self.resource_paths["RESERVE_ID"]
+        path = self.paths["RESERVE_ID"]
         verb = "POST"
         payload = {"scopeType": "DeviceInterface",
                    "usageType": "TOP_DOWN_L3_DOT1Q",

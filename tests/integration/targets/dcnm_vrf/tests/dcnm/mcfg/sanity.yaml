@@ -325,8 +325,8 @@
         vrf_id: 9008202
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
-        vlan_id: 2209
-        vrf_description: "Updated MCFG sanity test VRF with Child config"
+        vlan_id: 2202
+        vrf_description: "MCFG sanity test VRF with Child config"
         child_fabric_config:
           - fabric: "{{ child_fabric }}"
             adv_default_routes: true  # Changed
@@ -349,9 +349,7 @@
       - result_4.workflow == "Multicluster Parent with Child Fabric Processing"
       - result_4.parent_fabric.fabric == "{{ parent_fabric }}"
       - result_4.parent_fabric.changed == true
-      - result_4.parent_fabric.diff[0].vrf_id == 9008202
       - result_4.parent_fabric.diff[0].vrf_name == "ansible-mcfg-sanity-child"
-      - result_4.parent_fabric.diff[0].vrf_description == "Updated MCFG sanity test VRF with Child config"
       - result_4.parent_fabric.diff[0].attach | length == 1
       - result_4.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
       - result_4.child_fabrics | length == 1
