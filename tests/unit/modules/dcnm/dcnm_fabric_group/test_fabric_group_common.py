@@ -213,3 +213,127 @@ def test_fabric_group_common_00024(fabric_group_common) -> None:
     # Verify payload is unchanged (no ANYCAST_GW_MAC was added)
     assert "ANYCAST_GW_MAC" not in instance._payloads_to_commit[0]
     assert instance._payloads_to_commit[0]["FABRIC_NAME"] == original_payload["FABRIC_NAME"]
+
+
+def test_fabric_group_common_00030(fabric_group_common) -> None:
+    """
+    # Summary
+
+    Verify `_fixup_deploy` removes DEPLOY from top level.
+
+    ## Test
+
+    - DEPLOY at top level is removed
+    - `ValueError` is not raised
+
+    ## Classes and Methods
+
+    - FabricGroupCommon.__init__()
+    - FabricGroupCommon._fixup_deploy()
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = fabric_group_common
+        instance._payloads_to_commit = payloads_fabric_group_common(key)
+        assert "DEPLOY" in instance._payloads_to_commit[0]
+        instance._fixup_deploy()
+
+    assert "DEPLOY" not in instance._payloads_to_commit[0]
+
+
+def test_fabric_group_common_00031(fabric_group_common) -> None:
+    """
+    # Summary
+
+    Verify `_fixup_deploy` removes DEPLOY from nvPairs (MCFG fabric).
+
+    ## Test
+
+    - DEPLOY in nvPairs is removed
+    - `ValueError` is not raised
+    - This tests the fix for GitHub issue #626
+
+    ## Classes and Methods
+
+    - FabricGroupCommon.__init__()
+    - FabricGroupCommon._fixup_deploy()
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = fabric_group_common
+        instance._payloads_to_commit = payloads_fabric_group_common(key)
+        assert "DEPLOY" in instance._payloads_to_commit[0]["nvPairs"]
+        instance._fixup_deploy()
+
+    assert "DEPLOY" not in instance._payloads_to_commit[0]["nvPairs"]
+    # Verify other nvPairs keys are preserved
+    assert "ANYCAST_GW_MAC" in instance._payloads_to_commit[0]["nvPairs"]
+
+
+def test_fabric_group_common_00032(fabric_group_common) -> None:
+    """
+    # Summary
+
+    Verify `_fixup_deploy` removes DEPLOY from both top level and nvPairs.
+
+    ## Test
+
+    - DEPLOY at top level is removed
+    - DEPLOY in nvPairs is removed
+    - `ValueError` is not raised
+    - This tests the fix for GitHub issue #626
+
+    ## Classes and Methods
+
+    - FabricGroupCommon.__init__()
+    - FabricGroupCommon._fixup_deploy()
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = fabric_group_common
+        instance._payloads_to_commit = payloads_fabric_group_common(key)
+        assert "DEPLOY" in instance._payloads_to_commit[0]
+        assert "DEPLOY" in instance._payloads_to_commit[0]["nvPairs"]
+        instance._fixup_deploy()
+
+    assert "DEPLOY" not in instance._payloads_to_commit[0]
+    assert "DEPLOY" not in instance._payloads_to_commit[0]["nvPairs"]
+    # Verify other nvPairs keys are preserved
+    assert "ANYCAST_GW_MAC" in instance._payloads_to_commit[0]["nvPairs"]
+
+
+def test_fabric_group_common_00033(fabric_group_common) -> None:
+    """
+    # Summary
+
+    Verify `_fixup_deploy` handles payloads without DEPLOY gracefully.
+
+    ## Test
+
+    - Payload has no DEPLOY at top level or in nvPairs
+    - Method completes without error
+    - Payload is unchanged
+
+    ## Classes and Methods
+
+    - FabricGroupCommon.__init__()
+    - FabricGroupCommon._fixup_deploy()
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = fabric_group_common
+        instance._payloads_to_commit = payloads_fabric_group_common(key)
+        original_payload = instance._payloads_to_commit[0].copy()
+        instance._fixup_deploy()
+
+    # Verify payload is unchanged (no DEPLOY was present)
+    assert "DEPLOY" not in instance._payloads_to_commit[0]
+    assert instance._payloads_to_commit[0]["FABRIC_NAME"] == original_payload["FABRIC_NAME"]
