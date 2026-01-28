@@ -927,7 +927,7 @@ class DcnmNetwork:
             "GET_NET_ID": "/rest/managed-pool/fabrics/{}/segments/ids",
             "GET_NET": "/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
-            "GET_NET_BULK": "/rest/top-down/fabrics/{}/networks/bulk-create",
+            "GET_NET_BULK": "/rest/top-down/bulk-create/networks",
             "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
             "GET_NET_STATUS": "/rest/top-down/fabrics/{}/networks/{}/status",
             "GET_NET_SWITCH_DEPLOY": "/rest/top-down/fabrics/networks/deploy",
@@ -940,7 +940,7 @@ class DcnmNetwork:
             "GET_NET_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/netinfo",
             "GET_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
-            "GET_NET_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/bulk-create",
+            "GET_NET_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/bulk-create/networks",
             "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
             "GET_NET_STATUS": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}/status",
             "GET_NET_SWITCH_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/networks/deploy",
@@ -3737,7 +3737,7 @@ class DcnmNetwork:
             # Send bulk create for non-multicluster_parent fabrics with version >= 12.2
             if self.fabric_type != "multicluster_parent" and self.dcnm_version >= 12.2 and payload_list:
                 method = "POST"
-                create_path = self.paths["GET_NET_BULK"].format(self.fabric)
+                create_path = self.paths["GET_NET_BULK"]
                 resp = dcnm_send(self.module, method, create_path, json.dumps(payload_list))
                 self.result["response"].append(resp)
                 fail, self.result["changed"] = self.handle_response(resp, "create")
@@ -4428,7 +4428,8 @@ class DcnmNetwork:
 
             # DHCP servers list configuration
             if cfg.get("dhcp_servers", None) is None:
-                json_to_dict_want["dhcpServers"] = json_to_dict_have.get("dhcpServers", "")
+                if not json_to_dict_want.get("dhcpServers"):
+                    json_to_dict_want["dhcpServers"] = json_to_dict_have.get("dhcpServers", "")
 
             # DHCP loopback configuration
             if cfg.get("dhcp_loopback_id", None) is None:

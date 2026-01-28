@@ -1624,7 +1624,7 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
     entity_type_plural = entity_type + "s" if not entity_type.endswith("s") else entity_type
 
     # Get fabric type and build appropriate path
-    base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabric}/{entity_type_plural}"
+    base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric}/{entity_type_plural}"
 
     # Determine deployment path and payload based on fabric type
     if fabric_type == "multicluster_parent":
