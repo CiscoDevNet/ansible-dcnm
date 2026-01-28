@@ -1472,32 +1472,6 @@ class DcnmVrf:
 
                             # After comparing VRF lite interfaces, check deployment status
                             # only if all interfaces matched (found = True)
-                            if found:
-                                want_is_deploy = self.to_bool("is_deploy", want)
-                                have_is_deploy = self.to_bool("is_deploy", have)
-                                want_is_attached = self.to_bool("isAttached", want)
-                                have_is_attached = self.to_bool("isAttached", have)
-
-                                if have_is_attached != want_is_attached:
-                                    if "isAttached" in want:
-                                        del want["isAttached"]
-
-                                    want["deployment"] = True
-                                    attach_list.append(want)
-                                    if want_is_deploy is True:
-                                        if "isAttached" in want:
-                                            del want["isAttached"]
-                                        deploy_vrf = True
-                                    continue
-
-                                want_deployment = self.to_bool("deployment", want)
-                                have_deployment = self.to_bool("deployment", have)
-
-                                if (want_deployment != have_deployment) or (
-                                    want_is_deploy != have_is_deploy
-                                ):
-                                    if want_is_deploy is True:
-                                        deploy_vrf = True
 
                         elif (
                             want["extensionValues"] != ""
@@ -1520,6 +1494,7 @@ class DcnmVrf:
                             msg += f"{str(want.get('have_is_deploy'))}"
                             self.log.debug(msg)
 
+                        if found:
                             want_is_deploy = self.to_bool("is_deploy", want)
                             have_is_deploy = self.to_bool("is_deploy", have)
 
