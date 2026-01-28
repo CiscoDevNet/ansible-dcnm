@@ -156,9 +156,19 @@ class FabricGroupCommon:
         """
         -   Remove DEPLOY key from payloads prior to sending them
             to the controller.
+
+        ## Notes
+
+        -   For VXLAN child fabrics, DEPLOY is at the top level
+            of the payload.
+        -   For MCFG parent fabrics, DEPLOY is nested within
+            `payload["nvPairs"]`.
+        -   This method removes DEPLOY from both locations.
         """
         for payload in self._payloads_to_commit:
             payload.pop("DEPLOY", None)
+            if isinstance(payload.get("nvPairs"), dict):
+                payload["nvPairs"].pop("DEPLOY", None)
 
     def _verify_payload(self, payload: dict[str, Any]) -> None:
         """
