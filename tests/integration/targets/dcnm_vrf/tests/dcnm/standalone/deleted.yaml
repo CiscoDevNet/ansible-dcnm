@@ -423,7 +423,7 @@
   cisco.dcnm.dcnm_vrf: &conf3
     fabric: "{{ fabric_1 }}"
     state: deleted
-    config: {}
+    config: []
   register: result_3c
 
 - name: TEST.3d - DELETED - [debug] print result_3c
