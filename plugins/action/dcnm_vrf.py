@@ -549,7 +549,7 @@ class ActionModule(ActionNetworkModule):
 
             # Step 5: Deploy VRF(s) on parent fabric, if applicable
             if deploy_payload:
-                parent_result["deployment"] = deploy_fabric(self, task_vars, tmp, parent_fabric, fabric_type, deploy_payload)
+                parent_result["deployment"] = deploy_fabric(self, task_vars, tmp, parent_fabric, fabric_type, deploy_payload, "vrf")
 
             # Step 6: Create structured results
             result = self.create_structured_results(parent_result, child_results, parent_fabric, log_type)

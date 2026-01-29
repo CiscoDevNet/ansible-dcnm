@@ -57,9 +57,14 @@ class FabricUpdateCommon(FabricCommon):
         Remove keys that cause errors on ND 4.x during fabric update.
 
         -   Remove the following keys if present:
-            - PNP_ENABLE_INTERNAL
-            - DOMAIN_NAME_INTERNAL
             - dcnmUser
+            - DHCP_FORCE
+            - DOMAIN_NAME_INTERNAL
+            - INBAND_ENABLE_PREV
+            - PNP_ENABLE_INTERNAL
+        -   Initialize STP_BRIDGE_PRIORITY to empty string if:
+            - STP_ROOT_OPTION is "unmanaged"
+            - STP_BRIDGE_PRIORITY is not already present in payload
 
         Args:
             payload: Dictionary containing fabric parameters
@@ -67,7 +72,19 @@ class FabricUpdateCommon(FabricCommon):
         Returns:
             None. The payload is modified in place.
         """
-        problematic_keys = ["PNP_ENABLE_INTERNAL", "DOMAIN_NAME_INTERNAL", "dcnmUser"]
+        # If STP_ROOT_OPTION is "unmanaged", ensure STP_BRIDGE_PRIORITY is initialized
+        # to an empty string if not already present in the payload
+        if "STP_ROOT_OPTION" in payload and payload["STP_ROOT_OPTION"] == "unmanaged":
+            if "STP_BRIDGE_PRIORITY" not in payload:
+                payload["STP_BRIDGE_PRIORITY"] = ""
+
+        problematic_keys = [
+            "dcnmUser",
+            "DHCP_FORCE",
+            "DOMAIN_NAME_INTERNAL",
+            "INBAND_ENABLE_PREV",
+            "PNP_ENABLE_INTERNAL",
+        ]
         for key in problematic_keys:
             payload.pop(key, None)
 
