@@ -24,11 +24,13 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set rest_path for ND 11
+  set_fact:
     rest_path: "/rest/control/fabrics/{{ parent_fabric }}"
   when: controller_version == "11"
 
-- set_fact:
+- name: Set rest_path for ND 12+
+  set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ parent_fabric }}"
   when: controller_version >= "12"
 

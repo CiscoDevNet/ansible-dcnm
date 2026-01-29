@@ -251,7 +251,11 @@
       - result_4.response | selectattr('parent.vrfName', 'equalto', 'ansible-mcfg-query-multiple-1') | list | length == 1
       - result_4.response | selectattr('parent.vrfName', 'equalto', 'ansible-mcfg-query-multiple-2') | list | length == 1
       - (result_4.response | selectattr('parent.vrfName', 'equalto', 'ansible-mcfg-query-basic') | map(attribute='parent.vrfId') | list)[0] == 9008201
-      - (result_4.response | selectattr('parent.vrfName', 'equalto', 'ansible-mcfg-query-basic') | map(attribute='parent.vrfTemplateConfig') | list | first | from_json).vrfVlanId == "2201"
+      - >-
+        (result_4.response
+        | selectattr('parent.vrfName', 'equalto', 'ansible-mcfg-query-basic')
+        | map(attribute='parent.vrfTemplateConfig')
+        | list | first | from_json).vrfVlanId == "2201"
       - result_4.diff | length == 0
 
 - name: TEST.5 - MCFG QUERY - [query] Query all VRFs (no config specified - MCFG Parent)
