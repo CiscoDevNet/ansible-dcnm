@@ -1566,20 +1566,23 @@ def obtain_fabric_associations(action_module, task_vars, tmp):
         return action_module.error_handler.handle_exception(e, "fabric_discovery")
 
 
-def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_payload):
+def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_payload, entity_type):
     """
-    Deploy VRF configurations to fabric on ND controller.
+    Deploy VRF or Network configurations to fabric on ND controller.
 
-    This method sends VRF deployment requests to the ND controller,
+    This method sends VRF or Network deployment requests to the ND controller,
     which triggers configuration push to switches. The deployment
-    process varies based on fabric type (standard, multicluster parent/child).
+    process varies based on fabric type (standard, multicluster parent/child)
+    and entity type (vrfs, networks).
 
     API Endpoints:
-    - Standard/MSD: POST /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabric}/vrfs/deployments
-    - Multicluster Parent: POST /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/vrfs/deploy
+    - Standard/MSD VRFs: POST /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabric}/vrfs/deployments
+    - Standard/MSD Networks: POST /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabric}/networks/deployments
+    - Multicluster Parent VRFs: POST /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/vrfs/deploy
+    - Multicluster Parent Networks: POST /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/networks/deploy
 
     Request Payload:
-    - Standard/MSD: List of VRF names to deploy
+    - Standard/MSD: List of VRF/Network names to deploy
     - Multicluster Parent: Transformed payload with serial numbers
 
     Response Processing:
@@ -1593,8 +1596,9 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
         task_vars (dict): Ansible task variables for module execution
         tmp (str): Temporary directory path for module operations
         fabric (str): Fabric name to deploy to
-        fabric_details (dict): Fabric metadata including fabric_type and cluster_name
-        diff_deploy (list): List of VRFs or deployment payload to deploy
+        fabric_type (str): Fabric type (standard, multicluster_parent, multicluster_child, etc.)
+        deploy_payload (list): List of VRFs/Networks or deployment payload to deploy
+        entity_type (str): Type of entity to deploy ("vrfs" or "networks")
 
     Returns:
         dict: Deployment response from NDFC:
@@ -1612,30 +1616,30 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
     """
     # Log deployment initiation
     action_module.logger.debug(
-        f"Deploying VRF configurations to fabric: {fabric}",
-        operation="vrf_deployment"
+        f"Deploying {entity_type} configurations to fabric: {fabric}",
+        operation=f"{entity_type}_deployment"
     )
 
+    # Ensure entity_type is pluralized for API paths
+    entity_type_plural = entity_type + "s" if not entity_type.endswith("s") else entity_type
+
     # Get fabric type and build appropriate path
-    base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric}/vrfs"
-    proxy = ""
+    base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric}/{entity_type_plural}"
 
     # Determine deployment path and payload based on fabric type
     if fabric_type == "multicluster_parent":
-        # Multicluster parent uses different endpoint and payload format
+        # Multicluster parent always uses /onemanage prefix and special endpoint
         if action_module.ndfc_version >= 12.2:
-            proxy = "/onemanage"
-
-        deploy_path = proxy + base_path.replace(
-            f"lan-fabric/rest/top-down/fabrics/{fabric}/vrfs",
-            "onemanage/top-down/vrfs/deploy"
-        )
+            # NDFC 12.4+: /onemanage/appcenter/cisco/ndfc/api/v1/onemanage/top-down/{entity_type}/deploy
+            deploy_path = f"/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/top-down/{entity_type_plural}/deploy"
+        else:
+            deploy_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/{entity_type_plural}/deploy"
     else:
         # Standard fabric or MSD fabric deployment
         deploy_path = base_path + "/deployments"
 
     try:
-        # Execute NDFC REST API call to deploy VRF configurations
+        # Execute NDFC REST API call to deploy configurations
         deployment_response = action_module._execute_module(
             module_name="cisco.dcnm.dcnm_rest",
             module_args={
@@ -1650,13 +1654,13 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
         # Validate API response structure and extract data
         response_data = action_module.error_handler.validate_api_response(
             deployment_response,
-            f"VRF deployment for fabric: {fabric}"
+            f"{entity_type} deployment for fabric: {fabric}"
         )
 
         # Log successful deployment
         action_module.logger.info(
-            f"Successfully deployed VRF(s) to fabric: {fabric}",
-            operation="vrf_deployment"
+            f"Successfully deployed {entity_type} to fabric: {fabric}",
+            operation=f"{entity_type}_deployment"
         )
 
         return response_data
@@ -1665,5 +1669,5 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
         # Handle deployment failures
         return action_module.error_handler.handle_exception(
             e,
-            f"VRF deployment for fabric: {fabric}"
+            f"{entity_type} deployment for fabric: {fabric}"
         )
