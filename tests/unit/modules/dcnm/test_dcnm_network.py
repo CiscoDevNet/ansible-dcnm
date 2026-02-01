@@ -25,6 +25,7 @@ from ansible_collections.cisco.dcnm.plugins.modules import dcnm_network
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
 import copy
+import json
 
 
 class TestDcnmNetworkModule(TestDcnmModule):
@@ -1087,8 +1088,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(child_diff["gw_ip_subnet"], "192.168.101.1/24")
 
         # Verify child fabric specific configuration
-        self.assertEqual(child_diff["dhcp_srvr1_ip"], "192.168.1.101")
-        self.assertEqual(child_diff["dhcp_srvr1_vrf"], "management")
+        dhcp_servers = json.loads(child_diff["dhcp_servers"])["dhcpServers"]
+        self.assertEqual(dhcp_servers[0]["srvrAddr"], "192.168.1.101")
+        self.assertEqual(dhcp_servers[0]["srvrVrf"], "management")
         self.assertEqual(child_diff["dhcp_loopback_id"], 204)
         self.assertEqual(child_diff["multicast_group_address"], "239.1.1.1")
         self.assertTrue(child_diff["l3gw_on_border"])
@@ -1153,7 +1155,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(parent_diff["mtu_l3intf"], 9214)
 
         # Verify parent fabric does NOT have DHCP config (should be empty/false)
-        self.assertEqual(parent_diff["dhcp_srvr1_ip"], "")
+        self.assertEqual(parent_diff["dhcp_servers"], "")
         self.assertEqual(parent_diff["dhcp_loopback_id"], "")
         self.assertFalse(parent_diff["l3gw_on_border"])
 
@@ -1187,12 +1189,13 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(child_diff["vlan_id"], 2104)
 
         # Verify DHCP servers configuration
-        self.assertEqual(child_diff["dhcp_srvr1_ip"], "192.168.1.102")
-        self.assertEqual(child_diff["dhcp_srvr1_vrf"], "management")
-        self.assertEqual(child_diff["dhcp_srvr2_ip"], "192.168.1.105")
-        self.assertEqual(child_diff["dhcp_srvr2_vrf"], "default")
-        self.assertEqual(child_diff["dhcp_srvr3_ip"], "192.168.1.106")
-        self.assertEqual(child_diff["dhcp_srvr3_vrf"], "management")
+        dhcp_servers = json.loads(child_diff["dhcp_servers"])["dhcpServers"]
+        self.assertEqual(dhcp_servers[0]["srvrAddr"], "192.168.1.102")
+        self.assertEqual(dhcp_servers[0]["srvrVrf"], "management")
+        self.assertEqual(dhcp_servers[1]["srvrAddr"], "192.168.1.105")
+        self.assertEqual(dhcp_servers[1]["srvrVrf"], "default")
+        self.assertEqual(dhcp_servers[2]["srvrAddr"], "192.168.1.106")
+        self.assertEqual(dhcp_servers[2]["srvrVrf"], "management")
 
         # Verify child-specific parameters
         self.assertEqual(child_diff["dhcp_loopback_id"], 207)
