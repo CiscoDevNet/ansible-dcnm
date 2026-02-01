@@ -2448,6 +2448,7 @@ class DcnmVrf:
                 if vrf.get("vlan_id"):
                     vlan_id = vrf.get("vlan_id")
                 else:
+                    # TODO: After DCNM 11.x support is ended, change the default vlan_id to ""
                     vlan_id = 0
 
             vrf_deploy = vrf.get("deploy", True)
@@ -2803,6 +2804,9 @@ class DcnmVrf:
                 msg += f"{self.dcnm_version}"
                 self.module.fail_json(msg)
 
+            if vrf_id is not None:
+                break
+
         if vrf_id is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Unable to retrieve vrf_id "
@@ -2901,7 +2905,14 @@ class DcnmVrf:
                     }
 
                     if self.dcnm_version > 11:
-                        template_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
+                        # TODO: After DCNM 11.x support is ended, the following line can be removed
+                        vrf_vlan_id = "" if template_conf["vrfVlanId"] in [0, None] else template_conf["vrfVlanId"]
+                        template_conf.update(
+                            vrfVlanId=vrf_vlan_id
+                        )
+                        template_conf.update(
+                            isRPAbsent=json_to_dict.get("isRPAbsent")
+                        )
                         template_conf.update(
                             ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW")
                         )

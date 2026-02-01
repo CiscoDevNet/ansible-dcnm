@@ -1149,7 +1149,7 @@ def has_partial_dhcp_config(server):
     """
     # Summary
 
-    Check if a DHCP server has incomplete configuration (IP address set but no VRF or vice versa).
+    Check if a DHCP server has incomplete configuration (VRF set but no IP address).
 
     ## Raises
 
@@ -1179,7 +1179,7 @@ def has_partial_dhcp_config(server):
         }
     result2 = has_partial_dhcp_config(server2)
     print(result2)
-    # -> True (partial configuration)
+    # -> False (complete configuration)
 
     server3 = {
         "srvr_vrf": "vrf_name"
@@ -1190,7 +1190,7 @@ def has_partial_dhcp_config(server):
     """
     ip = server.get("srvr_ip")
     vrf = server.get("srvr_vrf")
-    return bool(ip) != bool(vrf)
+    return vrf is not None and ip is None
 
 
 def sanitize_lan_attach_list(attach_objects: list) -> list:
