@@ -3106,25 +3106,72 @@ class DcnmIntf:
         )
         intf["interfaces"][0].update({"ifName": ifname})
 
+        # Dynamic Peer Mapping: Determine the actual ND PEER1/PEER2 assignment
+        # based on the vpc_pair_sn order, regardless of playbook switch order
+        peer1_members = delem[profile]["peer1_members"]
+        peer2_members = delem[profile]["peer2_members"]
+        peer1_allowed_vlans = delem[profile].get("peer1_allowed_vlans")
+        peer2_allowed_vlans = delem[profile].get("peer2_allowed_vlans")
+        peer1_native_vlan = delem[profile].get("peer1_native_vlan")
+        peer2_native_vlan = delem[profile].get("peer2_native_vlan")
+        peer1_access_vlan = delem[profile].get("peer1_access_vlan")
+        peer2_access_vlan = delem[profile].get("peer2_access_vlan")
+        peer1_pcid = delem[profile]["peer1_pcid"]
+        peer2_pcid = delem[profile]["peer2_pcid"]
+        peer1_description = delem[profile]["peer1_description"]
+        peer2_description = delem[profile]["peer2_description"]
+        peer1_cmds = delem[profile]["peer1_cmds"]
+        peer2_cmds = delem[profile]["peer2_cmds"]
+
+        # Get the vPC pair serial number from ND (format: SERIAL1~SERIAL2)
+        vpc_pair_sn = self.vpc_ip_sn.get(delem["switch"][0], "")
+
+        if "~" in vpc_pair_sn:
+            vpc_sn_parts = vpc_pair_sn.split("~")
+            switch_0_sn = self.ip_sn.get(delem["switch"][0], "")
+            switch_1_sn = self.ip_sn.get(delem["switch"][1], "")
+
+            # Check if playbook switch order matches ND vPC pair order
+            if switch_0_sn == vpc_sn_parts[0] and switch_1_sn == vpc_sn_parts[1]:
+                # Playbook order matches ND order - no swap needed
+                pass
+            elif switch_0_sn == vpc_sn_parts[1] and switch_1_sn == vpc_sn_parts[0]:
+                # Playbook order is reversed from ND order - swap all peer parameters
+                peer1_members, peer2_members = peer2_members, peer1_members
+                peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
+                peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
+                peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
+                peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
+                peer1_description, peer2_description = peer2_description, peer1_description
+                peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
+            else:
+                # Serial numbers don't match vPC pair - this is an error condition
+                self.module.fail_json(
+                    msg=f"vPC {ifname} configuration error: Switch serial numbers "
+                        f"[{switch_0_sn}, {switch_1_sn}] do not match ND vPC pair "
+                        f"[{vpc_sn_parts[0]}, {vpc_sn_parts[1]}]. Verify that the "
+                        f"switches specified in the playbook are part of the same vPC pair."
+                )
+
         if delem[profile]["mode"] == "trunk":
 
-            if delem[profile]["peer1_members"] is None:
+            if peer1_members is None:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER1_MEMBER_INTERFACES"
                 ] = ""
             else:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER1_MEMBER_INTERFACES"
-                ] = ",".join(delem[profile]["peer1_members"])
+                ] = ",".join(peer1_members)
 
-            if delem[profile]["peer2_members"] is None:
+            if peer2_members is None:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER2_MEMBER_INTERFACES"
                 ] = ""
             else:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER2_MEMBER_INTERFACES"
-                ] = ",".join(delem[profile]["peer2_members"])
+                ] = ",".join(peer2_members)
 
             intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
                 "pc_mode"
@@ -3138,51 +3185,39 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
-            intf["interfaces"][0]["nvPairs"]["PEER1_ALLOWED_VLANS"] = delem[
-                profile
-            ]["peer1_allowed_vlans"]
-            intf["interfaces"][0]["nvPairs"]["PEER2_ALLOWED_VLANS"] = delem[
-                profile
-            ]["peer2_allowed_vlans"]
-            intf["interfaces"][0]["nvPairs"]["PEER1_NATIVE_VLAN"] = delem[
-                profile
-            ]["peer1_native_vlan"]
-            intf["interfaces"][0]["nvPairs"]["PEER2_NATIVE_VLAN"] = delem[
-                profile
-            ]["peer2_native_vlan"]
-            if delem[profile]["peer1_pcid"] == 0:
+            intf["interfaces"][0]["nvPairs"]["PEER1_ALLOWED_VLANS"] = peer1_allowed_vlans
+            intf["interfaces"][0]["nvPairs"]["PEER2_ALLOWED_VLANS"] = peer2_allowed_vlans
+            intf["interfaces"][0]["nvPairs"]["PEER1_NATIVE_VLAN"] = peer1_native_vlan
+            intf["interfaces"][0]["nvPairs"]["PEER2_NATIVE_VLAN"] = peer2_native_vlan
+            if peer1_pcid == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(port_id)
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(
-                    delem[profile]["peer1_pcid"]
-                )
+                intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(peer1_pcid)
 
-            if delem[profile]["peer2_pcid"] == 0:
+            if peer2_pcid == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(port_id)
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(
-                    delem[profile]["peer2_pcid"]
-                )
+                intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(peer2_pcid)
 
         if delem[profile]["mode"] == "access":
 
-            if delem[profile]["peer1_members"] is None:
+            if peer1_members is None:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER1_MEMBER_INTERFACES"
                 ] = ""
             else:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER1_MEMBER_INTERFACES"
-                ] = ",".join(delem[profile]["peer1_members"])
+                ] = ",".join(peer1_members)
 
-            if delem[profile]["peer2_members"] is None:
+            if peer2_members is None:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER2_MEMBER_INTERFACES"
                 ] = ""
             else:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER2_MEMBER_INTERFACES"
-                ] = ",".join(delem[profile]["peer2_members"])
+                ] = ",".join(peer2_members)
 
             intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
                 "pc_mode"
@@ -3196,45 +3231,29 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
-            intf["interfaces"][0]["nvPairs"]["PEER1_ACCESS_VLAN"] = delem[
-                profile
-            ]["peer1_access_vlan"]
-            intf["interfaces"][0]["nvPairs"]["PEER2_ACCESS_VLAN"] = delem[
-                profile
-            ]["peer2_access_vlan"]
+            intf["interfaces"][0]["nvPairs"]["PEER1_ACCESS_VLAN"] = peer1_access_vlan
+            intf["interfaces"][0]["nvPairs"]["PEER2_ACCESS_VLAN"] = peer2_access_vlan
 
-            if delem[profile]["peer1_pcid"] == 0:
+            if peer1_pcid == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(port_id)
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(
-                    delem[profile]["peer1_pcid"]
-                )
+                intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(peer1_pcid)
 
-            if delem[profile]["peer2_pcid"] == 0:
+            if peer2_pcid == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(port_id)
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(
-                    delem[profile]["peer2_pcid"]
-                )
+                intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(peer2_pcid)
 
-        intf["interfaces"][0]["nvPairs"]["PEER1_PO_DESC"] = delem[profile][
-            "peer1_description"
-        ]
-        intf["interfaces"][0]["nvPairs"]["PEER2_PO_DESC"] = delem[profile][
-            "peer2_description"
-        ]
-        if delem[profile]["peer1_cmds"] is None:
+        intf["interfaces"][0]["nvPairs"]["PEER1_PO_DESC"] = peer1_description
+        intf["interfaces"][0]["nvPairs"]["PEER2_PO_DESC"] = peer2_description
+        if peer1_cmds is None:
             intf["interfaces"][0]["nvPairs"]["PEER1_PO_CONF"] = ""
         else:
-            intf["interfaces"][0]["nvPairs"]["PEER1_PO_CONF"] = "\n".join(
-                delem[profile]["peer1_cmds"]
-            )
-        if delem[profile]["peer2_cmds"] is None:
+            intf["interfaces"][0]["nvPairs"]["PEER1_PO_CONF"] = "\n".join(peer1_cmds)
+        if peer2_cmds is None:
             intf["interfaces"][0]["nvPairs"]["PEER2_PO_CONF"] = ""
         else:
-            intf["interfaces"][0]["nvPairs"]["PEER2_PO_CONF"] = "\n".join(
-                delem[profile]["peer2_cmds"]
-            )
+            intf["interfaces"][0]["nvPairs"]["PEER2_PO_CONF"] = "\n".join(peer2_cmds)
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
