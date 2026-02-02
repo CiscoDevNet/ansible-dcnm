@@ -1415,7 +1415,10 @@ def obtain_federated_fabric_associations(action_module, task_vars, tmp):
         #   * Federation manager does not exist (standalone or MSD fabrics in a non-clustered environment)
         #   * ND3.2 returns an invalid JSON response for remote users
         if federated_fabric_associations.get('failed') and federated_fabric_associations.get('msg'):
-            error_msg = federated_fabric_associations.get('msg').get('DATA')
+            message = federated_fabric_associations.get('msg')
+            error_msg = message.get('DATA')
+            error_code = message.get('RETURN_CODE')
+
             # For ND3.2 error_msg will be a string
             # For ND4.X error_msg will be a dict
             if isinstance(error_msg, dict):
@@ -1435,6 +1438,13 @@ def obtain_federated_fabric_associations(action_module, task_vars, tmp):
             if error_msg in FEDERATION_MANAGER_NOT_FOUND_ERRORS:
                 # Return the same error message for both ND3.2 and ND4.X for consistency
                 return 'A federation manager does not exist'
+
+            # ND3.1 Returns a very cryptic error message using RC 404
+            # 'Invalid JSON response: <html>\r\n<head><title>404 Not Found<...<snip>...n'
+            if action_module.ndfc_version < 12.4 and error_code == 404 and \
+               error_msg.startswith("Invalid JSON response: <html>"):
+                return 'A federation manager does not exist'
+
 
         # Validate API response structure and extract data
         response_data = action_module.error_handler.validate_api_response(
