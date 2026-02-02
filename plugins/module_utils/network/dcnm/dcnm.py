@@ -34,6 +34,12 @@ try:
 except ImportError:
     HAS_REQUESTS = False
 
+FEDERATION_MANAGER_NOT_FOUND_ERRORS = [
+    'Invalid JSON response: this API is allowed only for remote user',
+    'A federation manager does not exist',
+    'Invalid JSON response: cannot serve APIs as federation state is secondary. Use primary cluster for APIs'
+]
+
 dcnm_paths = {
     11: {"TEMPLATE_WITH_NAME": "/rest/config/templates/{}"},
     12: {
@@ -1409,18 +1415,34 @@ def obtain_federated_fabric_associations(action_module, task_vars, tmp):
         #   * Federation manager does not exist (standalone or MSD fabrics in a non-clustered environment)
         #   * ND3.2 returns an invalid JSON response for remote users
         if federated_fabric_associations.get('failed') and federated_fabric_associations.get('msg'):
-            error_msg = federated_fabric_associations.get('msg').get('DATA')
+            message = federated_fabric_associations.get('msg')
+            error_msg = message.get('DATA')
+            error_code = message.get('RETURN_CODE')
+
             # For ND3.2 error_msg will be a string
             # For ND4.X error_msg will be a dict
             if isinstance(error_msg, dict):
                 error_msg = error_msg.get('error')
 
             if not isinstance(error_msg, str):
-                raise Exception("Unexpected error message format received from federated fabric associations API.")
+                error_details = {
+                    "error_msg_type": type(error_msg).__name__,
+                    "error_msg_value": str(error_msg),
+                    "response": federated_fabric_associations
+                }
+                return action_module.error_handler.handle_failure(
+                    "Unexpected error message format from federated fabric associations API",
+                    details=error_details
+                )
 
-            error_messages = ['Invalid JSON response: this API is allowed only for remote user', 'A federation manager does not exist']
-            if error_msg in error_messages:
+            if error_msg in FEDERATION_MANAGER_NOT_FOUND_ERRORS:
                 # Return the same error message for both ND3.2 and ND4.X for consistency
+                return 'A federation manager does not exist'
+
+            # ND3.1 Returns a very cryptic error message using RC 404
+            # 'Invalid JSON response: <html>\r\n<head><title>404 Not Found<...<snip>...n'
+            if action_module.ndfc_version < 12.4 and error_code == 404 and \
+               error_msg.startswith("Invalid JSON response: <html>"):
                 return 'A federation manager does not exist'
 
         # Validate API response structure and extract data
