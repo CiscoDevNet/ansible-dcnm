@@ -1445,7 +1445,6 @@ def obtain_federated_fabric_associations(action_module, task_vars, tmp):
                error_msg.startswith("Invalid JSON response: <html>"):
                 return 'A federation manager does not exist'
 
-
         # Validate API response structure and extract data
         response_data = action_module.error_handler.validate_api_response(
             federated_fabric_associations,
