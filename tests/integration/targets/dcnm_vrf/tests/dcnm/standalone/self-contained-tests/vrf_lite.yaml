@@ -93,7 +93,7 @@
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # dot1q can be got from dcnm
           - ip_address: "{{ switch_3 }}"
-    deploy: true
+        deploy: true
   register: result
 
 - name: Query fabric state until vrfStatus transitions to DEPLOYED state
@@ -117,8 +117,8 @@
       - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
       - 'result.diff[0].attach[0].deploy == true'
       - 'result.diff[0].attach[1].deploy == true'
-      - '"{{ switch_3 }}" in result.diff[0].attach[0].ip_address'
-      - '"{{ switch_2 }}" in result.diff[0].attach[1].ip_address'
+      - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
+      - '"{{ switch_3 }}" in result.diff[0].attach[1].ip_address'
       - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
       - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
       - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
@@ -286,7 +286,7 @@
                 ipv6_addr: 3010::10:34:0:7/64 # optional
                 neighbor_ipv6: 3010::10:34:0:3 # optional
                 dot1q: 21 # dot1q can be got from dcnm
-    deploy: true
+        deploy: true
   register: result
 
 - name: Query fabric state until vrfStatus transitions to DEPLOYED state
@@ -407,17 +407,17 @@
       - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
       - 'result.diff[0].attach[0].deploy == true'
       - 'result.diff[0].attach[1].deploy == true'
-      - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-      - '"{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
+      - '"{{ switch_1 }}" in result.diff[0].attach[0].ip_address'
+      - '"{{ switch_2 }}" in result.diff[0].attach[1].ip_address'
       - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
-      - '"{{ interface_1a }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-      - '"ansible-vrf-int3" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-      - '"40.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
-      - '"{{ interface_2a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"ansible-vrf-int1" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"10.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"{{ interface_2b }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
-      - '"20.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"{{ interface_1a }}" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"ansible-vrf-int3" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"40.33.0.2/24" in query_result.response[0].attach[1].switchDetailsList[0].extensionValues'
+      - '"{{ interface_2a }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - '"ansible-vrf-int1" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - '"10.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - '"{{ interface_2b }}" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
+      - '"20.33.0.2/24" in query_result.response[0].attach[0].switchDetailsList[0].extensionValues'
 
 - name: VRF LITE - conf5 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf5

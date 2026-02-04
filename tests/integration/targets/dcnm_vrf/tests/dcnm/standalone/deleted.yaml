@@ -79,7 +79,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_setup_3
 
 - name: SETUP.4 - DELETED - [query] Wait for vrfStatus == DEPLOYED
@@ -174,9 +174,9 @@
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         l3vni_wo_vlan: true
-    attach:
-      - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+        attach:
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: false
   register: result_1e
 
@@ -269,7 +269,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_2
 
 - name: TEST.2a - DELETED - [query] Wait for vrfStatus == DEPLOYED
@@ -322,7 +322,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # controller can provide dot1q
-                deploy: true
+        deploy: true
   register: result_2b
 
 - name: TEST.2c - DELETED - [debug] print result_2b
@@ -387,7 +387,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_3
 
 - name: TEST.3a - DELETED - [query] Wait for vrfStatus == DEPLOYED
@@ -423,7 +423,7 @@
   cisco.dcnm.dcnm_vrf: &conf3
     fabric: "{{ fabric_1 }}"
     state: deleted
-    config: {}
+    config: []
   register: result_3c
 
 - name: TEST.3d - DELETED - [debug] print result_3c

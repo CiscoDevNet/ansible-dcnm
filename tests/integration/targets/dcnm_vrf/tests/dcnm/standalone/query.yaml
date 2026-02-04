@@ -81,7 +81,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_setup_3
 
 - name: SETUP.3a - QUERY - [query] Wait for vrfStatus == DEPLOYED
@@ -130,7 +130,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_1
 
 - name: TEST.1b - QUERY - [debug] print result_1
@@ -144,12 +144,12 @@
       - 'result_1.response[0].parent.vrfName == "ansible-vrf-int1"'
       - 'result_1.response[0].parent.vrfId == 9008011'
       - 'result_1.response[0].parent.vrfStatus == "DEPLOYED"'
-      - 'result_1.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-      - 'result_1.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-      - 'result_1.response[0].attach[0].switchDetailsList[0].vlan == 500'
-      - 'result_1.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-      - 'result_1.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-      - 'result_1.response[0].attach[1].switchDetailsList[0].vlan == 500'
+      - 'result_1.response[0].attach[0].switchDetailsList[0].isLanAttached == true'
+      - 'result_1.response[0].attach[0].switchDetailsList[0].lanAttachState == "DEPLOYED"'
+      - 'result_1.response[0].attach[0].switchDetailsList[0].vlanId == 500'
+      - 'result_1.response[0].attach[1].switchDetailsList[0].isLanAttached == true'
+      - 'result_1.response[0].attach[1].switchDetailsList[0].lanAttachState == "DEPLOYED"'
+      - 'result_1.response[0].attach[1].switchDetailsList[0].vlanId == 500'
 
 - name: TEST.2 - QUERY - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
@@ -193,7 +193,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_3
 
 - name: TEST.3a - QUERY - [query] Wait for vrfStatus == DEPLOYED
@@ -241,8 +241,9 @@
                 interface: "{{ interface_2a }}" # mandatory
                 ipv4_addr: 10.33.0.2/30 # optional
                 neighbor_ipv4: 10.33.0.1 # optional
-                ipv6_addr: 2010::10:34:0:7/64 # optional
-                neighbor_ipv6: 10:34:0:3 # optional
+                # Parsed as integers instead of string causing attribute err
+                ipv6_addr: "2010::10:34:0:7/64" # optional
+                neighbor_ipv6: "2010::10:34:0:3" # optional
                 dot1q: 2 # optional controller can provide
         deploy: true
   register: result_4
@@ -290,10 +291,10 @@
                 interface: "{{ interface_2a }}" # mandatory
                 ipv4_addr: 10.33.0.2/30 # optional
                 neighbor_ipv4: 10.33.0.1 # optional
-                ipv6_addr: 2010::10:34:0:7/64 # optional
-                neighbor_ipv6: 2010::10:34:0:3 # optional
+                ipv6_addr: "2010::10:34:0:7/64" # optional
+                neighbor_ipv6: "2010::10:34:0:3" # optional
                 dot1q: 2 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_5
 
 - name: TEST.5a - QUERY - [debug] print result_5
@@ -309,10 +310,10 @@
       - 'result_5.response[0].parent.vrfStatus == "DEPLOYED"'
       - 'result_5.response[0].attach[0].switchDetailsList[0].islanAttached == true'
       - 'result_5.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-      - 'result_5.response[0].attach[0].switchDetailsList[0].vlan == 1500'
+      - 'result_5.response[0].attach[0].switchDetailsList[0].vlan == "1500"'
       - 'result_5.response[0].attach[1].switchDetailsList[0].islanAttached == true'
       - 'result_5.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-      - 'result_5.response[0].attach[1].switchDetailsList[0].vlan == 1500'
+      - 'result_5.response[0].attach[1].switchDetailsList[0].vlan == "1500"'
 
 - name: TEST.6 - QUERY - [query] Query without the config element
   cisco.dcnm.dcnm_vrf:
@@ -333,10 +334,10 @@
       - 'result_6.response[0].parent.vrfStatus == "DEPLOYED"'
       - 'result_6.response[0].attach[0].switchDetailsList[0].islanAttached == true'
       - 'result_6.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-      - 'result_6.response[0].attach[0].switchDetailsList[0].vlan == 1500'
+      - 'result_6.response[0].attach[0].switchDetailsList[0].vlan == "1500"'
       - 'result_6.response[0].attach[1].switchDetailsList[0].islanAttached == true'
       - 'result_6.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-      - 'result_6.response[0].attach[1].switchDetailsList[0].vlan == 1500'
+      - 'result_6.response[0].attach[1].switchDetailsList[0].vlan == "1500"'
 
 - name: TEST.7 - QUERY - [query] Query non-existent VRF ansible-vrf-int1
   cisco.dcnm.dcnm_vrf:
@@ -351,7 +352,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_7
 
 - name: TEST.7a - QUERY - [debug] print result_7
@@ -391,10 +392,10 @@
                 interface: "{{ interface_2a }}" # mandatory
                 ipv4_addr: 10.33.0.2/30 # optional
                 neighbor_ipv4: 10.33.0.1 # optional
-                ipv6_addr: 2010::10:34:0:7/64 # optional
-                neighbor_ipv6: 2010::10:34:0:3 # optional
+                ipv6_addr: "2010::10:34:0:7/64" # optional
+                neighbor_ipv6: "2010::10:34:0:3" # optional
                 dot1q: 2 # optional controller can provide
-                deploy: false
+        deploy: false
   register: result_8
 
 - name: TEST.8a - QUERY - [query] query VRF state
@@ -439,10 +440,10 @@
                 interface: "{{ interface_2a }}" # mandatory
                 ipv4_addr: 10.33.0.2/30 # optional
                 neighbor_ipv4: 10.33.0.1 # optional
-                ipv6_addr: 2010::10:34:0:7/64 # optional
-                neighbor_ipv6: 2010::10:34:0:3 # optional
+                ipv6_addr: "2010::10:34:0:7/64" # optional
+                neighbor_ipv6: "2010::10:34:0:3" # optional
                 dot1q: 2 # optional controller can provide
-                deploy: false
+        deploy: false
   register: result_9
 
 - name: TEST.9a - QUERY - [debug] print result_9

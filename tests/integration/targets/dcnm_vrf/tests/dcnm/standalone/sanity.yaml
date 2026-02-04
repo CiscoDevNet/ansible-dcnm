@@ -67,9 +67,9 @@
     timeout: 60
   tags: sanity
 
-###############################################
-###                MERGED                    ##
-###############################################
+##############################################
+##                MERGED                    ##
+##############################################
 
 - name: TEST.1 - SANITY MERGED - [merged] Create, Attach, Deploy VLAN+VRF - VLAN Provided by the User
   cisco.dcnm.dcnm_vrf: &conf1
@@ -83,7 +83,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_1
   tags: sanity
@@ -160,7 +160,7 @@
         l3vni_wo_vlan: true
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: false
   register: result_1g
   tags: sanity
@@ -230,7 +230,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_2
   tags: sanity
@@ -340,7 +340,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_2i
   tags: sanity
@@ -424,7 +424,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_3
   tags: sanity
@@ -473,7 +473,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_3c
   tags: sanity
@@ -503,11 +503,10 @@
       - 'result_3c.response[2].RETURN_CODE == 200'
       - 'result_3c.response[3].RETURN_CODE == 200'
       - 'result_3c.response[4].RETURN_CODE == 200'
-      - 'result_3c.response[5].RETURN_CODE == 200'
       - '(result_3c.response[0].DATA|dict2items)[0].value == "SUCCESS"'
       - '(result_3c.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-      - '(result_3c.response[5].DATA|dict2items)[0].value == "SUCCESS"'
-      - '(result_3c.response[5].DATA|dict2items)[1].value == "SUCCESS"'
+      - '(result_3c.response[4].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_3c.response[4].DATA|dict2items)[1].value == "SUCCESS"'
       - 'result_3c.diff[0].attach[0].deploy == true'
       - 'result_3c.diff[0].attach[1].deploy == true'
       - 'result_3c.diff[0].vrf_name == "ansible-vrf-int2"'
@@ -560,7 +559,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_4
   tags: sanity
@@ -626,12 +625,12 @@
       - 'result_4c.response[0].parent.vrfName == "ansible-vrf-int1"'
       - 'result_4c.response[0].parent.vrfId == 9008011'
       - 'result_4c.response[0].parent.vrfStatus == "DEPLOYED"'
-      - 'result_4c.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-      - 'result_4c.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-      - 'result_4c.response[0].attach[0].switchDetailsList[0].vlan == 500'
-      - 'result_4c.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-      - 'result_4c.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-      - 'result_4c.response[0].attach[1].switchDetailsList[0].vlan == 500'
+      - 'result_4c.response[0].attach[0].switchDetailsList[0].isLanAttached == true'
+      - 'result_4c.response[0].attach[0].switchDetailsList[0].lanAttachState == "DEPLOYED"'
+      - 'result_4c.response[0].attach[0].switchDetailsList[0].vlanId == 500'
+      - 'result_4c.response[0].attach[1].switchDetailsList[0].isLanAttached == true'
+      - 'result_4c.response[0].attach[1].switchDetailsList[0].lanAttachState == "DEPLOYED"'
+      - 'result_4c.response[0].attach[1].switchDetailsList[0].vlanId == 500'
   tags: sanity
 
 - name: TEST.4e - SANITY QUERY - [deleted] Delete all VRFs
@@ -661,7 +660,7 @@
         vlan_id: 500
         attach:
           - ip_address: "{{ switch_1 }}"
-      - ip_address: "{{ switch_2 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_5
   tags: sanity

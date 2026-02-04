@@ -137,7 +137,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: false
+        deploy: false
   register: result_1
 
 - name: TEST.1a - OVERRIDDEN - [query] query VRF state
@@ -158,11 +158,10 @@
       - 'result_1.response[1].RETURN_CODE == 200'
       - 'result_1.response[3].RETURN_CODE == 200'
       - 'result_1.response[4].RETURN_CODE == 200'
-      - 'result_1.response[5].RETURN_CODE == 200'
       - '(result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"'
       - '(result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-      - '(result_1.response[5].DATA|dict2items)[0].value == "SUCCESS"'
-      - '(result_1.response[5].DATA|dict2items)[1].value == "SUCCESS"'
+      - '(result_1.response[4].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_1.response[4].DATA|dict2items)[1].value == "SUCCESS"'
       - 'result_1.diff[0].vrf_name == "ansible-vrf-int2"'
       - 'result_1.diff[1].attach[0].deploy == false'
       - 'result_1.diff[1].attach[1].deploy == false'
@@ -203,7 +202,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_2
 
 - name: TEST.2a - OVERRIDDEN - [debug] print result_2
@@ -248,7 +247,7 @@
         attach:
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
-            deploy: true
+        deploy: true
   register: result_2c
 
 - name: TEST.2d - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
@@ -280,6 +279,8 @@
       - '(result_2c.response[0].DATA|dict2items)[1].value == "SUCCESS"'
       - '(result_2c.response[5].DATA|dict2items)[0].value == "SUCCESS"'
       - '(result_2c.response[5].DATA|dict2items)[1].value == "SUCCESS"'
+      - '(result_2c.response[4].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_2c.response[4].DATA|dict2items)[1].value == "SUCCESS"'
       - 'result_2c.diff[0].attach[0].deploy == true'
       - 'result_2c.diff[0].attach[1].deploy == true'
       - 'result_2c.diff[0].vrf_name == "ansible-vrf-int2"'
@@ -322,7 +323,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 2 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_3
 
 - name: TEST.3a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
@@ -355,11 +356,8 @@
       - 'result_3.response[1].RETURN_CODE == 200'
       - 'result_3.response[2].RETURN_CODE == 200'
       - '(result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-      - '(result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
       - 'result_3.diff[0].attach[0].deploy == true'
-      - 'result_3.diff[0].attach[1].deploy == true'
-      - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
-      - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
+      - '"{{ switch_2 }}" in result_3.diff[0].attach[0].ip_address'
       - 'result_3.diff[0].vrf_name == "ansible-vrf-int2"'
 
 - name: TEST.4 - OVERRIDDEN - [overridden] Override vrf_lite extension with new dot1q value
@@ -383,7 +381,7 @@
                 ipv6_addr: 2010::10:34:0:7/64 # optional
                 neighbor_ipv6: 2010::10:34:0:3 # optional
                 dot1q: 21 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_4
 
 - name: TEST.4a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
@@ -472,7 +470,7 @@
                 ipv6_addr: 2010::10:34:0:1/64 # optional
                 neighbor_ipv6: 2010::10:34:0:2 # optional
                 dot1q: 31 # optional controller can provide
-                deploy: true
+        deploy: true
   register: result_5
 
 - name: TEST.5a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
@@ -510,6 +508,8 @@
       - 'result_5.response[6].RETURN_CODE == 200'
       - '(result_5.response[0].DATA|dict2items)[0].value == "SUCCESS"'
       - '(result_5.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+      - '(result_5.response[4].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result_5.response[4].DATA|dict2items)[1].value == "SUCCESS"'
       - '(result_5.response[5].DATA|dict2items)[0].value == "SUCCESS"'
       - '(result_5.response[5].DATA|dict2items)[1].value == "SUCCESS"'
       - 'result_5.response[2].METHOD == "DELETE"'

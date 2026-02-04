@@ -1,0 +1,44 @@
+---
+# This MSD Invalid test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+# These configurations should FAIL when applied to parent fabrics
+#
+
+# ------------------------------
+# Invalid: l3gw_on_border on parent fabric (should fail)
+# ------------------------------
+- net_name: "invalid-l3gw-parent"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "2201"
+  gw_ip_subnet: '192.168.201.1/24'
+  # This should fail - l3gw_on_border not allowed on parent fabric
+  l3gw_on_border: True
+  deploy: false
+
+# ------------------------------
+# Invalid: netflow_enable on parent fabric (should fail)
+# ------------------------------
+- net_name: "invalid-netflow-parent"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "2202"
+  gw_ip_subnet: '192.168.202.1/24'
+  # This should fail - netflow_enable not allowed on parent fabric
+  netflow_enable: true
+  deploy: false
+
+# ------------------------------
+# Invalid: trm_enable on parent fabric (should fail)
+# ------------------------------
+- net_name: "invalid-trm-parent"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "2203"
+  gw_ip_subnet: '192.168.203.1/24'
+  # This should fail - trm_enable not allowed on parent fabric  
+  trm_enable: true
+  deploy: false

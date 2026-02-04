@@ -31,7 +31,7 @@
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
-- name: OVERRIDDEN_ALL - Verify if fabric is deployed.
+- name: REPLACED_ALL - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_path }}"
@@ -42,7 +42,7 @@
     that:
       - 'result.response.DATA != None'
 
-- name: OVERRIDDEN_ALL - Clean up any existing vrfs
+- name: REPLACED_ALL - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -51,7 +51,7 @@
 ###                MERGED                    ##
 ###############################################
 
-- name: OVERRIDDEN_ALL - Create, Attach and Deploy new VRF with all values
+- name: REPLACED_ALL - Create, Attach and Deploy new VRF with all values
   cisco.dcnm.dcnm_vrf: &conf
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -107,7 +107,7 @@
       - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
       - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: OVERRIDDEN_ALL - conf - Idempotence
+- name: REPLACED_ALL - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf
   register: result
 
@@ -117,12 +117,12 @@
       - 'result.changed == false'
       - 'result.response|length == 0'
 
-- name: OVERRIDDEN_ALL - Override a existing VRF with a new one
+- name: REPLACED_ALL - Replace VRF with all values
   cisco.dcnm.dcnm_vrf: &conf1
     fabric: "{{ fabric_1 }}"
-    state: overridden
+    state: replaced
     config:
-      - vrf_name: ansible-vrf-int2
+      - vrf_name: ansible-vrf-int1
         vrf_id: 9008011
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
@@ -158,31 +158,15 @@
   retries: 30
   delay: 2
 
-# - assert:
-#     that:
-#     - 'result.changed == true'
-#     - 'result.response[0].RETURN_CODE == 200'
-#     - 'result.response[1].RETURN_CODE == 200'
-#     - 'result.response[2].RETURN_CODE == 200'
-#     - 'result.response[3].RETURN_CODE == 200'
-#     - 'result.response[4].RETURN_CODE == 200'
-#     - 'result.response[5].RETURN_CODE == 200'
-#     - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-#     - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-#     - '(result.response[4].DATA|dict2items)[0].value == "SUCCESS"'
-#     - '(result.response[4].DATA|dict2items)[1].value == "SUCCESS"'
-#     - 'result.diff[0].attach[0].deploy == true'
-#     - 'result.diff[0].attach[1].deploy == true'
-#     - 'result.diff[1].attach[0].deploy == false'
-#     - 'result.diff[1].attach[1].deploy == false'
-#     - '"{{ switch_1 }}" or "{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-#     - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
-#     - '"{{ switch_1 }}" or "{{ switch_2 }}" in result.diff[1].attach[0].ip_address'
-#     - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[1].attach[1].ip_address'
-#     - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
-#     - 'result.diff[1].vrf_name == "ansible-vrf-int1"'
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - 'result.changed == true'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: OVERRIDDEN_ALL - conf1 - Idempotence
+- name: REPLACED_ALL - conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
   register: result
 
@@ -196,7 +180,7 @@
 ###                 CLEAN-UP                 ##
 ###############################################
 
-- name: OVERRIDDEN_ALL - Clean up any existing vrfs
+- name: REPLACED_ALL - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted

@@ -12,4 +12,4 @@ all:
         ansible_connection: ansible.netcommon.httpapi
         ansible_network_os: cisco.dcnm.dcnm
       hosts:
-          192.168.1.1:
+        192.168.1.1:

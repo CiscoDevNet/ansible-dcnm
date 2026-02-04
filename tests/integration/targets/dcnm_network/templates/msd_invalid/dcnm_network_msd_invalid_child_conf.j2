@@ -1,0 +1,20 @@
+---
+# This MSD Invalid test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+# These configurations should FAIL due to child fabric errors
+#
+
+# ------------------------------
+# Invalid: non-existent child fabric (should fail)
+# ------------------------------
+- net_name: "invalid-child-fabric"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "2204"
+  gw_ip_subnet: '192.168.204.1/24'
+  child_fabric_config:
+    - fabric: "non-existent-child-fabric"
+      netflow_enable: false
+      l3gw_on_border: True
+  deploy: false
