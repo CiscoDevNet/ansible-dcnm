@@ -10,7 +10,7 @@ This collection is intended for use with the following release versions:
   * `Cisco Nexus Dashboard Fabric Controller (NDFC) Release 12.2.1`
   * `Cisco Nexus Dashboard Fabric Controller (NDFC) Release 12.2.2`
   * `Cisco Nexus Dashboard Fabric Controller (NDFC) Release 12.2.3`
-  * `Cisco Nexus Dashboard Release 4.1.1g` - Unified Nexus Dashboard Tech Preview
+  * `Cisco Nexus Dashboard Release 4.1.1g` - Unified Nexus Dashboard (Legacy APIs)
 
 <!--start requires_ansible-->
 ## Ansible version compatibility
@@ -77,7 +77,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 3.9.1
+    version: 3.10.0
 ```
 ## Using this collection
 
@@ -191,14 +191,13 @@ We welcome community contributions to this collection. If you find problems, ple
 
 ## More information
 
-- [DCNM installation and configuration guides](https://www.cisco.com/c/en/us/support/cloud-systems-management/prime-data-center-network-manager/products-installation-and-configuration-guides-list.html)
 - [NDFC installation and configuration guides](https://www.cisco.com/c/en/us/td/docs/dcn/ndfc/1201/installation/cisco-ndfc-install-and-upgrade-guide-1201.html)
 - [Ansible User guide](https://docs.ansible.com/ansible/latest/user_guide/index.html)
 - [Ansible Developer guide](https://docs.ansible.com/ansible/latest/dev_guide/index.html)
 
 ## Licensing
 
-Copyright (c) 2020-2025 Cisco and/or its affiliates.
+Copyright (c) 2020-2026 Cisco and/or its affiliates.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

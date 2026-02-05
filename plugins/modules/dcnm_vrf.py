@@ -4856,7 +4856,7 @@ class DcnmVrf:
         for vrf in self.diff_delete:
             ok_to_delete = False
             path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
-            retry_count = max(100 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+            retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
             while not ok_to_delete:
                 resp = dcnm_send(self.module, "GET", path)
                 ok_to_delete = True
