@@ -384,12 +384,6 @@ options:
             - If not specified, inherits the deploy value from parent fabric configuration
             type: bool
             required: false
-          dhcp_loopback_id:
-            description:
-            - Child-specific Loopback ID for DHCP Relay interface
-            - Configured ID value should be in range 0-1023
-            type: int
-            required: false
           l3gw_on_border:
             description:
             - Child-specific Enable L3 Gateway on Border setting
@@ -414,16 +408,88 @@ options:
             - Netflow configs are supported on NDFC only
             type: str
             required: false
+          dhcp_loopback_id:
+            description:
+            - Child-specific Loopback ID for DHCP Relay interface
+            - Configured ID value should be in range 0-1023
+            type: int
+            required: false
           dhcp_srvr1_ip:
             description:
             - Child-specific DHCP relay IP address of the first DHCP server
+            - If dhcp_servers and dhcp_srvr1_ip are specified an error message is generated
+                indicating these are mutually exclusive options
+            - Not applicable at Multisite parent fabric level
+            - DEPRECATED
             type: str
             required: false
           dhcp_srvr1_vrf:
             description:
             - Child-specific VRF ID of first DHCP server
+            - If not specified, will use same VRF as the network VRF
+            - For ND version 3.1 and NDFC 12.1 dhcp_srvr1_vrf must be specified for dhcp_srvr1_ip
+            - Not applicable at Multisite parent fabric level
+            - DEPRECATED
             type: str
             required: false
+          dhcp_srvr2_ip:
+            description:
+            - Child-specific DHCP relay IP address of the second DHCP server
+            - If dhcp_servers and dhcp_srvr2_ip are specified an error message is generated
+                indicating these are mutually exclusive options
+            - Not applicable at Multisite parent fabric level
+            - DEPRECATED
+            type: str
+            required: false
+          dhcp_srvr2_vrf:
+            description:
+            - Child-specific VRF ID of second DHCP server
+            - If not specified, will use same VRF as the network VRF
+            - For ND version 3.1 and NDFC 12.1 dhcp_srvr2_vrf must be specified for dhcp_srvr2_ip
+            - Not applicable at Multisite parent fabric level
+            - DEPRECATED
+            type: str
+            required: false
+          dhcp_srvr3_ip:
+            description:
+            - Child-specific DHCP relay IP address of the third DHCP server
+            - Not applicable at Multisite parent fabric level
+            - If dhcp_servers and dhcp_srvr3_ip are specified an error message is generated
+                indicating these are mutually exclusive options
+            - DEPRECATED
+            type: str
+            required: false
+          dhcp_srvr3_vrf:
+            description:
+            - Child-specific VRF ID of third DHCP server
+            - If not specified, will use same VRF as the network VRF
+            - For ND version 3.1 and NDFC 12.1 dhcp_srvr3_vrf must be specified for dhcp_srvr3_ip
+            - Not applicable at Multisite parent fabric level
+            - DEPRECATED
+            type: str
+            required: false
+          dhcp_servers:
+            description:
+            - Child-specific List of DHCP server_vrf pairs where 'srvr_ip' is the IP key and 'srvr_vrf' is the VRF key
+            - The 'srvr_vrf' key is optional, if not specified will use same VRF as the network VRF
+            - For ND version 3.1 and NDFC 12.1 'srvr_vrf' must be specified for each DHCP server
+            - This replaces dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
+                dhcp_srvr3_ip, dhcp_srvr3_vrf
+            - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
+                dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated
+                indicating these are mutually exclusive options
+            - Not applicable at Multisite parent fabric level
+            type: list
+            elements: dict
+            required: false
+          trm_enable:
+            description:
+            - Child-specific Enable Tenant Routed Multicast
+            - Not applicable at Multisite parent fabric level
+            type: bool
+            required: false
+            default: false
+
 """
 
 EXAMPLES = """
