@@ -11,7 +11,7 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 `3.10.0`_
 =====================
 
-**Release Date:** ``2025-02-05``
+**Release Date:** ``2026-02-05``
 
 Added
 -----
