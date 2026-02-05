@@ -3349,7 +3349,7 @@ class DcnmNetwork:
                 else:
                     path = self.paths["GET_NET_STATUS"].format(self.fabric, net)
 
-                retry = max(100 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+                retry = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
                 deploy_started = False
                 while not state and retry >= 0:
                     retry -= 1
