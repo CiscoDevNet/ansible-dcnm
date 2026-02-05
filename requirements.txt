@@ -1,2 +1,4 @@
 ansible
+pydantic
 requests
+-c constraints.txt

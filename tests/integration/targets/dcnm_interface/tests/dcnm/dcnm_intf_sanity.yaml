@@ -2,31 +2,33 @@
 ##               SETUP                      ##
 ##############################################
 
-- name: SANITY- Remove local log file
+- name: Remove local log file
   local_action: command rm -f dcnm_intf.log
   tags: sanity
 
-- name: SANITY- Put the fabric to default state
+- name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
-    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+    state: overridden
   register: result
   tags: sanity
 
-- assert:
+- name: ASSERT - Check return codes for setup
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
+    loop: '{{ result.response }}'
   tags: sanity
 
 - name: Sanity tests - 1
   tags: sanity
-  block:
 
-##############################################
-##             SETUP VARS                   ##
-##############################################
+- block:
+
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
 
     - name: Setup Internal TestCase Variables
       ansible.builtin.set_fact:
@@ -53,7 +55,7 @@
       ansible.builtin.template:
         src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
         dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
-      with_items:
+      loop:
         - sanity_eth_merge
         - sanity_eth_replace
         - sanity_pc_merge
@@ -64,9 +66,9 @@
         - sanity_mixed_modified
       delegate_to: localhost
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##              MERGED                      ##
+    ##############################################
 
     - name: Load Ethernet Interface Config File
       ansible.builtin.set_fact:
@@ -85,7 +87,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC
@@ -102,9 +104,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              REPLACE                     ##
-##############################################
+    ##############################################
+    ##              REPLACE                     ##
+    ##############################################
 
     - name: Load Ethernet Replace Interface Config File
       ansible.builtin.set_fact:
@@ -123,7 +125,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC after replace
@@ -150,11 +152,11 @@
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -169,7 +171,7 @@
     - name: ASSERT - Check return codes for cleanup
       assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
 
@@ -177,9 +179,9 @@
   tags: sanity
   block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: SANITY- Create ethernet interfaces - 2
       cisco.dcnm.dcnm_interface: &eth_merge2
@@ -193,7 +195,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC
@@ -210,9 +212,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##              REPLACE                     ##
-##############################################
+    ##############################################
+    ##              REPLACE                     ##
+    ##############################################
 
     - name: SANITY- Replace ethernet interfaces - 2
       cisco.dcnm.dcnm_interface: &eth_replace2
@@ -226,7 +228,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC after replace
@@ -253,11 +255,11 @@
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -271,7 +273,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
 
@@ -279,9 +281,9 @@
   tags: sanity
   block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load PC Interface Config File
       ansible.builtin.set_fact:
@@ -300,7 +302,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for PC
@@ -317,9 +319,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##                REPLACE                   ##
-##############################################
+    ##############################################
+    ##                REPLACE                   ##
+    ##############################################
 
     - name: Load PC Replace Interface Config File
       ansible.builtin.set_fact:
@@ -338,7 +340,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for PC replace
@@ -359,18 +361,18 @@
       cisco.dcnm.dcnm_interface: *pc_replace
       register: result
 
-    # possible bug 
-    # - name: ASSERT - Check changed flag is false and return codes for idempotence
-    #   assert:
-    #     that:
-    #       - 'result.changed == false'
-    #       - 'result.response is defined'
-    #       - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+  # possible bug
+  # - name: ASSERT - Check changed flag is false and return codes for idempotence
+  #   assert:
+  #     that:
+  #       - 'result.changed == false'
+  #       - 'result.response is defined'
+  #       - 'result.response | length >= 0'  # Allow empty response for idempotence
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -384,7 +386,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
 
@@ -392,9 +394,9 @@
   tags: sanity
   block:
 
-##############################################
-##                MERGE                     ##
-##############################################
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
 
     - name: Load Sub Interface Config File
       ansible.builtin.set_fact:
@@ -413,7 +415,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for sub-interfaces
@@ -430,9 +432,9 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##             REPLACE                      ##
-##############################################
+    ##############################################
+    ##             REPLACE                      ##
+    ##############################################
 
     - name: Load Sub Replace Interface Config File
       ansible.builtin.set_fact:
@@ -451,7 +453,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for sub-interface replace
@@ -478,11 +480,11 @@
           - 'result.changed == false'
           - 'result.response is defined'
           - 'result.response | length >= 0'  # Allow empty response for idempotence
-      # Don't loop over response items for idempotence check as they may be empty
+  # Don't loop over response items for idempotence check as they may be empty
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
@@ -496,7 +498,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
 
@@ -504,9 +506,9 @@
   tags: sanity
   block:
 
-##############################################
-##              MERGE                       ##
-##############################################
+    ##############################################
+    ##              MERGE                       ##
+    ##############################################
 
     - name: Load Multi Interface Config File
       ansible.builtin.set_fact:
@@ -525,7 +527,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for multi-interfaces
@@ -559,7 +561,7 @@
       assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for mixed modified interfaces
@@ -576,22 +578,24 @@
         test_data: "{{ test_data_common }}"
       delegate_to: localhost
 
-##############################################
-##             CLEANUP                      ##
-##############################################
+
+  ##############################################
+  ##             CLEANUP                      ##
+  ##############################################
 
   always:
 
-    - name: SANITY- Put fabric to default state
+    - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
-        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+        state: overridden
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
-    - assert:
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

@@ -1,0 +1,127 @@
+{
+    "TEST_NOTES": [
+        "Mocked payloads for FabricGroupCommon unit tests.",
+        "tests/unit/modules/dcnm/dcnm_fabric_group/test_fabric_group_common.py"
+    ],
+    "test_fabric_group_common_00020a": [
+        {
+            "TEST_NOTES": [
+                "ANYCAST_GW_MAC at top level - valid Unix format MAC address.",
+                "Tests backward compatibility with VXLAN child fabric payloads."
+            ],
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "ANYCAST_GW_MAC": "00:11:22:33:44:55"
+        }
+    ],
+    "test_fabric_group_common_00021a": [
+        {
+            "TEST_NOTES": [
+                "ANYCAST_GW_MAC in nvPairs - valid Unix format MAC address.",
+                "Tests MCFG parent fabric payloads where MAC is nested."
+            ],
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "MFG1",
+            "FABRIC_TYPE": "MCFG",
+            "nvPairs": {
+                "ANYCAST_GW_MAC": "aa:bb:cc:dd:ee:ff"
+            }
+        }
+    ],
+    "test_fabric_group_common_00022a": [
+        {
+            "TEST_NOTES": [
+                "ANYCAST_GW_MAC at top level - malformed MAC address.",
+                "Tests error handling for invalid MAC at top level."
+            ],
+            "BGP_AS": 65001,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN",
+            "ANYCAST_GW_MAC": "00.54"
+        }
+    ],
+    "test_fabric_group_common_00023a": [
+        {
+            "TEST_NOTES": [
+                "ANYCAST_GW_MAC in nvPairs - malformed MAC address.",
+                "Tests error handling for invalid MAC in nvPairs."
+            ],
+            "BGP_AS": 65001,
+            "FABRIC_NAME": "MFG1",
+            "FABRIC_TYPE": "MCFG",
+            "nvPairs": {
+                "ANYCAST_GW_MAC": "invalid-mac"
+            }
+        }
+    ],
+    "test_fabric_group_common_00024a": [
+        {
+            "TEST_NOTES": [
+                "No ANYCAST_GW_MAC at top level or in nvPairs.",
+                "Tests that payloads without MAC are skipped gracefully."
+            ],
+            "BGP_AS": 65001,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+    "test_fabric_group_common_00030a": [
+        {
+            "TEST_NOTES": [
+                "DEPLOY at top level only (VXLAN child fabric).",
+                "Tests that DEPLOY is removed from the top level."
+            ],
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ],
+    "test_fabric_group_common_00031a": [
+        {
+            "TEST_NOTES": [
+                "DEPLOY in nvPairs only (MCFG parent fabric).",
+                "Tests that DEPLOY is removed from nvPairs.",
+                "This tests the fix for GitHub issue #626."
+            ],
+            "BGP_AS": 65001,
+            "FABRIC_NAME": "MFG1",
+            "FABRIC_TYPE": "MCFG",
+            "nvPairs": {
+                "DEPLOY": false,
+                "ANYCAST_GW_MAC": "00:11:22:33:44:55"
+            }
+        }
+    ],
+    "test_fabric_group_common_00032a": [
+        {
+            "TEST_NOTES": [
+                "DEPLOY at both top level and in nvPairs.",
+                "Tests that DEPLOY is removed from both locations.",
+                "This tests the fix for GitHub issue #626."
+            ],
+            "BGP_AS": 65001,
+            "DEPLOY": true,
+            "FABRIC_NAME": "MFG1",
+            "FABRIC_TYPE": "MCFG",
+            "nvPairs": {
+                "DEPLOY": false,
+                "ANYCAST_GW_MAC": "00:11:22:33:44:55"
+            }
+        }
+    ],
+    "test_fabric_group_common_00033a": [
+        {
+            "TEST_NOTES": [
+                "No DEPLOY at top level or in nvPairs.",
+                "Tests that payloads without DEPLOY are handled gracefully."
+            ],
+            "BGP_AS": 65001,
+            "FABRIC_NAME": "f1",
+            "FABRIC_TYPE": "VXLAN_EVPN"
+        }
+    ]
+}

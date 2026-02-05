@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -275,7 +276,6 @@ EXAMPLES = """
       - pool_name: "VPC_ID"                     # Based on the 'poolType', select appropriate name
         switch:                                 # provide the switch information to which the given resource is attached
           - 192.175.1.1
-
 """
 
 import json

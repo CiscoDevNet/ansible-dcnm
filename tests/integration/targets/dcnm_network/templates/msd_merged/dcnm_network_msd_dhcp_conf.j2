@@ -1,0 +1,37 @@
+---
+# This MSD test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+#
+
+# ------------------------------
+# MSD Network with DHCP Configuration
+# ------------------------------
+- net_name: "{{ test_data_common.msd_dhcp_net }}"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_id: "{{ test_data_common.msd_dhcp_net_id }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "{{ test_data_common.msd_dhcp_vlan_id }}"
+  gw_ip_subnet: "{{ test_data_common.msd_dhcp_gw_ip_subnet }}"
+  routing_tag: 12347
+  int_desc: 'MSD DHCP Network'
+  mtu_l3intf: 9214
+  child_fabric_config:
+    - fabric: "{{ test_data_common.child_fabric }}"
+      netflow_enable: false
+      l3gw_on_border: True
+      dhcp_loopback_id: 207
+      multicast_group_address: '239.1.1.4'
+      vlan_nf_monitor: 'monitor2'
+      dhcp_srvr1_ip: '192.168.1.104'
+      dhcp_srvr1_vrf: 'management'
+      dhcp_srvr2_ip: '192.168.1.105'
+      dhcp_srvr2_vrf: 'default'
+      dhcp_srvr3_ip: '192.168.1.106'
+      dhcp_srvr3_vrf: 'management'
+  attach:
+    - ip_address: "{{ test_data_common.sw1 }}"
+      ports: ["{{ test_data_common.sw1_int5 }}"]
+    - ip_address: "{{ test_data_common.sw2 }}"
+      ports: ["{{ test_data_common.sw2_int5 }}"]
+  deploy: {{ deploy_local | bool }}

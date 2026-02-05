@@ -12,10 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# pylint: disable=too-many-instance-attributes
+"""
+Send REST requests to the controller with retries.
+"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import copy
@@ -148,35 +151,6 @@ class RestSend:
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-    def _verify_commit_parameters(self):
-        """
-        ### Summary
-        Verify that required parameters are set prior to calling ``commit()``
-
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``path`` is not set
-                -   ``response_handler`` is not set
-                -   ``sender`` is not set
-                -   ``verb`` is not set
-        """
-        if self.path is None:
-            msg = f"{self.class_name}._verify_commit_parameters: "
-            msg += "path must be set before calling commit()."
-            raise ValueError(msg)
-        if self.response_handler is None:
-            msg = f"{self.class_name}._verify_commit_parameters: "
-            msg += "response_handler must be set before calling commit()."
-            raise ValueError(msg)
-        if self.sender is None:
-            msg = f"{self.class_name}._verify_commit_parameters: "
-            msg += "sender must be set before calling commit()."
-            raise ValueError(msg)
-        if self.verb is None:
-            msg = f"{self.class_name}._verify_commit_parameters: "
-            msg += "verb must be set before calling commit()."
-            raise ValueError(msg)
-
     def restore_settings(self):
         """
         ### Summary
@@ -230,7 +204,7 @@ class RestSend:
 
         ### Raises
         -   ``ValueError`` if:
-                -   RestSend()._verify_commit_parameters() raises
+                -   RestSend()._commit_normal_mode() raises
                     ``ValueError``
                 -   ResponseHandler() raises ``TypeError`` or ``ValueError``
                 -   Sender().commit() raises ``ValueError``
@@ -260,16 +234,16 @@ class RestSend:
 
         try:
             if self.check_mode is True:
-                self.commit_check_mode()
+                self._commit_check_mode()
             else:
-                self.commit_normal_mode()
+                self._commit_normal_mode()
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Error during commit. "
             msg += f"Error details: {error}"
             raise ValueError(msg) from error
 
-    def commit_check_mode(self):
+    def _commit_check_mode(self):
         """
         ### Summary
         Simulate a controller request for check_mode.
@@ -300,9 +274,24 @@ class RestSend:
         msg += f"verb {self.verb}, path {self.path}."
         self.log.debug(msg)
 
-        self._verify_commit_parameters()
+        if self.path is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "path must be set before calling commit()."
+            raise ValueError(msg)
+        if self.response_handler is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "response_handler must be set before calling commit()."
+            raise ValueError(msg)
+        if self.sender is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "sender must be set before calling commit()."
+            raise ValueError(msg)
+        if self.verb is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "verb must be set before calling commit()."
+            raise ValueError(msg)
 
-        response_current = {}
+        response_current: dict = {}
         response_current["RETURN_CODE"] = 200
         response_current["METHOD"] = self.verb
         response_current["REQUEST_PATH"] = self.path
@@ -324,7 +313,7 @@ class RestSend:
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-    def commit_normal_mode(self):
+    def _commit_normal_mode(self):
         """
         Call dcnm_send() with retries until successful response or timeout is exceeded.
 
@@ -346,10 +335,22 @@ class RestSend:
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
 
-        try:
-            self._verify_commit_parameters()
-        except ValueError as error:
-            raise ValueError(error) from error
+        if self.path is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "path must be set before calling commit()."
+            raise ValueError(msg)
+        if self.response_handler is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "response_handler must be set before calling commit()."
+            raise ValueError(msg)
+        if self.sender is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "sender must be set before calling commit()."
+            raise ValueError(msg)
+        if self.verb is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "verb must be set before calling commit()."
+            raise ValueError(msg)
 
         timeout = copy.copy(self.timeout)
 

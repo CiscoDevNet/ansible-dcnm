@@ -23,8 +23,8 @@ import inspect
 import json
 import logging
 
-from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabricUpdate
+from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import EpFabricUpdate
+from ..common.controller_version_v2 import ControllerVersion
 from ..common.exceptions import ControllerResponseError
 from .common import FabricCommon
 from .fabric_types import FabricTypes
@@ -47,8 +47,46 @@ class FabricUpdateCommon(FabricCommon):
         self.ep_fabric_update = EpFabricUpdate()
         self.fabric_types = FabricTypes()
 
+        self._controller_version = None
+
         msg = "ENTERED FabricUpdateCommon()"
         self.log.debug(msg)
+
+    def _remove_nd4x_problematic_keys(self, payload):
+        """
+        Remove keys that cause errors on ND 4.x during fabric update.
+
+        -   Remove the following keys if present:
+            - dcnmUser
+            - DHCP_FORCE
+            - DOMAIN_NAME_INTERNAL
+            - INBAND_ENABLE_PREV
+            - PNP_ENABLE_INTERNAL
+        -   Initialize STP_BRIDGE_PRIORITY to empty string if:
+            - STP_ROOT_OPTION is "unmanaged"
+            - STP_BRIDGE_PRIORITY is not already present in payload
+
+        Args:
+            payload: Dictionary containing fabric parameters
+
+        Returns:
+            None. The payload is modified in place.
+        """
+        # If STP_ROOT_OPTION is "unmanaged", ensure STP_BRIDGE_PRIORITY is initialized
+        # to an empty string if not already present in the payload
+        if "STP_ROOT_OPTION" in payload and payload["STP_ROOT_OPTION"] == "unmanaged":
+            if "STP_BRIDGE_PRIORITY" not in payload:
+                payload["STP_BRIDGE_PRIORITY"] = ""
+
+        problematic_keys = [
+            "dcnmUser",
+            "DHCP_FORCE",
+            "DOMAIN_NAME_INTERNAL",
+            "INBAND_ENABLE_PREV",
+            "PNP_ENABLE_INTERNAL",
+        ]
+        for key in problematic_keys:
+            payload.pop(key, None)
 
     def _fabric_needs_update_for_merged_state(self, payload):
         """
@@ -108,10 +146,7 @@ class FabricUpdateCommon(FabricCommon):
                 self.results.result_current = {"success": False, "changed": False}
                 self.results.failed = True
                 self.results.changed = False
-                self.results.failed_result["msg"] = (
-                    f"Key {key} not found in fabric configuration for "
-                    f"fabric {fabric_name}"
-                )
+                self.results.failed_result["msg"] = f"Key {key} not found in fabric configuration for fabric {fabric_name}"
                 self.results.register_task_result()
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Invalid key: {key} found in payload for "
@@ -153,6 +188,24 @@ class FabricUpdateCommon(FabricCommon):
         self._fabric_changes_payload[fabric_name]["FABRIC_NAME"] = fabric_name
         self._fabric_changes_payload[fabric_name]["FABRIC_TYPE"] = fabric_type
 
+        # ND 4.x requires ALL fabric parameters in the update payload,
+        # not just the changed parameters.  If we're on ND 4.x, merge all
+        # controller nvPairs with the user's changes.
+        # See: https://github.com/CiscoDevNet/ansible-dcnm/issues/609
+        if self._controller_version is not None and self._controller_version.is_controller_version_4x and True in self._fabric_update_required:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "ND 4.x detected. Merging all controller nvPairs with "
+            msg += "user changes for fabric update."
+            self.log.debug(msg)
+            # Start with all controller nvPairs
+            full_payload = copy.deepcopy(nv_pairs)
+            # Overlay the user's changes
+            full_payload.update(self._fabric_changes_payload[fabric_name])
+
+            # Remove keys that cause errors on ND 4.x during fabric update
+            self._remove_nd4x_problematic_keys(full_payload)
+            self._fabric_changes_payload[fabric_name] = full_payload
+
         msg = f"{self.class_name}.{method_name}: "
         msg += f"fabric_name: {fabric_name}, "
         msg += f"fabric_update_required: {self._fabric_update_required}, "
@@ -190,9 +243,7 @@ class FabricUpdateCommon(FabricCommon):
 
             if True not in self._fabric_update_required:
                 continue
-            self._payloads_to_commit.append(
-                copy.deepcopy(self._fabric_changes_payload[fabric_name])
-            )
+            self._payloads_to_commit.append(copy.deepcopy(self._fabric_changes_payload[fabric_name]))
 
     def _send_payloads(self):
         """
@@ -301,15 +352,40 @@ class FabricUpdateCommon(FabricCommon):
         else:
             self.results.diff_current = copy.deepcopy(payload)
 
-        self.send_payload_result[payload["FABRIC_NAME"]] = (
-            self.rest_send.result_current["success"]
-        )
+        self.send_payload_result[payload["FABRIC_NAME"]] = self.rest_send.result_current["success"]
         self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
         self.results.response_current = copy.deepcopy(self.rest_send.response_current)
         self.results.result_current = copy.deepcopy(self.rest_send.result_current)
         self.results.register_task_result()
+
+    @property
+    def controller_version(self) -> ControllerVersion:
+        """
+        # Summary
+
+        An instance of the ControllerVersion class that has been refreshed.
+
+        ## Raises
+
+        ### TypeError
+
+        - If value is not an instance of ControllerVersion.
+        """
+        return self._controller_version
+
+    @controller_version.setter
+    def controller_version(self, value: ControllerVersion) -> None:
+        method_name = inspect.stack()[0][3]
+        # Use duck-typing to allow mock objects in unit tests
+        if not hasattr(value, "is_controller_version_4x"):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "value must be an instance of ControllerVersion "
+            msg += "or a compatible object with is_controller_version_4x property. "
+            msg += f"Got type {type(value).__name__}, value {value}."
+            raise TypeError(msg)
+        self._controller_version = value
 
     @property
     def payloads(self):
@@ -392,6 +468,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
         """
         - Update fabrics and register results.
         - Return if there are no fabrics to update for merged state.
+        - raise ``ValueError`` if ``controller_version`` is not set
         - raise ``ValueError`` if ``fabric_details`` is not set
         - raise ``ValueError`` if ``fabric_summary`` is not set
         - raise ``ValueError`` if ``payloads`` is not set
@@ -419,6 +496,11 @@ class FabricUpdateBulk(FabricUpdateCommon):
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit."
+            raise ValueError(msg)
+
+        if self.controller_version is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "controller_version must be set prior to calling commit."
             raise ValueError(msg)
 
         self.results.action = self.action

@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -50,7 +51,7 @@ EXAMPLES = """
 
 - name: Log
   cisco.dcnm.dcnm_log:
-    msg: dcnm_vrf.merged - Create VRF myVrf 
+    msg: dcnm_vrf.merged - Create VRF myVrf
     severity: INFO
 
 - name: dcnm_vrf.merged - Create VRF myVrf
@@ -58,21 +59,20 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged
     config:
-    - vrf_name: myVrf
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
+      - vrf_name: myVrf
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
       - ip_address: 192.168.1.225
 
 - name: Log
   cisco.dcnm.dcnm_log:
-    msg: dcnm_vrf.merged - Create VRF myVrf DONE 
+    msg: dcnm_vrf.merged - Create VRF myVrf DONE
     severity: INFO
-
 """  # noqa
 
 RETURN = """

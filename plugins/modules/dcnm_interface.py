@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -1374,9 +1375,9 @@ EXAMPLES = """
           peer1_description: "VPC acting as trunk peer1 - modified"
           peer2_description: "VPC acting as trunk peer2 - modified"
           peer1_cmds:                     # Freeform config
-              - no shutdown
+            - no shutdown
           peer2_cmds:                     # Freeform config
-              - no shutdown
+            - no shutdown
 
 # To delete or reset a particular interface on a specific switch in the fabric
 - name: Delete vPC interfaces
@@ -1404,7 +1405,7 @@ EXAMPLES = """
           admin_state: true               # choose from [true, false]
           mode: trunk                     # choose from [trunk, access]
           peer1_pcid: 752                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
-          #peer2_pcid: 1                  # choose between [Min:1, Max:4096], if not given, will be VPC port-id
+          # peer2_pcid: 1                  # choose between [Min:1, Max:4096], if not given, will be VPC port-id
           peer1_members:                  # member interfaces on peer 1
             - e1/26
           peer2_members:                  # member interfaces on peer 2
@@ -1418,10 +1419,10 @@ EXAMPLES = """
           peer1_description: "VPC acting as trunk peer1"
           peer2_description: "VPC acting as trunk peer2"
           peer1_cmds:                     # Freeform config
-              - no shutdown
+            - no shutdown
               - no shutdown
           peer2_cmds:                     # Freeform config
-              - no shutdown
+            - no shutdown
               - no shutdown
 
 # SVI INTERFACES
@@ -1508,7 +1509,7 @@ EXAMPLES = """
 
 - name: Delete SVI interfaces
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
+    check_deploy: true
     fabric: "{{ ansible_svi_fabric }}"
     state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
     config:
@@ -1541,7 +1542,7 @@ EXAMPLES = """
 
 - name: Create AA FEX interfaces including optional parameters
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
+    check_deploy: true
     fabric: "{{ ansible_svi_fabric }}"
     state: merged                                   # only choose form [merged, replaced, deleted, overridden, query]
     config:
@@ -1597,7 +1598,7 @@ EXAMPLES = """
 
 - name: Delete AA FEX interfaces
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
+    check_deploy: true
     fabric: "{{ ansible_svi_fabric }}"
     state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
     config:
@@ -1684,7 +1685,7 @@ EXAMPLES = """
 
 - name: Delete ST FEX interfaces
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
+    check_deploy: true
     fabric: "{{ ansible_svi_fabric }}"
     state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
     config:
@@ -1805,7 +1806,6 @@ EXAMPLES = """
       - name: vpc750
         switch:
           - "192.172.1.1"
-
 """
 
 import copy
@@ -4702,8 +4702,12 @@ class DcnmIntf:
         for item in self.pb_input:
             # For overridden state, we will not touch anything that is present in incoming config,
             # because those interfaces will anyway be modified in the current run
+            # Must check both interface name AND serial number to ensure we're comparing the same
+            # interface on the same switch (not just the same interface name on different switches)
             if (self.module.params["state"] == "overridden") and (
                 item["ifname"] == have["ifName"]
+            ) and (
+                item.get("sno") == have.get("serialNo")
             ):
                 return False, item["ifname"]
             if item.get("members"):
@@ -4885,29 +4889,48 @@ class DcnmIntf:
                     continue
 
                 if uelem is not None:
-                    # Before defaulting ethernet interfaces, check if they are
-                    # member of any port-channel. If so, do not default that
-                    rc, intf = self.dcnm_intf_can_be_replaced(have)
-                    if rc is True:
-                        self.dcnm_intf_merge_intf_info(
-                            uelem, self.diff_replace
+                    # Before defaulting ethernet interfaces, check if this interface is present in want.
+                    # If yes, ignore the interface, because configuration from want will be applied anyway.
+                    # This ensures that Ethernet interfaces removed from the playbook config are reset to default,
+                    # while those still in the config are left alone to be configured later.
+                    match_want = [
+                        d
+                        for d in self.want
+                        if (
+                            (
+                                name.lower()
+                                == d["interfaces"][0]["ifName"].lower()
+                            )
+                            and (str(sno) == str(d["interfaces"][0]["serialNumber"]))
+                            and (fabric == d["interfaces"][0]["fabricName"])
                         )
-                        self.changed_dict[0]["replaced"].append(
-                            copy.deepcopy(uelem)
-                        )
-                        delem["serialNumber"] = sno
-                        delem["ifName"] = name
-                        delem["fabricName"] = self.fabric
-                        if str(deploy).lower() == "true":
-                            # Do not create interface E1/x/y, interface is created with breakout
-                            pattern = r'^Ethernet1/\d+/\d+$'
-                            if_name = delem.get('ifName')
+                    ]
 
-                            if not re.match(pattern, if_name):
-                                self.diff_deploy.append(delem)
-                                self.changed_dict[0]["deploy"].append(
-                                    copy.deepcopy(delem)
-                                )
+                    # Only default/reset this interface if it's NOT in the playbook config
+                    if not match_want:
+                        # Before defaulting ethernet interfaces, check if they are
+                        # member of any port-channel. If so, do not default that
+                        rc, intf = self.dcnm_intf_can_be_replaced(have)
+                        if rc is True:
+                            self.dcnm_intf_merge_intf_info(
+                                uelem, self.diff_replace
+                            )
+                            self.changed_dict[0]["replaced"].append(
+                                copy.deepcopy(uelem)
+                            )
+                            delem["serialNumber"] = sno
+                            delem["ifName"] = name
+                            delem["fabricName"] = self.fabric
+                            if str(deploy).lower() == "true":
+                                # Do not create interface E1/x/y, interface is created with breakout
+                                pattern = r'^Ethernet1/\d+/\d+$'
+                                if_name = delem.get('ifName')
+
+                                if not re.match(pattern, if_name):
+                                    self.diff_deploy.append(delem)
+                                    self.changed_dict[0]["deploy"].append(
+                                        copy.deepcopy(delem)
+                                    )
             # Sub-interafces are returned as INTERFACE_ETHERNET in have_all. So do an
             # additional check to see if it is physical. If not assume it to be sub-interface
             # for now. We will have to re-visit this check if there are additional non-physical
@@ -5080,12 +5103,22 @@ class DcnmIntf:
 
                     for have in self.have_all:
                         have_intf = have['ifName']
+                        deletable = have['deletable']
                         if re.search(r"\d+\/\d+\/\d+", have_intf):
                             found, parent_type = self.dcnm_intf_get_parent(have_intf, have['mgmtIpAddress'])
                             # If have in want breakout and if match to E1/x/1 add to dict
                             # Else if match E1/x/2, etc. silently ignore, because we delete the breakout
                             # with the first sub if.
                             if re.search(r"\d+\/\d+\/1$", have_intf) and found:
+                                if deletable is False:
+                                    self.changed_dict[0]["skipped"].append(
+                                        {
+                                            "Name": have_intf,
+                                            "Alias": have.get("alias"),
+                                            "Delete Reason": have["deleteReason"],
+                                        }
+                                    )
+                                    continue
                                 payload = {'serialNumber': have['serialNo'],
                                            'ifName': have['ifName']}
                                 self.diff_delete_breakout.append(payload)

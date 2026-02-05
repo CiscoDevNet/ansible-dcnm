@@ -1,0 +1,35 @@
+---
+# This MSD Invalid test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+# These configurations should FAIL due to parameter range errors
+#
+
+# ------------------------------
+# Invalid: DHCP loopback ID outside valid range (should fail)
+# ------------------------------
+- net_name: "invalid-dhcp-loopback"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "2205"
+  gw_ip_subnet: '192.168.205.1/24'
+  child_fabric_config:
+    - fabric: "{{ test_data_common.child_fabric }}"
+      # Invalid DHCP loopback ID (outside valid range)
+      dhcp_loopback_id: 99999
+  deploy: false
+
+# ------------------------------
+# Invalid: multicast address not in valid range (should fail)
+# ------------------------------
+- net_name: "invalid-multicast"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "2206"
+  gw_ip_subnet: '192.168.206.1/24'
+  child_fabric_config:
+    - fabric: "{{ test_data_common.child_fabric }}"
+      # Invalid multicast address (not in valid range)
+      multicast_group_address: '192.168.1.1'
+  deploy: false
