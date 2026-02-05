@@ -352,6 +352,29 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_servers</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Child-specific List of DHCP server_vrf pairs where &#x27;srvr_ip&#x27; is the IP key and &#x27;srvr_vrf&#x27; is the VRF key</div>
+                        <div>The &#x27;srvr_vrf&#x27; key is optional, if not specified will use same VRF as the network VRF</div>
+                        <div>For ND version 3.1 and NDFC 12.1 &#x27;srvr_vrf&#x27; must be specified for each DHCP server</div>
+                        <div>This replaces dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf</div>
+                        <div>If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated indicating these are mutually exclusive options</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_srvr1_ip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -362,6 +385,9 @@ Parameters
                 </td>
                 <td>
                         <div>Child-specific DHCP relay IP address of the first DHCP server</div>
+                        <div>If dhcp_servers and dhcp_srvr1_ip are specified an error message is generated indicating these are mutually exclusive options</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
+                        <div>DEPRECATED</div>
                 </td>
             </tr>
             <tr>
@@ -379,6 +405,92 @@ Parameters
                 </td>
                 <td>
                         <div>Child-specific VRF ID of first DHCP server</div>
+                        <div>If not specified, will use same VRF as the network VRF</div>
+                        <div>For ND version 3.1 and NDFC 12.1 dhcp_srvr1_vrf must be specified for dhcp_srvr1_ip</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
+                        <div>DEPRECATED</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_srvr2_ip</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Child-specific DHCP relay IP address of the second DHCP server</div>
+                        <div>If dhcp_servers and dhcp_srvr2_ip are specified an error message is generated indicating these are mutually exclusive options</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
+                        <div>DEPRECATED</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_srvr2_vrf</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Child-specific VRF ID of second DHCP server</div>
+                        <div>If not specified, will use same VRF as the network VRF</div>
+                        <div>For ND version 3.1 and NDFC 12.1 dhcp_srvr2_vrf must be specified for dhcp_srvr2_ip</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
+                        <div>DEPRECATED</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_srvr3_ip</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Child-specific DHCP relay IP address of the third DHCP server</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
+                        <div>If dhcp_servers and dhcp_srvr3_ip are specified an error message is generated indicating these are mutually exclusive options</div>
+                        <div>DEPRECATED</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_srvr3_vrf</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Child-specific VRF ID of third DHCP server</div>
+                        <div>If not specified, will use same VRF as the network VRF</div>
+                        <div>For ND version 3.1 and NDFC 12.1 dhcp_srvr3_vrf must be specified for dhcp_srvr3_ip</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
+                        <div>DEPRECATED</div>
                 </td>
             </tr>
             <tr>
@@ -459,6 +571,28 @@ Parameters
                         <div>Child-specific Enable Netflow setting</div>
                         <div>Netflow is supported only if it is enabled on fabric</div>
                         <div>Netflow configs are supported on NDFC only</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>trm_enable</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Child-specific Enable Tenant Routed Multicast</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
