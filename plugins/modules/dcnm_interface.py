@@ -4842,7 +4842,7 @@ class DcnmIntf:
                 if have["underlayPolicies"] is not None:
                     is_tor_member = False
                     for policy in have["underlayPolicies"]:
-                        if policy.get("templateName") in ["int_vpc_uplink_access_po", "int_vpc_uplink_access_po_member"]:
+                        if policy.get("templateName") in ["int_vpc_uplink_access_po_member"]:
                             is_tor_member = True
                             break
 
