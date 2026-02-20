@@ -37,7 +37,8 @@ except ImportError:
 FEDERATION_MANAGER_NOT_FOUND_ERRORS = [
     'Invalid JSON response: this API is allowed only for remote user',
     'A federation manager does not exist',
-    'Invalid JSON response: cannot serve APIs as federation state is secondary. Use primary cluster for APIs'
+    'Invalid JSON response: cannot serve APIs as federation state is secondary. Use primary cluster for APIs',
+    'Invalid JSON response: cannot serve APIs as federation state is not established yet'
 ]
 
 dcnm_paths = {
