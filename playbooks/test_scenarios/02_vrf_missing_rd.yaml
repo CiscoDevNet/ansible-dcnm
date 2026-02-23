@@ -1,0 +1,26 @@
+---
+# Crescit Test Scenario 2.1: VRF Missing Explicit Route Distinguisher
+# Expected Detection: MEDIUM severity by Static + AI Semantic Validator
+# Expected Auto-Fix: Add explicit RD based on ASN
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Add VRF without explicit RD (anti-pattern)
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vrf_name: PROD_VRF_NewApp
+            vrf_id: 50100
+            vlan_id: 2100
+            # ❌ MEDIUM: Missing explicit RD
+            # Will auto-generate which can cause routing loops in multi-site
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+        deploy: false

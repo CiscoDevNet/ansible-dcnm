@@ -1,0 +1,22 @@
+---
+# Crescit Test Scenario 1.2: VLAN Naming Convention Violation
+# Expected Detection: HIGH severity by Policy Validator
+# Expected Auto-Fix: Suggest compliant name (PROD_App_VLAN150)
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Add VLAN with non-compliant naming
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 150
+            vlan_name: "my_test_vlan"  # ❌ HIGH: Should be {ENV}_{PURPOSE}_VLAN{ID}
+            vlan_description: "Test VLAN for naming convention validation"
+        deploy: false
