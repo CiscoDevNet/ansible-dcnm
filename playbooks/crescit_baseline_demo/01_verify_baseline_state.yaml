@@ -1,0 +1,30 @@
+---
+# Query baseline state in NDFC after initial apply.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Query VRFs in fabric
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: query
+      register: vrf_query
+
+    - name: Query networks in fabric
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ fabric_name }}"
+        state: query
+      register: net_query
+
+    - name: Show verification summary
+      ansible.builtin.debug:
+        msg:
+          - "Fabric: {{ fabric_name }}"
+          - "VRF objects found: {{ (vrf_query.response | default([])) | length }}"
+          - "Network objects found: {{ (net_query.response | default([])) | length }}"
+          - "Expected baseline markers: PROD_VRF_Core, PROD_VRF_Shared, VLAN 999 via network PROD_NET_Legacy_VLAN999"
