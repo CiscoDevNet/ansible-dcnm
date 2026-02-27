@@ -556,6 +556,12 @@ options:
                         - NVE Source Inteface HoldDown Time  in seconds
                         required: false
                         type: int
+                    heartbeatInterval:
+                        default: 190
+                        description:
+                        - Xconnect HeartBeat Interval
+                        required: false
+                        type: int
                     HOST_INTF_ADMIN_STATE:
                         default: true
                         description:
