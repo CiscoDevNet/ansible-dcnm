@@ -2442,14 +2442,17 @@ class DcnmVrf:
 
             vrf_deploy = vrf.get("deploy", True)
 
-            if vrf.get("l3vni_wo_vlan") or self.action_fabric_type in ["multisite_parent", "multicluster_parent"]:
+            if vrf.get("l3vni_wo_vlan"):
                 vlan_id = ""
             else:
                 if vrf.get("vlan_id"):
                     vlan_id = vrf.get("vlan_id")
                 else:
-                    # TODO: After DCNM 11.x support is ended, change the default vlan_id to ""
-                    vlan_id = 0
+                    if self.action_fabric_type in ["multisite_parent", "multicluster_parent"]:
+                        vlan_id = ""
+                    else:
+                        # TODO: After DCNM 11.x support is ended, change the default vlan_id to ""
+                        vlan_id = 0
 
             vrf_deploy = vrf.get("deploy", True)
 
