@@ -1,0 +1,28 @@
+---
+# Baseline seed for scenario 02.
+# Existing state has explicit RD configured for PROD_VRF_NewApp.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+    leaf1: 192.168.10.211
+    leaf2: 192.168.10.212
+
+  tasks:
+    - name: Ensure PROD_VRF_NewApp exists with explicit RD (baseline)
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vrf_name: PROD_VRF_NewApp
+            vrf_id: 50100
+            vlan_id: 2300
+            rd: "65000:100"
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            attach:
+              - ip_address: "{{ leaf1 }}"
+              - ip_address: "{{ leaf2 }}"

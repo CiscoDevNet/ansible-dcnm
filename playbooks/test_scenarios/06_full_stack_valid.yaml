@@ -1,0 +1,42 @@
+---
+# Baseline seed for scenario 06.
+# Existing state has web-tier VRF and one network already provisioned.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+    leaf_switch: 192.168.10.211
+
+  tasks:
+    - name: Ensure web tier VRF exists (baseline)
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vrf_name: PROD_VRF_WebTier
+            vrf_id: 50700
+            vlan_id: 2700
+            rd: "65000:700"
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            attach:
+              - ip_address: "{{ leaf_switch }}"
+
+    - name: Ensure web server network exists (baseline)
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - net_name: PROD_NET_WebServers
+            vrf_name: PROD_VRF_WebTier
+            net_id: 30700
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3070
+            gw_ip_subnet: "10.107.10.1/24"
+            attach:
+              - ip_address: "{{ leaf_switch }}"
+                ports: []
