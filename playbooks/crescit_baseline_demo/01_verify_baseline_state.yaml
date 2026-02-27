@@ -27,4 +27,5 @@
           - "Fabric: {{ fabric_name }}"
           - "VRF objects found: {{ (vrf_query.response | default([])) | length }}"
           - "Network objects found: {{ (net_query.response | default([])) | length }}"
-          - "Expected baseline markers: PROD_VRF_Core, PROD_VRF_Shared, VLAN 999 via network PROD_NET_Legacy_VLAN999"
+          - "Expected baseline markers: PROD_VRF_Core, PROD_VRF_Shared, PROD_VRF_NewApp, PROD_VRF_Defaults, PROD_VRF_WebTier"
+          - "Expected network markers: PROD_NET_Orphan, PROD_NET_WebServers, PROD_NET_Invalid, PROD_NET_Legacy_VLAN999"

@@ -1,6 +1,6 @@
 ---
 # Apply existing baseline configuration in NDFC fabric.
-# This is the "current deployed state" over which PR scenario changes are evaluated.
+# This is the brownfield "current state" over which PR640 scenarios are evaluated.
 
 - hosts: ndfc
   gather_facts: false
@@ -13,7 +13,7 @@
     leaf2: 192.168.10.212
 
   tasks:
-    - name: Ensure baseline VRFs exist
+    - name: Ensure baseline VRFs exist (core + scenario seeds)
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: merged
@@ -37,9 +37,40 @@
             attach:
               - ip_address: "{{ leaf1 }}"
               - ip_address: "{{ leaf2 }}"
+
+          # Baseline for scenario 02 (PR640 removes explicit RD)
+          - vrf_name: PROD_VRF_NewApp
+            vrf_id: 50100
+            vlan_id: 2300
+            rd: "65000:100"
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            attach:
+              - ip_address: "{{ leaf1 }}"
+              - ip_address: "{{ leaf2 }}"
+
+          # Baseline for scenario 05 (PR640 introduces default-value anti-pattern)
+          - vrf_name: PROD_VRF_Defaults
+            vrf_id: 50600
+            vlan_id: 2600
+            rd: "65000:600"
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            attach:
+              - ip_address: "{{ leaf1 }}"
+
+          # Baseline for scenario 06 full-stack changes
+          - vrf_name: PROD_VRF_WebTier
+            vrf_id: 50700
+            vlan_id: 2700
+            rd: "65000:700"
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            attach:
+              - ip_address: "{{ leaf1 }}"
         deploy: "{{ deploy_changes }}"
 
-    - name: Ensure baseline networks exist (includes baseline VLAN representation)
+    - name: Ensure baseline networks exist (core + scenario seeds)
       cisco.dcnm.dcnm_network:
         fabric: "{{ fabric_name }}"
         state: merged
@@ -118,7 +149,42 @@
             attach:
               - ip_address: "{{ leaf1 }}"
                 ports: []
-        deploy: "{{ deploy_changes }}"
+
+          # Baseline for scenario 04 (PR640 changes VRF reference to non-existent VRF)
+          - net_name: PROD_NET_Orphan
+            vrf_name: PROD_VRF_Core
+            net_id: 30400
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3040
+            gw_ip_subnet: "10.104.1.1/24"
+            attach:
+              - ip_address: "{{ leaf1 }}"
+                ports: []
+
+          # Baseline for scenario 06 (PR640 adds DB tier and interface)
+          - net_name: PROD_NET_WebServers
+            vrf_name: PROD_VRF_WebTier
+            net_id: 30700
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3070
+            gw_ip_subnet: "10.107.10.1/24"
+            attach:
+              - ip_address: "{{ leaf1 }}"
+                ports: []
+
+          # Baseline for scenario 10 (PR640 changes CIDR to invalid /256)
+          - net_name: PROD_NET_Invalid
+            vrf_name: PROD_VRF_Core
+            net_id: 30100
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3010
+            gw_ip_subnet: "10.100.1.1/24"
+            attach:
+              - ip_address: "{{ leaf1 }}"
+                ports: []
 
     - name: Show baseline apply completion
       ansible.builtin.debug:
@@ -126,3 +192,4 @@
           - "Baseline applied for {{ fabric_name }}"
           - "deploy_changes={{ deploy_changes }}"
           - "Existing state seeded for Crescit PR evaluation"
+          - "Scenario-aligned seeds: VRF_NewApp, VRF_Defaults, VRF_WebTier, NET_Orphan, NET_WebServers, NET_Invalid"
