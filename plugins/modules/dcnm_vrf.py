@@ -2442,7 +2442,7 @@ class DcnmVrf:
 
             vrf_deploy = vrf.get("deploy", True)
 
-            if vrf.get("l3vni_wo_vlan"):
+            if vrf.get("l3vni_wo_vlan") or self.action_fabric_type in ["multisite_parent", "multicluster_parent"]:
                 vlan_id = ""
             else:
                 if vrf.get("vlan_id"):
