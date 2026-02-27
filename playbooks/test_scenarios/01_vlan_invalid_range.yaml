@@ -1,0 +1,21 @@
+---
+# Baseline seed for scenario 01.
+# Existing state uses valid VLAN range.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Keep baseline VLAN in valid range
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 3500
+            vlan_name: "PROD_Valid_VLAN3500"
+            vlan_description: "Baseline valid VLAN"
+        deploy: false

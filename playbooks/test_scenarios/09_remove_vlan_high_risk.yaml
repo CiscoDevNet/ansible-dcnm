@@ -1,0 +1,21 @@
+---
+# Baseline seed for scenario 09.
+# Existing state keeps legacy VLAN present (non-destructive baseline).
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Ensure legacy VLAN exists in baseline
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 999
+            vlan_name: "PROD_OldApp_VLAN999"
+            vlan_description: "Legacy baseline VLAN retained"
+        deploy: false

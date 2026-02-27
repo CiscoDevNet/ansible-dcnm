@@ -1,0 +1,20 @@
+---
+# Baseline read-only vPC visibility playbook
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Query all baseline vPC pairs
+      cisco.dcnm.dcnm_vpc_pair:
+        src_fabric: "{{ fabric_name }}"
+        state: query
+      register: vpc_result
+
+    - name: Show baseline vPC pair count
+      ansible.builtin.debug:
+        msg: "Baseline vPC pairs found: {{ vpc_result.response | length }}"

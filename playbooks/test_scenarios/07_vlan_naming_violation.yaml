@@ -1,0 +1,21 @@
+---
+# Baseline seed for scenario 07.
+# Existing VLAN naming is policy-compliant.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Keep compliant VLAN naming baseline
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 150
+            vlan_name: "PROD_App_VLAN150"
+            vlan_description: "Compliant naming baseline"
+        deploy: false

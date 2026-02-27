@@ -1,0 +1,34 @@
+---
+# Baseline seed for scenario 05.
+# Existing state uses explicit fields (no default-value anti-pattern).
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Ensure VRF has explicit routing values
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vrf_name: PROD_VRF_Defaults
+            vrf_id: 50600
+            vlan_id: 2600
+            rd: "65000:600"
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+        deploy: false
+
+    - name: Ensure VLAN has explicit description
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 2600
+            vlan_name: "PROD_Minimal_VLAN2600"
+            vlan_description: "Baseline explicit description"
+        deploy: false

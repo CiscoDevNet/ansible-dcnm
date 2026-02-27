@@ -1,0 +1,18 @@
+---
+# Baseline inventory for Crescit demo scenarios
+
+all:
+  vars:
+    ansible_python_interpreter: python
+    ansible_httpapi_validate_certs: false
+    ansible_httpapi_use_ssl: true
+  children:
+    ndfc:
+      vars:
+        ansible_connection: ansible.netcommon.httpapi
+        ansible_network_os: cisco.dcnm.dcnm
+        ansible_user: admin
+        ansible_password: "Admin1@#"
+      hosts:
+        ndfc1:
+          ansible_host: 10.78.210.227

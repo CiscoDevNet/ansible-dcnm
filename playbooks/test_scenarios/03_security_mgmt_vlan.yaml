@@ -1,0 +1,21 @@
+---
+# Baseline seed for scenario 03.
+# Existing management VLAN is in secure range.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Keep management VLAN in secure range
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 3901
+            vlan_name: "MGMT_OOB_VLAN3901"
+            vlan_description: "Secure management VLAN baseline"
+        deploy: false

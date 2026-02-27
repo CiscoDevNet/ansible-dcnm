@@ -1,0 +1,27 @@
+---
+# Baseline seed for scenario 08.
+# Existing state uses small, controlled VLAN batch.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Baseline controlled VLAN additions (<=3)
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 500
+            vlan_name: "PROD_App_VLAN500"
+            vlan_description: "Baseline VLAN 500"
+          - vlan_id: 501
+            vlan_name: "PROD_App_VLAN501"
+            vlan_description: "Baseline VLAN 501"
+          - vlan_id: 502
+            vlan_name: "PROD_App_VLAN502"
+            vlan_description: "Baseline VLAN 502"
+        deploy: false
