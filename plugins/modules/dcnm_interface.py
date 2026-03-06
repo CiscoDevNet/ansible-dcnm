@@ -219,19 +219,19 @@ options:
           enable_qos:
             description:
             - Enable QoS on the interface.
-              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'l3'
             type: bool
             default: false
           qos_policy:
             description:
             - QoS policy name to apply to the interface. This option is only valid when 'enable_qos' is true.
-              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'l3'
             type: str
             default: ""
           queuing_policy:
             description:
             - Queuing policy name to apply to the interface.
-              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'l3'
             type: str
             default: ""
       profile_vpc:
@@ -2468,6 +2468,9 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         pc_prof_spec_dot1q = dict(
@@ -3069,6 +3072,7 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
             else:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -3127,6 +3131,7 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
             else:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -3156,6 +3161,20 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
+
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
 
         if delem[profile]["mode"] == "dot1q":
             if delem[profile]["members"] is None:
