@@ -3876,6 +3876,7 @@ EXAMPLES = """
 # - 1. BGP fabric
 # - 1. VXLAN EVPN Multi-Site fabric
 # - 1. LAN Classic fabric
+# - 1. External fabric
 
 - name: Create fabrics
   cisco.dcnm.dcnm_fabric:
@@ -3891,6 +3892,9 @@ EXAMPLES = """
         FABRIC_TYPE: VXLAN_EVPN_MSD
       - FABRIC_NAME: LAN_Fabric
         FABRIC_TYPE: LAN_CLASSIC
+      - FABRIC_NAME: External_Fabric
+        FABRIC_TYPE: External
+        BGP_AS: 65003
   register: result
 - debug:
     var: result
@@ -3922,6 +3926,13 @@ EXAMPLES = """
       - FABRIC_NAME: LAN_Fabric
         FABRIC_TYPE: LAN_CLASSIC
         BOOTSTRAP_ENABLE: false
+        IS_READ_ONLY: false
+        DEPLOY: false
+      - FABRIC_NAME: External_Fabric
+        FABRIC_TYPE: External
+        BGP_AS: 65003
+        SUBINTERFACE_RANGE: 2-511
+        ENABLE_NXAPI: true
         IS_READ_ONLY: false
         DEPLOY: false
   register: result
@@ -3969,6 +3980,10 @@ EXAMPLES = """
       - FABRIC_NAME: LAN_Fabric
         FABRIC_TYPE: LAN_CLASSIC
         DEPLOY: false
+      - FABRIC_NAME: External_Fabric
+        FABRIC_TYPE: External
+        BGP_AS: 65003
+        DEPLOY: false
   register: result
 - debug:
     var: result
@@ -3982,6 +3997,7 @@ EXAMPLES = """
       - FABRIC_NAME: VXLAN_Fabric
       - FABRIC_NAME: MSD_Fabric
       - FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: External_Fabric
   register: result
 - debug:
     var: result
@@ -3995,6 +4011,7 @@ EXAMPLES = """
       - FABRIC_NAME: VXLAN_Fabric
       - FABRIC_NAME: MSD_Fabric
       - FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: External_Fabric
   register: result
 - debug:
     var: result
