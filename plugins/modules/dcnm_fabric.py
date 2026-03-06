@@ -62,8 +62,8 @@ options:
                 type: str
             FABRIC_TYPE:
                 choices:
-                - External
                 - BGP
+                - External
                 - IPFM
                 - ISN
                 - LAN_CLASSIC
