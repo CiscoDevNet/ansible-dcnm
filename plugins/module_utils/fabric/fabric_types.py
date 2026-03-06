@@ -148,12 +148,12 @@ class FabricTypes:
         self._mandatory_parameters["VXLAN_EVPN"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
-        
+
         self._mandatory_parameters["BGP"].append("BGP_AS")
         self._mandatory_parameters["External"].append("BGP_AS")
         self._mandatory_parameters["ISN"].append("BGP_AS")
         self._mandatory_parameters["VXLAN_EVPN"].append("BGP_AS")
-        
+
         self._mandatory_parameters["VXLAN_EVPN_MSD"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
