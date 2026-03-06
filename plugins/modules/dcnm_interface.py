@@ -4559,7 +4559,10 @@ class DcnmIntf:
                                         "ENABLE_PFC",
                                         "NATIVE_VLAN",
                                         "PORT_DUPLEX_MODE",
-                                        "SPEED"
+                                        "SPEED",
+                                        "ENABLE_QOS",
+                                        "QOS_POLICY",
+                                        "QUEUING_POLICY"
                                     ]
 
                                     for key in keys_to_check:
