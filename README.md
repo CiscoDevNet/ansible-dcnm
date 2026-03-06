@@ -15,7 +15,11 @@ This collection is intended for use with the following release versions:
 <!--start requires_ansible-->
 ## Ansible version compatibility
 
-This collection has been tested against the following Ansible versions: **>=2.15.0**.
+This collection has been tested against following Ansible Core versions:
+  * `2.14.x`
+  * `2.15.x`
+  * `2.16.x`
+  * `2.17.x`
 
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
