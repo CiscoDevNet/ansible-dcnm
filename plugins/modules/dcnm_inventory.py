@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -265,20 +266,20 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # merged / deleted / overridden / query
     config:
-    - seed_ip: 192.168.0.1
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: switch_username
-      password: switch_password
-      max_hops: 0
-      role: spine
-      preserve_config: False # boolean, default is  true
-    - seed_ip: 192.168.0.2
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: switch_username
-      password: switch_password
-      max_hops: 0
-      role: leaf
-      preserve_config: False # boolean, default is true
+      - seed_ip: 192.168.0.1
+        auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+        user_name: switch_username
+        password: switch_password
+        max_hops: 0
+        role: spine
+        preserve_config: false # boolean, default is  true
+      - seed_ip: 192.168.0.2
+        auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+        user_name: switch_username
+        password: switch_password
+        max_hops: 0
+        role: leaf
+        preserve_config: false # boolean, default is true
 
 # The following two switches will be added or updated in the existing fabric and all other
 # switches will be removed from the fabric
@@ -287,20 +288,20 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: overridden # merged / deleted / overridden / query
     config:
-    - seed_ip: 192.168.0.1
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: switch_username
-      password: switch_password
-      max_hops: 0
-      role: spine
-      preserve_config: False # boolean, default is  true
-    - seed_ip: 192.168.0.2
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: switch_username
-      password: switch_password
-      max_hops: 0
-      role: leaf
-      preserve_config: False # boolean, default is true
+      - seed_ip: 192.168.0.1
+        auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+        user_name: switch_username
+        password: switch_password
+        max_hops: 0
+        role: spine
+        preserve_config: false # boolean, default is  true
+      - seed_ip: 192.168.0.2
+        auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
+        user_name: switch_username
+        password: switch_password
+        max_hops: 0
+        role: leaf
+        preserve_config: false # boolean, default is true
 
 # The following two switches will be deleted in the existing fabric
 - name: Delete selected switches
@@ -308,8 +309,8 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: deleted # merged / deleted / overridden / query
     config:
-    - seed_ip: 192.168.0.1
-    - seed_ip: 192.168.0.2
+      - seed_ip: 192.168.0.1
+      - seed_ip: 192.168.0.2
 
 # All the switches will be deleted in the existing fabric
 - name: Delete all the switches
@@ -323,10 +324,10 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: query # merged / deleted / overridden / query
     config:
-    - seed_ip: 192.168.0.1
-      role: spine
-    - seed_ip: 192.168.0.2
-      role: leaf
+      - seed_ip: 192.168.0.1
+        role: spine
+      - seed_ip: 192.168.0.2
+        role: leaf
 
 # All the existing switches will be queried in the existing fabric
 - name: Query all the switches in the fabric
@@ -341,7 +342,12 @@ EXAMPLES = """
   cisco.dcnm.dcnm_rest:
     method: PUT
     path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/vxlan-fabric
-    json_data: '{"fabricId": "FABRIC-7","fabricName": "vxlan-fabric","id": 7,"nvPairs":{...,"BOOTSTRAP_ENABLE": true,"DHCP_ENABLE": true,"DHCP_IPV6_ENABLE": "DHCPv4","DHCP_START": "192.168.1.10", "DHCP_END": "192.168.1.20","MGMT_GW": "192.168.123.1","MGMT_PREFIX": "24",...},"templateName": "Easy_Fabric"}' # noqa
+    json_data: >
+      {"fabricId":"FABRIC-7","fabricName":"vxlan-fabric","id":7,
+      "nvPairs":{...,"BOOTSTRAP_ENABLE":true,"DHCP_ENABLE":true,
+      "DHCP_IPV6_ENABLE":"DHCPv4","DHCP_START":"192.168.1.10",
+      "DHCP_END":"192.168.1.20","MGMT_GW":"192.168.123.1",
+      "MGMT_PREFIX":"24",...},"templateName":"Easy_Fabric"}
 
 # The following switch will be Bootstrapped and merged into the existing fabric
 - name: Poap switch Configuration
@@ -349,19 +355,21 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # Only 2 options supported merged/query for poap config
     config:
-    # All the values below are mandatory if poap configuration is being done - state is merged
-    - seed_ip: 192.168.0.5
-      user_name: switch_username
-      password: switch_password
-      role: border_gateway
-      poap:
-        - serial_number: 2A3BCDEFJKL
-          model: 'N9K-C9300v'
-          version: '9.3(7)'
-          hostname: 'POAP_SWITCH'
-          image_policy: "poap_image_policy"
-          config_data:
-            modulesModel: [N9K-X9364v, N9K-vSUP]
+      # All the values below are mandatory if poap configuration is being done - state is merged
+      - seed_ip: 192.168.0.5
+        user_name: switch_username
+        password: switch_password
+        role: border_gateway
+        poap:
+          - serial_number: 2A3BCDEFJKL
+            model: 'N9K-C9300v'
+            version: '9.3(7)'
+            hostname: 'POAP_SWITCH'
+            image_policy: "poap_image_policy"
+            config_data:
+              modulesModel:
+                - N9K-X9364v
+                - N9K-vSUP
             gateway: 192.168.0.1/24
 
 # The following switch will be Pre-provisioned and merged into the existing fabric
@@ -370,19 +378,21 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # Only 2 options supported merged/query for poap config
     config:
-    # All the values below are mandatory if poap configuration is being done - state is merged
-    - seed_ip: 192.168.0.4
-      user_name: switch_username
-      password: switch_password
-      role: border
-      poap:
-        - preprovision_serial: 1A2BCDEFGHI
-          model: 'N9K-C9300v'
-          version: '9.3(7)'
-          hostname: 'PREPRO_SWITCH'
-          image_policy: "prepro_image_policy"
-          config_data:
-            modulesModel: [N9K-X9364v, N9K-vSUP]
+      # All the values below are mandatory if poap configuration is being done - state is merged
+      - seed_ip: 192.168.0.4
+        user_name: switch_username
+        password: switch_password
+        role: border
+        poap:
+          - preprovision_serial: 1A2BCDEFGHI
+            model: 'N9K-C9300v'
+            version: '9.3(7)'
+            hostname: 'PREPRO_SWITCH'
+            image_policy: "prepro_image_policy"
+            config_data:
+              modulesModel:
+                - N9K-X9364v
+                - N9K-vSUP
             gateway: 192.168.0.1/24
 
 - name: Poap, Pre-provision and existing switch Configuration
@@ -390,38 +400,42 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # Only 2 options supported merged/query for poap config
     config:
-    - seed_ip: 192.168.0.2
-      user_name: switch_username
-      password: switch_password
-      role: border_gateway
-      poap:
-        - serial_number: 2A3BCDEFGHI
-          model: 'N9K-C9300v'
-          version: '9.3(7)'
-          hostname: 'POAP_SWITCH'
-          image_policy: "poap_image_policy"
-          config_data:
-            modulesModel: [N9K-X9364v, N9K-vSUP]
+      - seed_ip: 192.168.0.2
+        user_name: switch_username
+        password: switch_password
+        role: border_gateway
+        poap:
+          - serial_number: 2A3BCDEFGHI
+            model: 'N9K-C9300v'
+            version: '9.3(7)'
+            hostname: 'POAP_SWITCH'
+            image_policy: "poap_image_policy"
+            config_data:
+              modulesModel:
+                - N9K-X9364v
+                - N9K-vSUP
             gateway: 192.168.0.1/24
-    - seed_ip: 192.168.0.3
-      user_name: switch_username
-      password: switch_password
-      auth_proto: MD5
-      max_hops: 0
-      preserve_config: False
-      role: spine
-    - seed_ip: 192.168.0.4
-      user_name: switch_username
-      password: switch_password
-      role: border
-      poap:
-        - preprovision_serial: 1A2BCDEFGHI
-          model: 'N9K-C9300v'
-          version: '9.3(7)'
-          hostname: 'PREPRO_SWITCH'
-          image_policy: "prepro_image_policy"
-          config_data:
-            modulesModel: [N9K-X9364v, N9K-vSUP]
+      - seed_ip: 192.168.0.3
+        user_name: switch_username
+        password: switch_password
+        auth_proto: MD5
+        max_hops: 0
+        preserve_config: false
+        role: spine
+      - seed_ip: 192.168.0.4
+        user_name: switch_username
+        password: switch_password
+        role: border
+        poap:
+          - preprovision_serial: 1A2BCDEFGHI
+            model: 'N9K-C9300v'
+            version: '9.3(7)'
+            hostname: 'PREPRO_SWITCH'
+            image_policy: "prepro_image_policy"
+            config_data:
+              modulesModel:
+                - N9K-X9364v
+                - N9K-vSUP
             gateway: 192.168.0.1/24
 
 # The following pre-provisioned switch will be swapped with actual switch in the existing fabric
@@ -433,14 +447,14 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # Only 2 options supported merged/query for poap config
     config:
-    # All the values below are mandatory if poap configuration is being done - state is merged
-    - seed_ip: 192.168.0.4
-      user_name: switch_username
-      password: switch_password
-      role: border
-      poap:
-        - preprovision_serial: 1A2BCDEFGHI
-          serial_number: 2A3BCDEFGHI
+      # All the values below are mandatory if poap configuration is being done - state is merged
+      - seed_ip: 192.168.0.4
+        user_name: switch_username
+        password: switch_password
+        role: border
+        poap:
+          - preprovision_serial: 1A2BCDEFGHI
+            serial_number: 2A3BCDEFGHI
 
 # All the existing switches along with available Bootstrap(POAP)
 # will be queried in the existing fabric
@@ -448,7 +462,7 @@ EXAMPLES = """
   cisco.dcnm.dcnm_inventory:
     fabric: vxlan-fabric
     state: query # merged / query
-    query_poap: True
+    query_poap: true
 
 # The following switch which is part of fabric will be replaced with a new switch
 # with same configurations through RMA.
@@ -458,17 +472,17 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged # Only merged is supported for rma config
     config:
-    - seed_ip: 192.168.0.4
-      user_name: switch_username
-      password: switch_password
-      rma:
-        - serial_number: 2A3BCDEFJKL
-          old_serial: 2A3BCDEFGHI
-          model: 'N9K-C9300v'
-          version: '9.3(7)'
-          image_policy: "rma_image_policy"
-          config_data:
-            modulesModel: [N9K-X9364v, N9K-vSUP]
+      - seed_ip: 192.168.0.4
+        user_name: switch_username
+        password: switch_password
+        rma:
+          - serial_number: 2A3BCDEFJKL
+            old_serial: 2A3BCDEFGHI
+            model: 'N9K-C9300v'
+            version: '9.3(7)'
+            image_policy: "rma_image_policy"
+            config_data:
+              modulesModel: [N9K-X9364v, N9K-vSUP]
             gateway: 192.168.0.1/24
 """
 
@@ -509,6 +523,7 @@ class DcnmInventory:
         self.node_migration = False
         self.nd_prefix = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
         self.switch_snos = []
+        self.diff_input_format = []
 
         self.result = dict(changed=False, diff=[], response=[])
 
@@ -752,7 +767,7 @@ class DcnmInventory:
     def get_have(self):
 
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
         inv_objects = dcnm_send(self.module, method, path)
@@ -783,7 +798,7 @@ class DcnmInventory:
             get_switch.update({"sysName": inv["logicalName"]})
             get_switch.update({"serialNumber": inv["serialNumber"]})
             get_switch.update({"ipaddr": inv["ipAddress"]})
-            get_switch.update({"platform": inv["nonMdsModel"]})
+            get_switch.update({"platform": inv["model"]})
             get_switch.update({"version": inv["release"]})
             get_switch.update(
                 {"deviceIndex": inv["logicalName"] + "(" + inv["serialNumber"] + ")"}
@@ -872,7 +887,7 @@ class DcnmInventory:
                     if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
                         match = re.search(r"\S+\((\S+)\)", have_c["switches"][0]["deviceIndex"])
                 if match is None:
-                    return match_found
+                    continue
                 want_serial_num = match.groups()[0]
                 if have_c["switches"][0]["serialNumber"] == want_serial_num:
                     if (
@@ -1005,8 +1020,8 @@ class DcnmInventory:
                     choices=["MD5", "SHA", "MD5_DES", "MD5_AES", "SHA_DES", "SHA_AES"],
                     default="MD5",
                 ),
-                user_name=dict(required=True, type="str", no_log=True, length_max=32),
-                password=dict(required=True, type="str", no_log=True, length_max=32),
+                user_name=dict(required=True, type="str", no_log=True, length_max=64),
+                password=dict(required=True, type="str", no_log=True, length_max=64),
                 max_hops=dict(type="int", default=0),
                 role=dict(
                     type="str",
@@ -1034,8 +1049,8 @@ class DcnmInventory:
             )
 
             poap_spec = dict(
-                discovery_username=dict(type="str", no_log=True, length_max=32),
-                discovery_password=dict(type="str", no_log=True, length_max=32),
+                discovery_username=dict(type="str", no_log=True, length_max=64),
+                discovery_password=dict(type="str", no_log=True, length_max=64),
                 serial_number=dict(type="str", default=""),
                 preprovision_serial=dict(type="str", default=""),
                 model=dict(type="str", default=""),
@@ -1046,8 +1061,8 @@ class DcnmInventory:
             )
 
             rma_spec = dict(
-                discovery_username=dict(type="str", no_log=True, length_max=32),
-                discovery_password=dict(type="str", no_log=True, length_max=32),
+                discovery_username=dict(type="str", no_log=True, length_max=64),
+                discovery_password=dict(type="str", no_log=True, length_max=64),
                 serial_number=dict(type="str", required=True),
                 old_serial=dict(type="str", required=True),
                 model=dict(type="str", required=True),
@@ -1249,7 +1264,7 @@ class DcnmInventory:
 
         # Get Fabric Inventory Details
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
         get_inv = dcnm_send(self.module, method, path)
@@ -1369,7 +1384,7 @@ class DcnmInventory:
         all_ok = True
         # Get Fabric Inventory Details
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
         get_inv = dcnm_send(self.module, method, path)
@@ -1420,7 +1435,7 @@ class DcnmInventory:
         method = "GET"
         path = "/fm/fmrest/lanConfig/getLanSwitchCredentials"
         if self.nd:
-            path = self.nd_prefix + "/" + path[6:]
+            path = self.nd_prefix + "/" + path[6:] + "WithType"
             # lan_path = '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/lanConfig/getLanSwitchCredentials'
         get_lan = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(get_lan, "query_dcnm")
@@ -1456,7 +1471,7 @@ class DcnmInventory:
     def assign_role(self):
 
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
         get_role = dcnm_send(self.module, method, path)
@@ -1477,14 +1492,29 @@ class DcnmInventory:
                         self.fabric
                     )
                     self.module.fail_json(msg=msg)
+                if not role.get("serialNumber"):
+                    msg = "Unable to get serial number using getLanSwitchCredentials under fabric: {0}".format(
+                        self.fabric
+                    )
+                    self.module.fail_json(msg=msg)
                 if role["ipAddress"] == create["switches"][0]["ipaddr"]:
                     method = "PUT"
                     path = "/fm/fmrest/topology/role/{0}?newRole={1}".format(
                         role["switchDbID"], create["role"].replace("_", "%20")
                     )
+                    data = None
                     if self.nd:
-                        path = self.nd_prefix + "/" + path[6:]
-                    response = dcnm_send(self.module, method, path)
+                        method = "POST"
+                        path = f"{self.nd_prefix}/rest/control/switches/roles"
+                        data = json.dumps(
+                            [
+                                {
+                                    "serialNumber": role["serialNumber"],
+                                    "role": create["role"].replace("_", " "),
+                                }
+                            ]
+                        )
+                    response = dcnm_send(self.module, method, path, data)
                     self.result["response"].append(response)
                     fail, self.result["changed"] = self.handle_response(
                         response, "create"
@@ -1499,14 +1529,29 @@ class DcnmInventory:
                         self.fabric
                     )
                     self.module.fail_json(msg=msg)
+                if not role.get("serialNumber"):
+                    msg = "Unable to get serial number using getLanSwitchCredentials under fabric: {0}".format(
+                        self.fabric
+                    )
+                    self.module.fail_json(msg=msg)
                 if role["ipAddress"] == create["ipAddress"]:
                     method = "PUT"
                     path = "/fm/fmrest/topology/role/{0}?newRole={1}".format(
                         role["switchDbID"], create["role"].replace("_", "%20")
                     )
+                    data = None
                     if self.nd:
-                        path = self.nd_prefix + "/" + path[6:]
-                    response = dcnm_send(self.module, method, path)
+                        method = "POST"
+                        path = f"{self.nd_prefix}/rest/control/switches/roles"
+                        data = json.dumps(
+                            [
+                                {
+                                    "serialNumber": role["serialNumber"],
+                                    "role": create["role"].replace("_", " "),
+                                }
+                            ]
+                        )
+                    response = dcnm_send(self.module, method, path, data)
                     self.result["response"].append(response)
                     fail, self.result["changed"] = self.handle_response(
                         response, "create"
@@ -1619,7 +1664,7 @@ class DcnmInventory:
         query_poap = self.params["query_poap"]
 
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
         inv_objects = dcnm_send(self.module, method, path)
@@ -1811,6 +1856,120 @@ class DcnmInventory:
 
         self.module.fail_json(msg=res)
 
+    def format_diff(self):
+        """
+        Format the diff for inventory operations
+        """
+        diff = []
+        create_list = []
+        preprovision_list = []
+        bootstrap_list = []
+        rma_list = []
+        delete_list = []
+
+        # Add created switches to the diff
+        for create in self.diff_create:
+            if create.get("switches") and len(create["switches"]) > 0:
+                switch = create["switches"][0]
+                item = {
+                    "ip_address": switch.get("ipaddr"),
+                    "serial_number": switch.get("serialNumber"),
+                    "role": create.get("role"),
+                    "platform": switch.get("platform"),
+                    "version": switch.get("version"),
+                    "hostname": switch.get("sysName"),
+                    "preserve_config": create.get("preserveConfig", False)
+                }
+                create_list.append(item)
+
+        if create_list:
+            create_item = {
+                "action": "create",
+                "switches": create_list
+            }
+            diff.append(create_item)
+
+        # Add POAP switches to the diff
+        for poap in self.want_create_poap:
+            item = {
+                "ip_address": poap.get("ipAddress"),
+                "role": poap.get("role"),
+                "hostname": poap.get("hostname"),
+                "platform": poap.get("model"),
+                "version": poap.get("version")
+            }
+            if poap.get("serialNumber"):
+                item["serial_number"] = poap.get("serialNumber")
+                bootstrap_list.append(item)
+            if poap.get("preprovisionSerial"):
+                item["preprovision_serial"] = poap.get("preprovisionSerial")
+                preprovision_list.append(item)
+
+        if bootstrap_list:
+            diff.append({
+                "action": "bootstrap",
+                "bootstrap_switches": bootstrap_list
+            })
+        if preprovision_list:
+            diff.append({
+                "action": "preprovision",
+                "preprovision_switches": preprovision_list
+            })
+
+        # Add RMA switches to the diff
+        for rma in self.want_create_rma:
+            item = {
+                "ip_address": rma.get("ipAddress"),
+                "old_serial": rma.get("oldSerialNumber"),
+                "new_serial": rma.get("newSerialNumber"),
+                "platform": rma.get("model"),
+                "version": rma.get("version")
+            }
+            rma_list.append(item)
+
+        if rma_list:
+            diff.append({
+                "action": "rma",
+                "rma_switches": rma_list
+            })
+
+        # Add deleted switches to the diff
+        for serial in self.diff_delete:
+            ip_address = None
+            hostname = None
+            for have_c in self.have_create:
+                if have_c["switches"][0]["serialNumber"] == serial:
+                    ip_address = have_c["switches"][0]["ipaddr"]
+                    hostname = have_c["switches"][0]["sysName"]
+                    role = have_c["switches"][0]["role"]
+                    platform = have_c["switches"][0]["platform"]
+                    version = have_c["switches"][0]["version"]
+                    break
+
+            item = {
+                "serial_number": serial
+            }
+            if ip_address:
+                item["ip_address"] = ip_address
+            if hostname:
+                item["hostname"] = hostname
+            if role:
+                item["role"] = role
+            if platform:
+                item["platform"] = platform
+            if version:
+                item["version"] = version
+
+            delete_list.append(item)
+
+        if delete_list:
+            diff.append({
+                "action": "delete",
+                "switches": delete_list
+            })
+
+        self.diff_input_format = diff
+
 
 def main():
     """main entry point for module execution"""
@@ -1943,6 +2102,8 @@ def main():
             if module.params["deploy"]:
                 dcnm_inv.config_deploy()
 
+    dcnm_inv.format_diff()
+    dcnm_inv.result["diff"] = dcnm_inv.diff_input_format
     module.exit_json(**dcnm_inv.result)
 
 

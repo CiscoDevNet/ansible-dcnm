@@ -29,6 +29,9 @@
 						"ALLOWED_VLANS": "none",
 						"NATIVE_VLAN": "10",
 						"ENABLE_ORPHAN_PORT": false,
+            "ENABLE_PFC": false,
+						"CDP_ENABLE": true,
+						"ENABLE_MONITOR": false,
 						"DESC": "port channel acting as trunk"
 					}
 				}],
@@ -69,6 +72,9 @@
             "DESC": "port channel acting as trunk",
             "CONF": "no shutdown",
 	    "ENABLE_ORPHAN_PORT": false,
+            "ENABLE_PFC": false,
+						"CDP_ENABLE": true,
+						"ENABLE_MONITOR": false,
             "ADMIN_STATE": "true"
           }
         }
@@ -147,6 +153,9 @@
             "DESC": "eth interface  acting as trunk",
             "CONF": "no shutdown",
 	    "ENABLE_ORPHAN_PORT": false,
+            "ENABLE_PFC": false,
+						"CDP_ENABLE": true,
+						"ENABLE_MONITOR": false,
             "ADMIN_STATE": "true"
           }
         }

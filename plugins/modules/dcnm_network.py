@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2023 Cisco and/or its affiliates.
+# Copyright (c) 2020-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -21,11 +22,12 @@ __author__ = "Chris Van Heuveln, Shrishail Kariyappanavar, Karthik Babu Harichan
 DOCUMENTATION = """
 ---
 module: dcnm_network
-short_description: Add and remove Networks from a DCNM managed VXLAN fabric.
+short_description: Add and remove Networks from a ND managed VXLAN fabric.
 version_added: "0.9.0"
 description:
-    - "Add and remove Networks from a DCNM managed VXLAN fabric."
-    - "In Multisite fabrics, Networks can be created only on Multisite fabric"
+    - "Add and remove Networks from a ND managed VXLAN fabric."
+    - "For multisite (MSD) fabrics, child fabric configurations can be specified using the child_fabric_config parameter"
+    - "The attribute _fabric_type (standalone, multisite_parent, multisite_child) is automatically detected and should not be manually specified by the user"
 author: Chris Van Heuveln(@chrisvanheuveln), Shrishail Kariyappanavar(@nkshrishail) Praveen Ramoorthy(@praveenramoorthy)
 options:
   fabric:
@@ -33,9 +35,37 @@ options:
     - Name of the target fabric for network operations
     type: str
     required: yes
+  _fabric_details:
+    description:
+    - INTERNAL PARAMETER - DO NOT USE
+    - Fabric details dictionary automatically provided by the action plugin
+    - Contains fabric_type, cluster_name, and nd_version information
+    - This parameter is used internally by the action plugin for MSD/MFD fabric processing
+    type: dict
+    required: false
+    suboptions:
+      fabric_type:
+        description:
+        - Type of fabric (multicluster_parent, multicluster_child, multisite_parent, multisite_child, standalone)
+        type: str
+        required: true
+        choices: ['multicluster_parent', 'multicluster_child', 'multisite_parent', 'multisite_child', 'standalone']
+      cluster_name:
+        description:
+        - Name of the cluster if applicable
+        type: str
+        required: false
+        default: ''
+      nd_version:
+        description:
+        - ND/NDFC version number used for API path selection
+        - Automatically provided by action plugin
+        - Module will fail if this is not provided by action plugin
+        type: float
+        required: false
   state:
     description:
-    - The state of DCNM after module completion.
+    - The state of ND after module completion.
     type: str
     choices:
       - merged
@@ -64,7 +94,7 @@ options:
       net_id:
         description:
         - ID of the network being managed
-        - If not specified in the playbook, DCNM will auto-select an available net_id
+        - If not specified in the playbook, ND will auto-select an available net_id
         type: int
         required: false
       net_template:
@@ -80,7 +110,7 @@ options:
       vlan_id:
         description:
         - VLAN ID for the network.
-        - If not specified in the playbook, DCNM will auto-select an available vlan_id
+        - If not specified in the playbook, ND will auto-select an available vlan_id
         type: int
         required: false
       routing_tag:
@@ -129,42 +159,82 @@ options:
       dhcp_srvr1_ip:
         description:
         - DHCP relay IP address of the first DHCP server
+        - If dhcp_servers and dhcp_srvr1_ip are specified an error message is generated
+            indicating these are mutually exclusive options
+        - Not applicable at Multisite parent fabric level
+        - DEPRECATED
         type: str
         required: false
       dhcp_srvr1_vrf:
         description:
         - VRF ID of first DHCP server
+        - If not specified, will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 dhcp_srvr1_vrf must be specified for dhcp_srvr1_ip
+        - Not applicable at Multisite parent fabric level
+        - DEPRECATED
         type: str
         required: false
       dhcp_srvr2_ip:
         description:
         - DHCP relay IP address of the second DHCP server
+        - If dhcp_servers and dhcp_srvr2_ip are specified an error message is generated
+            indicating these are mutually exclusive options
+        - Not applicable at Multisite parent fabric level
+        - DEPRECATED
         type: str
         required: false
       dhcp_srvr2_vrf:
         description:
         - VRF ID of second DHCP server
+        - If not specified, will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 dhcp_srvr2_vrf must be specified for dhcp_srvr2_ip
+        - Not applicable at Multisite parent fabric level
+        - DEPRECATED
         type: str
         required: false
       dhcp_srvr3_ip:
         description:
         - DHCP relay IP address of the third DHCP server
+        - Not applicable at Multisite parent fabric level
+        - If dhcp_servers and dhcp_srvr3_ip are specified an error message is generated
+            indicating these are mutually exclusive options
+        - DEPRECATED
         type: str
         required: false
       dhcp_srvr3_vrf:
         description:
         - VRF ID of third DHCP server
+        - If not specified, will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 dhcp_srvr3_vrf must be specified for dhcp_srvr3_ip
+        - Not applicable at Multisite parent fabric level
+        - DEPRECATED
         type: str
+        required: false
+      dhcp_servers:
+        description:
+        - List of DHCP server_vrf pairs where 'srvr_ip' is the IP key and 'srvr_vrf' is the VRF key
+        - The 'srvr_vrf' key is optional, if not specified will use same VRF as the network VRF
+        - For ND version 3.1 and NDFC 12.1 'srvr_vrf' must be specified for each DHCP server
+        - This replaces dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
+            dhcp_srvr3_ip, dhcp_srvr3_vrf
+        - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
+            dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated
+            indicating these are mutually exclusive options
+        - Not applicable at Multisite parent fabric level
+        type: list
+        elements: dict
         required: false
       dhcp_loopback_id:
         description:
         - Loopback ID for DHCP Relay interface
         - Configured ID value should be in range 0-1023
+        - Not applicable at Multisite parent fabric level
         type: int
         required: false
       multicast_group_address:
         description:
         - The multicast IP address for the network
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       gw_ipv6_subnet:
@@ -195,6 +265,7 @@ options:
       trm_enable:
         description:
         - Enable Tenant Routed Multicast
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -207,6 +278,7 @@ options:
       l3gw_on_border:
         description:
         - Enable L3 Gateway on Border
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -215,6 +287,7 @@ options:
         - Enable Netflow
         - Netflow is supported only if it is enabled on fabric
         - Netflow configs are supported on NDFC only
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -230,6 +303,7 @@ options:
         - Vlan Netflow Monitor
         - Provide monitor name defined in fabric setting for Layer 3 Record
         - Netflow configs are supported on NDFC only
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       attach:
@@ -279,13 +353,143 @@ options:
         description:
         - Global knob to control whether to deploy the attachment
         - Ansible NDFC Collection Behavior for Version 2.0.1 and earlier
-        - This knob will create and deploy the attachment in DCNM only when set to "True" in playbook
+        - This knob will create and deploy the attachment in ND only when set to "True" in playbook
         - Ansible NDFC Collection Behavior for Version 2.1.0 and later
         - Attachments specified in the playbook will always be created in DCNM.
           This knob, when set to "True",  will deploy the attachment in DCNM, by pushing the configs to switch.
           If set to "False", the attachments will be created in DCNM, but will not be deployed
+        - Defaults to true. For MSD parent fabrics, this value is copied to child fabrics unless overridden at child level
         type: bool
         default: true
+      child_fabric_config:
+        description:
+        - List of child fabric configurations for MSD (Multi-Site Domain) parent fabrics
+        - Only valid when the fabric is an MSD parent fabric
+        - Child fabric configurations cannot contain 'attach' parameter - attachments are managed at parent level only
+        - Child-specific parameters like dhcp_loopback_id, l3gw_on_border, netflow_enable, etc. can be specified per child
+        - Deploy setting defaults to parent's deploy value but can be overridden per child fabric
+        type: list
+        elements: dict
+        required: false
+        suboptions:
+          fabric:
+            description:
+            - Name of the child fabric
+            - Child fabric must be a member of the specified MSD parent fabric
+            type: str
+            required: true
+          deploy:
+            description:
+            - Override deploy setting for this child fabric
+            - If not specified, inherits the deploy value from parent fabric configuration
+            type: bool
+            required: false
+          l3gw_on_border:
+            description:
+            - Child-specific Enable L3 Gateway on Border setting
+            type: bool
+            required: false
+          netflow_enable:
+            description:
+            - Child-specific Enable Netflow setting
+            - Netflow is supported only if it is enabled on fabric
+            - Netflow configs are supported on NDFC only
+            type: bool
+            required: false
+          multicast_group_address:
+            description:
+            - Child-specific multicast IP address for the network
+            type: str
+            required: false
+          vlan_nf_monitor:
+            description:
+            - Child-specific Vlan Netflow Monitor
+            - Provide monitor name defined in fabric setting for Layer 3 Record
+            - Netflow configs are supported on NDFC only
+            type: str
+            required: false
+          dhcp_loopback_id:
+            description:
+            - Child-specific Loopback ID for DHCP Relay interface
+            - Configured ID value should be in range 0-1023
+            type: int
+            required: false
+          dhcp_srvr1_ip:
+            description:
+            - Child-specific DHCP relay IP address of the first DHCP server
+            - If dhcp_servers and dhcp_srvr1_ip are specified an error message is generated
+                indicating these are mutually exclusive options
+            - Not applicable at Multisite parent fabric level
+            - DEPRECATED
+            type: str
+            required: false
+          dhcp_srvr1_vrf:
+            description:
+            - Child-specific VRF ID of first DHCP server
+            - If not specified, will use same VRF as the network VRF
+            - For ND version 3.1 and NDFC 12.1 dhcp_srvr1_vrf must be specified for dhcp_srvr1_ip
+            - Not applicable at Multisite parent fabric level
+            - DEPRECATED
+            type: str
+            required: false
+          dhcp_srvr2_ip:
+            description:
+            - Child-specific DHCP relay IP address of the second DHCP server
+            - If dhcp_servers and dhcp_srvr2_ip are specified an error message is generated
+                indicating these are mutually exclusive options
+            - Not applicable at Multisite parent fabric level
+            - DEPRECATED
+            type: str
+            required: false
+          dhcp_srvr2_vrf:
+            description:
+            - Child-specific VRF ID of second DHCP server
+            - If not specified, will use same VRF as the network VRF
+            - For ND version 3.1 and NDFC 12.1 dhcp_srvr2_vrf must be specified for dhcp_srvr2_ip
+            - Not applicable at Multisite parent fabric level
+            - DEPRECATED
+            type: str
+            required: false
+          dhcp_srvr3_ip:
+            description:
+            - Child-specific DHCP relay IP address of the third DHCP server
+            - Not applicable at Multisite parent fabric level
+            - If dhcp_servers and dhcp_srvr3_ip are specified an error message is generated
+                indicating these are mutually exclusive options
+            - DEPRECATED
+            type: str
+            required: false
+          dhcp_srvr3_vrf:
+            description:
+            - Child-specific VRF ID of third DHCP server
+            - If not specified, will use same VRF as the network VRF
+            - For ND version 3.1 and NDFC 12.1 dhcp_srvr3_vrf must be specified for dhcp_srvr3_ip
+            - Not applicable at Multisite parent fabric level
+            - DEPRECATED
+            type: str
+            required: false
+          dhcp_servers:
+            description:
+            - Child-specific List of DHCP server_vrf pairs where 'srvr_ip' is the IP key and 'srvr_vrf' is the VRF key
+            - The 'srvr_vrf' key is optional, if not specified will use same VRF as the network VRF
+            - For ND version 3.1 and NDFC 12.1 'srvr_vrf' must be specified for each DHCP server
+            - This replaces dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
+                dhcp_srvr3_ip, dhcp_srvr3_vrf
+            - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
+                dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated
+                indicating these are mutually exclusive options
+            - Not applicable at Multisite parent fabric level
+            type: list
+            elements: dict
+            required: false
+          trm_enable:
+            description:
+            - Child-specific Enable Tenant Routed Multicast
+            - Not applicable at Multisite parent fabric level
+            type: bool
+            required: false
+            default: false
+
 """
 
 EXAMPLES = """
@@ -318,45 +522,64 @@ EXAMPLES = """
 #
 # Deleted:
 #   Networks defined in the playbook will be deleted.
-#   If no Networks are provided in the playbook, all Networks present on that DCNM fabric will be deleted.
+#   If no Networks are provided in the playbook, all Networks present on that ND fabric will be deleted.
 #
 # Query:
-#   Returns the current DCNM state for the Networks listed in the playbook.
+#   Returns the current ND state for the Networks listed in the playbook.
+#
+# MSD (Multi-Site Domain) Fabric Support:
+# - The module automatically detects fabric type (standalone, multisite_parent, multisite_child) using fabric associations API
+# - For MSD parent fabrics, use child_fabric_config to specify child-specific network parameters
+# - Child fabric configurations inherit deploy setting from parent unless explicitly overridden
+# - Attachments (attach parameter) can only be specified at parent fabric level, not in child_fabric_config
+# - When parent state is 'overridden', child fabrics use 'replaced' state (never 'overridden')
+# - Deploy defaults to true for both parent and child configurations
+
+# ===========================================================================
+# Standalone Fabric Examples
+# ===========================================================================
+# ---------------------------------------------------------------------------
+# STATE: MERGED - Merge Network Configuration
+# ---------------------------------------------------------------------------
 
 - name: Merge networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
     state: merged
     config:
-    - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 150
-      gw_ip_subnet: '192.168.30.1/24'
-      attach:
-      - ip_address: 192.168.1.224
-        ports: [Ethernet1/13, Ethernet1/14]
-      - ip_address: 192.168.1.225
-        ports: [Ethernet1/13, Ethernet1/14]
-      deploy: true
-    - net_name: ansible-net12
-      vrf_name: Tenant-2
-      net_id: 7002
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 151
-      gw_ip_subnet: '192.168.40.1/24'
-      attach:
-      - ip_address: 192.168.1.224
-        ports: [Ethernet1/11, Ethernet1/12]
-        tor_ports:
-        - ip_address: 192.168.1.120
-          ports: [Ethernet1/14, Ethernet1/15]
-      - ip_address: 192.168.1.225
-        ports: [Ethernet1/11, Ethernet1/12]
-      deploy: false
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 150
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+          - ip_address: 192.168.1.224
+            ports: [Ethernet1/13, Ethernet1/14]
+          - ip_address: 192.168.1.225
+            ports: [Ethernet1/13, Ethernet1/14]
+        deploy: true
+      - net_name: ansible-net12
+        vrf_name: Tenant-2
+        net_id: 7002
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 151
+        gw_ip_subnet: '192.168.40.1/24'
+        attach:
+          - ip_address: 192.168.1.224
+            ports: [Ethernet1/11, Ethernet1/12]
+            tor_ports:
+              - ip_address: 192.168.1.120
+                ports: [Ethernet1/14, Ethernet1/15]
+          - ip_address: 192.168.1.225
+            ports: [Ethernet1/11, Ethernet1/12]
+        deploy: false
+
+# ---------------------------------------------------------------------------
+# STATE: REPLACED - Replace Network Configuration
+# ---------------------------------------------------------------------------
 
 - name: Replace networks
   cisco.dcnm.dcnm_network:
@@ -370,12 +593,33 @@ EXAMPLES = """
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 150
         gw_ip_subnet: '192.168.30.1/24'
+        dhcp_servers:
+          - srvr_ip: 192.168.1.1
+            srvr_vrf: vrf_01
+          - srvr_ip: 192.168.2.1
+            srvr_vrf: vrf_02
+          - srvr_ip: 192.168.3.1
+            srvr_vrf: vrf_03
+          - srvr_ip: 192.168.4.1
+            srvr_vrf: vrf_04
+          - srvr_ip: 192.168.5.1
+            srvr_vrf: vrf_05
+          - srvr_ip: 192.168.6.1
+            srvr_vrf: vrf_06
+          - srvr_ip: 192.168.7.1
+            srvr_vrf: vrf_07
+          - srvr_ip: 192.168.8.1
+            srvr_vrf: vrf_08
+          - srvr_ip: 192.168.9.1
+            srvr_vrf: vrf_09
+          - srvr_ip: 192.168.10.1
+            srvr_vrf: vrf_10
         attach:
-        - ip_address: 192.168.1.224
-          # Replace the ports with new ports
-          # ports: [Ethernet1/13, Ethernet1/14]
-          ports: [Ethernet1/16, Ethernet1/17]
-          # Delete this attachment
+          - ip_address: 192.168.1.224
+            # Replace the ports with new ports
+            # ports: [Ethernet1/13, Ethernet1/14]
+            ports: [Ethernet1/16, Ethernet1/17]
+        # Delete this attachment
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
         deploy: true
@@ -394,79 +638,353 @@ EXAMPLES = """
         #       ports: [Ethernet1/11, Ethernet1/12]
         #   deploy: false
 
+# ---------------------------------------------------------------------------
+# STATE: OVERRIDDEN - Override all Networks
+# ---------------------------------------------------------------------------
+
 - name: Override networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
     state: overridden
     config:
-    - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 150
-      gw_ip_subnet: '192.168.30.1/24'
-      attach:
-      - ip_address: 192.168.1.224
-        # Replace the ports with new ports
-        # ports: [Ethernet1/13, Ethernet1/14]
-        ports: [Ethernet1/16, Ethernet1/17]
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 150
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+          - ip_address: 192.168.1.224
+            # Replace the ports with new ports
+            # ports: [Ethernet1/13, Ethernet1/14]
+            ports: [Ethernet1/16, Ethernet1/17]
         # Delete this attachment
         # - ip_address: 192.168.1.225
         #   ports: [Ethernet1/13, Ethernet1/14]
-      deploy: true
-      # Delete this network
-      # - net_name: ansible-net12
-      #   vrf_name: Tenant-2
-      #   net_id: 7002
-      #   net_template: Default_Network_Universal
-      #   net_extension_template: Default_Network_Extension_Universal
-      #   vlan_id: 151
-      #   gw_ip_subnet: '192.168.40.1/24'
-      #   attach:
-      #   - ip_address: 192.168.1.224
-      #     ports: [Ethernet1/11, Ethernet1/12]
-      #   - ip_address: 192.168.1.225
-      #     ports: [Ethernet1/11, Ethernet1/12]
-      #   deploy: false
+        deploy: true
+# Delete this network
+# - net_name: ansible-net12
+#   vrf_name: Tenant-2
+#   net_id: 7002
+#   net_template: Default_Network_Universal
+#   net_extension_template: Default_Network_Extension_Universal
+#   vlan_id: 151
+#   gw_ip_subnet: '192.168.40.1/24'
+#   attach:
+#   - ip_address: 192.168.1.224
+#     ports: [Ethernet1/11, Ethernet1/12]
+#   - ip_address: 192.168.1.225
+#     ports: [Ethernet1/11, Ethernet1/12]
+#   deploy: false
+
+# ---------------------------------------------------------------------------
+# STATE: DELETED - Delete Networks
+# ---------------------------------------------------------------------------
 
 - name: Delete selected networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
     state: deleted
     config:
-    - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 150
-      gw_ip_subnet: '192.168.30.1/24'
-    - net_name: ansible-net12
-      vrf_name: Tenant-2
-      net_id: 7002
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 151
-      gw_ip_subnet: '192.168.40.1/24'
-      deploy: false
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 150
+        gw_ip_subnet: '192.168.30.1/24'
+      - net_name: ansible-net12
+        vrf_name: Tenant-2
+        net_id: 7002
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 151
+        gw_ip_subnet: '192.168.40.1/24'
+        deploy: false
 
 - name: Delete all the networkss
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
     state: deleted
 
+# ---------------------------------------------------------------------------
+# STATE: QUERY - Query Networks
+# ---------------------------------------------------------------------------
+
 - name: Query Networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
     state: query
     config:
-    - net_name: ansible-net13
-    - net_name: ansible-net12
+      - net_name: ansible-net13
+      - net_name: ansible-net12
+
+# ===========================================================================
+# MSD (Multi-Site Domain) Fabric Examples
+# ===========================================================================
+
+# Note: The module automatically detects fabric type using fabric associations API.
+
+# ---------------------------------------------------------------------------
+# STATE: MERGED - Create/Update Networks on Parent and Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD MERGE | Create a Network on Parent and extend to Child fabrics
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric  # Must be the Parent MSD fabric
+    state: merged
+    config:
+      - net_name: ansible-net-msd-1
+        vrf_name: Tenant-1
+        net_id: 130001
+        vlan_id: 2301
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        gw_ip_subnet: '192.168.12.1/24'
+        routing_tag: 1234
+        # Attachments are for switches at the Parent fabric
+        attach:
+          - ip_address: 192.168.10.203
+            ports: [Ethernet1/13, Ethernet1/14]
+          - ip_address: 192.168.10.204
+            ports: [Ethernet1/13, Ethernet1/14]
+        # Define how this Network behaves on each Child fabric
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            l3gw_on_border: true
+            dhcp_loopback_id: 204
+            multicast_group_address: '239.1.1.1'
+          - fabric: vxlan-child-fabric2
+            l3gw_on_border: false
+            dhcp_loopback_id: 205
+        deploy: true
+      - net_name: ansible-net-msd-2  # A second Network in the same task
+        vrf_name: Tenant-2
+        net_id: 130002
+        vlan_id: 2302
+        gw_ip_subnet: '192.168.13.1/24'
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            netflow_enable: false
+        # Attachments are for switches at the Parent fabric
+        attach:
+          - ip_address: 192.168.10.203
+            ports: [Ethernet1/15, Ethernet1/16]
+          - ip_address: 192.168.10.204
+            ports: [Ethernet1/15, Ethernet1/16]
+
+- name: MSD MERGE | Create Network with advanced DHCP and multicast settings
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: merged
+    config:
+      - net_name: ansible-net-advanced
+        vrf_name: Tenant-1
+        net_id: 130010
+        vlan_id: 2310
+        vlan_name: advanced_network_vlan2310
+        gw_ip_subnet: '192.168.20.1/24'
+        int_desc: "Advanced Network Configuration"
+        mtu_l3intf: 9216
+        arp_suppress: true
+        route_target_both: true
+        # Parent-specific DHCP settings
+        dhcp_servers:
+          - srvr_ip: 192.168.1.1
+            srvr_vrf: management
+          - srvr_ip: 192.168.1.2
+            srvr_vrf: management
+        # Child fabric configuration with different settings per child
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            multicast_group_address: '239.2.1.1'
+            dhcp_loopback_id: 210
+            dhcp_srvr1_ip: '10.1.1.10'
+            dhcp_srvr1_vrf: 'management'
+          - fabric: vxlan-child-fabric2
+            multicast_group_address: '239.2.2.1'
+            l3gw_on_border: true
+            deploy: false  # Override parent deploy setting
+        attach:
+          - ip_address: 192.168.10.203
+            ports: [Ethernet1/17, Ethernet1/18]
+          - ip_address: 192.168.10.204
+            ports: [Ethernet1/17, Ethernet1/18]
+        deploy: true  # Parent deploy setting, inherited by children unless overridden
+
+# ---------------------------------------------------------------------------
+# STATE: REPLACED - Replace Network configuration on Parent and Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD REPLACE | Update Network properties on Parent and Child fabrics
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: replaced
+    config:
+      - net_name: ansible-net-msd-1
+        vrf_name: Tenant-1
+        net_id: 130001
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2301
+        gw_ip_subnet: '192.168.12.1/24'
+        mtu_l3intf: 9000  # Update MTU on Parent
+        # Child fabric configs are replaced: child1 is updated
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            l3gw_on_border: false  # Value is updated
+            dhcp_loopback_id: 205  # Value is updated
+        attach:
+          - ip_address: 192.168.10.203
+          # Delete this attachment
+          # - ip_address: 192.168.10.204
+          # Create the following attachment
+          - ip_address: 192.168.10.205
+            ports: [Ethernet1/13, Ethernet1/14]
+      # Dont touch this if its present on ND
+      # - net_name: ansible-net-msd-2
+      #   vrf_name: Tenant-2
+      #   net_id: 130002
+      #   net_template: Default_Network_Universal
+      #   net_extension_template: Default_Network_Extension_Universal
+      #   attach:
+      #   - ip_address: 192.168.10.203
+      #     ports: [Ethernet1/15, Ethernet1/16]
+      #   - ip_address: 192.168.10.204
+      #     ports: [Ethernet1/15, Ethernet1/16]
+
+- name: MSD REPLACE | Update Network with netflow configuration
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: replaced
+    config:
+      - net_name: ansible-net-advanced
+        vrf_name: Tenant-1
+        net_id: 130010
+        vlan_id: 2310
+        gw_ip_subnet: '192.168.20.1/24'
+        # Parent settings
+        arp_suppress: false  # Updated value
+        # Child fabric configuration updates
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            netflow_enable: true
+            vlan_nf_monitor: NETFLOW_MONITOR_2  # Updated monitor
+            multicast_group_address: '239.2.1.2'  # Updated address
+
+# ---------------------------------------------------------------------------
+# STATE: OVERRIDDEN - Override all Networks on Parent and Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD OVERRIDE | Override all Networks ensuring only specified ones exist
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: overridden
+    config:
+      - net_name: ansible-net-production
+        vrf_name: Tenant-Production
+        net_id: 140001
+        vlan_id: 3001
+        gw_ip_subnet: '172.16.1.1/24'
+        int_desc: "Production Network for critical workloads"
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            l3gw_on_border: true
+            netflow_enable: true
+          - fabric: vxlan-child-fabric2
+            l3gw_on_border: true
+            netflow_enable: true
+        attach:
+          - ip_address: 192.168.10.203
+            ports: [Ethernet1/19, Ethernet1/20]
+          - ip_address: 192.168.10.204
+            ports: [Ethernet1/19, Ethernet1/20]
+        deploy: true
+      # All other Networks will be deleted from both parent and child fabrics
+
+# ---------------------------------------------------------------------------
+# STATE: DELETED - Delete Networks from Parent and all Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD DELETE | Delete a Network from the Parent and all associated Child fabrics
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: deleted
+    config:
+      - net_name: ansible-net-msd-1
+      # The 'child_fabric_config' parameter is ignored for 'deleted' state.
+
+- name: MSD DELETE | Delete multiple Networks from Parent and Child fabrics
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: deleted
+    config:
+      - net_name: ansible-net-msd-1
+      - net_name: ansible-net-msd-2
+      - net_name: ansible-net-advanced
+
+- name: MSD DELETE | Delete all Networks from the Parent and all associated Child fabrics
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: deleted
+
+# ---------------------------------------------------------------------------
+# STATE: QUERY - Query Networks
+# ---------------------------------------------------------------------------
+
+- name: MSD QUERY | Query specific Networks on the Parent MSD fabric
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: query
+    config:
+      - net_name: ansible-net-msd-1
+      - net_name: ansible-net-msd-2
+      # The query will return the Network's configuration on the parent
+      # and its attachments on all associated child fabrics.
+
+- name: MSD QUERY | Query all Networks on the Parent MSD fabric
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: query
+    # No config specified - returns all Networks
+
+- name: MSD QUERY | Query specific Networks on the Child MSD fabric
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-child-fabric1
+    state: query
+    config:
+      - net_name: ansible-net-msd-1
+      - net_name: ansible-net-msd-2
+      # The query will return the Network's configuration on the child
+      # and its attachments.
+
+- name: MSD QUERY | Query all Networks on the Child MSD fabric
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-child-fabric1
+    state: query
+    # No config specified - returns all Networks on the child.
+
+- name: MSD QUERY | Query specific Networks on Parent & Child fabric
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: query
+    config:
+      - net_name: ansible-net-msd-1
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+      - net_name: ansible-net-msd-2
+        child_fabric_config:
+          - fabric: vxlan-child-fabric2
+      # The query will return the Network's configuration on the parent and the
+      # configuration on the specified childs and its attachments at
+      # the parent and child level respectively.
 """
 
 import copy
+import inspect
 import json
+import logging
 import re
 import time
 
@@ -475,12 +993,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_ip_addr_info,
     dcnm_get_url,
     dcnm_send,
-    dcnm_version_supported,
-    get_fabric_details,
-    get_fabric_inventory_details,
+    get_nd_fabric_details,
+    get_nd_fabric_inventory_details,
     get_ip_sn_dict,
     get_ip_sn_fabric_dict,
+    has_partial_dhcp_config,
     validate_list_of_dicts,
+    sanitize_lan_attach_list
 )
 
 
@@ -494,7 +1013,11 @@ class DcnmNetwork:
             "GET_NET_ID": "/rest/managed-pool/fabrics/{}/segments/ids",
             "GET_NET": "/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
+            "GET_NET_BULK": "/rest/top-down/bulk-create/networks",
             "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
+            "GET_NET_STATUS": "/rest/top-down/fabrics/{}/networks/{}/status",
+            "GET_NET_SWITCH_DEPLOY": "/rest/top-down/fabrics/networks/deploy",
+            "GET_NET_SWITCH_DEPLOY_ONEMANAGE": "/onemanage/rest/top-down/networks/deploy",
         },
         12: {
             "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
@@ -503,13 +1026,26 @@ class DcnmNetwork:
             "GET_NET_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/netinfo",
             "GET_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
+            "GET_NET_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/bulk-create/networks",
             "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
+            "GET_NET_STATUS": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}/status",
+            "GET_NET_SWITCH_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/networks/deploy",
+            "GET_NET_SWITCH_DEPLOY_ONEMANAGE": "/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/top-down/networks/deploy",
         },
     }
 
     def __init__(self, module):
+        self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self.module = module
         self.params = module.params
+
+        msg = "self.params: "
+        msg += f"{json.dumps(self.params, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         self.fabric = module.params["fabric"]
         self.config = copy.deepcopy(module.params.get("config"))
         self.check_mode = False
@@ -518,7 +1054,7 @@ class DcnmNetwork:
         self.diff_create = []
         self.diff_create_update = []
         # This variable is created specifically to hold all the create payloads which are missing a
-        # networkId. These payloads are sent to DCNM out of band (basically in the get_diff_merge())
+        # networkId. These payloads are sent to ND out of band (basically in the get_diff_merge())
         # We lose diffs for these without this variable. The content stored here will be helpful for
         # cases like "check_mode" and to print diffs[] in the output of each task.
         self.diff_create_quick = []
@@ -539,16 +1075,91 @@ class DcnmNetwork:
         self.diff_delete = {}
         self.diff_input_format = []
         self.query = []
-        self.dcnm_version = dcnm_version_supported(self.module)
-        self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
+        self.deployment_states = {}
+        self.network_to_sns = {}
+        self.deploy_payload = {}
+
+        # Get fabric details from parameter (set by action plugin) - MUST be done before inventory call
+        fabric_details = module.params.get("_fabric_details")
+
+        # Store fabric_details as instance variable for later use
+        self.fabric_details = fabric_details
+
+        # Get ND version from action plugin (similar to dcnm_vrf)
+        # The action plugin must provide nd_version in fabric_details
+        action_nd_version = None
+        if self.fabric_details and isinstance(self.fabric_details, dict):
+            action_nd_version = self.fabric_details.get("nd_version")
+
+        if action_nd_version:
+            self.dcnm_version = action_nd_version
+            msg = f"ND version from action plugin: {self.dcnm_version}"
+            self.log.debug(msg)
+        else:
+            # Fail if nd_version is not provided by action plugin
+            msg = "ND version not provided by action plugin. The '_fabric_details' parameter with 'nd_version' is required."
+            self.module.fail_json(msg=msg)
+
+        msg = f"self.dcnm_version: {self.dcnm_version}"
+        self.log.debug(msg)
+
+        self.inventory_data = get_nd_fabric_inventory_details(self.module, self.dcnm_version, self.fabric, self.fabric_details)
+
+        msg = "self.inventory_data: "
+        msg += f"{json.dumps(self.inventory_data, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
+
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
-        self.fabric_det = get_fabric_details(module, self.fabric)
+        # Use get_nd_fabric_details for ND/multicluster support (handles proxy paths for child fabrics)
+        self.fabric_det = get_nd_fabric_details(module, self.dcnm_version, self.fabric, self.fabric_details)
+
+        msg = "self.fabric_det: "
+        msg += f"{json.dumps(self.fabric_det, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         self.is_ms_fabric = True if self.fabric_det.get("fabricType") == "MFD" else False
         if self.dcnm_version > 12:
             self.paths = self.dcnm_network_paths[12]
         else:
             self.paths = self.dcnm_network_paths[self.dcnm_version]
+
+        # Extract fabric_type from fabric_details
+        # Note: fabric_details was already retrieved and stored as self.fabric_details earlier
+        if self.fabric_details and isinstance(self.fabric_details, dict):
+            self.fabric_type = self.fabric_details.get("fabric_type")
+            self.cluster_name = self.fabric_details.get("cluster_name", "")
+        else:
+            # Fail if fabric_details not provided
+            self.module.fail_json(msg="Fabric type detection failed. The '_fabric_details' parameter is required but was not provided by the action plugin.")
+
+        if self.fabric_type is None:
+            self.module.fail_json(msg="Could not determine fabric type from _fabric_details. Please ensure the action plugin is functioning correctly.")
+
+        # Modify paths based on fabric type for MFD (multicluster) fabrics
+        if self.fabric_type == "multicluster_child":
+            # For multicluster child fabrics, prepend proxy path based on ND version
+            # Version >= 12.4 uses /fedproxy/, < 12.4 uses /onepath/ (similar to dcnm_vrf)
+            if self.dcnm_version >= 12.4:
+                proxy = "/fedproxy/"
+            else:
+                proxy = "/onepath/"
+            self.module.warn(f"multicluster_child proxy path: {proxy} (version: {self.dcnm_version}, cluster: {self.cluster_name})")
+            for path_key in self.paths:
+                self.paths[path_key] = proxy + self.cluster_name + self.paths[path_key]
+        elif self.fabric_type == "multicluster_parent":
+            # For multicluster parent fabrics - ALL versions:
+            # 1. Replace "lan-fabric/rest" with "onemanage" (middle replacement) - applies to ALL versions
+            # 2. Prepend "/onemanage" proxy - applies to ALL versions
+            proxy = "/onemanage"
+            for path_key in self.paths:
+                if path_key == "GET_NET_SWITCH_DEPLOY":
+                    # Use the dedicated onemanage deploy endpoint
+                    self.paths[path_key] = self.paths["GET_NET_SWITCH_DEPLOY_ONEMANAGE"]
+                else:
+                    # Always replace lan-fabric/rest with onemanage AND prepend /onemanage for ALL versions
+                    self.paths[path_key] = proxy + self.paths[path_key].replace("lan-fabric/rest", "onemanage")
 
         self.check_extra_params = True
 
@@ -593,12 +1204,21 @@ class DcnmNetwork:
         # -> None
         ```
         """
+        if search is None:
+            return None
         match = (d for d in search if d[key] == value)
         return next(match, None)
 
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"replace == {replace}"
+        self.log.debug(msg)
 
         attach_list = []
+        atch_tor_ports = []
 
         if not want_a:
             return attach_list
@@ -608,7 +1228,7 @@ class DcnmNetwork:
             found = False
             if have_a:
                 for have in have_a:
-                    if want["serialNumber"] == have["serialNumber"]:
+                    if want["serialNumber"] == have["serialNumber"] and want["networkName"] == have["networkName"]:
                         found = True
 
                         if want.get("isAttached") is not None:
@@ -617,12 +1237,12 @@ class DcnmNetwork:
 
                                 # Handle tor ports first if configured.
                                 if want.get("torports"):
+                                    torconfig_list = []
                                     for tor_w in want["torports"]:
                                         torports_present = False
                                         if have.get("torports"):
                                             for tor_h in have["torports"]:
                                                 if tor_w["switch"] == tor_h["switch"]:
-                                                    atch_tor_ports = []
                                                     torports_present = True
                                                     h_tor_ports = tor_h["torPorts"].split(",") if tor_h["torPorts"] else []
                                                     w_tor_ports = tor_w["torPorts"].split(",") if tor_w["torPorts"] else []
@@ -636,7 +1256,7 @@ class DcnmNetwork:
                                                         atch_tor_ports.extend(h_tor_ports)
 
                                                     torconfig = tor_w["switch"] + "(" + ",".join(atch_tor_ports) + ")"
-                                                    want.update({"torPorts": torconfig})
+                                                    torconfig_list.append(torconfig)
                                                     # Update torports_configured to True. If there is no other config change for attach
                                                     # We will still append this attach to attach_list as there is tor port change
                                                     if sorted(atch_tor_ports) != sorted(h_tor_ports):
@@ -644,10 +1264,12 @@ class DcnmNetwork:
 
                                         if not torports_present:
                                             torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
-                                            want.update({"torPorts": torconfig})
+                                            torconfig_list.append(torconfig)
                                             # Update torports_configured to True. If there is no other config change for attach
                                             # We will still append this attach to attach_list as there is tor port change
                                             torports_configured = True
+
+                                    want.update({"torPorts": " ".join(torconfig_list)})
 
                                     if have.get("torports"):
                                         del have["torports"]
@@ -662,9 +1284,10 @@ class DcnmNetwork:
                                     else:
                                         # Dont update torports_configured to True.
                                         # If at all there is any other config change, this attach to will be appended attach_list there
+                                        torconfig_list = []
                                         for tor_h in have.get("torports"):
-                                            torconfig = tor_h["switch"] + "(" + tor_h["torPorts"] + ")"
-                                            want.update({"torPorts": torconfig})
+                                            torconfig_list.append(tor_h["switch"] + "(" + tor_h["torPorts"] + ")")
+                                        want.update({"torPorts": " ".join(torconfig_list)})
 
                                     del have["torports"]
 
@@ -676,7 +1299,7 @@ class DcnmNetwork:
 
                                 # This is needed to handle cases where vlan is updated after deploying the network
                                 # and attachments. This ensures that the attachments before vlan update will use previous
-                                # vlan id. All the active attachments on DCNM will have a vlan-id.
+                                # vlan id. All the active attachments on ND will have a vlan-id.
                                 if have.get("vlan"):
                                     want["vlan"] = have.get("vlan")
 
@@ -703,7 +1326,6 @@ class DcnmNetwork:
                                         attach_list.append(want)
                                         if bool(want["is_deploy"]):
                                             dep_net = True
-
                                         continue
 
                                     if not atch_sw_ports:
@@ -744,10 +1366,11 @@ class DcnmNetwork:
                                     continue
                                 del want["isAttached"]
                                 if want.get("torports"):
+                                    torconfig_list = []
                                     for tor_w in want["torports"]:
-                                        torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
-                                        want.update({"torPorts": torconfig})
-                                del want["torports"]
+                                        torconfig_list.append(tor_w["switch"] + "(" + tor_w["torPorts"] + ")")
+                                    want.update({"torPorts": " ".join(torconfig_list)})
+                                    del want["torports"]
                                 want.update({"deployment": True})
                                 attach_list.append(want)
                                 if bool(want["is_deploy"]):
@@ -768,9 +1391,10 @@ class DcnmNetwork:
             if not found:
                 if bool(want["isAttached"]):
                     if want.get("torports"):
+                        torconfig_list = []
                         for tor_w in want["torports"]:
-                            torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
-                            want.update({"torPorts": torconfig})
+                            torconfig_list.append(tor_w["switch"] + "(" + tor_w["torPorts"] + ")")
+                        want.update({"torPorts": " ".join(torconfig_list)})
                     del want["torports"]
                     del want["isAttached"]
                     want["deployment"] = True
@@ -805,6 +1429,11 @@ class DcnmNetwork:
         return attach_list, dep_net
 
     def update_attach_params(self, attach, net_name, deploy):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         torlist = []
         if not attach:
@@ -826,6 +1455,7 @@ class DcnmNetwork:
 
         attach.update({"fabric": self.fabric})
         attach.update({"networkName": net_name})
+        attach.update({"displayName": net_name})
         attach.update({"serialNumber": serial})
         attach.update({"switchPorts": ",".join(attach["ports"])})
         attach.update({"detachSwitchPorts": ""})  # Is this supported??Need to handle correct
@@ -841,12 +1471,13 @@ class DcnmNetwork:
         attach.update({"instanceValues": ""})
         attach.update({"freeformConfig": ""})
         attach.update({"is_deploy": deploy})
+
         if attach.get("tor_ports"):
-            torports = {}
             if role.lower() != "leaf":
                 msg = "tor_ports for Networks cannot be attached to switch {0} with role {1}".format(attach["ip_address"], role)
                 self.module.fail_json(msg=msg)
             for tor in attach.get("tor_ports"):
+                torports = {}
                 torports.update({"switch": self.inventory_data[tor["ip_address"]].get("logicalName")})
                 torports.update({"torPorts": ",".join(tor["ports"])})
                 torlist.append(torports)
@@ -860,7 +1491,95 @@ class DcnmNetwork:
 
         return attach
 
+    def transform_deploy_payload_for_multicluster(self, deploy_payload, use_diff_attach=True):
+        """
+        Transform deploy payload for multicluster parent fabrics ONLY.
+
+        For multicluster parent, the deploy API expects:
+        {"serialNumber1": "net1,net2,net3", "serialNumber2": "net1,net2,net3"}
+
+        For all other fabric types (including multicluster_child), use standard format:
+        {"networkNames": "net1,net2,net3"}
+
+        Uses diff_attach (for deploy) or have_attach (for undeploy) to build the serial number to networks mapping.
+
+        Args:
+            deploy_payload: Original payload with networkNames format
+            use_diff_attach: If True, use diff_attach (for deploy operations).
+                           If False, use have_attach (for undeploy/delete operations).
+
+        Returns:
+            Transformed payload for multicluster_parent or original payload for other fabric types
+        """
+        # Only transform for multicluster_parent, all others (including multicluster_child) use standard format
+        if self.fabric_type != "multicluster_parent":
+            return deploy_payload
+
+        if not deploy_payload or "networkNames" not in deploy_payload:
+            return deploy_payload
+
+        network_names_str = deploy_payload["networkNames"]
+        if not network_names_str:
+            return {}
+
+        # Parse the comma-separated network names that need to be deployed
+        network_names_list = [name.strip() for name in network_names_str.split(",")]
+
+        # Choose attach source based on parameter
+        # For deploy operations: use diff_attach
+        # For undeploy/delete operations: use have_attach
+        attach_source = None
+        if use_diff_attach:
+            if hasattr(self, 'diff_attach') and self.diff_attach:
+                attach_source = self.diff_attach
+        else:
+            if hasattr(self, 'have_attach') and self.have_attach:
+                attach_source = self.have_attach
+
+        if not attach_source:
+            return deploy_payload
+
+        # Build serial -> networks mapping from attach source
+        # Only include networks that are in the deploy_payload
+        serial_to_networks = {}
+
+        for net_attach in attach_source:
+            network_name = net_attach.get("networkName")
+
+            # Only process networks that are in the deploy list
+            if not network_name or network_name not in network_names_list:
+                continue
+
+            lan_attach_list = net_attach.get("lanAttachList", [])
+            for attach in lan_attach_list:
+                serial = attach.get("serialNumber")
+
+                if not serial:
+                    continue
+
+                # Add this network to the serial's list
+                if serial not in serial_to_networks:
+                    serial_to_networks[serial] = []
+                if network_name not in serial_to_networks[serial]:
+                    serial_to_networks[serial].append(network_name)
+
+        # If we couldn't build the mapping, fall back to original payload
+        if not serial_to_networks:
+            return deploy_payload
+
+        # Build the multicluster format payload: {serialNumber: "net1,net2,net3"}
+        multicluster_payload = {}
+        for serial, networks in serial_to_networks.items():
+            multicluster_payload[serial] = ",".join(networks)
+
+        return multicluster_payload
+
     def diff_for_create(self, want, have):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         # Possible update scenarios
         # vlanId - Changing vlanId on an already deployed network only affects new attachments
@@ -870,6 +1589,16 @@ class DcnmNetwork:
         if not have:
             return {}
 
+        # Get skipped attributes for parent fabrics
+        skipped_attributes = self.get_skipped_attributes()
+        template_mapping = self.get_template_config_mapping()
+
+        # Convert skipped spec attributes to template config keys
+        skipped_template_keys = set()
+        for attr in skipped_attributes:
+            if attr in template_mapping:
+                skipped_template_keys.add(template_mapping[attr])
+
         gw_changed = False
         tg_changed = False
         create = {}
@@ -878,12 +1607,7 @@ class DcnmNetwork:
         intdesc_changed = False
         mtu_changed = False
         arpsup_changed = False
-        dhcp1_ip_changed = False
-        dhcp2_ip_changed = False
-        dhcp3_ip_changed = False
-        dhcp1_vrf_changed = False
-        dhcp2_vrf_changed = False
-        dhcp3_vrf_changed = False
+        dhcp_servers_changed = False
         dhcp_loopback_changed = False
         multicast_group_address_changed = False
         gwv6_changed = False
@@ -894,6 +1618,7 @@ class DcnmNetwork:
         trm_en_changed = False
         rt_both_changed = False
         l3gw_onbd_changed = False
+        net_name_changed = False
         nf_en_changed = False
         intvlan_nfmon_changed = False
         vlan_nfmon_changed = False
@@ -915,7 +1640,7 @@ class DcnmNetwork:
         vlanId_want = json_to_dict_want.get("vlanId", "")
         vlanId_have = json_to_dict_have.get("vlanId")
         l2only_want = str(json_to_dict_want.get("isLayer2Only", "")).lower()
-        l2only_have = json_to_dict_have.get("isLayer2Only", "")
+        l2only_have = str(json_to_dict_have.get("isLayer2Only", "")).lower()
         vlanName_want = json_to_dict_want.get("vlanName", "")
         vlanName_have = json_to_dict_have.get("vlanName", "")
         intDesc_want = json_to_dict_want.get("intfDescription", "")
@@ -923,22 +1648,11 @@ class DcnmNetwork:
         mtu_want = json_to_dict_want.get("mtu", "")
         mtu_have = json_to_dict_have.get("mtu", "")
         arpsup_want = str(json_to_dict_want.get("suppressArp", "")).lower()
-        arpsup_have = json_to_dict_have.get("suppressArp", "")
-        dhcp1_ip_want = json_to_dict_want.get("dhcpServerAddr1", "")
-        dhcp1_ip_want = json_to_dict_want.get("dhcpServerAddr1", "")
-        dhcp1_ip_have = json_to_dict_have.get("dhcpServerAddr1", "")
-        dhcp2_ip_want = json_to_dict_want.get("dhcpServerAddr2", "")
-        dhcp2_ip_have = json_to_dict_have.get("dhcpServerAddr2", "")
-        dhcp3_ip_want = json_to_dict_want.get("dhcpServerAddr3", "")
-        dhcp3_ip_have = json_to_dict_have.get("dhcpServerAddr3", "")
-        dhcp1_vrf_want = json_to_dict_want.get("vrfDhcp", "")
-        dhcp1_vrf_have = json_to_dict_have.get("vrfDhcp", "")
-        dhcp2_vrf_want = json_to_dict_want.get("vrfDhcp2", "")
-        dhcp2_vrf_have = json_to_dict_have.get("vrfDhcp2", "")
-        dhcp3_vrf_want = json_to_dict_want.get("vrfDhcp3", "")
-        dhcp3_vrf_have = json_to_dict_have.get("vrfDhcp3", "")
-        dhcp_loopback_want = json_to_dict_want.get("loopbackId", "")
-        dhcp_loopback_have = json_to_dict_have.get("loopbackId", "")
+        arpsup_have = str(json_to_dict_have.get("suppressArp", "")).lower()
+        dhcp_servers_want = json_to_dict_want.get("dhcpServers", "")
+        dhcp_servers_have = json_to_dict_have.get("dhcpServers", "")
+        dhcp_loopback_want = str(json_to_dict_want.get("loopbackId", ""))
+        dhcp_loopback_have = str(json_to_dict_have.get("loopbackId", ""))
         multicast_group_address_want = json_to_dict_want.get("mcastGroup", "")
         multicast_group_address_have = json_to_dict_have.get("mcastGroup", "")
         gw_ipv6_want = json_to_dict_want.get("gatewayIpV6Address", "")
@@ -952,13 +1666,15 @@ class DcnmNetwork:
         secip_gw4_want = json_to_dict_want.get("secondaryGW4", "")
         secip_gw4_have = json_to_dict_have.get("secondaryGW4", "")
         trmen_want = str(json_to_dict_want.get("trmEnabled", "")).lower()
-        trmen_have = json_to_dict_have.get("trmEnabled", "")
+        trmen_have = str(json_to_dict_have.get("trmEnabled", "")).lower()
         rt_both_want = str(json_to_dict_want.get("rtBothAuto", "")).lower()
-        rt_both_have = json_to_dict_have.get("rtBothAuto", "")
+        rt_both_have = str(json_to_dict_have.get("rtBothAuto", "")).lower()
         l3gw_onbd_want = str(json_to_dict_want.get("enableL3OnBorder", "")).lower()
-        l3gw_onbd_have = json_to_dict_have.get("enableL3OnBorder", "")
+        l3gw_onbd_have = str(json_to_dict_have.get("enableL3OnBorder", "")).lower()
+        net_name_want = json_to_dict_want.get("networkName", "")
+        net_name_have = json_to_dict_have.get("networkName", "")
         nf_en_want = str(json_to_dict_want.get("ENABLE_NETFLOW", "")).lower()
-        nf_en_have = json_to_dict_have.get("ENABLE_NETFLOW", "")
+        nf_en_have = str(json_to_dict_have.get("ENABLE_NETFLOW", "")).lower()
         intvlan_nfen_want = json_to_dict_want.get("SVI_NETFLOW_MONITOR", "")
         intvlan_nfen_have = json_to_dict_have.get("SVI_NETFLOW_MONITOR", "")
         vlan_nfen_want = json_to_dict_want.get("VLAN_NETFLOW_MONITOR", "")
@@ -966,6 +1682,8 @@ class DcnmNetwork:
 
         if vlanId_have != "":
             vlanId_have = int(vlanId_have)
+        if vlanId_want != "":
+            vlanId_want = int(vlanId_want)
         tag_want = json_to_dict_want.get("tag", "")
         tag_have = json_to_dict_have.get("tag")
         if tag_have != "":
@@ -975,37 +1693,110 @@ class DcnmNetwork:
 
         if vlanId_want:
 
-            if (
-                have["networkTemplate"] != want["networkTemplate"]
-                or have["networkExtensionTemplate"] != want["networkExtensionTemplate"]
-                or gw_ip_have != gw_ip_want
-                or vlanId_have != vlanId_want
-                or tag_have != tag_want
-                or l2only_have != l2only_want
-                or vlanName_have != vlanName_want
-                or intDesc_have != intDesc_want
-                or mtu_have != mtu_want
-                or arpsup_have != arpsup_want
-                or dhcp1_ip_have != dhcp1_ip_want
-                or dhcp2_ip_have != dhcp2_ip_want
-                or dhcp3_ip_have != dhcp3_ip_want
-                or dhcp1_vrf_have != dhcp1_vrf_want
-                or dhcp2_vrf_have != dhcp2_vrf_want
-                or dhcp3_vrf_have != dhcp3_vrf_want
-                or dhcp_loopback_have != dhcp_loopback_want
-                or multicast_group_address_have != multicast_group_address_want
-                or gw_ipv6_have != gw_ipv6_want
-                or secip_gw1_have != secip_gw1_want
-                or secip_gw2_have != secip_gw2_want
-                or secip_gw3_have != secip_gw3_want
-                or secip_gw4_have != secip_gw4_want
-                or trmen_have != trmen_want
-                or rt_both_have != rt_both_want
-                or l3gw_onbd_have != l3gw_onbd_want
-                or nf_en_have != nf_en_want
-                or intvlan_nfen_have != intvlan_nfen_want
-                or vlan_nfen_have != vlan_nfen_want
-            ):
+            # Build comparison conditions, skipping those in skipped_template_keys
+            comparisons = []
+
+            # Always compare network templates
+            template_diff = have["networkTemplate"] != want["networkTemplate"]
+            comparisons.append(template_diff)
+
+            ext_template_diff = have["networkExtensionTemplate"] != want["networkExtensionTemplate"]
+            comparisons.append(ext_template_diff)
+
+            # Compare other attributes only if not skipped
+            if "gatewayIpAddress" not in skipped_template_keys:
+                gw_diff = gw_ip_have != gw_ip_want
+                comparisons.append(gw_diff)
+
+            if "vlanId" not in skipped_template_keys:
+                vlan_diff = vlanId_have != vlanId_want
+                comparisons.append(vlan_diff)
+
+            if "tag" not in skipped_template_keys:
+                tag_diff = tag_have != tag_want
+                comparisons.append(tag_diff)
+
+            if "isLayer2Only" not in skipped_template_keys:
+                l2_diff = l2only_have != l2only_want
+                comparisons.append(l2_diff)
+
+            if "vlanName" not in skipped_template_keys:
+                vname_diff = vlanName_have != vlanName_want
+                comparisons.append(vname_diff)
+
+            if "intfDescription" not in skipped_template_keys:
+                intdesc_diff = intDesc_have != intDesc_want
+                comparisons.append(intdesc_diff)
+
+            if "mtu" not in skipped_template_keys:
+                mtu_diff = mtu_have != mtu_want
+                comparisons.append(mtu_diff)
+
+            if "suppressArp" not in skipped_template_keys:
+                arp_diff = arpsup_have != arpsup_want
+                comparisons.append(arp_diff)
+
+            if "dhcpServers" not in skipped_template_keys:
+                dhcp_servers_diff = dhcp_servers_have != dhcp_servers_want
+                comparisons.append(dhcp_servers_diff)
+
+            if "loopbackId" not in skipped_template_keys:
+                loopback_diff = dhcp_loopback_have != dhcp_loopback_want
+                comparisons.append(loopback_diff)
+
+            if "mcastGroup" not in skipped_template_keys:
+                mcast_diff = multicast_group_address_have != multicast_group_address_want
+                comparisons.append(mcast_diff)
+
+            if "gatewayIpV6Address" not in skipped_template_keys:
+                gwv6_diff = gw_ipv6_have != gw_ipv6_want
+                comparisons.append(gwv6_diff)
+
+            if "secondaryGW1" not in skipped_template_keys:
+                secgw1_diff = secip_gw1_have != secip_gw1_want
+                comparisons.append(secgw1_diff)
+
+            if "secondaryGW2" not in skipped_template_keys:
+                secgw2_diff = secip_gw2_have != secip_gw2_want
+                comparisons.append(secgw2_diff)
+
+            if "secondaryGW3" not in skipped_template_keys:
+                secgw3_diff = secip_gw3_have != secip_gw3_want
+                comparisons.append(secgw3_diff)
+
+            if "secondaryGW4" not in skipped_template_keys:
+                secgw4_diff = secip_gw4_have != secip_gw4_want
+                comparisons.append(secgw4_diff)
+
+            if "trmEnabled" not in skipped_template_keys:
+                trm_diff = trmen_have != trmen_want
+                comparisons.append(trm_diff)
+
+            if "rtBothAuto" not in skipped_template_keys:
+                rt_diff = rt_both_have != rt_both_want
+                comparisons.append(rt_diff)
+
+            if "enableL3OnBorder" not in skipped_template_keys:
+                l3border_diff = l3gw_onbd_have != l3gw_onbd_want
+                comparisons.append(l3border_diff)
+
+            if "ENABLE_NETFLOW" not in skipped_template_keys:
+                nf_diff = nf_en_have != nf_en_want
+                comparisons.append(nf_diff)
+
+            if "SVI_NETFLOW_MONITOR" not in skipped_template_keys:
+                svi_nf_diff = intvlan_nfen_have != intvlan_nfen_want
+                comparisons.append(svi_nf_diff)
+
+            if "VLAN_NETFLOW_MONITOR" not in skipped_template_keys:
+                vlan_nf_diff = vlan_nfen_have != vlan_nfen_want
+                comparisons.append(vlan_nf_diff)
+
+            if "networkName" not in skipped_template_keys:
+                net_name_diff = net_name_have != net_name_want
+                comparisons.append(net_name_diff)
+
+            if any(comparisons):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
 
@@ -1026,18 +1817,8 @@ class DcnmNetwork:
                     mtu_changed = True
                 if arpsup_have != arpsup_want:
                     arpsup_changed = True
-                if dhcp1_ip_have != dhcp1_ip_want:
-                    dhcp1_ip_changed = True
-                if dhcp2_ip_have != dhcp2_ip_want:
-                    dhcp2_ip_changed = True
-                if dhcp3_ip_have != dhcp3_ip_want:
-                    dhcp3_ip_changed = True
-                if dhcp1_vrf_have != dhcp1_vrf_want:
-                    dhcp1_vrf_changed = True
-                if dhcp2_vrf_have != dhcp2_vrf_want:
-                    dhcp2_vrf_changed = True
-                if dhcp3_vrf_have != dhcp3_vrf_want:
-                    dhcp3_vrf_changed = True
+                if dhcp_servers_have != dhcp_servers_want:
+                    dhcp_servers_changed = True
                 if dhcp_loopback_have != dhcp_loopback_want:
                     dhcp_loopback_changed = True
                 if multicast_group_address_have != multicast_group_address_want:
@@ -1058,6 +1839,8 @@ class DcnmNetwork:
                     rt_both_changed = True
                 if l3gw_onbd_have != l3gw_onbd_want:
                     l3gw_onbd_changed = True
+                if net_name_have != net_name_want:
+                    net_name_changed = True
                 if self.dcnm_version > 11:
                     if nf_en_have != nf_en_want:
                         nf_en_changed = True
@@ -1071,36 +1854,110 @@ class DcnmNetwork:
 
         else:
 
-            if (
-                have["networkTemplate"] != want["networkTemplate"]
-                or have["networkExtensionTemplate"] != want["networkExtensionTemplate"]
-                or gw_ip_have != gw_ip_want
-                or tag_have != tag_want
-                or l2only_have != l2only_want
-                or vlanName_have != vlanName_want
-                or intDesc_have != intDesc_want
-                or mtu_have != mtu_want
-                or arpsup_have != arpsup_want
-                or dhcp1_ip_have != dhcp1_ip_want
-                or dhcp2_ip_have != dhcp2_ip_want
-                or dhcp3_ip_have != dhcp3_ip_want
-                or dhcp1_vrf_have != dhcp1_vrf_want
-                or dhcp2_vrf_have != dhcp2_vrf_want
-                or dhcp3_vrf_have != dhcp3_vrf_want
-                or dhcp_loopback_have != dhcp_loopback_want
-                or multicast_group_address_have != multicast_group_address_want
-                or gw_ipv6_have != gw_ipv6_want
-                or secip_gw1_have != secip_gw1_want
-                or secip_gw2_have != secip_gw2_want
-                or secip_gw3_have != secip_gw3_want
-                or secip_gw4_have != secip_gw4_want
-                or trmen_have != trmen_want
-                or rt_both_have != rt_both_want
-                or l3gw_onbd_have != l3gw_onbd_want
-                or nf_en_have != nf_en_want
-                or intvlan_nfen_have != intvlan_nfen_want
-                or vlan_nfen_have != vlan_nfen_want
-            ):
+            # Build comparison conditions, skipping those in skipped_template_keys
+            comparisons = []
+
+            # Always compare network templates
+            template_diff = have["networkTemplate"] != want["networkTemplate"]
+            comparisons.append(template_diff)
+
+            ext_template_diff = have["networkExtensionTemplate"] != want["networkExtensionTemplate"]
+            comparisons.append(ext_template_diff)
+
+            # Compare other attributes only if not skipped
+            if "gatewayIpAddress" not in skipped_template_keys:
+                gw_diff = gw_ip_have != gw_ip_want
+                comparisons.append(gw_diff)
+
+            if "vlanId" not in skipped_template_keys:
+                vlan_diff = vlanId_have != vlanId_want
+                comparisons.append(vlan_diff)
+
+            if "tag" not in skipped_template_keys:
+                tag_diff = tag_have != tag_want
+                comparisons.append(tag_diff)
+
+            if "isLayer2Only" not in skipped_template_keys:
+                l2_diff = l2only_have != l2only_want
+                comparisons.append(l2_diff)
+
+            if "vlanName" not in skipped_template_keys:
+                vname_diff = vlanName_have != vlanName_want
+                comparisons.append(vname_diff)
+
+            if "intfDescription" not in skipped_template_keys:
+                intdesc_diff = intDesc_have != intDesc_want
+                comparisons.append(intdesc_diff)
+
+            if "mtu" not in skipped_template_keys:
+                mtu_diff = mtu_have != mtu_want
+                comparisons.append(mtu_diff)
+
+            if "suppressArp" not in skipped_template_keys:
+                arp_diff = arpsup_have != arpsup_want
+                comparisons.append(arp_diff)
+
+            if "dhcpServers" not in skipped_template_keys:
+                dhcp_servers_diff = dhcp_servers_have != dhcp_servers_want
+                comparisons.append(dhcp_servers_diff)
+
+            if "loopbackId" not in skipped_template_keys:
+                loopback_diff = dhcp_loopback_have != dhcp_loopback_want
+                comparisons.append(loopback_diff)
+
+            if "mcastGroup" not in skipped_template_keys:
+                mcast_diff = multicast_group_address_have != multicast_group_address_want
+                comparisons.append(mcast_diff)
+
+            if "gatewayIpV6Address" not in skipped_template_keys:
+                gwv6_diff = gw_ipv6_have != gw_ipv6_want
+                comparisons.append(gwv6_diff)
+
+            if "secondaryGW1" not in skipped_template_keys:
+                secgw1_diff = secip_gw1_have != secip_gw1_want
+                comparisons.append(secgw1_diff)
+
+            if "secondaryGW2" not in skipped_template_keys:
+                secgw2_diff = secip_gw2_have != secip_gw2_want
+                comparisons.append(secgw2_diff)
+
+            if "secondaryGW3" not in skipped_template_keys:
+                secgw3_diff = secip_gw3_have != secip_gw3_want
+                comparisons.append(secgw3_diff)
+
+            if "secondaryGW4" not in skipped_template_keys:
+                secgw4_diff = secip_gw4_have != secip_gw4_want
+                comparisons.append(secgw4_diff)
+
+            if "trmEnabled" not in skipped_template_keys:
+                trm_diff = trmen_have != trmen_want
+                comparisons.append(trm_diff)
+
+            if "rtBothAuto" not in skipped_template_keys:
+                rt_diff = rt_both_have != rt_both_want
+                comparisons.append(rt_diff)
+
+            if "enableL3OnBorder" not in skipped_template_keys:
+                l3border_diff = l3gw_onbd_have != l3gw_onbd_want
+                comparisons.append(l3border_diff)
+
+            if "ENABLE_NETFLOW" not in skipped_template_keys:
+                nf_diff = nf_en_have != nf_en_want
+                comparisons.append(nf_diff)
+
+            if "SVI_NETFLOW_MONITOR" not in skipped_template_keys:
+                svi_nf_diff = intvlan_nfen_have != intvlan_nfen_want
+                comparisons.append(svi_nf_diff)
+
+            if "VLAN_NETFLOW_MONITOR" not in skipped_template_keys:
+                vlan_nf_diff = vlan_nfen_have != vlan_nfen_want
+                comparisons.append(vlan_nf_diff)
+
+            if "networkName" not in skipped_template_keys:
+                net_name_diff = net_name_have != net_name_want
+                comparisons.append(net_name_diff)
+
+            if any(comparisons):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
 
@@ -1118,18 +1975,8 @@ class DcnmNetwork:
                     mtu_changed = True
                 if arpsup_have != arpsup_want:
                     arpsup_changed = True
-                if dhcp1_ip_have != dhcp1_ip_want:
-                    dhcp1_ip_changed = True
-                if dhcp2_ip_have != dhcp2_ip_want:
-                    dhcp2_ip_changed = True
-                if dhcp3_ip_have != dhcp3_ip_want:
-                    dhcp3_ip_changed = True
-                if dhcp1_vrf_have != dhcp1_vrf_want:
-                    dhcp1_vrf_changed = True
-                if dhcp2_vrf_have != dhcp2_vrf_want:
-                    dhcp2_vrf_changed = True
-                if dhcp3_vrf_have != dhcp3_vrf_want:
-                    dhcp3_vrf_changed = True
+                if dhcp_servers_have != dhcp_servers_want:
+                    dhcp_servers_changed = True
                 if dhcp_loopback_have != dhcp_loopback_want:
                     dhcp_loopback_changed = True
                 if multicast_group_address_have != multicast_group_address_want:
@@ -1150,6 +1997,8 @@ class DcnmNetwork:
                     rt_both_changed = True
                 if l3gw_onbd_have != l3gw_onbd_want:
                     l3gw_onbd_changed = True
+                if net_name_have != net_name_want:
+                    net_name_changed = True
                 if self.dcnm_version > 11:
                     if nf_en_have != nf_en_want:
                         nf_en_changed = True
@@ -1171,12 +2020,7 @@ class DcnmNetwork:
             intdesc_changed,
             mtu_changed,
             arpsup_changed,
-            dhcp1_ip_changed,
-            dhcp2_ip_changed,
-            dhcp3_ip_changed,
-            dhcp1_vrf_changed,
-            dhcp2_vrf_changed,
-            dhcp3_vrf_changed,
+            dhcp_servers_changed,
             dhcp_loopback_changed,
             multicast_group_address_changed,
             gwv6_changed,
@@ -1187,12 +2031,18 @@ class DcnmNetwork:
             trm_en_changed,
             rt_both_changed,
             l3gw_onbd_changed,
+            net_name_changed,
             nf_en_changed,
             intvlan_nfmon_changed,
             vlan_nfmon_changed,
         )
 
     def update_create_params(self, net):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         if not net:
             return net
@@ -1213,8 +2063,9 @@ class DcnmNetwork:
         else:
             net_upd = {
                 "fabric": self.fabric,
-                "vrf": net["vrf_name"],
+                "vrf": net.get("vrf_name"),
                 "networkName": net["net_name"],
+                "displayName": net["net_name"],
                 "networkId": net.get("net_id", None),  # Network id will be auto generated in get_diff_merge()
                 "networkTemplate": n_template,
                 "networkExtensionTemplate": ne_template,
@@ -1235,7 +2086,15 @@ class DcnmNetwork:
             "vrfDhcp": net.get("dhcp_srvr1_vrf", ""),
             "vrfDhcp2": net.get("dhcp_srvr2_vrf", ""),
             "vrfDhcp3": net.get("dhcp_srvr3_vrf", ""),
-            "loopbackId": net.get("dhcp_loopback_id", ""),
+            "dhcpServers": [
+                {"srvrAddr": srvr["srvr_ip"], "srvrVrf": srvr.get("srvr_vrf", "")} for srvr in net.get("dhcp_servers", [])
+            ],
+        }
+
+        dhcp_loopback_val = net.get("dhcp_loopback_id", "")
+
+        template_conf.update({
+            "loopbackId": dhcp_loopback_val,
             "mcastGroup": net.get("multicast_group_address", ""),
             "gatewayIpV6Address": net.get("gw_ipv6_subnet", ""),
             "secondaryGW1": net.get("secondary_ip_gw1", ""),
@@ -1245,7 +2104,8 @@ class DcnmNetwork:
             "trmEnabled": net.get("trm_enable", False),
             "rtBothAuto": net.get("route_target_both", False),
             "enableL3OnBorder": net.get("l3gw_on_border", False),
-        }
+            "networkName": net.get("net_name", False),
+        })
 
         if self.dcnm_version > 11:
             template_conf.update(ENABLE_NETFLOW=net.get("netflow_enable", False))
@@ -1268,6 +2128,21 @@ class DcnmNetwork:
             template_conf["vrfDhcp2"] = ""
         if template_conf["vrfDhcp3"] is None:
             template_conf["vrfDhcp3"] = ""
+        if template_conf["dhcpServers"] == []:
+            dhcp_srvr_list = []
+            if template_conf["dhcpServerAddr1"] != "":
+                dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr1"], "srvrVrf": template_conf["vrfDhcp"]})
+            if template_conf["dhcpServerAddr2"] != "":
+                dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr2"], "srvrVrf": template_conf["vrfDhcp2"]})
+            if template_conf["dhcpServerAddr3"] != "":
+                dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr3"], "srvrVrf": template_conf["vrfDhcp3"]})
+            if dhcp_srvr_list != []:
+                template_conf["dhcpServers"] = json.dumps(dict(dhcpServers=dhcp_srvr_list), separators=(",", ":"))
+            else:
+                template_conf["dhcpServers"] = ""
+        elif template_conf["dhcpServers"] != []:
+            dhcp_srvr_list = template_conf["dhcpServers"]
+            template_conf["dhcpServers"] = json.dumps(dict(dhcpServers=dhcp_srvr_list), separators=(",", ":"))
         if template_conf["loopbackId"] is None:
             template_conf["loopbackId"] = ""
         if self.is_ms_fabric is True:
@@ -1296,6 +2171,11 @@ class DcnmNetwork:
         return net_upd
 
     def get_have(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         have_create = []
         have_deploy = {}
@@ -1366,6 +2246,7 @@ class DcnmNetwork:
                     "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
                     "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
                     "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                    "dhcpServers": json_to_dict.get("dhcpServers", ""),
                     "loopbackId": json_to_dict.get("loopbackId", ""),
                     "mcastGroup": json_to_dict.get("mcastGroup", ""),
                     "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
@@ -1376,6 +2257,7 @@ class DcnmNetwork:
                     "trmEnabled": json_to_dict.get("trmEnabled", False),
                     "rtBothAuto": json_to_dict.get("rtBothAuto", False),
                     "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+                    "networkName": json_to_dict.get("networkName", False),
                 }
 
                 if self.dcnm_version > 11:
@@ -1419,6 +2301,7 @@ class DcnmNetwork:
                             "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
                             "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
                             "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                            "dhcpServers": json_to_dict.get("dhcpServers", ""),
                             "loopbackId": json_to_dict.get("loopbackId", ""),
                             "mcastGroup": json_to_dict.get("mcastGroup", ""),
                             "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
@@ -1429,6 +2312,7 @@ class DcnmNetwork:
                             "trmEnabled": json_to_dict.get("trmEnabled", False),
                             "rtBothAuto": json_to_dict.get("rtBothAuto", False),
                             "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+                            "networkName": json_to_dict.get("networkName", ""),
                         }
 
                         if self.dcnm_version > 11:
@@ -1459,6 +2343,11 @@ class DcnmNetwork:
         if not net_attach_objects["DATA"]:
             return
 
+        if self.fabric_type == "multicluster_parent":
+            net_attach_objects["DATA"] = sanitize_lan_attach_list(
+                net_attach_objects.get("DATA")
+            )
+
         for net_attach in net_attach_objects["DATA"]:
             if not net_attach.get("lanAttachList"):
                 continue
@@ -1466,19 +2355,19 @@ class DcnmNetwork:
             dep_net = ""
             for attach in attach_list:
                 torlist = []
-                attach_state = False if attach["lanAttachState"] == "NA" else True
-                deploy = attach["isLanAttached"]
+                attach_state = bool(attach.get("isLanAttached", False))
+                deploy = attach_state
                 deployed = False
-                if bool(deploy) and (attach["lanAttachState"] == "OUT-OF-SYNC" or attach["lanAttachState"] == "PENDING"):
+                if attach_state and (attach["lanAttachState"] == "OUT-OF-SYNC" or attach["lanAttachState"] == "PENDING"):
                     deployed = False
-                else:
+                elif attach_state and (attach["lanAttachState"] == "IN-SYNC" or attach["lanAttachState"] == "DEPLOYED"):
                     deployed = True
 
                 if bool(deployed):
                     dep_net = attach["networkName"]
 
                 sn = attach["switchSerialNo"]
-                vlan = attach["vlanId"]
+                vlan = attach.get("vlanId")
 
                 if attach["portNames"] and re.match(r"\S+\(\S+\d+\/\d+\)", attach["portNames"]):
                     for idx, sw_list in enumerate(re.findall(r"\S+\(\S+\d+\/\d+\)", attach["portNames"])):
@@ -1500,7 +2389,8 @@ class DcnmNetwork:
                 # Ex: 'vlanId' in the attach section of incoming payload needs to be changed to 'vlan'
                 # on the attach section of outgoing payload.
 
-                del attach["vlanId"]
+                if "vlanId" in attach:
+                    del attach["vlanId"]
                 del attach["switchSerialNo"]
                 del attach["switchName"]
                 del attach["switchRole"]
@@ -1539,11 +2429,50 @@ class DcnmNetwork:
         if dep_networks:
             have_deploy.update({"networkNames": ",".join(dep_networks)})
 
+        # Build mapping for multicluster deploy payload transformation
+        # network_to_sns: {networkName: [sn1, sn2, ...]}
+        network_to_sns = {}
+
+        for net_attach in have_attach:
+            network_name = net_attach.get("networkName")
+            if not network_name:
+                continue
+
+            lan_attach_list = net_attach.get("lanAttachList", [])
+            for attach in lan_attach_list:
+                serial = attach.get("serialNumber")
+                if not serial:
+                    continue
+
+                # Build network_to_sns mapping
+                if network_name not in network_to_sns:
+                    network_to_sns[network_name] = []
+                if serial not in network_to_sns[network_name]:
+                    network_to_sns[network_name].append(serial)
+
         self.have_create = have_create
         self.have_attach = have_attach
         self.have_deploy = have_deploy
+        self.network_to_sns = network_to_sns
+
+        msg = "self.have_create: "
+        msg += f"{json.dumps(self.have_create, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.have_attach: "
+        msg += f"{self.have_attach}"
+        self.log.debug(msg)
+
+        msg = "self.have_deploy: "
+        msg += f"{json.dumps(self.have_deploy, indent=4)}"
+        self.log.debug(msg)
 
     def get_want(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         want_create = []
         want_attach = []
@@ -1566,7 +2495,10 @@ class DcnmNetwork:
                 continue
             for attach in net["attach"]:
                 deploy = net_deploy
-                networks.append(self.update_attach_params(attach, net["net_name"], deploy))
+
+                result = self.update_attach_params(attach, net["net_name"], deploy)
+
+                networks.append(result)
             if networks:
                 for attch in net["attach"]:
                     for ip, ser in self.ip_sn.items():
@@ -1614,7 +2546,24 @@ class DcnmNetwork:
         self.want_attach = want_attach
         self.want_deploy = want_deploy
 
+        msg = "self.want_create: "
+        msg += f"{json.dumps(self.want_create, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.want_attach: "
+        msg += f"{json.dumps(self.want_attach, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.want_deploy: "
+        msg += f"{json.dumps(self.want_deploy, indent=4)}"
+        self.log.debug(msg)
+
     def get_diff_delete(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         diff_detach = []
         diff_undeploy = {}
@@ -1676,7 +2625,24 @@ class DcnmNetwork:
         self.diff_undeploy = diff_undeploy
         self.diff_delete = diff_delete
 
+        msg = "self.diff_detach: "
+        msg += f"{json.dumps(self.diff_detach, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.diff_undeploy: "
+        msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.diff_delete: "
+        msg += f"{json.dumps(self.diff_delete, indent=4)}"
+        self.log.debug(msg)
+
     def get_diff_override(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         all_nets = ""
         diff_delete = {}
@@ -1690,7 +2656,7 @@ class DcnmNetwork:
         diff_undeploy = self.diff_undeploy
 
         for have_a in self.have_attach:
-            # This block will take care of deleting all the networks that are only present on DCNM but not on playbook
+            # This block will take care of deleting all the networks that are only present on ND but not on playbook
             # The "if not found" block will go through all attachments under those networks and update them so that
             # they will be detached and also the network name will be added to delete payload.
 
@@ -1729,6 +2695,11 @@ class DcnmNetwork:
         return warn_msg
 
     def get_diff_replace(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         all_nets = ""
 
@@ -1743,7 +2714,7 @@ class DcnmNetwork:
             for want_a in self.want_attach:
                 # This block will take care of deleting any attachments that are present only on DCNM
                 # but, not on the playbook. In this case, the playbook will have a network and few attaches under it,
-                # but, the attaches may be different to what the DCNM has for the same network.
+                # but, the attaches may be different to what the ND has for the same network.
                 if have_a["networkName"] == want_a["networkName"]:
                     h_in_w = True
                     atch_h = have_a["lanAttachList"]
@@ -1767,7 +2738,7 @@ class DcnmNetwork:
                     break
 
             if not h_in_w:
-                # This block will take care of deleting all the attachments which are in DCNM but
+                # This block will take care of deleting all the attachments which are in ND but
                 # are not mentioned in the playbook. The playbook just has the network, but, does not have any attach
                 # under it.
                 found = next(
@@ -1799,6 +2770,15 @@ class DcnmNetwork:
                     diff_attach.append(r_net_dict)
                     all_nets += have_a["networkName"] + ","
 
+        if all_nets:
+            modified_all_nets = copy.deepcopy(all_nets[:-1].split(","))
+            # If the playbook sets the deploy key to False, then we need to remove the network from the deploy list.
+            for net in all_nets[:-1].split(","):
+                want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key="net_name", value=net)
+                if (want_net_data is not None) and (want_net_data.get("deploy") is False):
+                    modified_all_nets.remove(net)
+            all_nets = ",".join(modified_all_nets)
+
         if not all_nets:
             self.diff_create = diff_create
             self.diff_attach = diff_attach
@@ -1806,9 +2786,9 @@ class DcnmNetwork:
             return warn_msg
 
         if not self.diff_deploy:
-            diff_deploy.update({"networkNames": all_nets[:-1]})
+            diff_deploy.update({"networkNames": all_nets})
         else:
-            nets = self.diff_deploy["networkNames"] + "," + all_nets[:-1]
+            nets = self.diff_deploy["networkNames"] + "," + all_nets
             diff_deploy.update({"networkNames": nets})
 
         self.diff_create = diff_create
@@ -1817,6 +2797,12 @@ class DcnmNetwork:
         return warn_msg
 
     def get_diff_merge(self, replace=False):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"replace == {replace}"
+        self.log.debug(msg)
 
         #
         # Special cases:
@@ -1826,7 +2812,7 @@ class DcnmNetwork:
         # 2. Update vlan-id on an existing network:
         #    This change will only affect new attachments of the same network.
         # 3. Auto generate networkId if its not mentioned by user:
-        #    In this case, we need to query the DCNM to get a usable ID and use it in the payload.
+        #    In this case, we need to query the ND to get a usable ID and use it in the payload.
         #    And also, any such network create requests need to be pushed individually(not bulk op).
 
         diff_create = []
@@ -1844,12 +2830,7 @@ class DcnmNetwork:
         intdesc_changed = {}
         mtu_changed = {}
         arpsup_changed = {}
-        dhcp1_ip_changed = {}
-        dhcp2_ip_changed = {}
-        dhcp3_ip_changed = {}
-        dhcp1_vrf_changed = {}
-        dhcp2_vrf_changed = {}
-        dhcp3_vrf_changed = {}
+        dhcp_servers_changed = {}
         dhcp_loopback_changed = {}
         multicast_group_address_changed = {}
         gwv6_changed = {}
@@ -1860,6 +2841,7 @@ class DcnmNetwork:
         trm_en_changed = {}
         rt_both_changed = {}
         l3gw_onbd_changed = {}
+        net_name_changed = {}
         nf_en_changed = {}
         intvlan_nfmon_changed = {}
         vlan_nfmon_changed = {}
@@ -1880,12 +2862,7 @@ class DcnmNetwork:
                         idesc_chg,
                         mtu_chg,
                         arpsup_chg,
-                        dhcp1_ip_chg,
-                        dhcp2_ip_chg,
-                        dhcp3_ip_chg,
-                        dhcp1_vrf_chg,
-                        dhcp2_vrf_chg,
-                        dhcp3_vrf_chg,
+                        dhcp_servers_chg,
                         dhcp_loopbk_chg,
                         mcast_grp_chg,
                         gwv6_chg,
@@ -1896,10 +2873,12 @@ class DcnmNetwork:
                         trm_en_chg,
                         rt_both_chg,
                         l3gw_onbd_chg,
+                        net_name_chg,
                         nf_en_chg,
                         intvlan_nfmon_chg,
                         vlan_nfmon_chg,
                     ) = self.diff_for_create(want_c, have_c)
+
                     gw_changed.update({want_c["networkName"]: gw_chg})
                     tg_changed.update({want_c["networkName"]: tg_chg})
                     l2only_changed.update({want_c["networkName"]: l2only_chg})
@@ -1907,12 +2886,7 @@ class DcnmNetwork:
                     intdesc_changed.update({want_c["networkName"]: idesc_chg})
                     mtu_changed.update({want_c["networkName"]: mtu_chg})
                     arpsup_changed.update({want_c["networkName"]: arpsup_chg})
-                    dhcp1_ip_changed.update({want_c["networkName"]: dhcp1_ip_chg})
-                    dhcp2_ip_changed.update({want_c["networkName"]: dhcp2_ip_chg})
-                    dhcp3_ip_changed.update({want_c["networkName"]: dhcp3_ip_chg})
-                    dhcp1_vrf_changed.update({want_c["networkName"]: dhcp1_vrf_chg})
-                    dhcp2_vrf_changed.update({want_c["networkName"]: dhcp2_vrf_chg})
-                    dhcp3_vrf_changed.update({want_c["networkName"]: dhcp3_vrf_chg})
+                    dhcp_servers_changed.update({want_c["networkName"]: dhcp_servers_chg})
                     dhcp_loopback_changed.update({want_c["networkName"]: dhcp_loopbk_chg})
                     if self.is_ms_fabric is False:
                         multicast_group_address_changed.update({want_c["networkName"]: mcast_grp_chg})
@@ -1924,6 +2898,7 @@ class DcnmNetwork:
                     trm_en_changed.update({want_c["networkName"]: trm_en_chg})
                     rt_both_changed.update({want_c["networkName"]: rt_both_chg})
                     l3gw_onbd_changed.update({want_c["networkName"]: l3gw_onbd_chg})
+                    net_name_changed.update({want_c["networkName"]: net_name_chg})
                     nf_en_changed.update({want_c["networkName"]: nf_en_chg})
                     intvlan_nfmon_changed.update({want_c["networkName"]: intvlan_nfmon_chg})
                     vlan_nfmon_changed.update({want_c["networkName"]: vlan_nfmon_chg})
@@ -1935,7 +2910,7 @@ class DcnmNetwork:
 
                 if not net_id:
                     # networkId(VNI-id) is not provided by user.
-                    # Need to query DCNM to fetch next available networkId and use it here.
+                    # Need to query ND to fetch next available networkId and use it here.
 
                     method = "POST"
 
@@ -1964,7 +2939,7 @@ class DcnmNetwork:
                         elif self.dcnm_version >= 12:
                             net_id = net_id_obj["DATA"].get("l2vni")
                         else:
-                            msg = "Unsupported DCNM version: version {0}".format(self.dcnm_version)
+                            msg = "Unsupported ND version: version {0}".format(self.dcnm_version)
                             self.module.fail_json(msg)
 
                         if net_id != prev_net_id_fetched:
@@ -1992,6 +2967,7 @@ class DcnmNetwork:
                 else:
                     diff_create.append(want_c)
 
+        # Check for deployment needed due to configuration changes (without attachment changes)
         all_nets = []
         for want_a in self.want_attach:
             dep_net = ""
@@ -2010,6 +2986,9 @@ class DcnmNetwork:
                         if net:
                             dep_net = want_a["networkName"]
                     else:
+                        # Check if any configuration changes require deployment
+                        network_name = want_a["networkName"]
+
                         if (
                             net
                             or gw_changed.get(want_a["networkName"], False)
@@ -2019,12 +2998,7 @@ class DcnmNetwork:
                             or intdesc_changed.get(want_a["networkName"], False)
                             or mtu_changed.get(want_a["networkName"], False)
                             or arpsup_changed.get(want_a["networkName"], False)
-                            or dhcp1_ip_changed.get(want_a["networkName"], False)
-                            or dhcp2_ip_changed.get(want_a["networkName"], False)
-                            or dhcp3_ip_changed.get(want_a["networkName"], False)
-                            or dhcp1_vrf_changed.get(want_a["networkName"], False)
-                            or dhcp2_vrf_changed.get(want_a["networkName"], False)
-                            or dhcp3_vrf_changed.get(want_a["networkName"], False)
+                            or dhcp_servers_changed.get(want_a["networkName"], False)
                             or dhcp_loopback_changed.get(want_a["networkName"], False)
                             or multicast_group_address_changed.get(want_a["networkName"], False)
                             or gwv6_changed.get(want_a["networkName"], False)
@@ -2035,6 +3009,7 @@ class DcnmNetwork:
                             or trm_en_changed.get(want_a["networkName"], False)
                             or rt_both_changed.get(want_a["networkName"], False)
                             or l3gw_onbd_changed.get(want_a["networkName"], False)
+                            or net_name_changed.get(want_a["networkName"], False)
                             or nf_en_changed.get(want_a["networkName"], False)
                             or intvlan_nfmon_changed.get(want_a["networkName"], False)
                             or vlan_nfmon_changed.get(want_a["networkName"], False)
@@ -2047,9 +3022,10 @@ class DcnmNetwork:
                     # Saftey check
                     if attach.get("isAttached"):
                         if attach.get("torports"):
+                            torconfig_list = []
                             for tor_w in attach["torports"]:
-                                torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
-                                attach.update({"torPorts": torconfig})
+                                torconfig_list.append(tor_w["switch"] + "(" + tor_w["torPorts"] + ")")
+                            attach.update({"torPorts": " ".join(torconfig_list)})
                         del attach["torports"]
                         del attach["isAttached"]
                         atch_list.append(attach)
@@ -2060,7 +3036,6 @@ class DcnmNetwork:
                     diff_attach.append(base)
                     if bool(attach["is_deploy"]):
                         dep_net = want_a["networkName"]
-
                 for atch in atch_list:
                     atch["deployment"] = True
 
@@ -2074,6 +3049,8 @@ class DcnmNetwork:
                 want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key="net_name", value=net)
                 if (want_net_data is not None) and (want_net_data.get("deploy") is False):
                     modified_all_nets.remove(net)
+            modified_all_nets = list(set(modified_all_nets))
+            final_count = len(modified_all_nets)
 
         if modified_all_nets:
             diff_deploy.update({"networkNames": ",".join(modified_all_nets)})
@@ -2126,12 +3103,7 @@ class DcnmNetwork:
             found_c.update({"int_desc": json_to_dict.get("intfDescription", "")})
             found_c.update({"mtu_l3intf": json_to_dict.get("mtu", "")})
             found_c.update({"arp_suppress": json_to_dict.get("suppressArp", False)})
-            found_c.update({"dhcp_srvr1_ip": json_to_dict.get("dhcpServerAddr1", "")})
-            found_c.update({"dhcp_srvr2_ip": json_to_dict.get("dhcpServerAddr2", "")})
-            found_c.update({"dhcp_srvr3_ip": json_to_dict.get("dhcpServerAddr3", "")})
-            found_c.update({"dhcp_srvr1_vrf": json_to_dict.get("vrfDhcp", "")})
-            found_c.update({"dhcp_srvr2_vrf": json_to_dict.get("vrfDhcp2", "")})
-            found_c.update({"dhcp_srvr3_vrf": json_to_dict.get("vrfDhcp3", "")})
+            found_c.update({"dhcp_servers": json_to_dict.get("dhcpServers", "")})
             found_c.update({"dhcp_loopback_id": json_to_dict.get("loopbackId", "")})
             found_c.update({"multicast_group_address": json_to_dict.get("mcastGroup", "")})
             found_c.update({"gw_ipv6_subnet": json_to_dict.get("gatewayIpV6Address", "")})
@@ -2142,6 +3114,7 @@ class DcnmNetwork:
             found_c.update({"trm_enable": json_to_dict.get("trmEnabled", False)})
             found_c.update({"route_target_both": json_to_dict.get("rtBothAuto", False)})
             found_c.update({"l3gw_on_border": json_to_dict.get("enableL3OnBorder", False)})
+            found_c.update({"net_name": json_to_dict.get("networkName", False)})
             if self.dcnm_version > 11:
                 found_c.update({"netflow_enable": json_to_dict.get("ENABLE_NETFLOW", False)})
                 found_c.update({"intfvlan_nf_monitor": json_to_dict.get("SVI_NETFLOW_MONITOR", "")})
@@ -2267,6 +3240,11 @@ class DcnmNetwork:
                         if not net_attach_objects["DATA"]:
                             return
 
+                        if self.fabric_type == "multicluster_parent":
+                            net_attach_objects["DATA"] = sanitize_lan_attach_list(
+                                net_attach_objects.get("DATA")
+                            )
+
                         for net_attach in net_attach_objects["DATA"]:
                             if want_c["networkName"] == net_attach["networkName"]:
                                 if not net_attach.get("lanAttachList"):
@@ -2299,6 +3277,11 @@ class DcnmNetwork:
                 if not net_attach_objects["DATA"]:
                     return
 
+                if self.fabric_type == "multicluster_parent":
+                    net_attach_objects["DATA"] = sanitize_lan_attach_list(
+                        net_attach_objects.get("DATA")
+                    )
+
                 for net_attach in net_attach_objects["DATA"]:
                     if not net_attach.get("lanAttachList"):
                         continue
@@ -2311,46 +3294,190 @@ class DcnmNetwork:
 
         self.query = query
 
+    def detach_and_deploy_for_del(self, net):
+        method = "GET"
+
+        payload_net = {}
+        deploy_payload = {}
+        payload_net["networkName"] = net["networkName"]
+        payload_net["lanAttachList"] = []
+        attach_list = net["switchList"]
+        for atch in attach_list:
+            payload_atch = {}
+            if atch["lanAttachedState"].upper() == "PENDING":
+                payload_atch["serialNumber"] = atch["serialNumber"]
+                payload_atch["networkName"] = net["networkName"]
+                payload_atch["fabric"] = net["fabric"]
+                payload_atch["deployment"] = False
+                payload_net["lanAttachList"].append(payload_atch)
+
+                deploy_payload[atch["serialNumber"]] = net["networkName"]
+
+        if payload_net["lanAttachList"]:
+            payload = [payload_net]
+
+            # Update the fabric name to specific fabric which the switches are part of.
+            self.update_ms_fabric(payload)
+
+            method = "POST"
+            path = self.paths["GET_NET"].format(self.fabric) + "/attachments"
+
+            resp = dcnm_send(self.module, method, path, json.dumps(payload))
+
+            self.result["response"].append(resp)
+            fail, dummy_changed = self.handle_response(resp, "attach")
+            if fail:
+                self.failure(resp)
+
+        method = "POST"
+        path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
+        resp = dcnm_send(self.module, method, path, json.dumps(deploy_payload))
+        self.result["response"].append(resp)
+        fail, dummy_changed = self.handle_response(resp, "deploy")
+        if fail:
+            self.failure(resp)
+
     def wait_for_del_ready(self):
 
         method = "GET"
         if self.diff_delete:
             for net in self.diff_delete:
                 state = False
-                path = self.paths["GET_NET_ATTACH"].format(self.fabric, net)
-                while not state:
+                # For multicluster_parent, use GET_NET_ATTACH instead of GET_NET_STATUS
+                if self.fabric_type == "multicluster_parent":
+                    path = self.paths["GET_NET_ATTACH"].format(self.fabric, net)
+                else:
+                    path = self.paths["GET_NET_STATUS"].format(self.fabric, net)
+
+                retry = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+                deploy_started = False
+                while not state and retry >= 0:
+                    retry -= 1
                     resp = dcnm_send(self.module, method, path)
                     state = True
-                    if resp["DATA"]:
-                        attach_list = resp["DATA"][0]["lanAttachList"]
-                        for atch in attach_list:
-                            if atch["lanAttachState"] == "OUT-OF-SYNC" or atch["lanAttachState"] == "FAILED":
-                                self.diff_delete.update({net: "OUT-OF-SYNC"})
-                                break
-                            if atch["lanAttachState"] != "NA":
-                                self.diff_delete.update({net: "DEPLOYED"})
-                                state = False
-                                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
-                                break
+
+                    # For multicluster_parent with GET_NET_ATTACH, response structure is different
+                    if self.fabric_type == "multicluster_parent":
+                        if resp.get("DATA") is None:
+                            time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                            state = False
+                            continue
+
+                        # GET_NET_ATTACH returns: [{'networkName': 'name', 'lanAttachList': [attachments]}]
+                        if isinstance(resp["DATA"], list) and len(resp["DATA"]) > 0:
+                            # Sanitize the lanAttachList entries
+                            sanitized_data = sanitize_lan_attach_list(
+                                resp["DATA"]
+                            )
+                            # Get the lanAttachList from the first element
+                            attach_list = sanitized_data[0].get("lanAttachList", [])
+                            # Check for PENDING state and trigger detach/deploy if needed
+                            for attach in attach_list:
+                                if attach.get("lanAttachState") == "PENDING" and not deploy_started:
+                                    # For multicluster, we need to convert the response structure
+                                    # from: [{'networkName': 'name', 'lanAttachList': [attachments]}]
+                                    # to: {'networkName': 'name', 'fabric': 'fabric', 'switchList': [attachments]}
+
+                                    # Convert multicluster response to format expected by detach_and_deploy_for_del
+                                    adapted_net = {
+                                        "networkName": resp["DATA"][0]["networkName"],
+                                        "fabric": self.fabric,
+                                        "switchList": resp["DATA"][0]["lanAttachList"]
+                                    }
+
+                                    # Note: lanAttachList uses 'lanAttachState' while switchList uses 'lanAttachedState'
+                                    # We need to rename the key for compatibility
+                                    for switch in adapted_net["switchList"]:
+                                        if "lanAttachState" in switch:
+                                            switch["lanAttachedState"] = switch["lanAttachState"]
+                                        if "switchSerialNo" in switch:
+                                            switch["serialNumber"] = switch["switchSerialNo"]
+
+                                    self.detach_and_deploy_for_del(adapted_net)
+                                    deploy_started = True
+
+                            for attach in attach_list:
+                                if attach.get("lanAttachState") == "OUT-OF-SYNC" or attach.get("lanAttachState") == "FAILED":
+                                    self.diff_delete.update({net: "OUT-OF-SYNC"})
+                                    break
+                                if attach.get("lanAttachState") != "NA":
+                                    self.diff_delete.update({net: "DEPLOYED"})
+                                    state = False
+                                    time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                                    break
+                            else:
+                                # All attachments are NA or no attachments
+                                self.diff_delete.update({net: "NA"})
+                        else:
+                            # No data found, network is ready
                             self.diff_delete.update({net: "NA"})
+
+                    else:
+                        # Original logic for GET_NET_STATUS (non-multicluster)
+                        if resp["DATA"]:
+                            if resp["DATA"]["networkStatus"].upper() == "PENDING" and not deploy_started:
+                                self.detach_and_deploy_for_del(resp["DATA"])
+                                deploy_started = True
+                            attach_list = resp["DATA"]["switchList"]
+                            for atch in attach_list:
+                                if atch["lanAttachedState"].upper() == "OUT-OF-SYNC" or atch["lanAttachedState"].upper() == "FAILED":
+                                    self.diff_delete.update({net: "OUT-OF-SYNC"})
+                                    break
+                                if atch["lanAttachedState"].upper() != "NA":
+                                    self.diff_delete.update({net: "DEPLOYED"})
+                                    state = False
+                                    time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                                    break
+                                self.diff_delete.update({net: "NA"})
+                if retry < 0:
+                    self.diff_delete.update({net: "TIMEOUT"})
+                    return False
 
             return True
 
     def update_ms_fabric(self, diff):
-        if not self.is_ms_fabric:
+        # Update fabric field for both multisite (MFD) and multicluster parent fabrics
+        if not self.is_ms_fabric and self.fabric_type != "multicluster_parent":
             return
 
         for list_elem in diff:
             for node in list_elem["lanAttachList"]:
-                node["fabric"] = self.sn_fab[node["serialNumber"]]
+                old_fabric = node.get("fabric")
+                sn = node["serialNumber"]
+                new_fabric = self.sn_fab.get(sn, old_fabric)
+                node["fabric"] = new_fabric
 
     def push_to_remote(self, is_rollback=False):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"is_rollback: {is_rollback}"
+        self.log.debug(msg)
 
         path = self.paths["GET_NET"].format(self.fabric)
 
         method = "PUT"
         if self.diff_create_update:
+            # Get skipped attributes for parent fabrics
+            skipped_attributes = self.get_skipped_attributes()
+            template_mapping = self.get_template_config_mapping()
+
+            # Convert skipped spec attributes to template config keys
+            skipped_template_keys = set()
+            for attr in skipped_attributes:
+                if attr in template_mapping:
+                    skipped_template_keys.add(template_mapping[attr])
+
             for net in self.diff_create_update:
+                # Remove skipped attributes from template config for parent fabrics
+                if net.get("networkTemplateConfig") and skipped_template_keys:
+                    json_to_dict = json.loads(net["networkTemplateConfig"])
+                    for key in list(json_to_dict.keys()):
+                        if key in skipped_template_keys:
+                            del json_to_dict[key]
+                    net["networkTemplateConfig"] = json.dumps(json_to_dict)
+
                 update_path = path + "/{0}".format(net["networkName"])
                 resp = dcnm_send(self.module, method, update_path, json.dumps(net))
                 self.result["response"].append(resp)
@@ -2376,7 +3503,8 @@ class DcnmNetwork:
 
             for d_a in self.diff_detach:
                 for v_a in d_a["lanAttachList"]:
-                    del v_a["is_deploy"]
+                    if v_a.get("is_deploy"):
+                        del v_a["is_deploy"]
 
             resp = dcnm_send(self.module, method, detach_path, json.dumps(self.diff_detach))
             self.result["response"].append(resp)
@@ -2388,15 +3516,26 @@ class DcnmNetwork:
                 self.failure(resp)
 
         method = "POST"
+        payload = copy.deepcopy(self.diff_undeploy)
         if self.diff_undeploy:
-            deploy_path = path + "/deployments"
-            resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_undeploy))
+            # For multicluster_parent, use special endpoint and payload format
+            # For all others (including multicluster_child), use standard /deployments path
+            if self.fabric_type == "multicluster_parent":
+                deploy_path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
+                deploy_payload = self.transform_deploy_payload_for_multicluster(payload, use_diff_attach=False)
+            else:
+                # Standard path for standalone, multisite, and multicluster_child
+                path = self.paths["GET_NET"].format(self.fabric)
+                deploy_path = path + "/deployments"
+                deploy_payload = payload
+
+            resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
             # Use the self.wait_for_del_ready() function to refresh the state
             # of self.diff_delete dict and re-attempt the undeploy action if
             # the state of the network is "OUT-OF-SYNC"
             self.wait_for_del_ready()
             for net, state in self.diff_delete.items():
-                if state == "OUT-OF-SYNC":
+                if state.upper() == "OUT-OF-SYNC":
                     resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_undeploy))
 
             self.result["response"].append(resp)
@@ -2410,19 +3549,52 @@ class DcnmNetwork:
         method = "DELETE"
         del_failure = ""
         if self.diff_delete and self.wait_for_del_ready():
+            resp = ""
+            networks_to_delete = []
+
+            # Separate networks by state
             for net, state in self.diff_delete.items():
-                if state == "OUT-OF-SYNC":
+                if state.upper() == "OUT-OF-SYNC" or state == "TIMEOUT":
                     del_failure += net + ","
+                    if state == "TIMEOUT":
+                        resp = "Timeout waiting for network to be in delete ready state.\n"
+                    if state == "OUT-OF-SYNC":
+                        resp = "Network is out of sync.\n"
                     continue
-                delete_path = path + "/" + net
-                resp = dcnm_send(self.module, method, delete_path)
-                self.result["response"].append(resp)
-                fail, self.result["changed"] = self.handle_response(resp, "delete")
-                if fail:
-                    if is_rollback:
-                        self.failed_to_rollback = True
-                        return
-                    self.failure(resp)
+
+                if self.fabric_type == "multicluster_parent":
+                    networks_to_delete.append(net)
+                else:
+                    # Non-multicluster_parent fabrics use individual delete
+                    delete_path = path + "/" + net
+                    delete_payload = {net: "NA"}
+                    resp = dcnm_send(self.module, method, delete_path, json.dumps(delete_payload))
+                    self.result["response"].append(resp)
+                    fail, self.result["changed"] = self.handle_response(resp, "delete")
+                    if fail:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        self.failure(resp)
+
+            # Batch delete for multicluster_parent using bulk-delete API
+            if self.fabric_type == "multicluster_parent" and networks_to_delete:
+
+                max_batch_size = 30
+
+                for i in range(0, len(networks_to_delete), max_batch_size):
+                    batch = networks_to_delete[i:i + max_batch_size]
+                    network_names = ','.join(batch)
+                    delete_path = path.replace("/networks", "") + "/bulk-delete/networks?network-names=" + network_names
+
+                    resp = dcnm_send(self.module, method, delete_path)
+                    self.result["response"].append(resp)
+                    fail, self.result["changed"] = self.handle_response(resp, "delete")
+                    if fail:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        self.failure(resp)
 
         if del_failure:
             fail_msg = "Deletion of Networks {0} has failed: {1}".format(del_failure[:-1], resp)
@@ -2433,6 +3605,18 @@ class DcnmNetwork:
             self.failure(fail_msg)
 
         if self.diff_create:
+            # Get skipped attributes for parent fabrics
+            skipped_attributes = self.get_skipped_attributes()
+            template_mapping = self.get_template_config_mapping()
+
+            # Convert skipped spec attributes to template config keys
+            skipped_template_keys = set()
+            for attr in skipped_attributes:
+                if attr in template_mapping:
+                    skipped_template_keys.add(template_mapping[attr])
+
+            payload_list = []
+
             for net in self.diff_create:
                 json_to_dict = json.loads(net["networkTemplateConfig"])
                 vlanId = json_to_dict.get("vlanId", "")
@@ -2454,12 +3638,7 @@ class DcnmNetwork:
                     "intfDescription": json_to_dict.get("intfDescription", ""),
                     "mtu": json_to_dict.get("mtu", ""),
                     "suppressArp": json_to_dict.get("suppressArp", False),
-                    "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
-                    "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
-                    "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
-                    "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
-                    "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
-                    "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                    "dhcpServers": json_to_dict.get("dhcpServers", ""),
                     "loopbackId": json_to_dict.get("loopbackId", ""),
                     "mcastGroup": json_to_dict.get("mcastGroup", ""),
                     "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
@@ -2470,6 +3649,7 @@ class DcnmNetwork:
                     "trmEnabled": json_to_dict.get("trmEnabled", False),
                     "rtBothAuto": json_to_dict.get("rtBothAuto", False),
                     "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+                    "networkName": json_to_dict.get("networkName", False),
                 }
 
                 if self.dcnm_version > 11:
@@ -2477,10 +3657,33 @@ class DcnmNetwork:
                     t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
 
+                # Remove skipped attributes from template config for parent fabrics
+                for key in list(t_conf.keys()):
+                    if key in skipped_template_keys:
+                        del t_conf[key]
+
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
 
+                # Send individual creates for multicluster_parent or version < 12.2
+                if self.fabric_type == "multicluster_parent" or self.dcnm_version < 12.2:
+                    method = "POST"
+                    resp = dcnm_send(self.module, method, path, json.dumps(net))
+                    self.result["response"].append(resp)
+                    fail, self.result["changed"] = self.handle_response(resp, "create")
+                    if fail:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        self.failure(resp)
+                else:
+                    # Collect for bulk create
+                    payload_list.append(net)
+
+            # Send bulk create for non-multicluster_parent fabrics with version >= 12.2
+            if self.fabric_type != "multicluster_parent" and self.dcnm_version >= 12.2 and payload_list:
                 method = "POST"
-                resp = dcnm_send(self.module, method, path, json.dumps(net))
+                create_path = self.paths["GET_NET_BULK"]
+                resp = dcnm_send(self.module, method, create_path, json.dumps(payload_list))
                 self.result["response"].append(resp)
                 fail, self.result["changed"] = self.handle_response(resp, "create")
                 if fail:
@@ -2498,10 +3701,19 @@ class DcnmNetwork:
 
             for d_a in self.diff_attach:
                 for v_a in d_a["lanAttachList"]:
-                    del v_a["is_deploy"]
+                    if v_a.get("is_deploy"):
+                        del v_a["is_deploy"]
+                    # Clean up tor_ports/torports keys if they exist and are empty
+                    if v_a.get("tor_ports") is not None:
+                        if not v_a["tor_ports"]:
+                            del v_a["tor_ports"]
+                    if v_a.get("torports") is not None:
+                        if not v_a["torports"]:
+                            del v_a["torports"]
 
             for attempt in range(0, 50):
                 resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
+
                 update_in_progress = False
                 for key in resp["DATA"].keys():
                     if re.search(r"Failed.*Please try after some time", str(resp["DATA"][key])):
@@ -2524,8 +3736,17 @@ class DcnmNetwork:
 
         method = "POST"
         if self.diff_deploy:
-            deploy_path = path + "/deployments"
-            resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_deploy))
+            # For multicluster_parent, use special endpoint and payload format
+            # For all others (including multicluster_child), use standard /deployments path
+            if self.fabric_type == "multicluster_parent":
+                deploy_path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
+                deploy_payload = self.transform_deploy_payload_for_multicluster(self.diff_deploy, use_diff_attach=True)
+            else:
+                # Standard path for standalone, multisite, and multicluster_child
+                path = self.paths["GET_NET"].format(self.fabric)
+                deploy_path = path + "/deployments"
+                deploy_payload = self.diff_deploy
+            resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
             self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "deploy")
             if fail:
@@ -2541,7 +3762,7 @@ class DcnmNetwork:
         -   If fabric REPLICATION_MODE is "Ingress", default multicast group
             address should be set to ""
         -   If fabric REPLICATION_MODE is "Multicast", default multicast group
-            address is set to 239.1.1.0 for DCNM version 11, and 239.1.1.1 for
+            address is set to 239.1.1.0 for ND version 11, and 239.1.1.1 for
             NDFC version 12
 
         ## Raises
@@ -2568,21 +3789,142 @@ class DcnmNetwork:
             self.module.fail_json(msg=msg)
         return fabric_multicast_group_address
 
-    def validate_input(self):
-        """Parse the playbook values, validate to param specs."""
+    def get_skipped_attributes(self):
+        """
+        Get list of attributes that should be skipped for parent fabrics.
 
-        state = self.params["state"]
+        For parent fabrics, returns all child spec attributes except net_name and deploy.
+        For child and standalone fabrics, returns empty list.
 
-        if state == "query":
+        Returns:
+            list: List of attribute names to skip
+        """
+        if "_parent" != self.fabric_type:
+            return []
 
-            mcast_group_addr = self.get_fabric_multicast_group_address()
+        # Get child spec dynamically using parameter
+        child_net_spec = self.get_network_spec(fabric_type="multisite_child")
 
+        # Extract all attribute names except net_name and deploy
+        skipped_attrs = [attr for attr in child_net_spec.keys()
+                         if attr not in ["net_name", "deploy", "vlan_id", "vrf_name", "is_l2only"]]
+
+        return skipped_attrs
+
+    def get_template_config_mapping(self):
+        """
+        Get mapping from network spec attributes to template config keys.
+
+        Returns:
+            dict: Mapping from spec attribute to template config key
+        """
+        mapping = {
+            "vlan_id": "vlanId",
+            "gw_ip_subnet": "gatewayIpAddress",
+            "is_l2only": "isLayer2Only",
+            "routing_tag": "tag",
+            "vlan_name": "vlanName",
+            "int_desc": "intfDescription",
+            "mtu_l3intf": "mtu",
+            "arp_suppress": "suppressArp",
+            "dhcp_srvr1_ip": "dhcpServerAddr1",
+            "dhcp_srvr2_ip": "dhcpServerAddr2",
+            "dhcp_srvr3_ip": "dhcpServerAddr3",
+            "dhcp_srvr1_vrf": "vrfDhcp",
+            "dhcp_srvr2_vrf": "vrfDhcp2",
+            "dhcp_srvr3_vrf": "vrfDhcp3",
+            "dhcp_servers": "dhcpServers",
+            "dhcp_loopback_id": "loopbackId",
+            "multicast_group_address": "mcastGroup",
+            "gw_ipv6_subnet": "gatewayIpV6Address",
+            "secondary_ip_gw1": "secondaryGW1",
+            "secondary_ip_gw2": "secondaryGW2",
+            "secondary_ip_gw3": "secondaryGW3",
+            "secondary_ip_gw4": "secondaryGW4",
+            "trm_enable": "trmEnabled",
+            "route_target_both": "rtBothAuto",
+            "l3gw_on_border": "enableL3OnBorder",
+            "netflow_enable": "ENABLE_NETFLOW",
+            "intfvlan_nf_monitor": "SVI_NETFLOW_MONITOR",
+            "vlan_nf_monitor": "VLAN_NETFLOW_MONITOR"
+        }
+        return mapping
+
+    def get_network_spec(self, fabric_type=None):
+        """
+        Get network specification based on fabric type and state.
+
+        Args:
+            fabric_type (str, optional): Override fabric type. If None, uses self.fabric_type.
+
+        Returns:
+            dict: Network specification dictionary
+        """
+        mcast_group_addr = self.get_fabric_multicast_group_address()
+        is_query_state = self.params["state"] == "query"
+
+        # Use parameter if provided, otherwise use instance fabric_type
+        net_fabric_type = fabric_type if fabric_type is not None else self.fabric_type
+
+        # Define the restricted spec for MSD child configurations
+        if "_child" in net_fabric_type:
+            net_spec = dict(
+                net_name=dict(required=True, type="str", length_max=64),
+                vrf_name=dict(type="str", length_max=32),
+                dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
+                netflow_enable=dict(type="bool", default=False),
+                vlan_nf_monitor=dict(type="str"),
+                trm_enable=dict(type="bool", default=False),
+                multicast_group_address=dict(type="ipv4", default=mcast_group_addr),
+                l3gw_on_border=dict(type="bool", default=False),
+                dhcp_srvr1_ip=dict(type="ipv4", default=""),
+                dhcp_srvr2_ip=dict(type="ipv4", default=""),
+                dhcp_srvr3_ip=dict(type="ipv4", default=""),
+                dhcp_srvr1_vrf=dict(type="str", length_max=32),
+                dhcp_srvr2_vrf=dict(type="str", length_max=32),
+                dhcp_srvr3_vrf=dict(type="str", length_max=32),
+                dhcp_servers=dict(type="list", elements="dict", default=[]),
+                deploy=dict(type="bool", default=True if not is_query_state else None),
+                is_l2only=dict(type="bool", default=False),
+            )
+        elif "_parent" in net_fabric_type:
+            # Parent-specific attributes: attributes present in full spec but not in child spec
             net_spec = dict(
                 net_name=dict(required=True, type="str", length_max=64),
                 net_id=dict(type="int", range_max=16777214),
                 vrf_name=dict(type="str", length_max=32),
                 attach=dict(type="list"),
-                deploy=dict(type="bool"),
+                deploy=dict(type="bool", default=True if not is_query_state else None),
+                gw_ip_subnet=dict(type="ipv4_subnet", default=""),
+                vlan_id=dict(type="int", range_max=4094),
+                routing_tag=dict(type="int", default=12345, range_max=4294967295),
+                net_template=dict(type="str", default="Default_Network_Universal"),
+                net_extension_template=dict(type="str", default="Default_Network_Extension_Universal"),
+                is_l2only=dict(type="bool", default=False),
+                vlan_name=dict(type="str", length_max=128),
+                int_desc=dict(type="str", length_max=258),
+                mtu_l3intf=dict(type="int", range_min=68, range_max=9216),
+                arp_suppress=dict(type="bool", default=False),
+                gw_ipv6_subnet=dict(type="ipv6_subnet", default=""),
+                secondary_ip_gw1=dict(type="ipv4", default=""),
+                secondary_ip_gw2=dict(type="ipv4", default=""),
+                secondary_ip_gw3=dict(type="ipv4", default=""),
+                secondary_ip_gw4=dict(type="ipv4", default=""),
+                route_target_both=dict(type="bool", default=False),
+                intfvlan_nf_monitor=dict(type="str"),
+            )
+
+            # Adjust deploy field for query state
+            if is_query_state:
+                net_spec["deploy"] = dict(type="bool")
+        else:
+            # Full specification for non-child, non-parent fabrics
+            net_spec = dict(
+                net_name=dict(required=True, type="str", length_max=64),
+                net_id=dict(type="int", range_max=16777214),
+                vrf_name=dict(type="str", length_max=32),
+                attach=dict(type="list"),
+                deploy=dict(type="bool", default=True if not is_query_state else None),
                 gw_ip_subnet=dict(type="ipv4_subnet", default=""),
                 vlan_id=dict(type="int", range_max=4094),
                 routing_tag=dict(type="int", default=12345, range_max=4294967295),
@@ -2599,6 +3941,7 @@ class DcnmNetwork:
                 dhcp_srvr1_vrf=dict(type="str", length_max=32),
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
+                dhcp_servers=dict(type="list", elements="dict", default=[]),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
                 multicast_group_address=dict(type="ipv4", default=mcast_group_addr),
                 gw_ipv6_subnet=dict(type="ipv6_subnet", default=""),
@@ -2613,6 +3956,56 @@ class DcnmNetwork:
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
             )
+
+            # Adjust deploy field for query state
+            if is_query_state:
+                net_spec["deploy"] = dict(type="bool")
+
+        return net_spec
+
+    def validate_input(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        """Parse the playbook values, validate to param specs."""
+
+        # Make sure mutually exclusive dhcp properties are not set
+        if self.config:
+            for net in self.config:
+                if net.get("dhcp_servers"):
+                    conflicting_keys = []
+                    dhcp_individual_keys = [
+                        "dhcp_srvr1_ip", "dhcp_srvr1_vrf",
+                        "dhcp_srvr2_ip", "dhcp_srvr2_vrf",
+                        "dhcp_srvr3_ip", "dhcp_srvr3_vrf"
+                    ]
+
+                    for key in dhcp_individual_keys:
+                        if net.get(key) is not None:
+                            conflicting_keys.append(key)
+
+                    if conflicting_keys:
+                        msg = "Network '{0}': dhcp_servers cannot be used together with individual DHCP server properties: {1}".format(
+                            net.get("net_name", "unknown"), ", ".join(conflicting_keys)
+                        )
+                        self.module.fail_json(msg=msg)
+
+        state = self.params["state"]
+
+        # Check for invalid state combinations with MSD child
+        if self.fabric_type in ["multisite_child", "multicluster_child"]:
+            if state in ["overridden", "deleted"]:
+                self.module.fail_json(
+                    msg=f"State '{state}' is not allowed for MSD child networks. Networks cannot be "
+                    "deleted or overridden in MSD child fabrics."
+                )
+
+        if state == "query":
+
+            net_spec = self.get_network_spec()
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
                 ports=dict(type="list", default=[]),
@@ -2624,6 +4017,14 @@ class DcnmNetwork:
                 # Validate net params
                 valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec, check_extra_params=self.check_extra_params)
                 for net in valid_net:
+                    # Check for attachment attributes in MSD child fabrics
+                    if self.fabric_type in ["multisite_child", "multicluster_child"] and net.get("attach"):
+                        self.module.fail_json(
+                            msg=f"Network '{net.get('net_name', 'unknown')}': Attachment attributes are "
+                            "not allowed for MSD child networks. MSD child fabrics do not support "
+                            "network attachments."
+                        )
+
                     if net.get("attach"):
                         valid_att, invalid_att = validate_list_of_dicts(net["attach"], att_spec, check_extra_params=self.check_extra_params)
                         net["attach"] = valid_att
@@ -2641,44 +4042,7 @@ class DcnmNetwork:
 
         else:
 
-            mcast_group_addr = self.get_fabric_multicast_group_address()
-
-            net_spec = dict(
-                net_name=dict(required=True, type="str", length_max=64),
-                net_id=dict(type="int", range_max=16777214),
-                vrf_name=dict(type="str", length_max=32),
-                attach=dict(type="list"),
-                deploy=dict(type="bool", default=True),
-                gw_ip_subnet=dict(type="ipv4_subnet", default=""),
-                vlan_id=dict(type="int", range_max=4094),
-                routing_tag=dict(type="int", default=12345, range_max=4294967295),
-                net_template=dict(type="str", default="Default_Network_Universal"),
-                net_extension_template=dict(type="str", default="Default_Network_Extension_Universal"),
-                is_l2only=dict(type="bool", default=False),
-                vlan_name=dict(type="str", length_max=128),
-                int_desc=dict(type="str", length_max=258),
-                mtu_l3intf=dict(type="int", range_min=68, range_max=9216),
-                arp_suppress=dict(type="bool", default=False),
-                dhcp_srvr1_ip=dict(type="ipv4", default=""),
-                dhcp_srvr2_ip=dict(type="ipv4", default=""),
-                dhcp_srvr3_ip=dict(type="ipv4", default=""),
-                dhcp_srvr1_vrf=dict(type="str", length_max=32),
-                dhcp_srvr2_vrf=dict(type="str", length_max=32),
-                dhcp_srvr3_vrf=dict(type="str", length_max=32),
-                dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
-                multicast_group_address=dict(type="ipv4", default=mcast_group_addr),
-                gw_ipv6_subnet=dict(type="ipv6_subnet", default=""),
-                secondary_ip_gw1=dict(type="ipv4", default=""),
-                secondary_ip_gw2=dict(type="ipv4", default=""),
-                secondary_ip_gw3=dict(type="ipv4", default=""),
-                secondary_ip_gw4=dict(type="ipv4", default=""),
-                trm_enable=dict(type="bool", default=False),
-                route_target_both=dict(type="bool", default=False),
-                l3gw_on_border=dict(type="bool", default=False),
-                netflow_enable=dict(type="bool", default=False),
-                intfvlan_nf_monitor=dict(type="str"),
-                vlan_nf_monitor=dict(type="str"),
-            )
+            net_spec = self.get_network_spec()
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
                 ports=dict(type="list", default=[]),
@@ -2695,6 +4059,14 @@ class DcnmNetwork:
                 # Validate net params
                 valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec, check_extra_params=self.check_extra_params)
                 for net in valid_net:
+                    # Check for attachment attributes in MSD child fabrics
+                    if self.fabric_type in ["multisite_child", "multicluster_child"] and net.get("attach"):
+                        self.module.fail_json(
+                            msg=f"Network '{net.get('net_name', 'unknown')}': Attachment attributes are "
+                            "not allowed for MSD child networks. MSD child fabrics do not support "
+                            "network attachments."
+                        )
+
                     if net.get("attach"):
                         valid_att, invalid_att = validate_list_of_dicts(net["attach"], att_spec, check_extra_params=self.check_extra_params)
                         net["attach"] = valid_att
@@ -2726,19 +4098,40 @@ class DcnmNetwork:
                             if net.get("vrf_name", "") is None:
                                 invalid_params.append("vrf_name is required for L3 Networks")
 
-                        if (
-                            (net.get("dhcp_srvr1_ip") and not net.get("dhcp_srvr1_vrf"))
-                            or (net.get("dhcp_srvr1_vrf") and not net.get("dhcp_srvr1_ip"))
-                            or (net.get("dhcp_srvr2_ip") and not net.get("dhcp_srvr2_vrf"))
-                            or (net.get("dhcp_srvr2_vrf") and not net.get("dhcp_srvr2_ip"))
-                            or (net.get("dhcp_srvr3_ip") and not net.get("dhcp_srvr3_vrf"))
-                            or (net.get("dhcp_srvr3_vrf") and not net.get("dhcp_srvr3_ip"))
-                        ):
-                            invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
+                        if any(has_partial_dhcp_config(srvr) for srvr in [
+                            dict(srvr_ip=net.get("dhcp_srvr1_ip"), srvr_vrf=net.get("dhcp_srvr1_vrf")),
+                            dict(srvr_ip=net.get("dhcp_srvr2_ip"), srvr_vrf=net.get("dhcp_srvr2_vrf")),
+                            dict(srvr_ip=net.get("dhcp_srvr3_ip"), srvr_vrf=net.get("dhcp_srvr3_vrf")),
+                        ]):
+                            invalid_params.append("DHCP server IP should be specified when DHCP server VRF is provided")
+
+                        if net.get("dhcp_servers"):
+                            dhcp_servers = net.get("dhcp_servers")
+                            if len(dhcp_servers) > 16:
+                                invalid_params.append("A maximum of 16 DHCP servers can be specified")
+                            if any(has_partial_dhcp_config(srvr) for srvr in dhcp_servers):
+                                invalid_params.append("DHCP server IP should be specified when DHCP server VRF is provided")
 
                         if self.dcnm_version == 11:
                             if net.get("netflow_enable") or net.get("intfvlan_nf_monitor") or net.get("vlan_nf_monitor"):
                                 invalid_params.append("Netflow configurations are supported only on NDFC")
+
+                        # Check if netflow monitors are specified without enabling netflow
+                        netflow_enable = net.get("netflow_enable", False)
+                        intfvlan_nf_monitor = net.get("intfvlan_nf_monitor")
+                        vlan_nf_monitor = net.get("vlan_nf_monitor")
+
+                        if not netflow_enable:
+                            if intfvlan_nf_monitor:
+                                invalid_params.append(
+                                    f"Network '{net.get('net_name', 'unknown')}': intfvlan_nf_monitor "
+                                    "(Interface VLAN Netflow Monitor) cannot be specified when netflow_enable is False or not set"
+                                )
+                            if vlan_nf_monitor:
+                                invalid_params.append(
+                                    f"Network '{net.get('net_name', 'unknown')}': vlan_nf_monitor "
+                                    "(VLAN Netflow Monitor) cannot be specified when netflow_enable is False or not set"
+                                )
 
                     self.validated.append(net)
 
@@ -2757,6 +4150,12 @@ class DcnmNetwork:
                 self.module.fail_json(msg=msg)
 
     def handle_response(self, resp, op):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"op: {op}"
+        self.log.debug(msg)
 
         fail = False
         changed = True
@@ -2787,20 +4186,40 @@ class DcnmNetwork:
         if op == "attach" and "Invalid interfaces" in str(res.values()):
             fail = True
             changed = True
-        if op == "deploy" and "No switches PENDING for deployment" in str(res.values()):
+        if op == "deploy" and "No switches PENDING for deployment" in str(res.values()) and "multi" not in self.fabric_type:
+            # For parent fabrics, don't set changed=False as they will never have switches
             changed = False
+
+        # Check for VLAN ID already in use errors in DATA section
+        # This handles cases where RETURN_CODE is 200 but DATA contains error messages
+        if op == "attach" and res.get("DATA") and isinstance(res["DATA"], dict):
+            for key, value in res["DATA"].items():
+                if isinstance(value, str) and "is already in use" in value.lower():
+                    fail = True
+                    changed = False
+                    break
+                # Check for multisite overlay link error
+                if isinstance(value, str) and "multisite overlay link should be available to extend multisite" in value.lower():
+                    fail = True
+                    changed = False
+                    break
 
         return fail, changed
 
     def failure(self, resp):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
 
         # Donot Rollback for Multi-site fabrics
-        if self.is_ms_fabric:
+        if self.is_ms_fabric or self.fabric_type != "standalone":
             self.failed_to_rollback = True
             self.module.fail_json(msg=resp)
             return
 
-        # Implementing a per task rollback logic here so that we rollback DCNM to the have state
+        # Implementing a per task rollback logic here so that we rollback ND to the have state
         # whenever there is a failure in any of the APIs.
         # The idea would be to run overridden state with want=have and have=dcnm_state
         self.want_create = self.have_create
@@ -2838,7 +4257,17 @@ class DcnmNetwork:
         self.module.fail_json(msg=res)
 
     def dcnm_update_network_information(self, want, have, cfg):
+        # Check if this is a replaced state with MSD child fabric
+        is_replaced_multisite_child = (
+            self.module.params["state"] == "replaced"
+            and self.fabric_type in ["multisite_child", "multicluster_child"]
+        )
 
+        # MSD child configurable attributes (can be updated in replaced state):
+        # dhcp_loopback_id, netflow_enable, vlan_nf_monitor, trm_enable,
+        # multicast_group_address, l3gw_on_border
+
+        # Update basic network information
         if cfg.get("vrf_name", None) is None:
             want["vrf"] = have["vrf"]
 
@@ -2854,6 +4283,7 @@ class DcnmNetwork:
         json_to_dict_want = json.loads(want["networkTemplateConfig"])
         json_to_dict_have = json.loads(have["networkTemplateConfig"])
 
+        # Update template configuration - common attributes
         if cfg.get("vlan_id", None) is None:
             json_to_dict_want["vlanId"] = json_to_dict_have["vlanId"]
             if json_to_dict_want["vlanId"] != "":
@@ -2892,31 +4322,7 @@ class DcnmNetwork:
             elif str(json_to_dict_want["suppressArp"]).lower() == "false":
                 json_to_dict_want["suppressArp"] = False
 
-        if cfg.get("dhcp_srvr1_ip", None) is None:
-            json_to_dict_want["dhcpServerAddr1"] = json_to_dict_have["dhcpServerAddr1"]
-
-        if cfg.get("dhcp_srvr2_ip", None) is None:
-            json_to_dict_want["dhcpServerAddr2"] = json_to_dict_have["dhcpServerAddr2"]
-
-        if cfg.get("dhcp_srvr3_ip", None) is None:
-            json_to_dict_want["dhcpServerAddr3"] = json_to_dict_have["dhcpServerAddr3"]
-
-        if cfg.get("dhcp_srvr1_vrf", None) is None:
-            json_to_dict_want["vrfDhcp"] = json_to_dict_have["vrfDhcp"]
-
-        if cfg.get("dhcp_srvr2_vrf", None) is None:
-            json_to_dict_want["vrfDhcp2"] = json_to_dict_have["vrfDhcp2"]
-
-        if cfg.get("dhcp_srvr3_vrf", None) is None:
-            json_to_dict_want["vrfDhcp3"] = json_to_dict_have["vrfDhcp3"]
-
-        if cfg.get("dhcp_loopback_id", None) is None:
-            json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]
-
-        if self.is_ms_fabric is False:
-            if cfg.get("multicast_group_address", None) is None:
-                json_to_dict_want["mcastGroup"] = json_to_dict_have["mcastGroup"]
-
+        # IPv6 and secondary gateway configuration
         if cfg.get("gw_ipv6_subnet", None) is None:
             json_to_dict_want["gatewayIpV6Address"] = json_to_dict_have["gatewayIpV6Address"]
 
@@ -2932,13 +4338,7 @@ class DcnmNetwork:
         if cfg.get("secondary_ip_gw4", None) is None:
             json_to_dict_want["secondaryGW4"] = json_to_dict_have["secondaryGW4"]
 
-        if cfg.get("trm_enable", None) is None:
-            json_to_dict_want["trmEnabled"] = json_to_dict_have["trmEnabled"]
-            if str(json_to_dict_want["trmEnabled"]).lower() == "true":
-                json_to_dict_want["trmEnabled"] = True
-            else:
-                json_to_dict_want["trmEnabled"] = False
-
+        # Route target configuration (common for all fabric types)
         if cfg.get("route_target_both", None) is None:
             json_to_dict_want["rtBothAuto"] = json_to_dict_have["rtBothAuto"]
             if str(json_to_dict_want["rtBothAuto"]).lower() == "true":
@@ -2946,26 +4346,92 @@ class DcnmNetwork:
             else:
                 json_to_dict_want["rtBothAuto"] = False
 
-        if cfg.get("l3gw_on_border", None) is None:
-            json_to_dict_want["enableL3OnBorder"] = json_to_dict_have["enableL3OnBorder"]
-            if str(json_to_dict_want["enableL3OnBorder"]).lower() == "true":
-                json_to_dict_want["enableL3OnBorder"] = True
-            else:
-                json_to_dict_want["enableL3OnBorder"] = False
+        if cfg.get("net_name", None) is None:
+            json_to_dict_want["networkName"] = json_to_dict_have["networkName"]
 
-        if self.dcnm_version > 11:
-            if cfg.get("netflow_enable", None) is None:
-                json_to_dict_want["ENABLE_NETFLOW"] = json_to_dict_have["ENABLE_NETFLOW"]
-                if str(json_to_dict_want["ENABLE_NETFLOW"]).lower() == "true":
-                    json_to_dict_want["ENABLE_NETFLOW"] = True
+        # MSD child configurable attributes - grouped together
+        # These can be modified in MSD child replaced state
+        if not is_replaced_multisite_child:
+            # DHCP servers configuration
+            if cfg.get("dhcp_servers", None) is None:
+                want_dhcp_servers = json.loads(json_to_dict_have["dhcpServers"] or "{}").get("dhcpServers", [])
+                if len(want_dhcp_servers) < 3:
+                    want_dhcp_servers += [None] * (3 - len(want_dhcp_servers))
+                # For backward compatibility, if individual DHCP server fields are set in have,
+                # use those values to populate want_dhcp_servers
+                if json_to_dict_have["dhcpServerAddr1"] != "":
+                    want_dhcp_servers[0] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr1"], srvrVrf=json_to_dict_have["vrfDhcp"])
+                # If individual DHCP server IP field is set in cfg, override corresponding entries in want_dhcp_servers
+                if cfg.get("dhcp_srvr1_ip", None) is not None:
+                    want_dhcp_servers[0].update({"srvrAddr": cfg.get("dhcp_srvr1_ip")})
+                    # If individual DHCP server VRF field is set in cfg, override corresponding entries in want_dhcp_servers
+                    if cfg.get("dhcp_srvr1_vrf", None) is not None:
+                        want_dhcp_servers[0].update({"srvrVrf": cfg.get("dhcp_srvr1_vrf")})
+                if json_to_dict_have["dhcpServerAddr2"] != "":
+                    want_dhcp_servers[1] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr2"], srvrVrf=json_to_dict_have["vrfDhcp2"])
+                if cfg.get("dhcp_srvr2_ip", None) is not None:
+                    want_dhcp_servers[1].update({"srvrAddr": cfg.get("dhcp_srvr2_ip")})
+                    if cfg.get("dhcp_srvr2_vrf", None) is not None:
+                        want_dhcp_servers[1].update({"srvrVrf": cfg.get("dhcp_srvr2_vrf")})
+                if json_to_dict_have["dhcpServerAddr3"] != "":
+                    want_dhcp_servers[2] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr3"], srvrVrf=json_to_dict_have["vrfDhcp3"])
+                if cfg.get("dhcp_srvr3_ip", None) is not None:
+                    want_dhcp_servers[2].update({"srvrAddr": cfg.get("dhcp_srvr3_ip")})
+                    if cfg.get("dhcp_srvr3_vrf", None) is not None:
+                        want_dhcp_servers[2].update({"srvrVrf": cfg.get("dhcp_srvr3_vrf")})
+                want_dhcp_servers = [srvr for srvr in want_dhcp_servers if srvr is not None]
+                if want_dhcp_servers == []:
+                    json_to_dict_want["dhcpServers"] = ""
                 else:
-                    json_to_dict_want["ENABLE_NETFLOW"] = False
+                    json_to_dict_want["dhcpServers"] = json.dumps(dict(dhcpServers=want_dhcp_servers), separators=(",", ":"))
 
-            if cfg.get("intfvlan_nf_monitor", None) is None:
-                json_to_dict_want["SVI_NETFLOW_MONITOR"] = json_to_dict_have["SVI_NETFLOW_MONITOR"]
+            # Remove individual DHCP server fields before sending networkTemplateConfig to controller
+            del json_to_dict_want["dhcpServerAddr1"]
+            del json_to_dict_want["dhcpServerAddr2"]
+            del json_to_dict_want["dhcpServerAddr3"]
+            del json_to_dict_want["vrfDhcp"]
+            del json_to_dict_want["vrfDhcp2"]
+            del json_to_dict_want["vrfDhcp3"]
 
-            if cfg.get("vlan_nf_monitor", None) is None:
-                json_to_dict_want["VLAN_NETFLOW_MONITOR"] = json_to_dict_have["VLAN_NETFLOW_MONITOR"]
+            # DHCP loopback configuration
+            if cfg.get("dhcp_loopback_id", None) is None:
+                json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]
+
+            # TRM enable configuration
+            if cfg.get("trm_enable", None) is None:
+                json_to_dict_want["trmEnabled"] = json_to_dict_have["trmEnabled"]
+                if str(json_to_dict_want["trmEnabled"]).lower() == "true":
+                    json_to_dict_want["trmEnabled"] = True
+                else:
+                    json_to_dict_want["trmEnabled"] = False
+
+            # L3 gateway on border configuration
+            if cfg.get("l3gw_on_border", None) is None:
+                json_to_dict_want["enableL3OnBorder"] = json_to_dict_have["enableL3OnBorder"]
+                if str(json_to_dict_want["enableL3OnBorder"]).lower() == "true":
+                    json_to_dict_want["enableL3OnBorder"] = True
+                else:
+                    json_to_dict_want["enableL3OnBorder"] = False
+
+            # Multicast configuration (skip for MS fabric)
+            if self.is_ms_fabric is False and cfg.get("multicast_group_address", None) is None:
+                json_to_dict_want["mcastGroup"] = json_to_dict_have["mcastGroup"]
+
+            # NetFlow configuration (version 12+ only)
+            if self.dcnm_version > 11:
+                if cfg.get("netflow_enable", None) is None:
+                    json_to_dict_want["ENABLE_NETFLOW"] = json_to_dict_have["ENABLE_NETFLOW"]
+                    if str(json_to_dict_want["ENABLE_NETFLOW"]).lower() == "true":
+                        json_to_dict_want["ENABLE_NETFLOW"] = True
+                    else:
+                        json_to_dict_want["ENABLE_NETFLOW"] = False
+
+                if cfg.get("vlan_nf_monitor", None) is None:
+                    json_to_dict_want["VLAN_NETFLOW_MONITOR"] = json_to_dict_have["VLAN_NETFLOW_MONITOR"]
+
+        # NetFlow SVI monitor configuration (common for all fabric types, version 12+ only)
+        if self.dcnm_version > 11 and cfg.get("intfvlan_nf_monitor", None) is None:
+            json_to_dict_want["SVI_NETFLOW_MONITOR"] = json_to_dict_have["SVI_NETFLOW_MONITOR"]
 
         want.update({"networkTemplateConfig": json.dumps(json_to_dict_want)})
 
@@ -2983,10 +4449,23 @@ class DcnmNetwork:
             None
         """
 
+        # For child fabrics, copy have attachments to want attachments since child fabrics don't support attachments in config
+        if self.fabric_type in ["multisite_child", "multicluster_child"]:
+            # Copy have attachments to want attachments for child fabrics
+            self.want_attach = copy.deepcopy(self.have_attach)
+
         # only for 'merged' state we need to update the objects that are not included in playbook with
         # values from self.have.
+        # Also for 'replaced' state when MSD exists and is child, we need to ignore certain attributes
 
-        if self.module.params["state"] != "merged":
+        state = self.module.params["state"]
+        if state == "merged":
+            # Normal merged state processing
+            pass
+        elif state == "replaced" and self.fabric_type in ["multisite_child", "multicluster_child"]:
+            # For MSD child in replaced state, we need special handling
+            pass
+        else:
             return
 
         if self.want_create == []:
@@ -3012,6 +4491,19 @@ def main():
 
     element_spec = dict(
         fabric=dict(required=True, type="str"),
+        _fabric_details=dict(
+            required=False,
+            type="dict",
+            options=dict(
+                fabric_type=dict(
+                    required=True,
+                    type="str",
+                    choices=["multicluster_parent", "multicluster_child", "multisite_parent", "multisite_child", "standalone"]
+                ),
+                cluster_name=dict(required=False, type="str", default=""),
+                nd_version=dict(required=False, type="float")
+            )
+        ),
         config=dict(required=False, type="list", elements="dict"),
         state=dict(
             default="merged",
@@ -3024,7 +4516,7 @@ def main():
     dcnm_net = DcnmNetwork(module)
 
     if not dcnm_net.ip_sn:
-        module.fail_json(msg="Fabric {0} missing on DCNM or does not have any switches".format(dcnm_net.fabric))
+        module.fail_json(msg="Fabric {0} missing on ND or does not have any switches".format(dcnm_net.fabric))
 
     dcnm_net.validate_input()
 
@@ -3079,6 +4571,7 @@ def main():
         module.exit_json(**dcnm_net.result)
 
     dcnm_net.push_to_remote()
+    dcnm_net.result["deploy_payload"] = dcnm_net.deploy_payload
 
     module.exit_json(**dcnm_net.result)
 

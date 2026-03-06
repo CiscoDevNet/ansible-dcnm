@@ -97,6 +97,9 @@
         "allowed_vlans": "none",
 	"native_vlan": "10",
         "orphan_port": false,
+        "enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
 	"speed": "Auto",
 	"duplex": "auto",
         "cmds": [
@@ -167,6 +170,9 @@
         "allowed_vlans": "none",
 	"native_vlan": "10",
 	"orphan_port": false,
+        "enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
         "cmds": [
           "no shutdown"
         ],
@@ -252,6 +258,9 @@
         "allowed_vlans": "none",
 	"native_vlan": "10",
         "orphan_port": false,
+        "enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
 	"speed": "Auto",
 	"duplex": "auto",
         "cmds": [
@@ -322,6 +331,9 @@
         "allowed_vlans": "none",
 	"native_vlan": "10",
         "orphan_port": false,
+        "enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
         "cmds": [
           "spanning-tree bpduguard enable"
         ],

@@ -59,7 +59,7 @@
       "peerOneId": "SAL1820SDPP",
       "peerTwoId": "SAL1819S6K3",
       "templateName": "vpc_pair",
-      "useVirtualPeerLink": "None"
+      "useVirtualPeerLink": false
     },
 
     "vpc_pair_want":
@@ -67,7 +67,7 @@
       "peerOneId": "SAL1820SDPP",
       "peerTwoId": "SAL1819S6K3",
       "templateName": "vpc_pair",
-      "useVirtualPeerLink": "None",
+      "useVirtualPeerLink": false,
       "nvPairs": {
         "PEER2_MEMBER_INTERFACES_defaulted": false,
         "PEER1_MEMBER_INTERFACES_defaulted": false,
@@ -110,7 +110,7 @@
       "peerOneId": "SAL1820SDPP",
       "peerTwoId": "SAL1819S6K3",
       "templateName": "vpc_pair",
-      "useVirtualPeerLink": "None",
+      "useVirtualPeerLink": false,
       "nvPairs": {
         "PEER2_MEMBER_INTERFACES_defaulted": false,
         "PEER1_MEMBER_INTERFACES_defaulted": false,
@@ -205,7 +205,7 @@
       "peerOneId": "SAL1820SDPP",
       "peerTwoId": "SAL1819S6K3",
       "templateName": "vpc_pair",
-      "useVirtualPeerLink": "None"
+      "useVirtualPeerLink": false
     },
 
     "vpc_pair_query_cfg_00003_11":[
@@ -246,7 +246,7 @@
       "peerOneId": "SAL1820SDPP",
       "peerTwoId": "SAL1819S6K3",
       "templateName": "vpc_pair",
-      "useVirtualPeerLink": "None",
+      "useVirtualPeerLink": false,
       "nvPairs": {
         "PEER2_MEMBER_INTERFACES_defaulted": false,
         "PEER1_MEMBER_INTERFACES_defaulted": false,
@@ -289,7 +289,7 @@
       "peerOneId": "SAL1820SDPP",
       "peerTwoId": "SAL1819S6K3",
       "templateName": "vpc_pair",
-      "useVirtualPeerLink": "None"
+      "useVirtualPeerLink": false
     },
 
     "vpc_pair_vpc_info_00005":
@@ -298,7 +298,7 @@
         "peerOneId": "10.122.84.174",
         "peerTwoId": "10.122.84.175",
         "templateName": "vpc_pair",
-        "useVirtualPeerLink": "None",
+        "useVirtualPeerLink": false,
         "profile": {
           "ADMIN_STATE": true,
           "ALLOWED_VLANS": "",
@@ -339,7 +339,7 @@
         "peerOneId": "10.122.85.174",
         "peerTwoId": "10.122.85.175",
         "templateName": "vpc_pair",
-        "useVirtualPeerLink": "None",
+        "useVirtualPeerLink": false,
         "profile": {
           "ADMIN_STATE": true,
           "ALLOWED_VLANS": "",
@@ -380,7 +380,7 @@
         "peerOneId": "10.122.86.174",
         "peerTwoId": "10.122.86.175",
         "templateName": "vpc_pair",
-        "useVirtualPeerLink": "None",
+        "useVirtualPeerLink": false,
         "profile": {
           "ADMIN_STATE": true,
           "ALLOWED_VLANS": "",
@@ -497,7 +497,7 @@
       "peerOneId": "SAL1820SDPP",
       "peerTwoId": "SAL1819S6K3",
       "templateName": "vpc_pair",
-      "useVirtualPeerLink": "None",
+      "useVirtualPeerLink": false,
       "nvPairs": {
         "PEER2_MEMBER_INTERFACES_defaulted": false,
         "PEER1_MEMBER_INTERFACES_defaulted": false,
@@ -538,7 +538,7 @@
       "peerOneId": "SAL1820SDPP",
       "peerTwoId": "SAL1819S6K3",
       "templateName": "vpc_pair",
-      "useVirtualPeerLink": "None",
+      "useVirtualPeerLink": false,
       "nvPairs": {
         "PEER2_MEMBER_INTERFACES_defaulted": false,
         "PEER1_MEMBER_INTERFACES_defaulted": false,
@@ -579,7 +579,7 @@
       "peerOneId": "SAL1820SDPQ",
       "peerTwoId": "SAL1819S6K4",
       "templateName": "vpc_pair",
-      "useVirtualPeerLink": "None",
+      "useVirtualPeerLink": false,
       "profile": {
         "PEER2_MEMBER_INTERFACES_defaulted": false,
         "PEER1_MEMBER_INTERFACES_defaulted": false,
@@ -620,7 +620,7 @@
       "peerOneId": "SAL1820SDPR",
       "peerTwoId": "SAL1819S6K5",
       "templateName": "vpc_pair",
-      "useVirtualPeerLink": "None",
+      "useVirtualPeerLink": false,
       "profile": {
         "PEER2_MEMBER_INTERFACES_defaulted": false,
         "PEER1_MEMBER_INTERFACES_defaulted": false,
@@ -1001,7 +1001,7 @@
         "peerOneId": "SAL1820SDPP",
         "peerTwoId": "SAL1819S6K3",
         "templateName": "vpc_pair",
-        "useVirtualPeerLink": null
+        "useVirtualPeerLink": false
       },
 
       "vpc_pair_del_list_1": [
@@ -1025,7 +1025,7 @@
         "peerOneId": "SAL1820SDPP",
         "peerTwoId": "SAL1819S6K3",
         "templateName": "vpc_pair",
-        "useVirtualPeerLink":null,
+        "useVirtualPeerLink": false,
         "nvPairs": {
           "ADMIN_STATE": true,
           "ALLOWED_VLANS": "all",
@@ -1062,7 +1062,7 @@
         "peerOneId": "SAL1820SDPQ",
         "peerTwoId": "SAL1819S6K4",
         "templateName": "vpc_pair",
-        "useVirtualPeerLink":null,
+        "useVirtualPeerLink": false,
         "nvPairs": {
           "ADMIN_STATE": true,
           "ALLOWED_VLANS": "all",
@@ -1099,7 +1099,7 @@
         "peerOneId": "SAL1820SDPR",
         "peerTwoId": "SAL1819S6K5",
         "templateName": "vpc_pair",
-        "useVirtualPeerLink":null,
+        "useVirtualPeerLink": false,
         "nvPairs": {
           "ADMIN_STATE": true,
           "ALLOWED_VLANS": "all",
@@ -1138,7 +1138,7 @@
         "peerOneId": "SAL1820SDPP",
         "peerTwoId": "SAL1819S6K3",
         "templateName": "vpc_pair",
-        "useVirtualPeerLink":null,
+        "useVirtualPeerLink": false,
         "nvPairs": {
           "ADMIN_STATE": true,
           "ALLOWED_VLANS": "all",
@@ -1175,7 +1175,7 @@
         "peerOneId": "SAL1820SDPQ",
         "peerTwoId": "SAL1819S6K4",
         "templateName": "vpc_pair",
-        "useVirtualPeerLink":null,
+        "useVirtualPeerLink": false,
         "nvPairs": {
           "ADMIN_STATE": true,
           "ALLOWED_VLANS": "all",
@@ -1212,7 +1212,7 @@
         "peerOneId": "SAL1820SDPR",
         "peerTwoId": "SAL1819S6K5",
         "templateName": "vpc_pair",
-        "useVirtualPeerLink":null,
+        "useVirtualPeerLink": false,
         "nvPairs": {
           "ADMIN_STATE": true,
           "ALLOWED_VLANS": "all",

@@ -1208,7 +1208,7 @@
         "recommendationReason": "Switches have same role and support Virtual Fabric Peering",
         "recommended": "True",
         "serialNumber": "FDO24020JMT",
-        "useVirtualPeerlink": "False",
+        "useVirtualPeerlink": false,
         "uuid": "None",
         "vdcId": 0,
         "vdcName": "None"

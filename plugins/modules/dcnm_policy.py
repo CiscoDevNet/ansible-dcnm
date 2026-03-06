@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -524,10 +525,9 @@ class DcnmPolicy:
                 clist, policy_spec
             )
             if invalid_params:
-                mesg = 'Invalid parameters in playbook: while processing policy "{0}", Error: {1}'.format(
-                    cfg["name"], invalid_params
-                )
-                self.module.fail_json(msg=mesg)
+                policy_name = cfg.get("name", "unknown")
+                msg = f"Invalid parameters in playbook: while processing policy {policy_name}, Error: {invalid_params}"
+                self.module.fail_json(msg=msg)
             if self.use_desc_as_key:
                 # Fail the module when use_desc_as_key is True but description is not given or empty
                 if cfg.get("description", "") == "":

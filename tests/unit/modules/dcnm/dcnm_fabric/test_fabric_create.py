@@ -623,7 +623,7 @@ def test_fabric_create_00033(monkeypatch, fabric_create) -> None:
     match = r"FabricCreate\._fixup_anycast_gw_mac: "
     match += "Error translating ANYCAST_GW_MAC for fabric f1, "
     match += "ANYCAST_GW_MAC: 00:12:34:56:78:9, "
-    match += "Error detail: Invalid MAC address: 00123456789"
+    match += "Error detail: Invalid MAC address: 00:12:34:56:78:9"
 
     with pytest.raises(ValueError, match=match):
         instance.commit()

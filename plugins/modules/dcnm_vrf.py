@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -21,10 +22,10 @@ __author__ = "Shrishail Kariyappanavar, Karthik Babu Harichandra Babu, Praveen R
 DOCUMENTATION = """
 ---
 module: dcnm_vrf
-short_description: Add and remove VRFs from a DCNM managed VXLAN fabric.
+short_description: Add and remove VRFs from a ND managed VXLAN fabric.
 version_added: "0.9.0"
 description:
-    - "Add and remove VRFs and VRF Lite Extension from a DCNM managed VXLAN fabric."
+    - "Add and remove VRFs and VRF Lite Extension from a ND managed VXLAN fabric."
     - "In Multisite fabrics, VRFs can be created only on Multisite fabric"
     - "In Multisite fabrics, VRFs cannot be created on member fabric"
 author: Shrishail Kariyappanavar(@nkshrishail), Karthik Babu Harichandra Babu (@kharicha), Praveen Ramoorthy(@praveenramoorthy)
@@ -36,7 +37,7 @@ options:
     required: yes
   state:
     description:
-    - The state of DCNM after module completion.
+    - The state of ND after module completion.
     type: str
     choices:
       - merged
@@ -64,7 +65,7 @@ options:
       vlan_id:
         description:
         - vlan ID for the vrf attachment
-        - If not specified in the playbook, DCNM will auto-select an available vlan_id
+        - If not specified in the playbook, ND will auto-select an available vlan_id
         type: int
         required: false
       vrf_template:
@@ -86,11 +87,13 @@ options:
         description:
         - VRF Vlan Name
         - if > 32 chars enable - system vlan long-name
+        - Not applicable to L3VNI w/o VLAN config
         type: str
         required: false
       vrf_intf_desc:
         description:
         - VRF Intf Description
+        - Not applicable to L3VNI w/o VLAN config
         type: str
         required: false
       vrf_description:
@@ -101,6 +104,7 @@ options:
       vrf_int_mtu:
         description:
         - VRF interface MTU
+        - Not applicable to L3VNI w/o VLAN config
         type: int
         required: false
         default: 9216
@@ -113,6 +117,12 @@ options:
       redist_direct_rmap:
         description:
         - Redistribute Direct Route Map
+        type: str
+        required: false
+        default: 'FABRIC-RMAP-REDIST-SUBNET'
+      v6_redist_direct_rmap:
+        description:
+        - IPv6 Redistribute Direct Route Map
         type: str
         required: false
         default: 'FABRIC-RMAP-REDIST-SUBNET'
@@ -131,19 +141,29 @@ options:
       ipv6_linklocal_enable:
         description:
         - Enable IPv6 link-local Option
+        - Not applicable to L3VNI w/o VLAN config
         type: bool
         required: false
         default: true
+      l3vni_wo_vlan:
+        description:
+        - Enable L3 VNI without VLAN
+        - Not applicable at Multisite parent fabric level
+        type: bool
+        required: false
+        default: Inherited from fabric level settings
       trm_enable:
         description:
         - Enable Tenant Routed Multicast
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
       no_rp:
         description:
         - No RP, only SSM is used
-        - supported on NDFC only
+        - supported on ND only
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -151,6 +171,7 @@ options:
         description:
         - Specifies if RP is external to the fabric
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -158,48 +179,56 @@ options:
         description:
         - IPv4 Address of RP
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       rp_loopback_id:
         description:
         - loopback ID of RP
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: int
         required: false
       underlay_mcast_ip:
         description:
         - Underlay IPv4 Multicast Address
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       overlay_mcast_group:
         description:
         - Underlay IPv4 Multicast group (224.0.0.0/4 to 239.255.255.255/4)
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       trm_bgw_msite:
         description:
         - Enable TRM on Border Gateway Multisite
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
       adv_host_routes:
         description:
         - Flag to Control Advertisement of /32 and /128 Routes to Edge Routers
+        - Not applicable at Multisite Parent fabric level
         type: bool
         required: false
         default: false
       adv_default_routes:
         description:
         - Flag to Control Advertisement of Default Route Internally
+        - Not applicable at Multisite Parent fabric level
         type: bool
         required: false
         default: true
       static_default_route:
         description:
         - Flag to Control Static Default Route Configuration
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: true
@@ -207,12 +236,14 @@ options:
         description:
         - VRF Lite BGP neighbor password
         - Password should be in Hex string format
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       bgp_passwd_encrypt:
         description:
         - VRF Lite BGP Key Encryption Type
         - Allowed values are 3 (3DES) and 7 (Cisco)
+        - Not applicable at Multisite parent fabric level
         type: int
         choices:
           - 3
@@ -223,67 +254,208 @@ options:
         description:
         - Enable netflow on VRF-LITE Sub-interface
         - Netflow is supported only if it is enabled on fabric
-        - Netflow configs are supported on NDFC only
+        - Netflow configs are supported on ND only
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
       nf_monitor:
         description:
         - Netflow Monitor
-        - Netflow configs are supported on NDFC only
+        - Netflow configs are supported on ND only
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       disable_rt_auto:
         description:
         - Disable RT Auto-Generate
-        - supported on NDFC only
+        - supported on ND only
         type: bool
         required: false
         default: false
       import_vpn_rt:
         description:
         - VPN routes to import
-        - supported on NDFC only
+        - supported on ND only
         - Use ',' to separate multiple route-targets
         type: str
         required: false
       export_vpn_rt:
         description:
         - VPN routes to export
-        - supported on NDFC only
+        - supported on ND only
         - Use ',' to separate multiple route-targets
         type: str
         required: false
       import_evpn_rt:
         description:
         - EVPN routes to import
-        - supported on NDFC only
+        - supported on ND only
         - Use ',' to separate multiple route-targets
         type: str
         required: false
       export_evpn_rt:
         description:
         - EVPN routes to export
-        - supported on NDFC only
+        - supported on ND only
         - Use ',' to separate multiple route-targets
         type: str
         required: false
       import_mvpn_rt:
         description:
         - MVPN routes to import
-        - supported on NDFC only
+        - supported on ND only
         - Can be configured only when TRM is enabled
         - Use ',' to separate multiple route-targets
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       export_mvpn_rt:
         description:
         - MVPN routes to export
-        - supported on NDFC only
+        - supported on ND only
         - Can be configured only when TRM is enabled
         - Use ',' to separate multiple route-targets
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
+      child_fabric_config:
+        description:
+        - Configuration for Child fabrics in multisite (MSD) deployments
+        - Only applicable for Parent multisite fabrics
+        - Defines VRF behavior on each Child fabric
+        - Not supported with state 'deleted'
+        type: list
+        elements: dict
+        required: false
+        suboptions:
+          fabric:
+            description:
+            - Name of the Child fabric
+            - Must be a valid Child fabric associated with the Parent
+            type: str
+            required: true
+          l3vni_wo_vlan:
+            description:
+            - Enable L3 VNI without VLAN on Child fabric
+            type: bool
+            required: false
+            default: false
+          adv_default_routes:
+            description:
+            - Advertise default routes on Child fabric
+            type: bool
+            required: false
+            default: true
+          adv_host_routes:
+            description:
+            - Advertise host routes on Child fabric
+            type: bool
+            required: false
+            default: false
+          static_default_route:
+            description:
+            - Configure static default route on Child fabric
+            type: bool
+            required: false
+            default: true
+          bgp_password:
+            description:
+            - BGP password for Child fabric VRF Lite
+            - Password should be in Hex string format
+            type: str
+            required: false
+          bgp_passwd_encrypt:
+            description:
+            - BGP password encryption type on Child fabric
+            - 3 for 3DES encryption, 7 for Cisco encryption
+            type: int
+            choices:
+              - 3
+              - 7
+            required: false
+            default: 3
+          netflow_enable:
+            description:
+            - Enable netflow on Child fabric
+            - Netflow is supported only if it is enabled on fabric
+            type: bool
+            required: false
+            default: false
+          nf_monitor:
+            description:
+            - Netflow monitor on Child fabric
+            type: str
+            required: false
+          trm_enable:
+            description:
+            - Enable TRM (Tenant Routed Multicast) on Child fabric
+            - Required for multicast traffic within VRF on Child fabric
+            type: bool
+            required: false
+            default: false
+          no_rp:
+            description:
+            - No RP, only SSM is used on Child fabric
+            - Cannot be used with TRM enabled
+            type: bool
+            required: false
+            default: false
+          rp_address:
+            description:
+            - IPv4 Address of RP (Rendezvous Point) on Child fabric
+            - Can be configured only when TRM is enabled
+            type: str
+            required: false
+          rp_external:
+            description:
+            - Specifies if RP is external to the Child fabric
+            - Can be configured only when TRM is enabled
+            type: bool
+            required: false
+            default: false
+          rp_loopback_id:
+            description:
+            - Loopback ID of RP on Child fabric
+            - Can be configured only when TRM is enabled
+            - Range 0-1023
+            type: int
+            required: false
+          underlay_mcast_ip:
+            description:
+            - Underlay IPv4 Multicast Address on Child fabric
+            - Can be configured only when TRM is enabled
+            type: str
+            required: false
+          overlay_mcast_group:
+            description:
+            - Overlay IPv4 Multicast group on Child fabric
+            - Format (224.0.0.0/4 to 239.255.255.255/4)
+            - Can be configured only when TRM is enabled
+            type: str
+            required: false
+          trm_bgw_msite:
+            description:
+            - Enable TRM on Border Gateway Multisite for Child fabric
+            - Can be configured only when TRM is enabled
+            - Required for multicast across sites
+            type: bool
+            required: false
+            default: false
+          import_mvpn_rt:
+            description:
+            - MVPN routes to import on Child fabric
+            - Can be configured only when TRM is enabled
+            - Use ',' to separate multiple route-targets
+            type: str
+            required: false
+          export_mvpn_rt:
+            description:
+            - MVPN routes to export on Child fabric
+            - Can be configured only when TRM is enabled
+            - Use ',' to separate multiple route-targets
+            type: str
+            required: false
       attach:
         description:
         - List of vrf attachment details
@@ -341,35 +513,77 @@ options:
           import_evpn_rt:
             description:
             - import evpn route-target
-            - supported on NDFC only
+            - supported on ND only
             - Use ',' to separate multiple route-targets
             type: str
             required: false
           export_evpn_rt:
             description:
             - export evpn route-target
-            - supported on NDFC only
+            - supported on ND only
             - Use ',' to separate multiple route-targets
             type: str
             required: false
           deploy:
             description:
             - Per switch knob to control whether to deploy the attachment
-            - This knob has been deprecated from Ansible NDFC Collection Version 2.1.0 onwards.
+            - This knob has been deprecated from Ansible ND Collection Version 2.1.0 onwards.
               There will not be any functional impact if specified in playbook.
             type: bool
             default: true
       deploy:
         description:
         - Global knob to control whether to deploy the attachment
-        - Ansible NDFC Collection Behavior for Version 2.0.1 and earlier
-        - This knob will create and deploy the attachment in DCNM only when set to "True" in playbook
-        - Ansible NDFC Collection Behavior for Version 2.1.0 and later
-        - Attachments specified in the playbook will always be created in DCNM.
-          This knob, when set to "True",  will deploy the attachment in DCNM, by pushing the configs to switch.
-          If set to "False", the attachments will be created in DCNM, but will not be deployed
+        - Ansible ND Collection Behavior for Version 2.0.1 and earlier
+        - This knob will create and deploy the attachment in ND only when set to "True" in playbook
+        - Ansible ND Collection Behavior for Version 2.1.0 and later
+        - Attachments specified in the playbook will always be created in ND
+          This knob, when set to "True",  will deploy the attachment in ND, by pushing the configs to switch.
+          If set to "False", the attachments will be created in ND, but will not be deployed
+        - In case of Multisite fabrics, deploy flag on parent will be inherited by the specified child fabrics.
         type: bool
         default: true
+  fabric_details:
+    description:
+    - INTERNAL USE ONLY - Populated automatically by the action plugin
+    - Contains fabric metadata required for multisite and multicluster operations
+    - This parameter is constructed by the module's action plugin and should not be set manually in playbooks
+    - Includes controller version, fabric type (standalone, multisite_parent, multisite_child,
+      multicluster_parent, multicluster_child), member fabrics, and cluster information
+    type: dict
+    required: false
+    suboptions:
+      fabric_type:
+        description:
+        - Type of fabric deployment
+        type: str
+        required: true
+        choices:
+          - standalone
+          - multisite_parent
+          - multisite_child
+          - multicluster_parent
+          - multicluster_child
+      cluster_name:
+        description:
+        - Name of the cluster for multicluster deployments
+        - Only applicable for multicluster fabric types
+        type: str
+        required: false
+      nd_version:
+        description:
+        - Version of the ND controller
+        - Used to determine API endpoints and feature availability
+        type: float
+        required: false
+      members:
+        description:
+        - List of member fabrics for multisite_parent or multicluster_parent deployments
+        - Contains fabric details for each child fabric
+        type: list
+        elements: dict
+        required: false
+
 """
 
 EXAMPLES = """
@@ -402,163 +616,388 @@ EXAMPLES = """
 #
 # Deleted:
 #   VRFs defined in the playbook will be deleted.
-#   If no VRFs are provided in the playbook, all VRFs present on that DCNM fabric will be deleted.
+#   If no VRFs are provided in the playbook, all VRFs present on that ND fabric will be deleted.
 #
 # Query:
-#   Returns the current DCNM state for the VRFs listed in the playbook.
+#   Returns the current ND state for the VRFs listed in the playbook.
 #
 # rollback functionality:
 # This module supports task level rollback functionality. If any task runs into failures, as part of failure
-# handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
+# handling, the module tries to bring the state of the ND back to the state captured in have structure at the
 # beginning of the task execution. Following few lines provide a logical description of how this works,
 # if (failure)
 #     want data = have data
-#     have data = get state of DCNM
+#     have data = get state of ND
 #     Run the module in override state with above set of data to produce the required set of diffs
-#     and push the diff payloads to DCNM.
+#     and push the diff payloads to ND.
 # If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
 
-# The two VRFs below will be merged into the target fabric.
-- name: Merge vrfs
+# ===========================================================================
+# Non-MSD/Standalone Fabric Examples
+# ===========================================================================
+
+- name: MERGE | Create two VRFs on a standalone fabric
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: merged
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
-    - vrf_name: ansible-vrf-r2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
 
-# VRF LITE Extension attached
-- name: Merge vrfs
+- name: MERGE | Create a VRF with VRF-Lite extensions
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: merged
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
-        vrf_lite:
-          - peer_vrf: test_vrf_1 # optional
-            interface: Ethernet1/16 # mandatory
-            ipv4_addr: 10.33.0.2/30 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
-            dot1q: 2 # dot1q can be got from dcnm/optional
-          - peer_vrf: test_vrf_2 # optional
-            interface: Ethernet1/17 # mandatory
-            ipv4_addr: 20.33.0.2/30 # optional
-            neighbor_ipv4: 20.33.0.1 # optional
-            ipv6_addr: 3010::10:34:0:7/64 # optional
-            neighbor_ipv6: 3010::10:34:0:3 # optional
-            dot1q: 3 # dot1q can be got from dcnm/optional
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+            vrf_lite:
+              - peer_vrf: test_vrf_1 # optional
+                interface: Ethernet1/16 # mandatory
+                ipv4_addr: 192.168.0.2/30 # optional
+                neighbor_ipv4: 192.168.0.1 # optional
+                ipv6_addr: 2012::30:34:0:7/64 # optional
+                neighbor_ipv6: 2012::30:34:0:3 # optional
+                dot1q: 2 # dot1q can be got from ND/optional
+              - peer_vrf: test_vrf_2 # optional
+                interface: Ethernet1/17 # mandatory
+                ipv4_addr: 192.169.0.2/30 # optional
+                neighbor_ipv4: 192.169.0.1 # optional
+                ipv6_addr: 3000::30:34:0:7/64 # optional
+                neighbor_ipv6: 3000::30:34:0:3 # optional
+                dot1q: 3 # dot1q can be got from ND/optional
 
-# The two VRFs below will be replaced in the target fabric.
-- name: Replace vrfs
+- name: REPLACE | Update attachments for a VRF
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: replaced
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      # Delete this attachment
-      # - ip_address: 192.168.1.225
-      # Create the following attachment
-      - ip_address: 192.168.1.226
-    # Dont touch this if its present on DCNM
-    # - vrf_name: ansible-vrf-r2
-    #   vrf_id: 9008012
-    #   vrf_template: Default_VRF_Universal
-    #   vrf_extension_template: Default_VRF_Extension_Universal
-    #   attach:
-    #   - ip_address: 192.168.1.224
-    #   - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        attach:
+          - ip_address: 192.168.1.224
+          # Delete this attachment
+          # - ip_address: 192.168.1.225
+          # Create the following attachment
+          - ip_address: 192.168.1.226
+      # Dont touch this if its present on ND
+      # - vrf_name: ansible-vrf-r2
+      #   vrf_id: 9008012
+      #   vrf_template: Default_VRF_Universal
+      #   vrf_extension_template: Default_VRF_Extension_Universal
+      #   attach:
+      #   - ip_address: 192.168.1.224
+      #   - ip_address: 192.168.1.225
 
-# The two VRFs below will be overridden in the target fabric.
-- name: Override vrfs
+- name: OVERRIDE | Override all VRFs on a fabric
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: overridden
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      # Delete this attachment
-      # - ip_address: 192.168.1.225
-      # Create the following attachment
-      - ip_address: 192.168.1.226
-    # Delete this vrf
-    # - vrf_name: ansible-vrf-r2
-    #   vrf_id: 9008012
-    #   vrf_template: Default_VRF_Universal
-    #   vrf_extension_template: Default_VRF_Extension_Universal
-    #   vlan_id: 2000
-    #   service_vrf_template: null
-    #   attach:
-    #   - ip_address: 192.168.1.224
-    #   - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        attach:
+          - ip_address: 192.168.1.224
+          # Delete this attachment
+          # - ip_address: 192.168.1.225
+          # Create the following attachment
+          - ip_address: 192.168.1.226
+      # Delete this vrf
+      # - vrf_name: ansible-vrf-r2
+      #   vrf_id: 9008012
+      #   vrf_template: Default_VRF_Universal
+      #   vrf_extension_template: Default_VRF_Extension_Universal
+      #   vlan_id: 2000
+      #   attach:
+      #   - ip_address: 192.168.1.224
+      #   - ip_address: 192.168.1.225
 
-- name: Delete selected vrfs
+- name: DELETE | Delete selected VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: deleted
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-    - vrf_name: ansible-vrf-r2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+      - vrf_name: ansible-vrf-r2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
 
-- name: Delete all the vrfs
+- name: DELETE | Delete all VRFs on a fabric
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: deleted
 
-- name: Query vrfs
+- name: QUERY | Query specific VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: query
     config:
-    - vrf_name: ansible-vrf-r1
-    - vrf_name: ansible-vrf-r2
+      - vrf_name: ansible-vrf-r1
+      - vrf_name: ansible-vrf-r2
+
+# ===========================================================================
+# MSD (Multi-Site Domain) Fabric Examples
+# ===========================================================================
+
+# Note: For fabrics which are "member" (part of an MSD fabric),
+# operations are permitted only through the parent MSD fabric tasks.
+
+# ---------------------------------------------------------------------------
+# STATE: MERGED - Create/Update VRFs on Parent and Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD MERGE | Create a VRF on Parent and extend to Child fabrics
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric # Must be the Parent MSD fabric
+    state: merged
+    config:
+      - vrf_name: ansible-vrf-msd-1
+        vrf_id: 9008011
+        vlan_id: 2000
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        # Attachments are for switches at the Parent fabric
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+        # Define how this VRF behaves on each Child fabric
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            adv_default_routes: true
+            adv_host_routes: false
+          - fabric: vxlan-child-fabric2
+            adv_default_routes: false
+            adv_host_routes: true
+      - vrf_name: ansible-vrf-msd-2 # A second VRF in the same task
+        vrf_id: 9008012
+        vlan_id: 2001
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            adv_default_routes: false
+            adv_host_routes: false
+        # Attachments are for switches at the Parent fabric
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+
+- name: MSD MERGE | Create VRF with L3VNI and advanced routing settings
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: merged
+    config:
+      - vrf_name: ansible-vrf-advanced
+        vrf_id: 9008020
+        vlan_id: 2020
+        vrf_int_mtu: 9000
+        max_bgp_paths: 4
+        max_ibgp_paths: 4
+        ipv6_linklocal_enable: true
+        # Parent-specific settings
+        redist_direct_rmap: CUSTOM-RMAP-REDIST
+        v6_redist_direct_rmap: CUSTOM-RMAP-REDIST-V6
+        # Child fabric configuration with multicast settings
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            l3vni_wo_vlan: true
+            trm_enable: true
+            trm_bgw_msite: true
+            rp_address: 10.1.1.1
+            underlay_mcast_ip: 239.1.1.1
+            overlay_mcast_group: 239.2.1.1
+          - fabric: vxlan-child-fabric2
+            bgp_password: 1234ABCD
+            bgp_passwd_encrypt: 7
+            netflow_enable: true
+            nf_monitor: NETFLOW_MONITOR_1
+
+# ---------------------------------------------------------------------------
+# STATE: REPLACED - Replace VRF configuration on Parent and Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD REPLACE | Update VRF properties on Parent and Child fabrics
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: replaced
+    config:
+      - vrf_name: ansible-vrf-msd-1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        vrf_int_mtu: 9000 # Update MTU on Parent
+        # Child fabric configs are replaced: child1 is updated
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            adv_default_routes: false # Value is updated
+            adv_host_routes: true     # Value is updated
+        attach:
+          - ip_address: 192.168.1.224
+          # Delete this attachment
+          # - ip_address: 192.168.1.225
+          # Create the following attachment
+          - ip_address: 192.168.1.226
+      # Dont touch this if its present on ND
+      # - vrf_name: ansible-vrf-r2
+      #   vrf_id: 9008012
+      #   vrf_template: Default_VRF_Universal
+      #   vrf_extension_template: Default_VRF_Extension_Universal
+      #   attach:
+      #   - ip_address: 192.168.1.224
+      #   - ip_address: 192.168.1.225
+
+- name: MSD REPLACE | Update VRF with route-target configuration
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: replaced
+    config:
+      - vrf_name: ansible-vrf-advanced
+        vrf_id: 9008020
+        vlan_id: 2020
+        # Parent route-target settings
+        disable_rt_auto: false
+        import_vpn_rt: "65000:10001,65000:10002"
+        export_vpn_rt: "65000:10001,65000:10002"
+        import_evpn_rt: "65000:20001,65000:20002"
+        export_evpn_rt: "65000:20001,65000:20002"
+        # Child fabric configuration updates
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            trm_enable: true
+            import_mvpn_rt: "65000:30001"
+            export_mvpn_rt: "65000:30001"
+
+# ---------------------------------------------------------------------------
+# STATE: OVERRIDDEN - Override all VRFs on Parent and Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD OVERRIDE | Override all VRFs ensuring only specified ones exist
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: overridden
+    config:
+      - vrf_name: ansible-vrf-production
+        vrf_id: 9008050
+        vlan_id: 2050
+        vrf_description: "Production VRF for critical workloads"
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            adv_default_routes: true
+            static_default_route: true
+          - fabric: vxlan-child-fabric2
+            adv_default_routes: true
+            static_default_route: true
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+      # All other VRFs will be deleted from both parent and child fabrics
+
+# ---------------------------------------------------------------------------
+# STATE: DELETED - Delete VRFs from Parent and all Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD DELETE | Delete a VRF from the Parent and all associated Child fabrics
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: deleted
+    config:
+      - vrf_name: ansible-vrf-msd-1
+      # The 'child_fabric_config' parameter is not used or allowed for 'deleted' state.
+
+- name: MSD DELETE | Delete multiple VRFs from Parent and Child fabrics
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: deleted
+    config:
+      - vrf_name: ansible-vrf-msd-1
+      - vrf_name: ansible-vrf-msd-2
+      - vrf_name: ansible-vrf-advanced
+
+- name: MSD DELETE | Delete all VRFs from the Parent and all associated Child fabrics
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: deleted
+
+# ---------------------------------------------------------------------------
+# STATE: QUERY - Query VRFs
+# ---------------------------------------------------------------------------
+
+- name: MSD QUERY | Query specific VRFs on the Parent MSD fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: query
+    config:
+      - vrf_name: ansible-vrf-msd-1
+      - vrf_name: ansible-vrf-msd-2
+      # The query will return the VRF's configuration on the parent
+      # and its attachments on all associated child fabrics.
+
+- name: MSD QUERY | Query all VRFs on the Parent MSD fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: query
+    # No config specified - returns all VRFs
+
+- name: MSD QUERY | Query specific VRFs on the Child MSD fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-child-fabric1
+    state: query
+    config:
+      - vrf_name: ansible-vrf-msd-1
+      - vrf_name: ansible-vrf-msd-2
+      # The query will return the VRF's configuration on the child
+      # and its attachments.
+
+- name: MSD QUERY | Query all VRFs on the Child MSD fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-child-fabric1
+    state: query
+    # No config specified - returns all VRFs on the child.
+
+- name: MSD QUERY | Query specific VRFs on Parent & Child fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: query
+    config:
+      - vrf_name: ansible-vrf-msd-1
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+      - vrf_name: ansible-vrf-msd-2
+        child_fabric_config:
+          - fabric: vxlan-child-fabric2
+      # The query will return the VRF's configuration on the parent and the
+      # configuration on the specified childs and its attachments at
+      # the parent and child level respectively.
 """
 import ast
 import copy
@@ -571,8 +1010,9 @@ import time
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
-    get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
-    get_sn_fabric_dict, validate_list_of_dicts)
+    get_nd_fabric_details, get_nd_fabric_inventory_details, get_ip_sn_dict,
+    get_sn_fabric_dict, validate_list_of_dicts, search_nested_json,
+    find_dict_in_list_by_key_value, sanitize_lan_attach_list)
 
 from ..module_utils.common.log_v2 import Log
 
@@ -583,14 +1023,24 @@ dcnm_vrf_paths = {
         "GET_VRF_SWITCH": "/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
         "GET_VRF_ID": "/rest/managed-pool/fabrics/{}/partitions/ids",
         "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+        "GET_NET_VRF": "/rest/resource-manager/fabrics/{}/networks?vrf-name={}"
     },
     12: {
+        "GET_VRF_FAB": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}",
         "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
+        "GET_VRF_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/bulk-create/vrfs",
         "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
         "GET_VRF_SWITCH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
         "GET_VRF_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfinfo",
         "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+        "GET_NET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
+        "RESERVE_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/reserve-id",
     },
+}
+
+dcnm_resource_paths = {
+    "RELEASE_RESOURCES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/resources?id={}",
+    "GET_RESOURCE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabric/{}/",
 }
 
 
@@ -641,6 +1091,7 @@ class DcnmVrf:
         # variable. The content stored here will be helpful for cases like
         # "check_mode" and to print diffs[] in the output of each task.
         self.diff_create_quick = []
+        self.vrf_sn_attach_map = {}
         self.have_attach = []
         self.want_attach = []
         self.diff_attach = []
@@ -653,19 +1104,34 @@ class DcnmVrf:
         # another vrf. Without this additional logic, the create+attach+deploy
         # go out first and complain the VLAN is already in use.
         self.diff_detach = []
+        self.chg_deploy = {}
         self.have_deploy = {}
         self.want_deploy = {}
         self.diff_deploy = {}
         self.diff_undeploy = {}
         self.diff_delete = {}
         self.diff_input_format = []
+        self.deploy_payload = {}
         self.query = []
-        self.dcnm_version = dcnm_version_supported(self.module)
+
+        self.action_fabric_details = self.params.get("fabric_details")
+
+        self.action_nd_version = self.action_fabric_details.get("nd_version")
+        if not self.action_nd_version:
+            self.dcnm_version = dcnm_version_supported(self.module)
+        else:
+            self.dcnm_version = self.action_nd_version
 
         msg = f"self.dcnm_version: {self.dcnm_version}"
         self.log.debug(msg)
 
-        self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
+        self.action_fabric_type = self.action_fabric_details.get("fabric_type")
+        self.action_fabric_cluster = self.action_fabric_details.get("cluster_name")
+        self.fabric_members = []
+        if self.action_fabric_type in ["multicluster_parent", "multisite_parent"]:
+            self.fabric_members = self.action_fabric_details.get("members", [])
+
+        self.inventory_data = get_nd_fabric_inventory_details(self.module, self.dcnm_version, self.fabric, self.action_fabric_details)
 
         msg = "self.inventory_data: "
         msg += f"{json.dumps(self.inventory_data, indent=4, sort_keys=True)}"
@@ -673,13 +1139,18 @@ class DcnmVrf:
 
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
         self.sn_ip = {value: key for (key, value) in self.ip_sn.items()}
-        self.fabric_data = get_fabric_details(self.module, self.fabric)
+        self.fabric_data = get_nd_fabric_details(self.module, self.dcnm_version, self.fabric, self.action_fabric_details)
 
         msg = "self.fabric_data: "
         msg += f"{json.dumps(self.fabric_data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         self.fabric_type = self.fabric_data.get("fabricType")
+        self.fabric_nvpairs = self.fabric_data.get("nvPairs")
+        self.fabric_l3vni_wo_vlan = False
+
+        if self.fabric_nvpairs and self.fabric_nvpairs.get("ENABLE_L3VNI_NO_VLAN") == "true":
+            self.fabric_l3vni_wo_vlan = True
 
         try:
             self.sn_fab = get_sn_fabric_dict(self.inventory_data)
@@ -687,10 +1158,36 @@ class DcnmVrf:
             msg += f"{self.class_name}.__init__(): {error}"
             module.fail_json(msg=msg)
 
+        self.resource_paths = copy.deepcopy(dcnm_resource_paths)
+
         if self.dcnm_version > 12:
-            self.paths = dcnm_vrf_paths[12]
+            self.paths = copy.deepcopy(dcnm_vrf_paths[12])
         else:
-            self.paths = dcnm_vrf_paths[self.dcnm_version]
+            self.paths = copy.deepcopy(dcnm_vrf_paths[11])
+
+        proxy = ""
+        if self.action_fabric_type == "multicluster_child":
+            if self.dcnm_version >= 12.4:
+                proxy = "/fedproxy/"
+            else:
+                proxy = "/onepath/"
+            for path in self.paths:
+                self.paths[path] = proxy + self.action_fabric_cluster + self.paths[path]
+            for path in self.resource_paths:
+                self.resource_paths[path] = proxy + self.action_fabric_cluster + self.resource_paths[path]
+        elif self.action_fabric_type == "multicluster_parent":
+            # onemanage proxy path
+            if self.dcnm_version >= 12.2:
+                proxy = "/onemanage"
+            for path in self.paths:
+                self.paths[path] = proxy + self.paths[path].replace("lan-fabric/rest", "onemanage")
+            # onepath proxy paths
+            if self.dcnm_version >= 12.4:
+                proxy = "/fedproxy/"
+            else:
+                proxy = "/onepath/"
+            for path in self.resource_paths:
+                self.resource_paths[path] = proxy + "{}" + self.resource_paths[path]
 
         self.result = {"changed": False, "diff": [], "response": []}
 
@@ -738,7 +1235,7 @@ class DcnmVrf:
             msg = "size must be an integer. "
             msg += f"Got {type(size)}."
             raise ValueError(msg)
-        return [lst[x : x + size] for x in range(0, len(lst), size)]
+        return [lst[x: x + size] for x in range(0, len(lst), size)]
 
     @staticmethod
     def find_dict_in_list_by_key_value(search: list, key: str, value: str):
@@ -821,14 +1318,17 @@ class DcnmVrf:
 
     # pylint: enable=inconsistent-return-statements
     @staticmethod
-    def compare_properties(dict1, dict2, property_list):
+    def compare_properties(dict1, dict2, property_list, skip_prop=None):
         """
-        Given two dictionaries and a list of keys:
+        Given two dictionaries, a list of keys and keys that can be
+        skipped, compare the values of the keys in both dictionaries:
 
         - Return True if all property values match.
         - Return False otherwise
         """
         for prop in property_list:
+            if skip_prop and prop in skip_prop:
+                continue
             if dict1.get(prop) != dict2.get(prop):
                 return False
         return True
@@ -866,7 +1366,7 @@ class DcnmVrf:
             interface_match = False
             if have_a:
                 for have in have_a:
-                    if want["serialNumber"] == have["serialNumber"]:
+                    if want["serialNumber"] == have["serialNumber"] and want["vrfName"] == have["vrfName"]:
                         # handle instanceValues first
                         want.update(
                             {"freeformConfig": have.get("freeformConfig", "")}
@@ -874,8 +1374,9 @@ class DcnmVrf:
                         want_inst_values = {}
                         have_inst_values = {}
                         if (
-                            want["instanceValues"] is not None
-                            and have["instanceValues"] is not None
+                            (want["instanceValues"] is not None and want["instanceValues"] != "")
+                            and
+                            (have["instanceValues"] is not None and have["instanceValues"] != "")
                         ):
                             want_inst_values = ast.literal_eval(want["instanceValues"])
                             have_inst_values = ast.literal_eval(have["instanceValues"])
@@ -940,8 +1441,22 @@ class DcnmVrf:
                                         continue
                                     found = True
                                     interface_match = True
+
+                                    # Copy VRF Lite properties from have to want to ensure proper idempotence comparison
+                                    # This prevents false positives when user specifies minimal config (only interface name)
+                                    # Captured in merged Idempotence test case
+                                    for prop in self.vrf_lite_properties:
+                                        # Skip IF_NAME as it's already matched
+                                        if prop != "IF_NAME" and prop in hlite:
+                                            # Only copy if want property is empty/None and have has a value
+                                            if not wlite.get(prop) and hlite.get(prop):
+                                                wlite[prop] = hlite[prop]
+
+                                    skip_prop = []
+                                    if not wlite["DOT1Q_ID"]:
+                                        skip_prop.append("DOT1Q_ID")
                                     if not self.compare_properties(
-                                        wlite, hlite, self.vrf_lite_properties
+                                        wlite, hlite, self.vrf_lite_properties, skip_prop
                                     ):
                                         found = False
                                         break
@@ -954,6 +1469,9 @@ class DcnmVrf:
 
                                 if interface_match and not found:
                                     break
+
+                            # After comparing VRF lite interfaces, check deployment status
+                            # only if all interfaces matched (found = True)
 
                         elif (
                             want["extensionValues"] != ""
@@ -976,6 +1494,7 @@ class DcnmVrf:
                             msg += f"{str(want.get('have_is_deploy'))}"
                             self.log.debug(msg)
 
+                        if found:
                             want_is_deploy = self.to_bool("is_deploy", want)
                             have_is_deploy = self.to_bool("is_deploy", have)
 
@@ -1009,7 +1528,6 @@ class DcnmVrf:
                             self.log.debug(msg)
 
                             if have_is_attached != want_is_attached:
-
                                 if "isAttached" in want:
                                     del want["isAttached"]
 
@@ -1119,9 +1637,9 @@ class DcnmVrf:
                     {
                         "dot1q": 2,
                         "interface": "Ethernet1/2",
-                        "ipv4_addr": "10.33.0.2/30",
+                        "ipv4_addr": "192.168.0.2/30",
                         "ipv6_addr": "2010::10:34:0:7/64",
-                        "neighbor_ipv4": "10.33.0.1",
+                        "neighbor_ipv4": "192.168.0.1",
                         "neighbor_ipv6": "2010::10:34:0:3",
                         "peer_vrf": "ansible-vrf-int1"
                     }
@@ -1202,14 +1720,16 @@ class DcnmVrf:
             else:
                 extension_values["VRF_LITE_CONN"] = copy.deepcopy(vrf_lite_connections)
 
-            extension_values["VRF_LITE_CONN"] = json.dumps(
-                extension_values["VRF_LITE_CONN"]
-            )
-
-            msg = "Returning extension_values: "
+            msg = "Building extension_values: "
             msg += f"{json.dumps(extension_values, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
+        extension_values["VRF_LITE_CONN"] = json.dumps(
+            extension_values["VRF_LITE_CONN"]
+        )
+        msg = "Returning extension_values: "
+        msg += f"{json.dumps(extension_values, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         return copy.deepcopy(extension_values)
 
     def update_attach_params(self, attach, vrf_name, deploy, vlan_id) -> dict:
@@ -1379,10 +1899,32 @@ class DcnmVrf:
         # remove it here (as we did with the other params that are
         # compared in the call to self.dict_values_differ())
         vlan_id_want = str(json_to_dict_want.get("vrfVlanId", ""))
+        vrfSegmentId_want = json_to_dict_want.get("vrfSegmentId")
 
         skip_keys = []
-        if vlan_id_want == "0":
+        if vlan_id_want == "0" or vlan_id_want == "":
             skip_keys = ["vrfVlanId"]
+        if vrfSegmentId_want is None:
+            skip_keys.append("vrfSegmentId")
+
+        # BGP password/key type special handling
+        bgp_password_want = json_to_dict_want.get("bgpPassword")
+        bgp_password_have = json_to_dict_have.get("bgpPassword")
+        bgp_key_type_have = json_to_dict_have.get("bgpPasswordKeyType")
+        bgp_key_type_want = json_to_dict_want.get("bgpPasswordKeyType")
+
+        # Some ND versions give empty bgpPasswordKeyType. Skip comparison if:
+        # 1. Have keytype is empty/None (ND has no password configured)
+        # 2. Both passwords are empty (no password in want or have)
+        if ((bgp_key_type_have == "" and bgp_key_type_want == 3 and
+             bgp_password_want != "") or (bgp_password_want == ""
+                                          and bgp_password_have == "")):
+            skip_keys.append("bgpPasswordKeyType")
+
+        template_skip_keys = self.get_template_skip_keys()
+        if template_skip_keys:
+            skip_keys.extend(template_skip_keys)
+
         templates_differ = self.dict_values_differ(
             json_to_dict_want, json_to_dict_have, skip_keys=skip_keys
         )
@@ -1403,6 +1945,11 @@ class DcnmVrf:
                 # The vrf updates with missing vrfId will have to use existing
                 # vrfId from the instance of the same vrf on DCNM.
                 want["vrfId"] = have["vrfId"]
+            if skip_keys:
+                for key in skip_keys:
+                    if key in json_to_dict_have:
+                        json_to_dict_want[key] = json_to_dict_have[key]
+                want["vrfTemplateConfig"] = json.dumps(json_to_dict_want)
             create = want
 
         else:
@@ -1452,9 +1999,11 @@ class DcnmVrf:
             "mtu": vrf.get("vrf_int_mtu", ""),
             "tag": vrf.get("loopback_route_tag", ""),
             "vrfRouteMap": vrf.get("redist_direct_rmap", ""),
+            "v6VrfRouteMap": vrf.get("v6_redist_direct_rmap", ""),
             "maxBgpPaths": vrf.get("max_bgp_paths", ""),
             "maxIbgpPaths": vrf.get("max_ibgp_paths", ""),
             "ipv6LinkLocalFlag": vrf.get("ipv6_linklocal_enable", True),
+            "enableL3VniNoVlan": vrf.get("l3vni_wo_vlan", False),
             "trmEnabled": vrf.get("trm_enable", False),
             "isRPExternal": vrf.get("rp_external", False),
             "rpAddress": vrf.get("rp_address", ""),
@@ -1510,6 +2059,45 @@ class DcnmVrf:
 
         return copy.deepcopy(vrf_objects)
 
+    def _has_vrf_lite_in_config(self, vrf_name=None) -> bool:
+        """
+        # Summary
+
+        Check if VRF-Lite configuration is present in the playbook config.
+
+        ## Parameters
+
+        - vrf_name: Optional. If provided, checks only for this specific VRF.
+                   If None, checks if ANY VRF has vrf_lite configuration.
+
+        ## Returns
+
+        - True if vrf_lite configuration is found
+        - False if no vrf_lite configuration is found, or if self.config is None/empty
+        """
+        if not self.config:
+            # No config provided (e.g., query/deleted state without config)
+            # Return False to indicate we should call API (can't optimize)
+            return False
+
+        for vrf in self.config:
+            # If checking for a specific VRF, skip others
+            if vrf_name and vrf.get("vrf_name") != vrf_name:
+                continue
+
+            # Check if this VRF has attach list with vrf_lite
+            attach_list = vrf.get("attach", [])
+            if not attach_list:
+                continue
+
+            for attach in attach_list:
+                vrf_lite = attach.get("vrf_lite")
+                # Check if vrf_lite exists and is not empty/null
+                if vrf_lite:
+                    return True
+
+        return False
+
     def get_vrf_lite_objects(self, attach) -> dict:
         """
         # Summary
@@ -1532,8 +2120,11 @@ class DcnmVrf:
         self.log.debug(msg)
 
         verb = "GET"
+        attach_fabric = attach["fabric"]
+        if self.action_fabric_type == "multicluster_parent":
+            attach_fabric = self.fabric
         path = self.paths["GET_VRF_SWITCH"].format(
-            attach["fabric"], attach["vrfName"], attach["serialNumber"]
+            attach_fabric, attach["vrfName"], attach["serialNumber"]
         )
         msg = f"verb: {verb}, path: {path}"
         self.log.debug(msg)
@@ -1553,6 +2144,8 @@ class DcnmVrf:
 
         have_create = []
         have_deploy = {}
+        chg_deploy = {}
+        vrf_sn_attach_map = self.vrf_sn_attach_map
 
         curr_vrfs = ""
 
@@ -1575,6 +2168,11 @@ class DcnmVrf:
         if not vrf_attach_objects["DATA"]:
             return
 
+        if self.action_fabric_type == "multicluster_parent":
+            vrf_attach_objects["DATA"] = sanitize_lan_attach_list(
+                vrf_attach_objects.get("DATA")
+            )
+
         for vrf in vrf_objects["DATA"]:
             json_to_dict = json.loads(vrf["vrfTemplateConfig"])
             t_conf = {
@@ -1587,9 +2185,11 @@ class DcnmVrf:
                 "mtu": json_to_dict.get("mtu", 9216),
                 "tag": json_to_dict.get("tag", 12345),
                 "vrfRouteMap": json_to_dict.get("vrfRouteMap", ""),
+                "v6VrfRouteMap": json_to_dict.get("v6VrfRouteMap", ""),
                 "maxBgpPaths": json_to_dict.get("maxBgpPaths", 1),
                 "maxIbgpPaths": json_to_dict.get("maxIbgpPaths", 2),
                 "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag", True),
+                "enableL3VniNoVlan": json_to_dict.get("enableL3VniNoVlan", False),
                 "trmEnabled": json_to_dict.get("trmEnabled", False),
                 "isRPExternal": json_to_dict.get("isRPExternal", False),
                 "rpAddress": json_to_dict.get("rpAddress", ""),
@@ -1639,17 +2239,19 @@ class DcnmVrf:
             have_create.append(vrf)
 
         upd_vrfs = ""
+        chg_vrfs = ""
 
         for vrf_attach in vrf_attach_objects["DATA"]:
             if not vrf_attach.get("lanAttachList"):
                 continue
             attach_list = vrf_attach["lanAttachList"]
             deploy_vrf = ""
+            change_vrf = ""
             for attach in attach_list:
-                attach_state = not attach["lanAttachState"] == "NA"
-                deploy = attach["isLanAttached"]
+                attach_state = bool(attach.get("isLanAttached", False))
+                deploy = attach_state
                 deployed = False
-                if deploy and (
+                if attach_state and (
                     attach["lanAttachState"] == "OUT-OF-SYNC"
                     or attach["lanAttachState"] == "PENDING"
                 ):
@@ -1661,7 +2263,15 @@ class DcnmVrf:
                     deploy_vrf = attach["vrfName"]
 
                 sn = attach["switchSerialNo"]
-                vlan = attach["vlanId"]
+
+                if attach["vrfName"] not in vrf_sn_attach_map:
+                    vrf_sn_attach_map[attach["vrfName"]] = set()
+                vrf_sn_attach_map[attach["vrfName"]].add(sn)
+
+                if attach["lanAttachState"] in ("OUT-OF-SYNC", "PENDING"):
+                    change_vrf = attach["vrfName"]
+
+                vlan = attach.get("vlanId", None)
                 inst_values = attach.get("instanceValues", None)
 
                 # The deletes and updates below are done to update the incoming
@@ -1669,7 +2279,8 @@ class DcnmVrf:
                 # Ex: 'vlanId' in the attach section of the incoming payload needs to
                 # be changed to 'vlan' on the attach section of outgoing payload.
 
-                del attach["vlanId"]
+                if attach.get("vlanId"):
+                    del attach["vlanId"]
                 del attach["switchSerialNo"]
                 del attach["switchName"]
                 del attach["switchRole"]
@@ -1690,13 +2301,28 @@ class DcnmVrf:
 
                 # Get the VRF LITE extension template and update it
                 # with the attach['extensionvalues']
+                # Only call get_vrf_lite_objects() if VRF-Lite is configured in the playbook
+                # to avoid expensive API calls when VRF-Lite is not being used
 
+                vrf_name = attach.get("vrfName")
+                has_lite = self._has_vrf_lite_in_config(vrf_name)
+
+                if not has_lite:
+                    # No VRF-Lite config for this VRF in the playbook
+                    # Skip the expensive API call and set empty extensionValues
+                    attach.update({"freeformConfig": ""})
+                    # extensionValues already set to "" at line 1766
+                    continue
+
+                # VRF-Lite IS configured, making API call
                 lite_objects = self.get_vrf_lite_objects(attach)
 
                 if not lite_objects.get("DATA"):
-                    msg = "Early return. lite_objects missing DATA"
+                    msg = "No VRF Lite extensions found, skipping attachment processing"
                     self.log.debug(msg)
-                    return
+                    attach.update({"freeformConfig": ""})
+                    # extensionValues already set to "" earlier at line 1781
+                    continue
 
                 msg = f"lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
@@ -1746,14 +2372,22 @@ class DcnmVrf:
             if deploy_vrf:
                 upd_vrfs += deploy_vrf + ","
 
+            if change_vrf:
+                chg_vrfs += change_vrf + ","
+
         have_attach = vrf_attach_objects["DATA"]
 
         if upd_vrfs:
             have_deploy.update({"vrfNames": upd_vrfs[:-1]})
 
+        if chg_vrfs:
+            chg_deploy.update({"vrfNames": chg_vrfs[:-1]})
+
         self.have_create = have_create
         self.have_attach = have_attach
         self.have_deploy = have_deploy
+        self.chg_deploy = chg_deploy
+        self.vrf_sn_attach_map = vrf_sn_attach_map
 
         msg = "self.have_create: "
         msg += f"{json.dumps(self.have_create, indent=4)}"
@@ -1769,6 +2403,10 @@ class DcnmVrf:
         msg += f"{json.dumps(self.have_deploy, indent=4)}"
         self.log.debug(msg)
 
+        msg = "self.chg_deploy: "
+        msg += f"{json.dumps(self.chg_deploy, indent=4)}"
+        self.log.debug(msg)
+
     def get_want(self):
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
@@ -1780,6 +2418,7 @@ class DcnmVrf:
         want_create = []
         want_attach = []
         want_deploy = {}
+        vrf_sn_attach_map = self.vrf_sn_attach_map
 
         msg = "self.config "
         msg += f"{json.dumps(self.config, indent=4)}"
@@ -1798,15 +2437,27 @@ class DcnmVrf:
                 msg += f"vrf missing mandatory key vrf_name: {vrf}"
                 self.module.fail_json(msg=msg)
 
-            all_vrfs.append(vrf_name)
             vrf_attach = {}
             vrfs = []
 
             vrf_deploy = vrf.get("deploy", True)
-            if vrf.get("vlan_id"):
-                vlan_id = vrf.get("vlan_id")
+
+            if vrf.get("l3vni_wo_vlan"):
+                vlan_id = ""
             else:
-                vlan_id = 0
+                if vrf.get("vlan_id"):
+                    vlan_id = vrf.get("vlan_id")
+                else:
+                    if self.action_fabric_type in ["multisite_parent", "multicluster_parent"]:
+                        vlan_id = ""
+                    else:
+                        # TODO: After DCNM 11.x support is ended, change the default vlan_id to ""
+                        vlan_id = 0
+
+            vrf_deploy = vrf.get("deploy", True)
+
+            if vrf_deploy:
+                all_vrfs.append(vrf_name)
 
             want_create.append(self.update_create_params(vrf, vlan_id))
 
@@ -1816,9 +2467,11 @@ class DcnmVrf:
                 continue
             for attach in vrf["attach"]:
                 deploy = vrf_deploy
-                vrfs.append(
-                    self.update_attach_params(attach, vrf_name, deploy, vlan_id)
-                )
+                vrf_attach_obj = self.update_attach_params(attach, vrf_name, deploy, vlan_id)
+                vrfs.append(vrf_attach_obj)
+                if vrf_sn_attach_map.get(vrf_name) is None:
+                    vrf_sn_attach_map[vrf_name] = set()
+                vrf_sn_attach_map[vrf_name].add(vrf_attach_obj["serialNumber"])
 
             if vrfs:
                 vrf_attach.update({"vrfName": vrf_name})
@@ -1832,6 +2485,7 @@ class DcnmVrf:
         self.want_create = copy.deepcopy(want_create)
         self.want_attach = copy.deepcopy(want_attach)
         self.want_deploy = copy.deepcopy(want_deploy)
+        self.vrf_sn_attach_map = vrf_sn_attach_map
 
         msg = "self.want_create: "
         msg += f"{json.dumps(self.want_create, indent=4)}"
@@ -1844,6 +2498,24 @@ class DcnmVrf:
         msg = "self.want_deploy: "
         msg += f"{json.dumps(self.want_deploy, indent=4)}"
         self.log.debug(msg)
+
+    def update_want(self):
+
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        # If fabric type is multisite_child, no attachments
+        # are present in want. So copy have_attach to want_attach for
+        # processing deployments.
+        if self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
+            self.want_attach = copy.deepcopy(self.have_attach)
+
+            msg = "self.want_attach: "
+            msg += f"{json.dumps(self.want_attach, indent=4)}"
+            self.log.debug(msg)
 
     def get_diff_delete(self):
         caller = inspect.stack()[1][3]
@@ -1880,33 +2552,35 @@ class DcnmVrf:
 
                 diff_delete.update({want_c["vrfName"]: "DEPLOYED"})
 
-                have_a = self.find_dict_in_list_by_key_value(
-                    search=self.have_attach, key="vrfName", value=want_c["vrfName"]
-                )
+                if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
+                    have_a = self.find_dict_in_list_by_key_value(
+                        search=self.have_attach, key="vrfName", value=want_c["vrfName"]
+                    )
 
-                if not have_a:
-                    continue
+                    if not have_a:
+                        continue
 
-                detach_items = get_items_to_detach(have_a["lanAttachList"])
-                if detach_items:
-                    have_a.update({"lanAttachList": detach_items})
-                    diff_detach.append(have_a)
-                    all_vrfs.append(have_a["vrfName"])
-            if len(all_vrfs) != 0:
+                    detach_items = get_items_to_detach(have_a["lanAttachList"])
+                    if detach_items:
+                        have_a.update({"lanAttachList": detach_items})
+                        diff_detach.append(have_a)
+                        all_vrfs.append(have_a["vrfName"])
+
+            if len(all_vrfs) != 0 and self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
                 diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         else:
+            if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
+                for have_a in self.have_attach:
+                    detach_items = get_items_to_detach(have_a["lanAttachList"])
+                    if detach_items:
+                        have_a.update({"lanAttachList": detach_items})
+                        diff_detach.append(have_a)
+                        all_vrfs.append(have_a["vrfName"])
 
-            for have_a in self.have_attach:
-                detach_items = get_items_to_detach(have_a["lanAttachList"])
-                if detach_items:
-                    have_a.update({"lanAttachList": detach_items})
-                    diff_detach.append(have_a)
-                    all_vrfs.append(have_a["vrfName"])
-
-                diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
-            if len(all_vrfs) != 0:
-                diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
+                    diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
+                if len(all_vrfs) != 0:
+                    diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_detach = diff_detach
         self.diff_undeploy = diff_undeploy
@@ -1946,21 +2620,22 @@ class DcnmVrf:
 
             detach_list = []
             if not found:
-                for item in have_a["lanAttachList"]:
-                    if "isAttached" in item:
-                        if item["isAttached"]:
-                            del item["isAttached"]
-                            item.update({"deployment": False})
-                            detach_list.append(item)
+                if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
+                    for item in have_a["lanAttachList"]:
+                        if "isAttached" in item:
+                            if item["isAttached"]:
+                                del item["isAttached"]
+                                item.update({"deployment": False})
+                                detach_list.append(item)
 
-                if detach_list:
-                    have_a.update({"lanAttachList": detach_list})
-                    diff_detach.append(have_a)
-                    all_vrfs.append(have_a["vrfName"])
+                    if detach_list:
+                        have_a.update({"lanAttachList": detach_list})
+                        diff_detach.append(have_a)
+                        all_vrfs.append(have_a["vrfName"])
 
                 diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
 
-        if len(all_vrfs) != 0:
+        if len(all_vrfs) != 0 and self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
             diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_delete = diff_delete
@@ -1989,6 +2664,7 @@ class DcnmVrf:
         all_vrfs = []
 
         self.get_diff_merge(replace=True)
+
         diff_attach = self.diff_attach
         diff_deploy = self.diff_deploy
 
@@ -2054,11 +2730,19 @@ class DcnmVrf:
             self.diff_deploy = diff_deploy
             return
 
-        if not self.diff_deploy:
-            diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
-        else:
-            vrfs = self.diff_deploy["vrfNames"] + "," + ",".join(all_vrfs)
-            diff_deploy.update({"vrfNames": vrfs})
+        modified_all_vrfs = copy.deepcopy(all_vrfs)
+        for vrf in all_vrfs:
+            # If the playbook sets the deploy key to False, then we need to remove the vrf from the deploy list.
+            want_vrf_data = find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=vrf)
+            if want_vrf_data.get('deploy', True) is False:
+                modified_all_vrfs.remove(vrf)
+
+        if modified_all_vrfs:
+            if not diff_deploy:
+                diff_deploy.update({"vrfNames": ",".join(modified_all_vrfs)})
+            else:
+                vrfs = self.diff_deploy["vrfNames"] + "," + ",".join(modified_all_vrfs)
+                diff_deploy.update({"vrfNames": vrfs})
 
         self.diff_attach = copy.deepcopy(diff_attach)
         self.diff_deploy = copy.deepcopy(diff_deploy)
@@ -2123,6 +2807,9 @@ class DcnmVrf:
                 msg += f"{self.dcnm_version}"
                 self.module.fail_json(msg)
 
+            if vrf_id is not None:
+                break
+
         if vrf_id is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Unable to retrieve vrf_id "
@@ -2143,6 +2830,7 @@ class DcnmVrf:
         diff_create = []
         diff_create_update = []
         diff_create_quick = []
+        payload_list = []
 
         for want_c in self.want_create:
             vrf_found = False
@@ -2194,9 +2882,11 @@ class DcnmVrf:
                         "mtu": json_to_dict.get("mtu"),
                         "tag": json_to_dict.get("tag"),
                         "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
+                        "v6VrfRouteMap": json_to_dict.get("v6VrfRouteMap"),
                         "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
                         "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
                         "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
+                        "enableL3VniNoVlan": json_to_dict.get("enableL3VniNoVlan"),
                         "trmEnabled": json_to_dict.get("trmEnabled"),
                         "isRPExternal": json_to_dict.get("isRPExternal"),
                         "rpAddress": json_to_dict.get("rpAddress"),
@@ -2218,7 +2908,14 @@ class DcnmVrf:
                     }
 
                     if self.dcnm_version > 11:
-                        template_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
+                        # TODO: After DCNM 11.x support is ended, the following line can be removed
+                        vrf_vlan_id = "" if template_conf["vrfVlanId"] in [0, None] else template_conf["vrfVlanId"]
+                        template_conf.update(
+                            vrfVlanId=vrf_vlan_id
+                        )
+                        template_conf.update(
+                            isRPAbsent=json_to_dict.get("isRPAbsent")
+                        )
                         template_conf.update(
                             ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW")
                         )
@@ -2257,23 +2954,40 @@ class DcnmVrf:
 
                     want_c.update({"vrfTemplateConfig": json.dumps(template_conf)})
 
-                    create_path = self.paths["GET_VRF"].format(self.fabric)
+                    if self.action_fabric_type == "multicluster_parent" or self.dcnm_version < 12:
+                        self.log.debug("Sending individual VRF create request")
+                        create_path = self.paths["GET_VRF"].format(self.fabric)
+                        diff_create_quick.append(want_c)
 
-                    diff_create_quick.append(want_c)
+                        if self.module.check_mode:
+                            continue
 
-                    if self.module.check_mode:
-                        continue
+                        # arobel: TODO: Not covered by UT
+                        resp = dcnm_send(
+                            self.module, "POST", create_path, json.dumps(want_c)
+                        )
+                        self.result["response"].append(resp)
+                        fail, self.result["changed"] = self.handle_response(resp, "create")
 
-                    # arobel: TODO: Not covered by UT
-                    resp = dcnm_send(
-                        self.module, "POST", create_path, json.dumps(want_c)
-                    )
-                    self.result["response"].append(resp)
+                        if fail:
+                            self.failure(resp)
+                    else:
+                        payload_list.append(want_c)
 
-                    fail, self.result["changed"] = self.handle_response(resp, "create")
+        if self.action_fabric_type != "multicluster_parent" and self.dcnm_version >= 12:
+            self.log.debug("Sending bulk VRF create request")
+            create_path = self.paths["GET_VRF_BULK"]
 
-                    if fail:
-                        self.failure(resp)
+            if not self.module.check_mode and payload_list:
+                # arobel: TODO: Not covered by UT
+                resp = dcnm_send(
+                    self.module, "POST", create_path, json.dumps(payload_list)
+                )
+                self.result["response"].append(resp)
+                fail, self.result["changed"] = self.handle_response(resp, "create")
+
+                if fail:
+                    self.failure(resp)
 
         self.diff_create = diff_create
         self.diff_create_update = diff_create_update
@@ -2309,6 +3023,8 @@ class DcnmVrf:
             want_config = self.find_dict_in_list_by_key_value(
                 search=self.config, key="vrf_name", value=want_a["vrfName"]
             )
+            if not want_config:
+                continue
             deploy_vrf = ""
             attach_found = False
             for have_a in self.have_attach:
@@ -2357,8 +3073,19 @@ class DcnmVrf:
             if deploy_vrf:
                 all_vrfs.append(deploy_vrf)
 
-        if len(all_vrfs) != 0:
-            diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
+        modified_all_vrfs = copy.deepcopy(all_vrfs)
+        for vrf in all_vrfs:
+            # If the playbook sets the deploy key to False, then we need to remove the vrf from the deploy list.
+            want_vrf_data = find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=vrf)
+            if want_vrf_data.get("deploy", True) is False:
+                modified_all_vrfs.remove(vrf)
+
+        if modified_all_vrfs:
+            if not diff_deploy:
+                diff_deploy.update({"vrfNames": ",".join(modified_all_vrfs)})
+            else:
+                vrfs = self.diff_deploy["vrfNames"] + "," + ",".join(modified_all_vrfs)
+                diff_deploy.update({"vrfNames": vrfs})
 
         self.diff_attach = diff_attach
         self.diff_deploy = diff_deploy
@@ -2366,6 +3093,42 @@ class DcnmVrf:
         msg = "self.diff_attach: "
         msg += f"{json.dumps(self.diff_attach, indent=4)}"
         self.log.debug(msg)
+
+        msg = "self.diff_deploy: "
+        msg += f"{json.dumps(self.diff_deploy, indent=4)}"
+        self.log.debug(msg)
+
+    def diff_merge_no_attach(self):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        diff_deploy = self.diff_deploy
+        all_vrfs = []
+
+        if not self.want_deploy or not self.chg_deploy:
+            msg = "No vrfs to deploy. Returning"
+            self.log.debug(msg)
+            return
+
+        for vrf_name in self.want_deploy["vrfNames"].split(","):
+            msg = f"VRF Name : {vrf_name}"
+            self.log.debug(msg)
+            if not self.diff_attach and vrf_name in self.chg_deploy["vrfNames"].split(","):
+                want_vrf_data = find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=vrf_name)
+                if want_vrf_data.get("deploy", True) is True:
+                    all_vrfs.append(vrf_name)
+
+        if all_vrfs:
+            if not diff_deploy:
+                diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
+            else:
+                vrfs = self.diff_deploy["vrfNames"] + "," + ",".join(all_vrfs)
+                diff_deploy.update({"vrfNames": vrfs})
+
+            self.diff_deploy = diff_deploy
 
         msg = "self.diff_deploy: "
         msg += f"{json.dumps(self.diff_deploy, indent=4)}"
@@ -2388,6 +3151,7 @@ class DcnmVrf:
 
         self.diff_merge_create(replace)
         self.diff_merge_attach(replace)
+        self.diff_merge_no_attach()
 
     def format_diff(self):
         caller = inspect.stack()[1][3]
@@ -2443,6 +3207,13 @@ class DcnmVrf:
         diff_attach.extend(diff_detach)
         diff_deploy.extend(diff_undeploy)
 
+        # Get the VRF spec to determine which properties should be included in diff
+        vrf_spec = self.get_vrf_spec()
+
+        msg = "vrf_spec for diff formatting: "
+        msg += f"{json.dumps(vrf_spec, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         for want_d in diff_create:
 
             msg = "want_d: "
@@ -2463,110 +3234,53 @@ class DcnmVrf:
             msg += f"{json.dumps(found_c, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            src = found_c["source"]
-            found_c.update({"vrf_name": found_c["vrfName"]})
-            found_c.update({"vrf_id": found_c["vrfId"]})
-            found_c.update({"vrf_template": found_c["vrfTemplate"]})
-            found_c.update({"vrf_extension_template": found_c["vrfExtensionTemplate"]})
-            del found_c["source"]
-            found_c.update({"source": src})
-            found_c.update({"service_vrf_template": found_c["serviceVrfTemplate"]})
-            found_c.update({"attach": []})
-
+            # Extract template configuration
             json_to_dict = json.loads(found_c["vrfTemplateConfig"])
-            found_c.update({"vrf_vlan_name": json_to_dict.get("vrfVlanName", "")})
-            found_c.update(
-                {"vrf_intf_desc": json_to_dict.get("vrfIntfDescription", "")}
-            )
-            found_c.update({"vrf_description": json_to_dict.get("vrfDescription", "")})
-            found_c.update({"vrf_int_mtu": json_to_dict.get("mtu", "")})
-            found_c.update({"loopback_route_tag": json_to_dict.get("tag", "")})
-            found_c.update({"redist_direct_rmap": json_to_dict.get("vrfRouteMap", "")})
-            found_c.update({"max_bgp_paths": json_to_dict.get("maxBgpPaths", "")})
-            found_c.update({"max_ibgp_paths": json_to_dict.get("maxIbgpPaths", "")})
-            found_c.update(
-                {"ipv6_linklocal_enable": json_to_dict.get("ipv6LinkLocalFlag", True)}
-            )
-            found_c.update({"trm_enable": json_to_dict.get("trmEnabled", False)})
-            found_c.update({"rp_external": json_to_dict.get("isRPExternal", False)})
-            found_c.update({"rp_address": json_to_dict.get("rpAddress", "")})
-            found_c.update({"rp_loopback_id": json_to_dict.get("loopbackNumber", "")})
-            found_c.update(
-                {"underlay_mcast_ip": json_to_dict.get("L3VniMcastGroup", "")}
-            )
-            found_c.update(
-                {"overlay_mcast_group": json_to_dict.get("multicastGroup", "")}
-            )
-            found_c.update(
-                {"trm_bgw_msite": json_to_dict.get("trmBGWMSiteEnabled", False)}
-            )
-            found_c.update(
-                {"adv_host_routes": json_to_dict.get("advertiseHostRouteFlag", False)}
-            )
-            found_c.update(
-                {
-                    "adv_default_routes": json_to_dict.get(
-                        "advertiseDefaultRouteFlag", True
-                    )
-                }
-            )
-            found_c.update(
-                {
-                    "static_default_route": json_to_dict.get(
-                        "configureStaticDefaultRouteFlag", True
-                    )
-                }
-            )
-            found_c.update({"bgp_password": json_to_dict.get("bgpPassword", "")})
-            found_c.update(
-                {"bgp_passwd_encrypt": json_to_dict.get("bgpPasswordKeyType", "")}
-            )
-            if self.dcnm_version > 11:
-                found_c.update({"no_rp": json_to_dict.get("isRPAbsent", False)})
-                found_c.update(
-                    {"netflow_enable": json_to_dict.get("ENABLE_NETFLOW", True)}
-                )
-                found_c.update({"nf_monitor": json_to_dict.get("NETFLOW_MONITOR", "")})
-                found_c.update(
-                    {"disable_rt_auto": json_to_dict.get("disableRtAuto", False)}
-                )
-                found_c.update(
-                    {"import_vpn_rt": json_to_dict.get("routeTargetImport", "")}
-                )
-                found_c.update(
-                    {"export_vpn_rt": json_to_dict.get("routeTargetExport", "")}
-                )
-                found_c.update(
-                    {"import_evpn_rt": json_to_dict.get("routeTargetImportEvpn", "")}
-                )
-                found_c.update(
-                    {"export_evpn_rt": json_to_dict.get("routeTargetExportEvpn", "")}
-                )
-                found_c.update(
-                    {"import_mvpn_rt": json_to_dict.get("routeTargetImportMvpn", "")}
-                )
-                found_c.update(
-                    {"export_mvpn_rt": json_to_dict.get("routeTargetExportMvpn", "")}
-                )
 
-            del found_c["fabric"]
-            del found_c["vrfName"]
-            del found_c["vrfId"]
-            del found_c["vrfTemplate"]
-            del found_c["vrfExtensionTemplate"]
-            del found_c["serviceVrfTemplate"]
-            del found_c["vrfTemplateConfig"]
+            # Initialize the output dict with basic required fields
+            src = found_c["source"]
+            formatted_vrf = {
+                "vrf_name": found_c["vrfName"],
+                "source": src,
+            }
 
-            msg = "found_c: POST_UPDATE: "
-            msg += f"{json.dumps(found_c, indent=4, sort_keys=True)}"
+            formatted_vrf.update({"attach": []})
+
+            # Get property mappings for both template and VRF object properties
+            template_mappings, vrf_object_mappings = self.get_property_mappings()
+
+            # Process each property defined in the VRF spec
+            for spec_key in vrf_spec.keys():
+                if spec_key in ["vrf_name", "attach", "deploy", "source"]:
+                    continue  # These are handled separately
+
+                # Handle template properties
+                if spec_key in template_mappings:
+                    template_key = template_mappings[spec_key]
+                    if template_key and template_key in json_to_dict:
+                        formatted_vrf[spec_key] = json_to_dict[template_key]
+                    elif "default" in vrf_spec[spec_key]:
+                        formatted_vrf[spec_key] = vrf_spec[spec_key]["default"]
+
+                # Handle VRF object properties
+                elif spec_key in vrf_object_mappings:
+                    vrf_key = vrf_object_mappings[spec_key]
+                    if vrf_key and vrf_key in found_c:
+                        formatted_vrf[spec_key] = found_c[vrf_key]
+                    elif "default" in vrf_spec[spec_key]:
+                        formatted_vrf[spec_key] = vrf_spec[spec_key]["default"]
+
+            msg = "formatted_vrf: POST_UPDATE: "
+            msg += f"{json.dumps(formatted_vrf, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            if diff_deploy and found_c["vrf_name"] in diff_deploy:
-                diff_deploy.remove(found_c["vrf_name"])
+            if diff_deploy and formatted_vrf["vrf_name"] in diff_deploy:
+                diff_deploy.remove(formatted_vrf["vrf_name"])
+
             if not found_a:
-                msg = "not found_a.  Appending found_c to diff."
+                msg = "not found_a.  Appending formatted_vrf to diff."
                 self.log.debug(msg)
-                diff.append(found_c)
+                diff.append(formatted_vrf)
                 continue
 
             attach = found_a["lanAttachList"]
@@ -2580,13 +3294,12 @@ class DcnmVrf:
                         break
                 attach_d.update({"vlan_id": a_w["vlan"]})
                 attach_d.update({"deploy": a_w["deployment"]})
-                found_c["attach"].append(attach_d)
+                formatted_vrf["attach"].append(attach_d)
 
-            msg = "Appending found_c to diff."
+            msg = "Appending formatted_vrf to diff."
             self.log.debug(msg)
 
-            diff.append(found_c)
-
+            diff.append(formatted_vrf)
             diff_attach.remove(found_a)
 
         for vrf in diff_attach:
@@ -2689,6 +3402,11 @@ class DcnmVrf:
                         if not vrf_attach_objects["DATA"]:
                             return
 
+                        if self.action_fabric_type == "multicluster_parent":
+                            vrf_attach_objects["DATA"] = sanitize_lan_attach_list(
+                                vrf_attach_objects.get("DATA")
+                            )
+
                         for vrf_attach in vrf_attach_objects["DATA"]:
                             if want_c["vrfName"] == vrf_attach["vrfName"]:
                                 if not vrf_attach.get("lanAttachList"):
@@ -2703,12 +3421,52 @@ class DcnmVrf:
                                     attach_copy.update(
                                         {"serialNumber": attach["switchSerialNo"]}
                                     )
-                                    lite_objects = self.get_vrf_lite_objects(
-                                        attach_copy
-                                    )
-                                    if not lite_objects.get("DATA"):
-                                        return
-                                    item["attach"].append(lite_objects.get("DATA")[0])
+
+                                    # Only call get_vrf_lite_objects() if VRF-Lite is configured
+                                    # in the playbook to avoid expensive API calls
+                                    use_minimal_attach = True
+                                    if self._has_vrf_lite_in_config(want_c["vrfName"]):
+                                        lite_objects = self.get_vrf_lite_objects(
+                                            attach_copy
+                                        )
+                                        # Check if DATA exists and is not empty
+                                        has_lite_data = (
+                                            lite_objects.get("DATA") is not None
+                                            and len(lite_objects.get("DATA", [])) > 0
+                                        )
+                                        if has_lite_data:
+                                            # VRF Lite extensions exist - use API response but ensure vlan field is correct
+                                            use_minimal_attach = False
+                                            lite_attach = lite_objects.get("DATA")[0]
+                                            # The vlan field should be the VRF's L3VNI vlan, not the dot1q
+                                            vlan_id = attach.get("vlanId")
+                                            vlan_str = str(vlan_id) if vlan_id is not None else ""
+                                            msg = f"Fixing vlan field in VRF lite attach for switch {attach['switchSerialNo']}: "
+                                            msg += f"vlanId={vlan_id}, setting vlan={vlan_str}"
+                                            self.log.debug(msg)
+                                            # Update vlan in all switchDetailsList entries
+                                            if lite_attach.get("switchDetailsList"):
+                                                for switch_detail in lite_attach["switchDetailsList"]:
+                                                    switch_detail["vlan"] = vlan_str
+                                            item["attach"].append(lite_attach)
+                                        else:
+                                            # No VRF Lite extensions found - will use minimal attach
+                                            msg = f"No VRF Lite extensions found for switch {attach['switchSerialNo']}"
+                                            self.log.debug(msg)
+
+                                    # Use minimal attach structure when:
+                                    # 1. VRF-Lite is not configured in playbook, OR
+                                    # 2. VRF-Lite is configured but no extensions exist on controller
+                                    if use_minimal_attach:
+                                        # Ensure extensionValues is set to empty string when no VRF Lite
+                                        attach["extensionValues"] = ""
+                                        minimal_attach = {
+                                            "fabric": self.fabric,
+                                            "vrfName": want_c["vrfName"],
+                                            "serialNumber": attach["switchSerialNo"],
+                                            "switchDetailsList": [attach]
+                                        }
+                                        item["attach"].append(minimal_attach)
                                 query.append(item)
 
         else:
@@ -2739,6 +3497,11 @@ class DcnmVrf:
                 if not vrf_attach_objects["DATA"]:
                     return
 
+                if self.action_fabric_type == "multicluster_parent":
+                    vrf_attach_objects["DATA"] = sanitize_lan_attach_list(
+                        vrf_attach_objects.get("DATA")
+                    )
+
                 for vrf_attach in vrf_attach_objects["DATA"]:
                     if not vrf_attach.get("lanAttachList"):
                         continue
@@ -2750,11 +3513,44 @@ class DcnmVrf:
                         attach_copy = copy.deepcopy(attach)
                         attach_copy.update({"fabric": self.fabric})
                         attach_copy.update({"serialNumber": attach["switchSerialNo"]})
+
+                        # Note: When querying without specific config (else branch),
+                        # we always call get_vrf_lite_objects() to provide complete
+                        # information in the query response, as the user expects to see
+                        # all VRF configuration including any VRF-Lite extensions present
+                        # on the controller.
                         lite_objects = self.get_vrf_lite_objects(attach_copy)
 
-                        if not lite_objects.get("DATA"):
-                            return
-                        item["attach"].append(lite_objects.get("DATA")[0])
+                        # Check if DATA exists and is not empty
+                        has_lite_data = (
+                            lite_objects.get("DATA") is not None
+                            and len(lite_objects.get("DATA", [])) > 0
+                        )
+                        if not has_lite_data:
+                            # No VRF Lite extensions exist - use minimal attach structure
+                            # Ensure extensionValues is set to empty string when no VRF Lite
+                            attach["extensionValues"] = ""
+                            minimal_attach = {
+                                "fabric": self.fabric,
+                                "vrfName": vrf["vrfName"],
+                                "serialNumber": attach["switchSerialNo"],
+                                "switchDetailsList": [attach]
+                            }
+                            item["attach"].append(minimal_attach)
+                        else:
+                            # VRF Lite extensions exist - use API response but ensure vlan field is correct
+                            lite_attach = lite_objects.get("DATA")[0]
+                            # The vlan field should be the VRF's L3VNI vlan, not the dot1q
+                            vlan_id = attach.get("vlanId")
+                            vlan_str = str(vlan_id) if vlan_id is not None else ""
+                            msg = f"Fixing vlan field in VRF lite attach for switch {attach['switchSerialNo']}: "
+                            msg += f"vlanId={vlan_id}, setting vlan={vlan_str}"
+                            self.log.debug(msg)
+                            # Update vlan in all switchDetailsList entries
+                            if lite_attach.get("switchDetailsList"):
+                                for switch_detail in lite_attach["switchDetailsList"]:
+                                    switch_detail["vlan"] = vlan_str
+                            item["attach"].append(lite_attach)
                     query.append(item)
 
         self.query = query
@@ -2765,6 +3561,7 @@ class DcnmVrf:
 
         Send diff_create_update to the controller
         """
+        method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
@@ -2778,6 +3575,24 @@ class DcnmVrf:
         if self.diff_create_update:
             for vrf in self.diff_create_update:
                 update_path = f"{path}/{vrf['vrfName']}"
+                # Check for VRF VLAN ID in the template
+                json_to_dict = json.loads(vrf["vrfTemplateConfig"])
+                vlan_id = json_to_dict.get("vrfVlanId", "0")
+                if vlan_id == 0:
+                    # Get the next available VLAN ID, vlan 0 shouldn't be pushed
+                    # to the controller
+                    vlan_path = self.paths["GET_VLAN"].format(self.fabric)
+                    vlan_data = dcnm_send(self.module, "GET", vlan_path)
+                    if vlan_data["RETURN_CODE"] != 200:
+                        msg = f"{self.class_name}.{method_name}: "
+                        msg += f"caller: {caller}, "
+                        msg += f"vrf_name: {vrf['vrfName']}. "
+                        msg += f"Failure getting autogenerated vlan_id {vlan_data}"
+                        self.module.fail_json(msg=msg)
+
+                    vlan_id = vlan_data["DATA"]
+                    json_to_dict.update({"vrfVlanId": vlan_id})
+                    vrf.update({"vrfTemplateConfig": json.dumps(json_to_dict)})
 
                 self.send_to_controller(
                     action,
@@ -2802,8 +3617,9 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_detach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_detach:
-            msg = "Early return. self.diff_detach is empty."
+        if not self.diff_detach or self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
+            msg = f"Early return. Fabric Type:{self.action_fabric_type}"
+            msg += f"diff_detach: {json.dumps(self.diff_detach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             return
 
@@ -2822,6 +3638,8 @@ class DcnmVrf:
         action = "attach"
         path = self.paths["GET_VRF"].format(self.fabric)
         detach_path = path + "/attachments"
+        if self.action_fabric_type == "multicluster_parent":
+            detach_path = detach_path + "?quick-Attach=true"
         verb = "POST"
 
         self.send_to_controller(
@@ -2847,21 +3665,28 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_undeploy, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_undeploy:
-            msg = "Early return. self.diff_undeploy is empty."
+        if not self.diff_undeploy or self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
+            msg = f"Early return. Fabric Type:{self.action_fabric_type}"
+            msg += f"diff_undeploy: {json.dumps(self.diff_undeploy, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             return
 
         action = "deploy"
         path = self.paths["GET_VRF"].format(self.fabric)
-        deploy_path = path + "/deployments"
         verb = "POST"
+        diff_undeploy = self.diff_undeploy
+
+        if self.action_fabric_type == "multicluster_parent":
+            deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
+            diff_undeploy = self.vrf_serial_payload_transform(self.diff_undeploy)
+        else:
+            deploy_path = path + "/deployments"
 
         self.send_to_controller(
             action,
             verb,
             deploy_path,
-            self.diff_undeploy,
+            diff_undeploy,
             log_response=True,
             is_rollback=is_rollback,
         )
@@ -2880,28 +3705,48 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_delete, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_delete:
-            msg = "Early return. self.diff_delete is None."
+        if not self.diff_delete or self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
+            msg = f"Early return. Fabric Type:{self.action_fabric_type}"
+            msg += f"diff_delete: {json.dumps(self.diff_delete, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             return
 
         action = "delete"
-        path = self.paths["GET_VRF"].format(self.fabric)
         verb = "DELETE"
 
         del_failure = ""
+        vrfs_to_delete = []
 
         self.wait_for_vrf_del_ready()
         for vrf, state in self.diff_delete.items():
             if state == "OUT-OF-SYNC":
                 del_failure += vrf + ","
                 continue
-            delete_path = f"{path}/{vrf}"
+            if self.action_fabric_type == "multicluster_parent" or self.dcnm_version < 12:
+                self.log.debug("Sending individual VRF delete request")
+                path = self.paths["GET_VRF"].format(self.fabric)
+                delete_path = f"{path}/{vrf}"
+                self.send_to_controller(
+                    action,
+                    verb,
+                    delete_path,
+                    None,
+                    log_response=True,
+                    is_rollback=is_rollback,
+                )
+            else:
+                vrfs_to_delete.append(vrf)
+
+        if self.action_fabric_type != "multicluster_parent" and vrfs_to_delete and self.dcnm_version >= 12:
+            self.log.debug("Sending Bulk VRF delete request")
+            # Build the bulk delete path with comma-separated VRF names
+            path = self.paths["GET_VRF_FAB"].format(self.fabric)
+            delete_path = f"{path}/bulk-delete/vrfs?vrf-names={','.join(vrfs_to_delete)}"
             self.send_to_controller(
                 action,
                 verb,
                 delete_path,
-                self.diff_delete,
+                None,  # Bulk delete uses query params, not payload
                 log_response=True,
                 is_rollback=is_rollback,
             )
@@ -2927,10 +3772,15 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_create, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+        payload_list = []
+
         if not self.diff_create:
             msg = "Early return. self.diff_create is empty."
             self.log.debug(msg)
             return
+
+        action = "create"
+        verb = "POST"
 
         for vrf in self.diff_create:
             json_to_dict = json.loads(vrf["vrfTemplateConfig"])
@@ -2961,9 +3811,11 @@ class DcnmVrf:
                 "mtu": json_to_dict.get("mtu"),
                 "tag": json_to_dict.get("tag"),
                 "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
+                "v6VrfRouteMap": json_to_dict.get("v6VrfRouteMap"),
                 "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
                 "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
                 "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
+                "enableL3VniNoVlan": json_to_dict.get("enableL3VniNoVlan"),
                 "trmEnabled": json_to_dict.get("trmEnabled"),
                 "isRPExternal": json_to_dict.get("isRPExternal"),
                 "rpAddress": json_to_dict.get("rpAddress"),
@@ -3004,14 +3856,22 @@ class DcnmVrf:
 
             vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
 
-            msg = "Sending vrf create request."
+            if self.action_fabric_type == "multicluster_parent" or self.dcnm_version < 12:
+                msg = "Sending vrf create request."
+                self.log.debug(msg)
+                path = self.paths["GET_VRF"].format(self.fabric)
+                payload = copy.deepcopy(vrf)
+                self.send_to_controller(
+                    action, verb, path, payload, log_response=True, is_rollback=is_rollback
+                )
+            else:
+                payload_list.append(vrf)
+
+        if self.action_fabric_type != "multicluster_parent" and self.dcnm_version >= 12:
+            msg = "Sending bulk vrf create request."
             self.log.debug(msg)
-
-            action = "create"
-            verb = "POST"
-            path = self.paths["GET_VRF"].format(self.fabric)
-            payload = copy.deepcopy(vrf)
-
+            path = self.paths["GET_VRF_BULK"]
+            payload = copy.deepcopy(payload_list)
             self.send_to_controller(
                 action, verb, path, payload, log_response=True, is_rollback=is_rollback
             )
@@ -3068,6 +3928,54 @@ class DcnmVrf:
         self.log.debug(msg)
 
         return extension_values_list
+
+    def get_vrf_lite_dot1q_id(self, serial_number: str, vrf_name: str, interface: str) -> int:
+        """
+        # Summary
+
+        Given a switch serial, vrf name and ifname, return the dot1q ID
+        reserved for the vrf_lite extension on that switch.
+
+        ## Raises
+
+        Calls fail_json if DNCM fails to reserve the dot1q ID.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"serial_number: {serial_number}"
+        msg += f"vrf name: {vrf_name}"
+        msg += f"interface: {interface}"
+        self.log.debug(msg)
+
+        dot1q_id = None
+        # Reserve ID present in DCNM API paths
+        path = self.paths["RESERVE_ID"]
+        verb = "POST"
+        payload = {"scopeType": "DeviceInterface",
+                   "usageType": "TOP_DOWN_L3_DOT1Q",
+                   "serialNumber": serial_number,
+                   "ifName": interface,
+                   "allocatedTo": vrf_name}
+
+        resp = dcnm_send(self.module, verb, path, json.dumps(payload))
+        if resp.get("RETURN_CODE") != 200:
+            msg = f"{self.class_name}.get_vrf_lite_dot1q_id: "
+            msg += f"caller: {caller}. "
+            msg += "Failed to get dot1q ID for vrf_lite extension on switch "
+            msg += f"{serial_number} for vrf {vrf_name} and interface {interface}. "
+            msg += f"Response: {resp}"
+            self.module.fail_json(msg=msg)
+        else:
+            msg = f"{self.class_name}.get_vrf_lite_dot1q_id: "
+            msg += f"caller: {caller}. "
+            msg += "Successfully got dot1q ID for vrf_lite extension on switch "
+            msg += f"{serial_number} for vrf {vrf_name} and interface {interface}. "
+            msg += f"Response: {resp}"
+            self.log.debug(msg)
+            dot1q_id = resp.get("DATA")
+            return dot1q_id
 
     def update_vrf_attach_vrf_lite_extensions(self, vrf_attach, lite) -> dict:
         """
@@ -3127,7 +4035,8 @@ class DcnmVrf:
         self.log.debug(msg)
 
         ext_values = self.get_extension_values_from_lite_objects(lite)
-        if ext_values is None:
+        # ext_values now accepts None, empty list, empty string, empty dict etc
+        if not ext_values:
             ip_address = self.serial_number_to_ip(serial_number)
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
@@ -3199,7 +4108,20 @@ class DcnmVrf:
             if item["user"]["dot1q"]:
                 nbr_dict["DOT1Q_ID"] = str(item["user"]["dot1q"])
             else:
-                nbr_dict["DOT1Q_ID"] = str(item["switch"]["DOT1Q_ID"])
+                dot1q_vlan = self.get_vrf_lite_dot1q_id(
+                    serial_number,
+                    vrf_attach.get("vrfName"),
+                    nbr_dict["IF_NAME"]
+                )
+                if dot1q_vlan is not None:
+                    nbr_dict["DOT1Q_ID"] = str(dot1q_vlan)
+                else:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"caller: {caller}. "
+                    msg += "Failed to get dot1q ID for vrf_lite extension "
+                    msg += f"on switch {serial_number} for vrf {vrf_attach.get('vrfName')} "
+                    msg += f"and interface {nbr_dict['IF_NAME']}"
+                    self.module.fail_json(msg=msg)
 
             if item["user"]["ipv4_addr"]:
                 nbr_dict["IP_MASK"] = item["user"]["ipv4_addr"]
@@ -3245,9 +4167,9 @@ class DcnmVrf:
             ms_con["MULTISITE_CONN"] = []
             extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
 
-            extension_values["VRF_LITE_CONN"] = json.dumps(
-                extension_values["VRF_LITE_CONN"]
-            )
+        extension_values["VRF_LITE_CONN"] = json.dumps(
+            extension_values["VRF_LITE_CONN"]
+        )
         vrf_attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
         if vrf_attach.get("vrf_lite") is not None:
             del vrf_attach["vrf_lite"]
@@ -3457,9 +4379,9 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_attach:
-            msg = "Early return. self.diff_attach is empty. "
-            msg += f"{json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
+        if not self.diff_attach or self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
+            msg = f"Early return. Fabric Type:{self.action_fabric_type}"
+            msg += f"diff_attach: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             return
 
@@ -3565,6 +4487,8 @@ class DcnmVrf:
         verb = "POST"
         path = self.paths["GET_VRF"].format(self.fabric)
         attach_path = path + "/attachments"
+        if self.action_fabric_type == "multicluster_parent":
+            attach_path = attach_path + "?quick-Attach=true"
 
         self.send_to_controller(
             action,
@@ -3574,6 +4498,49 @@ class DcnmVrf:
             log_response=True,
             is_rollback=is_rollback,
         )
+
+    def vrf_serial_payload_transform(self, payload: dict) -> dict:
+        """
+        # Summary
+
+        Transform vrf_deploy payload for multicluster_parent fabric type.
+
+        ## Description
+
+        The multicluster_parent fabric type requires a different
+        payload format for vrf_deploy operations.  This method
+        transforms the standard payload into the required format.
+
+        Returns a dictionary mapping serial numbers to comma-separated VRF names.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        new_payload = {}
+        vrf_to_serial_attach = self.vrf_sn_attach_map
+        payload_list = payload["vrfNames"].split(",")
+
+        for vrf in payload_list:
+            # vrf_sn_attach_map stores sets of serial numbers per VRF
+            vrf_serial_set = vrf_to_serial_attach.get(vrf, set())
+
+            for serial in vrf_serial_set:
+                if serial not in new_payload:
+                    new_payload[serial] = []
+                new_payload[serial].append(vrf)
+
+        # Convert lists to comma-separated strings
+        for serial, vrf_list in new_payload.items():
+            new_payload[serial] = ','.join(vrf_list)
+
+        msg = "Returning new_payload: "
+        msg += f"{json.dumps(new_payload, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        return new_payload
 
     def push_diff_deploy(self, is_rollback=False):
         """
@@ -3588,25 +4555,36 @@ class DcnmVrf:
         self.log.debug(msg)
 
         if not self.diff_deploy:
-            msg = "Early return. self.diff_deploy is empty."
+            msg = f"Early return. Fabric Type:{self.action_fabric_type}"
+            msg += f"diff_deploy: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             return
 
         action = "deploy"
         verb = "POST"
         path = self.paths["GET_VRF"].format(self.fabric)
-        deploy_path = path + "/deployments"
+        diff_deploy = self.diff_deploy
+
+        if self.action_fabric_type == "multicluster_parent":
+            deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
+            diff_deploy = self.vrf_serial_payload_transform(diff_deploy)
+        else:
+            deploy_path = path + "/deployments"
+
+        if self.action_fabric_type == "multicluster_parent" or self.action_fabric_type == "multisite_parent":
+            self.deploy_payload = diff_deploy
+            return
 
         self.send_to_controller(
             action,
             verb,
             deploy_path,
-            self.diff_deploy,
+            diff_deploy,
             log_response=True,
             is_rollback=is_rollback,
         )
 
-    def release_resources_by_id(self, id_list=None):
+    def release_resources_by_id(self, id_list=None, cluster=None):
         """
         # Summary
 
@@ -3655,13 +4633,14 @@ class DcnmVrf:
             self.log.debug(msg)
 
             action = "deploy"
-            path = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
-            path += "/rest/resource-manager/resources"
-            path += f"?id={','.join(item)}"
+            if self.action_fabric_type == "multicluster_parent":
+                path = self.resource_paths["RELEASE_RESOURCES"].format(cluster, ','.join(item))
+            else:
+                path = self.resource_paths["RELEASE_RESOURCES"].format(','.join(item))
             verb = "DELETE"
             self.send_to_controller(action, verb, path, None, log_response=False)
 
-    def release_orphaned_resources(self, vrf, is_rollback=False):
+    def release_orphaned_resources(self, vrf_del_list, fabric, cluster=None, is_rollback=False):
         """
         # Summary
 
@@ -3677,6 +4656,8 @@ class DcnmVrf:
         - allocatedFlag is False
         - entityName == vrf
         - fabricName == self.fabric
+        - switchName is not None
+        - ipAddress is not None
 
         ```json
         [
@@ -3708,37 +4689,105 @@ class DcnmVrf:
         """
         self.log.debug("ENTERED")
 
-        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/"
-        path += f"resource-manager/fabric/{self.fabric}/"
-        path += "pools/TOP_DOWN_VRF_VLAN"
-        resp = dcnm_send(self.module, "GET", path)
-        self.result["response"].append(resp)
-        fail, self.result["changed"] = self.handle_response(resp, "deploy")
-        if fail:
-            if is_rollback:
-                self.failed_to_rollback = True
-                return
-            self.failure(resp)
+        if cluster is not None:
+            path = self.resource_paths["GET_RESOURCE"].format(cluster, fabric)
+        else:
+            path = self.resource_paths["GET_RESOURCE"].format(fabric)
 
-        delete_ids = []
-        for item in resp["DATA"]:
-            if "entityName" not in item:
-                continue
-            if item["entityName"] != vrf:
-                continue
-            if item.get("allocatedFlag") is not False:
-                continue
-            if item.get("id") is None:
-                continue
-
-            msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
+        resource_pool = ["TOP_DOWN_VRF_VLAN", "TOP_DOWN_L3_DOT1Q"]
+        for pool in resource_pool:
+            msg = f"Processing orphaned resources in pool:{pool}"
             self.log.debug(msg)
+            req_path = path + f"pools/{pool}"
+            resp = dcnm_send(self.module, "GET", req_path)
+            fail, self.result["changed"] = self.handle_response(resp, "deploy")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
 
-            delete_ids.append(item["id"])
+            delete_ids = []
+            if resp.get("DATA"):
+                for item in resp["DATA"]:
+                    if "entityName" not in item:
+                        continue
+                    if item["entityName"] not in vrf_del_list:
+                        continue
+                    if item.get("allocatedFlag") is not False:
+                        continue
+                    if item.get("id") is None:
+                        continue
+                    # Resources with no ipAddress or switchName
+                    # are invalid and of Fabric's scope and
+                    # should not be attempted to be deleted here.
+                    if not item.get("ipAddress"):
+                        continue
+                    if not item.get("switchName"):
+                        continue
 
-        if len(delete_ids) == 0:
-            return
-        self.release_resources_by_id(delete_ids)
+                    msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
+                    self.log.debug(msg)
+
+                    delete_ids.append(item["id"])
+
+            if len(delete_ids) != 0:
+                msg = f"Releasing orphaned resources with IDs:{delete_ids}"
+                self.log.debug(msg)
+                self.release_resources_by_id(delete_ids, cluster)
+
+    def release_resource_invoker(self, vrf_del_list, is_rollback=False):
+        """
+        # Summary
+
+        Invoker method to release orphaned resources.
+
+        ## params
+
+        -   `vrf_del_list`: List of VRF names that were deleted.
+        -   `is_rollback`: If True, attempt to rollback on failure
+        """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"vrf_del_list: {vrf_del_list}"
+        self.log.debug(msg)
+
+        cluster = None
+
+        if self.action_fabric_type == "multicluster_parent":
+            for fabric_details in self.fabric_members:
+                fabric = fabric_details.get("fabricName")
+                cluster = fabric_details.get("clusterName")
+                msg = f"Releasing orphaned resources in fabric:{fabric}, cluster:{cluster}"
+                self.log.debug(msg)
+                self.release_orphaned_resources(
+                    vrf_del_list,
+                    fabric,
+                    cluster,
+                    is_rollback
+                )
+        elif self.action_fabric_type == "multisite_parent":
+            for fabric_details in self.fabric_members:
+                fabric = fabric_details.get("fabricName")
+                msg = f"Releasing orphaned resources in fabric:{fabric}"
+                self.log.debug(msg)
+                self.release_orphaned_resources(
+                    vrf_del_list,
+                    fabric,
+                    cluster,
+                    is_rollback
+                )
+        else:
+            fabric = self.fabric
+            msg = f"Releasing orphaned resources in fabric:{fabric}"
+            self.log.debug(msg)
+            self.release_orphaned_resources(
+                vrf_del_list,
+                fabric,
+                cluster,
+                is_rollback
+            )
 
     def push_to_remote(self, is_rollback=False):
         """
@@ -3758,6 +4807,19 @@ class DcnmVrf:
         # attachment being deleted is re-used on a new vrf attachment being
         # created. This is needed specially for state: overridden
 
+        for vrf_name in self.diff_delete:
+            path = self.paths["GET_NET_VRF"].format(self.fabric, vrf_name)
+            resp = dcnm_send(self.module, "GET", path)
+            if resp.get("DATA") is None:
+                msg = f"Invalid Response from Controller. {resp}"
+                self.module.fail_json(msg=msg)
+            elif resp["DATA"] != []:
+                msg = f"{vrf_name} in fabric: {self.fabric} has associated network attachments. "
+                self.log.debug("%s. Number of networks: %d", msg, len(resp['DATA']))
+                msg += "Please remove the network attachments "
+                msg += "before deleting the VRF. (maybe using dcnm_network module)"
+                self.module.fail_json(msg=msg)
+
         self.push_diff_detach(is_rollback)
         self.push_diff_undeploy(is_rollback)
 
@@ -3765,8 +4827,14 @@ class DcnmVrf:
         self.log.debug(msg)
 
         self.push_diff_delete(is_rollback)
+
+        vrf_del_list = []
         for vrf_name in self.diff_delete:
-            self.release_orphaned_resources(vrf_name, is_rollback)
+            vrf_del_list.append(vrf_name)
+        if vrf_del_list:
+            msg += f"VRF(s) to be deleted: {vrf_del_list}."
+            self.log.debug(msg)
+            self.release_resource_invoker(vrf_del_list, is_rollback)
 
         self.push_diff_create(is_rollback)
         self.push_diff_attach(is_rollback)
@@ -3791,7 +4859,7 @@ class DcnmVrf:
         for vrf in self.diff_delete:
             ok_to_delete = False
             path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
-
+            retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
             while not ok_to_delete:
                 resp = dcnm_send(self.module, "GET", path)
                 ok_to_delete = True
@@ -3799,7 +4867,15 @@ class DcnmVrf:
                     time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
                     continue
 
-                attach_list = resp["DATA"][0]["lanAttachList"]
+                if self.action_fabric_type == "multicluster_parent":
+                    # Sanitize the lanAttachList entries
+                    sanitized_data = sanitize_lan_attach_list(
+                        resp["DATA"]
+                    )
+                    attach_list = sanitized_data[0]["lanAttachList"]
+                else:
+                    attach_list = resp["DATA"][0]["lanAttachList"]
+
                 msg = f"ok_to_delete: {ok_to_delete}, "
                 msg += f"attach_list: {json.dumps(attach_list, indent=4)}"
                 self.log.debug(msg)
@@ -3811,31 +4887,18 @@ class DcnmVrf:
                     ):
                         self.diff_delete.update({vrf: "OUT-OF-SYNC"})
                         break
-                    if (
-                        attach["lanAttachState"] == "DEPLOYED"
-                        and attach["isLanAttached"] is True
-                    ):
-                        vrf_name = attach.get("vrfName", "unknown")
-                        fabric_name = attach.get("fabricName", "unknown")
-                        switch_ip = attach.get("ipAddress", "unknown")
-                        switch_name = attach.get("switchName", "unknown")
-                        vlan_id = attach.get("vlanId", "unknown")
-                        msg = f"Network attachments associated with vrf {vrf_name} "
-                        msg += "must be removed (e.g. using the dcnm_network module) "
-                        msg += "prior to deleting the vrf. "
-                        msg += f"Details: fabric_name: {fabric_name}, "
-                        msg += f"vrf_name: {vrf_name}. "
-                        msg += "Network attachments found on "
-                        msg += f"switch_ip: {switch_ip}, "
-                        msg += f"switch_name: {switch_name}, "
-                        msg += f"vlan_id: {vlan_id}"
-                        self.module.fail_json(msg=msg)
                     if attach["lanAttachState"] != "NA":
                         time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
                         self.diff_delete.update({vrf: "DEPLOYED"})
                         ok_to_delete = False
                         break
                     self.diff_delete.update({vrf: "NA"})
+                if retry_count <= 0:
+                    msg = "Timeout waiting for VRF to be ready for deletion. "
+                    msg += f"vrf: {vrf}, "
+                    msg += f"resp: {resp}"
+                    self.module.fail_json(msg=msg)
+                retry_count -= 1
 
     def attach_spec(self):
         """
@@ -3877,95 +4940,272 @@ class DcnmVrf:
 
         return copy.deepcopy(spec)
 
-    def vrf_spec(self):
-        """
-        # Summary
-
-        Return the argument spec for VRF parameters
-        """
-        spec = {}
-        spec["adv_default_routes"] = {"default": True, "type": "bool"}
-        spec["adv_host_routes"] = {"default": False, "type": "bool"}
-
-        spec["attach"] = {"type": "list"}
-        spec["bgp_password"] = {"default": "", "type": "str"}
-        spec["bgp_passwd_encrypt"] = {"choices": [3, 7], "default": 3, "type": "int"}
-        spec["disable_rt_auto"] = {"default": False, "type": "bool"}
-
-        spec["export_evpn_rt"] = {"default": "", "type": "str"}
-        spec["export_mvpn_rt"] = {"default": "", "type": "str"}
-        spec["export_vpn_rt"] = {"default": "", "type": "str"}
-
-        spec["import_evpn_rt"] = {"default": "", "type": "str"}
-        spec["import_mvpn_rt"] = {"default": "", "type": "str"}
-        spec["import_vpn_rt"] = {"default": "", "type": "str"}
-
-        spec["ipv6_linklocal_enable"] = {"default": True, "type": "bool"}
-
-        spec["loopback_route_tag"] = {
-            "default": 12345,
-            "range_max": 4294967295,
-            "type": "int",
+    def get_vrf_spec(self):
+        """Return VRF spec based on fabric type and hierarchy"""
+        base_spec = {
+            "vrf_name": {"length_max": 32, "required": True, "type": "str"},
+            "attach": {"type": "list"},
         }
-        spec["max_bgp_paths"] = {
-            "default": 1,
-            "range_max": 64,
-            "range_min": 1,
-            "type": "int",
-        }
-        spec["max_ibgp_paths"] = {
-            "default": 2,
-            "range_max": 64,
-            "range_min": 1,
-            "type": "int",
-        }
-        spec["netflow_enable"] = {"default": False, "type": "bool"}
-        spec["nf_monitor"] = {"default": "", "type": "str"}
 
-        spec["no_rp"] = {"default": False, "type": "bool"}
-        spec["overlay_mcast_group"] = {"default": "", "type": "str"}
-
-        spec["redist_direct_rmap"] = {
-            "default": "FABRIC-RMAP-REDIST-SUBNET",
-            "type": "str",
-        }
-        spec["rp_address"] = {"default": "", "type": "str"}
-        spec["rp_external"] = {"default": False, "type": "bool"}
-        spec["rp_loopback_id"] = {"default": "", "range_max": 1023, "type": "int"}
-
-        spec["service_vrf_template"] = {"default": None, "type": "str"}
-        spec["source"] = {"default": None, "type": "str"}
-        spec["static_default_route"] = {"default": True, "type": "bool"}
-
-        spec["trm_bgw_msite"] = {"default": False, "type": "bool"}
-        spec["trm_enable"] = {"default": False, "type": "bool"}
-
-        spec["underlay_mcast_ip"] = {"default": "", "type": "str"}
-
-        spec["vlan_id"] = {"range_max": 4094, "type": "int"}
-        spec["vrf_description"] = {"default": "", "type": "str"}
-        spec["vrf_id"] = {"range_max": 16777214, "type": "int"}
-        spec["vrf_intf_desc"] = {"default": "", "type": "str"}
-        spec["vrf_int_mtu"] = {
-            "default": 9216,
-            "range_max": 9216,
-            "range_min": 68,
-            "type": "int",
-        }
-        spec["vrf_name"] = {"length_max": 32, "required": True, "type": "str"}
-        spec["vrf_template"] = {"default": "Default_VRF_Universal", "type": "str"}
-        spec["vrf_extension_template"] = {
-            "default": "Default_VRF_Extension_Universal",
-            "type": "str",
-        }
-        spec["vrf_vlan_name"] = {"default": "", "type": "str"}
-
+        # Add deploy spec based on state
         if self.state in ("merged", "overridden", "replaced"):
-            spec["deploy"] = {"default": True, "type": "bool"}
+            base_spec["deploy"] = {"default": True, "type": "bool"}
         else:
-            spec["deploy"] = {"type": "bool"}
+            base_spec["deploy"] = {"type": "bool"}
 
-        return copy.deepcopy(spec)
+        # Add specs based on fabric type
+        if self.action_fabric_type == 'multisite_parent' or self.action_fabric_type == 'multicluster_parent':
+            base_spec.update(self.get_parent_msd_specs())
+        elif self.action_fabric_type == 'multisite_child' or self.action_fabric_type == 'multicluster_child':
+            base_spec.update(self.get_child_msd_specs())
+        else:  # standalone
+            base_spec.update(self.get_standalone_specs())
+
+        return base_spec
+
+    def get_parent_msd_specs(self):
+        """Return Parent MSD specific VRF parameters"""
+        spec = {
+            "vrf_id": {"range_max": 16777214, "type": "int"},
+            "vlan_id": {"range_max": 4094, "type": "int"},
+            "vrf_template": {"default": "Default_VRF_Universal", "type": "str"},
+            "vrf_extension_template": {
+                "default": "Default_VRF_Extension_Universal",
+                "type": "str",
+            },
+            "vrf_vlan_name": {"default": "", "type": "str"},
+            "vrf_intf_desc": {"default": "", "type": "str"},
+            "vrf_description": {"default": "", "type": "str"},
+            "vrf_int_mtu": {
+                "default": 9216,
+                "range_max": 9216,
+                "range_min": 68,
+                "type": "int",
+            },
+            "loopback_route_tag": {
+                "default": 12345,
+                "range_max": 4294967295,
+                "type": "int",
+            },
+            "redist_direct_rmap": {
+                "default": "FABRIC-RMAP-REDIST-SUBNET",
+                "type": "str",
+            },
+            "v6_redist_direct_rmap": {
+                "default": "FABRIC-RMAP-REDIST-SUBNET",
+                "type": "str",
+            },
+            "max_bgp_paths": {
+                "default": 1,
+                "range_max": 64,
+                "range_min": 1,
+                "type": "int",
+            },
+            "max_ibgp_paths": {
+                "default": 2,
+                "range_max": 64,
+                "range_min": 1,
+                "type": "int",
+            },
+            "ipv6_linklocal_enable": {"default": True, "type": "bool"},
+            "disable_rt_auto": {"default": False, "type": "bool"},
+            "import_vpn_rt": {"default": "", "type": "str"},
+            "export_vpn_rt": {"default": "", "type": "str"},
+            "import_evpn_rt": {"default": "", "type": "str"},
+            "export_evpn_rt": {"default": "", "type": "str"},
+            "service_vrf_template": {"default": None, "type": "str"},
+            "source": {"default": None, "type": "str"},
+        }
+        return spec
+
+    def get_child_msd_specs(self):
+        """Return Child MSD specific VRF parameters"""
+        spec = {
+            "l3vni_wo_vlan": {"default": self.fabric_l3vni_wo_vlan, "type": "bool"},
+            "adv_default_routes": {"default": True, "type": "bool"},
+            "adv_host_routes": {"default": False, "type": "bool"},
+            "static_default_route": {"default": True, "type": "bool"},
+            "bgp_password": {"default": "", "type": "str"},
+            "bgp_passwd_encrypt": {"choices": [3, 7], "default": 3, "type": "int"},
+            "netflow_enable": {"default": False, "type": "bool"},
+            "nf_monitor": {"default": "", "type": "str"},
+            "trm_enable": {"default": False, "type": "bool"},
+            "no_rp": {"default": False, "type": "bool"},
+            "rp_address": {"default": "", "type": "str"},
+            "rp_external": {"default": False, "type": "bool"},
+            "rp_loopback_id": {"default": "", "range_max": 1023, "type": "int"},
+            "underlay_mcast_ip": {"default": "", "type": "str"},
+            "overlay_mcast_group": {"default": "", "type": "str"},
+            "trm_bgw_msite": {"default": False, "type": "bool"},
+            "import_mvpn_rt": {"default": "", "type": "str"},
+            "export_mvpn_rt": {"default": "", "type": "str"},
+        }
+        return spec
+
+    def get_standalone_specs(self):
+        """Return standalone (non-MSD) VRF parameters"""
+        spec = {
+            "adv_default_routes": {"default": True, "type": "bool"},
+            "adv_host_routes": {"default": False, "type": "bool"},
+            "bgp_password": {"default": "", "type": "str"},
+            "bgp_passwd_encrypt": {"choices": [3, 7], "default": 3, "type": "int"},
+            "disable_rt_auto": {"default": False, "type": "bool"},
+            "export_evpn_rt": {"default": "", "type": "str"},
+            "export_mvpn_rt": {"default": "", "type": "str"},
+            "export_vpn_rt": {"default": "", "type": "str"},
+            "import_evpn_rt": {"default": "", "type": "str"},
+            "import_mvpn_rt": {"default": "", "type": "str"},
+            "import_vpn_rt": {"default": "", "type": "str"},
+            "ipv6_linklocal_enable": {"default": True, "type": "bool"},
+            "l3vni_wo_vlan": {"default": self.fabric_l3vni_wo_vlan, "type": "bool"},
+            "loopback_route_tag": {
+                "default": 12345,
+                "range_max": 4294967295,
+                "type": "int",
+            },
+            "max_bgp_paths": {
+                "default": 1,
+                "range_max": 64,
+                "range_min": 1,
+                "type": "int",
+            },
+            "max_ibgp_paths": {
+                "default": 2,
+                "range_max": 64,
+                "range_min": 1,
+                "type": "int",
+            },
+            "netflow_enable": {"default": False, "type": "bool"},
+            "nf_monitor": {"default": "", "type": "str"},
+            "no_rp": {"default": False, "type": "bool"},
+            "overlay_mcast_group": {"default": "", "type": "str"},
+            "redist_direct_rmap": {
+                "default": "FABRIC-RMAP-REDIST-SUBNET",
+                "type": "str",
+            },
+            "v6_redist_direct_rmap": {
+                "default": "FABRIC-RMAP-REDIST-SUBNET",
+                "type": "str",
+            },
+            "rp_address": {"default": "", "type": "str"},
+            "rp_external": {"default": False, "type": "bool"},
+            "rp_loopback_id": {"default": "", "range_max": 1023, "type": "int"},
+            "service_vrf_template": {"default": None, "type": "str"},
+            "source": {"default": None, "type": "str"},
+            "static_default_route": {"default": True, "type": "bool"},
+            "trm_bgw_msite": {"default": False, "type": "bool"},
+            "trm_enable": {"default": False, "type": "bool"},
+            "underlay_mcast_ip": {"default": "", "type": "str"},
+            "vlan_id": {"range_max": 4094, "type": "int"},
+            "vrf_description": {"default": "", "type": "str"},
+            "vrf_id": {"range_max": 16777214, "type": "int"},
+            "vrf_intf_desc": {"default": "", "type": "str"},
+            "vrf_int_mtu": {
+                "default": 9216,
+                "range_max": 9216,
+                "range_min": 68,
+                "type": "int",
+            },
+            "vrf_template": {"default": "Default_VRF_Universal", "type": "str"},
+            "vrf_extension_template": {
+                "default": "Default_VRF_Extension_Universal",
+                "type": "str",
+            },
+            "vrf_vlan_name": {"default": "", "type": "str"},
+        }
+        return spec
+
+    def get_template_skip_keys(self):
+        """Return template configuration keys to skip comparison based on fabric type"""
+
+        if self.action_fabric_type == "multisite_parent" or self.action_fabric_type == "multicluster_parent":
+            return self.get_child_msd_template_keys()
+        elif self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
+            return self.get_parent_msd_template_keys()
+        else:  # standalone
+            return None
+
+    def get_parent_msd_template_keys(self):
+        """Return Parent MSD template configuration keys for comparison"""
+        return [
+            "vrfName", "vrfVlanName", "vrfIntfDescription",
+            "vrfDescription", "mtu", "tag", "vrfRouteMap", "v6VrfRouteMap",
+            "maxBgpPaths", "maxIbgpPaths", "ipv6LinkLocalFlag",
+            "disableRtAuto", "routeTargetImport", "routeTargetExport",
+            "routeTargetImportEvpn", "routeTargetExportEvpn"
+        ]
+
+    def get_child_msd_template_keys(self):
+        """Return Child MSD template configuration keys for comparison"""
+        return [
+            "enableL3VniNoVlan", "advertiseDefaultRouteFlag",
+            "advertiseHostRouteFlag", "configureStaticDefaultRouteFlag", "bgpPassword",
+            "bgpPasswordKeyType", "ENABLE_NETFLOW", "NETFLOW_MONITOR", "trmEnabled",
+            "isRPAbsent", "rpAddress", "isRPExternal", "loopbackNumber",
+            "L3VniMcastGroup", "multicastGroup", "trmBGWMSiteEnabled",
+            "routeTargetImportMvpn", "routeTargetExportMvpn"
+        ]
+
+    def get_property_mappings(self):
+        """
+        Return mappings for both template and VRF object properties.
+
+        Returns:
+            tuple: (template_mappings, vrf_object_mappings)
+        """
+        # Base properties available in all NDFC versions
+        template_mappings = {
+            "vrf_id": "vrfSegmentId",
+            "vlan_id": "vrfVlanId",
+            "vrf_vlan_name": "vrfVlanName",
+            "vrf_intf_desc": "vrfIntfDescription",
+            "vrf_description": "vrfDescription",
+            "vrf_int_mtu": "mtu",
+            "loopback_route_tag": "tag",
+            "redist_direct_rmap": "vrfRouteMap",
+            "v6_redist_direct_rmap": "v6VrfRouteMap",
+            "max_bgp_paths": "maxBgpPaths",
+            "max_ibgp_paths": "maxIbgpPaths",
+            "ipv6_linklocal_enable": "ipv6LinkLocalFlag",
+            "l3vni_wo_vlan": "enableL3VniNoVlan",
+            "trm_enable": "trmEnabled",
+            "rp_external": "isRPExternal",
+            "rp_address": "rpAddress",
+            "rp_loopback_id": "loopbackNumber",
+            "underlay_mcast_ip": "L3VniMcastGroup",
+            "overlay_mcast_group": "multicastGroup",
+            "trm_bgw_msite": "trmBGWMSiteEnabled",
+            "adv_host_routes": "advertiseHostRouteFlag",
+            "adv_default_routes": "advertiseDefaultRouteFlag",
+            "static_default_route": "configureStaticDefaultRouteFlag",
+            "bgp_password": "bgpPassword",
+            "bgp_passwd_encrypt": "bgpPasswordKeyType",
+        }
+
+        # Add ND version 12+ specific properties
+        if self.dcnm_version > 11:
+            dcnm_12_mappings = {
+                "no_rp": "isRPAbsent",
+                "netflow_enable": "ENABLE_NETFLOW",
+                "nf_monitor": "NETFLOW_MONITOR",
+                "disable_rt_auto": "disableRtAuto",
+                "import_vpn_rt": "routeTargetImport",
+                "export_vpn_rt": "routeTargetExport",
+                "import_evpn_rt": "routeTargetImportEvpn",
+                "export_evpn_rt": "routeTargetExportEvpn",
+                "import_mvpn_rt": "routeTargetImportMvpn",
+                "export_mvpn_rt": "routeTargetExportMvpn",
+            }
+            template_mappings.update(dcnm_12_mappings)
+
+        # VRF object properties (same for all versions)
+        vrf_object_mappings = {
+            "vrf_template": "vrfTemplate",
+            "vrf_extension_template": "vrfExtensionTemplate",
+            "service_vrf_template": "serviceVrfTemplate",
+        }
+
+        return template_mappings, vrf_object_mappings
 
     def validate_input(self):
         """Parse the playbook values, validate to param specs."""
@@ -3974,7 +5214,7 @@ class DcnmVrf:
 
         attach_spec = self.attach_spec()
         lite_spec = self.lite_spec()
-        vrf_spec = self.vrf_spec()
+        vrf_spec = self.get_vrf_spec()
 
         msg = "attach_spec: "
         msg += f"{json.dumps(attach_spec, indent=4, sort_keys=True)}"
@@ -4001,6 +5241,9 @@ class DcnmVrf:
                     vrf["source"] = None
                     if not vrf.get("service_vrf_template"):
                         vrf["service_vrf_template"] = None
+
+                    if "deploy" not in vrf:
+                        vrf["deploy"] = True
 
                     if "vrf_name" not in vrf:
                         fail_msg_list.append(
@@ -4135,17 +5378,20 @@ class DcnmVrf:
         if res.get("ERROR"):
             fail = True
             changed = False
+        if res.get("DATA"):
+            resp_val = search_nested_json(res.get("DATA"), "fail")
+            if resp_val:
+                fail = True
+                changed = False
         if op == "attach" and "is in use already" in str(res.values()):
             fail = True
-            changed = False
-        if op == "deploy" and "No switches PENDING for deployment" in str(res.values()):
             changed = False
 
         return fail, changed
 
     def failure(self, resp):
         # Do not Rollback for Multi-site fabrics
-        if self.fabric_type == "MFD":
+        if self.fabric_type == "MFD" or self.action_fabric_type != "standalone":
             self.failed_to_rollback = True
             self.module.fail_json(msg=resp)
             return
@@ -4207,6 +5453,21 @@ def main():
             default="merged",
             choices=["merged", "replaced", "deleted", "overridden", "query"],
         ),
+        fabric_details=dict(
+            required=False,
+            type="dict",
+            options=dict(
+                fabric_type=dict(
+                    required=True,
+                    type="str",
+                    choices=["standalone", "multicluster_parent", "multicluster_child",
+                             "multisite_parent", "multisite_child"]
+                ),
+                cluster_name=dict(required=False, type="str"),
+                nd_version=dict(required=False, type="float"),
+                members=dict(required=False, type="list", elements="dict")
+            )
+        )
     )
 
     module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
@@ -4222,6 +5483,7 @@ def main():
 
     dcnm_vrf.get_want()
     dcnm_vrf.get_have()
+    dcnm_vrf.update_want()
 
     if module.params["state"] == "merged":
         dcnm_vrf.get_diff_merge()
@@ -4263,6 +5525,9 @@ def main():
         module.exit_json(**dcnm_vrf.result)
 
     dcnm_vrf.push_to_remote()
+
+    # Pass back the deploy payload to action plugin
+    dcnm_vrf.result["deploy_payload"] = dcnm_vrf.deploy_payload
 
     msg = f"dcnm_vrf.result: {dcnm_vrf.result}"
     dcnm_vrf.log.debug(msg)

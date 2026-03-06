@@ -1,0 +1,361 @@
+---
+################################################################################
+# RUNTIME
+################################################################################
+# Recent run times (MM:SS.ms):
+# TBD
+################################################################################
+# DESCRIPTION - BASIC FABRIC GROUP DELETED STATE TEST
+#
+# Test basic deletion of fabric group configurations and verify results.
+################################################################################
+# STEPS
+################################################################################
+# SETUP
+################################################################################
+# 1. The following fabric groups must be empty on the controller
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - fabric_group_name_1  # MCFG1
+#    - fabric_group_type_1  # MCFG
+# 2. Delete fabric groups under test, if they exist
+#    - fabric_group_name_1
+################################################################################
+# TEST
+################################################################################
+# 3. Create fabric group fabric_group_name_1 and verify results
+# 4. Delete fabric group fabric_group_name_1 and verify results
+# 5. Delete fabric group fabric_group_name_1 again to verify idempotency
+################################################################################
+# CLEANUP
+################################################################################
+# None required
+################################################################################
+# REQUIREMENTS
+################################################################################
+# Inventory:
+# ./playbooks/roles/dcnm_fabric_group/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric_group/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric_group/tests/*.yaml
+#
+# Example vars:
+#
+# vars:
+#   testcase: dcnm_fabric_group_deleted_basic
+#   fabric_group_name_1: MCFG_Fabric_Group
+#   fabric_group_type_1: MCFG
+################################################################################
+# DELETED - SETUP - Delete fabric groups
+################################################################################
+- name: DELETED - SETUP - Delete fabric groups
+  cisco.dcnm.dcnm_fabric_group:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ fabric_group_name_1 }}"
+  register: result
+- debug:
+    var: result
+################################################################################
+# DELETED - SETUP - Create fabric group with basic config
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric group global keys in DATA removed for brevity.
+# ok: [192.168.7.8] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "fabricName": "MCFG1",
+#                 "fabricTechnology": "VXLANFabric",
+#                 "fabricType": "MFD",
+#                 "nvPairs": {
+#                     "ANYCAST_GW_MAC": "2020.0000.00dc",
+#                     "BGW_ROUTING_TAG": "54321",
+#                     "BORDER_GWY_CONNECTIONS": "Direct_To_BGWS",
+#                     "CLOUDSEC_ALGORITHM": "",
+#                     "CLOUDSEC_ENFORCEMENT": "",
+#                     "CLOUDSEC_KEY_STRING": "",
+#                     "CLOUDSEC_REPORT_TIMER": "",
+#                     "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                     "DCI_SUBNET_TARGET_MASK": "30",
+#                     "DELAY_RESTORE": "300",
+#                     "ENABLE_PVLAN": false,
+#                     "ENABLE_SGT": "off",
+#                     "ENABLE_TRM_TRMv6": false,
+#                     "EXT_FABRIC_TYPE": "",
+#                     "FABRIC_NAME": "MCFG1",
+#                     "FABRIC_TYPE": "MFD",
+#                     "FF": "MSD",
+#                     "L2_SEGMENT_ID_RANGE": "30000-49000",
+#                     "L3_PARTITION_ID_RANGE": "50000-59000",
+#                     "LOOPBACK100_IPV6_RANGE": "",
+#                     "LOOPBACK100_IP_RANGE": "10.10.0.0/24",
+#                     "MSO_CONTROLER_ID": "",
+#                     "MSO_SITE_GROUP_NAME": "",
+#                     "MS_IFC_BGP_AUTH_KEY_TYPE": "",
+#                     "MS_IFC_BGP_PASSWORD": "",
+#                     "MS_IFC_BGP_PASSWORD_ENABLE": false,
+#                     "MS_LOOPBACK_ID": "100",
+#                     "MS_UNDERLAY_AUTOCONFIG": false,
+#                     "PARENT_ONEMANAGE_FABRIC": "",
+#                     "PREMSO_PARENT_FABRIC": "",
+#                     "SGT_OPER_STATUS": "off",
+#                     "SGT_PREPROV_RECALC_STATUS": "empty",
+#                     "SGT_RECALC_STATUS": "empty",
+#                     "TOR_AUTO_DEPLOY": false,
+#                     "V6_DCI_SUBNET_RANGE": "",
+#                     "V6_DCI_SUBNET_TARGET_MASK": "",
+#                     "VXLAN_UNDERLAY_IS_V6": false,
+#                     "default_network": "Default_Network_Universal",
+#                     "default_vrf": "Default_VRF_Universal",
+#                     "network_extension_template": "Default_Network_Extension_Universal",
+#                     "scheduledTime": "",
+#                     "vrf_extension_template": "Default_VRF_Extension_Universal"
+#                 },
+#                 "seedMember": {},
+#                 "sequence_number": 2,
+#                 "templateName": "MSD_Fabric"
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_groups",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "fabric_group_create",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": [],
+#                 "MESSAGE": "OK",
+#                 "METHOD": "GET",
+#                 "REQUEST_PATH": "https://192.168.7.8:443/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": {},
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://192.168.7.8:443/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "found": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: DELETED - SETUP - Create fabric group with minimal config
+  cisco.dcnm.dcnm_fabric_group:
+    state: merged
+    config:
+      - ANYCAST_GW_MAC: 2020.0000.00aa
+        BGW_ROUTING_TAG: "54321"
+        BORDER_GWY_CONNECTIONS: Direct_To_BGWS
+        DCI_SUBNET_RANGE: "10.10.1.0/24"
+        DCI_SUBNET_TARGET_MASK: "30"
+        DELAY_RESTORE: "300"
+        ENABLE_PVLAN: false
+        ENABLE_SGT: "off"
+        ENABLE_TRM_TRMv6: false
+        EXT_FABRIC_TYPE: ""
+        FABRIC_NAME: "{{ fabric_group_name_1 }}"
+        FABRIC_TYPE: "{{ fabric_group_type_1 }}"
+        L2_SEGMENT_ID_RANGE: 30000-49000
+        L3_PARTITION_ID_RANGE: 50000-59000
+        LOOPBACK100_IP_RANGE: 10.10.0.0/24
+        MSO_CONTROLER_ID: ""
+        MSO_SITE_GROUP_NAME: ""
+        MS_IFC_BGP_PASSWORD_ENABLE: false
+        MS_LOOPBACK_ID: "100"
+        MS_UNDERLAY_AUTOCONFIG: false
+        PARENT_ONEMANAGE_FABRIC: ""
+        PREMSO_PARENT_FABRIC: ""
+        SGT_OPER_STATUS: "off"
+        SGT_PREPROV_RECALC_STATUS: "empty"
+        SGT_RECALC_STATUS: "empty"
+        TOR_AUTO_DEPLOY: false
+        VXLAN_UNDERLAY_IS_V6: false
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[1].nvPairs.FABRIC_NAME == fabric_group_name_1
+      - result.diff[1].sequence_number == 2
+      - result.metadata[1].action == "fabric_group_create"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - (result.response | length) == 2
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+
+
+################################################################################
+# DELETED - TEST - Delete fabric group fabric_group_name_1 and verify results
+################################################################################
+# Expected result
+# ok: [192.168.7.8] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "fabric_group_name": "MCFG1",
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_group_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {},
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://192.168.7.8:443/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MCFG1",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: DELETED - TEST - Delete fabric group fabric_group_name_1 and verify results
+  cisco.dcnm.dcnm_fabric_group:
+    state: deleted
+    config: &config_deleted
+      - FABRIC_NAME: "{{ fabric_group_name_1 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].fabric_group_name == fabric_group_name_1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_group_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.response | length) == 1
+      - result.response[0].DATA is match '{.*}'
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+
+################################################################################
+# DELETED - TEST - Idempotency - Delete fabric group fabric_group_name_1
+################################################################################
+# Expected result
+# ok: [192.168.7.8] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_group_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "MESSAGE": "No fabric groups to delete",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: DELETED - TEST - Idempotency - Delete fabric group fabric_group_name_1
+  cisco.dcnm.dcnm_fabric_group:
+    state: deleted
+    config: *config_deleted
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_group_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "No fabric groups to delete"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - (result.result | length) == 1
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1

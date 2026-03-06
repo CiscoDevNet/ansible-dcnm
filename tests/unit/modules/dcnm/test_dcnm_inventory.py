@@ -1064,7 +1064,7 @@ class TestDcnmInvModule(TestDcnmModule):
         result = self.execute_module(changed=False, failed=True)
         self.assertEqual(
             result.get("msg"),
-            "Invalid parameters in playbook: password: : The string exceeds the allowed range of max 32 char",
+            "Invalid parameters in playbook: password: : The string exceeds the allowed range of max 64 char",
         )
 
     def test_dcnm_inv_have_initial_failure_switch_fabric(self):

@@ -7,15 +7,20 @@ The Ansible Cisco Nexus® Dashboard Fabric Controller (NDFC) (formerly Cisco Dat
 
 This collection is intended for use with the following release versions:
   * `DCNM Release 11.4(1)` or later
-  * `NDFC Release 12.0` or later.
+  * `Cisco Nexus Dashboard Fabric Controller (NDFC) Release 12.2.1`
+  * `Cisco Nexus Dashboard Fabric Controller (NDFC) Release 12.2.2`
+  * `Cisco Nexus Dashboard Fabric Controller (NDFC) Release 12.2.3`
+  * `Cisco Nexus Dashboard Release 4.1.1g` - Unified Nexus Dashboard (Legacy APIs)
 
 <!--start requires_ansible-->
 ## Ansible version compatibility
 
-This collection has been tested against following Ansible versions: **>=2.15.0**.
+This collection has been tested against following Ansible Core versions: 
+  * `2.14.x`
+  * `2.15.x`
+  * `2.16.x`
+  * `2.17.x`
 
-For collections that support Ansible 2.9, please ensure you update your `network_os` to use the
-fully qualified collection name (for example, `cisco.ios.ios`).
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
@@ -36,6 +41,7 @@ Name | Description
 --- | ---
 [cisco.dcnm.dcnm_bootflash](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_bootflash_module.rst)|Bootflash management for Nexus switches.
 [cisco.dcnm.dcnm_fabric](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_fabric_module.rst)|Manage creation and configuration of NDFC fabrics.
+[cisco.dcnm.dcnm_fabric_group](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_fabric_group_module.rst)|Manage creation, deletion, and update of fabric groups.
 [cisco.dcnm.dcnm_image_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_policy_module.rst)|Image policy management for Nexus Dashboard Fabric Controller
 [cisco.dcnm.dcnm_image_upgrade](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_upgrade_module.rst)|Image management for Nexus switches
 [cisco.dcnm.dcnm_image_upload](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_upload_module.rst)|DCNM Ansible Module for managing images.
@@ -44,7 +50,7 @@ Name | Description
 [cisco.dcnm.dcnm_links](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_links_module.rst)|DCNM ansible module for managing Links.
 [cisco.dcnm.dcnm_log](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_log_module.rst)|Log messages according to the configuration pointed to by the environment variable NDFC_LOGGING_CONFIG.
 [cisco.dcnm.dcnm_maintenance_mode](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_maintenance_mode_module.rst)|Manage Maintenance Mode Configuration of NX-OS Switches.
-[cisco.dcnm.dcnm_network](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_network_module.rst)|Add and remove Networks from a DCNM managed VXLAN fabric.
+[cisco.dcnm.dcnm_network](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_network_module.rst)|Add and remove Networks from a ND managed VXLAN fabric.
 [cisco.dcnm.dcnm_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_policy_module.rst)|DCNM Ansible Module for managing policies.
 [cisco.dcnm.dcnm_resource_manager](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_resource_manager_module.rst)|DCNM ansible module for managing resources.
 [cisco.dcnm.dcnm_rest](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_rest_module.rst)|Send REST API requests to DCNM controller.
@@ -53,7 +59,7 @@ Name | Description
 [cisco.dcnm.dcnm_service_route_peering](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_service_route_peering_module.rst)|DCNM Ansible Module for managing Service Route Peerings.
 [cisco.dcnm.dcnm_template](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_template_module.rst)|DCNM Ansible Module for managing templates.
 [cisco.dcnm.dcnm_vpc_pair](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vpc_pair_module.rst)|DCNM Ansible Module for managing VPC switch pairs required for VPC interfaces.
-[cisco.dcnm.dcnm_vrf](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vrf_module.rst)|Add and remove VRFs from a DCNM managed VXLAN fabric.
+[cisco.dcnm.dcnm_vrf](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vrf_module.rst)|Add and remove VRFs from a ND managed VXLAN fabric.
 
 <!--end collection content-->
 
@@ -71,7 +77,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 3.8.1
+    version: 3.10.0
 ```
 ## Using this collection
 
@@ -185,14 +191,13 @@ We welcome community contributions to this collection. If you find problems, ple
 
 ## More information
 
-- [DCNM installation and configuration guides](https://www.cisco.com/c/en/us/support/cloud-systems-management/prime-data-center-network-manager/products-installation-and-configuration-guides-list.html)
 - [NDFC installation and configuration guides](https://www.cisco.com/c/en/us/td/docs/dcn/ndfc/1201/installation/cisco-ndfc-install-and-upgrade-guide-1201.html)
 - [Ansible User guide](https://docs.ansible.com/ansible/latest/user_guide/index.html)
 - [Ansible Developer guide](https://docs.ansible.com/ansible/latest/dev_guide/index.html)
 
 ## Licensing
 
-Copyright (c) 2020-2025 Cisco and/or its affiliates.
+Copyright (c) 2020-2026 Cisco and/or its affiliates.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

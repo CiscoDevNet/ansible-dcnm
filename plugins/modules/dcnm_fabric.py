@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -1970,6 +1971,12 @@ options:
                         - Enable NBM mode to pim-passive for default VRF
                         required: false
                         type: bool
+                    ENABLE_RT_INTF_STATS:
+                        default: false
+                        description:
+                        - Valid for NX-OS only and External Non-ND Telemetry Receiver
+                        required: false
+                        type: bool
                     EXTRA_CONF_INTRA_LINKS:
                         default: ''
                         description:
@@ -2015,6 +2022,12 @@ options:
                         - No description available
                         required: false
                         type: bool
+                    INTF_STAT_LOAD_INTERVAL:
+                        default: 10
+                        description:
+                        - Time in seconds (Min:5, Max:300)
+                        required: false
+                        type: int
                     ISIS_AUTH_ENABLE:
                         default: false
                         description:
@@ -3868,15 +3881,15 @@ EXAMPLES = """
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-    -   FABRIC_NAME: VXLAN_Fabric
+      - FABRIC_NAME: VXLAN_Fabric
         FABRIC_TYPE: VXLAN_EVPN
         BGP_AS: 65000
-    -   FABRIC_NAME: BGP_Fabric
+      - FABRIC_NAME: BGP_Fabric
         FABRIC_TYPE: BGP
         BGP_AS: 65001
-    -   FABRIC_NAME: MSD_Fabric
+      - FABRIC_NAME: MSD_Fabric
         FABRIC_TYPE: VXLAN_EVPN_MSD
-    -   FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: LAN_Fabric
         FABRIC_TYPE: LAN_CLASSIC
   register: result
 - debug:
@@ -3888,7 +3901,7 @@ EXAMPLES = """
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-    -   FABRIC_NAME: VXLAN_Fabric
+      - FABRIC_NAME: VXLAN_Fabric
         FABRIC_TYPE: VXLAN_EVPN
         BGP_AS: 65000
         ANYCAST_GW_MAC: 0001.aabb.ccdd
@@ -3897,16 +3910,16 @@ EXAMPLES = """
           interface Ethernet1/1-16
             description managed by NDFC
         DEPLOY: false
-    -   FABRIC_NAME: BGP_Fabric
+      - FABRIC_NAME: BGP_Fabric
         FABRIC_TYPE: BGP
         BGP_AS: 65001
         SUPER_SPINE_BGP_AS: 65002
         DEPLOY: false
-    -   FABRIC_NAME: MSD_Fabric
+      - FABRIC_NAME: MSD_Fabric
         FABRIC_TYPE: VXLAN_EVPN_MSD
         LOOPBACK100_IP_RANGE: 10.22.0.0/24
         DEPLOY: false
-    -   FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: LAN_Fabric
         FABRIC_TYPE: LAN_CLASSIC
         BOOTSTRAP_ENABLE: false
         IS_READ_ONLY: false
@@ -3924,9 +3937,9 @@ EXAMPLES = """
 - name: Update fabrics
   cisco.dcnm.dcnm_fabric:
     state: merged
-    skip_validation: True
+    skip_validation: true
     config:
-    -   FABRIC_NAME: VXLAN_Fabric
+      - FABRIC_NAME: VXLAN_Fabric
         FABRIC_TYPE: VXLAN_EVPN
         BGP_AS: 65000
         ANYCAST_GW_MAC: 0001.aabb.ccdd
@@ -3942,18 +3955,18 @@ EXAMPLES = """
   cisco.dcnm.dcnm_fabric:
     state: replaced
     config:
-    -   FABRIC_NAME: VXLAN_Fabric
+      - FABRIC_NAME: VXLAN_Fabric
         FABRIC_TYPE: VXLAN_EVPN
         BGP_AS: 65000
         DEPLOY: false
-    -   FABRIC_NAME: BGP_Fabric
+      - FABRIC_NAME: BGP_Fabric
         FABRIC_TYPE: BGP
         BGP_AS: 65001
         DEPLOY: false
-    -   FABRIC_NAME: MSD_Fabric
+      - FABRIC_NAME: MSD_Fabric
         FABRIC_TYPE: VXLAN_EVPN_MSD
         DEPLOY: false
-    -   FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: LAN_Fabric
         FABRIC_TYPE: LAN_CLASSIC
         DEPLOY: false
   register: result
@@ -3966,9 +3979,9 @@ EXAMPLES = """
   cisco.dcnm.dcnm_fabric:
     state: query
     config:
-    -   FABRIC_NAME: VXLAN_Fabric
-    -   FABRIC_NAME: MSD_Fabric
-    -   FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: VXLAN_Fabric
+      - FABRIC_NAME: MSD_Fabric
+      - FABRIC_NAME: LAN_Fabric
   register: result
 - debug:
     var: result
@@ -3979,9 +3992,9 @@ EXAMPLES = """
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-    -   FABRIC_NAME: VXLAN_Fabric
-    -   FABRIC_NAME: MSD_Fabric
-    -   FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: VXLAN_Fabric
+      - FABRIC_NAME: MSD_Fabric
+      - FABRIC_NAME: LAN_Fabric
   register: result
 - debug:
     var: result
@@ -3994,20 +4007,20 @@ EXAMPLES = """
 # the ability to modify the PVLAN option.  Hence, even a valid value for
 # ENABLE_PVLAN in the playbook will generate an error.
 
--   name: merge fabric MyFabric
-    cisco.dcnm.dcnm_fabric:
-        state: merged
-        skip_validation: false
-        config:
-        -   FABRIC_NAME: MyFabric
-            FABRIC_TYPE: VXLAN_EVPN
-            BGP_AS: 65001
-            ENABLE_SGT: true
-            ENABLE_PVLAN: false
+- name: merge fabric MyFabric
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    skip_validation: false
+    config:
+      - FABRIC_NAME: MyFabric
+        FABRIC_TYPE: VXLAN_EVPN
+        BGP_AS: 65001
+        ENABLE_SGT: true
+        ENABLE_PVLAN: false
 
 # Resulting error message (edited for brevity)
-# "The following parameter(value) combination(s) are invalid and need to be reviewed: Fabric: f3, ENABLE_PVLAN(False) requires ENABLE_SGT != True."
-
+# "The following parameter(value) combination(s) are invalid and need to be reviewed:
+# Fabric: f3, ENABLE_PVLAN(False) requires ENABLE_SGT != True."
 """
 # pylint: disable=wrong-import-position
 import copy
@@ -4597,6 +4610,7 @@ class Merged(Common):
             self.log.debug(msg)
             return
 
+        self.fabric_update.controller_version = self.controller_version
         self.fabric_update.fabric_details = self.fabric_details
         self.fabric_update.fabric_summary = self.fabric_summary
         self.fabric_update.rest_send = self.rest_send
@@ -4870,9 +4884,7 @@ def main():
         "choices": ["deleted", "merged", "query", "replaced"],
     }
 
-    ansible_module = AnsibleModule(
-        argument_spec=argument_spec, supports_check_mode=True
-    )
+    ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     params = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
 

@@ -54,6 +54,9 @@ class ControllerVersion:
     ```
 
     ### Response
+
+    #### ND 3.x
+
     ```json
         {
             "version": "12.1.2e",
@@ -62,10 +65,40 @@ class ControllerVersion:
             "dev": false,
             "isHaEnabled": false,
             "install": "EASYFABRIC",
-            "uuid": "f49e6088-ad4f-4406-bef6-2419de914ff1",
+            "uuid": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
             "is_upgrade_inprogress": false
         }
     ```
+
+    #### ND 4.1 EFT 138c
+
+    ```json
+        {
+            "version": "12.4.1.225",
+            "mode": "",
+            "isMediaController": false,
+            "dev": false,
+            "isHaEnabled": false,
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": false
+        }
+    ```
+
+    #### ND 4.1 EFT 156b
+
+    ```json
+        {
+            "version": "12.4.1.245",
+            "mode": "",
+            "isMediaController": false,
+            "dev": false,
+            "isHaEnabled": false,
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": false
+        }
+
     """
 
     def __init__(self):
@@ -109,10 +142,50 @@ class ControllerVersion:
             msg += f"{self.rest_send.response_current}"
             raise ValueError(msg)
 
+        # Ensure response_data is a dictionary
+        if not isinstance(self._response_data, dict):
+            msg = f"{self.class_name}.refresh() failed: "
+            msg += f"Expected response data to be a dictionary, got {type(self._response_data).__name__}. "
+            msg += f"Data: {self._response_data}"
+            raise ValueError(msg)
+
     def _get(self, item):
-        return self.conversion.make_none(
-            self.conversion.make_boolean(self.response_data.get(item))
-        )
+        """
+        # Summary
+
+        Return the parameter (item) from the response
+
+        ## Notes
+
+        - With ND 4, parameters like "mode", "uuid" are empty strings.
+          Return empty string in this case, rather than None.
+        - None indicates that the parameter is missing in the response (i.e. an error)
+        """
+        value = self.response_data.get(item)
+        if value == "":
+            return ""
+        return self.conversion.make_none(self.conversion.make_boolean(value))
+
+    def _validate_and_split_version(self):
+        """
+        Validate version format and return split version parts.
+
+        Expected formats:
+            w.x.y (3 parts) or w.x.y.z (4 parts)
+
+        Returns:
+            list: Version parts split by '.'
+
+        Raises:
+            ValueError: If version format is unexpected
+        """
+        version_parts = self.version.split(".")
+        if len(version_parts) not in [3, 4]:
+            msg = f"{self.class_name}._validate_and_split_version: "
+            msg += f"Unexpected version format '{self.version}'. "
+            msg += f"Expected 3 or 4 parts (w.x.y or w.x.y.z), got {len(version_parts)} parts"
+            raise ValueError(msg)
+        return version_parts
 
     @property
     def dev(self):
@@ -193,14 +266,24 @@ class ControllerVersion:
     @property
     def mode(self):
         """
+        # Summary
+
         Return the controller mode, if it exists.
         Return None otherwise
 
         Possible values:
             LAN
-            None
+            ""
+
+        ## Notes
+
+        - mode will be "" for ND 4
         """
-        return self._get("mode")
+        value = self._get("mode")
+        if value is None:
+            msg = "Controller response is missing 'mode' parameter."
+            raise ValueError(msg)
+        return value
 
     @property
     def uuid(self):
@@ -217,84 +300,116 @@ class ControllerVersion:
     @property
     def version(self):
         """
-        Return the controller version, if it exists.
-        Return None otherwise
+        # Summary
+
+        - Return the controller version, if it exists.
+        - Raise ValueError if version is not available.
 
         Possible values:
-            version, e.g. "12.1.2e"
-            None
+            version, e.g. "12.1.2e" or "12.4.1.245"
         """
-        return self._get("version")
+        version = self._get("version")
+        if version is None:
+            msg = f"{self.class_name}.version: "
+            msg += "Version information not available in controller response"
+            raise ValueError(msg)
+        return version
 
     @property
     def version_major(self):
         """
-        Return the controller major version as a string, if it exists.
-        Return None otherwise
+        Return the controller major version as a string.
+        Raise ValueError if version format is unexpected.
 
         We are assuming semantic versioning based on:
         https://semver.org
 
+        Expected formats:
+            w.x.y (3 parts) or w.x.y.z (4 parts)
+
         Possible values:
             if version is 12.1.2e, return "12"
-            None
+            if version is 12.4.1.245, return "12"
         """
-        if self.version is None:
-            return None
-        return (self._get("version").split("."))[0]
+        version_parts = self._validate_and_split_version()
+        return version_parts[0]
 
     @property
     def version_minor(self):
         """
-        Return the controller minor version as a string, if it exists.
-        Return None otherwise
+        Return the controller minor version as a string.
+        Raise ValueError if version format is unexpected.
 
         We are assuming semantic versioning based on:
         https://semver.org
 
+        Expected formats:
+            w.x.y (3 parts) or w.x.y.z (4 parts)
+
         Possible values:
-            if version is 12.1.2e, return 1
-            None
+            if version is 12.1.2e, return "1"
+            if version is 12.4.1.245, return "4"
         """
-        if self.version is None:
-            return None
-        return (self._get("version").split("."))[1]
+        version_parts = self._validate_and_split_version()
+        return version_parts[1]
 
     @property
     def version_patch(self):
         """
-        Return the controller patch version as a string, if it exists.
-        Return None otherwise
+        Return the controller patch version as a string.
+        Raise ValueError if version format is unexpected.
 
         We are assuming semantic versioning based on:
         https://semver.org
 
+        Expected formats:
+            w.x.y (3 parts) or w.x.y.z (4 parts)
+
         Possible values:
-            if version is 12.1.2e, return 2e
-            None
+            if version is 12.1.2e, return "2e"
+            if version is 12.4.1.245, return "1"
         """
-        if self.version is None:
-            return None
-        return (self._get("version").split("."))[2]
+        version_parts = self._validate_and_split_version()
+        return version_parts[2]
 
     @property
     def is_controller_version_4x(self) -> bool:
         """
-        ### Summary
+        # Summary
 
         -   Return True if the controller version implies ND 4.0 or higher.
         -   Return False otherwise.
+
+        ## Raises
+
+        - ValueError if unable to determine version
         """
         method_name = inspect.stack()[0][3]
 
         result = None
-        if int(self.version_major) == 12 and int(self.version_minor) < 3:
-            result = False
-        else:
-            result = True
+        try:
+            major = self.version_major
+            minor = self.version_minor
+
+            if major is None or minor is None:
+                # This should never happen due to early validation, but if it does, raise an error
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Unexpected None values: major={major}, minor={minor}"
+                raise ValueError(msg)
+
+            # version_minor is always numeric, so we can convert directly to int
+            if int(major) == 12 and int(minor) < 3:
+                result = False
+            else:
+                result = True
+        except (ValueError, TypeError) as e:
+            # If version parsing fails, re-raise as ValueError - do not assume version
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Error parsing version {self.version}: {e}"
+            raise ValueError(msg) from e
 
         msg = f"{self.class_name}.{method_name}: "
-        msg = f"self.version: {self.version}, "
+        msg += f"self.version: {self.version}, "
         msg += f"Controller is version 4.x: {result}"
         self.log.debug(msg)
 

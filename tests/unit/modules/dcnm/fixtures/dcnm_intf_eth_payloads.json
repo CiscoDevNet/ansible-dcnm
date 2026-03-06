@@ -21,7 +21,10 @@
 						"PORT_DUPLEX_MODE": "auto",
 						"DESC": "eth interface  acting as trunk",
 						"NATIVE_VLAN": "10",
-						"ENABLE_ORPHAN_PORT": false
+						"ENABLE_ORPHAN_PORT": false,
+						"ENABLE_PFC": false,
+						"CDP_ENABLE": true,
+						"ENABLE_MONITOR": false
 					},
 					"ifName": "Ethernet1/30",
 					"serialNumber": "SAL1819SAN8",
@@ -53,6 +56,9 @@
 						"BPDUGUARD_ENABLED": "True",
 						"SPEED": "auto",
 						"ENABLE_ORPHAN_PORT": false,
+						"ENABLE_PFC": false,
+						"CDP_ENABLE": true,
+						"ENABLE_MONITOR": false,
 						"PORT_DUPLEX_MODE": "auto",
 						"DESC": "eth interface acting as access"
 					},

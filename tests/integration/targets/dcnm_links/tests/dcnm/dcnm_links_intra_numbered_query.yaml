@@ -3,15 +3,16 @@
 ##############################################
 
 - name: Remove local log file
-  local_action: command rm -f dcnm_links.log
+  ansible.builtin.command: rm -f dcnm_links.log
+  delegate_to: localhost
 
 - block:
 
-##############################################
-##               DELETE                     ##
-##############################################
+    ##############################################
+    ##               DELETE                     ##
+    ##############################################
 
-    - name: Initial setup - Delete Links 
+    - name: Initial setup - Delete Links
       cisco.dcnm.dcnm_links: &links_delete
         state: deleted                                           # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -48,14 +49,15 @@
 
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-###############################################
-###                MERGE                     ##
-###############################################
+    ###############################################
+    ###                MERGE                     ##
+    ###############################################
 
     - name: Create Links without including optional parameters
       cisco.dcnm.dcnm_links:
@@ -67,29 +69,30 @@
             dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_fabric_num_link                  # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+            template: int_intra_fabric_num_link                  # template to be applied, choose from
+            #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+            #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+            #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+
             profile:
               peer1_ipv4_addr: 192.168.1.1                       # IP address of the Source interface
               peer2_ipv4_addr: 192.168.1.2                       # IP address of the Destination interface
               admin_state: true                                  # choose from [true, false]
-              mtu: 9216                                          # 
+              mtu: 9216                                          #
 
           - dst_fabric: "{{ ansible_num_fabric }}"               # Destination fabric
             src_interface: "{{ intf_1_2 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_2 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
+      #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+      #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+      #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
@@ -98,39 +101,42 @@
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"][0][ "{{ ansible_num_fabric }}" ] | length) == 2'
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-###############################################
-###             QUERY                        ##
-###############################################
+    ###############################################
+    ###             QUERY                        ##
+    ###############################################
 
     - name: Query Links - with Src Fabric
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
-          '(result["response"] | length) >= 2'
+          - '(result["response"] | length) >= 2'
 
     - name: Query Links - with Src & Dst Fabric
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
           - dst_fabric: "{{ ansible_num_fabric }}"               # optional, Destination fabric
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
-          '(result["response"] | length) >= 2'
+          - '(result["response"] | length) >= 2'
 
     - name: Query Links - with Src & Dst Fabric, Src Intf
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -138,12 +144,13 @@
             src_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Source fabric
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
-          '(result["response"] | length) >= 1'
+          - '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -152,12 +159,13 @@
             dst_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Destination fabric
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
-          '(result["response"] | length) >= 1'
+          - '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -167,12 +175,13 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -183,12 +192,13 @@
             dst_device: "{{ ansible_num_switch2 }}"              # optional, Device on the Destination fabric
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -197,10 +207,10 @@
             dst_interface: "{{ intf_1_1 }}"                      # optional, Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # optional, Device on the Destination fabric
-            template: int_intra_fabric_num_link                  # optional, template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+            template: int_intra_fabric_num_link                  # optional, template to be applied, choose from
+          #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+          #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+          #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
 
           - dst_fabric: "{{ ansible_num_fabric }}"               # optional, Destination fabric
             src_interface: "{{ intf_1_2 }}"                      # optional, Interface on the Source fabric
@@ -208,27 +218,29 @@
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # optional, Device on the Destination fabric
             template: int_pre_provision_intra_fabric_link        # optional, template to be applied, choose from
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
+      #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+      #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+      #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
       register: result
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
-          '(result["response"] | length) >= 2'
+          - '(result["response"] | length) >= 2'
 
-###############################################
-###             CLEANUP                      ##
-###############################################
+  ###############################################
+  ###             CLEANUP                      ##
+  ###############################################
 
   always:
 
-    - name: Cleanup - Delete Links 
+    - name: Cleanup - Delete Links
       cisco.dcnm.dcnm_links: *links_delete
       register: result
       when: IT_CONTEXT is not defined
 
-    - assert:
+    - name: Assert conditions
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
