@@ -3564,7 +3564,7 @@ options:
                 - External fabric specific parameters.
                 - Also known as External Connectivity Network.
                 - The following parameters are specific to External fabrics.
-                - Fabric type attached to Border Leaf switches to connevt VXLAN EVPN fabrics via VRF-Lite.
+                - Fabric type attached to Border Leaf switches to connect VXLAN EVPN fabrics via VRF-Lite.
                 - The indentation of these parameters is meant only to logically group them.
                 - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
                 suboptions:
