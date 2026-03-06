@@ -4265,7 +4265,8 @@ class DcnmIntf:
             "ENABLE_LACP_VPC_CONV",
             "ENABLE_PFC",
             "ENABLE_MONITOR",
-            "CDP_ENABLE"
+            "CDP_ENABLE",
+            "ENABLE_QOS"
         ]
         if k in boolean_keys:
             # This is a special case where the value is a boolean and we need to compare it as such
