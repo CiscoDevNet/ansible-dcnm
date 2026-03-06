@@ -216,6 +216,24 @@ options:
             type: str
             choices: ['normal', 'fast']
             default: normal
+          enable_qos:
+            description:
+            - Enable QoS on the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+            type: bool
+            default: false
+          qos_policy:
+            description:
+            - QoS policy name to apply to the interface. This option is only valid when 'enable_qos' is true.
+              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+            type: str
+            default: ""
+          queuing_policy:
+            description:
+            - Queuing policy name to apply to the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+            type: str
+            default: ""
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -368,6 +386,24 @@ options:
             type: str
             choices: ['normal', 'fast']
             default: normal
+          enable_qos:
+            description:
+            - Enable QoS on the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+            type: bool
+            default: false
+          qos_policy:
+            description:
+            - QoS policy name to apply to the interface. This option is only valid when 'enable_qos' is true.
+              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+            type: str
+            default: ""
+          queuing_policy:
+            description:
+            - Queuing policy name to apply to the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+            type: str
+            default: ""
       profile_subint:
         description:
         - Though the key shown here is 'profile_subint' the actual key to be used in playbook
@@ -638,6 +674,24 @@ options:
             - State of Switchport Monitor for SPAN/ERSPAN
             type: bool
             default: false
+          enable_qos:
+            description:
+            - Enable QoS on the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'routed'
+            type: bool
+            default: false
+          qos_policy:
+            description:
+            - QoS policy name to apply to the interface. This option is only valid when 'enable_qos' is true.
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'routed'
+            type: str
+            default: ""
+          queuing_policy:
+            description:
+            - Queuing policy name to apply to the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'routed'
+            type: str
+            default: ""
       profile_svi:
         description:
         - Though the key shown here is 'profile_svi' the actual key to be used in playbook
@@ -2002,6 +2056,9 @@ class DcnmIntf:
             "ENABLE_PFC": "enable_pfc",
             "ENABLE_MONITOR": "enable_monitor",
             "CDP_ENABLE": "enable_cdp",
+            "ENABLE_QOS": "enable_qos",
+            "QOS_POLICY": "qos_policy",
+            "QUEUING_POLICY": "queuing_policy",
 
         }
 
@@ -2367,6 +2424,9 @@ class DcnmIntf:
             disable_lacp_suspend_individual=dict(type="bool", default=False),
             lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
             lacp_rate=dict(type="str", default="normal"),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         pc_prof_spec_access = dict(
@@ -2390,6 +2450,9 @@ class DcnmIntf:
             disable_lacp_suspend_individual=dict(type="bool", default=False),
             lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
             lacp_rate=dict(type="str", default="normal"),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         pc_prof_spec_l3 = dict(
@@ -2478,6 +2541,9 @@ class DcnmIntf:
             enable_lacp_vpc_convergence=dict(type="bool", default=False),
             lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
             lacp_rate=dict(type="str", default="normal"),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         vpc_prof_spec_access = dict(
@@ -2502,6 +2568,9 @@ class DcnmIntf:
             peer1_description=dict(type="str", default=""),
             peer2_description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         if "trunk" == cfg[0]["profile"]["mode"]:
@@ -2599,6 +2668,9 @@ class DcnmIntf:
             enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         eth_prof_spec_access = dict(
@@ -2619,6 +2691,9 @@ class DcnmIntf:
             enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         eth_prof_spec_routed_host = dict(
@@ -2631,6 +2706,9 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         eth_prof_spec_epl_routed_host = dict(
@@ -2978,6 +3056,19 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
             else:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -3023,6 +3114,19 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
             else:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -3256,6 +3360,19 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
         else:
             intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
+        if delem[profile].get("enable_qos"):
+            intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+            if delem[profile].get("qos_policy"):
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+        else:
+            intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+            intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+        if delem[profile].get("queuing_policy"):
+            intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
             str(delem[profile].get("speed", ""))
@@ -3416,6 +3533,19 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
         if delem[profile]["mode"] == "access":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
                 profile
@@ -3440,6 +3570,19 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
         if delem[profile]["mode"] == "routed":
             intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
                 "int_vrf"
@@ -3460,6 +3603,19 @@ class DcnmIntf:
                 delem[profile]["mtu"]
             )
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         if delem[profile]["mode"] == "epl_routed":

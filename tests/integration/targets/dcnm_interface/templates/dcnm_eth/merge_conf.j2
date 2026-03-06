@@ -14,6 +14,7 @@
     port_type_fast: true
     mtu: jumbo
     allowed_vlans: none
+    enable_qos: true
     cmds:
       - no shutdown
     description: "eth interface acting as trunk"
@@ -31,6 +32,7 @@
     port_type_fast: true
     mtu: default
     access_vlan: 31
+    enable_qos: true
     cmds:
       - no shutdown
     description: "eth interface acting as access"
