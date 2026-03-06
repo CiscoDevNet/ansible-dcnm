@@ -15,11 +15,7 @@ This collection is intended for use with the following release versions:
 <!--start requires_ansible-->
 ## Ansible version compatibility
 
-This collection has been tested against following Ansible Core versions: 
-  * `2.14.x`
-  * `2.15.x`
-  * `2.16.x`
-  * `2.17.x`
+This collection has been tested against the following Ansible versions: **>=2.15.0**.
 
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
@@ -58,7 +54,7 @@ Name | Description
 [cisco.dcnm.dcnm_service_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_service_policy_module.rst)|DCNM ansible module for managing service policies.
 [cisco.dcnm.dcnm_service_route_peering](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_service_route_peering_module.rst)|DCNM Ansible Module for managing Service Route Peerings.
 [cisco.dcnm.dcnm_template](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_template_module.rst)|DCNM Ansible Module for managing templates.
-[cisco.dcnm.dcnm_vpc_pair](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vpc_pair_module.rst)|DCNM Ansible Module for managing VPC switch pairs required for VPC interfaces.
+[cisco.dcnm.dcnm_vpc_pair](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vpc_pair_module.rst)|DCNM Ansible Module for managing vPC switch pairs required for vPC interfaces.
 [cisco.dcnm.dcnm_vrf](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vrf_module.rst)|Add and remove VRFs from a ND managed VXLAN fabric.
 
 <!--end collection content-->
