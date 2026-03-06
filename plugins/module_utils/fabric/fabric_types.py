@@ -76,8 +76,8 @@ class FabricTypes:
             - Value is a list of mandatory parameters for the fabric type
         """
         self._fabric_type_to_template_name_map = {}
-        self._fabric_type_to_template_name_map["External"] = "External_Fabric"
         self._fabric_type_to_template_name_map["BGP"] = "Easy_Fabric_eBGP"
+        self._fabric_type_to_template_name_map["External"] = "External_Fabric"
         self._fabric_type_to_template_name_map["IPFM"] = "Easy_Fabric_IPFM"
         self._fabric_type_to_template_name_map["ISN"] = "External_Fabric"
         self._fabric_type_to_template_name_map["LAN_CLASSIC"] = "LAN_Classic"
@@ -88,8 +88,8 @@ class FabricTypes:
         # Map fabric type to the feature name that must be running
         # on the controller to enable the fabric type.
         self._fabric_type_to_feature_name_map = {}
-        self._fabric_type_to_feature_name_map["External"] = "vxlan"
         self._fabric_type_to_feature_name_map["BGP"] = "vxlan"
+        self._fabric_type_to_feature_name_map["External"] = "vxlan"
         self._fabric_type_to_feature_name_map["IPFM"] = "pmn"
         self._fabric_type_to_feature_name_map["ISN"] = "vxlan"
         self._fabric_type_to_feature_name_map["LAN_CLASSIC"] = "lan"
@@ -127,10 +127,10 @@ class FabricTypes:
         self._mandatory_parameters_all_fabrics.append("FABRIC_TYPE")
 
         self._mandatory_parameters = {}
-        self._mandatory_parameters["External"] = copy.copy(
+        self._mandatory_parameters["BGP"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
-        self._mandatory_parameters["BGP"] = copy.copy(
+        self._mandatory_parameters["External"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
         self._mandatory_parameters["IPFM"] = copy.copy(
@@ -148,16 +148,18 @@ class FabricTypes:
         self._mandatory_parameters["VXLAN_EVPN"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
-        self._mandatory_parameters["External"].append("BGP_AS")
+        
         self._mandatory_parameters["BGP"].append("BGP_AS")
+        self._mandatory_parameters["External"].append("BGP_AS")
         self._mandatory_parameters["ISN"].append("BGP_AS")
         self._mandatory_parameters["VXLAN_EVPN"].append("BGP_AS")
+        
         self._mandatory_parameters["VXLAN_EVPN_MSD"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
 
-        self._mandatory_parameters["External"].sort()
         self._mandatory_parameters["BGP"].sort()
+        self._mandatory_parameters["External"].sort()
         self._mandatory_parameters["IPFM"].sort()
         self._mandatory_parameters["ISN"].sort()
         self._mandatory_parameters["LAN_CLASSIC"].sort()
