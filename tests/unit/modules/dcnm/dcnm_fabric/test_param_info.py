@@ -33,10 +33,8 @@ import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import \
-    ParamInfo
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    does_not_raise, templates_param_info)
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import ParamInfo
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import does_not_raise, templates_param_info
 
 
 def test_param_info_00010() -> None:
