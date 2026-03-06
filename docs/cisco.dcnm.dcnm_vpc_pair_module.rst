@@ -5,7 +5,7 @@
 cisco.dcnm.dcnm_vpc_pair
 ************************
 
-**DCNM Ansible Module for managing VPC switch pairs required for VPC interfaces.**
+**DCNM Ansible Module for managing vPC switch pairs required for vPC interfaces.**
 
 
 Version added: 3.5.0
@@ -17,7 +17,7 @@ Version added: 3.5.0
 
 Synopsis
 --------
-- DCNM Ansible Module for managing VPC switch pairs.
+- DCNM Ansible Module for managing vPC switch pairs.
 
 
 
@@ -47,7 +47,7 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">[]</div>
                 </td>
                 <td>
-                        <div>A list of dictionaries containing VPC switch pair information</div>
+                        <div>A list of dictionaries containing vPC switch pair information</div>
                 </td>
             </tr>
                                 <tr>
@@ -64,7 +64,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>IP Address/Host Name of Peer1 of VPC switch pair.</div>
+                        <div>IP Address/Host Name of Peer1 of vPC switch pair.</div>
                 </td>
             </tr>
             <tr>
@@ -81,7 +81,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>IP Address/Host Name of Peer2 of VPC switch pair.</div>
+                        <div>IP Address/Host Name of Peer2 of vPC switch pair.</div>
                 </td>
             </tr>
             <tr>
@@ -97,7 +97,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>A dictionary of additional VPC switch pair related parameters that must be included while creating VPC switch pairs.</div>
+                        <div>A dictionary of additional vPC switch pair related parameters that must be included while creating vPC switch pairs.</div>
                 </td>
             </tr>
                                 <tr>
@@ -141,7 +141,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Vlans that are allowed on the VPC peer link port-channel.</div>
+                        <div>Vlans that are allowed on the vPC peer link port-channel.</div>
                 </td>
             </tr>
             <tr>
@@ -159,7 +159,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>VPC domain ID.</div>
+                        <div>vPC domain ID.</div>
                         <div>Minimum value is 1 and Maximum value is 1000.</div>
                 </td>
             </tr>
@@ -178,7 +178,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Name of the target fabric for VPC switch pair operations.</div>
+                        <div>Name of the target fabric for vPC switch pair operations.</div>
                 </td>
             </tr>
             <tr>
@@ -477,8 +477,28 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Name of the template which inlcudes the required parameters for creating the VPC switch pair.</div>
+                        <div>Name of the template which inlcudes the required parameters for creating the vPC switch pair.</div>
                         <div>This parameter is &#x27;mandatory&#x27; if the fabric is of type &#x27;LANClassic&#x27; or &#x27;External&#x27;. It is optional otherwise.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>useVirtualPeerlink</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to enable or disable the use of a virtual peer link (fabric peering) for the vPC switch pair.</div>
                 </td>
             </tr>
 
@@ -514,7 +534,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Name of the target fabric for VPC switch pair operations</div>
+                        <div>Name of the target fabric for vPC switch pair operations</div>
                 </td>
             </tr>
             <tr>
@@ -573,44 +593,44 @@ Examples
     # This module supports the following states:
     #
     # Merged:
-    #   VPC switch pairs defined in the playbook will be merged into the target fabric.
+    #   vPC switch pairs defined in the playbook will be merged into the target fabric.
     #
-    #   The VPC switch pairs listed in the playbook will be created if not already present on the DCNM
-    #   server. If the VPC switch pair is already present and the configuration information included
+    #   The vPC switch pairs listed in the playbook will be created if not already present on the DCNM
+    #   server. If the vPC switch pair is already present and the configuration information included
     #   in the playbook is either different or not present in DCNM, then the corresponding
-    #   information is added to the DCNM. If a VPC switch pair  mentioned in playbook
+    #   information is added to the DCNM. If a vPC switch pair  mentioned in playbook
     #   is already present on DCNM and there is no difference in configuration, no operation
     #   will be performed for such switch pairs.
     #
     # Replaced:
-    #   VPC switch pairs defined in the playbook will be replaced in the target fabric.
+    #   vPC switch pairs defined in the playbook will be replaced in the target fabric.
     #
-    #   The state of the VPC switch pairs listed in the playbook will serve as source of truth for the
-    #   same VPC switch pairs present on the DCNM under the fabric mentioned. Additions and updations
-    #   will be done to bring the DCNM VPC switch pairs to the state listed in the playbook.
-    #   Note: Replace will only work on the VPC switch pairs mentioned in the playbook.
+    #   The state of the vPC switch pairs listed in the playbook will serve as source of truth for the
+    #   same vPC switch pairs present on the DCNM under the fabric mentioned. Additions and updations
+    #   will be done to bring the DCNM vPC switch pairs to the state listed in the playbook.
+    #   Note: Replace will only work on the vPC switch pairs mentioned in the playbook.
     #
     # Overridden:
-    #   VPC switch pairs defined in the playbook will be overridden in the target fabric.
+    #   vPC switch pairs defined in the playbook will be overridden in the target fabric.
     #
-    #   The state of the VPC switch pairs listed in the playbook will serve as source of truth for all
-    #   the VPC switch pairs under the fabric mentioned. Additions and deletions will be done to bring
-    #   the DCNM VPC switch pairs to the state listed in the playbook. All VPC switch pairs other than the
+    #   The state of the vPC switch pairs listed in the playbook will serve as source of truth for all
+    #   the vPC switch pairs under the fabric mentioned. Additions and deletions will be done to bring
+    #   the DCNM vPC switch pairs to the state listed in the playbook. All vPC switch pairs other than the
     #   ones mentioned in the playbook will be deleted.
-    #   Note: Override will work on the all the VPC switch pairs present in the DCNM Fabric.
+    #   Note: Override will work on the all the vPC switch pairs present in the DCNM Fabric.
     #
     # Deleted:
-    #   VPC switch pairs defined in the playbook will be deleted in the target fabric.
+    #   vPC switch pairs defined in the playbook will be deleted in the target fabric.
     #
-    #   Deletes the list of VPC switch pairs specified in the playbook.  If the playbook does not include
-    #   any VPC switch pair information, then all VPC switch pairs from the fabric will be deleted.
+    #   Deletes the list of vPC switch pairs specified in the playbook.  If the playbook does not include
+    #   any vPC switch pair information, then all vPC switch pairs from the fabric will be deleted.
     #
     # Query:
-    #   Returns the current DCNM state for the VPC switch pairs listed in the playbook.
+    #   Returns the current DCNM state for the vPC switch pairs listed in the playbook.
 
-    # CREATE VPC SWITCH PAIR (LANClassic or External fabrics)
+    # CREATE vPC SWITCH PAIR (LANClassic or External fabrics)
 
-    - name: Merge VPC switch pair paremeters
+    - name: Merge vPC switch pair paremeters
       cisco.dcnm.dcnm_vpc_pair:
         src_fabric: "test-fabric"
         deploy: true
@@ -640,9 +660,9 @@ Examples
               PEER2_PO_CONF: "buffer-boost"
               PEER2_PO_DESC: "This is peer2 PC"
 
-    # CREATE VPC SWITCH PAIR (VXLAN fabrics)
+    # CREATE vPC SWITCH PAIR (VXLAN fabrics)
 
-    - name: Merge VPC switch pair paremeters
+    - name: Merge vPC switch pair paremeters
       cisco.dcnm.dcnm_vpc_pair:
         src_fabric: "test-fabric"
         deploy: true
@@ -651,9 +671,9 @@ Examples
           - peerOneId: 192.168.1.1
             peerTwoId: 192.168.1.2
 
-    # DELETE VPC SWITCH PAIR
+    # DELETE vPC SWITCH PAIR
 
-    - name: Delete VPC switch pair
+    - name: Delete vPC switch pair
       cisco.dcnm.dcnm_vpc_pair:
         src_fabric: "test-fabric"
         deploy: true
@@ -662,9 +682,9 @@ Examples
           - peerOneId: 192.168.1.1
             peerTwoId: 192.168.1.2
 
-    # REPLACE VPC SWITCH PAIR (LANClassic or External fabrics)
+    # REPLACE vPC SWITCH PAIR (LANClassic or External fabrics)
 
-    - name: Replace VPC switch pair paremeters
+    - name: Replace vPC switch pair paremeters
       cisco.dcnm.dcnm_vpc_pair:
         src_fabric: "test-fabric"
         deploy: true
@@ -694,9 +714,9 @@ Examples
               PEER2_PO_CONF: "buffer-boost"
               PEER2_PO_DESC: "This is peer2 PC"
 
-    # OVERRIDDE VPC SWITCH PAIRS
+    # OVERRIDDE vPC SWITCH PAIRS
 
-    - name: Override with a new VPC switch pair
+    - name: Override with a new vPC switch pair
       cisco.dcnm.dcnm_vpc_pair:
         src_fabric: "test-fabric"
         deploy: true
@@ -728,14 +748,14 @@ Examples
         deploy: true
         state: overridden
 
-    # QUERY VPC SWITCH PAIRS
+    # QUERY vPC SWITCH PAIRS
 
-    - name: Query VPC switch pairs - with no filters
+    - name: Query vPC switch pairs - with no filters
       cisco.dcnm.dcnm_vpc_pair:
         src_fabric: "test-fabric"
         state: query
 
-    - name: Query VPC switch pairs - with both peers specified
+    - name: Query vPC switch pairs - with both peers specified
       cisco.dcnm.dcnm_vpc_pair:
         src_fabric: "test-fabric"
         state: query
@@ -743,7 +763,7 @@ Examples
           - peerOneId: "{{ ansible_switch1 }}"
             peerTwoId: "{{ ansible_switch2 }}"
 
-    - name: Query VPC switch pairs - with one peer specified
+    - name: Query vPC switch pairs - with one peer specified
       cisco.dcnm.dcnm_vpc_pair:
         src_fabric: "test-fabric"
         state: query
