@@ -4839,9 +4839,9 @@ class DcnmIntf:
                     continue
 
                 # Skip TOR uplink member interfaces
-                if have["underlayPolicies"] is not None:
+                if have.get("underlayPolicies") is not None:
                     is_tor_member = False
-                    for policy in have["underlayPolicies"]:
+                    for policy in have.get("underlayPolicies"):
                         if policy.get("templateName") in ["int_vpc_uplink_access_po_member"]:
                             is_tor_member = True
                             break
@@ -4990,12 +4990,12 @@ class DcnmIntf:
                             continue
                         # Also check if port-channel uses TOR uplink templates
                         skip_pc = False
-                        if have["underlayPolicies"] is not None:
+                        if have.get("underlayPolicies") is not None:
                             tor_uplink_templates = [
                                 "int_vpc_uplink_access_po",
                                 "int_port_channel_uplink_access",
                             ]
-                            for policy in have["underlayPolicies"]:
+                            for policy in have.get("underlayPolicies"):
                                 if policy.get("templateName") in tor_uplink_templates:
                                     self.changed_dict[0]["skipped"].append(
                                         {
@@ -5043,7 +5043,7 @@ class DcnmIntf:
                             is_tor_uplink = True
 
                         # Check underlayPolicies templateName for TOR uplink patterns
-                        if not is_tor_uplink and have["underlayPolicies"]:
+                        if not is_tor_uplink and have.get("underlayPolicies"):
                             for policy in have["underlayPolicies"]:
                                 template_name = policy.get("templateName", "")
                                 if template_name and template_name.startswith("int_vpc_uplink_"):
@@ -5064,7 +5064,7 @@ class DcnmIntf:
                     # Interfaces sometimes take time to get deleted from DCNM. Such interfaces will have
                     # underlayPolicies set to "None". Such interfaces need not be deleted again
 
-                    if have["underlayPolicies"] is None:
+                    if have.get("underlayPolicies") is None:
                         self.changed_dict[0]["skipped"].append(
                             {
                                 "Name": name,
