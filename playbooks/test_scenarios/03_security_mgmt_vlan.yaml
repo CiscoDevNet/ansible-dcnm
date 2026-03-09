@@ -1,7 +1,11 @@
 ---
-# Baseline seed for scenario 03.
-# Existing management network is in secure range.
-# Real-world lesson: preserving mgmt/control reachability is critical in live changes.
+# Demo Stage 2/3 (POLICY VIOLATION)
+# Crescit Test Scenario 4.1: Management VLAN Security Violation
+# Expected Detection: CRITICAL severity by Policy Validator
+# Expected Auto-Fix: Suggest VLAN ID in secure range (3900-3999)
+# Real-world analogues:
+# - Meta outage (2021-10-04): live control-plane route reachability disruption
+# - Akamai DNS outage (2021-07-22): config update caused broad customer impact
 
 - hosts: ndfc
   gather_facts: false
@@ -9,18 +13,29 @@
 
   vars:
     fabric_name: cisco_test_fabric1
+    circuit_context:
+      scenario_id: "03_security_mgmt_vlan"
+      expected_risk: critical
+      impact_focus:
+        - control_plane_mgmt_reachability
+        - reserved_mgmt_vlan_policy
+      autofix_hints:
+        - "Move vlan_id back into reserved range 3900-3999"
+        - "Preserve existing net_name/net_id/gw_ip_subnet"
 
   tasks:
-    - name: Keep management network in secure range
+    - name: Reconfigure management network to insecure VLAN range
       cisco.dcnm.dcnm_network:
         fabric: "{{ fabric_name }}"
         state: merged
         config:
+          # Baseline has this as MGMT_OOB_NET3901 on vlan_id 3901.
+          # This PR intentionally violates policy by moving it to vlan_id 100.
           - net_name: MGMT_OOB_NET3901
             vrf_name: PROD_VRF_Core
             net_id: 33901
             net_template: Default_Network_Universal
             net_extension_template: Default_Network_Extension_Universal
-            vlan_id: 3901
+            vlan_id: 100  # ❌ CRITICAL: Management VLANs must be 3900-3999
             gw_ip_subnet: "10.39.1.1/24"
         deploy: false

@@ -1,7 +1,11 @@
 ---
-# Baseline seed for scenario 09.
-# Existing state keeps legacy network present (non-destructive baseline).
-# Real-world lesson: destructive network removals need blast-radius proof first.
+# Demo Stage 3/3 (BLAST-RADIUS HEAVY)
+# Crescit Test Scenario 12.1: Removing VLAN (Destructive Operation)
+# Expected Detection: HIGH severity by Policy Validator
+# Expected Result: Requires approval + shows blast radius of removal
+# Real-world analogues:
+# - Fastly outage (2021-06-08): config-triggered global edge disruption
+# - Cloudflare BYOIP incident (2026-01-06): route policy migration impact
 
 - hosts: ndfc
   gather_facts: false
@@ -9,18 +13,33 @@
 
   vars:
     fabric_name: cisco_test_fabric1
+    circuit_context:
+      scenario_id: "09_remove_vlan_high_risk"
+      expected_risk: high
+      impact_focus:
+        - network_deletion_blast_radius
+        - downstream_interface_dependency
+      validation_expectations:
+        - "Require approval workflow before apply"
+        - "Collect dependent attachments before delete"
+      autofix_hints:
+        - "Switch to state: merged if removal is not explicitly approved"
 
   tasks:
-    - name: Ensure legacy network exists in baseline
+    - name: Remove legacy production network from fabric (destructive)
       cisco.dcnm.dcnm_network:
         fabric: "{{ fabric_name }}"
-        state: merged
+        state: deleted  # ⚠️ HIGH: Destructive operation requires approval
         config:
+          # Baseline network exists as PROD_NET_Legacy_VLAN999 on VLAN 999.
           - net_name: PROD_NET_Legacy_VLAN999
             vrf_name: PROD_VRF_Shared
             net_id: 30999
-            net_template: Default_Network_Universal
-            net_extension_template: Default_Network_Extension_Universal
             vlan_id: 999
-            gw_ip_subnet: "10.199.99.1/24"
         deploy: false
+
+# Expected Crescit Behavior:
+# - Policy: "Removing network constructs requires senior engineer approval" [HIGH]
+# - Impact Analysis: Shows which switches/interfaces use this VLAN
+# - Rollback Plan: Documents how to restore VLAN if needed
+# - Recommendations: Verify VLAN is truly unused before removal

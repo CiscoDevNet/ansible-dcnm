@@ -1,7 +1,10 @@
 ---
-# Baseline seed for scenario 06.
-# Existing state has web-tier VRF and one network already provisioned.
-# Real-world lesson: validate dependency order before multi-layer config activation.
+# Demo Stage 1/3 (SAFE CHANGE)
+# Crescit Test Scenario 13.1: Full Stack Change (VRF + Networks + Interfaces)
+# Expected Detection: LOW risk, validates dependency chain, generates topology
+# Expected Result: PASS with comprehensive blast radius visualization
+# Real-world analogue: staged dependency validation to avoid hidden control-plane
+# interactions seen in large-scale outages (for example Google Cloud 2019).
 
 - hosts: ndfc
   gather_facts: false
@@ -10,34 +13,79 @@
   vars:
     fabric_name: cisco_test_fabric1
     leaf_switch: 192.168.10.211
+    circuit_context:
+      scenario_id: "06_full_stack_valid"
+      expected_risk: low
+      impact_focus:
+        - dependency_chain_vrf_network_interface
+        - blast_radius_visualization
+      validation_expectations:
+        - "All referenced VRFs exist before network/interface changes"
+        - "No destructive operations"
 
   tasks:
-    - name: Ensure web tier VRF exists (baseline)
+    # Step 1: Create VRF (foundation)
+    - name: Create new application VRF
       cisco.dcnm.dcnm_vrf:
         fabric: "{{ fabric_name }}"
         state: merged
         config:
-          - vrf_name: PROD_VRF_WebTier
+          - vrf_name: PROD_VRF_WebTier  # ✅ Proper naming
             vrf_id: 50700
             vlan_id: 2700
-            rd: "65000:700"
+            rd: "65000:700"  # ✅ Explicit RD
             vrf_template: Default_VRF_Universal
             vrf_extension_template: Default_VRF_Extension_Universal
             attach:
               - ip_address: "{{ leaf_switch }}"
+        deploy: false
 
-    - name: Ensure web server network exists (baseline)
+    # Step 2: Create networks in VRF
+    - name: Create web tier network
       cisco.dcnm.dcnm_network:
         fabric: "{{ fabric_name }}"
         state: merged
         config:
-          - net_name: PROD_NET_WebServers
+          - net_name: PROD_NET_WebServers  # ✅ Proper naming
             vrf_name: PROD_VRF_WebTier
             net_id: 30700
             net_template: Default_Network_Universal
             net_extension_template: Default_Network_Extension_Universal
             vlan_id: 3070
-            gw_ip_subnet: "10.107.10.1/24"
+            gw_ip_subnet: "10.107.10.1/24"  # ✅ Valid CIDR
             attach:
               - ip_address: "{{ leaf_switch }}"
                 ports: []
+        deploy: false
+
+    - name: Create database tier network
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - net_name: PROD_NET_DBServers
+            vrf_name: PROD_VRF_WebTier
+            net_id: 30701
+            vlan_id: 3071
+            gw_ip_subnet: "10.107.20.1/24"  # ✅ Non-overlapping
+            attach:
+              - ip_address: "{{ leaf_switch }}"
+                ports: []
+        deploy: false
+
+    # Step 3: Configure SVI for VRF
+    - name: Configure L3 SVI interface
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - name: Vlan2700
+            type: svi
+            switch:
+              - "{{ leaf_switch }}"
+            profile:
+              int_vrf: PROD_VRF_WebTier
+              ipv4_addr: 10.107.0.1/24
+              mtu: 9216
+              desc: "VRF gateway for PROD_VRF_WebTier - Crescit validated"
+        deploy: false
