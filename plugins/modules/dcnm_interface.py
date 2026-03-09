@@ -4973,10 +4973,10 @@ class DcnmIntf:
                         # This includes both TOR-side and leaf-side port-channels:
                         # - TOR side: "tor-connected-to-vPC-leaf:" or "tor-connected-to-leaf:"
                         # - Leaf side: "leaf-connected-to-vPC-tor:" or "leaf-connected-to-tor:"
-                        if have["alias"] is not None and (
-                            "tor-connected-to" in have["alias"]
-                            or "leaf-connected-to-vPC-tor" in have["alias"]
-                            or "leaf-connected-to-tor" in have["alias"]
+                        if have.get("alias") is not None and (
+                            "tor-connected-to" in have.get("alias")
+                            or "leaf-connected-to-vPC-tor" in have.get("alias")
+                            or "leaf-connected-to-tor" in have.get("alias")
                         ):
                             self.changed_dict[0]["skipped"].append(
                                 {
@@ -5031,14 +5031,14 @@ class DcnmIntf:
                     # - ifType: INTERFACE_VPC
                     # - underlayPolicies templateName starting with "int_vpc_uplink_"
                     # - alias patterns: "tor-connected-to", "leaf-connected-to-vPC-tor"
-                    if have["ifType"] == "INTERFACE_VPC":
+                    if have.get("ifType") == "INTERFACE_VPC":
                         is_tor_uplink = False
 
                         # Check alias patterns for TOR uplinks
-                        if have["alias"] is not None and (
-                            "tor-connected-to" in have["alias"]
-                            or "leaf-connected-to-vPC-tor" in have["alias"]
-                            or "leaf-connected-to-tor" in have["alias"]
+                        if have.get("alias") is not None and (
+                            "tor-connected-to" in have.get("alias")
+                            or "leaf-connected-to-vPC-tor" in have.get("alias")
+                            or "leaf-connected-to-tor" in have.get("alias")
                         ):
                             is_tor_uplink = True
 
