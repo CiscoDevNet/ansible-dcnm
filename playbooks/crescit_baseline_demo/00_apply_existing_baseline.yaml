@@ -1,0 +1,106 @@
+---
+# Apply focused baseline configuration used by Crescit demo scenarios.
+# This keeps PR scope small while preserving high-value impact and auto-fix paths.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+    deploy_changes: true
+    leaf1: 192.168.10.211
+    leaf2: 192.168.10.212
+
+  tasks:
+    - name: Ensure baseline VRFs exist (foundation for scenarios 03/06/09/10)
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vrf_name: PROD_VRF_Core
+            vrf_id: 50010
+            vlan_id: 2100
+            rd: "65000:10"
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            attach:
+              - ip_address: "{{ leaf1 }}"
+              - ip_address: "{{ leaf2 }}"
+          - vrf_name: PROD_VRF_Shared
+            vrf_id: 50020
+            vlan_id: 2200
+            rd: "65000:20"
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            attach:
+              - ip_address: "{{ leaf1 }}"
+              - ip_address: "{{ leaf2 }}"
+          - vrf_name: PROD_VRF_WebTier
+            vrf_id: 50700
+            vlan_id: 2700
+            rd: "65000:700"
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            attach:
+              - ip_address: "{{ leaf1 }}"
+        deploy: "{{ deploy_changes }}"
+
+    - name: Ensure baseline networks exist (scenario anchors)
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          # Scenario 03 baseline: management network in secure reserved range
+          - net_name: MGMT_OOB_NET3901
+            vrf_name: PROD_VRF_Core
+            net_id: 33901
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3901
+            gw_ip_subnet: "10.39.1.1/24"
+            attach:
+              - ip_address: "{{ leaf1 }}"
+                ports: []
+          # Scenario 06 baseline: existing web-tier network
+          - net_name: PROD_NET_WebServers
+            vrf_name: PROD_VRF_WebTier
+            net_id: 30700
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3070
+            gw_ip_subnet: "10.107.10.1/24"
+            attach:
+              - ip_address: "{{ leaf1 }}"
+                ports: []
+          # Scenario 09 baseline: legacy network exists before destructive remove test
+          - net_name: PROD_NET_Legacy_VLAN999
+            vrf_name: PROD_VRF_Shared
+            net_id: 30999
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 999
+            gw_ip_subnet: "10.199.99.1/24"
+            attach:
+              - ip_address: "{{ leaf1 }}"
+                ports: []
+          # Scenario 10 baseline: valid CIDR that PR640 intentionally corrupts
+          - net_name: PROD_NET_Invalid
+            vrf_name: PROD_VRF_Core
+            net_id: 30100
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3010
+            gw_ip_subnet: "10.100.1.1/24"
+            attach:
+              - ip_address: "{{ leaf1 }}"
+                ports: []
+              - ip_address: "{{ leaf2 }}"
+                ports: []
+
+    - name: Show baseline apply completion
+      ansible.builtin.debug:
+        msg:
+          - "Baseline applied for {{ fabric_name }}"
+          - "deploy_changes={{ deploy_changes }}"
+          - "Scenario anchors: 03(policy), 06(dependency-chain), 09(blast-radius), 10(auto-fix)"
