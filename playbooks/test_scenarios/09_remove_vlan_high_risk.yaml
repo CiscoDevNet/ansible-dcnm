@@ -1,6 +1,7 @@
 ---
 # Baseline seed for scenario 09.
 # Existing state keeps legacy network present (non-destructive baseline).
+# Real-world lesson: destructive network removals need blast-radius proof first.
 
 - hosts: ndfc
   gather_facts: false

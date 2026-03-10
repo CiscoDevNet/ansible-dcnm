@@ -1,6 +1,7 @@
 ---
 # Baseline seed for scenario 03.
 # Existing management network is in secure range.
+# Real-world lesson: preserving mgmt/control reachability is critical in live changes.
 
 - hosts: ndfc
   gather_facts: false

@@ -1,5 +1,6 @@
 ---
 # Query focused baseline state in NDFC after initial apply.
+# This verification gate exists to reduce "live-change surprise" before PR640 deltas.
 
 - hosts: ndfc
   gather_facts: false

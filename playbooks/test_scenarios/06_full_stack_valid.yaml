@@ -1,6 +1,7 @@
 ---
 # Baseline seed for scenario 06.
 # Existing state has web-tier VRF and one network already provisioned.
+# Real-world lesson: validate dependency order before multi-layer config activation.
 
 - hosts: ndfc
   gather_facts: false

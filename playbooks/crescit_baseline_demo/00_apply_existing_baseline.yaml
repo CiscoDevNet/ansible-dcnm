@@ -1,6 +1,10 @@
 ---
 # Apply focused baseline configuration used by Crescit demo scenarios.
 # This keeps PR scope small while preserving high-value impact and auto-fix paths.
+# Incident-informed framing:
+# - Meta outage (2021-10-04): control-plane safety during live routing changes
+# - Google Cloud incident 19009 (2019-06-02): staged rollout for large config updates
+# - Fastly outage (2021-06-08): config gating before broad activation
 
 - hosts: ndfc
   gather_facts: false

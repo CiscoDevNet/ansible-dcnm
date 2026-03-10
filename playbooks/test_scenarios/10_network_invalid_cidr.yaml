@@ -1,6 +1,7 @@
 ---
 # Baseline seed for scenario 10.
 # Existing state has valid gateway CIDR for this network.
+# Real-world lesson: strict control-plane input validation prevents broad outages.
 
 - hosts: ndfc
   gather_facts: false
