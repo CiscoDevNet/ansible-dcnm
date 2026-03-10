@@ -1,8 +1,8 @@
 ---
-# Demo Stage 1/3 (SAFE CHANGE)
+# Demo Stage 1/3 (DEEP, NON-OBVIOUS MISCONFIG)
 # Crescit Test Scenario 13.1: Full Stack Change (VRF + Networks + Interfaces)
-# Expected Detection: LOW risk, validates dependency chain, generates topology
-# Expected Result: PASS with comprehensive blast radius visualization
+# Expected Detection: HIGH risk after deep dependency evaluation
+# Expected Result: Auto-fix should propose unique net_id and non-overlapping gateway CIDR
 # Real-world analogue: staged dependency validation to avoid hidden control-plane
 # interactions seen in large-scale outages (for example Google Cloud 2019).
 
@@ -13,15 +13,28 @@
   vars:
     fabric_name: cisco_test_fabric1
     leaf_switch: 192.168.10.211
+    web_net_id: 30700
+    change_batch_id: 1
+    # Deep trap: resolves to 30700 (duplicate with web network net_id).
+    db_net_id_derived: "{{ (web_net_id | int) + (change_batch_id | int) - 1 }}"
+    web_gateway_cidr: "10.107.10.1/24"
+    # Deep trap: DB network reuses web gateway CIDR through indirect variable chain.
+    db_gateway_cidr_derived: "{{ web_gateway_cidr }}"
     circuit_context:
       scenario_id: "06_full_stack_valid"
-      expected_risk: low
+      expected_risk: high
+      complexity_bucket: deep
       impact_focus:
         - dependency_chain_vrf_network_interface
         - blast_radius_visualization
       validation_expectations:
         - "All referenced VRFs exist before network/interface changes"
-        - "No destructive operations"
+        - "Unique network identifiers and non-overlapping gateway CIDRs"
+      historical_reference:
+        - "Cisco Duo 2025-10-07: edge misconfiguration blocked traffic"
+      autofix_hints:
+        - "Allocate a unique net_id for PROD_NET_DBServers"
+        - "Change DB gw_ip_subnet to an independent prefix (for example 10.107.20.1/24)"
 
   tasks:
     # Step 1: Create VRF (foundation)
@@ -48,11 +61,11 @@
         config:
           - net_name: PROD_NET_WebServers  # ✅ Proper naming
             vrf_name: PROD_VRF_WebTier
-            net_id: 30700
+            net_id: "{{ web_net_id | int }}"
             net_template: Default_Network_Universal
             net_extension_template: Default_Network_Extension_Universal
             vlan_id: 3070
-            gw_ip_subnet: "10.107.10.1/24"  # ✅ Valid CIDR
+            gw_ip_subnet: "{{ web_gateway_cidr }}"
             attach:
               - ip_address: "{{ leaf_switch }}"
                 ports: []
@@ -65,9 +78,9 @@
         config:
           - net_name: PROD_NET_DBServers
             vrf_name: PROD_VRF_WebTier
-            net_id: 30701
+            net_id: "{{ db_net_id_derived | int }}"  # ❌ Collides with web net_id
             vlan_id: 3071
-            gw_ip_subnet: "10.107.20.1/24"  # ✅ Non-overlapping
+            gw_ip_subnet: "{{ db_gateway_cidr_derived }}"  # ❌ Overlaps web network
             attach:
               - ip_address: "{{ leaf_switch }}"
                 ports: []

@@ -1,5 +1,5 @@
 ---
-# Demo Stage 2/3 (POLICY VIOLATION)
+# Demo Stage 2/3 (MODERATE, LESS-OBVIOUS POLICY VIOLATION)
 # Crescit Test Scenario 4.1: Management VLAN Security Violation
 # Expected Detection: CRITICAL severity by Policy Validator
 # Expected Auto-Fix: Suggest VLAN ID in secure range (3900-3999)
@@ -13,14 +13,22 @@
 
   vars:
     fabric_name: cisco_test_fabric1
+    # Moderate trap: arithmetic indirection hides that effective VLAN becomes 100.
+    mgmt_vlan_reserved_default: 3901
+    maintenance_window_offset: -3801
+    mgmt_vlan_effective: "{{ (mgmt_vlan_reserved_default | int) + (maintenance_window_offset | int) }}"
     circuit_context:
       scenario_id: "03_security_mgmt_vlan"
       expected_risk: critical
+      complexity_bucket: moderate
       impact_focus:
         - control_plane_mgmt_reachability
         - reserved_mgmt_vlan_policy
+      historical_reference:
+        - "Cisco Meraki 2023-06-14: backend config change caused operational switch reboot"
       autofix_hints:
-        - "Move vlan_id back into reserved range 3900-3999"
+        - "Resolve rendered VLAN value and enforce reserved range 3900-3999"
+        - "Replace arithmetic offset logic with explicit reserved VLAN assignment"
         - "Preserve existing net_name/net_id/gw_ip_subnet"
 
   tasks:
@@ -36,6 +44,6 @@
             net_id: 33901
             net_template: Default_Network_Universal
             net_extension_template: Default_Network_Extension_Universal
-            vlan_id: 100  # ❌ CRITICAL: Management VLANs must be 3900-3999
+            vlan_id: "{{ mgmt_vlan_effective | int }}"  # ❌ Renders to 100
             gw_ip_subnet: "10.39.1.1/24"
         deploy: false

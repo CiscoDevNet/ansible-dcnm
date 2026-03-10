@@ -1,5 +1,5 @@
 ---
-# Demo Stage 3/3 (BLAST-RADIUS HEAVY)
+# Demo Stage 3/3 (DEEP LOGIC TRAP + BLAST-RADIUS HEAVY)
 # Crescit Test Scenario 12.1: Removing VLAN (Destructive Operation)
 # Expected Detection: HIGH severity by Policy Validator
 # Expected Result: Requires approval + shows blast radius of removal
@@ -13,23 +13,32 @@
 
   vars:
     fabric_name: cisco_test_fabric1
+    cleanup_requested: true
+    # Deep trap: string "false" is truthy in Jinja, so deletion still executes.
+    change_ticket_approved: "false"
+    legacy_network_state: >-
+      {{ 'deleted' if (cleanup_requested and change_ticket_approved) else 'merged' }}
     circuit_context:
       scenario_id: "09_remove_vlan_high_risk"
-      expected_risk: high
+      expected_risk: critical
+      complexity_bucket: deep
       impact_focus:
         - network_deletion_blast_radius
         - downstream_interface_dependency
       validation_expectations:
         - "Require approval workflow before apply"
         - "Collect dependent attachments before delete"
+      historical_reference:
+        - "Cisco Duo 2025-09-09: config change disrupted traffic routing"
       autofix_hints:
-        - "Switch to state: merged if removal is not explicitly approved"
+        - "Use strict boolean casting (change_ticket_approved | bool)"
+        - "Force state: merged when approval is false"
 
   tasks:
     - name: Remove legacy production network from fabric (destructive)
       cisco.dcnm.dcnm_network:
         fabric: "{{ fabric_name }}"
-        state: deleted  # ⚠️ HIGH: Destructive operation requires approval
+        state: "{{ legacy_network_state }}"  # ❌ Renders to deleted due to truthiness trap
         config:
           # Baseline network exists as PROD_NET_Legacy_VLAN999 on VLAN 999.
           - net_name: PROD_NET_Legacy_VLAN999

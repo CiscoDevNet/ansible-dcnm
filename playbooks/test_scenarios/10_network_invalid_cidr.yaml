@@ -14,9 +14,12 @@
     circuit_context:
       scenario_id: "10_network_invalid_cidr"
       expected_risk: critical
+      complexity_bucket: simple
       impact_focus:
         - cidr_validation
         - l3_gateway_reachability
+      historical_reference:
+        - "Cisco Duo 2026-02-04: software update introduced session logic regression"
       autofix_hints:
         - "Replace /256 with valid prefix length /24 or /32 as per intent"
         - "Keep net_name/vrf/net_id unchanged"
