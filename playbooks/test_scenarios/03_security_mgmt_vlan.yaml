@@ -5,7 +5,7 @@
 # Expected Auto-Fix: Suggest VLAN ID in secure range (3900-3999)
 # Real-world analogues:
 # - Meta outage (2021-10-04): live control-plane route reachability disruption
-# - Akamai DNS outage (2021-07-22): config update caused broad customer impact
+# - Cloudflare route leak (2026-01-22): automated routing policy error caused prefix leak
 
 - hosts: ndfc
   gather_facts: false
