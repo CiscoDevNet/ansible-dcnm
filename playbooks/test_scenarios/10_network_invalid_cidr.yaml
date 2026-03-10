@@ -1,7 +1,9 @@
 ---
-# Baseline seed for scenario 10.
-# Existing state has valid gateway CIDR for this network.
-# Real-world lesson: strict control-plane input validation prevents broad outages.
+# Crescit Test Scenario 3.1: Invalid CIDR Format
+# Expected Detection: CRITICAL severity by Static Validator
+# Expected Auto-Fix: Correct subnet mask to valid value
+# Real-world analogue: malformed control-plane inputs can amplify quickly in
+# distributed systems (for example Cloudflare 2019 and Google Cloud 2019).
 
 - hosts: ndfc
   gather_facts: false
@@ -9,17 +11,30 @@
 
   vars:
     fabric_name: cisco_test_fabric1
+    circuit_context:
+      scenario_id: "10_network_invalid_cidr"
+      expected_risk: critical
+      complexity_bucket: simple
+      impact_focus:
+        - cidr_validation
+        - l3_gateway_reachability
+      historical_reference:
+        - "Cisco Duo 2026-02-04: software update introduced session logic regression"
+      autofix_hints:
+        - "Replace /256 with valid prefix length /24 or /32 as per intent"
+        - "Keep net_name/vrf/net_id unchanged"
 
   tasks:
-    - name: Ensure PROD_NET_Invalid exists with valid CIDR (baseline)
+    - name: Add network with invalid CIDR notation
       cisco.dcnm.dcnm_network:
         fabric: "{{ fabric_name }}"
         state: merged
         config:
           - net_name: PROD_NET_Invalid
-            vrf_name: PROD_VRF_Core
+            vrf_name: PROD_VRF_Core  # Assuming this exists
             net_id: 30100
             net_template: Default_Network_Universal
             net_extension_template: Default_Network_Extension_Universal
             vlan_id: 3010
-            gw_ip_subnet: "10.100.1.1/24"
+            gw_ip_subnet: "10.100.1.1/256"  # ❌ CRITICAL: /256 is invalid (max /32)
+        deploy: false
