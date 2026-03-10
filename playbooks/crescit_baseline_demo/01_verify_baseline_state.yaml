@@ -8,6 +8,9 @@
 
   vars:
     fabric_name: cisco_test_fabric1
+    history_line: >-
+      History: Cisco Duo 2025-09-09 config change disrupted admin/API traffic;
+      verify baseline state before applying high-risk deltas.
 
   tasks:
     - name: Query VRFs in fabric
@@ -25,6 +28,7 @@
     - name: Show verification summary
       ansible.builtin.debug:
         msg:
+          - "{{ history_line }}"
           - "Fabric: {{ fabric_name }}"
           - "VRF objects found: {{ (vrf_query.response | default([])) | length }}"
           - "Network objects found: {{ (net_query.response | default([])) | length }}"

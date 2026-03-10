@@ -15,6 +15,14 @@
     deploy_changes: true
     leaf1: 192.168.10.211
     leaf2: 192.168.10.212
+    history_line: >-
+      History: 2023-06-14 Cisco Meraki backend config change triggered
+      one-time MS390/Catalyst reboot; baseline pins mgmt/data anchors first.
+    historical_config_anchors:
+      - incident: "Cisco Meraki MS390 config incident"
+        reference: "https://status.meraki.net/incidents/gc1gzznrmjl7"
+      - incident: "Cisco Duo edge misconfiguration outage"
+        reference: "https://status.duo.com/incidents/hw98mjf7fkth"
 
   tasks:
     - name: Ensure baseline VRFs exist (foundation for scenarios 03/06/09/10)
@@ -105,6 +113,7 @@
     - name: Show baseline apply completion
       ansible.builtin.debug:
         msg:
+          - "{{ history_line }}"
           - "Baseline applied for {{ fabric_name }}"
           - "deploy_changes={{ deploy_changes }}"
           - "Scenario anchors: 03(policy), 06(dependency-chain), 09(blast-radius), 10(auto-fix)"
