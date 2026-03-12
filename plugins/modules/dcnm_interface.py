@@ -4352,9 +4352,6 @@ class DcnmIntf:
         for key in self.pol_pc_member_types[self.dcnm_version].keys():
             member_policy_names.append(self.pol_pc_member_types[self.dcnm_version][key])
 
-        # List of keys in nvPairs to protect
-        protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF", "PRIMARY_INTF"]
-
         for have_int in have:
             if have_int["policy"] in member_policy_names:
                 # We have a port-channel member interface. Find the corresponding port-channel
@@ -4363,6 +4360,8 @@ class DcnmIntf:
                 have_pc_serial = have_int["interfaces"][0]["serialNumber"]
 
                 for want_int in want:
+                    # List of keys in nvPairs to protect
+                    protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF", "PRIMARY_INTF"]
                     match_int = find_dict_in_list_by_key_value(search=want_int['interfaces'], key='ifName', value=have_pc_name)
                     if match_int and match_int['serialNumber'] == have_pc_serial:
                         msg = "\nHave Interface Info: "
