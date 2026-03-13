@@ -33,9 +33,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_fil
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import ConvertTargetToParams
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import SwitchDetails
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details_v2 import SwitchDetails
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
     MockAnsibleModule,

@@ -27,8 +27,8 @@ from ..common.api.v1.imagemanagement.rest.discovery.discovery import EpBootflash
 from ..common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import EpBootflashInfo
 from ..common.conversion import ConversionUtils
 from ..common.rest_send_v2 import RestSend
-from ..common.results import Results
-from ..common.switch_details import SwitchDetails
+from ..common.results_v2 import Results
+from ..common.switch_details_v2 import SwitchDetails
 from .convert_file_info_to_target import ConvertFileInfoToTarget
 
 
@@ -266,7 +266,7 @@ class BootflashInfo:
         ## Raises
 
         -   `ValueError` if:
-                -   self.rest_send.params is not set.
+                -   self._rest_send.params is not set.
                 -   self.switches is not set.
                 -   switches is not set.
         """
@@ -277,7 +277,7 @@ class BootflashInfo:
             msg += f"{property_name} must be set prior to calling refresh."
             raise ValueError(msg)
 
-        if not self.rest_send.params:
+        if not self._rest_send.params:
             raise_value_error_if_not_set("rest_send")
         if not self.switches:
             raise_value_error_if_not_set("switches")
@@ -299,12 +299,12 @@ class BootflashInfo:
         """
         self.validate_refresh_parameters()
 
-        self.results.action = self.action
-        self.results.check_mode = self.rest_send.check_mode
-        self.results.state = self.rest_send.state
+        self._results.action = self.action
+        self._results.check_mode = self._rest_send.check_mode
+        self._results.state = self._rest_send.state
 
         # TODO: remove type: ignore[attr-defined] after refactoring SwitchDetails
-        self.switch_details.rest_send = self.rest_send  # type: ignore[attr-defined]
+        self.switch_details.rest_send = self._rest_send  # type: ignore[attr-defined]
         self.switch_details.results = Results()  # type: ignore[attr-defined]
         self.switch_details.refresh()
 
@@ -337,19 +337,19 @@ class BootflashInfo:
 
             # rediscover bootflash contents for the switch
             self.ep_bootflash_discovery.serial_number = serial_number
-            self.rest_send.path = self.ep_bootflash_discovery.path
-            self.rest_send.verb = self.ep_bootflash_discovery.verb
-            self.rest_send.commit()
+            self._rest_send.path = self.ep_bootflash_discovery.path
+            self._rest_send.verb = self.ep_bootflash_discovery.verb
+            self._rest_send.commit()
 
             # retrieve bootflash information for the switch
             self.ep_bootflash_info.serial_number = serial_number
-            self.rest_send.path = self.ep_bootflash_info.path
-            self.rest_send.verb = self.ep_bootflash_info.verb
-            self.rest_send.commit()
+            self._rest_send.path = self.ep_bootflash_info.path
+            self._rest_send.verb = self.ep_bootflash_info.verb
+            self._rest_send.commit()
 
-            self.info_dict[switch] = copy.deepcopy(self.rest_send.response_current.get("DATA", {}))
-            self.response_dict[switch] = copy.deepcopy(self.rest_send.response_current)
-            self.result_dict[switch] = copy.deepcopy(self.rest_send.result_current)
+            self.info_dict[switch] = copy.deepcopy(self._rest_send.response_current.get("DATA", {}))
+            self.response_dict[switch] = copy.deepcopy(self._rest_send.response_current)
+            self.result_dict[switch] = copy.deepcopy(self._rest_send.result_current)
 
     def validate_prerequisites_for_build_matches(self) -> None:
         """
