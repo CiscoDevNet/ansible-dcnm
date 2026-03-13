@@ -1,0 +1,26 @@
+---
+# Crescit Test Scenario 3.1: Invalid CIDR Format
+# Expected Detection: CRITICAL severity by Static Validator
+# Expected Auto-Fix: Correct subnet mask to valid value
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Add network with invalid CIDR notation
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - net_name: PROD_NET_Invalid
+            vrf_name: PROD_VRF_Core  # Assuming this exists
+            net_id: 30100
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3010
+            gw_ip_subnet: "10.100.1.1/256"  # ❌ CRITICAL: /256 is invalid (max /32)
+        deploy: false

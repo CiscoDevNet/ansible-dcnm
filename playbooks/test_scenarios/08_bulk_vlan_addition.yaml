@@ -1,0 +1,51 @@
+---
+# Crescit Test Scenario 5.1: Bulk VLAN Addition Triggers Approval
+# Expected Detection: MEDIUM severity by Policy Validator
+# Expected Result: Requires senior engineer review workflow
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Add 8 VLANs at once (triggers approval workflow)
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          # ⚠️ MEDIUM: Adding >5 VLANs requires approval
+          - vlan_id: 500
+            vlan_name: "PROD_App_VLAN500"
+            vlan_description: "Application VLAN 500"
+
+          - vlan_id: 501
+            vlan_name: "PROD_App_VLAN501"
+            vlan_description: "Application VLAN 501"
+
+          - vlan_id: 502
+            vlan_name: "PROD_App_VLAN502"
+            vlan_description: "Application VLAN 502"
+
+          - vlan_id: 503
+            vlan_name: "PROD_App_VLAN503"
+            vlan_description: "Application VLAN 503"
+
+          - vlan_id: 504
+            vlan_name: "PROD_App_VLAN504"
+            vlan_description: "Application VLAN 504"
+
+          - vlan_id: 505
+            vlan_name: "PROD_App_VLAN505"
+            vlan_description: "Application VLAN 505"
+
+          - vlan_id: 506
+            vlan_name: "PROD_App_VLAN506"
+            vlan_description: "Application VLAN 506"
+
+          - vlan_id: 507
+            vlan_name: "PROD_App_VLAN507"
+            vlan_description: "Application VLAN 507"
+        deploy: false

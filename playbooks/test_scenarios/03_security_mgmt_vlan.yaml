@@ -1,0 +1,22 @@
+---
+# Crescit Test Scenario 4.1: Management VLAN Security Violation
+# Expected Detection: CRITICAL severity by Policy Validator
+# Expected Auto-Fix: Suggest VLAN ID in secure range (3900-3999)
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Add management VLAN outside secure range
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 100  # ❌ CRITICAL: Management VLANs must be 3900-3999
+            vlan_name: "MGMT_OOB_VLAN100"
+            vlan_description: "Out-of-band management VLAN - INSECURE RANGE"
+        deploy: false
