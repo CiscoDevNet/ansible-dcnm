@@ -1,0 +1,42 @@
+---
+# Crescit Test Scenario 10.2: Using Default Values (Your Specific Requirement)
+# Expected Detection: MEDIUM severity by AI Semantic Validator
+# Expected Auto-Fix: Suggest explicit configuration values
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Add VRF relying on default values (anti-pattern)
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vrf_name: PROD_VRF_Defaults
+            vrf_id: 50600
+            vlan_id: 2600
+            # ⚠️ MEDIUM: Relies on defaults for critical fields:
+            # - No explicit RD (will auto-generate)
+            # - No explicit route targets (will auto-derive)
+            # - No L3VNI specified (uses default)
+            # - No BGP settings (uses fabric defaults)
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+        deploy: false
+
+    - name: Add VLAN with minimal config (also defaults)
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 2600
+            vlan_name: "PROD_Minimal_VLAN2600"
+            # ⚠️ INFO: Missing optional but recommended fields:
+            # - vlan_description (best practice)
+            # - dhcp_loopback_id (may need DHCP)
+            # - stp settings (uses fabric defaults)
+        deploy: false

@@ -1,0 +1,26 @@
+---
+# Crescit Test Scenario 9.1: Network References Non-Existent VRF
+# Expected Detection: HIGH severity by NDFC Check Mode Validator
+# Expected Auto-Fix: Suggest creating VRF first or using existing VRF
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Add network referencing non-existent VRF
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - net_name: PROD_NET_Orphan
+            vrf_name: PROD_VRF_DoesNotExist  # ❌ HIGH: This VRF doesn't exist
+            net_id: 30400
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3040
+            gw_ip_subnet: "10.104.1.1/24"
+        deploy: false
