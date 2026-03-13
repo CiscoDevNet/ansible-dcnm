@@ -1,0 +1,27 @@
+---
+# Crescit Test Scenario 12.1: Removing VLAN (Destructive Operation)
+# Expected Detection: HIGH severity by Policy Validator
+# Expected Result: Requires approval + shows blast radius of removal
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Remove VLAN from fabric (destructive)
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: deleted  # ⚠️ HIGH: Destructive operation requires approval
+        config:
+          - vlan_id: 999  # Assuming this exists
+            vlan_name: "PROD_OldApp_VLAN999"
+        deploy: false
+
+# Expected Crescit Behavior:
+# - Policy: "Removing network constructs requires senior engineer approval" [HIGH]
+# - Impact Analysis: Shows which switches/interfaces use this VLAN
+# - Rollback Plan: Documents how to restore VLAN if needed
+# - Recommendations: Verify VLAN is truly unused before removal

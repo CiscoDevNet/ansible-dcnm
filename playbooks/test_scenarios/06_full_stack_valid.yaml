@@ -1,0 +1,79 @@
+---
+# Crescit Test Scenario 13.1: Full Stack Change (VRF + Networks + Interfaces)
+# Expected Detection: LOW risk, validates dependency chain, generates topology
+# Expected Result: PASS with comprehensive blast radius visualization
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+    leaf_switch: 192.168.10.211
+
+  tasks:
+    # Step 1: Create VRF (foundation)
+    - name: Create new application VRF
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vrf_name: PROD_VRF_WebTier  # ✅ Proper naming
+            vrf_id: 50700
+            vlan_id: 2700
+            rd: "65000:700"  # ✅ Explicit RD
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            attach:
+              - ip_address: "{{ leaf_switch }}"
+        deploy: false
+
+    # Step 2: Create networks in VRF
+    - name: Create web tier network
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - net_name: PROD_NET_WebServers  # ✅ Proper naming
+            vrf_name: PROD_VRF_WebTier
+            net_id: 30700
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3070
+            gw_ip_subnet: "10.107.10.1/24"  # ✅ Valid CIDR
+            attach:
+              - ip_address: "{{ leaf_switch }}"
+                ports: []
+        deploy: false
+
+    - name: Create database tier network
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - net_name: PROD_NET_DBServers
+            vrf_name: PROD_VRF_WebTier
+            net_id: 30701
+            vlan_id: 3071
+            gw_ip_subnet: "10.107.20.1/24"  # ✅ Non-overlapping
+            attach:
+              - ip_address: "{{ leaf_switch }}"
+                ports: []
+        deploy: false
+
+    # Step 3: Configure SVI for VRF
+    - name: Configure L3 SVI interface
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - name: Vlan2700
+            type: svi
+            switch:
+              - "{{ leaf_switch }}"
+            profile:
+              int_vrf: PROD_VRF_WebTier
+              ipv4_addr: 10.107.0.1/24
+              mtu: 9216
+              desc: "VRF gateway for PROD_VRF_WebTier - Crescit validated"
+        deploy: false
