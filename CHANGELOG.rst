@@ -8,6 +8,30 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 .. contents:: ``Release Versions``
 
+`3.11.0`_
+=====================
+
+**Release Date:** ``2026-03-13``
+
+Added
+-----
+
+- Added support for External fabric type in the dcnm_fabric module
+- Added support for the following parameters in the dcnm_interface module
+    - `enable_qos`
+    - `qos_policy`
+    - `queuing_policy
+
+
+Fixed
+-----
+
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/440
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/525
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/617
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/634
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/637
+
 `3.10.0`_
 =====================
 
@@ -44,7 +68,6 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/609
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/615
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/626
-
 
 `3.9.1`_
 =====================
@@ -698,6 +721,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 - cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 - cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+.. _3.11.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.10.0...3.11.0
 .. _3.10.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.9.1...3.10.0
 .. _3.9.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.9.0...3.9.1
 .. _3.9.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.8.1...3.9.0
