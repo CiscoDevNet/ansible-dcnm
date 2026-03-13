@@ -16,13 +16,10 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 Added
 -----
 
-- Added Multisite Support
-    - Collection now supports both Multi-Site Domain `MSD` and Multi-Cluster Fabric Group `MCFG`
-    - `dcnm_fabric_group` - Module for fabric group management
-    - Added support to `dcnm_vrf` and `dcnm_network` modules for Multi-Site fabrics
-- Added support for a new `dhcp_servers` parameter in the dcnm_network module to configure up to 16 DHCP servers
-    - This parameter replaces the existing `dhcp_srvr1_ip`, `dhcp_srvr2_ip`, and `dhcp_srvr3_ip` parameters
-    - The old parameters are deprecated but will continue to work for backward compatibility
+- Added support for the following parameters in the dcnm_interface module
+    - `enable_qos`
+    - `qos_policy`
+    - `queuing_policy
 
 
 Fixed
@@ -37,15 +34,19 @@ Fixed
 `3.10.0`_
 =====================
 
-**Release Date:** ``2026-03-13``
+**Release Date:** ``2026-02-05``
 
 Added
 -----
 
-- Added support for the following parameters in the dcnm_interface module
-    - `enable_qos`
-    - `qos_policy`
-    - `queuing_policy
+- Added Multisite Support
+    - Collection now supports both Multi-Site Domain `MSD` and Multi-Cluster Fabric Group `MCFG`
+    - `dcnm_fabric_group` - Module for fabric group management
+    - Added support to `dcnm_vrf` and `dcnm_network` modules for Multi-Site fabrics
+- Added support for a new `dhcp_servers` parameter in the dcnm_network module to configure up to 16 DHCP servers
+    - This parameter replaces the existing `dhcp_srvr1_ip`, `dhcp_srvr2_ip`, and `dhcp_srvr3_ip` parameters
+    - The old parameters are deprecated but will continue to work for backward compatibility
+
 
 Fixed
 -----
@@ -66,7 +67,6 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/609
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/615
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/626
-
 
 `3.9.1`_
 =====================
