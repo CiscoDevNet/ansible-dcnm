@@ -1,5 +1,5 @@
 ---
-# Demo Stage 3/3 (DEEP LOGIC TRAP + BLAST-RADIUS HEAVY)
+# Demo Stage 3/4 (COMPLEX, DESTRUCTIVE + DEPENDENT INTERFACE/LINK INTENT)
 # Crescit Test Scenario 12.1: Removing VLAN (Destructive Operation)
 # Expected Detection: HIGH severity by Policy Validator
 # Expected Result: Requires approval + shows blast radius of removal
@@ -21,10 +21,9 @@
     circuit_context:
       scenario_id: "09_remove_vlan_high_risk"
       expected_risk: critical
-      complexity_bucket: deep
+      complexity_bucket: complex
       impact_focus:
-        - network_deletion_blast_radius
-        - downstream_interface_dependency
+        - network_deletion_blast_radius_with_interface_and_link_dependencies
       validation_expectations:
         - "Require approval workflow before apply"
         - "Collect dependent attachments before delete"
@@ -33,6 +32,7 @@
       autofix_hints:
         - "Use strict boolean casting (change_ticket_approved | bool)"
         - "Force state: merged when approval is false"
+        - "Detach trunk allowances and link templates in staged order before deletion"
 
   tasks:
     - name: Remove legacy production network from fabric (destructive)
@@ -45,6 +45,34 @@
             vrf_name: PROD_VRF_Shared
             net_id: 30999
             vlan_id: 999
+        deploy: false
+
+    - name: Narrow trunk policy after legacy VLAN cleanup
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - name: Ethernet1/31
+            type: int_trunk
+            switch:
+              - "192.168.10.211"
+            profile:
+              # Hidden dependency: VLAN 999 remains in allowed list during cleanup window.
+              allowed_vlans: "100-200,300,999"
+              desc: "Legacy cleanup trunk policy"
+        deploy: false
+
+    - name: Update underlay link intent during cleanup window
+      cisco.dcnm.dcnm_links:
+        state: merged
+        config:
+          - source_fabric: "{{ fabric_name }}"
+            dest_fabric: "{{ fabric_name }}"
+            template_name: int_routed_host
+            profile:
+              ADMIN_STATE: "true"
+              ROUTING_TAG: "LEGACY_CLEANUP"
+              MTU: "9216"
         deploy: false
 
 # Expected Crescit Behavior:

@@ -1,6 +1,6 @@
 ---
-# Demo Stage 1/3 (DEEP, NON-OBVIOUS MISCONFIG)
-# Crescit Test Scenario 13.1: Full Stack Change (VRF + Networks + Interfaces)
+# Demo Stage 4/4 (VERY COMPLEX, MULTI-LAYER DEPENDENCY CHAIN)
+# Crescit Test Scenario 13.1: Full Stack Change (Fabric + VRF + VLAN + Networks + Interfaces + Links)
 # Expected Detection: HIGH risk after deep dependency evaluation
 # Expected Result: Auto-fix should propose unique net_id and non-overlapping gateway CIDR
 # Real-world analogue: staged dependency validation to avoid hidden control-plane
@@ -23,20 +23,30 @@
     circuit_context:
       scenario_id: "06_full_stack_valid"
       expected_risk: high
-      complexity_bucket: deep
+      complexity_bucket: very_complex
       impact_focus:
-        - dependency_chain_vrf_network_interface
+        - dependency_chain_fabric_vrf_vlan_network_interface_links
         - blast_radius_visualization
       validation_expectations:
         - "All referenced VRFs exist before network/interface changes"
         - "Unique network identifiers and non-overlapping gateway CIDRs"
+        - "Fabric-level link intent must remain consistent with underlay policy"
       historical_reference:
         - "Cisco Duo 2025-10-07: edge misconfiguration blocked traffic"
       autofix_hints:
         - "Allocate a unique net_id for PROD_NET_DBServers"
         - "Change DB gw_ip_subnet to an independent prefix (for example 10.107.20.1/24)"
+        - "Reconcile link template profile fields to match fabric underlay guardrails"
 
   tasks:
+    # Step 0: Capture fabric context before mutating dependent resources
+    - name: Query baseline fabric context
+      cisco.dcnm.dcnm_fabric:
+        state: query
+        config:
+          - FABRIC_NAME: "{{ fabric_name }}"
+      register: fabric_context
+
     # Step 1: Create VRF (foundation)
     - name: Create new application VRF
       cisco.dcnm.dcnm_vrf:
@@ -51,6 +61,17 @@
             vrf_extension_template: Default_VRF_Extension_Universal
             attach:
               - ip_address: "{{ leaf_switch }}"
+        deploy: false
+
+    # Step 1.5: Seed VLAN object for app handoff
+    - name: Create dedicated app handoff VLAN
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 3070
+            vlan_name: PROD_App_Handoff_VLAN3070
+            vlan_description: "Very-complex scenario baseline handoff VLAN"
         deploy: false
 
     # Step 2: Create networks in VRF
@@ -101,4 +122,20 @@
               ipv4_addr: 10.107.0.1/24
               mtu: 9216
               desc: "VRF gateway for PROD_VRF_WebTier - Crescit validated"
+        deploy: false
+
+    # Step 4: Apply underlay link intent (subtle policy mismatch hidden in profile)
+    - name: Merge leaf-spine link profile with hidden underlay mismatch
+      cisco.dcnm.dcnm_links:
+        state: merged
+        config:
+          - source_fabric: "{{ fabric_name }}"
+            dest_fabric: "{{ fabric_name }}"
+            template_name: int_routed_host
+            profile:
+              ADMIN_STATE: "true"
+              MTU: "9216"
+              ROUTING_TAG: "WEBTIER_BATCH"
+              # Subtle mismatch: BFD echo disabled for one side of transition intent.
+              BFD_ECHO_DISABLE: "true"
         deploy: false

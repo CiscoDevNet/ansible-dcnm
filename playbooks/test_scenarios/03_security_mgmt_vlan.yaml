@@ -1,5 +1,5 @@
 ---
-# Demo Stage 2/3 (MODERATE, LESS-OBVIOUS POLICY VIOLATION)
+# Demo Stage 2/4 (MODERATE, LESS-OBVIOUS POLICY VIOLATION)
 # Crescit Test Scenario 4.1: Management VLAN Security Violation
 # Expected Detection: CRITICAL severity by Policy Validator
 # Expected Auto-Fix: Suggest VLAN ID in secure range (3900-3999)
