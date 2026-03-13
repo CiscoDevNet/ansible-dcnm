@@ -1,0 +1,22 @@
+---
+# Crescit Test Scenario 1.1: VLAN ID Out of Range
+# Expected Detection: CRITICAL severity by Static Validator
+# Expected Auto-Fix: Suggest valid VLAN ID from available pool
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Add VLAN with invalid ID (out of range)
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 5000  # ❌ CRITICAL: Valid range is 1-4094
+            vlan_name: "PROD_Invalid_VLAN5000"
+            vlan_description: "Test scenario for VLAN range validation"
+        deploy: false
