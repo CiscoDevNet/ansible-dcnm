@@ -16,6 +16,7 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 Added
 -----
 
+- Added support for External fabric type in the dcnm_fabric module
 - Added support for the following parameters in the dcnm_interface module
     - `enable_qos`
     - `qos_policy`
