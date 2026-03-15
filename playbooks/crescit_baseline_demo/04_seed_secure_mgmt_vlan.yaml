@@ -1,0 +1,29 @@
+---
+# Seed secure management VLANs in approved policy range for brownfield baseline.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+    deploy_changes: false
+
+  tasks:
+    - name: Seed management and telemetry VLANs in secure range
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vlan_id: 3902
+            vlan_name: MGMT_OOB_VLAN3902
+            vlan_description: "Out-of-band management baseline"
+
+          - vlan_id: 3903
+            vlan_name: MGMT_TELEMETRY_VLAN3903
+            vlan_description: "Streaming telemetry baseline"
+
+          - vlan_id: 3904
+            vlan_name: MGMT_BACKUP_VLAN3904
+            vlan_description: "Backup and restore baseline"
+        deploy: "{{ deploy_changes }}"
