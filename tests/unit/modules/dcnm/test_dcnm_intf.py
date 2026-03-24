@@ -212,18 +212,55 @@ class TestDcnmIntfModule(TestDcnmModule):
             eth_3_2_access_intf = self.have_all_payloads_data.get(
                 "eth_3_2_access_payload"
             )
+
+            # Build combined bulk response for SAL1819SAN8 containing all
+            # Ethernet interface details.  The real NDFC API groups interfaces
+            # that share the same policy into a single DATA element with
+            # multiple entries in the "interfaces" array.  Simulate that here
+            # to verify the bulk-fetch cache correctly unpacks grouped data.
+            shared_policy = eth_1_1_access_intf["DATA"][0]["policy"]
+            eth_bulk_payload = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    {
+                        "policy": shared_policy,
+                        "interfaces": (
+                            eth_1_1_access_intf["DATA"][0]["interfaces"]
+                            + eth_1_2_access_intf["DATA"][0]["interfaces"]
+                            + eth_3_2_access_intf["DATA"][0]["interfaces"]
+                        ),
+                    }
+                ],
+            }
+            # Empty bulk response for the VPC switch (no eth interfaces there)
+            eth_vpc_empty_payload = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [],
+            }
+
             # Load breakout policies fixture
             self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
             empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
+            # Call sequence with bulk interface detail prefetch:
+            # [0] FABRIC_ACCESS_MODE
+            # [1] IF_DETAIL_WITH_SNO for FOX1821H035 (returns empty)
+            # [2] breakout policies for FOX1821H035 (returns empty)
+            # [3] IF_DETAIL_WITH_SNO for SAL1819SAN8 (populates have_all)
+            # [4] breakout policies for SAL1819SAN8 (returns empty)
+            # [5] bulk IF_WITH_SNO for SAL1819SAN8 (all 3 Eth interface details)
+            # [6] bulk IF_WITH_SNO for SAL1821T9EF (empty - VPC switch)
+            # [7+] PUT/POST for replace/deploy
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 empty_breakout_resp,
                 empty_breakout_resp,
                 playbook_have_all_data,
-                eth_1_1_access_intf,
-                eth_1_2_access_intf,
-                eth_3_2_access_intf,
+                empty_breakout_resp,
+                eth_bulk_payload,
+                eth_vpc_empty_payload,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -5809,7 +5846,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             )
 
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
-        self.assertEqual(len(result["diff"][0]["replaced"]), 2)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
         self.assertEqual(len(result["diff"][0]["overridden"]), 0)
 
     def test_dcnm_intf_override_sub_int_intf_types_only(self):
