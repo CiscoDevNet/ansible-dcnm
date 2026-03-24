@@ -1900,6 +1900,7 @@ class DcnmIntf:
         11: {
             "VPC_SNO": "/rest/interface/vpcpair_serial_number?serial_number={}",
             "IF_WITH_SNO_IFNAME": "/rest/interface?serialNumber={}&ifName={}",
+            "IF_WITH_SNO": "/rest/interface?serialNumber={}",
             "IF_DETAIL_WITH_SNO": "/rest/interface/detail?serialNumber={}",
             "GLOBAL_IF": "/rest/globalInterface",
             "GLOBAL_IF_DEPLOY": "/rest/globalInterface/deploy",
@@ -1911,6 +1912,7 @@ class DcnmIntf:
         12: {
             "VPC_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/vpcpair_serial_number?serial_number={}",
             "IF_WITH_SNO_IFNAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber={}&ifName={}",
+            "IF_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber={}",
             "IF_DETAIL_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/detail?serialNumber={}",
             "GLOBAL_IF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface",
             "GLOBAL_IF_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface/deploy",
@@ -1951,6 +1953,13 @@ class DcnmIntf:
         self.ip_sn = {}
         self.hn_sn = {}
         self.monitoring = []
+
+        # Cache for bulk-fetched interface policy details.
+        # Keyed by (serialNumber, ifName_lower) -> interface detail dict.
+        # This avoids per-interface HTTP GETs which are the primary
+        # performance bottleneck when managing many interfaces.
+        self.intf_detail_cache = {}
+        self.intf_detail_cached_snos = set()
 
         self.changed_dict = [
             {
@@ -4070,6 +4079,66 @@ class DcnmIntf:
                             else:
                                 self.want.append(intf_payload)
 
+    def dcnm_intf_bulk_fetch_intf_info(self, serialNumber):
+        """Bulk-fetch all interface policy details for a switch and populate the cache.
+
+        Instead of making one HTTP GET per interface via IF_WITH_SNO_IFNAME,
+        this fetches ALL interfaces for a serial number in a single call and
+        caches the results.  Subsequent calls to dcnm_intf_get_intf_info()
+        will resolve from the cache in O(1) instead of making a network
+        round-trip.
+
+        Parameters:
+            serialNumber (str): The serial number of the switch. For VPC/AA_FEX
+                                combined serial numbers pass only one side.
+        """
+
+        sno = serialNumber.split("~")[0] if "~" in serialNumber else serialNumber
+
+        if sno in self.intf_detail_cached_snos:
+            return
+
+        path = self.paths["IF_WITH_SNO"].format(sno)
+
+        retry_count = 0
+        resp = []
+        while retry_count < 3:
+            retry_count += 1
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp == [] or (isinstance(resp, dict) and resp.get("RETURN_CODE") == 200):
+                break
+            time.sleep(1)
+
+        if (
+            resp
+            and isinstance(resp, dict)
+            and "DATA" in resp
+            and resp["DATA"]
+            and resp["RETURN_CODE"] == 200
+        ):
+            for item in resp["DATA"]:
+                # The bulk endpoint may group multiple interfaces under the
+                # same policy in a single DATA element.  We must iterate ALL
+                # interfaces in the group — not just [0] — and create a
+                # separate cache entry for each one that looks identical to
+                # what the individual endpoint would return (i.e. a single
+                # interface in the "interfaces" list).
+                for intf in item.get("interfaces", []):
+                    if_name = intf.get("ifName", "")
+                    if if_name:
+                        # Build a per-interface entry that mirrors the
+                        # individual-GET response structure.
+                        single_item = {}
+                        for key in item:
+                            if key != "interfaces":
+                                single_item[key] = item[key]
+                        single_item["interfaces"] = [intf]
+                        cache_key = (sno, if_name.lower())
+                        self.intf_detail_cache[cache_key] = single_item
+
+        self.intf_detail_cached_snos.add(sno)
+
     def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
 
         # For VPC and AA_FEX interfaces the serialNumber will be a combined one. But GET on interface cannot
@@ -4080,6 +4149,21 @@ class DcnmIntf:
         else:
             sno = serialNumber
 
+        # Check the bulk-fetched cache first to avoid a per-interface HTTP GET
+        cache_key = (sno, ifName.lower())
+        cached = self.intf_detail_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        # If we already bulk-fetched all interfaces for this serial number
+        # and this interface was not in the response, it does not exist on
+        # the controller.  Return empty without an additional HTTP call.
+        if sno in self.intf_detail_cached_snos:
+            return []
+
+        # No bulk fetch done for this serial number — fall back to
+        # individual GET (this path is taken when bulk pre-population
+        # was not triggered, e.g. for states other than overridden).
         path = self.paths["IF_WITH_SNO_IFNAME"].format(sno, ifName)
 
         retry_count = 0
@@ -4097,6 +4181,8 @@ class DcnmIntf:
             and resp["DATA"]
             and resp["RETURN_CODE"] == 200
         ):
+            # Store in cache so subsequent lookups for this interface are free
+            self.intf_detail_cache[cache_key] = resp["DATA"][0]
             return resp["DATA"][0]
         else:
             return []
@@ -4980,6 +5066,18 @@ class DcnmIntf:
 
         del_list = []
         defer_list = []
+
+        # Bulk pre-populate the interface detail cache for every switch
+        # present in have_all.  This replaces N per-interface HTTP GETs
+        # (inside dcnm_intf_get_intf_info) with at most S bulk GETs
+        # (one per unique serial number), dramatically speeding up the
+        # overridden diff computation for large interface counts.
+        prefetched_snos = set()
+        for h in self.have_all:
+            sno = h["serialNo"]
+            if sno not in prefetched_snos:
+                prefetched_snos.add(sno)
+                self.dcnm_intf_bulk_fetch_intf_info(sno)
 
         for have in self.have_all:
 
