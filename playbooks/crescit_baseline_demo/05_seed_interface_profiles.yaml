@@ -37,8 +37,11 @@
             switch:
               - "{{ leaf1 }}"
             profile:
-              int_vrf: PROD_VRF_App
+              int_vrf: TEST_VRF_App  # Changed from PROD_VRF_App to TEST_VRF_App
               ipv4_addr: 10.130.0.1/24
               mtu: 9216
-              desc: "Baseline gateway SVI for PROD_VRF_App"
+              desc: "Baseline gateway SVI for TEST_VRF_App with L3 retention"  # Updated description
+              system:
+                vrf-member-change:
+                  retain-l3-config: true  # System command to preserve L3 config
         deploy: "{{ deploy_changes }}"
