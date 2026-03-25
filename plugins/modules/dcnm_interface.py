@@ -6069,14 +6069,17 @@ class DcnmIntf:
         resp = None
 
         path = self.paths["GLOBAL_IF_DEPLOY"]
-        index = -1
+        # Flatten all diff_delete_deploy sublists into a single list and
+        # send one POST instead of up to 9 separate calls (one per
+        # interface type).  The deploy endpoint only needs serialNumber,
+        # ifName, and fabricName — interface type grouping is irrelevant.
+        flat_delete_deploy = []
         for delem in self.diff_delete_deploy:
+            if delem:
+                flat_delete_deploy.extend(delem)
 
-            # index = index + 1
-            if delem == []:
-                continue
-
-            json_payload = json.dumps(delem)
+        if flat_delete_deploy:
+            json_payload = json.dumps(flat_delete_deploy)
 
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
@@ -6197,10 +6200,14 @@ class DcnmIntf:
 
         resp = None
 
-        if self.diff_deploy:
-            # Do a second deploy. Sometimes even if interfaces are created, they are
-            # not being deployed. A second deploy solves the same. Don't worry about
-            # the return values
+        if self.diff_deploy and self.module.params["check_deploy"]:
+            # Safety re-deploy: only when check_deploy is True.
+            # Sometimes NDFC does not deploy all interfaces on the first
+            # attempt.  A second deploy covers those stragglers before
+            # the deployment-status polling loop below verifies In-Sync.
+            # When check_deploy is False (default), the extra round-trip
+            # is skipped because the caller does not require deployment
+            # verification anyway.
 
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
