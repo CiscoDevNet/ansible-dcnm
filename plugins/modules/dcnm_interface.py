@@ -4242,6 +4242,22 @@ class DcnmIntf:
         if not self.want:
             return
 
+        # Bulk-prefetch interface details for all switches referenced in self.want.
+        # This populates the cache so that individual dcnm_intf_get_intf_info calls
+        # below become O(1) lookups instead of individual HTTP GETs.
+        prefetched_snos = set()
+        for elem in self.want:
+            for intf in elem["interfaces"]:
+                sno = intf.get("serialNumber", "")
+                if not sno:
+                    continue
+                # For VPC/AA_FEX, use the first part of the ~-separated pair
+                if intf.get("interfaceType") in ("INTERFACE_VPC", "AA_FEX"):
+                    sno = sno.split("~")[0]
+                if sno not in prefetched_snos:
+                    prefetched_snos.add(sno)
+                    self.dcnm_intf_bulk_fetch_intf_info(sno)
+
         # We have all the requested interface config in self.want. Interfaces are grouped together based on the
         # policy string and the interface name in a single dict entry.
 
@@ -4965,44 +4981,78 @@ class DcnmIntf:
 
         return eth_payload
 
-    def dcnm_intf_can_be_replaced(self, have):
+    def dcnm_intf_build_can_be_replaced_lookups(self):
+        """Pre-build lookup structures for O(1) dcnm_intf_can_be_replaced() checks.
+
+        Replaces the O(n) linear scan of self.pb_input that was performed
+        for every interface in have_all, turning the overall O(n*m) cost
+        into O(n+m).
+
+        Populates three instance-level lookup structures:
+          _pb_override_lookup  – set of (ifname, sno) for overridden-state match
+          _pb_member_lookup    – dict mapping expanded member ifName
+                                 to list of (parent_ifname, parent_sno)
+          _pb_peer_member_lookup – dict mapping expanded peer member ifName
+                                   to parent_ifname
+        """
+
+        self._pb_override_lookup = set()
+        self._pb_member_lookup = {}
+        self._pb_peer_member_lookup = {}
 
         for item in self.pb_input:
-            # For overridden state, we will not touch anything that is present in incoming config,
-            # because those interfaces will anyway be modified in the current run
-            # Must check both interface name AND serial number to ensure we're comparing the same
-            # interface on the same switch (not just the same interface name on different switches)
-            if (self.module.params["state"] == "overridden") and (
-                item["ifname"] == have["ifName"]
-            ) and (
-                item.get("sno") == have.get("serialNo")
-            ):
-                return False, item["ifname"]
+            ifname = item.get("ifname")
+            sno = item.get("sno")
+
+            # Override entries: (ifname, sno) pairs for direct match
+            if ifname and sno:
+                self._pb_override_lookup.add((ifname, sno))
+
+            # Members (port-channel style)
             if item.get("members"):
-                if have["ifName"] in [
-                    self.dcnm_intf_get_if_name(mem, "eth")[0]
-                    for mem in item["members"]
-                ]:
-                    # Compare have serial_number to item serial_number return if they don't match
-                    if have.get('serialNo') != item.get('sno'):
-                        return True, None
-                    else:
-                        return False, item["ifname"]
-            elif (item.get("peer1_members")) or (item.get("peer2_members")):
-                if (
-                    have["ifName"]
-                    in [
-                        self.dcnm_intf_get_if_name(mem, "eth")[0]
-                        for mem in item["peer1_members"]
-                    ]
-                ) or (
-                    have["ifName"]
-                    in [
-                        self.dcnm_intf_get_if_name(mem, "eth")[0]
-                        for mem in item["peer2_members"]
-                    ]
-                ):
-                    return False, item["ifname"]
+                for mem in item["members"]:
+                    expanded_name = self.dcnm_intf_get_if_name(mem, "eth")[0]
+                    if expanded_name not in self._pb_member_lookup:
+                        self._pb_member_lookup[expanded_name] = []
+                    self._pb_member_lookup[expanded_name].append((ifname, sno))
+
+            # Peer members (VPC style)
+            elif item.get("peer1_members") or item.get("peer2_members"):
+                for mem in (item.get("peer1_members") or []):
+                    expanded_name = self.dcnm_intf_get_if_name(mem, "eth")[0]
+                    self._pb_peer_member_lookup[expanded_name] = ifname
+                for mem in (item.get("peer2_members") or []):
+                    expanded_name = self.dcnm_intf_get_if_name(mem, "eth")[0]
+                    self._pb_peer_member_lookup[expanded_name] = ifname
+
+    def dcnm_intf_can_be_replaced(self, have):
+
+        # Build lookup structures on first call if not already built
+        if not hasattr(self, '_pb_member_lookup'):
+            self.dcnm_intf_build_can_be_replaced_lookups()
+
+        have_ifname = have["ifName"]
+        have_sno = have.get("serialNo")
+
+        # Check 1: For overridden state, skip interfaces present in incoming
+        # config — they will be modified in the current run anyway.
+        if self.module.params["state"] == "overridden":
+            if (have_ifname, have_sno) in self._pb_override_lookup:
+                return False, have_ifname
+
+        # Check 2: Check if this interface is a member of a port-channel.
+        if have_ifname in self._pb_member_lookup:
+            for parent_ifname, parent_sno in self._pb_member_lookup[have_ifname]:
+                # Compare have serial_number to item serial_number return if they don't match
+                if have_sno != parent_sno:
+                    return True, None
+                else:
+                    return False, parent_ifname
+
+        # Check 3: Check if this interface is a peer member of a VPC.
+        if have_ifname in self._pb_peer_member_lookup:
+            return False, self._pb_peer_member_lookup[have_ifname]
+
         return True, None
 
     def dcnm_intf_process_config(self, cfg):
@@ -5078,6 +5128,20 @@ class DcnmIntf:
             if sno not in prefetched_snos:
                 prefetched_snos.add(sno)
                 self.dcnm_intf_bulk_fetch_intf_info(sno)
+
+        # Pre-build O(1) lookup structures to replace linear scans.
+        # want_set:  replaces match_want list comprehension over self.want
+        # can_be_replaced lookups: replaces linear scan of self.pb_input
+        want_set = set()
+        for d in self.want:
+            intf0 = d["interfaces"][0]
+            want_set.add((
+                intf0["ifName"].lower(),
+                str(intf0["serialNumber"]),
+                intf0["fabricName"],
+            ))
+
+        self.dcnm_intf_build_can_be_replaced_lookups()
 
         for have in self.have_all:
 
@@ -5191,21 +5255,10 @@ class DcnmIntf:
                     # If yes, ignore the interface, because configuration from want will be applied anyway.
                     # This ensures that Ethernet interfaces removed from the playbook config are reset to default,
                     # while those still in the config are left alone to be configured later.
-                    match_want = [
-                        d
-                        for d in self.want
-                        if (
-                            (
-                                name.lower()
-                                == d["interfaces"][0]["ifName"].lower()
-                            )
-                            and (str(sno) == str(d["interfaces"][0]["serialNumber"]))
-                            and (fabric == d["interfaces"][0]["fabricName"])
-                        )
-                    ]
+                    in_want = (name.lower(), str(sno), fabric) in want_set
 
                     # Only default/reset this interface if it's NOT in the playbook config
-                    if not match_want:
+                    if not in_want:
                         # Before defaulting ethernet interfaces, check if they are
                         # member of any port-channel. If so, do not default that
                         rc, intf = self.dcnm_intf_can_be_replaced(have)
@@ -5383,19 +5436,8 @@ class DcnmIntf:
                     # Check if this interface is present in want. If yes, ignore the interface, because all
                     # configuration from want will be added to create anyway
 
-                    match_want = [
-                        d
-                        for d in self.want
-                        if (
-                            (
-                                name.lower()
-                                == d["interfaces"][0]["ifName"].lower()
-                            )
-                            and (sno == d["interfaces"][0]["serialNumber"])
-                            and (fabric == d["interfaces"][0]["fabricName"])
-                        )
-                    ]
-                    if not match_want:
+                    in_want = (name.lower(), str(sno), fabric) in want_set
+                    if not in_want:
 
                         delem = {}
 
@@ -5476,6 +5518,35 @@ class DcnmIntf:
             # and delete or reset interfaces.
             self.dcnm_intf_get_diff_overridden(self.config)
         elif self.config:
+            # Bulk pre-populate the interface detail cache for every switch
+            # referenced in the config.  This replaces N per-interface HTTP
+            # GETs (inside dcnm_intf_get_intf_info) with at most S bulk GETs
+            # (one per unique serial number), dramatically speeding up the
+            # deleted diff computation for large interface counts.
+            prefetched_snos = set()
+            for cfg in self.config:
+                if cfg.get("name") is None:
+                    continue
+                switches = cfg.get("switch", None)
+                if switches is None:
+                    switches = list(self.ip_sn.keys())
+                for sw in switches:
+                    if sw in self.ip_sn:
+                        sno = self.ip_sn[sw]
+                        if sno not in prefetched_snos:
+                            prefetched_snos.add(sno)
+                            self.dcnm_intf_bulk_fetch_intf_info(sno)
+                    # VPC/AA_FEX interfaces use vpc_ip_sn for lookups.
+                    # Pre-split the combined serial (e.g. "FOX~SAL") and
+                    # prefetch the first part so those lookups hit cache.
+                    name_lower = cfg.get("name", "")[0:3].lower()
+                    if name_lower == "vpc" and sw in self.vpc_ip_sn:
+                        vpc_sno = self.vpc_ip_sn[sw]
+                        vpc_sno_first = vpc_sno.split("~")[0] if "~" in vpc_sno else vpc_sno
+                        if vpc_sno_first not in prefetched_snos:
+                            prefetched_snos.add(vpc_sno_first)
+                            self.dcnm_intf_bulk_fetch_intf_info(vpc_sno_first)
+
             for cfg in self.config:
                 if cfg.get("name", None) is not None and cfg.get("type") == "breakout":
                     self.dcnm_intf_get_have_all(cfg["switch"][0])

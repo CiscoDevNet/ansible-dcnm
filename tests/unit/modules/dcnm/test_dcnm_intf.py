@@ -364,7 +364,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             ]
 
         if "_multi_intf_merged_exist" in self._testMethodName:
-            # No I/F exists case
+            # Interfaces exist case
             playbook_pc_intf = self.payloads_data.get("pc_payload")
             playbook_lo_intf = self.payloads_data.get("lo_payload")
             playbook_eth_intf = self.payloads_data.get("eth_payload")
@@ -377,15 +377,33 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "deployed_payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 (PC, subint, lo, eth)
+            multi_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_pc_intf["DATA"][0],
+                    playbook_subint_intf["DATA"][0],
+                    playbook_lo_intf["DATA"][0],
+                    playbook_eth_intf["DATA"][0],
+                ],
+            }
+            # Bulk IF_WITH_SNO response for FOX1821H035 (VPC)
+            multi_bulk_fox = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_vpc_intf["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_pc_intf,
-                playbook_vpc_intf,
-                playbook_subint_intf,
-                playbook_lo_intf,
-                playbook_eth_intf,
+                multi_bulk_sal,                      # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                multi_bulk_fox,                      # IF_WITH_SNO bulk prefetch for FOX1821H035
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
@@ -497,16 +515,6 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         if "_bunched_intf_merged_new" in self._testMethodName:
             # No I/F exists case
-            playbook_pc_intf1 = []
-            playbook_pc_intf2 = []
-            playbook_pc_intf3 = []
-            playbook_pc_intf4 = []
-            playbook_eth_intf1 = []
-            playbook_eth_intf2 = []
-            playbook_eth_intf3 = []
-            playbook_eth_intf4 = []
-            playbook_vpc_intf1 = []
-            playbook_vpc_intf2 = []
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -514,20 +522,25 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "deployed_payloads"
             )
 
+            # Bulk IF_WITH_SNO responses — empty since no interfaces exist yet
+            bunched_bulk_sal_empty = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [],
+            }
+            bunched_bulk_fox_empty = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_pc_intf1,
-                playbook_pc_intf2,
-                playbook_pc_intf3,
-                playbook_pc_intf4,
-                playbook_eth_intf1,
-                playbook_eth_intf2,
-                playbook_eth_intf3,
-                playbook_eth_intf4,
-                playbook_vpc_intf1,
-                playbook_vpc_intf2,
+                bunched_bulk_sal_empty,               # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                bunched_bulk_fox_empty,               # IF_WITH_SNO bulk prefetch for FOX1821H035
+                # Individual GETs eliminated — all cache misses
                 playbook_have_all_data,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
@@ -919,17 +932,34 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO responses.  AA_FEX with vpc-prefixed name
+            # uses vpc_ip_sn → FOX1821H035 for lookups.  Prefetch order:
+            # SAL (from ip_sn) then FOX (from vpc_ip_sn split).
+            aa_fex_bulk_sal_empty = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [],
+            }
+            aa_fex_bulk_fox = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_aa_fex_intf1["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
-                self.mock_monitor_false_resp,
-                self.playbook_mock_vpc_resp,
-                playbook_aa_fex_intf1,
+                self.mock_monitor_false_resp,       # FABRIC_ACCESS_MODE
+                self.playbook_mock_vpc_resp,         # VPC_SNO for 192.168.1.108
+                aa_fex_bulk_sal_empty,               # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                aa_fex_bulk_fox,                     # IF_WITH_SNO bulk prefetch for FOX1821H035
+                # intf_info for vPC150 is now a cache hit (FOX serial)
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
             ]
 
         if "_aa_fex_deleted_non_existing" in self._testMethodName:
-            playbook_aa_fex_intf1 = []
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -937,12 +967,33 @@ class TestDcnmIntfModule(TestDcnmModule):
             self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
             empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
+            # Bulk IF_WITH_SNO responses.  vPC111 does not exist, so the
+            # FOX bulk response is empty.  After prefetch, the intf_info
+            # lookup for vPC111 on FOX returns [] from cache (SNO already
+            # fetched, interface not found) — no individual HTTP call.
+            # However, when intf_payload==[] for a non-ETH interface, the
+            # code falls through to dcnm_intf_get_have_all(sw) which makes
+            # 2 additional calls (have_all_with_sno + breakout_policies).
+            aa_fex_bulk_sal_empty = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [],
+            }
+            aa_fex_bulk_fox_empty = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [],
+            }
+
             self.run_dcnm_send.side_effect = [
-                self.mock_monitor_false_resp,
-                self.playbook_mock_vpc_resp,
-                playbook_aa_fex_intf1,
-                empty_breakout_resp,
-                playbook_aa_fex_intf1,
+                self.mock_monitor_false_resp,       # FABRIC_ACCESS_MODE
+                self.playbook_mock_vpc_resp,         # VPC_SNO for 192.168.1.108
+                aa_fex_bulk_sal_empty,               # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                aa_fex_bulk_fox_empty,               # IF_WITH_SNO bulk prefetch for FOX1821H035
+                # intf_info for vPC111 returns [] from cache — no HTTP call
+                # Since intf_payload==[], code falls through to have_all:
+                playbook_have_all_data,              # have_all_with_sno for SAL1819SAN8
+                empty_breakout_resp,                 # breakout_policies for SAL1819SAN8
             ]
 
         if "_aa_fex_replaced_existing" in self._testMethodName:
@@ -1297,21 +1348,22 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         if "_pc_merged_new" in self._testMethodName:
             # No I/F exists case
-            playbook_pc_intf1 = []
-            playbook_pc_intf2 = []
-            playbook_pc_intf3 = []
-            playbook_pc_intf4 = []
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO response — empty since no interfaces exist yet
+            pc_bulk_sal_empty = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_pc_intf1,
-                playbook_pc_intf2,
-                playbook_pc_intf3,
-                playbook_pc_intf4,
+                pc_bulk_sal_empty,                   # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # Individual GETs eliminated — all cache misses
                 playbook_have_all_data,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
@@ -1393,13 +1445,23 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 combining all 4 PCs
+            pc_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_pc_intf1["DATA"][0],
+                    playbook_pc_intf2["DATA"][0],
+                    playbook_pc_intf3["DATA"][0],
+                    playbook_pc_intf4["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_pc_intf1,
-                playbook_pc_intf2,
-                playbook_pc_intf3,
-                playbook_pc_intf4,
+                pc_bulk_sal,                         # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
@@ -1433,13 +1495,23 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 combining all 4 PCs.
+            pc_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_pc_intf1["DATA"][0],
+                    playbook_pc_intf2["DATA"][0],
+                    playbook_pc_intf3["DATA"][0],
+                    playbook_pc_intf4["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
-                self.mock_monitor_false_resp,
-                self.playbook_mock_vpc_resp,
-                playbook_pc_intf1,
-                playbook_pc_intf2,
-                playbook_pc_intf3,
-                playbook_pc_intf4,
+                self.mock_monitor_false_resp,       # FABRIC_ACCESS_MODE
+                self.playbook_mock_vpc_resp,         # VPC_SNO for 192.168.1.108
+                pc_bulk_sal,                         # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # intf_info calls for all 4 PCs are now cache hits
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1534,13 +1606,23 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 combining all 4 PCs
+            pc_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_pc_intf1["DATA"][0],
+                    playbook_pc_intf2["DATA"][0],
+                    playbook_pc_intf3["DATA"][0],
+                    playbook_pc_intf4["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_pc_intf1,
-                playbook_pc_intf2,
-                playbook_pc_intf3,
-                playbook_pc_intf4,
+                pc_bulk_sal,                         # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1609,11 +1691,6 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         if "_eth_merged_new" in self._testMethodName:
             # No I/F exists case
-            playbook_eth_intf1 = []
-            playbook_eth_intf2 = []
-            playbook_eth_intf3 = []
-            playbook_eth_intf4 = []
-            playbook_eth_intf5 = []
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -1621,14 +1698,18 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "deployed_payloads"
             )
 
+            # Bulk IF_WITH_SNO response — empty since no interfaces exist yet
+            eth_bulk_sal_empty = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_eth_intf1,
-                playbook_eth_intf2,
-                playbook_eth_intf3,
-                playbook_eth_intf4,
-                playbook_eth_intf5,
+                eth_bulk_sal_empty,                  # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # Individual GETs eliminated — all cache misses (SNO cached, interfaces not found)
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1698,14 +1779,24 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 combining all 5 ETH interfaces
+            eth_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_eth_intf1["DATA"][0],
+                    playbook_eth_intf2["DATA"][0],
+                    playbook_eth_intf3["DATA"][0],
+                    playbook_eth_intf4["DATA"][0],
+                    playbook_eth_intf5["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_eth_intf1,
-                playbook_eth_intf2,
-                playbook_eth_intf3,
-                playbook_eth_intf4,
-                playbook_eth_intf5,
+                eth_bulk_sal,                        # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
@@ -1748,14 +1839,24 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "deployed_payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 combining all 5 ETH interfaces
+            eth_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_eth_intf1["DATA"][0],
+                    playbook_eth_intf2["DATA"][0],
+                    playbook_eth_intf3["DATA"][0],
+                    playbook_eth_intf4["DATA"][0],
+                    playbook_eth_intf5["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_eth_intf1,
-                playbook_eth_intf2,
-                playbook_eth_intf3,
-                playbook_eth_intf4,
-                playbook_eth_intf5,
+                eth_bulk_sal,                        # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1795,16 +1896,28 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "eth_payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 combining all 5 ETH
+            # interfaces.  The deleted-state prefetch makes one bulk GET per
+            # unique serial number, replacing 5 individual GETs.
+            eth_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_eth_intf1["DATA"][0],
+                    playbook_eth_intf2["DATA"][0],
+                    playbook_eth_intf3["DATA"][0],
+                    playbook_eth_intf4["DATA"][0],
+                    playbook_eth_intf5["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
-                self.mock_monitor_false_resp,
-                self.playbook_mock_vpc_resp,
-                playbook_have_all_data,
-                playbook_eth_intf1,
-                playbook_eth_intf2,
-                playbook_eth_intf3,
-                playbook_eth_intf4,
-                playbook_eth_intf5,
-                self.playbook_mock_succ_resp,
+                self.mock_monitor_false_resp,       # FABRIC_ACCESS_MODE
+                self.playbook_mock_vpc_resp,         # VPC_SNO for 192.168.1.108
+                eth_bulk_sal,                        # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                playbook_have_all_data,              # IF_DETAIL_WITH_SNO (have_all)
+                self.playbook_mock_succ_resp,         # breakout_policies (harmless, no breakout match)
+                # intf_info calls for all 5 ETH interfaces are now cache hits
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1917,11 +2030,21 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 with both sub-interfaces
+            subint_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_subint_intf1["DATA"][0],
+                    playbook_subint_intf2["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_subint_intf1,
-                playbook_subint_intf2,
+                subint_bulk_sal,                     # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1942,11 +2065,21 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "deployed_payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 with both sub-interfaces
+            subint_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_subint_intf1["DATA"][0],
+                    playbook_subint_intf2["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_subint_intf1,
-                playbook_subint_intf2,
+                subint_bulk_sal,                     # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -2003,11 +2136,21 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 with both sub-interfaces.
+            subint_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_subint_intf1["DATA"][0],
+                    playbook_subint_intf2["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
-                self.mock_monitor_false_resp,
-                self.playbook_mock_vpc_resp,
-                playbook_subint_intf1,
-                playbook_subint_intf2,
+                self.mock_monitor_false_resp,       # FABRIC_ACCESS_MODE
+                self.playbook_mock_vpc_resp,         # VPC_SNO for 192.168.1.108
+                subint_bulk_sal,                     # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # intf_info calls for both sub-interfaces are now cache hits
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -2131,11 +2274,21 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 with both loopbacks
+            lo_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_lo_intf1["DATA"][0],
+                    playbook_lo_intf2["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_lo_intf1,
-                playbook_lo_intf2,
+                lo_bulk_sal,                         # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
@@ -2189,11 +2342,21 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "deployed_payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 with both loopbacks
+            lo_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_lo_intf1["DATA"][0],
+                    playbook_lo_intf2["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_lo_intf1,
-                playbook_lo_intf2,
+                lo_bulk_sal,                         # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -2216,11 +2379,21 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 with both loopbacks.
+            lo_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_lo_intf1["DATA"][0],
+                    playbook_lo_intf2["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
-                self.mock_monitor_false_resp,
-                self.playbook_mock_vpc_resp,
-                playbook_lo_intf1,
-                playbook_lo_intf2,
+                self.mock_monitor_false_resp,       # FABRIC_ACCESS_MODE
+                self.playbook_mock_vpc_resp,         # VPC_SNO for 192.168.1.108
+                lo_bulk_sal,                         # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # intf_info calls for both loopbacks are now cache hits
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -2256,11 +2429,22 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "eth_3_2_access_payload"
             )
 
+            # Bulk IF_WITH_SNO response for SAL1819SAN8 with both loopbacks
+            # (consumed by get_have bulk prefetch for the overridden state)
+            lo_bulk_sal = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_lo_intf1["DATA"][0],
+                    playbook_lo_intf2["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_lo_intf1,
-                playbook_lo_intf2,
+                lo_bulk_sal,                         # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 eth_1_1_access_intf,
                 eth_1_2_access_intf,
@@ -2417,12 +2601,22 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO response for FOX1821H035 (first part of VPC pair)
+            vpc_bulk_fox = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_vpc_intf1["DATA"][0],
+                    playbook_vpc_intf2["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_vpc_intf1,
-                playbook_vpc_intf2,
+                vpc_bulk_fox,                        # IF_WITH_SNO bulk prefetch for FOX1821H035
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -2451,12 +2645,31 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # Bulk IF_WITH_SNO responses.  VPC interfaces use the first
+            # part of the combined serial (FOX1821H035).  The prefetch
+            # fetches both ip_sn serials (FOX, SAL) plus the VPC serial
+            # (FOX again, deduped).  Order: FOX first, then SAL.
+            vpc_bulk_fox = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_vpc_intf1["DATA"][0],
+                    playbook_vpc_intf2["DATA"][0],
+                ],
+            }
+            vpc_bulk_sal_empty = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [],
+            }
+
             self.run_dcnm_send.side_effect = [
-                self.mock_monitor_false_resp,
-                self.playbook_mock_vpc_resp,
-                self.playbook_mock_vpc_resp,
-                playbook_vpc_intf1,
-                playbook_vpc_intf2,
+                self.mock_monitor_false_resp,       # FABRIC_ACCESS_MODE
+                self.playbook_mock_vpc_resp,         # VPC_SNO for 192.168.1.109
+                self.playbook_mock_vpc_resp,         # VPC_SNO for 192.168.1.108
+                vpc_bulk_fox,                        # IF_WITH_SNO bulk prefetch for FOX1821H035
+                vpc_bulk_sal_empty,                  # IF_WITH_SNO bulk prefetch for SAL1819SAN8
+                # intf_info calls for both VPCs are now cache hits (FOX serial)
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -2482,12 +2695,22 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "deployed_payloads"
             )
 
+            # Bulk IF_WITH_SNO response for FOX1821H035 (first part of VPC pair)
+            vpc_bulk_fox = {
+                "MESSAGE": "OK",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    playbook_vpc_intf1["DATA"][0],
+                    playbook_vpc_intf2["DATA"][0],
+                ],
+            }
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 self.playbook_mock_vpc_resp,
-                playbook_vpc_intf1,
-                playbook_vpc_intf2,
+                vpc_bulk_fox,                        # IF_WITH_SNO bulk prefetch for FOX1821H035
+                # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
