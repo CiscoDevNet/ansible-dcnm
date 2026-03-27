@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,24 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, annotations, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import inspect
 import json
 import logging
+from typing import Any
 
 from ..common.api.v1.imagemanagement.rest.imageupgrade.imageupgrade import \
     EpInstallOptions
 from ..common.conversion import ConversionUtils
 from ..common.exceptions import ControllerResponseError
-from ..common.properties import Properties
+from ..common.rest_send_v2 import RestSend
+from ..common.results_v2 import Results
 
 
-@Properties.add_rest_send
-@Properties.add_results
 class ImageInstallOptions:
     """
     ### Summary
@@ -153,39 +153,29 @@ class ImageInstallOptions:
     """
 
     def __init__(self) -> None:
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.compatibility_status = {}
-        self.payload: dict = {}
+        self.compatibility_status: dict[str, Any] = {}
+        self.payload: dict[str, Any] = {}
 
-        self.conversion = ConversionUtils()
-        self.ep_install_options = EpInstallOptions()
+        self.conversion: ConversionUtils = ConversionUtils()
+        self.ep_install_options: EpInstallOptions = EpInstallOptions()
 
-        self._response_data = None
+        self._epld: bool = False
+        self._issu: bool = True
+        self._package_install: bool = False
+        self._policy_name: str = ""
+        self._response_data: dict[str, Any] = {}
+        self._rest_send: RestSend = RestSend({})
+        self._results: Results = Results()
+        self._serial_number: str = ""
+        self._timeout: int = 300
 
-        self._init_properties()
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
-
-    def _init_properties(self):
-        """
-        ### Summary
-        Initialize class properties.
-
-        ### Raises
-        None
-        """
-        self._epld = False
-        self._issu = True
-        self._package_install = False
-        self._policy_name = None
-        self._rest_send = None
-        self._results = None
-        self._serial_number = None
-        self._timeout = 300
 
     def _validate_refresh_parameters(self) -> None:
         """
@@ -195,25 +185,19 @@ class ImageInstallOptions:
         ### Raises
         ``ValueError`` if parameters are not set correctly.
         """
-        # pylint: disable=no-member
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        if self.policy_name is None:
+        if self.policy_name == "":
             msg = f"{self.class_name}.{method_name}: "
             msg += "policy_name must be set before calling refresh()."
             raise ValueError(msg)
 
-        if self.rest_send is None:
+        if not self.rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling refresh()."
             raise ValueError(msg)
 
-        if self.results is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "results must be set before calling refresh()."
-            raise ValueError(msg)
-
-        if self.serial_number is None:
+        if self.serial_number == "":
             msg = f"{self.class_name}.{method_name}: "
             msg += "serial_number must be set before calling refresh()."
             raise ValueError(msg)
@@ -228,7 +212,7 @@ class ImageInstallOptions:
         -   ``ControllerResponseError``: if the controller response is bad.
             e.g. 401, 500 error, etc.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         self._validate_refresh_parameters()
 
@@ -257,20 +241,17 @@ class ImageInstallOptions:
 
         self._build_payload()
 
-        # pylint: disable=no-member
         self.rest_send.path = self.ep_install_options.path
         self.rest_send.verb = self.ep_install_options.verb
         self.rest_send.payload = self.payload
         self.rest_send.commit()
 
         self._response_data = self.rest_send.response_current.get("DATA", {})
-        # pylint: enable=no-member
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"self.response_data: {json.dumps(self.response_data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        # pylint: disable=no-member
         if self.rest_send.result_current["success"] is False:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Bad result when retrieving install-options from "
@@ -284,7 +265,6 @@ class ImageInstallOptions:
                 msg += "a package defined, and package_install is set to "
                 msg += f"True in the playbook for device {self.serial_number}."
             raise ControllerResponseError(msg)
-        # pylint: enable=no-member
 
         if self.response_data.get("compatibilityStatusList") is None:
             self.compatibility_status = {}
@@ -317,7 +297,7 @@ class ImageInstallOptions:
         }
         ```
         """
-        self.payload: dict = {}
+        self.payload = {}
         self.payload["devices"] = []
         devices = {}
         devices["serialNumber"] = self.serial_number
@@ -330,7 +310,7 @@ class ImageInstallOptions:
         msg = f"self.payload {self.payload}"
         self.log.debug(msg)
 
-    def _get(self, item):
+    def _get(self, item: str) -> Any:
         """
         ### Summary
         Return items from self.response_data.
@@ -356,7 +336,7 @@ class ImageInstallOptions:
 
     @policy_name.setter
     def policy_name(self, value):
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, str):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.policy_name must be a string. Got {value}."
@@ -400,7 +380,7 @@ class ImageInstallOptions:
 
     @issu.setter
     def issu(self, value):
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         value = self.conversion.make_boolean(value)
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
@@ -429,7 +409,7 @@ class ImageInstallOptions:
 
     @epld.setter
     def epld(self, value):
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         value = self.conversion.make_boolean(value)
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
@@ -458,7 +438,7 @@ class ImageInstallOptions:
 
     @package_install.setter
     def package_install(self, value):
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         value = self.conversion.make_boolean(value)
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
@@ -469,29 +449,29 @@ class ImageInstallOptions:
 
     # Getter properties
     @property
-    def comp_disp(self):
+    def comp_disp(self) -> str:
         """
         ### Summary
 
         -   Return the compDisp (CLI output from show install all status)
             of the install-options response, if it exists.
-        -   Return None otherwise
+        -   Return empty string otherwise
         """
-        return self.compatibility_status.get("compDisp")
+        return self.compatibility_status.get("compDisp", "")
 
     @property
-    def device_name(self):
+    def device_name(self) -> str:
         """
         ### Summary
 
         -   Return the deviceName of the install-options response,
             if it exists.
-        -   Return None otherwise
+        -   Return empty string otherwise
         """
-        return self.compatibility_status.get("deviceName")
+        return self.compatibility_status.get("deviceName", "")
 
     @property
-    def epld_modules(self):
+    def epld_modules(self) -> dict:
         """
         ### Summary
 
@@ -503,125 +483,128 @@ class ImageInstallOptions:
         -   epldModules will be "null" if self.epld is False.
         -   _get() will convert to NoneType in this case.
         """
-        return self._get("epldModules")
+        value = self._get("epldModules")
+        if not value:
+            return {}
+        return value
 
     @property
-    def err_message(self):
+    def err_message(self) -> str:
         """
         ### Summary
 
-        -   Return the errMessage of the install-options response,
-            if it exists.
-        -   Return None otherwise
+        - Return the errMessage of the install-options response, if it exists.
+        - Return empty string otherwise
         """
-        return self._get("errMessage")
+        value = self._get("errMessage")
+        if not value:
+            return ""
+        return value
 
     @property
-    def install_option(self):
+    def install_option(self) -> str:
         """
         ### Summary
 
-        -   Return the installOption of the install-options response,
-            if it exists.
-        -   Return None otherwise
+        - Return the installOption of the install-options response, if it exists.
+        - Return empty string otherwise
         """
-        return self.compatibility_status.get("installOption")
+        return self.compatibility_status.get("installOption", "")
 
     @property
-    def install_packages(self):
+    def install_packages(self) -> dict:
         """
         ### Summary
 
-        -   Return the installPackages of the install-options response,
-            if it exists.
-        -   Return None otherwise
+        - Return the installPackages of the install-options response, if it exists.
+        - Return empty dict otherwise
 
         ### NOTE
+
         Yes, installPacakges is misspelled in the response in the following
         controller versions (at least):
 
         -   12.1.2e
         -   12.1.3b
         """
-        return self._get("installPacakges")
+        value = self._get("installPacakges")
+        if not value:
+            return {}
+        return value
 
     @property
-    def ip_address(self):
+    def ip_address(self) -> str:
         """
         ### Summary
 
-        -   Return the ipAddress of the install-options response,
-            if it exists.
-        -   Return None otherwise
+        - Return the ipAddress of the install-options response, if it exists.
+        - Return empty string otherwise
         """
-        return self.compatibility_status.get("ipAddress")
+        return self.compatibility_status.get("ipAddress", "")
 
     @property
     def response_data(self) -> dict:
         """
         ### Summary
 
-        -   Return the DATA portion of the controller response.
-        -   Return empty dict otherwise.
+        - Return the DATA portion of the controller response.
+        - Return empty dict otherwise.
         """
         return self._response_data
 
     @property
-    def os_type(self):
+    def os_type(self) -> str:
         """
         ### Summary
 
-        -   Return the osType of the install-options response,
-            if it exists.
-        -   Return None otherwise
+        - Return the osType of the install-options response, if it exists.
+        - Return empty string otherwise.
         """
-        return self.compatibility_status.get("osType")
+        return self.compatibility_status.get("osType", "")
 
     @property
-    def platform(self):
+    def platform(self) -> str:
         """
         ### Summary
 
-        -   Return the platform of the install-options response,
-            if it exists.
-        -   Return None otherwise
+        - Return the platform of the install-options response, if it exists.
+        - Return empty string otherwise.
         """
-        return self.compatibility_status.get("platform")
+        return self.compatibility_status.get("platform", "")
 
     @property
-    def pre_issu_link(self):
+    def pre_issu_link(self) -> str:
         """
         ### Summary
 
-        -   Return the ``preIssuLink`` of the install-options response,
-            if it exists.
-        -   Return ``None`` otherwise.
+        - Return the ``preIssuLink`` of the install-options response, if it exists.
+        - Return empty string otherwise.
         """
-        return self.compatibility_status.get("preIssuLink")
+        return self.compatibility_status.get("preIssuLink", "")
 
     @property
-    def raw_data(self):
+    def raw_data(self) -> dict:
         """
         ### Summary
 
-        -   Return the raw data of the install-options response,
-            if it exists.
-        -   Return ``None`` otherwise.
+        - Return the raw data of the install-options response, if it exists.
+        - Return empty dict otherwise.
         """
         return self.response_data
 
     @property
-    def raw_response(self):
+    def raw_response(self) -> dict:
         """
         ### Summary
 
-        -   Return the raw install-options response, if it exists.
-        -   Alias for self.rest_send.response_current
+        - Return the raw install-options response, if it exists.
+        - Return empty dict otherwise.
+        - Alias for self.rest_send.response_current
         """
-        return self.rest_send.response_current  # pylint: disable=no-member
+        return self.rest_send.response_current
 
     @property
-    def rep_status(self):
+    def rep_status(self) -> str:
         """
         ### Summary
 
@@ -629,32 +612,102 @@ class ImageInstallOptions:
             if it exists.
         -   Return ``None`` otherwise.
         """
-        return self.compatibility_status.get("repStatus")
+        return self.compatibility_status.get("repStatus", "")
 
     @property
-    def status(self):
+    def rest_send(self) -> RestSend:
+        """
+        ### Summary
+        An instance of the RestSend class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of RestSend.
+
+        ### getter
+        Return an instance of the RestSend class.
+
+        ### setter
+        Set an instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            raise ValueError(f"{self.class_name}.{method_name}: RestSend.params must be set.")
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        ### Summary
+        An instance of the Results class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of Results.
+
+        ### getter
+        Return an instance of the Results class.
+
+        ### setter
+        Set an instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._results = value
+
+    @property
+    def status(self) -> str:
         """
         ### Summary
 
         -   Return the ``status`` of the install-options response,
             if it exists.
-        -   Return ``None`` otherwise.
+        -   Return empty string otherwise.
         """
-        return self.compatibility_status.get("status")
+        return self.compatibility_status.get("status", "")
 
     @property
-    def timestamp(self):
+    def timestamp(self) -> str:
         """
         ### Summary
 
         -   Return the ``timestamp`` of the install-options response,
             if it exists.
-        -   Return ``None`` otherwise.
+        -   Return empty string otherwise.
         """
-        return self.compatibility_status.get("timestamp")
+        return self.compatibility_status.get("timestamp", "")
 
     @property
-    def version(self):
+    def version(self) -> str:
         """
         ### Summary
 
@@ -662,10 +715,10 @@ class ImageInstallOptions:
             if it exists.
         -   Return ``None`` otherwise.
         """
-        return self.compatibility_status.get("version")
+        return self.compatibility_status.get("version", "")
 
     @property
-    def version_check(self):
+    def version_check(self) -> str:
         """
         ### Summary
 
@@ -673,4 +726,4 @@ class ImageInstallOptions:
             of the install-options response, if it exists.
         -   Return ``None`` otherwise.
         """
-        return self.compatibility_status.get("versionCheck")
+        return self.compatibility_status.get("versionCheck", "")
