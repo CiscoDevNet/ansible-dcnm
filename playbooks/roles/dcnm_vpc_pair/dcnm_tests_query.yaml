@@ -1,0 +1,21 @@
+---
+# Query existing vPC pairs in the fabric
+# This is a read-only operation — safe to run at any time
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Query all vPC pairs in fabric
+      cisco.dcnm.dcnm_vpc_pair:
+        src_fabric: "{{ fabric_name }}"
+        state: query
+      register: vpc_result
+
+    - name: Display vPC pair information
+      ansible.builtin.debug:
+        var: vpc_result
