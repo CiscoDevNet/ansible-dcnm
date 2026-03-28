@@ -32,19 +32,18 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, fabric_config_save_fixture, params,
-    responses_ep_fabric_config_save)
+    MockAnsibleModule,
+    does_not_raise,
+    fabric_config_save_fixture,
+    params,
+    responses_ep_fabric_config_save,
+)
 
 
 def test_fabric_config_save_00010(fabric_config_save) -> None:
@@ -99,9 +98,7 @@ MATCH_00020b += r"contain only the characters in: \[A-Z,a-z,0-9,-,_\]\."
         ("My*Fabric", pytest.raises(ValueError, match=MATCH_00020b), True),
     ],
 )
-def test_fabric_config_save_00020(
-    fabric_config_save, fabric_name, expected, does_raise
-) -> None:
+def test_fabric_config_save_00020(fabric_config_save, fabric_name, expected, does_raise) -> None:
     """
     Classes and Methods
     - FabricConfigSave
@@ -151,9 +148,7 @@ MATCH_00030 += r"value must be an instance of RestSend\."
         ({10}, True, pytest.raises(TypeError, match=MATCH_00030)),
     ],
 )
-def test_fabric_config_save_00030(
-    fabric_config_save, value, does_raise, expected
-) -> None:
+def test_fabric_config_save_00030(fabric_config_save, value, does_raise, expected) -> None:
     """
     Classes and Methods
     - FabricConfigSave
@@ -191,9 +186,7 @@ MATCH_00040 += r"value must be an instance of Results\."
         ({10}, True, pytest.raises(TypeError, match=MATCH_00040)),
     ],
 )
-def test_fabric_config_save_00040(
-    fabric_config_save, value, does_raise, expected
-) -> None:
+def test_fabric_config_save_00040(fabric_config_save, value, does_raise, expected) -> None:
     """
     Classes and Methods
     - FabricConfigSave

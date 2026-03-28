@@ -32,22 +32,14 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabrics
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    does_not_raise, fabric_details_v2_fixture, responses_fabric_details_v2)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import EpFabrics
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import does_not_raise, fabric_details_v2_fixture, responses_fabric_details_v2
 
 
 def test_fabric_details_v2_00000(fabric_details_v2) -> None:
@@ -342,10 +334,7 @@ def test_fabric_details_v2_00130(fabric_details_v2) -> None:
     assert False not in instance.results.failed
     assert False in instance.results.changed
     assert True not in instance.results.changed
-    assert (
-        instance.all_data.get("VXLAN_Fabric", {}).get("nvPairs", {}).get("FABRIC_NAME")
-        == "VXLAN_Fabric"
-    )
+    assert instance.all_data.get("VXLAN_Fabric", {}).get("nvPairs", {}).get("FABRIC_NAME") == "VXLAN_Fabric"
 
 
 def test_fabric_details_v2_00140(fabric_details_v2, monkeypatch) -> None:
@@ -594,9 +583,7 @@ MATCH_00500 += r"Error detail:.*\."
         (RestSend({"state": "merged", "check_mode": False}), False, does_not_raise()),
     ],
 )
-def test_fabric_details_v2_00500(
-    fabric_details_v2, param, does_raise, expected
-) -> None:
+def test_fabric_details_v2_00500(fabric_details_v2, param, does_raise, expected) -> None:
     """
     ### Classes and Methods
     - FabricDetails()
