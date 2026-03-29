@@ -30,19 +30,19 @@ import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import \
-    Query
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import Query
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import (
-    MockAnsibleModule, configs_query, does_not_raise, params_query,
-    responses_ep_all_switches, responses_ep_fabrics)
+    MockAnsibleModule,
+    configs_query,
+    does_not_raise,
+    params_query,
+    responses_ep_all_switches,
+    responses_ep_fabrics,
+)
 
 
 def test_dcnm_maintenance_mode_query_00000() -> None:
@@ -350,6 +350,7 @@ def test_dcnm_maintenance_mode_query_00600(monkeypatch) -> None:
         """
         Mocked MaintenanceModeInfo class.
         """
+
         def __init__(self, *args):
             pass
 
@@ -367,7 +368,5 @@ def test_dcnm_maintenance_mode_query_00600(monkeypatch) -> None:
     match += r"Error detail: MockMaintenanceModeInfo\.refresh:\s+"
     match += r"Mocked ValueError\."
     with pytest.raises(ValueError, match=match):
-        monkeypatch.setattr(
-            instance, "maintenance_mode_info", MockMaintenanceModeInfo()
-        )
+        monkeypatch.setattr(instance, "maintenance_mode_info", MockMaintenanceModeInfo())
         instance.commit()
