@@ -306,6 +306,12 @@ options:
         - Not applicable at Multisite parent fabric level
         type: str
         required: false
+      xconnect:
+        description:
+        - Enable XConnect feature. Only available for ND version > 4.1.
+        type: bool
+        default: false
+        required: false
       attach:
         description:
         - List of network attachment details
@@ -1001,6 +1007,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     validate_list_of_dicts,
     sanitize_lan_attach_list
 )
+from ..module_utils.common.controller_version_v2 import ControllerVersion
+from ..module_utils.common.rest_send_v2 import RestSend
+from ..module_utils.common.response_handler import ResponseHandler
+from ..module_utils.common.sender_dcnm import Sender
+from ..module_utils.common.exceptions import ControllerResponseError
 
 
 class DcnmNetwork:
@@ -1102,6 +1113,8 @@ class DcnmNetwork:
 
         msg = f"self.dcnm_version: {self.dcnm_version}"
         self.log.debug(msg)
+
+        self.ndfc_version = self._get_ndfc_version()
 
         self.inventory_data = get_nd_fabric_inventory_details(self.module, self.dcnm_version, self.fabric, self.fabric_details)
 
@@ -1622,6 +1635,7 @@ class DcnmNetwork:
         nf_en_changed = False
         intvlan_nfmon_changed = False
         vlan_nfmon_changed = False
+        xconnect_changed = False
 
         if want.get("networkId") and want["networkId"] != have["networkId"]:
             self.module.fail_json(msg="networkId can not be updated on existing network: {0}".format(want["networkName"]))
@@ -1679,6 +1693,8 @@ class DcnmNetwork:
         intvlan_nfen_have = json_to_dict_have.get("SVI_NETFLOW_MONITOR", "")
         vlan_nfen_want = json_to_dict_want.get("VLAN_NETFLOW_MONITOR", "")
         vlan_nfen_have = json_to_dict_have.get("VLAN_NETFLOW_MONITOR", "")
+        xconnect_want = str(json_to_dict_want.get("xconnect", "")).lower()
+        xconnect_have = str(json_to_dict_have.get("xconnect", "")).lower()
 
         if vlanId_have != "":
             vlanId_have = int(vlanId_have)
@@ -1796,6 +1812,10 @@ class DcnmNetwork:
                 net_name_diff = net_name_have != net_name_want
                 comparisons.append(net_name_diff)
 
+            if "xconnect" not in skipped_template_keys:
+                xconnect_diff = xconnect_have != xconnect_want
+                comparisons.append(xconnect_diff)
+
             if any(comparisons):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
@@ -1848,6 +1868,9 @@ class DcnmNetwork:
                         intvlan_nfmon_changed = True
                     if vlan_nfen_have != vlan_nfen_want:
                         vlan_nfmon_changed = True
+                if self._ndfc_version_gte("12.4.1"):
+                    if xconnect_have != xconnect_want:
+                        xconnect_changed = True
 
                 want.update({"networkId": have["networkId"]})
                 create = want
@@ -1957,6 +1980,10 @@ class DcnmNetwork:
                 net_name_diff = net_name_have != net_name_want
                 comparisons.append(net_name_diff)
 
+            if "xconnect" not in skipped_template_keys:
+                xconnect_diff = xconnect_have != xconnect_want
+                comparisons.append(xconnect_diff)
+
             if any(comparisons):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
@@ -2006,6 +2033,9 @@ class DcnmNetwork:
                         intvlan_nfmon_changed = True
                     if vlan_nfen_have != vlan_nfen_want:
                         vlan_nfmon_changed = True
+                if self._ndfc_version_gte("12.4.1"):
+                    if xconnect_have != xconnect_want:
+                        xconnect_changed = True
 
                 want.update({"networkId": have["networkId"]})
                 create = want
@@ -2035,6 +2065,7 @@ class DcnmNetwork:
             nf_en_changed,
             intvlan_nfmon_changed,
             vlan_nfmon_changed,
+            xconnect_changed,
         )
 
     def update_create_params(self, net):
@@ -2111,6 +2142,8 @@ class DcnmNetwork:
             template_conf.update(ENABLE_NETFLOW=net.get("netflow_enable", False))
             template_conf.update(SVI_NETFLOW_MONITOR=net.get("intfvlan_nf_monitor", ""))
             template_conf.update(VLAN_NETFLOW_MONITOR=net.get("vlan_nf_monitor", ""))
+        if self._ndfc_version_gte("12.4.1"):
+            template_conf.update(xconnect=net.get("xconnect", False))
 
         if template_conf["vlanId"] is None:
             template_conf["vlanId"] = ""
@@ -2264,6 +2297,8 @@ class DcnmNetwork:
                     t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
                     t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                if self._ndfc_version_gte("12.4.1"):
+                    t_conf.update(xconnect=json_to_dict.get("xconnect", False))
 
                 # Remove mcastGroup when Fabric is MSD
                 if "mcastGroup" not in json_to_dict:
@@ -2319,6 +2354,8 @@ class DcnmNetwork:
                             t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
                             t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
                             t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                        if self._ndfc_version_gte("12.4.1"):
+                            t_conf.update(xconnect=json_to_dict.get("xconnect", False))
 
                         l2net.update({"networkTemplateConfig": json.dumps(t_conf)})
                         del l2net["displayName"]
@@ -2845,6 +2882,7 @@ class DcnmNetwork:
         nf_en_changed = {}
         intvlan_nfmon_changed = {}
         vlan_nfmon_changed = {}
+        xconnect_changed = {}
 
         for want_c in self.want_create:
             found = False
@@ -2877,6 +2915,7 @@ class DcnmNetwork:
                         nf_en_chg,
                         intvlan_nfmon_chg,
                         vlan_nfmon_chg,
+                        xconnect_chg,
                     ) = self.diff_for_create(want_c, have_c)
 
                     gw_changed.update({want_c["networkName"]: gw_chg})
@@ -2902,6 +2941,7 @@ class DcnmNetwork:
                     nf_en_changed.update({want_c["networkName"]: nf_en_chg})
                     intvlan_nfmon_changed.update({want_c["networkName"]: intvlan_nfmon_chg})
                     vlan_nfmon_changed.update({want_c["networkName"]: vlan_nfmon_chg})
+                    xconnect_changed.update({want_c["networkName"]: xconnect_chg})
                     if diff:
                         diff_create_update.append(diff)
                     break
@@ -3013,6 +3053,7 @@ class DcnmNetwork:
                             or nf_en_changed.get(want_a["networkName"], False)
                             or intvlan_nfmon_changed.get(want_a["networkName"], False)
                             or vlan_nfmon_changed.get(want_a["networkName"], False)
+                            or xconnect_changed.get(want_a["networkName"], False)
                         ):
                             dep_net = want_a["networkName"]
 
@@ -3119,6 +3160,8 @@ class DcnmNetwork:
                 found_c.update({"netflow_enable": json_to_dict.get("ENABLE_NETFLOW", False)})
                 found_c.update({"intfvlan_nf_monitor": json_to_dict.get("SVI_NETFLOW_MONITOR", "")})
                 found_c.update({"vlan_nf_monitor": json_to_dict.get("VLAN_NETFLOW_MONITOR", "")})
+            if self._ndfc_version_gte("12.4.1"):
+                found_c.update({"xconnect": json_to_dict.get("xconnect", False)})
             found_c.update({"attach": []})
 
             del found_c["fabric"]
@@ -3656,6 +3699,8 @@ class DcnmNetwork:
                     t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
                     t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                if self._ndfc_version_gte("12.4.1"):
+                    t_conf.update(xconnect=json_to_dict.get("xconnect", False))
 
                 # Remove skipped attributes from template config for parent fabrics
                 for key in list(t_conf.keys()):
@@ -3811,6 +3856,35 @@ class DcnmNetwork:
 
         return skipped_attrs
 
+    def _get_ndfc_version(self):
+        """Return the full NDFC version string (e.g. '12.4.1.245') using ControllerVersion, or None on failure."""
+        try:
+            sender = Sender()
+            sender.ansible_module = self.module
+            rest_send = RestSend(self.module.params)
+            rest_send.response_handler = ResponseHandler()
+            rest_send.sender = sender
+            controller_version = ControllerVersion()
+            controller_version.rest_send = rest_send
+            controller_version.refresh()
+            raw_version = controller_version.version
+            if raw_version:
+                return re.sub(r'[a-zA-Z]+$', '', raw_version)
+        except (ControllerResponseError, ValueError):
+            pass
+        return None
+
+    def _ndfc_version_gte(self, target):
+        """Check if NDFC version >= target. Uses tuple comparison on version segments."""
+        if not self.ndfc_version:
+            return False
+        try:
+            current = tuple(int(x) for x in self.ndfc_version.split(".")[:3])
+            required = tuple(int(x) for x in target.split(".")[:3])
+            return current >= required
+        except (ValueError, AttributeError):
+            return False
+
     def get_template_config_mapping(self):
         """
         Get mapping from network spec attributes to template config keys.
@@ -3846,8 +3920,10 @@ class DcnmNetwork:
             "l3gw_on_border": "enableL3OnBorder",
             "netflow_enable": "ENABLE_NETFLOW",
             "intfvlan_nf_monitor": "SVI_NETFLOW_MONITOR",
-            "vlan_nf_monitor": "VLAN_NETFLOW_MONITOR"
+            "vlan_nf_monitor": "VLAN_NETFLOW_MONITOR",
         }
+        if self._ndfc_version_gte("12.4.1"):
+            mapping["xconnect"] = "xconnect"
         return mapping
 
     def get_network_spec(self, fabric_type=None):
@@ -3956,6 +4032,9 @@ class DcnmNetwork:
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
             )
+
+            if self._ndfc_version_gte("12.4.1"):
+                net_spec["xconnect"] = dict(type="bool", default=False)
 
             # Adjust deploy field for query state
             if is_query_state:
@@ -4432,6 +4511,14 @@ class DcnmNetwork:
         # NetFlow SVI monitor configuration (common for all fabric types, version 12+ only)
         if self.dcnm_version > 11 and cfg.get("intfvlan_nf_monitor", None) is None:
             json_to_dict_want["SVI_NETFLOW_MONITOR"] = json_to_dict_have["SVI_NETFLOW_MONITOR"]
+
+        # XConnect configuration (NDFC >= 12.4.1 only)
+        if self._ndfc_version_gte("12.4.1") and cfg.get("xconnect", None) is None:
+            json_to_dict_want["xconnect"] = json_to_dict_have.get("xconnect", False)
+            if str(json_to_dict_want["xconnect"]).lower() == "true":
+                json_to_dict_want["xconnect"] = True
+            else:
+                json_to_dict_want["xconnect"] = False
 
         want.update({"networkTemplateConfig": json.dumps(json_to_dict_want)})
 
