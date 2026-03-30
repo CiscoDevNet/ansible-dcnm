@@ -2173,7 +2173,6 @@ class DcnmIntf:
         msg = "ENTERED DcnmIntf: "
         self.log.debug(msg)
 
-
     def _get_ndfc_version(self):
         """Return the full NDFC version string (e.g. '12.4.1.245') using ControllerVersion, or None on failure."""
         try:
@@ -2202,7 +2201,6 @@ class DcnmIntf:
             return current >= required
         except (ValueError, AttributeError):
             return False
-
 
     def dcnm_intf_breakout_format(self, if_name):
         # Define the pattern to match '1/x/y' where x and y are integers
