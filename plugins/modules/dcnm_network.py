@@ -1110,6 +1110,11 @@ class DcnmNetwork:
         self.log.debug(msg)
 
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
+        self.logical_name_inventory = {}
+        for switch_details in self.inventory_data.values():
+            logical_name = switch_details.get("logicalName")
+            if logical_name:
+                self.logical_name_inventory[logical_name.lower()] = switch_details
 
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
         # Use get_nd_fabric_details for ND/multicluster support (handles proxy paths for child fabrics)
@@ -1206,8 +1211,25 @@ class DcnmNetwork:
         """
         if search is None:
             return None
+
         match = (d for d in search if d[key] == value)
         return next(match, None)
+
+    @staticmethod
+    def merge_port_lists(port_lists):
+        """
+        Merge comma-separated interface lists while preserving first-seen order.
+        """
+
+        merged_ports = []
+        for port_list in port_lists:
+            if not port_list:
+                continue
+            for port in port_list.split(","):
+                port = port.strip()
+                if port and port not in merged_ports:
+                    merged_ports.append(port)
+        return ",".join(merged_ports)
 
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
         caller = inspect.stack()[1][3]
@@ -2369,20 +2391,29 @@ class DcnmNetwork:
                 sn = attach["switchSerialNo"]
                 vlan = attach.get("vlanId")
 
-                if attach["portNames"] and re.match(r"\S+\(\S+\d+\/\d+\)", attach["portNames"]):
-                    for idx, sw_list in enumerate(re.findall(r"\S+\(\S+\d+\/\d+\)", attach["portNames"])):
-                        torports = {}
-                        sw = sw_list.split("(")
-                        eth_list = sw[1].split(")")
-                        if idx == 0:
-                            ports = eth_list[0]
-                            continue
-                        torports.update({"switch": sw[0]})
-                        torports.update({"torPorts": eth_list[0]})
-                        torlist.append(torports)
-                    attach.update({"torports": torlist})
-                else:
-                    ports = attach["portNames"]
+                ports = ""
+                if attach["portNames"]:
+                    named_port_entries = re.findall(r"(\S+)\(([^)]*)\)", attach["portNames"])
+                    if named_port_entries:
+                        residual_ports = re.sub(r"\S+\([^)]*\)", "", attach["portNames"]).strip()
+                        non_tor_port_lists = []
+                        for switch_name, port_list in named_port_entries:
+                            switch_details = self.logical_name_inventory.get(switch_name.lower(), {})
+                            role = switch_details.get("switchRole", "").lower()
+                            if role == "tor":
+                                torlist.append({"switch": switch_name, "torPorts": port_list})
+                            else:
+                                non_tor_port_lists.append(port_list)
+
+                        if residual_ports:
+                            ports = residual_ports
+                        elif non_tor_port_lists:
+                            ports = self.merge_port_lists(non_tor_port_lists)
+
+                        if torlist:
+                            attach.update({"torports": torlist})
+                    else:
+                        ports = attach["portNames"]
 
                 # The deletes and updates below are done to update the incoming dictionary format to
                 # match to what the outgoing payload requirements mandate.
