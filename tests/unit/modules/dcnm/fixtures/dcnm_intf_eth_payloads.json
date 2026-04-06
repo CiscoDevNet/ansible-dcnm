@@ -36,6 +36,42 @@
 			"METHOD": "GET"
 	},
 
+	"eth_merged_trunk_missing_native_vlan_payloads" : 
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Ethernet1/30",
+			"DATA": [
+			{
+				"policy": "int_trunk_host_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_ETHERNET",
+					"nvPairs": {
+						"CONF": "no shutdown",
+						"MTU": "jumbo",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"ADMIN_STATE": "True",
+						"INTF_NAME": "Ethernet1/30",
+						"BPDUGUARD_ENABLED": "True",
+						"ALLOWED_VLANS": "none",
+						"SPEED": "auto",
+						"PORT_DUPLEX_MODE": "auto",
+						"DESC": "eth interface  acting as trunk",
+						"ENABLE_ORPHAN_PORT": false,
+						"ENABLE_PFC": false,
+						"CDP_ENABLE": true,
+						"ENABLE_MONITOR": false
+					},
+					"ifName": "Ethernet1/30",
+					"serialNumber": "SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}],
+        "skipResourceCheck": "True"
+			}],
+		"RETURN_CODE": 200,
+			"METHOD": "GET"
+	},
+
 		"eth_merged_access_payloads" : 
 		{
 			"MESSAGE": "OK",

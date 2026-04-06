@@ -1231,6 +1231,47 @@ class DcnmNetwork:
                     merged_ports.append(port)
         return ",".join(merged_ports)
 
+    def normalize_vpc_torports(self, networks):
+        """
+        NDFC reflects TOR attachments on both VPC peers even when the playbook
+        only models them on one peer. Mirror one-sided TOR intent across the
+        peer pair before diffing so merged/replaced are evaluated consistently.
+        """
+
+        if not networks:
+            return
+
+        networks_by_serial = {network.get("serialNumber"): network for network in networks}
+
+        for network in networks:
+            serial = network.get("serialNumber")
+            if not serial:
+                continue
+
+            ip_address = next((ip for ip, ser in self.ip_sn.items() if ser == serial), None)
+            if not ip_address:
+                continue
+
+            switch_details = self.inventory_data.get(ip_address, {})
+            if not switch_details.get("isVpcConfigured"):
+                continue
+
+            peer_serial = switch_details.get("peerSerialNumber")
+            if not peer_serial:
+                continue
+
+            peer_network = networks_by_serial.get(peer_serial)
+            if not peer_network:
+                continue
+
+            network_torports = network.get("torports") or []
+            peer_torports = peer_network.get("torports") or []
+
+            if network_torports and not peer_torports:
+                peer_network["torports"] = copy.deepcopy(network_torports)
+            elif peer_torports and not network_torports:
+                network["torports"] = copy.deepcopy(peer_torports)
+
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
         caller = inspect.stack()[1][3]
 
@@ -1240,16 +1281,18 @@ class DcnmNetwork:
         self.log.debug(msg)
 
         attach_list = []
-        atch_tor_ports = []
 
         if not want_a:
             return attach_list
 
+        working_have_a = copy.deepcopy(have_a) if have_a else []
+        original_have_a = copy.deepcopy(have_a) if have_a else []
+
         dep_net = False
         for want in want_a:
             found = False
-            if have_a:
-                for have in have_a:
+            if working_have_a:
+                for have in working_have_a:
                     if want["serialNumber"] == have["serialNumber"] and want["networkName"] == have["networkName"]:
                         found = True
 
@@ -1269,19 +1312,21 @@ class DcnmNetwork:
                                                     h_tor_ports = tor_h["torPorts"].split(",") if tor_h["torPorts"] else []
                                                     w_tor_ports = tor_w["torPorts"].split(",") if tor_w["torPorts"] else []
 
-                                                    if sorted(h_tor_ports) != sorted(w_tor_ports):
-                                                        atch_tor_ports = list(set(w_tor_ports) - set(h_tor_ports))
-
                                                     if replace:
-                                                        atch_tor_ports = w_tor_ports
+                                                        merged_tor_ports = w_tor_ports
                                                     else:
-                                                        atch_tor_ports.extend(h_tor_ports)
+                                                        merged_tor_ports = self.merge_port_lists(
+                                                            [tor_w.get("torPorts", ""), tor_h.get("torPorts", "")]
+                                                        )
+                                                        merged_tor_ports = (
+                                                            merged_tor_ports.split(",") if merged_tor_ports else []
+                                                        )
 
-                                                    torconfig = tor_w["switch"] + "(" + ",".join(atch_tor_ports) + ")"
+                                                    torconfig = tor_w["switch"] + "(" + ",".join(merged_tor_ports) + ")"
                                                     torconfig_list.append(torconfig)
                                                     # Update torports_configured to True. If there is no other config change for attach
                                                     # We will still append this attach to attach_list as there is tor port change
-                                                    if sorted(atch_tor_ports) != sorted(h_tor_ports):
+                                                    if sorted(merged_tor_ports) != sorted(h_tor_ports):
                                                         torports_configured = True
 
                                         if not torports_present:
@@ -1437,7 +1482,7 @@ class DcnmNetwork:
                     if peer_ser == attch["serialNumber"]:
                         peer_found = True
                 if not peer_found:
-                    for hav in have_a:
+                    for hav in original_have_a:
                         if hav["serialNumber"] == peer_ser:
                             havtoattach = copy.deepcopy(hav)
                             havtoattach.update({"switchPorts": ""})
@@ -2531,6 +2576,7 @@ class DcnmNetwork:
 
                 networks.append(result)
             if networks:
+                self.normalize_vpc_torports(networks)
                 for attch in net["attach"]:
                     for ip, ser in self.ip_sn.items():
                         if ser == attch["serialNumber"]:

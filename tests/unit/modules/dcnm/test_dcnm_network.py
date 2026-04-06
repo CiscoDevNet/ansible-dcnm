@@ -42,6 +42,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
     nd_version_11 = test_data.get("nd_version_11")
     mock_ip_sn = test_data.get("mock_ip_sn")
     net_inv_data = test_data.get("net_inv_data")
+    net_inv_data_vpc_tor = test_data.get("net_inv_data_vpc_tor")
     fabric_details = test_data.get("fabric_details")
     fabric_details_vxlan_fabric = test_data.get("fabric_details_vxlan_fabric")
     fabric_associations = test_data.get("fabric_associations")
@@ -56,6 +57,8 @@ class TestDcnmNetworkModule(TestDcnmModule):
     playbook_tor_roleerr_config = test_data.get("playbook_tor_roleerr_config")
     playbook_tor_config_update = test_data.get("playbook_tor_config_update")
     playbook_tor_only_config_update = test_data.get("playbook_tor_only_config_update")
+    playbook_tor_vpc_one_sided_config = test_data.get("playbook_tor_vpc_one_sided_config")
+    playbook_tor_vpc_one_sided_update = test_data.get("playbook_tor_vpc_one_sided_update")
 
     playbook_config_replace = test_data.get("playbook_config_replace")
     playbook_config_replace_no_atch = test_data.get("playbook_config_replace_no_atch")
@@ -121,6 +124,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.mock_net_attach_tor_only_object = copy.deepcopy(
             self.test_data.get("mock_net_attach_tor_only_object")
         )
+        self.mock_net_attach_tor_vpc_object = copy.deepcopy(
+            self.test_data.get("mock_net_attach_tor_vpc_object")
+        )
 
     def setUp(self):
         super(TestDcnmNetworkModule, self).setUp()
@@ -151,6 +157,30 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.mock_dcnm_ip_sn.stop()
         self.mock_dcnm_fabric_details.stop()
         self.mock_dcnm_get_url.stop()
+
+    @staticmethod
+    def _build_attach_state(serial, switch_ports, torports=None, vlan=202):
+        return {
+            "serialNumber": serial,
+            "networkName": "test_network",
+            "switchPorts": switch_ports,
+            "isAttached": True,
+            "deployment": True,
+            "is_deploy": True,
+            "vlan": vlan,
+            "torports": copy.deepcopy(torports or []),
+        }
+
+    @staticmethod
+    def _build_test_logger():
+        return type("Logger", (), {"debug": lambda *args, **kwargs: None})()
+
+    def _build_diff_network(self, inventory_data, ip_sn=None):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.inventory_data = copy.deepcopy(inventory_data)
+        dcnm_net.ip_sn = copy.deepcopy(ip_sn or self.mock_ip_sn)
+        return dcnm_net
 
     def load_fixtures(self, response=None, device=""):
 
@@ -437,6 +467,18 @@ class TestDcnmNetworkModule(TestDcnmModule):
         elif "_merged_tor_only_with_update" in self._testMethodName:
             self.init_data()
             self.run_dcnm_get_url.side_effect = [self.mock_net_attach_tor_only_object]
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf_object,
+                self.mock_net_object,
+                self.blank_data,
+                self.attach_success_resp,
+                self.deploy_success_resp,
+            ]
+
+        elif "_merged_tor_vpc_one_sided_with_update" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_ip_sn.side_effect = [self.net_inv_data_vpc_tor]
+            self.run_dcnm_get_url.side_effect = [self.mock_net_attach_tor_vpc_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
                 self.mock_net_object,
@@ -989,6 +1031,297 @@ class TestDcnmNetworkModule(TestDcnmModule):
             attach_by_ip["10.10.10.217"]["tor_ports"],
         )
         self.assertEqual(result.get("diff")[0]["net_name"], "test_network")
+
+    def test_dcnm_net_merged_tor_vpc_idempotent(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = type("Logger", (), {"debug": lambda *args, **kwargs: None})()
+        dcnm_net.inventory_data = copy.deepcopy(self.net_inv_data_vpc_tor)
+        dcnm_net.ip_sn = copy.deepcopy(self.mock_ip_sn)
+
+        have_attach = [
+            {
+                "serialNumber": "9YO9A29F27U",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "vlan": 202,
+                "torports": [
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/12"},
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/12"},
+                ],
+            },
+            {
+                "serialNumber": "9NN7E41N16A",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "vlan": 202,
+                "torports": [
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/12"},
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/12"},
+                ],
+            },
+        ]
+        want_attach = copy.deepcopy(have_attach)
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
+
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
+
+    def test_dcnm_net_merged_tor_vpc_one_sided_with_update(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_network",
+                config=self.playbook_tor_vpc_one_sided_update,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+        self.version = 11
+
+        attach_by_ip = {
+            attach["ip_address"]: attach for attach in result.get("diff")[0]["attach"]
+        }
+        self.assertIn("10.10.10.217", attach_by_ip)
+        self.assertIn("10.10.10.218", attach_by_ip)
+        self.assertIn("dt-n9k6(Ethernet1/13,Ethernet1/14,Ethernet1/12)", attach_by_ip["10.10.10.217"]["tor_ports"])
+        self.assertIn("dt-n9k7(Ethernet1/13,Ethernet1/14,Ethernet1/12)", attach_by_ip["10.10.10.217"]["tor_ports"])
+        self.assertIn("dt-n9k6(Ethernet1/13,Ethernet1/14,Ethernet1/12)", attach_by_ip["10.10.10.218"]["tor_ports"])
+        self.assertIn("dt-n9k7(Ethernet1/13,Ethernet1/14,Ethernet1/12)", attach_by_ip["10.10.10.218"]["tor_ports"])
+
+    def test_dcnm_net_replace_tor_vpc_one_sided_idempotent(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = type("Logger", (), {"debug": lambda *args, **kwargs: None})()
+        dcnm_net.inventory_data = copy.deepcopy(self.net_inv_data_vpc_tor)
+        dcnm_net.ip_sn = copy.deepcopy(self.mock_ip_sn)
+
+        want_attach = [
+            {
+                "serialNumber": "9NN7E41N16A",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "torports": [],
+            },
+            {
+                "serialNumber": "9YO9A29F27U",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "torports": [
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/12"},
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/12"},
+                ],
+            },
+        ]
+        have_attach = [
+            {
+                "serialNumber": "9NN7E41N16A",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "vlan": 202,
+                "torports": [
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/12"},
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/12"},
+                ],
+            },
+            {
+                "serialNumber": "9YO9A29F27U",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "vlan": 202,
+                "torports": [
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/12"},
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/12"},
+                ],
+            },
+        ]
+
+        dcnm_net.normalize_vpc_torports(want_attach)
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach), replace=True)
+
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
+
+    def test_dcnm_net_merged_tor_vpc_single_tor_with_update(self):
+        dcnm_net = self._build_diff_network(self.net_inv_data_vpc_tor)
+
+        have_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/12"}],
+            ),
+            self._build_attach_state(
+                "9YO9A29F27U",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/12"}],
+            ),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14"),
+            self._build_attach_state(
+                "9YO9A29F27U",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            ),
+        ]
+
+        dcnm_net.normalize_vpc_torports(want_attach)
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(
+            copy.deepcopy(want_attach), copy.deepcopy(have_attach)
+        )
+
+        attach_by_serial = {attach["serialNumber"]: attach for attach in diff}
+        self.assertTrue(dep_net)
+        self.assertEqual(len(diff), 2)
+        self.assertEqual(
+            attach_by_serial["9NN7E41N16A"]["torPorts"],
+            "dt-n9k6(Ethernet1/13,Ethernet1/14,Ethernet1/12)",
+        )
+        self.assertEqual(
+            attach_by_serial["9YO9A29F27U"]["torPorts"],
+            "dt-n9k6(Ethernet1/13,Ethernet1/14,Ethernet1/12)",
+        )
+
+    def test_dcnm_net_replace_tor_vpc_single_tor_idempotent(self):
+        dcnm_net = self._build_diff_network(self.net_inv_data_vpc_tor)
+
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14"),
+            self._build_attach_state(
+                "9YO9A29F27U",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            ),
+        ]
+        have_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            ),
+            self._build_attach_state(
+                "9YO9A29F27U",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            ),
+        ]
+
+        dcnm_net.normalize_vpc_torports(want_attach)
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(
+            copy.deepcopy(want_attach), copy.deepcopy(have_attach), replace=True
+        )
+
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
+
+    def test_dcnm_net_merged_tor_single_leaf_single_tor_with_update(self):
+        inventory_data = {
+            "10.10.10.217": {
+                "ipAddress": "10.10.10.217",
+                "logicalName": "dt-n9k1",
+                "serialNumber": "9NN7E41N16A",
+                "switchRole": "leaf",
+                "isVpcConfigured": False,
+            },
+            "10.10.10.219": {
+                "ipAddress": "10.10.10.219",
+                "logicalName": "dt-n9k6",
+                "serialNumber": "9YO9A29F28C",
+                "switchRole": "tor",
+            },
+        }
+        ip_sn = {
+            "10.10.10.217": "9NN7E41N16A",
+            "10.10.10.219": "9YO9A29F28C",
+        }
+        dcnm_net = self._build_diff_network(inventory_data, ip_sn)
+
+        have_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/12"}],
+            )
+        ]
+        want_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            )
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(
+            copy.deepcopy(want_attach), copy.deepcopy(have_attach)
+        )
+
+        self.assertTrue(dep_net)
+        self.assertEqual(len(diff), 1)
+        self.assertEqual(
+            diff[0]["torPorts"], "dt-n9k6(Ethernet1/13,Ethernet1/14,Ethernet1/12)"
+        )
+
+    def test_dcnm_net_replace_tor_single_leaf_single_tor_idempotent(self):
+        inventory_data = {
+            "10.10.10.217": {
+                "ipAddress": "10.10.10.217",
+                "logicalName": "dt-n9k1",
+                "serialNumber": "9NN7E41N16A",
+                "switchRole": "leaf",
+                "isVpcConfigured": False,
+            },
+            "10.10.10.219": {
+                "ipAddress": "10.10.10.219",
+                "logicalName": "dt-n9k6",
+                "serialNumber": "9YO9A29F28C",
+                "switchRole": "tor",
+            },
+        }
+        ip_sn = {
+            "10.10.10.217": "9NN7E41N16A",
+            "10.10.10.219": "9YO9A29F28C",
+        }
+        dcnm_net = self._build_diff_network(inventory_data, ip_sn)
+
+        want_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            )
+        ]
+        have_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            )
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(
+            copy.deepcopy(want_attach), copy.deepcopy(have_attach), replace=True
+        )
+
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
 
     def test_dcnm_net_replace_tor_ports(self):
         self.version = 12

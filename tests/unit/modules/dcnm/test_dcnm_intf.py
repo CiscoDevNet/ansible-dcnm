@@ -1728,6 +1728,35 @@ class TestDcnmIntfModule(TestDcnmModule):
                 playbook_deployed_data,
             ]
 
+        if "_eth_merged_missing_native_vlan" in self._testMethodName:
+            playbook_eth_intf1 = self.payloads_data.get(
+                "eth_merged_trunk_missing_native_vlan_payloads"
+            )
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.playbook_mock_vpc_resp,
+                playbook_eth_intf1,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
         if "_eth_merged_existing" in self._testMethodName:
             # No I/F exists case
             playbook_eth_intf1 = self.payloads_data.get(
@@ -3484,6 +3513,46 @@ class TestDcnmIntfModule(TestDcnmModule):
         for d in result["diff"][0]["merged"]:
             for intf in d["interfaces"]:
                 self.assertEqual((intf["ifName"] in ["Ethernet1/2"]), True)
+
+    def test_dcnm_intf_eth_merged_missing_native_vlan(self):
+
+        # Use Version 12 For This Test Case
+        self.run_dcnm_version_supported.side_effect = [12]
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_eth_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_eth_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "eth_merged_config_missing_native_vlan"
+        )
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        for d in result["diff"][0]["merged"]:
+            for intf in d["interfaces"]:
+                self.assertEqual((intf["ifName"] in ["Ethernet1/30"]), True)
 
     def test_dcnm_intf_eth_merged_new(self):
 

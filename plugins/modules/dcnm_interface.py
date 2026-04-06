@@ -4625,6 +4625,17 @@ class DcnmIntf:
                     if "skipResourceCheck" in changed_dict.keys():
                         changed_dict.pop("skipResourceCheck")
 
+                    match_pb = [
+                        pb
+                        for pb in self.pb_input
+                        if (
+                            (name.lower() == pb["ifname"].lower())
+                            and (sno == pb["sno"])
+                            and (fabric == pb["fabric"])
+                        )
+                    ]
+                    pb_keys = list(match_pb[0].keys()) if match_pb else []
+
                     # First check if the policies are same for want and have. If they are different, we cannot compare
                     # the profiles because each profile will have different elements. As per PRD, if policies are different
                     # we should not merge the information. For now we will assume we will overwrite the same. Don't compare
@@ -4668,8 +4679,18 @@ class DcnmIntf:
                                     ]
 
                                     for key in keys_to_check:
-                                        # Remove the key from nv_keys only if it exists and is not present in 'have'
-                                        if key in nv_keys and d[k][index][ik].get(key, None) is None:
+                                        # Some GET payloads omit optional keys altogether. Keep comparing keys that were
+                                        # explicitly requested in the playbook so merged state can correct drift when
+                                        # the current payload is incomplete.
+                                        key_missing_in_have = all(
+                                            intf.get(ik, {}).get(key, None) is None
+                                            for intf in d[k]
+                                        )
+                                        if (
+                                            key in nv_keys
+                                            and key_missing_in_have
+                                            and self.keymap.get(key) not in pb_keys
+                                        ):
                                             nv_keys.remove(key)
 
                                     for nk in nv_keys:
@@ -4682,7 +4703,7 @@ class DcnmIntf:
                                                 sno,
                                                 fabric,
                                                 want[k][0][ik][nk],
-                                                d[k][index][ik][nk],
+                                                d[k][index][ik].get(nk),
                                                 nk,
                                                 state,
                                             )

@@ -513,6 +513,7 @@ class DcnmInventory:
         self.check_mode = False
         self.validated = []
         self.have_create = []
+        self.have_create_by_ip = {}
         self.want_create = []
         self.want_create_poap = []
         self.want_create_rma = []
@@ -524,6 +525,9 @@ class DcnmInventory:
         self.nd_prefix = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
         self.switch_snos = []
         self.diff_input_format = []
+        self.poap_inventory = []
+        self.poap_inventory_by_serial = {}
+        self.poap_inventory_loaded = False
 
         self.result = dict(changed=False, diff=[], response=[])
 
@@ -536,34 +540,15 @@ class DcnmInventory:
 
         self.nd = True if self.controller_version >= 12 else False
 
-    def discover_poap_params(self, poap_upd, poap):
-
-        for have_c in self.have_create:
-            # Idempotence - Bootstrap but already in inventory
-            if poap_upd["serialNumber"]:
-                if (
-                    poap_upd["ipAddress"] == have_c["switches"][0]["ipaddr"]
-                    and poap_upd["serialNumber"] == have_c["switches"][0]["serialNumber"]
-                ):
-                    return {}
-
-            # Idempotence - Preprovision but already in inventory
-            if poap_upd["preprovisionSerial"] and not poap_upd["serialNumber"]:
-                if (
-                    poap_upd["ipAddress"] == have_c["switches"][0]["ipaddr"]
-                ):
-                    return {}
-
-        # Preprovision case
-        if poap_upd["preprovisionSerial"] and not poap_upd["serialNumber"]:
-            return poap_upd
+    def get_poap_inventory(self):
+        if self.poap_inventory_loaded:
+            return self.poap_inventory_by_serial
 
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory/poap".format(
-            self.fabric
-        )
+        path = "/rest/control/fabrics/{0}/inventory/poap".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
+
         response = dcnm_send(self.module, method, path)
         self.result["response"].append(response)
         fail, self.result["changed"] = self.handle_response(response, "query")
@@ -571,29 +556,56 @@ class DcnmInventory:
         if fail:
             self.module.fail_json(msg=response)
 
-        if "DATA" in response:
-            for resp in response["DATA"]:
-                if (resp["serialNumber"] == poap["serial_number"]):
-                    if self.nd:
-                        poap_upd.update({"publicKey": resp["publicKey"]})
-                        poap_upd.update({"reAdd": resp["reAdd"]})
-                        poap_upd.update({"fingerprint": resp["fingerprint"]})
-                        if poap["image_policy"]:
-                            poap_upd.update({"imagePolicy": poap["image_policy"]})
-                        else:
-                            poap_upd.update({"imagePolicy": ""})
-                        # poap_upd.update({"role": "leaf"})
-                    return poap_upd
+        self.poap_inventory = response.get("DATA") or []
+        self.poap_inventory_by_serial = {}
+        for poap_switch in self.poap_inventory:
+            serial_number = poap_switch.get("serialNumber")
+            if serial_number:
+                self.poap_inventory_by_serial[serial_number] = poap_switch
+
+        self.poap_inventory_loaded = True
+        return self.poap_inventory_by_serial
+
+    def discover_poap_params(self, poap_upd, poap):
+        have_c = self.have_create_by_ip.get(poap_upd["ipAddress"])
+        if have_c is not None:
+            # Idempotence - Bootstrap but already in inventory
+            if (
+                poap_upd["serialNumber"]
+                and poap_upd["serialNumber"] == have_c["switches"][0]["serialNumber"]
+            ):
+                return {}
+
+            # Idempotence - Preprovision but already in inventory
+            if poap_upd["preprovisionSerial"] and not poap_upd["serialNumber"]:
+                return {}
+
+        # Preprovision case
+        if poap_upd["preprovisionSerial"] and not poap_upd["serialNumber"]:
+            return poap_upd
+
+        resp = self.get_poap_inventory().get(poap["serial_number"])
+        if resp is not None:
+            if self.nd:
+                poap_upd.update({"publicKey": resp["publicKey"]})
+                poap_upd.update({"reAdd": resp["reAdd"]})
+                poap_upd.update({"fingerprint": resp["fingerprint"]})
+                if poap["image_policy"]:
+                    poap_upd.update({"imagePolicy": poap["image_policy"]})
+                else:
+                    poap_upd.update({"imagePolicy": ""})
+                # poap_upd.update({"role": "leaf"})
+            return poap_upd
 
         msg = "Specified switch {0}".format(
-            poap["serial_number"] + " is not listed in bootstrap devices or inventory. " +
-            "If you are trying to pre-provision, please set " +
-            "'preprovision_serial' instead of 'serial_number' in your task")
+            poap["serial_number"] + " is not listed in bootstrap devices or inventory. "
+            + "If you are trying to pre-provision, please set "
+            + "'preprovision_serial' instead of 'serial_number' in your task"
+        )
 
         self.module.fail_json(msg)
 
     def update_poap_params(self, inv, poap):
-
         s_ip = "None"
         if inv["seed_ip"]:
             s_ip = dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None)
@@ -627,31 +639,16 @@ class DcnmInventory:
         return poap_upd
 
     def discover_rma_params(self, rma_upd, rma):
-
-        method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory/poap".format(
-            self.fabric
-        )
-        if self.nd:
-            path = self.nd_prefix + path
-        response = dcnm_send(self.module, method, path)
-        self.result["response"].append(response)
-        fail, self.result["changed"] = self.handle_response(response, "query")
-
-        if fail:
-            self.module.fail_json(msg=response)
-
-        if "DATA" in response:
-            for resp in response["DATA"]:
-                if (resp["serialNumber"] == rma["serial_number"]):
-                    if self.nd:
-                        rma_upd.update({"publicKey": resp["publicKey"]})
-                        if rma["image_policy"]:
-                            rma_upd.update({"imagePolicy": rma["image_policy"]})
-                        else:
-                            rma_upd.update({"imagePolicy": ""})
-                    rma_upd.update({"hostname": list(self.hn_sn.keys())[list(self.hn_sn.values()).index(rma_upd["oldSerialNumber"])]})
-                    return rma_upd
+        resp = self.get_poap_inventory().get(rma["serial_number"])
+        if resp is not None:
+            if self.nd:
+                rma_upd.update({"publicKey": resp["publicKey"]})
+                if rma["image_policy"]:
+                    rma_upd.update({"imagePolicy": rma["image_policy"]})
+                else:
+                    rma_upd.update({"imagePolicy": ""})
+            rma_upd.update({"hostname": list(self.hn_sn.keys())[list(self.hn_sn.values()).index(rma_upd["oldSerialNumber"])]})
+            return rma_upd
 
         msg = "Specified switch {0}".format(
             rma["serial_number"] + " is not listed in bootstrap devices.")
@@ -659,7 +656,6 @@ class DcnmInventory:
         self.module.fail_json(msg)
 
     def update_rma_params(self, inv, rma):
-
         s_ip = "None"
         if inv["seed_ip"]:
             s_ip = dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None)
@@ -691,7 +687,6 @@ class DcnmInventory:
         return rma_upd
 
     def update_discover_params(self, inv):
-
         # with the inv parameters perform the test-reachability (discover)
         method = "POST"
         path = "/rest/control/fabrics/{0}/inventory/test-reachability".format(
@@ -717,7 +712,6 @@ class DcnmInventory:
             return 0
 
     def update_create_params(self, inv):
-
         s_ip = "None"
         if inv["seed_ip"]:
             s_ip = dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None)
@@ -758,14 +752,64 @@ class DcnmInventory:
                 "discoveryCredForLan": "true",
             }
 
-            resp = self.update_discover_params(inv_upd)
+            # V2-OPTIMIZATION: Skip expensive POST /test-reachability for switches
+            # already discovered and present in have_create. Build the want entry
+            # directly from the existing have data instead.
+            # This eliminates ~50 API calls (each 2-3s) in the no-op scenario.
+            have_match = self.have_create_by_ip.get(s_ip)
 
-            inv_upd["switches"] = resp
+            if have_match is not None:
+                # Switch already exists in fabric — reuse have data as the
+                # discovery response, no need to call test-reachability
+                inv_upd["switches"] = have_match["switches"]
+            else:
+                # Switch is new — must call test-reachability to discover it
+                resp = self.update_discover_params(inv_upd)
+                inv_upd["switches"] = resp
 
         return inv_upd
 
-    def get_have(self):
+    def iter_create_switches(self, create):
+        for switch in create.get("switches", []):
+            if switch:
+                yield switch
 
+    def group_diff_create_by_role(self):
+        grouped_create = []
+        grouped_by_key = {}
+
+        for create in self.diff_create:
+            group_fields = copy.deepcopy(create)
+            group_fields.pop("seedIP", None)
+            group_fields.pop("switches", None)
+            group_key = tuple(sorted(group_fields.items()))
+
+            if group_key not in grouped_by_key:
+                grouped_create.append(copy.deepcopy(create))
+                grouped_by_key[group_key] = grouped_create[-1]
+            else:
+                grouped = grouped_by_key[group_key]
+                grouped["switches"].extend(copy.deepcopy(create.get("switches", [])))
+
+            current_group = grouped_by_key[group_key]
+            seed_ips = []
+            for switch in self.iter_create_switches(current_group):
+                ip_addr = switch.get("ipaddr")
+                if ip_addr and ip_addr not in seed_ips:
+                    seed_ips.append(ip_addr)
+
+            if (
+                not seed_ips
+                and current_group.get("seedIP")
+                and current_group["seedIP"] != "None"
+            ):
+                seed_ips.append(current_group["seedIP"])
+
+            current_group["seedIP"] = ",".join(seed_ips)
+
+        self.diff_create = grouped_create
+
+    def get_have(self):
         method = "GET"
         path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
@@ -792,6 +836,7 @@ class DcnmInventory:
             return
 
         have_switch = []
+        have_switch_by_ip = {}
 
         for inv in inv_objects["DATA"]:
             get_switch = {}
@@ -811,11 +856,12 @@ class DcnmInventory:
             switchlst.append(get_switch)
             switchdict["switches"] = switchlst
             have_switch.append(switchdict)
+            have_switch_by_ip[get_switch["ipaddr"]] = switchdict
 
         self.have_create = have_switch
+        self.have_create_by_ip = have_switch_by_ip
 
     def get_want(self):
-
         want_create = []
         want_create_poap = []
         want_create_rma = []
@@ -843,7 +889,6 @@ class DcnmInventory:
         self.want_create_rma = want_create_rma
 
     def get_diff_override(self):
-
         self.get_diff_replace()
         self.get_diff_replace_delete()
 
@@ -854,14 +899,12 @@ class DcnmInventory:
         self.diff_delete = diff_delete
 
     def get_diff_replace(self):
-
         self.get_diff_merge()
         diff_create = self.diff_create
 
         self.diff_create = diff_create
 
     def get_diff_replace_delete(self):
-
         diff_delete = []
 
         def check_have_c_in_want_list(have_c):
@@ -914,7 +957,6 @@ class DcnmInventory:
         self.diff_delete = diff_delete
 
     def get_diff_delete(self):
-
         diff_delete = []
         if self.config:
             for want_c in self.want_create:
@@ -930,7 +972,6 @@ class DcnmInventory:
         self.diff_delete = diff_delete
 
     def get_diff_merge(self):
-
         diff_create = []
 
         for want_c in self.want_create:
@@ -965,7 +1006,6 @@ class DcnmInventory:
                     == have_c["switches"][0]["sysName"]
                     and want_c["role"] == have_c["switches"][0]["role"]
                 ):
-
                     found = True
 
                     if have_c["switches"][0]["mode"] == "Migration":
@@ -979,7 +1019,7 @@ class DcnmInventory:
                         # Assign Role
                         self.assign_role()
 
-                        for check in range(1, 300):
+                        for check in range(1, 120):
                             if not self.all_switches_ok():
                                 time.sleep(5)
                             else:
@@ -1006,13 +1046,10 @@ class DcnmInventory:
         query_poap = self.params["query_poap"]
 
         if query_poap is True and state != "query":
-            msg = "query_poap: should not be set 'True' for state {0}".format(
-                state
-            )
+            msg = "query_poap: should not be set 'True' for state {0}".format(state)
             self.module.fail_json(msg=msg)
 
         if state == "merged" or state == "overridden":
-
             inv_spec = dict(
                 seed_ip=dict(required=True, type="str"),
                 auth_proto=dict(
@@ -1156,7 +1193,6 @@ class DcnmInventory:
                     self.module.fail_json(msg=msg)
 
         elif state == "deleted":
-
             inv_spec = dict(seed_ip=dict(required=True, type="str"))
 
             msg = None
@@ -1186,7 +1222,6 @@ class DcnmInventory:
                     self.module.fail_json(msg=msg)
 
         else:
-
             inv_spec = dict(
                 seed_ip=dict(type="str"),
                 role=dict(
@@ -1226,7 +1261,6 @@ class DcnmInventory:
                     self.module.fail_json(msg=msg)
 
     def import_switches(self):
-
         method = "POST"
         path = "/rest/control/fabrics/{0}".format(self.fabric)
         if self.nd:
@@ -1247,7 +1281,6 @@ class DcnmInventory:
                     self.failure(import_response)
 
     def rediscover_switch(self, serial_num):
-
         method = "POST"
         path = "/rest/control/fabrics/{0}/inventory/rediscover/{1}".format(
             self.fabric, serial_num
@@ -1261,10 +1294,15 @@ class DcnmInventory:
             self.failure(response)
 
     def rediscover_all_switches(self):
+        # V2 OPTIMIZATION: Use set-based lookups instead of O(N*M) nested loops
+        # throughout the polling sections. This converts O(N*M) per poll iteration
+        # to O(N) where N = number of switches in fabric inventory.
 
         # Get Fabric Inventory Details
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(
+            self.fabric
+        )
         if self.nd:
             path = self.nd_prefix + path
         get_inv = dcnm_send(self.module, method, path)
@@ -1278,6 +1316,9 @@ class DcnmInventory:
         if not get_inv.get("DATA"):
             return
 
+        # V2: Pre-build a set for O(1) serial number lookups
+        target_snos = set(self.switch_snos)
+
         def ready_to_continue(inv_data):
             # This is a helper function to wait for certain events to complete
             # as part of the switch rediscovery step before moving on.
@@ -1286,12 +1327,15 @@ class DcnmInventory:
             # First check migration mode.  Switches will enter migration mode
             # even if the GRFIELD_DEBUG_FLAG is enabled so this needs to be
             # checked first.
+            # V2: O(N) with set lookup instead of O(N*M) nested loop
             for switch in inv_data.get("DATA"):
-                for snos in self.switch_snos:
-                    if snos == switch["serialNumber"] and switch["mode"].lower() == "migration":
-                        # At least one switch is still in migration mode
-                        # so not ready to continue
-                        return False
+                if (
+                    switch["serialNumber"] in target_snos
+                    and switch["mode"].lower() == "migration"
+                ):
+                    # At least one switch is still in migration mode
+                    # so not ready to continue
+                    return False
 
             # Check # 2
             # The fabric has a setting to prevent reload for greenfield
@@ -1305,26 +1349,23 @@ class DcnmInventory:
             # the switch will show up as managable for a period of time before it
             # moves to unmanagable but we need to wait for this to allow enough time
             # for the reload to completed.
+            # V2: O(N) with set lookup instead of O(N*M) nested loop
             for switch in inv_data.get("DATA"):
-                for snos in self.switch_snos:
-                    if snos == switch["serialNumber"] and not switch["managable"]:
-                        # We found our first switch that changed state to
-                        # unmanageable because it's reloading.  Now we can
-                        # continue
-                        return True
+                if switch["serialNumber"] in target_snos and not switch["managable"]:
+                    # We found our first switch that changed state to
+                    # unmanageable because it's reloading.  Now we can
+                    # continue
+                    return True
 
             # We still have not detected a switch is reloading so return False
             return False
 
         def switches_managable(inv_data):
-            managable = True
+            # V2: O(N) with set lookup instead of O(N*M) nested loop
             for switch in inv_data["DATA"]:
-                for snos in self.switch_snos:
-                    if snos == switch["serialNumber"] and not switch["managable"]:
-                        managable = False
-                        break
-
-            return managable
+                if switch["serialNumber"] in target_snos and not switch["managable"]:
+                    return False
+            return True
 
         # It can take a while to rediscover switches if they are reloading
         # while importing them into the fabric.
@@ -1338,7 +1379,6 @@ class DcnmInventory:
                 all_brownfield_switches = False
 
         while attempt < total_attempts and not all_brownfield_switches and self.switch_snos:
-
             # Don't error out.  We might miss the status change so worst case
             # scenario is that we loop 300 times and then bail out.
             if attempt == 1:
@@ -1374,17 +1414,26 @@ class DcnmInventory:
 
             break
 
+        # V2: Collect all matching serials first, then rediscover
+        # Uses set lookup O(N) instead of O(N*M) nested loop
+        rediscover_serials = []
         for inv in get_inv["DATA"]:
-            for snos in self.switch_snos:
-                if snos == inv["serialNumber"]:
-                    self.rediscover_switch(inv["serialNumber"])
+            if inv["serialNumber"] in target_snos:
+                rediscover_serials.append(inv["serialNumber"])
+
+        for sn in rediscover_serials:
+            self.rediscover_switch(sn)
 
     def all_switches_ok(self):
-
         all_ok = True
+        # V2: Pre-build set for O(1) lookups instead of O(N*M) nested loop
+        target_snos = set(self.switch_snos)
+
         # Get Fabric Inventory Details
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(
+            self.fabric
+        )
         if self.nd:
             path = self.nd_prefix + path
         get_inv = dcnm_send(self.module, method, path)
@@ -1395,11 +1444,11 @@ class DcnmInventory:
             msg2 = "Unable to find inventories under fabric: {0}".format(self.fabric)
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
+        # V2: Single pass O(N) with set lookup instead of O(N*M) nested loop
         for inv in get_inv["DATA"]:
-            for snos in self.switch_snos:
-                if snos == inv["serialNumber"] and inv["status"] != "ok":
-                    all_ok = False
-                    self.rediscover_switch(inv["serialNumber"])
+            if inv["serialNumber"] in target_snos and inv["status"] != "ok":
+                all_ok = False
+                self.rediscover_switch(inv["serialNumber"])
 
         # If the switches added through discovery itself has issues, then there is no
         # point in checking rma switch status, so return false here.
@@ -1417,7 +1466,6 @@ class DcnmInventory:
         return all_ok
 
     def set_lancred_switch(self, set_lan):
-
         method = "POST"
         path = "/fm/fmrest/lanConfig/saveSwitchCredentials"
         if self.nd:
@@ -1430,7 +1478,6 @@ class DcnmInventory:
             self.failure(response)
 
     def lancred_all_switches(self):
-
         # Get Fabric Inventory Details
         method = "GET"
         path = "/fm/fmrest/lanConfig/getLanSwitchCredentials"
@@ -1450,26 +1497,31 @@ class DcnmInventory:
         if not get_lan.get("DATA"):
             return
 
+        # V2: Build IP-to-lancred dict for O(1) lookup instead of O(N*M) nested loop
+        lan_by_ip = {}
+        for lan in get_lan["DATA"]:
+            if not lan["switchDbID"]:
+                msg = "Unable to SWITCHDBID using getLanSwitchCredentials under fabric: {0}".format(
+                    self.fabric
+                )
+                self.module.fail_json(msg=msg)
+            lan_by_ip[lan["ipAddress"]] = lan
+
         for create in self.want_create:
-            for lan in get_lan["DATA"]:
-                if not lan["switchDbID"]:
-                    msg = "Unable to SWITCHDBID using getLanSwitchCredentials under fabric: {0}".format(
-                        self.fabric
-                    )
-                    self.module.fail_json(msg=msg)
-                if lan["ipAddress"] == create["switches"][0]["ipaddr"]:
-                    set_lan = {
-                        "switchIds": lan["switchDbID"],
-                        "userName": create["username"],
-                        "password": create["password"],
-                        "v3Protocol": "0",
-                    }
-                    # TODO: Remove this check later.. should work on ND but does not for some reason
-                    if not self.nd:
-                        self.set_lancred_switch(set_lan)
+            ip = create["switches"][0]["ipaddr"]
+            if ip in lan_by_ip:
+                lan = lan_by_ip[ip]
+                set_lan = {
+                    "switchIds": lan["switchDbID"],
+                    "userName": create["username"],
+                    "password": create["password"],
+                    "v3Protocol": "0",
+                }
+                # TODO: Remove this check later.. should work on ND but does not for some reason
+                if not self.nd:
+                    self.set_lancred_switch(set_lan)
 
     def assign_role(self):
-
         method = "GET"
         path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
@@ -1485,73 +1537,85 @@ class DcnmInventory:
         if not get_role.get("DATA"):
             return
 
-        for create in self.diff_create:
-            for role in get_role["DATA"]:
-                if not role["switchDbID"]:
-                    msg = "Unable to get SWITCHDBID using getLanSwitchCredentials under fabric: {0}".format(
-                        self.fabric
-                    )
-                    self.module.fail_json(msg=msg)
-                if not role.get("serialNumber"):
-                    msg = "Unable to get serial number using getLanSwitchCredentials under fabric: {0}".format(
-                        self.fabric
-                    )
-                    self.module.fail_json(msg=msg)
-                if role["ipAddress"] == create["switches"][0]["ipaddr"]:
-                    method = "PUT"
-                    path = "/fm/fmrest/topology/role/{0}?newRole={1}".format(
-                        role["switchDbID"], create["role"].replace("_", "%20")
-                    )
-                    data = None
-                    if self.nd:
-                        method = "POST"
-                        path = f"{self.nd_prefix}/rest/control/switches/roles"
-                        data = json.dumps(
-                            [
-                                {
-                                    "serialNumber": role["serialNumber"],
-                                    "role": create["role"].replace("_", " "),
-                                }
-                            ]
-                        )
-                    response = dcnm_send(self.module, method, path, data)
-                    self.result["response"].append(response)
-                    fail, self.result["changed"] = self.handle_response(
-                        response, "create"
-                    )
-                    if fail:
-                        self.failure(response)
+        # V2: Build IP-to-inventory dict for O(1) lookups instead of O(N*M) nested loops
+        inv_by_ip = {}
+        for role in get_role["DATA"]:
+            if not role["switchDbID"]:
+                msg = "Unable to get SWITCHDBID using getLanSwitchCredentials under fabric: {0}".format(
+                    self.fabric
+                )
+                self.module.fail_json(msg=msg)
+            if not role.get("serialNumber"):
+                msg = "Unable to get serial number using getLanSwitchCredentials under fabric: {0}".format(
+                    self.fabric
+                )
+                self.module.fail_json(msg=msg)
+            inv_by_ip[role["ipAddress"]] = role
 
-        for create in self.want_create_poap:
-            for role in get_role["DATA"]:
-                if not role["switchDbID"]:
-                    msg = "Unable to get SWITCHDBID using getLanSwitchCredentials under fabric: {0}".format(
-                        self.fabric
-                    )
-                    self.module.fail_json(msg=msg)
-                if not role.get("serialNumber"):
-                    msg = "Unable to get serial number using getLanSwitchCredentials under fabric: {0}".format(
-                        self.fabric
-                    )
-                    self.module.fail_json(msg=msg)
-                if role["ipAddress"] == create["ipAddress"]:
-                    method = "PUT"
-                    path = "/fm/fmrest/topology/role/{0}?newRole={1}".format(
-                        role["switchDbID"], create["role"].replace("_", "%20")
-                    )
-                    data = None
-                    if self.nd:
-                        method = "POST"
-                        path = f"{self.nd_prefix}/rest/control/switches/roles"
-                        data = json.dumps(
-                            [
-                                {
-                                    "serialNumber": role["serialNumber"],
-                                    "role": create["role"].replace("_", " "),
-                                }
-                            ]
+        if self.nd:
+            # V2: Batch all role assignments into a single POST for ND
+            # The /rest/control/switches/roles API accepts an array
+            batch_roles = []
+            for create in self.diff_create:
+                for switch in self.iter_create_switches(create):
+                    ip = switch["ipaddr"]
+                    if ip in inv_by_ip:
+                        role_data = inv_by_ip[ip]
+                        batch_roles.append(
+                            {
+                                "serialNumber": role_data["serialNumber"],
+                                "role": create["role"].replace("_", " "),
+                            }
                         )
-                    response = dcnm_send(self.module, method, path, data)
+            for create in self.want_create_poap:
+                ip = create["ipAddress"]
+                if ip in inv_by_ip:
+                    role_data = inv_by_ip[ip]
+                    batch_roles.append(
+                        {
+                            "serialNumber": role_data["serialNumber"],
+                            "role": create["role"].replace("_", " "),
+                        }
+                    )
+
+            if batch_roles:
+                nd_method = "POST"
+                nd_path = f"{self.nd_prefix}/rest/control/switches/roles"
+                response = dcnm_send(
+                    self.module, nd_method, nd_path, json.dumps(batch_roles)
+                )
+                self.result["response"].append(response)
+                fail, self.result["changed"] = self.handle_response(response, "create")
+                if fail:
+                    self.failure(response)
+        else:
+            # Non-ND (DCNM): per-switch PUT with dict lookup
+            for create in self.diff_create:
+                for switch in self.iter_create_switches(create):
+                    ip = switch["ipaddr"]
+                    if ip in inv_by_ip:
+                        role_data = inv_by_ip[ip]
+                        put_method = "PUT"
+                        put_path = "/fm/fmrest/topology/role/{0}?newRole={1}".format(
+                            role_data["switchDbID"], create["role"].replace("_", "%20")
+                        )
+                        response = dcnm_send(self.module, put_method, put_path)
+                        self.result["response"].append(response)
+                        fail, self.result["changed"] = self.handle_response(
+                            response, "create"
+                        )
+                        if fail:
+                            self.failure(response)
+
+            for create in self.want_create_poap:
+                ip = create["ipAddress"]
+                if ip in inv_by_ip:
+                    role_data = inv_by_ip[ip]
+                    put_method = "PUT"
+                    put_path = "/fm/fmrest/topology/role/{0}?newRole={1}".format(
+                        role_data["switchDbID"], create["role"].replace("_", "%20")
+                    )
+                    response = dcnm_send(self.module, put_method, put_path)
                     self.result["response"].append(response)
                     fail, self.result["changed"] = self.handle_response(
                         response, "create"
@@ -1560,9 +1624,9 @@ class DcnmInventory:
                         self.failure(response)
 
     def config_save(self):
-
         success = False
-        no_of_tries = 3
+        # V2: 10 retries x 60s = 10min max instead of 3 retries x 600s = 20min max
+        no_of_tries = 10
 
         # NDFC/DCNM return error when we config-save a fabric with just Pre-provisioned switches.
         if not self.want_create:
@@ -1600,7 +1664,6 @@ class DcnmInventory:
                 self.failure(response)
 
             if response["RETURN_CODE"] != 200:
-
                 # Get Fabric Errors
                 method = "GET"
                 path = "/rest/control/fabrics/{0}/errors".format(fabric_id)
@@ -1622,10 +1685,10 @@ class DcnmInventory:
                 break
 
             if not success and x in range(0, no_of_tries - 1):
-                time.sleep(600)
+                # V2: 60s retry interval instead of 600s (10min)
+                time.sleep(60)
 
     def config_deploy(self):
-
         # config-deploy
         method = "POST"
         path = "/rest/control/fabrics/{0}".format(self.fabric)
@@ -1644,7 +1707,6 @@ class DcnmInventory:
                 self.failure(response)
 
     def delete_switch(self):
-
         if self.diff_delete:
             method = "DELETE"
             for sn in self.diff_delete:
@@ -1659,12 +1721,13 @@ class DcnmInventory:
                     self.failure(response)
 
     def get_diff_query(self):
-
         query = []
         query_poap = self.params["query_poap"]
 
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(
+            self.fabric
+        )
         if self.nd:
             path = self.nd_prefix + path
         inv_objects = dcnm_send(self.module, method, path)
@@ -1737,7 +1800,6 @@ class DcnmInventory:
         self.query = query
 
     def swap_serial(self, poap):
-
         method = "POST"
         swap_path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{0}/swapSN/{1}/{2}".format(
                     self.fabric, poap["preprovisionSerial"], poap["serialNumber"]
@@ -1750,9 +1812,7 @@ class DcnmInventory:
             self.failure(response)
 
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory/poap".format(
-            self.fabric
-        )
+        path = "/rest/control/fabrics/{0}/inventory/poap".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
         response = dcnm_send(self.module, method, path)
@@ -1764,21 +1824,20 @@ class DcnmInventory:
 
         if "DATA" in response:
             for resp in response["DATA"]:
-                if (resp["serialNumber"] == poap["serialNumber"]):
+                if resp["serialNumber"] == poap["serialNumber"]:
                     resp.update({"password": poap["password"]})
                     resp.update({"discoveryAuthProtocol": "0"})
                     resp.pop("seedSwitchFlag")
                     return resp
 
         msg = "Specified switch {0}".format(
-            poap["serial_number"] + " is not listed in bootstrap devices or inventory. " +
-            "If you are trying to pre-provision, please set " +
-            "'preprovision_serial' instead of 'serial_number' in your task")
+            poap["serial_number"] + " is not listed in bootstrap devices or inventory. "
+            + "If you are trying to pre-provision, please set "
+            + "'preprovision_serial' instead of 'serial_number' in your task")
 
         self.module.fail_json(msg=response)
 
     def poap_config(self):
-
         method = "POST"
         path = "/rest/control/fabrics/{0}/inventory/poap".format(self.fabric)
         if self.nd:
@@ -1803,7 +1862,6 @@ class DcnmInventory:
                 self.failure(response)
 
     def rma_config(self):
-
         method = "POST"
         path = "/rest/control/fabrics/{0}/rma".format(self.fabric)
         if self.nd:
@@ -1818,7 +1876,6 @@ class DcnmInventory:
                     self.failure(response)
 
     def handle_response(self, res, op):
-
         fail = False
         changed = True
 
@@ -1843,7 +1900,6 @@ class DcnmInventory:
         return fail, changed
 
     def failure(self, resp):
-
         res = copy.deepcopy(resp)
 
         if not resp.get("DATA"):
@@ -1869,8 +1925,7 @@ class DcnmInventory:
 
         # Add created switches to the diff
         for create in self.diff_create:
-            if create.get("switches") and len(create["switches"]) > 0:
-                switch = create["switches"][0]
+            for switch in self.iter_create_switches(create):
                 item = {
                     "ip_address": switch.get("ipaddr"),
                     "serial_number": switch.get("serialNumber"),
@@ -1878,15 +1933,12 @@ class DcnmInventory:
                     "platform": switch.get("platform"),
                     "version": switch.get("version"),
                     "hostname": switch.get("sysName"),
-                    "preserve_config": create.get("preserveConfig", False)
+                    "preserve_config": create.get("preserveConfig", False),
                 }
                 create_list.append(item)
 
         if create_list:
-            create_item = {
-                "action": "create",
-                "switches": create_list
-            }
+            create_item = {"action": "create", "switches": create_list}
             diff.append(create_item)
 
         # Add POAP switches to the diff
@@ -1906,15 +1958,9 @@ class DcnmInventory:
                 preprovision_list.append(item)
 
         if bootstrap_list:
-            diff.append({
-                "action": "bootstrap",
-                "bootstrap_switches": bootstrap_list
-            })
+            diff.append({"action": "bootstrap", "bootstrap_switches": bootstrap_list})
         if preprovision_list:
-            diff.append({
-                "action": "preprovision",
-                "preprovision_switches": preprovision_list
-            })
+            diff.append({"action": "preprovision", "preprovision_switches": preprovision_list})
 
         # Add RMA switches to the diff
         for rma in self.want_create_rma:
@@ -1928,10 +1974,7 @@ class DcnmInventory:
             rma_list.append(item)
 
         if rma_list:
-            diff.append({
-                "action": "rma",
-                "rma_switches": rma_list
-            })
+            diff.append({"action": "rma", "rma_switches": rma_list})
 
         # Add deleted switches to the diff
         for serial in self.diff_delete:
@@ -1946,9 +1989,7 @@ class DcnmInventory:
                     version = have_c["switches"][0]["version"]
                     break
 
-            item = {
-                "serial_number": serial
-            }
+            item = {"serial_number": serial}
             if ip_address:
                 item["ip_address"] = ip_address
             if hostname:
@@ -1963,10 +2004,7 @@ class DcnmInventory:
             delete_list.append(item)
 
         if delete_list:
-            diff.append({
-                "action": "delete",
-                "switches": delete_list
-            })
+            diff.append({"action": "delete", "switches": delete_list})
 
         self.diff_input_format = diff
 
@@ -1998,6 +2036,9 @@ def main():
     if module.params["state"] == "overridden":
         dcnm_inv.get_diff_override()
 
+    if module.params["state"] in ["merged", "overridden"]:
+        dcnm_inv.group_diff_create_by_role()
+
     if module.params["state"] == "deleted":
         dcnm_inv.get_diff_delete()
 
@@ -2008,15 +2049,31 @@ def main():
 
     if not dcnm_inv.diff_delete and module.params["state"] == "deleted":
         dcnm_inv.result["changed"] = False
-        dcnm_inv.result[
-            "response"
-        ] = "The switch provided is not part of the fabric and cannot be deleted"
+        dcnm_inv.result["response"] = "The switch provided is not part of the fabric and cannot be deleted"
 
-    if not dcnm_inv.diff_create and module.params["state"] == "merged" and not dcnm_inv.want_create_poap and not dcnm_inv.want_create_rma:
-        dcnm_inv.result["changed"] = False
-        dcnm_inv.result[
-            "response"
-        ] = "The switch provided is already part of the fabric and cannot be created again"
+    if (
+        not dcnm_inv.diff_create
+        and module.params["state"] == "merged"
+        and not dcnm_inv.want_create_poap
+        and not dcnm_inv.want_create_rma
+    ):
+        # V2-OPTIMIZATION: Fast-path for save/deploy-only re-calls.
+        # When all switches already exist (diff_create empty), still honor
+        # save/deploy flags instead of just exiting. This makes the second
+        # NAC call (save=true) complete in seconds instead of being a no-op.
+        if module.params["save"]:
+            dcnm_inv.config_save()
+            dcnm_inv.result["changed"] = True
+        if module.params["deploy"]:
+            dcnm_inv.config_deploy()
+            dcnm_inv.result["changed"] = True
+        if not dcnm_inv.result["changed"]:
+            dcnm_inv.result["response"] = (
+                "The switch provided is already part of the fabric and cannot be created again"
+            )
+        dcnm_inv.format_diff()
+        dcnm_inv.result["diff"] = dcnm_inv.diff_input_format
+        module.exit_json(**dcnm_inv.result)
 
     if (
         not dcnm_inv.diff_create
@@ -2024,17 +2081,18 @@ def main():
         and module.params["state"] == "overridden"
     ):
         dcnm_inv.result["changed"] = False
-        dcnm_inv.result[
-            "response"
-        ] = "The switch provided is already part of the fabric and there is no more device to delete in the fabric"
+        dcnm_inv.result["response"] = "The switch provided is already part of the fabric and there is no more device to delete in the fabric"
 
     if not dcnm_inv.query and module.params["state"] == "query":
         dcnm_inv.result["changed"] = False
-        dcnm_inv.result[
-            "response"
-        ] = "The queried switch is not part of the fabric configured"
+        dcnm_inv.result["response"] = "The queried switch is not part of the fabric configured"
 
-    if dcnm_inv.diff_create or dcnm_inv.diff_delete or dcnm_inv.want_create_poap or dcnm_inv.want_create_rma:
+    if (
+        dcnm_inv.diff_create
+        or dcnm_inv.diff_delete
+        or dcnm_inv.want_create_poap
+        or dcnm_inv.want_create_rma
+    ):
         dcnm_inv.result["changed"] = True
     else:
         module.exit_json(**dcnm_inv.result)
@@ -2051,8 +2109,11 @@ def main():
 
     # Discover & Register Switch
     if not dcnm_inv.node_migration:
-        if dcnm_inv.diff_create or dcnm_inv.want_create_poap or dcnm_inv.want_create_rma:
-
+        if (
+            dcnm_inv.diff_create
+            or dcnm_inv.want_create_poap
+            or dcnm_inv.want_create_rma
+        ):
             # Step 1
             # Import all switches
             dcnm_inv.import_switches()
@@ -2069,7 +2130,8 @@ def main():
 
             # Step 3
             # Check all devices are up
-            for check in range(1, 300):
+            # V2: Reduced from 300 to 120 max iterations (120 x 5s = 10min max)
+            for check in range(1, 120):
                 if not dcnm_inv.all_switches_ok():
                     time.sleep(5)
                     continue
