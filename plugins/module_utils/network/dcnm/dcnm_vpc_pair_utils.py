@@ -33,7 +33,6 @@ def dcnm_vpc_pair_utils_get_paths(version):
     return dcnm_vpc_pair_paths[version]
 
 
-
 def dcnm_vpc_pair_utils_update_common_spec(self, common_spec):
     if (
         self.src_fabric_info["fabricTechnology"] == "LANClassic"
