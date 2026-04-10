@@ -1960,6 +1960,8 @@ class DcnmIntf:
         # performance bottleneck when managing many interfaces.
         self.intf_detail_cache = {}
         self.intf_detail_cached_snos = set()
+        self._replace_have_lookup = {}
+        self._replace_pb_input_lookup = {}
 
         self.changed_dict = [
             {
@@ -4375,6 +4377,17 @@ class DcnmIntf:
             t_e1 = str(t_e1).lower()
             t_e2 = str(t_e2).lower()
 
+        numeric_keys = ["LACP_PORT_PRIO"]
+        if k in numeric_keys:
+            # Controller responses may return numeric nvPairs as strings while
+            # desired state keeps them as integers. Normalize both sides so
+            # default-valued port-channel/vPC settings remain idempotent.
+            try:
+                t_e1 = int(t_e1)
+                t_e2 = int(t_e2)
+            except (TypeError, ValueError):
+                pass
+
         if t_e1 != t_e2:
 
             if (state == "replaced") or (state == "overridden"):
@@ -4594,14 +4607,19 @@ class DcnmIntf:
             intf_changed = False
 
             want.pop("deploy")
-            match_have = [
-                d
-                for d in self.have
-                if (
-                    (name.lower() == d["interfaces"][0]["ifName"].lower())
-                    and (sno == d["interfaces"][0]["serialNumber"])
+            if state == "replaced" and self._replace_have_lookup:
+                match_have = self._replace_have_lookup.get(
+                    (name.lower(), str(sno)), []
                 )
-            ]
+            else:
+                match_have = [
+                    d
+                    for d in self.have
+                    if (
+                        (name.lower() == d["interfaces"][0]["ifName"].lower())
+                        and (sno == d["interfaces"][0]["serialNumber"])
+                    )
+                ]
             if not match_have:
                 changed_dict = copy.deepcopy(want)
 
@@ -4625,15 +4643,20 @@ class DcnmIntf:
                     if "skipResourceCheck" in changed_dict.keys():
                         changed_dict.pop("skipResourceCheck")
 
-                    match_pb = [
-                        pb
-                        for pb in self.pb_input
-                        if (
-                            (name.lower() == pb["ifname"].lower())
-                            and (sno == pb["sno"])
-                            and (fabric == pb["fabric"])
+                    if state == "replaced" and self._replace_pb_input_lookup:
+                        match_pb = self._replace_pb_input_lookup.get(
+                            (name.lower(), str(sno), fabric), []
                         )
-                    ]
+                    else:
+                        match_pb = [
+                            pb
+                            for pb in self.pb_input
+                            if (
+                                (name.lower() == pb["ifname"].lower())
+                                and (sno == pb["sno"])
+                                and (fabric == pb["fabric"])
+                            )
+                        ]
                     pb_keys = list(match_pb[0].keys()) if match_pb else []
 
                     # First check if the policies are same for want and have. If they are different, we cannot compare
@@ -4842,6 +4865,8 @@ class DcnmIntf:
 
         for cfg in self.config:
             self.dcnm_intf_process_config(cfg)
+
+        self.dcnm_intf_build_replace_lookups()
 
         # Compare want[] and have[] and build a list of dicts containing interface information that
         # should be sent to DCNM for updation. The list can include information on interfaces which
@@ -5075,6 +5100,38 @@ class DcnmIntf:
             return False, self._pb_peer_member_lookup[have_ifname]
 
         return True, None
+
+    def dcnm_intf_build_replace_lookups(self):
+        """Pre-build lookup structures for replaced-state comparisons.
+
+        Replaces repeated linear scans of self.have and self.pb_input during
+        dcnm_intf_compare_want_and_have("replaced") with dictionary lookups.
+        """
+
+        self._replace_have_lookup = {}
+        self._replace_pb_input_lookup = {}
+
+        for item in self.have:
+            interfaces = item.get("interfaces") or []
+            if not interfaces:
+                continue
+
+            intf = interfaces[0]
+            ifname = intf.get("ifName")
+            sno = intf.get("serialNumber")
+
+            if ifname and sno:
+                key = (ifname.lower(), str(sno))
+                self._replace_have_lookup.setdefault(key, []).append(item)
+
+        for item in self.pb_input:
+            ifname = item.get("ifname")
+            sno = item.get("sno")
+            fabric = item.get("fabric")
+
+            if ifname and sno and fabric:
+                key = (ifname.lower(), str(sno), fabric)
+                self._replace_pb_input_lookup.setdefault(key, []).append(item)
 
     def dcnm_intf_process_config(self, cfg):
 
@@ -6409,6 +6466,15 @@ class DcnmIntf:
             index = 0
             if cfg.get("switch", None) is None:
                 continue
+
+            cfg_name = cfg.get("name", "")
+            need_vpc_pair_lookup = cfg.get("type") in ("vpc", "aa_fex")
+            if not need_vpc_pair_lookup and isinstance(cfg_name, str):
+                # Deleted/query-style entries may omit type. Keep supporting
+                # vPC names without paying the VPC lookup cost for every
+                # non-vPC interface in the playbook.
+                need_vpc_pair_lookup = cfg_name.lower().startswith("vpc")
+
             for sw_elem in cfg["switch"][:]:
                 if sw_elem in self.ip_sn or sw_elem in self.hn_sn:
                     addr_info = dcnm_get_ip_addr_info(
@@ -6416,8 +6482,12 @@ class DcnmIntf:
                     )
                     cfg["switch"][index] = addr_info
 
-                    # Check if the VPC serial number information is already present. If not fetch that
-                    if self.vpc_ip_sn.get(addr_info, None) is None:
+                    # Fetch VPC pair serials only for interface types that
+                    # actually need them.
+                    if (
+                        need_vpc_pair_lookup
+                        and self.vpc_ip_sn.get(addr_info, None) is None
+                    ):
                         sno = self.dcnm_intf_get_vpc_serial_number(addr_info)
                         if "~" in sno:
                             # This switch is part of VPC pair. Populate the VPC serial number DB
