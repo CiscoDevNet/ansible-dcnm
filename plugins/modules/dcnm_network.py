@@ -2237,6 +2237,75 @@ class DcnmNetwork:
 
         return net_upd
 
+    def normalize_have_network(self, network):
+        net = copy.deepcopy(network)
+
+        json_to_dict = net.get("networkTemplateConfig", {})
+        if isinstance(json_to_dict, str):
+            json_to_dict = json.loads(json_to_dict)
+
+        t_conf = {
+            "vlanId": json_to_dict.get("vlanId", ""),
+            "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
+            "isLayer2Only": json_to_dict.get("isLayer2Only", False),
+            "tag": json_to_dict.get("tag", ""),
+            "vlanName": json_to_dict.get("vlanName", ""),
+            "intfDescription": json_to_dict.get("intfDescription", ""),
+            "mtu": json_to_dict.get("mtu", ""),
+            "suppressArp": json_to_dict.get("suppressArp", False),
+            "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
+            "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
+            "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
+            "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
+            "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
+            "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+            "dhcpServers": json_to_dict.get("dhcpServers", ""),
+            "loopbackId": json_to_dict.get("loopbackId", ""),
+            "mcastGroup": json_to_dict.get("mcastGroup", ""),
+            "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
+            "secondaryGW1": json_to_dict.get("secondaryGW1", ""),
+            "secondaryGW2": json_to_dict.get("secondaryGW2", ""),
+            "secondaryGW3": json_to_dict.get("secondaryGW3", ""),
+            "secondaryGW4": json_to_dict.get("secondaryGW4", ""),
+            "trmEnabled": json_to_dict.get("trmEnabled", False),
+            "rtBothAuto": json_to_dict.get("rtBothAuto", False),
+            "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+            "networkName": json_to_dict.get("networkName", False),
+        }
+
+        if self.dcnm_version > 11:
+            t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
+            t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
+            t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+
+        if "mcastGroup" not in json_to_dict:
+            del t_conf["mcastGroup"]
+
+        net.update({"networkTemplateConfig": json.dumps(t_conf)})
+        net.pop("displayName", None)
+        net.pop("serviceNetworkTemplate", None)
+        net.pop("source", None)
+
+        return net
+
+    @staticmethod
+    def is_missing_named_network_response(resp):
+        if not isinstance(resp, dict):
+            return False
+
+        if resp.get("RETURN_CODE") != 400:
+            return False
+
+        data = resp.get("DATA")
+        if not isinstance(data, dict):
+            return False
+
+        message = data.get("message", "")
+        if not isinstance(message, str):
+            return False
+
+        return message.lower() == "invalid network name"
+
     def get_have(self):
         caller = inspect.stack()[1][3]
 
@@ -2287,65 +2356,70 @@ class DcnmNetwork:
                     if not vrf_found:
                         self.module.fail_json(msg="VRF: {0} is missing in fabric: {1}".format(vrf_missing, self.fabric))
 
-        for vrf in vrf_objects["DATA"]:
+        use_targeted_network_lookups = state in ["merged", "replaced", "deleted"] and bool(self.config)
+        use_bulk_network_inventory = state == "overridden"
 
-            path = self.paths["GET_VRF_NET"].format(self.fabric, vrf["vrfName"])
+        if use_targeted_network_lookups:
+            requested_networks = []
+            seen_networks = set()
 
-            networks_per_vrf = dcnm_send(self.module, method, path)
+            for net in self.config:
+                net_name = net.get("net_name")
+                if not net_name or net_name in seen_networks:
+                    continue
+                seen_networks.add(net_name)
+                requested_networks.append(net_name)
 
-            if not networks_per_vrf["DATA"]:
-                continue
+            for network_name in requested_networks:
+                path = self.paths["GET_NET_NAME"].format(self.fabric, network_name)
+                network = dcnm_send(self.module, method, path)
 
-            for net in networks_per_vrf["DATA"]:
-                json_to_dict = json.loads(net["networkTemplateConfig"])
-                t_conf = {
-                    "vlanId": json_to_dict.get("vlanId", ""),
-                    "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
-                    "isLayer2Only": json_to_dict.get("isLayer2Only", False),
-                    "tag": json_to_dict.get("tag", ""),
-                    "vlanName": json_to_dict.get("vlanName", ""),
-                    "intfDescription": json_to_dict.get("intfDescription", ""),
-                    "mtu": json_to_dict.get("mtu", ""),
-                    "suppressArp": json_to_dict.get("suppressArp", False),
-                    "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
-                    "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
-                    "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
-                    "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
-                    "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
-                    "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
-                    "dhcpServers": json_to_dict.get("dhcpServers", ""),
-                    "loopbackId": json_to_dict.get("loopbackId", ""),
-                    "mcastGroup": json_to_dict.get("mcastGroup", ""),
-                    "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
-                    "secondaryGW1": json_to_dict.get("secondaryGW1", ""),
-                    "secondaryGW2": json_to_dict.get("secondaryGW2", ""),
-                    "secondaryGW3": json_to_dict.get("secondaryGW3", ""),
-                    "secondaryGW4": json_to_dict.get("secondaryGW4", ""),
-                    "trmEnabled": json_to_dict.get("trmEnabled", False),
-                    "rtBothAuto": json_to_dict.get("rtBothAuto", False),
-                    "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
-                    "networkName": json_to_dict.get("networkName", False),
-                }
+                missing_network, not_ok = self.handle_response(network, "query_dcnm")
 
-                if self.dcnm_version > 11:
-                    t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
-                    t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
-                    t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                if missing_network or self.is_missing_named_network_response(network):
+                    continue
+                if not_ok:
+                    msg = "Unable to find network: {0} under fabric: {1}".format(network_name, self.fabric)
+                    self.module.fail_json(msg=msg)
 
-                # Remove mcastGroup when Fabric is MSD
-                if "mcastGroup" not in json_to_dict:
-                    del t_conf["mcastGroup"]
+                network_data = network.get("DATA")
+                if not network_data:
+                    continue
+                if isinstance(network_data, list):
+                    if not network_data:
+                        continue
+                    network_data = network_data[0]
 
-                net.update({"networkTemplateConfig": json.dumps(t_conf)})
-                del net["displayName"]
-                del net["serviceNetworkTemplate"]
-                del net["source"]
+                normalized_net = self.normalize_have_network(network_data)
+                curr_networks.append(normalized_net["networkName"])
+                have_create.append(normalized_net)
+        elif use_bulk_network_inventory:
+            path = self.paths["GET_NET"].format(self.fabric)
+            networks = dcnm_send(self.module, method, path)
 
-                curr_networks.append(net["networkName"])
+            if networks.get("DATA"):
+                for net in networks["DATA"]:
+                    normalized_net = self.normalize_have_network(net)
+                    curr_networks.append(normalized_net["networkName"])
+                    have_create.append(normalized_net)
+        else:
+            for vrf in vrf_objects["DATA"]:
 
-                have_create.append(net)
+                path = self.paths["GET_VRF_NET"].format(self.fabric, vrf["vrfName"])
 
-        if l2only_configured is True or state == "deleted":
+                networks_per_vrf = dcnm_send(self.module, method, path)
+
+                if not networks_per_vrf["DATA"]:
+                    continue
+
+                for net in networks_per_vrf["DATA"]:
+                    normalized_net = self.normalize_have_network(net)
+                    curr_networks.append(normalized_net["networkName"])
+                    have_create.append(normalized_net)
+
+        if (l2only_configured is True and not use_bulk_network_inventory) or (
+            state == "deleted" and not use_targeted_network_lookups
+        ):
             path = self.paths["GET_VRF_NET"].format(self.fabric, "NA")
             networks_per_navrf = dcnm_send(self.module, method, path)
 
@@ -2353,48 +2427,9 @@ class DcnmNetwork:
                 for l2net in networks_per_navrf["DATA"]:
                     json_to_dict = json.loads(l2net["networkTemplateConfig"])
                     if (json_to_dict.get("vrfName", "")) == "NA":
-                        t_conf = {
-                            "vlanId": json_to_dict.get("vlanId", ""),
-                            "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
-                            "isLayer2Only": json_to_dict.get("isLayer2Only", False),
-                            "tag": json_to_dict.get("tag", ""),
-                            "vlanName": json_to_dict.get("vlanName", ""),
-                            "intfDescription": json_to_dict.get("intfDescription", ""),
-                            "mtu": json_to_dict.get("mtu", ""),
-                            "suppressArp": json_to_dict.get("suppressArp", False),
-                            "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
-                            "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
-                            "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
-                            "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
-                            "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
-                            "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
-                            "dhcpServers": json_to_dict.get("dhcpServers", ""),
-                            "loopbackId": json_to_dict.get("loopbackId", ""),
-                            "mcastGroup": json_to_dict.get("mcastGroup", ""),
-                            "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
-                            "secondaryGW1": json_to_dict.get("secondaryGW1", ""),
-                            "secondaryGW2": json_to_dict.get("secondaryGW2", ""),
-                            "secondaryGW3": json_to_dict.get("secondaryGW3", ""),
-                            "secondaryGW4": json_to_dict.get("secondaryGW4", ""),
-                            "trmEnabled": json_to_dict.get("trmEnabled", False),
-                            "rtBothAuto": json_to_dict.get("rtBothAuto", False),
-                            "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
-                            "networkName": json_to_dict.get("networkName", ""),
-                        }
-
-                        if self.dcnm_version > 11:
-                            t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
-                            t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
-                            t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
-
-                        l2net.update({"networkTemplateConfig": json.dumps(t_conf)})
-                        del l2net["displayName"]
-                        del l2net["serviceNetworkTemplate"]
-                        del l2net["source"]
-
-                        curr_networks.append(l2net["networkName"])
-
-                        have_create.append(l2net)
+                        normalized_net = self.normalize_have_network(l2net)
+                        curr_networks.append(normalized_net["networkName"])
+                        have_create.append(normalized_net)
 
         if not curr_networks:
             return
@@ -3594,6 +3629,7 @@ class DcnmNetwork:
 
         method = "POST"
         payload = copy.deepcopy(self.diff_undeploy)
+        delete_ready = False
         if self.diff_undeploy:
             # For multicluster_parent, use special endpoint and payload format
             # For all others (including multicluster_child), use standard /deployments path
@@ -3610,10 +3646,13 @@ class DcnmNetwork:
             # Use the self.wait_for_del_ready() function to refresh the state
             # of self.diff_delete dict and re-attempt the undeploy action if
             # the state of the network is "OUT-OF-SYNC"
-            self.wait_for_del_ready()
-            for net, state in self.diff_delete.items():
-                if state.upper() == "OUT-OF-SYNC":
-                    resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_undeploy))
+            delete_ready = self.wait_for_del_ready()
+            undeploy_retry_needed = any(
+                str(state).upper() == "OUT-OF-SYNC" for state in self.diff_delete.values()
+            )
+            if delete_ready and undeploy_retry_needed:
+                resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_undeploy))
+                delete_ready = False
 
             self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "deploy")
@@ -3625,7 +3664,7 @@ class DcnmNetwork:
 
         method = "DELETE"
         del_failure = ""
-        if self.diff_delete and self.wait_for_del_ready():
+        if self.diff_delete and (delete_ready or self.wait_for_del_ready()):
             resp = ""
             networks_to_delete = []
 
