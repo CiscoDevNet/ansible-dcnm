@@ -1962,6 +1962,8 @@ class DcnmIntf:
         self.intf_detail_cached_snos = set()
         self._replace_have_lookup = {}
         self._replace_pb_input_lookup = {}
+        self.deferred_delete_member_defaults = []
+        self._deferred_delete_member_default_keys = set()
 
         self.changed_dict = [
             {
@@ -4732,27 +4734,43 @@ class DcnmIntf:
                                             )
                                             if res == "dont_add":
                                                 break
-                                        if res == "copy_and_add":
-                                            want[k][0][ik][nk] = d[k][0][ik][
-                                                nk
-                                            ]
-                                            continue
-                                        if res == "merge_and_add":
-                                            want[k][0][ik][
-                                                nk
-                                            ] = self.dcnm_intf_merge_want_and_have(
+                                    if res == "copy_and_add":
+                                        want[k][0][ik][nk] = d[k][0][ik][
+                                            nk
+                                        ]
+                                        continue
+                                    if res == "merge_and_add":
+                                        merged_value = self.dcnm_intf_merge_want_and_have(
+                                            nk,
+                                            want[k][0][ik][nk],
+                                            d[k][0][ik][nk],
+                                        )
+                                        # A merged aggregate key can resolve back to the
+                                        # exact current controller value, for example
+                                        # CONF="" merged with CONF="no shutdown". Skip
+                                        # the update when the merged result is already in
+                                        # sync.
+                                        if (
+                                            self.dcnm_intf_compare_elements(
+                                                name,
+                                                sno,
+                                                fabric,
+                                                merged_value,
+                                                d[k][0][ik].get(nk),
                                                 nk,
-                                                want[k][0][ik][nk],
-                                                d[k][0][ik][nk],
+                                                "replaced",
                                             )
-                                            changed_dict[k][0][ik][nk] = want[
-                                                k
-                                            ][0][ik][nk]
-                                        if res != "dont_add":
-                                            action = "update"
-                                        else:
-                                            # Keys and values match. Remove from changed_dict
+                                            == "dont_add"
+                                        ):
                                             changed_dict[k][0][ik].pop(nk)
+                                            continue
+                                        want[k][0][ik][nk] = merged_value
+                                        changed_dict[k][0][ik][nk] = merged_value
+                                    if res != "dont_add":
+                                        action = "update"
+                                    else:
+                                        # Keys and values match. Remove from changed_dict
+                                        changed_dict[k][0][ik].pop(nk)
                                 else:
                                     # HAVE may have an entry with a list # of interfaces. Check all the
                                     # interface entries for a match.  Even if one entry matches do not
@@ -4773,12 +4791,25 @@ class DcnmIntf:
                                         want[k][0][ik] = d[k][0][ik]
                                         continue
                                     if res == "merge_and_add":
-                                        want[k][0][
-                                            ik
-                                        ] = self.dcnm_intf_merge_want_and_have(
+                                        merged_value = self.dcnm_intf_merge_want_and_have(
                                             ik, want[k][0][ik], d[k][0][ik]
                                         )
-                                        changed_dict[k][0][ik] = want[k][0][ik]
+                                        if (
+                                            self.dcnm_intf_compare_elements(
+                                                name,
+                                                sno,
+                                                fabric,
+                                                merged_value,
+                                                d[k][0][ik],
+                                                ik,
+                                                "replaced",
+                                            )
+                                            == "dont_add"
+                                        ):
+                                            changed_dict[k][0].pop(ik)
+                                            continue
+                                        want[k][0][ik] = merged_value
+                                        changed_dict[k][0][ik] = merged_value
                                     if res != "dont_add":
                                         action = "update"
                                     else:
@@ -4901,60 +4932,134 @@ class DcnmIntf:
         intf_nv = intf.get("interfaces")[0].get("nvPairs")
         have_nv = have.get("interfaces")[0].get("nvPairs")
 
+        def normalize_default_compare_value(key, value):
+            if value is None:
+                value = ""
+
+            sval = str(value).strip().lower()
+
+            if key == "CONF":
+                # NDFC may omit explicit default CLI from stored interface
+                # intent while the module's generated default payload includes
+                # "no shutdown". Treat them as equivalent for deleted-state
+                # idempotence checks.
+                if sval in ("", "no shutdown"):
+                    return ""
+                return sval
+
+            if key in (
+                "ADMIN_STATE",
+                "BPDUGUARD_ENABLED",
+                "PORTTYPE_FAST_ENABLED",
+            ):
+                if sval in ("true", "yes"):
+                    return "true"
+                if sval in ("false", "no"):
+                    return "false"
+                return sval
+
+            return sval
+
         if (
-            str(intf_nv.get("SPEED")).lower()
-            != str(have_nv.get("SPEED")).lower()
+            normalize_default_compare_value("SPEED", intf_nv.get("SPEED"))
+            != normalize_default_compare_value("SPEED", have_nv.get("SPEED"))
         ):
             return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("DESC") != have_nv.get("DESC"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("CONF") != have_nv.get("CONF"):
-            return "DCNM_INTF_NOT_MATCH"
         if (
-            str(intf_nv.get("ADMIN_STATE")).lower()
-            != str(have_nv.get("ADMIN_STATE")).lower()
+            normalize_default_compare_value("DESC", intf_nv.get("DESC"))
+            != normalize_default_compare_value("DESC", have_nv.get("DESC"))
         ):
             return "DCNM_INTF_NOT_MATCH"
-        if str(intf_nv.get("MTU")).lower() != str(have_nv.get("MTU")).lower():
+        if (
+            normalize_default_compare_value("CONF", intf_nv.get("CONF"))
+            != normalize_default_compare_value("CONF", have_nv.get("CONF"))
+        ):
+            return "DCNM_INTF_NOT_MATCH"
+        if (
+            normalize_default_compare_value(
+                "ADMIN_STATE", intf_nv.get("ADMIN_STATE")
+            )
+            != normalize_default_compare_value(
+                "ADMIN_STATE", have_nv.get("ADMIN_STATE")
+            )
+        ):
+            return "DCNM_INTF_NOT_MATCH"
+        if (
+            normalize_default_compare_value("MTU", intf_nv.get("MTU"))
+            != normalize_default_compare_value("MTU", have_nv.get("MTU"))
+        ):
             return "DCNM_INTF_NOT_MATCH"
 
         if intf.get("policy") == "int_routed_host":
-            if intf_nv.get("INTF_VRF") != have_nv.get("INTF_VRF"):
-                return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("IP")).lower()
-                != str(have_nv.get("IP")).lower()
+                normalize_default_compare_value(
+                    "INTF_VRF", intf_nv.get("INTF_VRF")
+                )
+                != normalize_default_compare_value(
+                    "INTF_VRF", have_nv.get("INTF_VRF")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("PREFIX")).lower()
-                != str(have_nv.get("PREFIX")).lower()
+                normalize_default_compare_value("IP", intf_nv.get("IP"))
+                != normalize_default_compare_value("IP", have_nv.get("IP"))
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("ROUTING_TAG")).lower()
-                != str(have_nv.get("ROUTING_TAG")).lower()
+                normalize_default_compare_value(
+                    "PREFIX", intf_nv.get("PREFIX")
+                )
+                != normalize_default_compare_value(
+                    "PREFIX", have_nv.get("PREFIX")
+                )
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                normalize_default_compare_value(
+                    "ROUTING_TAG", intf_nv.get("ROUTING_TAG")
+                )
+                != normalize_default_compare_value(
+                    "ROUTING_TAG", have_nv.get("ROUTING_TAG")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
         elif intf.get("policy") == "int_trunk_host":
             if (
-                str(intf_nv.get("BPDUGUARD_ENABLED")).lower()
-                != str(have_nv.get("BPDUGUARD_ENABLED")).lower()
+                normalize_default_compare_value(
+                    "BPDUGUARD_ENABLED", intf_nv.get("BPDUGUARD_ENABLED")
+                )
+                != normalize_default_compare_value(
+                    "BPDUGUARD_ENABLED", have_nv.get("BPDUGUARD_ENABLED")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("PORTTYPE_FAST_ENABLED")).lower()
-                != str(have_nv.get("PORTTYPE_FAST_ENABLED")).lower()
+                normalize_default_compare_value(
+                    "PORTTYPE_FAST_ENABLED",
+                    intf_nv.get("PORTTYPE_FAST_ENABLED"),
+                )
+                != normalize_default_compare_value(
+                    "PORTTYPE_FAST_ENABLED",
+                    have_nv.get("PORTTYPE_FAST_ENABLED"),
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("ALLOWED_VLANS")).lower()
-                != str(have_nv.get("ALLOWED_VLANS")).lower()
+                normalize_default_compare_value(
+                    "ALLOWED_VLANS", intf_nv.get("ALLOWED_VLANS")
+                )
+                != normalize_default_compare_value(
+                    "ALLOWED_VLANS", have_nv.get("ALLOWED_VLANS")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("NATIVE_VLAN")).lower()
-                != str(have_nv.get("NATIVE_VLAN")).lower()
+                normalize_default_compare_value(
+                    "NATIVE_VLAN", intf_nv.get("NATIVE_VLAN")
+                )
+                != normalize_default_compare_value(
+                    "NATIVE_VLAN", have_nv.get("NATIVE_VLAN")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
         return "DCNM_INTF_MATCH"
@@ -5045,6 +5150,8 @@ class DcnmIntf:
         self._pb_override_lookup = set()
         self._pb_member_lookup = {}
         self._pb_peer_member_lookup = {}
+        self._pb_deleted_parent_lookup = set()
+        self._pb_deleted_peer_parent_lookup = set()
 
         for item in self.pb_input:
             ifname = item.get("ifname")
@@ -5056,6 +5163,7 @@ class DcnmIntf:
 
             # Members (port-channel style)
             if item.get("members"):
+                self._pb_deleted_parent_lookup.add((ifname, sno))
                 for mem in item["members"]:
                     expanded_name = self.dcnm_intf_get_if_name(mem, "eth")[0]
                     if expanded_name not in self._pb_member_lookup:
@@ -5064,6 +5172,8 @@ class DcnmIntf:
 
             # Peer members (VPC style)
             elif item.get("peer1_members") or item.get("peer2_members"):
+                self._pb_deleted_parent_lookup.add((ifname, sno))
+                self._pb_deleted_peer_parent_lookup.add(ifname)
                 for mem in (item.get("peer1_members") or []):
                     expanded_name = self.dcnm_intf_get_if_name(mem, "eth")[0]
                     self._pb_peer_member_lookup[expanded_name] = ifname
@@ -5089,6 +5199,13 @@ class DcnmIntf:
         # Check 2: Check if this interface is a member of a port-channel.
         if have_ifname in self._pb_member_lookup:
             for parent_ifname, parent_sno in self._pb_member_lookup[have_ifname]:
+                # Deleted state needs one extra reconciliation pass for member
+                # Ethernet defaults after parent PC/vPC delete. Execution order
+                # already sends parent deletes before member replacements, so it
+                # is safe to queue the member default in the same module run.
+                if self.module.params["state"] == "deleted":
+                    if (parent_ifname, parent_sno) in self._pb_deleted_parent_lookup:
+                        return True, parent_ifname
                 # Compare have serial_number to item serial_number return if they don't match
                 if have_sno != parent_sno:
                     return True, None
@@ -5097,9 +5214,171 @@ class DcnmIntf:
 
         # Check 3: Check if this interface is a peer member of a VPC.
         if have_ifname in self._pb_peer_member_lookup:
+            if self.module.params["state"] == "deleted":
+                parent_ifname = self._pb_peer_member_lookup[have_ifname]
+                if parent_ifname in self._pb_deleted_peer_parent_lookup:
+                    return True, parent_ifname
             return False, self._pb_peer_member_lookup[have_ifname]
 
         return True, None
+
+    def dcnm_intf_parent_present_in_have_all(self, parent_ifname, parent_sno=None):
+
+        parent_ifname = parent_ifname.lower()
+
+        for have in self.have_all:
+            if have.get("ifName", "").lower() != parent_ifname:
+                continue
+            if parent_sno is None or have.get("serialNo") == parent_sno:
+                return True
+
+        return False
+
+    def dcnm_intf_should_defer_deleted_member_default(self, have, parent_ifname):
+
+        if self.module.params["state"] != "deleted" or not parent_ifname:
+            return False
+
+        if not hasattr(self, "_pb_member_lookup"):
+            self.dcnm_intf_build_can_be_replaced_lookups()
+
+        have_ifname = have["ifName"]
+
+        if have_ifname in self._pb_member_lookup:
+            for candidate_parent_ifname, candidate_parent_sno in self._pb_member_lookup[have_ifname]:
+                if candidate_parent_ifname != parent_ifname:
+                    continue
+                if (
+                    (candidate_parent_ifname, candidate_parent_sno)
+                    in self._pb_deleted_parent_lookup
+                ):
+                    return self.dcnm_intf_parent_present_in_have_all(
+                        candidate_parent_ifname, candidate_parent_sno
+                    )
+
+        if have_ifname in self._pb_peer_member_lookup:
+            if (
+                self._pb_peer_member_lookup[have_ifname] == parent_ifname
+                and parent_ifname in self._pb_deleted_peer_parent_lookup
+            ):
+                return self.dcnm_intf_parent_present_in_have_all(parent_ifname)
+
+        return False
+
+    def dcnm_intf_defer_deleted_member_default(
+        self, ifname, sno, fabric, deploy, parent_ifname
+    ):
+
+        key = (str(sno), ifname.lower(), parent_ifname.lower())
+
+        if key in self._deferred_delete_member_default_keys:
+            return
+
+        self._deferred_delete_member_default_keys.add(key)
+        self.deferred_delete_member_defaults.append(
+            {
+                "ifName": ifname,
+                "serialNumber": str(sno),
+                "fabricName": fabric,
+                "deploy": deploy,
+                "parentIfName": parent_ifname,
+            }
+        )
+
+    def dcnm_intf_refresh_deferred_deleted_member_defaults(self):
+
+        if not self.deferred_delete_member_defaults:
+            return
+
+        affected_snos = sorted(
+            {
+                item["serialNumber"].split("~")[0]
+                for item in self.deferred_delete_member_defaults
+            }
+        )
+
+        max_retries = 10
+        retry_sleep = 2
+
+        for retry in range(max_retries):
+            # Refresh only the impacted switches so same-run parent deletes are
+            # reflected before we calculate default replacements for former members.
+            self.have_all = [
+                have
+                for have in self.have_all
+                if have.get("serialNo") not in affected_snos
+            ]
+
+            for sno in affected_snos:
+                stale_cache_keys = [
+                    key for key in self.intf_detail_cache if key[0] == sno
+                ]
+                for key in stale_cache_keys:
+                    self.intf_detail_cache.pop(key, None)
+                self.intf_detail_cached_snos.discard(sno)
+                self.dcnm_intf_get_have_all_with_sno(sno)
+                self.dcnm_intf_bulk_fetch_intf_info(sno)
+
+            parent_still_present = False
+            for item in self.deferred_delete_member_defaults:
+                if self.dcnm_intf_parent_present_in_have_all(item["parentIfName"]):
+                    parent_still_present = True
+                    break
+
+            if not parent_still_present:
+                break
+
+            if retry < (max_retries - 1):
+                time.sleep(retry_sleep)
+
+        for item in self.deferred_delete_member_defaults:
+            intf = {
+                "ifName": item["ifName"],
+                "serialNumber": item["serialNumber"],
+                "interfaceType": "INTERFACE_ETHERNET",
+            }
+
+            match_have = [
+                have
+                for have in self.have_all
+                if (
+                    (intf["ifName"].lower() == have["ifName"].lower())
+                    and (intf["serialNumber"] == have["serialNo"])
+                )
+            ]
+
+            if not match_have:
+                continue
+
+            if str(match_have[0].get("isPhysical")).lower() != "true":
+                continue
+
+            uelem = self.dcnm_intf_get_default_eth_payload(
+                intf["ifName"], intf["serialNumber"], item["fabricName"]
+            )
+            intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
+
+            if intf_payload != []:
+                if (
+                    self.dcnm_compare_default_payload(uelem, intf_payload)
+                    == "DCNM_INTF_MATCH"
+                ):
+                    continue
+
+            self.dcnm_intf_merge_intf_info(uelem, self.diff_replace)
+            self.changed_dict[0]["replaced"].append(copy.deepcopy(uelem))
+
+            if str(item.get("deploy", "true")).lower() == "true":
+                delem = {
+                    "serialNumber": intf["serialNumber"],
+                    "ifName": intf["ifName"],
+                    "fabricName": item["fabricName"],
+                }
+                self.diff_deploy.append(delem)
+                self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
+
+        self.deferred_delete_member_defaults = []
+        self._deferred_delete_member_default_keys = set()
 
     def dcnm_intf_build_replace_lookups(self):
         """Pre-build lookup structures for replaced-state comparisons.
@@ -5590,6 +5869,8 @@ class DcnmIntf:
         self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
+        self.deferred_delete_member_defaults = []
+        self._deferred_delete_member_default_keys = set()
 
         if self.config == []:
             # Now that we have all the interface information we can run override
@@ -5752,6 +6033,17 @@ class DcnmIntf:
                                         match_have
                                     )
                                     if rc is True:
+                                        if self.dcnm_intf_should_defer_deleted_member_default(
+                                            match_have, iface
+                                        ):
+                                            self.dcnm_intf_defer_deleted_member_default(
+                                                intf["ifName"],
+                                                intf["serialNumber"],
+                                                self.fabric,
+                                                cfg.get("deploy", "true"),
+                                                iface,
+                                            )
+                                            continue
                                         self.dcnm_intf_merge_intf_info(
                                             uelem, self.diff_replace
                                         )
@@ -6181,6 +6473,9 @@ class DcnmIntf:
             self.result["response"].append(resp)
 
         resp = None
+
+        if self.deferred_delete_member_defaults:
+            self.dcnm_intf_refresh_deferred_deleted_member_defaults()
 
         # Add Breakout creation from self.want_breakout
         path = self.paths["BREAKOUT"]
