@@ -4734,43 +4734,43 @@ class DcnmIntf:
                                             )
                                             if res == "dont_add":
                                                 break
-                                    if res == "copy_and_add":
-                                        want[k][0][ik][nk] = d[k][0][ik][
-                                            nk
-                                        ]
-                                        continue
-                                    if res == "merge_and_add":
-                                        merged_value = self.dcnm_intf_merge_want_and_have(
-                                            nk,
-                                            want[k][0][ik][nk],
-                                            d[k][0][ik][nk],
-                                        )
-                                        # A merged aggregate key can resolve back to the
-                                        # exact current controller value, for example
-                                        # CONF="" merged with CONF="no shutdown". Skip
-                                        # the update when the merged result is already in
-                                        # sync.
-                                        if (
-                                            self.dcnm_intf_compare_elements(
-                                                name,
-                                                sno,
-                                                fabric,
-                                                merged_value,
-                                                d[k][0][ik].get(nk),
-                                                nk,
-                                                "replaced",
-                                            )
-                                            == "dont_add"
-                                        ):
-                                            changed_dict[k][0][ik].pop(nk)
+                                        if res == "copy_and_add":
+                                            want[k][0][ik][nk] = d[k][0][ik][
+                                                nk
+                                            ]
                                             continue
-                                        want[k][0][ik][nk] = merged_value
-                                        changed_dict[k][0][ik][nk] = merged_value
-                                    if res != "dont_add":
-                                        action = "update"
-                                    else:
-                                        # Keys and values match. Remove from changed_dict
-                                        changed_dict[k][0][ik].pop(nk)
+                                        if res == "merge_and_add":
+                                            merged_value = self.dcnm_intf_merge_want_and_have(
+                                                nk,
+                                                want[k][0][ik][nk],
+                                                d[k][0][ik][nk],
+                                            )
+                                            # A merged aggregate key can resolve back to the
+                                            # exact current controller value, for example
+                                            # CONF="" merged with CONF="no shutdown". Skip
+                                            # the update when the merged result is already in
+                                            # sync.
+                                            if (
+                                                self.dcnm_intf_compare_elements(
+                                                    name,
+                                                    sno,
+                                                    fabric,
+                                                    merged_value,
+                                                    d[k][0][ik].get(nk),
+                                                    nk,
+                                                    "replaced",
+                                                )
+                                                == "dont_add"
+                                            ):
+                                                changed_dict[k][0][ik].pop(nk)
+                                                continue
+                                            want[k][0][ik][nk] = merged_value
+                                            changed_dict[k][0][ik][nk] = merged_value
+                                        if res != "dont_add":
+                                            action = "update"
+                                        else:
+                                            # Keys and values match. Remove from changed_dict
+                                            changed_dict[k][0][ik].pop(nk)
                                 else:
                                     # HAVE may have an entry with a list # of interfaces. Check all the
                                     # interface entries for a match.  Even if one entry matches do not
