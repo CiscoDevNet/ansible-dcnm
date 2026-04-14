@@ -378,7 +378,6 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.deploy_success_resp,
                 self.mock_net_attach_object_del_not_ready,
                 self.mock_net_attach_object_del_ready,
-                self.mock_net_attach_object_del_ready,
                 self.delete_success_resp,
                 self.blank_data,
                 self.attach_success_resp2,
@@ -391,11 +390,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
                 self.mock_net_object,
-                self.blank_data,
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 self.mock_net_attach_object_del_not_ready,
-                self.mock_net_attach_object_del_ready,
                 self.mock_net_attach_object_del_ready,
                 self.delete_success_resp,
             ]
