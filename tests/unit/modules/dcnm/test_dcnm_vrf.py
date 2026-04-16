@@ -155,6 +155,13 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_vrf_attach_get_ext_object_merge_att4_only = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_get_ext_object_merge_att4_only")
         )
+        # Combined (batched) VRF-Lite switch fixtures for PENDING-05 batch GET_VRF_SWITCH
+        self.mock_vrf_attach_get_ext_object_combined_sn1_sn2 = copy.deepcopy(
+            self.test_data.get("mock_vrf_attach_get_ext_object_combined_sn1_sn2")
+        )
+        self.mock_vrf_attach_get_ext_object_combined_sn1_sn4 = copy.deepcopy(
+            self.test_data.get("mock_vrf_attach_get_ext_object_combined_sn1_sn4")
+        )
         self.mock_vrf_msd_attach_get_ext_object_dcnm_att1_only = copy.deepcopy(
             self.test_data.get("mock_vrf_msd_attach_get_ext_object_dcnm_att1_only")
         )
@@ -315,8 +322,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
             ]
 
         elif "_merged_with_incorrect" in self._testMethodName:
@@ -347,8 +354,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att2_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn2,
                 self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
@@ -360,8 +367,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att2_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn2,
                 self.blank_data,
                 self.mock_vrf_lite_obj,
                 self.attach_success_resp,
@@ -387,8 +394,8 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_lite_obj,
                 self.mock_vrf_attach_object_pending,
                 self.blank_data,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
                 self.deploy_success_resp,
             ]
 
@@ -440,8 +447,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
                 self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
@@ -462,8 +469,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
             ]
 
         elif "lite_override_with_additions" in self._testMethodName:
@@ -492,8 +499,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
                 self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
@@ -540,8 +547,9 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att3_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                # att3 has the same serialNumber as att1 (XYZKSJHSMK1), so combined_sn1_sn4 applies
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
             ]
 
         elif "delete_std_lite" in self._testMethodName:
@@ -551,8 +559,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
                 self.mock_net_from_vrf_empty,  # Check for network attachments before delete
                 self.attach_success_resp,
                 self.deploy_success_resp,
@@ -629,8 +637,8 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_object,  # get_have: GET /vrfs (NO get_vrf_lite calls because config=[])
                 self.mock_vrf_object,  # get_diff_query: GET /vrfs
                 self.mock_vrf_attach_object2_query,  # get_diff_query: dcnm_send() GET /vrfs/attachments
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,  # get_diff_query: get_vrf_lite_objects(att1)
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,  # get_diff_query: get_vrf_lite_objects(att4)
+                # Batch GET_VRF_SWITCH: one call for both switches of test_vrf_1 (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
             ]
 
         elif "query_vrf_lite" in self._testMethodName:
@@ -638,12 +646,12 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,  # get_have: GET /vrfs
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,  # get_have: extension att1
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,  # get_have: extension att4
+                # Batch GET_VRF_SWITCH: one call for both switches in get_have() (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
                 self.mock_vrf_object,  # get_diff_query: GET /vrfs
                 self.mock_vrf_attach_object2_query,  # get_diff_query: GET /vrfs/attachments
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,  # get_diff_query: extension att1
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,  # get_diff_query: extension att4
+                # Batch GET_VRF_SWITCH: one call for both switches in get_diff_query() (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
             ]
 
         elif "nochild_msd_query" in self._testMethodName:
