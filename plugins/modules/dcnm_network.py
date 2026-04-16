@@ -1005,6 +1005,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
 
 class DcnmNetwork:
 
+    BULK_GET_HAVE_NETWORK_THRESHOLD = 25
+
     dcnm_network_paths = {
         11: {
             "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
@@ -2356,20 +2358,31 @@ class DcnmNetwork:
                     if not vrf_found:
                         self.module.fail_json(msg="VRF: {0} is missing in fabric: {1}".format(vrf_missing, self.fabric))
 
-        use_targeted_network_lookups = state in ["merged", "replaced", "deleted"] and bool(self.config)
-        use_bulk_network_inventory = state == "overridden"
+        requested_networks = []
+        requested_network_set = set()
 
-        if use_targeted_network_lookups:
-            requested_networks = []
+        if self.config:
             seen_networks = set()
-
             for net in self.config:
                 net_name = net.get("net_name")
                 if not net_name or net_name in seen_networks:
                     continue
                 seen_networks.add(net_name)
                 requested_networks.append(net_name)
+            requested_network_set = set(requested_networks)
 
+        use_large_config_bulk_inventory = (
+            state in ["merged", "replaced"]
+            and bool(requested_networks)
+            and len(requested_networks) >= self.BULK_GET_HAVE_NETWORK_THRESHOLD
+        )
+        use_targeted_network_lookups = (
+            state in ["merged", "replaced", "deleted"] and bool(requested_networks) and not use_large_config_bulk_inventory
+        )
+        use_bulk_network_inventory = state == "overridden" or use_large_config_bulk_inventory
+        filter_bulk_inventory_to_requested_networks = use_large_config_bulk_inventory
+
+        if use_targeted_network_lookups:
             for network_name in requested_networks:
                 path = self.paths["GET_NET_NAME"].format(self.fabric, network_name)
                 network = dcnm_send(self.module, method, path)
@@ -2399,6 +2412,8 @@ class DcnmNetwork:
 
             if networks.get("DATA"):
                 for net in networks["DATA"]:
+                    if filter_bulk_inventory_to_requested_networks and net.get("networkName") not in requested_network_set:
+                        continue
                     normalized_net = self.normalize_have_network(net)
                     curr_networks.append(normalized_net["networkName"])
                     have_create.append(normalized_net)
@@ -3667,6 +3682,11 @@ class DcnmNetwork:
         if self.diff_delete and (delete_ready or self.wait_for_del_ready()):
             resp = ""
             networks_to_delete = []
+            supports_bulk_delete = self.fabric_type in [
+                "standalone",
+                "multisite_parent",
+                "multicluster_parent",
+            ]
 
             # Separate networks by state
             for net, state in self.diff_delete.items():
@@ -3678,10 +3698,10 @@ class DcnmNetwork:
                         resp = "Network is out of sync.\n"
                     continue
 
-                if self.fabric_type == "multicluster_parent":
+                if supports_bulk_delete:
                     networks_to_delete.append(net)
                 else:
-                    # Non-multicluster_parent fabrics use individual delete
+                    # Fall back to individual deletes for fabric types without bulk-delete support.
                     delete_path = path + "/" + net
                     delete_payload = {net: "NA"}
                     resp = dcnm_send(self.module, method, delete_path, json.dumps(delete_payload))
@@ -3693,8 +3713,8 @@ class DcnmNetwork:
                             return
                         self.failure(resp)
 
-            # Batch delete for multicluster_parent using bulk-delete API
-            if self.fabric_type == "multicluster_parent" and networks_to_delete:
+            # Use the bulk-delete API for standalone, MSD parent, and multicluster parent fabrics.
+            if supports_bulk_delete and networks_to_delete:
 
                 max_batch_size = 30
 
