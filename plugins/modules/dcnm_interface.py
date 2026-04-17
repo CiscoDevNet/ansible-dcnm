@@ -216,6 +216,24 @@ options:
             type: str
             choices: ['normal', 'fast']
             default: normal
+          enable_qos:
+            description:
+            - Enable QoS on the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'l3'
+            type: bool
+            default: false
+          qos_policy:
+            description:
+            - QoS policy name to apply to the interface. This option is only valid when 'enable_qos' is true.
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'l3'
+            type: str
+            default: ""
+          queuing_policy:
+            description:
+            - Queuing policy name to apply to the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'l3'
+            type: str
+            default: ""
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -368,6 +386,24 @@ options:
             type: str
             choices: ['normal', 'fast']
             default: normal
+          enable_qos:
+            description:
+            - Enable QoS on the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+            type: bool
+            default: false
+          qos_policy:
+            description:
+            - QoS policy name to apply to the interface. This option is only valid when 'enable_qos' is true.
+              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+            type: str
+            default: ""
+          queuing_policy:
+            description:
+            - Queuing policy name to apply to the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+            type: str
+            default: ""
       profile_subint:
         description:
         - Though the key shown here is 'profile_subint' the actual key to be used in playbook
@@ -638,6 +674,24 @@ options:
             - State of Switchport Monitor for SPAN/ERSPAN
             type: bool
             default: false
+          enable_qos:
+            description:
+            - Enable QoS on the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'routed'
+            type: bool
+            default: false
+          qos_policy:
+            description:
+            - QoS policy name to apply to the interface. This option is only valid when 'enable_qos' is true.
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'routed'
+            type: str
+            default: ""
+          queuing_policy:
+            description:
+            - Queuing policy name to apply to the interface.
+              This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'routed'
+            type: str
+            default: ""
       profile_svi:
         description:
         - Though the key shown here is 'profile_svi' the actual key to be used in playbook
@@ -2002,6 +2056,9 @@ class DcnmIntf:
             "ENABLE_PFC": "enable_pfc",
             "ENABLE_MONITOR": "enable_monitor",
             "CDP_ENABLE": "enable_cdp",
+            "ENABLE_QOS": "enable_qos",
+            "QOS_POLICY": "qos_policy",
+            "QUEUING_POLICY": "queuing_policy",
 
         }
 
@@ -2367,6 +2424,9 @@ class DcnmIntf:
             disable_lacp_suspend_individual=dict(type="bool", default=False),
             lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
             lacp_rate=dict(type="str", default="normal"),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         pc_prof_spec_access = dict(
@@ -2390,6 +2450,9 @@ class DcnmIntf:
             disable_lacp_suspend_individual=dict(type="bool", default=False),
             lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
             lacp_rate=dict(type="str", default="normal"),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         pc_prof_spec_l3 = dict(
@@ -2405,6 +2468,9 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         pc_prof_spec_dot1q = dict(
@@ -2478,6 +2544,9 @@ class DcnmIntf:
             enable_lacp_vpc_convergence=dict(type="bool", default=False),
             lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
             lacp_rate=dict(type="str", default="normal"),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         vpc_prof_spec_access = dict(
@@ -2502,6 +2571,9 @@ class DcnmIntf:
             peer1_description=dict(type="str", default=""),
             peer2_description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         if "trunk" == cfg[0]["profile"]["mode"]:
@@ -2599,6 +2671,9 @@ class DcnmIntf:
             enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         eth_prof_spec_access = dict(
@@ -2619,6 +2694,9 @@ class DcnmIntf:
             enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         eth_prof_spec_routed_host = dict(
@@ -2631,6 +2709,9 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
 
         eth_prof_spec_epl_routed_host = dict(
@@ -2661,6 +2742,8 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
         if "trunk" == cfg[0]["profile"]["mode"]:
@@ -2976,6 +3059,20 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
             else:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -3021,6 +3118,20 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
             else:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -3050,6 +3161,20 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
+
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
 
         if delem[profile]["mode"] == "dot1q":
             if delem[profile]["members"] is None:
@@ -3254,6 +3379,19 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
         else:
             intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
+        if delem[profile].get("enable_qos"):
+            intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+            if delem[profile].get("qos_policy"):
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+        else:
+            intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+            intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+        if delem[profile].get("queuing_policy"):
+            intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
             str(delem[profile].get("speed", ""))
@@ -3414,6 +3552,19 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
         if delem[profile]["mode"] == "access":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
                 profile
@@ -3438,6 +3589,19 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
         if delem[profile]["mode"] == "routed":
             intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
                 "int_vrf"
@@ -3458,6 +3622,19 @@ class DcnmIntf:
                 delem[profile]["mtu"]
             )
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            if delem[profile].get("enable_qos"):
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
+                if delem[profile].get("qos_policy"):
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
+                else:
+                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
+                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
+            if delem[profile].get("queuing_policy"):
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         if delem[profile]["mode"] == "epl_routed":
@@ -3513,6 +3690,8 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
 
     def dcnm_intf_get_st_fex_payload(self, delem, intf, profile):
 
@@ -4086,7 +4265,8 @@ class DcnmIntf:
             "ENABLE_LACP_VPC_CONV",
             "ENABLE_PFC",
             "ENABLE_MONITOR",
-            "CDP_ENABLE"
+            "CDP_ENABLE",
+            "ENABLE_QOS"
         ]
         if k in boolean_keys:
             # This is a special case where the value is a boolean and we need to compare it as such
@@ -4172,9 +4352,6 @@ class DcnmIntf:
         for key in self.pol_pc_member_types[self.dcnm_version].keys():
             member_policy_names.append(self.pol_pc_member_types[self.dcnm_version][key])
 
-        # List of keys in nvPairs to protect
-        protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF", "PRIMARY_INTF"]
-
         for have_int in have:
             if have_int["policy"] in member_policy_names:
                 # We have a port-channel member interface. Find the corresponding port-channel
@@ -4183,6 +4360,8 @@ class DcnmIntf:
                 have_pc_serial = have_int["interfaces"][0]["serialNumber"]
 
                 for want_int in want:
+                    # List of keys in nvPairs to protect
+                    protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF", "PRIMARY_INTF"]
                     match_int = find_dict_in_list_by_key_value(search=want_int['interfaces'], key='ifName', value=have_pc_name)
                     if match_int and match_int['serialNumber'] == have_pc_serial:
                         msg = "\nHave Interface Info: "
@@ -4380,7 +4559,10 @@ class DcnmIntf:
                                         "ENABLE_PFC",
                                         "NATIVE_VLAN",
                                         "PORT_DUPLEX_MODE",
-                                        "SPEED"
+                                        "SPEED",
+                                        "ENABLE_QOS",
+                                        "QOS_POLICY",
+                                        "QUEUING_POLICY"
                                     ]
 
                                     for key in keys_to_check:
@@ -4842,6 +5024,24 @@ class DcnmIntf:
                     )
                     continue
 
+                # Skip TOR uplink member interfaces
+                if have.get("underlayPolicies") is not None:
+                    is_tor_member = False
+                    for policy in have.get("underlayPolicies"):
+                        if policy.get("templateName") in ["int_vpc_uplink_access_po_member"]:
+                            is_tor_member = True
+                            break
+
+                    if is_tor_member:
+                        self.changed_dict[0]["skipped"].append(
+                            {
+                                "Name": name,
+                                "Alias": have["alias"],
+                                "Reason": "TOR uplink member interface",
+                            }
+                        )
+                        continue
+
                 if str(have["deletable"]).lower() == "false":
                     # Add this 'have to a deferred list. We will process this list once we have processed all the 'haves'
                     defer_list.append(have)
@@ -4974,6 +5174,48 @@ class DcnmIntf:
                                 }
                             )
                             continue
+                        # Port-channel which are created as part of TOR uplink should not be deleted
+                        # This includes both TOR-side and leaf-side port-channels:
+                        # - TOR side: "tor-connected-to-vPC-leaf:" or "tor-connected-to-leaf:"
+                        # - Leaf side: "leaf-connected-to-vPC-tor:" or "leaf-connected-to-tor:"
+                        if have.get("alias") is not None and (
+                            "tor-connected-to" in have.get("alias")
+                            or "leaf-connected-to-vPC-tor" in have.get("alias")
+                            or "leaf-connected-to-tor" in have.get("alias")
+                        ):
+                            self.changed_dict[0]["skipped"].append(
+                                {
+                                    "Name": name,
+                                    "Alias": have["alias"],
+                                    "Underlay Policies": have[
+                                        "underlayPolicies"
+                                    ],
+                                }
+                            )
+                            continue
+                        # Also check if port-channel uses TOR uplink templates
+                        skip_pc = False
+                        if have.get("underlayPolicies") is not None:
+                            tor_uplink_templates = [
+                                "int_vpc_uplink_access_po",
+                                "int_port_channel_uplink_access",
+                            ]
+                            for policy in have.get("underlayPolicies"):
+                                if policy.get("templateName") in tor_uplink_templates:
+                                    self.changed_dict[0]["skipped"].append(
+                                        {
+                                            "Name": name,
+                                            "Alias": have["alias"],
+                                            "Underlay Policies": have[
+                                                "underlayPolicies"
+                                            ],
+                                            "Skip Reason": "TOR uplink port-channel (template match)",
+                                        }
+                                    )
+                                    skip_pc = True
+                                    break
+                        if skip_pc:
+                            continue
                         else:
                             self.changed_dict[0]["debugs"].append(
                                 {
@@ -4985,10 +5227,49 @@ class DcnmIntf:
                                 }
                             )
 
+                    # TOR uplink vPC interfaces should NEVER be deleted through interface override.
+                    # TOR uplink vPCs are auto-generated by NDFC when TOR switches are paired
+                    # with leaf switches. These vPC interfaces (vPC1, vPC2, etc.) represent
+                    # the uplink bundle between TOR and leaf switches.
+                    #
+                    # TOR uplink vPCs can be identified by:
+                    # - ifType: INTERFACE_VPC
+                    # - underlayPolicies templateName starting with "int_vpc_uplink_"
+                    # - alias patterns: "tor-connected-to", "leaf-connected-to-vPC-tor"
+                    if have.get("ifType") == "INTERFACE_VPC":
+                        is_tor_uplink = False
+
+                        # Check alias patterns for TOR uplinks
+                        if have.get("alias") is not None and (
+                            "tor-connected-to" in have.get("alias")
+                            or "leaf-connected-to-vPC-tor" in have.get("alias")
+                            or "leaf-connected-to-tor" in have.get("alias")
+                        ):
+                            is_tor_uplink = True
+
+                        # Check underlayPolicies templateName for TOR uplink patterns
+                        if not is_tor_uplink and have.get("underlayPolicies"):
+                            for policy in have["underlayPolicies"]:
+                                template_name = policy.get("templateName", "")
+                                if template_name and template_name.startswith("int_vpc_uplink_"):
+                                    is_tor_uplink = True
+                                    break
+
+                        if is_tor_uplink:
+                            self.changed_dict[0]["skipped"].append(
+                                {
+                                    "Name": name,
+                                    "Alias": have["alias"],
+                                    "Underlay Policies": have["underlayPolicies"],
+                                    "Reason": "TOR uplink vPC interface",
+                                }
+                            )
+                            continue
+
                     # Interfaces sometimes take time to get deleted from DCNM. Such interfaces will have
                     # underlayPolicies set to "None". Such interfaces need not be deleted again
 
-                    if have["underlayPolicies"] is None:
+                    if have.get("underlayPolicies") is None:
                         self.changed_dict[0]["skipped"].append(
                             {
                                 "Name": name,

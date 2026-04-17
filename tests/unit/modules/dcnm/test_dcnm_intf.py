@@ -3107,7 +3107,10 @@ class TestDcnmIntfModule(TestDcnmModule):
             "CONF",
             "DISABLE_LACP_SUSPEND",
             "LACP_PORT_PRIO",
-            "LACP_RATE"
+            "LACP_RATE",
+            "ENABLE_QOS",
+            "QOS_POLICY",
+            "QUEUING_POLICY"
         ]
 
         for d in result["diff"][0]["replaced"]:
@@ -3357,6 +3360,9 @@ class TestDcnmIntfModule(TestDcnmModule):
             "SPEED",
             "IPv6",
             "IPv6_PREFIX",
+            "ENABLE_QOS",
+            "QOS_POLICY",
+            "QUEUING_POLICY",
         ]
 
         for d in result["diff"][0]["replaced"]:
@@ -4337,7 +4343,10 @@ class TestDcnmIntfModule(TestDcnmModule):
             "ENABLE_LACP_VPC_CONV",
             "DISABLE_LACP_SUSPEND",
             "LACP_PORT_PRIO",
-            "LACP_RATE"
+            "LACP_RATE",
+            "ENABLE_QOS",
+            "QOS_POLICY",
+            "QUEUING_POLICY"
         ]
 
         for d in result["diff"][0]["replaced"]:
