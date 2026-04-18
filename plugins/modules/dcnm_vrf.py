@@ -3540,14 +3540,6 @@ class DcnmVrf:
                     attach_list = vrf_attach["lanAttachList"]
 
                     for attach in attach_list:
-                        # copy attach and update it with the keys that
-                        # get_vrf_lite_objects() expects.
-                        attach_copy = copy.deepcopy(attach)
-                        attach_copy.update({"fabric": self.fabric})
-                        attach_copy.update(
-                            {"serialNumber": attach["switchSerialNo"]}
-                        )
-
                         # Only call get_vrf_lite_objects() if VRF-Lite is configured
                         # in the playbook to avoid expensive API calls
                         use_minimal_attach = True
@@ -3656,12 +3648,6 @@ class DcnmVrf:
                     attach_list = vrf_attach["lanAttachList"]
 
                     for attach in attach_list:
-                        # copy attach and update it with the keys that
-                        # get_vrf_lite_objects() expects.
-                        attach_copy = copy.deepcopy(attach)
-                        attach_copy.update({"fabric": self.fabric})
-                        attach_copy.update({"serialNumber": attach["switchSerialNo"]})
-
                         # When querying without specific config (else branch),
                         # provide complete information for all VRF-Lite extensions.
                         sn = attach["switchSerialNo"]
