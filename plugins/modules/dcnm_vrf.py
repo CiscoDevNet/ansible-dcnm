@@ -1016,16 +1016,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
 
 from ..module_utils.common.log_v2 import Log
 
-# When the number of VRFs in the playbook config is below this threshold,
-# get_have() uses a targeted GET_VRF_TARGETED fetch (only the named VRFs) instead
-# of a full-fabric GET_VRF sweep.  Above the threshold, one bulk GET_VRF + local
-# filter is cheaper than many individual requests.
-BULK_GET_HAVE_VRF_THRESHOLD = 25
-
 dcnm_vrf_paths = {
     11: {
         "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
-        "GET_VRF_TARGETED": "/rest/top-down/fabrics/{}/vrfs?vrf-names={}",
         "GET_VRF_ATTACH": "/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
         "GET_VRF_SWITCH": "/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
         "GET_VRF_ID": "/rest/managed-pool/fabrics/{}/partitions/ids",
@@ -1035,7 +1028,6 @@ dcnm_vrf_paths = {
     12: {
         "GET_VRF_FAB": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}",
         "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
-        "GET_VRF_TARGETED": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs?vrf-names={}",
         "GET_VRF_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/bulk-create/vrfs",
         "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
         "GET_VRF_SWITCH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
@@ -2166,62 +2158,23 @@ class DcnmVrf:
 
         curr_vrfs = ""
 
-        # Hybrid targeted fetch:
-        # - targeted states (merged/replaced/deleted) with config < threshold:
-        #   use GET_VRF_TARGETED to fetch only the requested VRFs, skipping the
-        #   full-fabric GET_VRF call entirely.
-        # - targeted states with config >= threshold:
-        #   full-fabric GET_VRF + local filter (one bulk call is cheaper than many
-        #   individual targeted calls for large config lists).
-        # - non-targeted states (overridden/query/deleted-without-config):
-        #   full-fabric sweep unchanged.
-        targeted_states = {"merged", "replaced", "deleted"}
-        wanted_vrf_names = None
-        vrf_data_to_process = None
+        vrf_objects = self.get_vrf_objects()
 
+        if not vrf_objects.get("DATA"):
+            return
+
+        vrf_data_to_process = vrf_objects["DATA"]
+
+        targeted_states = {"merged", "replaced", "deleted"}
         if self.state in targeted_states and self.config:
             wanted_vrf_names = {vrf.get("vrf_name") for vrf in self.config if vrf.get("vrf_name")}
-
-            if len(wanted_vrf_names) < BULK_GET_HAVE_VRF_THRESHOLD:
-                # Small config: targeted per-name GET avoids downloading the full fabric payload.
-                targeted_path = self.paths["GET_VRF_TARGETED"].format(
-                    self.fabric, ",".join(sorted(wanted_vrf_names))
-                )
-                msg = (
-                    f"Targeted get_have() for state '{self.state}': "
-                    f"fetching {len(wanted_vrf_names)} VRF(s) by name "
-                    f"(below threshold {BULK_GET_HAVE_VRF_THRESHOLD})."
-                )
-                self.log.debug(msg)
-                vrf_targeted = dcnm_send(self.module, "GET", targeted_path)
-                missing_fabric, not_ok = self.handle_response(vrf_targeted, "query_dcnm")
-                if missing_fabric or not_ok:
-                    msg0 = "caller: get_have. "
-                    msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
-                    msg2 = f"{msg0} Unable to find vrfs under fabric: {self.fabric}"
-                    self.module.fail_json(msg=msg1 if missing_fabric else msg2)
-                vrf_data_to_process = vrf_targeted.get("DATA") or []
-            # else: large config — fall through to full-fabric get_vrf_objects() below
-
-        if vrf_data_to_process is None:
-            # Large config (>= threshold) or non-targeted state: full fabric sweep.
-            vrf_objects = self.get_vrf_objects()
-
-            if not vrf_objects.get("DATA"):
-                return
-
-            if wanted_vrf_names:
-                # Large config in targeted state: filter the full-fabric response in memory.
-                vrf_data_to_process = [v for v in vrf_objects["DATA"] if v["vrfName"] in wanted_vrf_names]
-                msg = (
-                    f"Targeted get_have() for state '{self.state}': "
-                    f"requesting attachments for {len(vrf_data_to_process)} of "
-                    f"{len(vrf_objects['DATA'])} fabric VRFs "
-                    f"(at/above threshold {BULK_GET_HAVE_VRF_THRESHOLD})."
-                )
-                self.log.debug(msg)
-            else:
-                vrf_data_to_process = vrf_objects["DATA"]
+            vrf_data_to_process = [v for v in vrf_objects["DATA"] if v["vrfName"] in wanted_vrf_names]
+            msg = (
+                f"Targeted get_have() for state '{self.state}': "
+                f"scoping GET_VRF_ATTACH to {len(vrf_data_to_process)} of "
+                f"{len(vrf_objects['DATA'])} fabric VRF(s)."
+            )
+            self.log.debug(msg)
 
         for vrf in vrf_data_to_process:
             curr_vrfs += vrf["vrfName"] + ","
