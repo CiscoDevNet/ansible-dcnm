@@ -914,7 +914,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
 
         delete_paths = [
             args[2]
-            for args, _ in self.run_dcnm_send.call_args_list
+            for args, _kwargs in self.run_dcnm_send.call_args_list
             if len(args) >= 3 and args[1] == "DELETE"
         ]
         self.assertTrue(
