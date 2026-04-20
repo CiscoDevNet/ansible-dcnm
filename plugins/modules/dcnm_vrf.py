@@ -1912,8 +1912,10 @@ class DcnmVrf:
         # vlan_id_want drives the conditional below, so we cannot
         # remove it here (as we did with the other params that are
         # compared in the call to self.dict_values_differ())
+        vlan_id_have = str(json_to_dict_have.get("vrfVlanId", ""))
         vlan_id_want = str(json_to_dict_want.get("vrfVlanId", ""))
         vrfSegmentId_want = json_to_dict_want.get("vrfSegmentId")
+        enable_l3vni_no_vlan = json_to_dict_want.get("enableL3VniNoVlan", False)
 
         skip_keys = []
         if vlan_id_want == "0" or vlan_id_want == "":
@@ -1923,16 +1925,10 @@ class DcnmVrf:
 
         # BGP password/key type special handling
         bgp_password_want = json_to_dict_want.get("bgpPassword")
-        bgp_password_have = json_to_dict_have.get("bgpPassword")
-        bgp_key_type_have = json_to_dict_have.get("bgpPasswordKeyType")
-        bgp_key_type_want = json_to_dict_want.get("bgpPasswordKeyType")
 
-        # Some ND versions give empty bgpPasswordKeyType. Skip comparison if:
-        # 1. Have keytype is empty/None (ND has no password configured)
-        # 2. Both passwords are empty (no password in want or have)
-        if ((bgp_key_type_have == "" and bgp_key_type_want == 3 and
-             bgp_password_want != "") or (bgp_password_want == ""
-                                          and bgp_password_have == "")):
+        # Skip bgpPasswordKeyType comparison when want has no password —
+        # key type is irrelevant regardless of have values.
+        if bgp_password_want == "":
             skip_keys.append("bgpPasswordKeyType")
 
         template_skip_keys = self.get_template_skip_keys()
@@ -1960,6 +1956,13 @@ class DcnmVrf:
                 # vrfId from the instance of the same vrf on DCNM.
                 want["vrfId"] = have["vrfId"]
             if skip_keys:
+                if "vrfVlanId" in skip_keys:
+                    if ((enable_l3vni_no_vlan) or
+                            (vlan_id_want == "0" and vlan_id_have == "")):
+                        # When enableL3VniNoVlan is True, vrfVlanId is not
+                        # applicable, additionally, if vlan_id_want is "0" and
+                        # vlan_id_have is "", vlan id should not be copied from want.
+                        skip_keys.remove("vrfVlanId")
                 for key in skip_keys:
                     if key in json_to_dict_have:
                         json_to_dict_want[key] = json_to_dict_have[key]
@@ -3209,9 +3212,17 @@ class DcnmVrf:
             self.log.debug(msg)
             return
 
+        # Build the set of VRFs already queued for deploy (added by
+        # diff_merge_attach) to prevent adding the same VRF twice.
+        already_deploying = set()
+        if self.diff_deploy:
+            already_deploying = set(self.diff_deploy["vrfNames"].split(","))
+
         for vrf_name in self.want_deploy["vrfNames"].split(","):
             msg = f"VRF Name : {vrf_name}"
             self.log.debug(msg)
+            if vrf_name in already_deploying:
+                continue
             if not self.diff_attach and vrf_name in self.chg_deploy["vrfNames"].split(","):
                 want_vrf_data = find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=vrf_name)
                 if want_vrf_data.get("deploy", True) is True:
@@ -5600,6 +5611,7 @@ def main():
     # Logging setup
     try:
         log = Log()
+        log.config = "/Users/achengam/Documents/Ansible_Dev/NAC_Performance/ansible_collections/cisco/dcnm/plugins/modules/ansible_cisco_log_r.json"
         log.commit()
     except (TypeError, ValueError):
         pass
