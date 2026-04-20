@@ -758,6 +758,29 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(result["response"][1]["DATA"]["status"], "")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
+    def test_dcnm_net_replace_with_changes_bulk_inventory(self):
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_network",
+                config=self.playbook_config_replace,
+            )
+        )
+        with patch.object(dcnm_network.DcnmNetwork, "BULK_GET_HAVE_NETWORK_THRESHOLD", 1):
+            result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+
+        request_calls = [(call.args[1], call.args[2]) for call in self.run_dcnm_send.call_args_list]
+        get_net_path = dcnm_network.DcnmNetwork.dcnm_network_paths[self.version]["GET_NET"].format("test_network")
+        get_net_name_path = dcnm_network.DcnmNetwork.dcnm_network_paths[self.version]["GET_NET_NAME"].format(
+            "test_network", "test_network"
+        )
+
+        self.assertIn(("GET", get_net_path), request_calls)
+        self.assertNotIn(("GET", get_net_name_path), request_calls)
+        self.assertEqual(result.get("diff")[0]["vlan_id"], 203)
+        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
+        self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
+
     def test_dcnm_net_replace_with_no_atch(self):
         set_module_args(
             dict(
@@ -888,6 +911,15 @@ class TestDcnmNetworkModule(TestDcnmModule):
         )
         self.assertEqual(result["response"][1]["DATA"]["status"], "")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+
+        delete_paths = [
+            args[2]
+            for args, _ in self.run_dcnm_send.call_args_list
+            if len(args) >= 3 and args[1] == "DELETE"
+        ]
+        self.assertTrue(
+            any("/bulk-delete/networks?network-names=test_network" in path for path in delete_paths)
+        )
 
     def test_dcnm_net_delete_without_config(self):
         set_module_args(dict(state="deleted", fabric="test_network", config=[]))
