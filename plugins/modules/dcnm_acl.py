@@ -465,14 +465,14 @@ class DcnmAcl:
     """Class to manage Access Control Lists on NDFC."""
 
     # API paths for ACL operations - only supporting NDFC 12+ (ND 4.1+)
-    # Full paths including /appcenter/cisco/ndfc prefix for NDFC
+    # Note: The Routing Policies API uses /api/v1/manage/... path (not /appcenter/cisco/ndfc/...)
     dcnm_acl_paths = {
         12: {
-            "ACL_LIST": "/appcenter/cisco/ndfc/api/v1/manage/fabrics/{}/accessControlLists",
-            "ACL_GET": "/appcenter/cisco/ndfc/api/v1/manage/fabrics/{}/accessControlLists/{}",
-            "ACL_CREATE": "/appcenter/cisco/ndfc/api/v1/manage/fabrics/{}/accessControlLists",
-            "ACL_UPDATE": "/appcenter/cisco/ndfc/api/v1/manage/fabrics/{}/accessControlLists/{}",
-            "ACL_DELETE": "/appcenter/cisco/ndfc/api/v1/manage/fabrics/{}/accessControlLists/{}",
+            "ACL_LIST": "/api/v1/manage/fabrics/{}/accessControlLists",
+            "ACL_GET": "/api/v1/manage/fabrics/{}/accessControlLists/{}",
+            "ACL_CREATE": "/api/v1/manage/fabrics/{}/accessControlLists",
+            "ACL_UPDATE": "/api/v1/manage/fabrics/{}/accessControlLists/{}",
+            "ACL_DELETE": "/api/v1/manage/fabrics/{}/accessControlLists/{}",
         },
     }
 
@@ -586,6 +586,7 @@ class DcnmAcl:
                 type="str",
                 choices=[
                     "ip",
+                    "ipv6",
                     "tcp",
                     "udp",
                     "icmp",
