@@ -5564,7 +5564,6 @@ def main():
     # Logging setup
     try:
         log = Log()
-        log.config = "/Users/achengam/Documents/Ansible_Dev/NAC_Performance/ansible_collections/cisco/dcnm/plugins/modules/ansible_cisco_log_r.json"
         log.commit()
     except (TypeError, ValueError):
         pass
