@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2026 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,18 +17,18 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-__author__ = "Cisco Systems, Inc."
+__author__ = "Slawomir Kaszlikowski"
 
 DOCUMENTATION = """
 ---
 module: dcnm_acl
-short_description: Manage Access Control Lists (ACLs) on Nexus Dashboard Fabric Controller
-version_added: "3.6.0"
+short_description: Manage Access Control Lists (ACLs) on Nexus Dashboard
+version_added: "1.0"
 description:
-    - This module manages Access Control Lists (ACLs) on Nexus Dashboard Fabric Controller (NDFC).
+    - This module manages Access Control Lists (ACLs) on Nexus Dashboard (ND).
     - It supports creating, updating, deleting, and querying IPv4 and IPv6 ACLs.
-    - Requires NDFC version 12.2.2 (ND 4.1) or later.
-author: Cisco Systems, Inc.
+    - Requires ND 4.1 or later; build_version: 4.1.x +
+author: Slawomir Kaszlikowski
 options:
   fabric:
     description:
@@ -45,7 +45,7 @@ options:
       If an ACL exists, it will be completely replaced. If it does not exist, it will be created.
     - C(deleted) - ACLs defined in the playbook will be deleted from the fabric.
       If no config is provided, all ACLs in the fabric will be deleted.
-    - C(query) - Returns the current NDFC state for the ACLs listed in the playbook.
+    - C(query) - Returns the current ND state for the ACLs listed in the playbook.
       If no config is provided, all ACLs in the fabric will be returned.
     type: str
     required: false
@@ -120,11 +120,12 @@ options:
             description:
             - IP protocol to match.
             - Required when action is C(permit) or C(deny).
-            - Common values include ip, tcp, udp, icmp, igmp, eigrp, ospf, pim, ahp, gre, nos, esp.
+            - Common values include ip, ipv6, tcp, udp, icmp, igmp, eigrp, ospf, pim, ahp, gre, nos, esp.
             - Use C(custom) to specify a custom protocol number.
             type: str
             choices:
               - ip
+              - ipv6
               - tcp
               - udp
               - icmp
@@ -147,16 +148,14 @@ options:
           src:
             description:
             - Source address specification.
-            - Can be C(any), a host address (e.g., C(host 10.1.1.1)), or a network with wildcard
-              (e.g., C(10.1.1.0 0.0.0.255) for IPv4 or C(2001:db8::/32) for IPv6).
+            - Can be C(any), a host address (e.g., C(host 10.1.1.1)) or C(2001:db8::/32) for IPv6).
             - Required when action is C(permit) or C(deny).
             type: str
 
           dst:
             description:
             - Destination address specification.
-            - Can be C(any), a host address (e.g., C(host 10.1.1.1)), or a network with wildcard
-              (e.g., C(10.1.1.0 0.0.0.255) for IPv4 or C(2001:db8::/32) for IPv6).
+            - Can be C(any), a host address (e.g., C(host 10.1.1.1)) for IPv4 or C(2001:db8::/32) for IPv6).
             - Required when action is C(permit) or C(deny).
             type: str
 
@@ -266,7 +265,7 @@ EXAMPLES = """
 #   - If no config is provided, all ACLs in the fabric will be deleted.
 #
 # Query:
-#   Returns the current state of ACLs from NDFC.
+#   Returns the current state of ACLs from ND.
 #   - If config is provided, only those ACLs are returned.
 #   - If no config is provided, all ACLs in the fabric are returned.
 
@@ -410,7 +409,7 @@ EXAMPLES = """
 
 RETURN = """
 response:
-  description: Response from NDFC API calls.
+  description: Response from ND API calls.
   type: list
   elements: dict
   returned: always
@@ -454,6 +453,8 @@ import re
 import copy
 
 from ansible.module_utils.basic import AnsibleModule
+
+# dcnm_version_supported() requires update to support ND 4.1+
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
@@ -462,10 +463,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
 
 
 class DcnmAcl:
-    """Class to manage Access Control Lists on NDFC."""
+    """Class to manage Access Control Lists on ND"""
 
-    # API paths for ACL operations - only supporting NDFC 12+ (ND 4.1+)
-    # Note: The Routing Policies API uses /api/v1/manage/... path (not /appcenter/cisco/ndfc/...)
+    # API paths for ACL operations - only supporting ND 4.1+
+
     dcnm_acl_paths = {
         12: {
             "ACL_LIST": "/api/v1/manage/fabrics/{}/accessControlLists",
@@ -520,7 +521,7 @@ class DcnmAcl:
 
         # State tracking lists
         self.want = []  # Desired state from playbook
-        self.have = []  # Current state from NDFC
+        self.have = []  # Current state from ND
         self.diff_create = []  # ACLs to create
         self.diff_replace = []  # ACLs to replace/update
         self.diff_delete = []  # ACLs to delete
@@ -542,13 +543,13 @@ class DcnmAcl:
             }
         ]
 
-        # Get DCNM/NDFC version
+        # Get ND version (the current dcnm_version_supported() doesn't works with ND 4.x)
         self.dcnm_version = dcnm_version_supported(self.module)
 
         # Verify minimum version (must be 12+)
         if self.dcnm_version < 12:
             self.module.fail_json(
-                msg="dcnm_acl module requires NDFC version 12.2.2 (ND 4.1) or later. "
+                msg="dcnm_acl module requires ND 4.1 or later. "
                 f"Detected version: {self.dcnm_version}"
             )
 
@@ -575,7 +576,7 @@ class DcnmAcl:
         # Validation spec for ACL entries
         entry_spec = dict(
             sequence_number=dict(
-                required=True, type="int", range_min=1, range_max=4294967295
+                required=True, type="int", range_min=1, range_max=2147483647
             ),
             action=dict(
                 required=True, type="str", choices=["permit", "deny", "remark"]
@@ -651,7 +652,7 @@ class DcnmAcl:
         for acl in self.config:
             # Validate ACL-level parameters
             acl_list = [acl]
-            acl_info, invalid_params = validate_list_of_dicts(acl_list, acl_spec)
+            invalid_params = validate_list_of_dicts(acl_list, acl_spec)
             if invalid_params:
                 self.module.fail_json(
                     msg=f"Invalid parameters in ACL '{acl.get('name', 'unknown')}': {invalid_params}"
@@ -675,7 +676,7 @@ class DcnmAcl:
             # Validate entries
             entries = acl.get("entries", [])
             if entries:
-                entry_info, invalid_params = validate_list_of_dicts(entries, entry_spec)
+                invalid_params = validate_list_of_dicts(entries, entry_spec)
                 if invalid_params:
                     self.module.fail_json(
                         msg=f"Invalid parameters in entries for ACL '{name}': {invalid_params}"
@@ -829,14 +830,14 @@ class DcnmAcl:
         return acl
 
     def get_have(self):
-        """Get current ACLs from NDFC."""
+        """Get current ACLs from ND."""
         path = self.paths["ACL_LIST"].format(self.fabric)
         resp = dcnm_send(self.module, "GET", path)
 
         # Handle response - could be dict or string on error
         if not isinstance(resp, dict):
             self.module.fail_json(
-                msg=f"Failed to get ACLs from NDFC: Invalid response - {resp}"
+                msg=f"Failed to get ACLs from ND: Invalid response - {resp}"
             )
 
         if resp.get("RETURN_CODE") == 200:
@@ -856,7 +857,7 @@ class DcnmAcl:
             # No ACLs found - this is OK
             pass
         else:
-            self.module.fail_json(msg=f"Failed to get ACLs from NDFC: {resp}")
+            self.module.fail_json(msg=f"Failed to get ACLs from ND: {resp}")
 
     def get_want(self):
         """Build the desired state from playbook config."""
@@ -1163,7 +1164,7 @@ class DcnmAcl:
         return False
 
     def send_to_dcnm(self):
-        """Send changes to NDFC."""
+        """Send changes to ND."""
         if self.check_mode:
             self.result["changed"] = bool(
                 self.diff_create or self.diff_replace or self.diff_delete
@@ -1190,7 +1191,7 @@ class DcnmAcl:
         # Validate input
         self.validate_input()
 
-        # Get current state from NDFC
+        # Get current state from ND
         self.get_have()
 
         # Build desired state from playbook
@@ -1214,7 +1215,7 @@ class DcnmAcl:
             self.result["acls"] = self.diff_query
             return self.result
 
-        # Send changes to NDFC (unless in check mode)
+        # Send changes to ND (unless in check mode)
         self.send_to_dcnm()
 
         return self.result
