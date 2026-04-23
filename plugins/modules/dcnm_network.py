@@ -2295,18 +2295,29 @@ class DcnmNetwork:
         if not isinstance(resp, dict):
             return False
 
-        if resp.get("RETURN_CODE") != 400:
-            return False
-
+        return_code = resp.get("RETURN_CODE")
         data = resp.get("DATA")
-        if not isinstance(data, dict):
-            return False
 
-        message = data.get("message", "")
-        if not isinstance(message, str):
-            return False
+        # Check for non-onemanage 400 error: "Invalid network name"
+        if return_code == 400:
+            if not isinstance(data, dict):
+                return False
 
-        return message.lower() == "invalid network name"
+            message = data.get("message", "")
+            if not isinstance(message, str):
+                return False
+
+            return message.lower() == "invalid network name"
+
+        # Check for onemanage 500 error: "Network ... not found in cache"
+        if return_code == 500:
+            if not isinstance(data, str):
+                return False
+
+            # Check for the onemanage-specific "not found in cache" message
+            return "not found in cache" in data.lower()
+
+        return False
 
     def get_have(self):
         caller = inspect.stack()[1][3]
