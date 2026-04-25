@@ -3808,7 +3808,12 @@ class DcnmVrf:
         del_failure = ""
         vrfs_to_delete = []
 
+        # First, wait for attachments to be ready for deletion (lanAttachState = NA)
+        self.wait_for_vrf_attachments_del_ready()
+
+        # Then, wait for VRF itself to be ready for deletion (vrfStatus = NA/OUT-OF-SYNC/FAILED)
         self.wait_for_vrf_del_ready()
+
         for vrf, state in self.diff_delete.items():
             if state == "OUT-OF-SYNC":
                 del_failure += vrf + ","
@@ -4931,91 +4936,211 @@ class DcnmVrf:
         self.push_diff_attach(is_rollback)
         self.push_diff_deploy(is_rollback)
 
-    def wait_for_vrf_del_ready(self, vrf_name="not_supplied"):
+    def wait_for_vrf_del_ready(self):
         """
         # Summary
 
-        Wait for VRFs to be ready for deletion.
+        Wait for VRFs to reach a terminal state ready for deletion by checking vrfStatus.
+
+        Polls the GET /vrfs API once per retry iteration to check all VRFs.
+        Terminal states (ready for deletion):
+        - NA, OUT-OF-SYNC, FAILED: Can proceed with deletion
+        - DEPLOYED, PENDING: Must wait
 
         ## Raises
 
-        Calls fail_json if VRF has associated network attachments.
+        Calls fail_json if timeout is reached while waiting for VRF to reach terminal state.
         """
         caller = inspect.stack()[1][3]
         msg = "ENTERED. "
-        msg += f"caller: {caller}, "
-        msg += f"vrf_name: {vrf_name}"
+        msg += f"caller: {caller}"
         self.log.debug(msg)
 
-        for vrf in self.diff_delete:
-            ok_to_delete = False
-            path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
-            retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+        # Create a list of VRFs that still need to reach terminal state
+        pending_vrfs = list(self.diff_delete.keys())
 
-            # Initial quick-scan pass — check if VRF is already in a
-            # terminal state before entering the polling while-loop.
+        msg = f"Waiting for {len(pending_vrfs)} VRF(s) to reach terminal state: {pending_vrfs}"
+        self.log.debug(msg)
+
+        path = self.paths["GET_VRF"].format(self.fabric)
+        retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+
+        while pending_vrfs and retry_count > 0:
+            retry_count -= 1
+
+            msg = f"Retry iteration, remaining: {retry_count}, pending VRFs: {len(pending_vrfs)}"
+            self.log.debug(msg)
+
+            # Make ONE API call to get all VRFs
             resp = dcnm_send(self.module, "GET", path)
-            if resp.get("DATA") is not None:
-                if self.action_fabric_type == "multicluster_parent":
-                    sanitized_data = sanitize_lan_attach_list(resp["DATA"])
-                    attach_list = sanitized_data[0]["lanAttachList"]
-                else:
-                    attach_list = resp["DATA"][0]["lanAttachList"]
 
-                initial_ready = True
-                for attach in attach_list:
-                    state = attach["lanAttachState"]
-                    if state in ("OUT-OF-SYNC", "FAILED"):
-                        self.diff_delete.update({vrf: "OUT-OF-SYNC"})
-                        ok_to_delete = True
-                        initial_ready = True
-                        break
-                    if state != "NA":
-                        initial_ready = False
-                        break
+            if resp.get("DATA") is None:
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                continue
+
+            # Build a lookup dict for faster access: {vrfName: vrfData}
+            vrfs_by_name = {vrf_data.get("vrfName"): vrf_data for vrf_data in resp["DATA"]}
+
+            # Check all pending VRFs in this response
+            vrfs_to_remove = []
+            for vrf in pending_vrfs:
+                vrf_data = vrfs_by_name.get(vrf)
+
+                if vrf_data is None:
+                    # VRF not found in response - it may have already been deleted
+                    msg = f"VRF {vrf} not found in GET /vrfs response, assuming already deleted"
+                    self.log.debug(msg)
                     self.diff_delete.update({vrf: "NA"})
-                if initial_ready:
-                    continue  # already in terminal state — skip polling loop
-
-            while not ok_to_delete:
-                resp = dcnm_send(self.module, "GET", path)
-                ok_to_delete = True
-                if resp.get("DATA") is None:
-                    time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                    vrfs_to_remove.append(vrf)
                     continue
 
-                if self.action_fabric_type == "multicluster_parent":
-                    # Sanitize the lanAttachList entries
-                    sanitized_data = sanitize_lan_attach_list(
-                        resp["DATA"]
-                    )
-                    attach_list = sanitized_data[0]["lanAttachList"]
-                else:
-                    attach_list = resp["DATA"][0]["lanAttachList"]
+                vrf_status = vrf_data.get("vrfStatus", "")
 
-                msg = f"ok_to_delete: {ok_to_delete}, "
-                msg += f"attach_list: {json.dumps(attach_list, indent=4)}"
+                msg = f"vrf: {vrf}, vrfStatus: {vrf_status}"
                 self.log.debug(msg)
 
-                for attach in attach_list:
-                    if (
-                        attach["lanAttachState"] == "OUT-OF-SYNC"
-                        or attach["lanAttachState"] == "FAILED"
-                    ):
-                        self.diff_delete.update({vrf: "OUT-OF-SYNC"})
-                        break
-                    if attach["lanAttachState"] != "NA":
-                        time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
-                        self.diff_delete.update({vrf: "DEPLOYED"})
-                        ok_to_delete = False
-                        break
+                # Check if VRF is in a terminal state ready for deletion
+                if vrf_status in ("OUT-OF-SYNC", "FAILED"):
+                    self.diff_delete.update({vrf: "OUT-OF-SYNC"})
+                    vrfs_to_remove.append(vrf)
+                elif vrf_status == "NA" or vrf_status == "":
                     self.diff_delete.update({vrf: "NA"})
-                if retry_count <= 0:
-                    msg = "Timeout waiting for VRF to be ready for deletion. "
-                    msg += f"vrf: {vrf}, "
-                    msg += f"resp: {resp}"
-                    self.module.fail_json(msg=msg)
-                retry_count -= 1
+                    vrfs_to_remove.append(vrf)
+                else:
+                    # VRF is still in DEPLOYED, PENDING, or other non-terminal state
+                    self.diff_delete.update({vrf: "DEPLOYED"})
+
+            # Remove VRFs that reached terminal state
+            for vrf in vrfs_to_remove:
+                pending_vrfs.remove(vrf)
+                msg = f"VRF {vrf} reached terminal state, removed from pending list"
+                self.log.debug(msg)
+
+            # If we still have pending VRFs, sleep before next retry
+            if pending_vrfs:
+                msg = f"Still waiting for {len(pending_vrfs)} VRF(s): {pending_vrfs}"
+                self.log.debug(msg)
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+
+        # Check if we timed out
+        if pending_vrfs:
+            msg = "Timeout waiting for VRFs to be ready for deletion. "
+            msg += f"Pending VRFs: {pending_vrfs}, "
+            msg += f"States: {[(vrf, self.diff_delete.get(vrf)) for vrf in pending_vrfs]}"
+            self.module.fail_json(msg=msg)
+
+        msg = "All VRFs reached terminal state. Ready for deletion."
+        self.log.debug(msg)
+
+    def wait_for_vrf_attachments_del_ready(self):
+        """
+        # Summary
+
+        Wait for VRF attachments to be ready for deletion by checking lanAttachState.
+
+        Uses bulk GET_VRF_ATTACH API to check all VRFs in a single call per retry iteration.
+        Terminal states (ready for deletion):
+        - NA: Attachment has been removed
+        - OUT-OF-SYNC, FAILED: Can proceed with cleanup
+        - Other states: Must wait for undeployment to complete
+
+        ## Raises
+
+        Calls fail_json if timeout is reached while waiting for attachments.
+        """
+        caller = inspect.stack()[1][3]
+        msg = f"ENTERED. caller: {caller}"
+        self.log.debug(msg)
+
+        if not self.diff_delete:
+            return True
+
+        # Create list of VRFs pending deletion readiness
+        pending_vrfs = list(self.diff_delete.keys())
+        msg = f"Waiting for {len(pending_vrfs)} VRF(s) attachments to reach terminal state"
+        self.log.debug(msg)
+
+        retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+
+        while pending_vrfs and retry_count > 0:
+            retry_count -= 1
+
+            # Make ONE bulk API call for all pending VRFs
+            vrf_names = ",".join(pending_vrfs)
+            path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf_names)
+
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp.get("DATA") is None:
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                continue
+
+            # VRF attachments API response structure: [{vrfName, lanAttachList: [...]}, ...]
+            # Each object contains vrfName and lanAttachList array
+
+            # Sanitize if multicluster_parent
+            if self.action_fabric_type == "multicluster_parent":
+                sanitized_data = sanitize_lan_attach_list(resp["DATA"])
+            else:
+                sanitized_data = resp["DATA"]
+
+            # Build lookup dictionary: {vrfName: lanAttachList}
+            vrfs_by_name = {}
+            for vrf_data in sanitized_data:
+                vrf_name = vrf_data.get("vrfName")
+                if vrf_name:
+                    vrfs_by_name[vrf_name] = vrf_data.get("lanAttachList", [])
+
+            # Process all pending VRFs
+            vrfs_to_remove = []
+            for vrf in pending_vrfs:
+                attach_list = vrfs_by_name.get(vrf, [])
+
+                if not attach_list:
+                    # VRF not found in response, mark as ready
+                    self.diff_delete.update({vrf: "NA"})
+                    vrfs_to_remove.append(vrf)
+                    continue
+
+                # Check if all attachments are in terminal state
+                all_terminal = True
+                has_out_of_sync = False
+                for attach in attach_list:
+                    state = attach.get("lanAttachState", "")
+                    if state in ("OUT-OF-SYNC", "FAILED"):
+                        has_out_of_sync = True
+                    elif state != "NA":
+                        all_terminal = False
+                        break
+
+                if all_terminal:
+                    final_state = "OUT-OF-SYNC" if has_out_of_sync else "NA"
+                    self.diff_delete.update({vrf: final_state})
+                    vrfs_to_remove.append(vrf)
+                else:
+                    self.diff_delete.update({vrf: "DEPLOYED"})
+
+            # Remove VRFs that reached terminal state
+            for vrf in vrfs_to_remove:
+                pending_vrfs.remove(vrf)
+
+            # Sleep before next retry if there are still pending VRFs
+            if pending_vrfs:
+                msg = f"Still waiting for {len(pending_vrfs)} VRF(s): {pending_vrfs}"
+                self.log.debug(msg)
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+
+        # Check if we timed out
+        if pending_vrfs:
+            msg = f"Timeout waiting for VRF attachments. Pending: {pending_vrfs}"
+            self.log.debug(msg)
+            for vrf in pending_vrfs:
+                self.diff_delete.update({vrf: "TIMEOUT"})
+            return False
+
+        msg = "All VRF attachments reached terminal state"
+        self.log.debug(msg)
+        return True
 
     def attach_spec(self):
         """

@@ -1005,7 +1005,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
 
 class DcnmNetwork:
 
-    BULK_GET_HAVE_NETWORK_THRESHOLD = 25
+    BULK_GET_HAVE_NETWORK_THRESHOLD = 5
 
     dcnm_network_paths = {
         11: {
@@ -2383,7 +2383,7 @@ class DcnmNetwork:
             requested_network_set = set(requested_networks)
 
         use_large_config_bulk_inventory = (
-            state in ["merged", "replaced"]
+            state in ["merged", "replaced", "deleted"]
             and bool(requested_networks)
             and len(requested_networks) >= self.BULK_GET_HAVE_NETWORK_THRESHOLD
         )
@@ -3475,103 +3475,236 @@ class DcnmNetwork:
         if fail:
             self.failure(resp)
 
-    def wait_for_del_ready(self):
+    def wait_for_network_del_ready(self):
+        """
+        # Summary
+
+        Wait for networks to reach a terminal state ready for deletion by checking networkStatus.
+
+        Polls the GET /networks API once per retry iteration to check all networks.
+        Terminal states (ready for deletion):
+        - NA, OUT-OF-SYNC, FAILED: Can proceed with deletion
+        - DEPLOYED, PENDING: Must wait
+
+        ## Raises
+
+        Calls fail_json if timeout is reached while waiting for network to reach terminal state.
+        """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}"
+        self.log.debug(msg)
+
+        # Create a list of networks that still need to reach terminal state
+        pending_networks = list(self.diff_delete.keys())
+
+        msg = f"Waiting for {len(pending_networks)} network(s) to reach terminal state: {pending_networks}"
+        self.log.debug(msg)
 
         method = "GET"
-        if self.diff_delete:
-            for net in self.diff_delete:
-                state = False
-                # For multicluster_parent, use GET_NET_ATTACH instead of GET_NET_STATUS
-                if self.fabric_type == "multicluster_parent":
-                    path = self.paths["GET_NET_ATTACH"].format(self.fabric, net)
+        path = self.paths["GET_NET"].format(self.fabric)
+        retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+
+        while pending_networks and retry_count > 0:
+            retry_count -= 1
+
+            msg = f"Retry iteration, remaining: {retry_count}, pending networks: {len(pending_networks)}"
+            self.log.debug(msg)
+
+            # Make ONE API call to get all networks
+            resp = dcnm_send(self.module, method, path)
+
+            if resp.get("DATA") is None:
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                continue
+
+            # Build a lookup dict for faster access: {networkName: networkData}
+            networks_by_name = {net_data.get("networkName"): net_data for net_data in resp["DATA"]}
+
+            # Check all pending networks in this response
+            networks_to_remove = []
+            for net in pending_networks:
+                net_data = networks_by_name.get(net)
+
+                if net_data is None:
+                    # Network not found in response - it may have already been deleted
+                    msg = f"Network {net} not found in GET /networks response, assuming already deleted"
+                    self.log.debug(msg)
+                    self.diff_delete.update({net: "NA"})
+                    networks_to_remove.append(net)
+                    continue
+
+                network_status = net_data.get("networkStatus", "")
+
+                msg = f"network: {net}, networkStatus: {network_status}"
+                self.log.debug(msg)
+
+                # Check if network is in a terminal state ready for deletion
+                if network_status.upper() in ("OUT-OF-SYNC", "FAILED"):
+                    self.diff_delete.update({net: "OUT-OF-SYNC"})
+                    networks_to_remove.append(net)
+                elif network_status.upper() == "NA" or network_status == "":
+                    self.diff_delete.update({net: "NA"})
+                    networks_to_remove.append(net)
                 else:
-                    path = self.paths["GET_NET_STATUS"].format(self.fabric, net)
+                    # Network is still in DEPLOYED, PENDING, or other non-terminal state
+                    self.diff_delete.update({net: "DEPLOYED"})
 
-                retry = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
-                deploy_started = False
-                while not state and retry >= 0:
-                    retry -= 1
-                    resp = dcnm_send(self.module, method, path)
-                    state = True
+            # Remove networks that reached terminal state
+            for net in networks_to_remove:
+                pending_networks.remove(net)
+                msg = f"Network {net} reached terminal state, removed from pending list"
+                self.log.debug(msg)
 
-                    # For multicluster_parent with GET_NET_ATTACH, response structure is different
-                    if self.fabric_type == "multicluster_parent":
-                        if resp.get("DATA") is None:
-                            time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
-                            state = False
-                            continue
+            # If we still have pending networks, sleep before next retry
+            if pending_networks:
+                msg = f"Still waiting for {len(pending_networks)} network(s): {pending_networks}"
+                self.log.debug(msg)
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
 
-                        # GET_NET_ATTACH returns: [{'networkName': 'name', 'lanAttachList': [attachments]}]
-                        if isinstance(resp["DATA"], list) and len(resp["DATA"]) > 0:
-                            # Sanitize the lanAttachList entries
-                            sanitized_data = sanitize_lan_attach_list(
-                                resp["DATA"]
-                            )
-                            # Get the lanAttachList from the first element
-                            attach_list = sanitized_data[0].get("lanAttachList", [])
-                            # Check for PENDING state and trigger detach/deploy if needed
-                            for attach in attach_list:
-                                if attach.get("lanAttachState") == "PENDING" and not deploy_started:
-                                    # For multicluster, we need to convert the response structure
-                                    # from: [{'networkName': 'name', 'lanAttachList': [attachments]}]
-                                    # to: {'networkName': 'name', 'fabric': 'fabric', 'switchList': [attachments]}
+        # Check if we timed out
+        if pending_networks:
+            msg = "Timeout waiting for networks to be ready for deletion. "
+            msg += f"Pending networks: {pending_networks}, "
+            msg += f"States: {[(net, self.diff_delete.get(net)) for net in pending_networks]}"
+            self.module.fail_json(msg=msg)
 
-                                    # Convert multicluster response to format expected by detach_and_deploy_for_del
-                                    adapted_net = {
-                                        "networkName": resp["DATA"][0]["networkName"],
-                                        "fabric": self.fabric,
-                                        "switchList": resp["DATA"][0]["lanAttachList"]
-                                    }
+        msg = "All networks reached terminal state. Ready for deletion."
+        self.log.debug(msg)
+        return True
 
-                                    # Note: lanAttachList uses 'lanAttachState' while switchList uses 'lanAttachedState'
-                                    # We need to rename the key for compatibility
-                                    for switch in adapted_net["switchList"]:
-                                        if "lanAttachState" in switch:
-                                            switch["lanAttachedState"] = switch["lanAttachState"]
-                                        if "switchSerialNo" in switch:
-                                            switch["serialNumber"] = switch["switchSerialNo"]
+    def wait_for_network_attachments_del_ready(self):
+        """
+        # Summary
 
-                                    self.detach_and_deploy_for_del(adapted_net)
-                                    deploy_started = True
+        Wait for network attachments to be ready for deletion by checking lanAttachState.
 
-                            for attach in attach_list:
-                                if attach.get("lanAttachState") == "OUT-OF-SYNC" or attach.get("lanAttachState") == "FAILED":
-                                    self.diff_delete.update({net: "OUT-OF-SYNC"})
-                                    break
-                                if attach.get("lanAttachState") != "NA":
-                                    self.diff_delete.update({net: "DEPLOYED"})
-                                    state = False
-                                    time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
-                                    break
-                            else:
-                                # All attachments are NA or no attachments
-                                self.diff_delete.update({net: "NA"})
-                        else:
-                            # No data found, network is ready
-                            self.diff_delete.update({net: "NA"})
+        Uses bulk GET_NET_ATTACH API to check all networks in a single call per retry iteration.
+        Terminal states (ready for deletion):
+        - NA: Attachment has been removed
+        - OUT-OF-SYNC, FAILED: Can proceed with cleanup
+        - Other states: Must wait for undeployment to complete
 
-                    else:
-                        # Original logic for GET_NET_STATUS (non-multicluster)
-                        if resp["DATA"]:
-                            if resp["DATA"]["networkStatus"].upper() == "PENDING" and not deploy_started:
-                                self.detach_and_deploy_for_del(resp["DATA"])
-                                deploy_started = True
-                            attach_list = resp["DATA"]["switchList"]
-                            for atch in attach_list:
-                                if atch["lanAttachedState"].upper() == "OUT-OF-SYNC" or atch["lanAttachedState"].upper() == "FAILED":
-                                    self.diff_delete.update({net: "OUT-OF-SYNC"})
-                                    break
-                                if atch["lanAttachedState"].upper() != "NA":
-                                    self.diff_delete.update({net: "DEPLOYED"})
-                                    state = False
-                                    time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
-                                    break
-                                self.diff_delete.update({net: "NA"})
-                if retry < 0:
-                    self.diff_delete.update({net: "TIMEOUT"})
-                    return False
+        ## Raises
 
+        Calls fail_json if timeout is reached while waiting for attachments.
+        """
+        caller = inspect.stack()[1][3]
+        msg = f"ENTERED. caller: {caller}, fabric_type: {self.fabric_type}"
+        self.log.debug(msg)
+
+        method = "GET"
+        if not self.diff_delete:
             return True
+
+        # Create list of networks pending deletion readiness
+        pending_networks = list(self.diff_delete.keys())
+        msg = f"Waiting for {len(pending_networks)} network(s) attachments to reach terminal state"
+        self.log.debug(msg)
+
+        retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+        deploy_triggered = set()  # Track networks that had deploy triggered
+
+        while pending_networks and retry_count > 0:
+            retry_count -= 1
+
+            # Make ONE bulk API call for all pending networks
+            network_names = ",".join(pending_networks)
+
+            if self.fabric_type == "multicluster_parent":
+                path = self.paths["GET_NET_ATTACH"].format(self.fabric, network_names)
+            else:
+                # For non-multicluster, use GET_NET_ATTACH for consistency and bulk support
+                path = self.paths["GET_NET_ATTACH"].format(self.fabric, network_names)
+
+            resp = dcnm_send(self.module, method, path)
+
+            if resp.get("DATA") is None:
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                continue
+
+            # Sanitize and build lookup dictionary
+            sanitized_data = sanitize_lan_attach_list(resp["DATA"]) if resp["DATA"] else []
+            networks_by_name = {
+                net_data.get("networkName"): net_data 
+                for net_data in sanitized_data
+            }
+
+            # Process all pending networks
+            networks_to_remove = []
+            for net in pending_networks:
+                net_data = networks_by_name.get(net)
+
+                if not net_data:
+                    # Network not found in response, mark as ready
+                    self.diff_delete.update({net: "NA"})
+                    networks_to_remove.append(net)
+                    continue
+
+                attach_list = net_data.get("lanAttachList", [])
+
+                # Check for PENDING state and trigger detach/deploy once per network
+                if net not in deploy_triggered:
+                    has_pending = any(
+                        attach.get("lanAttachState") == "PENDING" 
+                        for attach in attach_list
+                    )
+                    if has_pending:
+                        # Convert response structure for detach_and_deploy_for_del
+                        adapted_net = {
+                            "networkName": net,
+                            "fabric": self.fabric,
+                            "switchList": attach_list
+                        }
+                        # Rename keys for compatibility
+                        for switch in adapted_net["switchList"]:
+                            if "lanAttachState" in switch:
+                                switch["lanAttachedState"] = switch["lanAttachState"]
+                            if "switchSerialNo" in switch:
+                                switch["serialNumber"] = switch["switchSerialNo"]
+
+                        self.detach_and_deploy_for_del(adapted_net)
+                        deploy_triggered.add(net)
+
+                # Check if all attachments are in terminal state
+                all_terminal = True
+                has_out_of_sync = False
+                for attach in attach_list:
+                    state = attach.get("lanAttachState", "")
+                    if state in ("OUT-OF-SYNC", "FAILED"):
+                        has_out_of_sync = True
+                    elif state != "NA":
+                        all_terminal = False
+                        break
+
+                if all_terminal:
+                    final_state = "OUT-OF-SYNC" if has_out_of_sync else "NA"
+                    self.diff_delete.update({net: final_state})
+                    networks_to_remove.append(net)
+                else:
+                    self.diff_delete.update({net: "DEPLOYED"})
+
+            # Remove networks that reached terminal state
+            for net in networks_to_remove:
+                pending_networks.remove(net)
+
+            # Sleep before next retry if there are still pending networks
+            if pending_networks:
+                msg = f"Still waiting for {len(pending_networks)} network(s): {pending_networks}"
+                self.log.debug(msg)
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+
+        # Check if we timed out
+        if pending_networks:
+            msg = f"Timeout waiting for network attachments. Pending: {pending_networks}"
+            self.log.debug(msg)
+            for net in pending_networks:
+                self.diff_delete.update({net: "TIMEOUT"})
+            return False
+
+        msg = "All network attachments reached terminal state"
+        self.log.debug(msg)
+        return True
 
     def update_ms_fabric(self, diff):
         # Update fabric field for both multisite (MFD) and multicluster parent fabrics
@@ -3669,10 +3802,10 @@ class DcnmNetwork:
                 deploy_payload = payload
 
             resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
-            # Use the self.wait_for_del_ready() function to refresh the state
+            # Use the self.wait_for_network_attachments_del_ready() function to refresh the state
             # of self.diff_delete dict and re-attempt the undeploy action if
             # the state of the network is "OUT-OF-SYNC"
-            delete_ready = self.wait_for_del_ready()
+            delete_ready = self.wait_for_network_attachments_del_ready()
             undeploy_retry_needed = any(
                 str(state).upper() == "OUT-OF-SYNC" for state in self.diff_delete.values()
             )
@@ -3690,7 +3823,17 @@ class DcnmNetwork:
 
         method = "DELETE"
         del_failure = ""
-        if self.diff_delete and (delete_ready or self.wait_for_del_ready()):
+
+        # First, wait for attachments to be ready for deletion (lanAttachState = NA)
+        attachments_ready = delete_ready or self.wait_for_network_attachments_del_ready()
+
+        # Then, wait for network itself to be ready for deletion (networkStatus = NA/OUT-OF-SYNC/FAILED)
+        if attachments_ready:
+            networks_ready = self.wait_for_network_del_ready()
+        else:
+            networks_ready = False
+
+        if self.diff_delete and networks_ready:
             resp = ""
             networks_to_delete = []
             supports_bulk_delete = self.fabric_type in [
