@@ -284,6 +284,7 @@ import ipaddress
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    dcnm_get_bulk_api_support,
     dcnm_send,
     validate_list_of_dicts,
     dcnm_version_supported,
@@ -310,11 +311,13 @@ class DcnmResManager:
             "RM_GET_RESOURCES_BY_SNO_AND_POOLNAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/switch/{}/pools/{}",
             "RM_GET_RESOURCES_BY_FABRIC_AND_POOLNAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabric/{}/pools/{}",
             "RM_CREATE_RESOURCE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/fabrics/{}/resources",
+            "RM_BULK_CREATE_RESOURCE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/createResource?isManual=true",
             "RM_DELETE_RESOURCE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/resources?id=",
         },
     }
 
     def __init__(self, module):
+        self.log = logging.getLogger(f"DcnmResManager")
         self.module = module
         self.params = module.params
         self.fabric = module.params["fabric"]
@@ -331,6 +334,8 @@ class DcnmResManager:
         ]
 
         self.dcnm_version = dcnm_version_supported(self.module)
+        # Check for bulk API support
+        self.has_bulk_api = dcnm_get_bulk_api_support(self.module)
 
         self.inventory_data = get_fabric_inventory_details(
             self.module, self.fabric
@@ -1125,6 +1130,83 @@ class DcnmResManager:
                 return True
         return False
 
+    def dcnm_rm_build_bulk_payload(self, diff_create):
+
+        """
+        Routine to build bulk create payload from diff_create list. The bulk payload format is required
+        for the RM_BULK_CREATE_RESOURCE API.
+
+        Parameters:
+            diff_create - list of resources to be created
+
+        Returns:
+            bulk_payload - formatted payload for bulk creation API
+        """
+
+        scope_type_xlate_reverse = {
+            "Fabric": "fabric",
+            "Device": "device",
+            "DeviceInterface": "deviceInterface",
+            "DevicePair": "devicePair",
+            "Link": "link",
+        }
+
+        resources = []
+        
+        for res in diff_create:
+            resource_item = {
+                "entityName": res["entityName"],
+                "isPreAllocated": True,
+                "poolName": res["poolName"],
+                "vrfName": res.get("vrfName", "default")  # Use vrfName from resource if available
+            }
+            
+            # Add resourceValue if resource is present
+            if res.get("resource") is not None:
+                resource_item["resourceValue"] = str(res["resource"])
+            
+            # Build scopeDetails based on scopeType
+            scope_details = {}
+            scope_type = scope_type_xlate_reverse.get(res["scopeType"], "fabric")
+            scope_details["scopeType"] = scope_type
+            
+            if res["scopeType"] == "Fabric":
+                scope_details["fabricName"] = self.fabric
+            elif res["scopeType"] == "Device":
+                scope_details["switchId"] = res["scopeValue"]
+            elif res["scopeType"] == "DeviceInterface":
+                # Parse entity name to get interface: format is "SERIAL~InterfaceName"
+                entity_parts = res["entityName"].split("~")
+                scope_details["switchId"] = res["scopeValue"]
+                if len(entity_parts) > 1:
+                    scope_details["interfaceName"] = entity_parts[1]
+            elif res["scopeType"] == "DevicePair":
+                # Parse entity name: format is "SERIAL1~SERIAL2~..."
+                entity_parts = res["entityName"].split("~")
+                if len(entity_parts) >= 2:
+                    scope_details["srcSwitchId"] = entity_parts[0]
+                    scope_details["dstSwitchId"] = entity_parts[1]
+            elif res["scopeType"] == "Link":
+                # Parse entity name: format is "SERIAL1~Interface1~SERIAL2~Interface2"
+                entity_parts = res["entityName"].split("~")
+                if len(entity_parts) >= 4:
+                    scope_details["srcSwitchId"] = entity_parts[0]
+                    scope_details["srcInterfaceName"] = entity_parts[1]
+                    scope_details["dstSwitchId"] = entity_parts[2]
+                    scope_details["dstInterfaceName"] = entity_parts[3]
+            
+            resource_item["scopeDetails"] = scope_details
+            resources.append(resource_item)
+        
+        bulk_payload = {
+            "fabricName": self.fabric,
+            "Body": {
+                "resources": resources
+            }
+        }
+        
+        return bulk_payload
+
     def dcnm_rm_send_message_to_dcnm(self):
 
         """
@@ -1142,19 +1224,35 @@ class DcnmResManager:
         create_flag = False
         delete_flag = False
 
-        path = self.paths["RM_CREATE_RESOURCE"].format(self.fabric)
+        if self.diff_create:
+            # Use bulk API if bulk API is available
+            if self.has_bulk_api:
+                # Build bulk payload
+                bulk_payload = self.dcnm_rm_build_bulk_payload(self.diff_create)
+                path = self.paths["RM_BULK_CREATE_RESOURCE"]
+            
+                json_payload = json.dumps(bulk_payload)
+                resp = dcnm_send(self.module, "POST", path, json_payload)
+                create_flag = True
+                
+                self.result["response"].append(resp)
+                # Accept both 200 (OK) and 207 (Multi-Status) as success for bulk operations
+                if resp and resp.get("RETURN_CODE") not in [200, 207]:
+                    resp["CHANGED"] = self.changed_dict[0]
+                    self.module.fail_json(msg=resp)
+            else:
+                # Use individual API calls for other versions
+                path = self.paths["RM_CREATE_RESOURCE"].format(self.fabric)
+                
+                for res in self.diff_create:
+                    json_payload = json.dumps(res)
+                    resp = dcnm_send(self.module, "POST", path, json_payload)
+                    create_flag = True
 
-        for res in self.diff_create:
-
-            json_payload = json.dumps(res)
-            resp = dcnm_send(self.module, "POST", path, json_payload)
-
-            create_flag = True
-
-            self.result["response"].append(resp)
-            if resp and resp.get("RETURN_CODE") != 200:
-                resp["CHANGED"] = self.changed_dict[0]
-                self.module.fail_json(msg=resp)
+                    self.result["response"].append(resp)
+                    if resp and resp.get("RETURN_CODE") != 200:
+                        resp["CHANGED"] = self.changed_dict[0]
+                        self.module.fail_json(msg=resp)
 
         if self.diff_delete:
             path = self.paths["RM_DELETE_RESOURCE"].format(self.fabric)
@@ -1166,7 +1264,8 @@ class DcnmResManager:
             delete_flag = True
 
             self.result["response"].append(resp)
-            if resp and resp.get("RETURN_CODE") != 200:
+            # Accept both 200 (OK) and 207 (Multi-Status) as success for bulk operations
+            if resp and resp.get("RETURN_CODE") not in [200, 207]:
                 resp["CHANGED"] = self.changed_dict[0]
                 self.module.fail_json(msg=resp)
 

@@ -851,6 +851,7 @@ import ipaddress
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    dcnm_get_bulk_api_support,
     dcnm_send,
     validate_list_of_dicts,
     dcnm_version_supported,
@@ -879,6 +880,7 @@ class DcnmLinks:
             "LINKS_CREATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links",
             "LINKS_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/",
             "LINKS_UPDATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/",
+            "LINKS_UPDATE_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/",
             "LINKS_GET_BY_FABRIC": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/fabrics/{}",
             "LINKS_CFG_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/",
             "CONFIG_PREVIEW": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-preview/",
@@ -972,11 +974,18 @@ class DcnmLinks:
         ]
 
         self.dcnm_version = dcnm_version_supported(self.module)
+        # Check for bulk API support
+        self.has_bulk_api = dcnm_get_bulk_api_support(self.module)
+
         self.inventory_data = get_fabric_inventory_details(
             self.module, self.fabric
         )
 
         self.src_fabric_info = get_fabric_details(self.module, self.fabric)
+        if not self.src_fabric_info:
+            self.module.fail_json(
+                msg=f"Source fabric {self.fabric} is not found in ND."
+            )
 
         self.paths = self.dcnm_links_paths[self.dcnm_version]
         self.templates = self.dcnm_links_xlate_template[self.dcnm_version]
@@ -3644,21 +3653,37 @@ class DcnmLinks:
             else:
                 create_flag = True
 
-        for link in self.diff_modify:
-
-            path = self.paths["LINKS_UPDATE"] + link["link-uuid"]
-
-            json_payload = json.dumps(link)
-            resp = dcnm_send(self.module, "PUT", path, json_payload)
-
-            if resp != []:
-                self.result["response"].append(resp)
-
-            if resp and resp.get("RETURN_CODE") != 200:
-                resp["CHANGED"] = self.changed_dict[0]
-                self.module.fail_json(msg=resp)
+        # For bulk API support, use bulk update API. For other versions, use individual update API.
+        if self.diff_modify:
+            # Bulk update API for bulk-capable controllers
+            if self.has_bulk_api:
+                path = self.paths["LINKS_UPDATE_BULK"]
+                json_payload = json.dumps(self.diff_modify)
+                resp = dcnm_send(self.module, "POST", path, json_payload)
+                if resp != []:
+                    self.result["response"].append(resp)
+                if resp and resp.get("RETURN_CODE") != 200:
+                    resp["CHANGED"] = self.changed_dict[0]
+                    self.module.fail_json(msg=resp)
+                else:
+                    modified_flag = True
             else:
-                modified_flag = True
+                # Individual update API for versions 11 and 12
+                for link in self.diff_modify:
+
+                    path = self.paths["LINKS_UPDATE"] + link["link-uuid"]
+
+                    json_payload = json.dumps(link)
+                    resp = dcnm_send(self.module, "PUT", path, json_payload)
+
+                    if resp != []:
+                        self.result["response"].append(resp)
+
+                    if resp and resp.get("RETURN_CODE") != 200:
+                        resp["CHANGED"] = self.changed_dict[0]
+                        self.module.fail_json(msg=resp)
+                    else:
+                        modified_flag = True
 
         if self.diff_deploy != {}:
 
