@@ -3632,7 +3632,7 @@ class DcnmNetwork:
             # Sanitize and build lookup dictionary
             sanitized_data = sanitize_lan_attach_list(resp["DATA"]) if resp["DATA"] else []
             networks_by_name = {
-                net_data.get("networkName"): net_data 
+                net_data.get("networkName"): net_data
                 for net_data in sanitized_data
             }
 
@@ -3652,7 +3652,7 @@ class DcnmNetwork:
                 # Check for PENDING state and trigger detach/deploy once per network
                 if net not in deploy_triggered:
                     has_pending = any(
-                        attach.get("lanAttachState") == "PENDING" 
+                        attach.get("lanAttachState") == "PENDING"
                         for attach in attach_list
                     )
                     if has_pending:
@@ -3852,14 +3852,14 @@ class DcnmNetwork:
                                 return
                             msg = f"{self.class_name}.{method_name}: "
                             msg += f"Bulk delete failed with 500 error after {max_retries} attempts. "
-                            msg += f"No failure details provided by controller."
+                            msg += "No failure details provided by controller."
                             self.log.debug(msg)
                             self.failure(response)
                             return
                 else:
                     # Other error codes
                     fail, self.result["changed"] = self.handle_response(response, "delete")
-                    self.log.debug(f"Bulk deletion failed for networks {network_names} with response: {response}")
+                    self.log.debug("Bulk deletion failed for networks %s with response: %s", network_names, response)
                     if fail:
                         if is_rollback:
                             self.failed_to_rollback = True

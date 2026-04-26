@@ -3908,7 +3908,7 @@ class DcnmVrf:
                             return
                         msg = f"{self.class_name}.{method_name}: "
                         msg += f"Bulk delete failed with 500 error after {max_retries} attempts. "
-                        msg += f"No failure details provided by controller."
+                        msg += "No failure details provided by controller."
                         self.log.debug(msg)
                         self.failure(response)
                     time.sleep(retry_delay)
