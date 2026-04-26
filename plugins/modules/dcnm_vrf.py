@@ -1198,7 +1198,7 @@ class DcnmVrf:
         self.result = {"changed": False, "diff": [], "response": []}
 
         self.failed_to_rollback = False
-        self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
+        self.WAIT_TIME_FOR_DELETE_LOOP = 10  # in seconds
 
         self.vrf_lite_properties = [
             "DOT1Q_ID",
@@ -3782,6 +3782,149 @@ class DcnmVrf:
             is_rollback=is_rollback,
         )
 
+    def bulk_delete_with_retry(self, vrfs_to_delete, action, verb, is_rollback=False):
+        """
+        # Summary
+
+        Perform bulk delete with retry logic for controller sync issues.
+
+        ## Description
+
+        The controller sometimes returns a 500 error with message
+        "Please do a Fabric Re-sync and try Again" for certain VRFs.
+        This method retries the bulk delete operation up to 3 times
+        with 30-second delays, retrying only the failed VRFs.
+
+        ## Parameters
+
+        - vrfs_to_delete: List of VRF names to delete
+        - action: Action string for logging ("delete")
+        - verb: HTTP verb ("DELETE")
+        - is_rollback: Whether this is a rollback operation
+
+        ## Raises
+
+        Calls fail_json if deletion fails after all retry attempts
+        """
+        caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"vrfs_to_delete: {vrfs_to_delete}"
+        self.log.debug(msg)
+
+        max_retries = 3
+        retry_delay = 30  # seconds
+        all_successful_vrfs = []
+        vrfs_to_retry = vrfs_to_delete.copy()
+
+        for attempt in range(1, max_retries + 1):
+            if not vrfs_to_retry:
+                # All VRFs deleted successfully
+                msg = "All VRFs deleted successfully."
+                self.log.debug(msg)
+                return
+
+            msg = f"Bulk delete attempt {attempt}/{max_retries} "
+            msg += f"for VRFs: {','.join(vrfs_to_retry)}"
+            self.log.debug(msg)
+
+            # Build the bulk delete path
+            path = self.paths["GET_VRF_FAB"].format(self.fabric)
+            delete_path = f"{path}/bulk-delete/vrfs?vrf-names={','.join(vrfs_to_retry)}"
+
+            msg = f"Attempt {attempt}: "
+            msg += f"verb: {verb}, path: {delete_path}"
+            self.log.debug(msg)
+
+            # Send the request
+            response = dcnm_send(self.module, verb, delete_path)
+
+            msg = f"Attempt {attempt} response: "
+            msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            # Always append response for visibility
+            self.result["response"].append(response)
+
+            return_code = response.get("RETURN_CODE", 0)
+
+            # Check if request was successful
+            if return_code == 200:
+                msg = f"Attempt {attempt}: Bulk delete succeeded for all VRFs."
+                self.log.debug(msg)
+                # Mark as changed if not in check mode
+                if not self.module.check_mode:
+                    self.result["changed"] = True
+                return
+
+            # Handle partial success (500 error with failureList)
+            if return_code == 500:
+                data = response.get("DATA", {})
+                success_list = data.get("successList", [])
+                failure_list = data.get("failureList", [])
+
+                # Track successful deletions
+                if success_list:
+                    all_successful_vrfs.extend(success_list)
+                    msg = f"Attempt {attempt}: Successfully deleted VRFs: "
+                    msg += f"{','.join(success_list)}"
+                    self.log.debug(msg)
+                    if not self.module.check_mode:
+                        self.result["changed"] = True
+
+                # Extract failed VRF names for retry
+                if failure_list:
+                    vrfs_to_retry = [item.get("name") for item in failure_list if item.get("name")]
+                    failure_messages = [
+                        f"{item.get('name')}: {item.get('message')}"
+                        for item in failure_list
+                    ]
+                    msg = f"Attempt {attempt}: Failed VRFs: {', '.join(failure_messages)}"
+                    self.log.debug(msg)
+
+                    # If this is the last attempt, fail
+                    if attempt == max_retries:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        msg = f"{self.class_name}.{method_name}: "
+                        msg += f"Bulk delete failed after {max_retries} attempts. "
+                        msg += f"Successfully deleted: {','.join(all_successful_vrfs) if all_successful_vrfs else 'None'}. "
+                        msg += f"Failed: {', '.join(failure_messages)}"
+                        self.log.debug(msg)
+                        self.failure(response)
+
+                    # Wait before retrying
+                    msg = f"Waiting {retry_delay} seconds before retry {attempt + 1}..."
+                    self.log.debug(msg)
+                    time.sleep(retry_delay)
+                else:
+                    # No failure list but 500 error - this shouldn't happen but handle it
+                    if attempt == max_retries:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        msg = f"{self.class_name}.{method_name}: "
+                        msg += f"Bulk delete failed with 500 error after {max_retries} attempts. "
+                        msg += f"No failure details provided by controller."
+                        self.log.debug(msg)
+                        self.failure(response)
+                    time.sleep(retry_delay)
+            else:
+                # Other error codes - let handle_response deal with it
+                fail, self.result["changed"] = self.handle_response(response, action)
+                if fail:
+                    if is_rollback:
+                        self.failed_to_rollback = True
+                        return
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"Bulk delete failed with return code {return_code}"
+                    self.log.debug(msg)
+                    self.failure(response)
+                return
+
     def push_diff_delete(self, is_rollback=False):
         """
         # Summary
@@ -3835,16 +3978,12 @@ class DcnmVrf:
 
         if self.action_fabric_type != "multicluster_parent" and vrfs_to_delete and self.dcnm_version >= 12:
             self.log.debug("Sending Bulk VRF delete request")
-            # Build the bulk delete path with comma-separated VRF names
-            path = self.paths["GET_VRF_FAB"].format(self.fabric)
-            delete_path = f"{path}/bulk-delete/vrfs?vrf-names={','.join(vrfs_to_delete)}"
-            self.send_to_controller(
+            # Use retry logic for bulk delete
+            self.bulk_delete_with_retry(
+                vrfs_to_delete,
                 action,
                 verb,
-                delete_path,
-                None,  # Bulk delete uses query params, not payload
-                log_response=True,
-                is_rollback=is_rollback,
+                is_rollback
             )
 
         if del_failure:

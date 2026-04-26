@@ -805,33 +805,34 @@
         "ERROR": "",
         "RETURN_CODE": 200,
         "MESSAGE": "OK",
-        "DATA": {
-            "networkStatus": "NA",
-            "networkName": "test_network",
-            "switchList": []
-        }
+        "DATA": [
+            {
+                "networkName": "test_network",
+                "lanAttachList": []
+            }
+        ]
     },
     "mock_net_attach_object_del_not_ready": {
         "ERROR": "",
         "RETURN_CODE": 200,
         "MESSAGE": "OK",
-        "DATA": {
-            "networkStatus": "DEPLOYED",
-            "networkName": "test_network",
-            "switchList":
-            [
-                {
-                    "lanAttachedState": "DEPLOYED",
-                    "serialNumber": "9NN7E41N16A"
-                },
-                {
-                    "lanAttachedState": "DEPLOYED",
-                    "serialNumber": "9YO9A29F27U"
-                }
-                
-            ]
-    
-        }
+        "DATA": [
+            {
+                "networkName": "test_network",
+                "lanAttachList": [
+                    {
+                        "networkName": "test_network",
+                        "lanAttachState": "DEPLOYED",
+                        "switchSerialNo": "9NN7E41N16A"
+                    },
+                    {
+                        "networkName": "test_network",
+                        "lanAttachState": "DEPLOYED",
+                        "switchSerialNo": "9YO9A29F27U"
+                    }
+                ]
+            }
+        ]
     },
     "mock_vlan_get": {
         "DATA": "202",
@@ -924,6 +925,17 @@
         "METHOD": "POST",
         "RETURN_CODE": 200,
         "MESSAGE": "OK"
+    },
+    "mock_net_del_ready": {
+        "DATA": [
+            {
+                "networkName": "test_network",
+                "networkStatus": "NA"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "RETURN_CODE": 200
     },
     "net_inv_data": {
         "10.10.10.217": {

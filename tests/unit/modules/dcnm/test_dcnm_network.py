@@ -67,7 +67,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         "mock_net_attach_object_del_not_ready"
     )
     mock_net_attach_object_del_ready = test_data.get("mock_net_attach_object_del_ready")
-
+    mock_net_del_ready = test_data.get("mock_net_del_ready")
     attach_success_resp = test_data.get("attach_success_resp")
     attach_success_resp2 = test_data.get("attach_success_resp2")
     deploy_success_resp = test_data.get("deploy_success_resp")
@@ -376,9 +376,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.mock_net_object,
                 self.attach_success_resp,
                 self.deploy_success_resp,
-                self.mock_net_attach_object_del_not_ready,
-                self.mock_net_attach_object_del_ready,
-                self.delete_success_resp,
+                self.mock_net_attach_object_del_not_ready,  # wait_for_network_attachments_del_ready
+                self.mock_net_attach_object_del_ready,      # wait_for_network_attachments_del_ready
+                self.mock_net_del_ready,                     # wait_for_network_del_ready
+                self.delete_success_resp,                    # bulk_delete_networks_with_retry
                 self.blank_data,
                 self.attach_success_resp2,
                 self.deploy_success_resp,
@@ -392,9 +393,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.mock_net_object,
                 self.attach_success_resp,
                 self.deploy_success_resp,
-                self.mock_net_attach_object_del_not_ready,
-                self.mock_net_attach_object_del_ready,
-                self.delete_success_resp,
+                self.mock_net_attach_object_del_not_ready,  # wait_for_network_attachments_del_ready
+                self.mock_net_attach_object_del_ready,      # wait_for_network_attachments_del_ready
+                self.mock_net_del_ready,                     # wait_for_network_del_ready
+                self.delete_success_resp,                    # bulk_delete_networks_with_retry
             ]
 
         elif "delete_without_config" in self._testMethodName:
@@ -406,10 +408,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.blank_data,
                 self.attach_success_resp,
                 self.deploy_success_resp,
-                self.mock_net_attach_object_del_not_ready,
-                self.mock_net_attach_object_del_ready,
-                self.mock_net_attach_object_del_ready,
-                self.delete_success_resp,
+                self.mock_net_attach_object_del_not_ready,  # wait_for_network_attachments_del_ready
+                self.mock_net_attach_object_del_ready,      # wait_for_network_attachments_del_ready
+                self.mock_net_del_ready,                     # wait_for_network_del_ready
+                self.delete_success_resp,                    # bulk_delete_networks_with_retry
             ]
 
         elif "query_with_config" in self._testMethodName:

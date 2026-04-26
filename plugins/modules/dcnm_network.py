@@ -3495,6 +3495,12 @@ class DcnmNetwork:
         msg += f"caller: {caller}"
         self.log.debug(msg)
 
+        # Early return if no networks to wait for
+        if not self.diff_delete:
+            msg = "No networks in diff_delete, returning immediately."
+            self.log.debug(msg)
+            return True
+
         # Create a list of networks that still need to reach terminal state
         pending_networks = list(self.diff_delete.keys())
 
@@ -3718,6 +3724,158 @@ class DcnmNetwork:
                 new_fabric = self.sn_fab.get(sn, old_fabric)
                 node["fabric"] = new_fabric
 
+    def bulk_delete_networks_with_retry(self, networks_to_delete, path, method, is_rollback=False):
+        """
+        # Summary
+
+        Perform bulk delete with retry logic for controller sync issues.
+
+        ## Description
+
+        The controller sometimes returns a 500 error with message
+        "Please do a Fabric Re-sync and try Again" for certain networks.
+        This method retries the bulk delete operation up to 3 times
+        with 30-second delays, retrying only the failed networks.
+
+        ## Parameters
+
+        - networks_to_delete: List of network names to delete
+        - path: Base API path for network operations
+        - method: HTTP method ("DELETE")
+        - is_rollback: Whether this is a rollback operation
+
+        ## Raises
+
+        Calls failure() if deletion fails after all retry attempts
+        """
+        caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"networks_to_delete: {networks_to_delete}"
+        self.log.debug(msg)
+
+        max_retries = 3
+        retry_delay = 30  # seconds
+        max_batch_size = 30
+        all_successful_networks = []
+        networks_to_retry = networks_to_delete.copy()
+
+        for attempt in range(1, max_retries + 1):
+            if not networks_to_retry:
+                # All networks deleted successfully
+                msg = "All networks deleted successfully."
+                self.log.debug(msg)
+                return
+
+            msg = f"Bulk delete attempt {attempt}/{max_retries} "
+            msg += f"for {len(networks_to_retry)} networks"
+            self.log.debug(msg)
+
+            # Process in batches
+            for i in range(0, len(networks_to_retry), max_batch_size):
+                batch = networks_to_retry[i:i + max_batch_size]
+                network_names = ','.join(batch)
+                delete_path = path.replace("/networks", "") + "/bulk-delete/networks?network-names=" + network_names
+
+                msg = f"Attempt {attempt}, batch {i//max_batch_size + 1}: "
+                msg += f"method: {method}, path: {delete_path}"
+                self.log.debug(msg)
+
+                # Send the request
+                response = dcnm_send(self.module, method, delete_path)
+
+                msg = f"Attempt {attempt}, batch response: "
+                msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                # Always append response for visibility
+                self.result["response"].append(response)
+
+                return_code = response.get("RETURN_CODE", 0)
+
+                # Check if request was successful
+                if return_code == 200:
+                    msg = f"Attempt {attempt}: Batch delete succeeded for networks: {network_names}"
+                    self.log.debug(msg)
+                    # Mark as changed if not in check mode
+                    if not self.module.check_mode:
+                        self.result["changed"] = True
+                    all_successful_networks.extend(batch)
+                    continue
+
+                # Handle partial success (500 error with failureList)
+                if return_code == 500:
+                    data = response.get("DATA", {})
+                    success_list = data.get("successList", [])
+                    failure_list = data.get("failureList", [])
+
+                    # Track successful deletions
+                    if success_list:
+                        all_successful_networks.extend(success_list)
+                        msg = f"Attempt {attempt}: Successfully deleted networks: "
+                        msg += f"{','.join(success_list)}"
+                        self.log.debug(msg)
+                        if not self.module.check_mode:
+                            self.result["changed"] = True
+
+                    # Extract failed network names for retry
+                    if failure_list:
+                        failed_names = [item.get("name") for item in failure_list if item.get("name")]
+                        failure_messages = [
+                            f"{item.get('name')}: {item.get('message')}"
+                            for item in failure_list
+                        ]
+                        msg = f"Attempt {attempt}: Failed networks: {', '.join(failure_messages)}"
+                        self.log.debug(msg)
+
+                        # If this is the last attempt, fail
+                        if attempt == max_retries:
+                            if is_rollback:
+                                self.failed_to_rollback = True
+                                return
+                            msg = f"{self.class_name}.{method_name}: "
+                            msg += f"Bulk delete failed after {max_retries} attempts. "
+                            msg += f"Successfully deleted: {','.join(all_successful_networks) if all_successful_networks else 'None'}. "
+                            msg += f"Failed: {', '.join(failure_messages)}"
+                            self.log.debug(msg)
+                            self.failure(response)
+                            return
+                    else:
+                        # No failure list but 500 error - all in this batch failed
+                        msg = f"Attempt {attempt}: Batch failed with 500 error, no failure details. Networks: {network_names}"
+                        self.log.debug(msg)
+                        if attempt == max_retries:
+                            if is_rollback:
+                                self.failed_to_rollback = True
+                                return
+                            msg = f"{self.class_name}.{method_name}: "
+                            msg += f"Bulk delete failed with 500 error after {max_retries} attempts. "
+                            msg += f"No failure details provided by controller."
+                            self.log.debug(msg)
+                            self.failure(response)
+                            return
+                else:
+                    # Other error codes
+                    fail, self.result["changed"] = self.handle_response(response, "delete")
+                    self.log.debug(f"Bulk deletion failed for networks {network_names} with response: {response}")
+                    if fail:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        self.failure(response)
+                        return
+
+            # After processing all batches in this attempt, update retry list
+            # Only retry networks that actually failed (not in success list)
+            if attempt < max_retries:
+                networks_to_retry = [net for net in networks_to_retry if net not in all_successful_networks]
+                if networks_to_retry:
+                    msg = f"Waiting {retry_delay} seconds before retry {attempt + 1}..."
+                    self.log.debug(msg)
+                    time.sleep(retry_delay)
+
     def push_to_remote(self, is_rollback=False):
         caller = inspect.stack()[1][3]
 
@@ -3867,24 +4025,14 @@ class DcnmNetwork:
                             return
                         self.failure(resp)
 
-            # Use the bulk-delete API for standalone, MSD parent, and multicluster parent fabrics.
+            # Use the bulk-delete API with retry logic for standalone, MSD parent, and multicluster parent fabrics.
             if supports_bulk_delete and networks_to_delete:
-
-                max_batch_size = 30
-
-                for i in range(0, len(networks_to_delete), max_batch_size):
-                    batch = networks_to_delete[i:i + max_batch_size]
-                    network_names = ','.join(batch)
-                    delete_path = path.replace("/networks", "") + "/bulk-delete/networks?network-names=" + network_names
-
-                    resp = dcnm_send(self.module, method, delete_path)
-                    self.result["response"].append(resp)
-                    fail, self.result["changed"] = self.handle_response(resp, "delete")
-                    if fail:
-                        if is_rollback:
-                            self.failed_to_rollback = True
-                            return
-                        self.failure(resp)
+                self.bulk_delete_networks_with_retry(
+                    networks_to_delete,
+                    path,
+                    method,
+                    is_rollback
+                )
 
         if del_failure:
             fail_msg = "Deletion of Networks {0} has failed: {1}".format(del_failure[:-1], resp)

@@ -1269,6 +1269,24 @@
             }
         ]
     },
+    "mock_vrf_object_na": {
+        "ERROR": "",
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "fabric": "standalone_fabric",
+                "serviceVrfTemplate": "None",
+                "source": "None",
+                "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+                "vrfId": 9008011,
+                "vrfName": "test_vrf_1",
+                "vrfTemplate": "Default_VRF_Universal",
+                "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\"}",
+                "vrfStatus": "NA"
+            }
+        ]
+    },
     "mock_msd_parent_vrf_object": {
         "ERROR": "",
         "RETURN_CODE": 200,
@@ -1698,6 +1716,24 @@
                 "serviceVrfTemplate": "None",
                 "source": "None",
                 "vrfStatus": "DEPLOYED",
+                "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_dcnm\"}",
+                "vrfId": "9008013"
+            }
+        ]
+    },
+    "mock_vrf_object_dcnm_only_na": {
+        "ERROR": "",
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "fabric": "standalone_fabric",
+                "vrfName": "test_vrf_dcnm",
+                "vrfTemplate": "Default_VRF_Universal",
+                "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+                "serviceVrfTemplate": "None",
+                "source": "None",
+                "vrfStatus": "NA",
                 "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_dcnm\"}",
                 "vrfId": "9008013"
             }
@@ -2166,6 +2202,20 @@
         "METHOD": "POST",
         "RETURN_CODE": 200,
         "MESSAGE": "OK"
+    },
+    "delete_failure_resp": {
+        "DATA": {
+            "successList": [],
+            "failureList": [
+                {
+                    "name": "test_vrf_1",
+                    "message": "VRF deletion failed"
+                }
+            ]
+        },
+        "MESSAGE": "Partial failure",
+        "METHOD": "DELETE",
+        "RETURN_CODE": 500
     },
     "vrf_inv_data": {
         "10.10.10.224": {
