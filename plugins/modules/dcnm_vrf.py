@@ -5232,7 +5232,6 @@ class DcnmVrf:
         msg += f"vrf_count: {vrf_count}, base_timeout: {base_timeout}s, retry_count: {retry_count}"
         self.log.debug(msg)
 
-
         while pending_vrfs and retry_count > 0:
             retry_count -= 1
 

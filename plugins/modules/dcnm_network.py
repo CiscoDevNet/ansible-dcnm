@@ -4168,7 +4168,17 @@ class DcnmNetwork:
                         if not v_a["torports"]:
                             del v_a["torports"]
 
-            for attempt in range(0, 50):
+            # Calculate dynamic retry count based on number of attachments
+            attachment_count = sum(len(net.get("lanAttachList", [])) for net in self.diff_attach)
+            base_timeout = max(attachment_count * 30, 500)  # 30 seconds per attachment, minimum 500s
+            retry_count = max(base_timeout // 1, 1)  # 1 second sleep per retry
+
+            msg = f"Attempting to attach {attachment_count} network attachment(s). "
+            msg += f"attachment_count: {attachment_count}, base_timeout: {base_timeout}s, retry_count: {retry_count}"
+            self.log.debug(msg)
+
+            for attempt in range(0, retry_count):
+                resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
                 resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
 
                 update_in_progress = False
