@@ -1900,6 +1900,7 @@ class DcnmIntf:
         11: {
             "VPC_SNO": "/rest/interface/vpcpair_serial_number?serial_number={}",
             "IF_WITH_SNO_IFNAME": "/rest/interface?serialNumber={}&ifName={}",
+            "IF_WITH_SNO": "/rest/interface?serialNumber={}",
             "IF_DETAIL_WITH_SNO": "/rest/interface/detail?serialNumber={}",
             "GLOBAL_IF": "/rest/globalInterface",
             "GLOBAL_IF_DEPLOY": "/rest/globalInterface/deploy",
@@ -1911,6 +1912,7 @@ class DcnmIntf:
         12: {
             "VPC_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/vpcpair_serial_number?serial_number={}",
             "IF_WITH_SNO_IFNAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber={}&ifName={}",
+            "IF_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber={}",
             "IF_DETAIL_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/detail?serialNumber={}",
             "GLOBAL_IF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface",
             "GLOBAL_IF_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface/deploy",
@@ -1951,6 +1953,17 @@ class DcnmIntf:
         self.ip_sn = {}
         self.hn_sn = {}
         self.monitoring = []
+
+        # Cache for bulk-fetched interface policy details.
+        # Keyed by (serialNumber, ifName_lower) -> interface detail dict.
+        # This avoids per-interface HTTP GETs which are the primary
+        # performance bottleneck when managing many interfaces.
+        self.intf_detail_cache = {}
+        self.intf_detail_cached_snos = set()
+        self._replace_have_lookup = {}
+        self._replace_pb_input_lookup = {}
+        self.deferred_delete_member_defaults = []
+        self._deferred_delete_member_default_keys = set()
 
         self.changed_dict = [
             {
@@ -4070,6 +4083,66 @@ class DcnmIntf:
                             else:
                                 self.want.append(intf_payload)
 
+    def dcnm_intf_bulk_fetch_intf_info(self, serialNumber):
+        """Bulk-fetch all interface policy details for a switch and populate the cache.
+
+        Instead of making one HTTP GET per interface via IF_WITH_SNO_IFNAME,
+        this fetches ALL interfaces for a serial number in a single call and
+        caches the results.  Subsequent calls to dcnm_intf_get_intf_info()
+        will resolve from the cache in O(1) instead of making a network
+        round-trip.
+
+        Parameters:
+            serialNumber (str): The serial number of the switch. For VPC/AA_FEX
+                                combined serial numbers pass only one side.
+        """
+
+        sno = serialNumber.split("~")[0] if "~" in serialNumber else serialNumber
+
+        if sno in self.intf_detail_cached_snos:
+            return
+
+        path = self.paths["IF_WITH_SNO"].format(sno)
+
+        retry_count = 0
+        resp = []
+        while retry_count < 3:
+            retry_count += 1
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp == [] or (isinstance(resp, dict) and resp.get("RETURN_CODE") == 200):
+                break
+            time.sleep(1)
+
+        if (
+            resp
+            and isinstance(resp, dict)
+            and "DATA" in resp
+            and resp["DATA"]
+            and resp["RETURN_CODE"] == 200
+        ):
+            for item in resp["DATA"]:
+                # The bulk endpoint may group multiple interfaces under the
+                # same policy in a single DATA element.  We must iterate ALL
+                # interfaces in the group — not just [0] — and create a
+                # separate cache entry for each one that looks identical to
+                # what the individual endpoint would return (i.e. a single
+                # interface in the "interfaces" list).
+                for intf in item.get("interfaces", []):
+                    if_name = intf.get("ifName", "")
+                    if if_name:
+                        # Build a per-interface entry that mirrors the
+                        # individual-GET response structure.
+                        single_item = {}
+                        for key in item:
+                            if key != "interfaces":
+                                single_item[key] = item[key]
+                        single_item["interfaces"] = [intf]
+                        cache_key = (sno, if_name.lower())
+                        self.intf_detail_cache[cache_key] = single_item
+
+        self.intf_detail_cached_snos.add(sno)
+
     def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
 
         # For VPC and AA_FEX interfaces the serialNumber will be a combined one. But GET on interface cannot
@@ -4080,6 +4153,21 @@ class DcnmIntf:
         else:
             sno = serialNumber
 
+        # Check the bulk-fetched cache first to avoid a per-interface HTTP GET
+        cache_key = (sno, ifName.lower())
+        cached = self.intf_detail_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        # If we already bulk-fetched all interfaces for this serial number
+        # and this interface was not in the response, it does not exist on
+        # the controller.  Return empty without an additional HTTP call.
+        if sno in self.intf_detail_cached_snos:
+            return []
+
+        # No bulk fetch done for this serial number — fall back to
+        # individual GET (this path is taken when bulk pre-population
+        # was not triggered, e.g. for states other than overridden).
         path = self.paths["IF_WITH_SNO_IFNAME"].format(sno, ifName)
 
         retry_count = 0
@@ -4097,6 +4185,8 @@ class DcnmIntf:
             and resp["DATA"]
             and resp["RETURN_CODE"] == 200
         ):
+            # Store in cache so subsequent lookups for this interface are free
+            self.intf_detail_cache[cache_key] = resp["DATA"][0]
             return resp["DATA"][0]
         else:
             return []
@@ -4155,6 +4245,22 @@ class DcnmIntf:
 
         if not self.want:
             return
+
+        # Bulk-prefetch interface details for all switches referenced in self.want.
+        # This populates the cache so that individual dcnm_intf_get_intf_info calls
+        # below become O(1) lookups instead of individual HTTP GETs.
+        prefetched_snos = set()
+        for elem in self.want:
+            for intf in elem["interfaces"]:
+                sno = intf.get("serialNumber", "")
+                if not sno:
+                    continue
+                # For VPC/AA_FEX, use the first part of the ~-separated pair
+                if intf.get("interfaceType") in ("INTERFACE_VPC", "AA_FEX"):
+                    sno = sno.split("~")[0]
+                if sno not in prefetched_snos:
+                    prefetched_snos.add(sno)
+                    self.dcnm_intf_bulk_fetch_intf_info(sno)
 
         # We have all the requested interface config in self.want. Interfaces are grouped together based on the
         # policy string and the interface name in a single dict entry.
@@ -4272,6 +4378,17 @@ class DcnmIntf:
             # This is a special case where the value is a boolean and we need to compare it as such
             t_e1 = str(t_e1).lower()
             t_e2 = str(t_e2).lower()
+
+        numeric_keys = ["LACP_PORT_PRIO"]
+        if k in numeric_keys:
+            # Controller responses may return numeric nvPairs as strings while
+            # desired state keeps them as integers. Normalize both sides so
+            # default-valued port-channel/vPC settings remain idempotent.
+            try:
+                t_e1 = int(t_e1)
+                t_e2 = int(t_e2)
+            except (TypeError, ValueError):
+                pass
 
         if t_e1 != t_e2:
 
@@ -4492,14 +4609,19 @@ class DcnmIntf:
             intf_changed = False
 
             want.pop("deploy")
-            match_have = [
-                d
-                for d in self.have
-                if (
-                    (name.lower() == d["interfaces"][0]["ifName"].lower())
-                    and (sno == d["interfaces"][0]["serialNumber"])
+            if state == "replaced" and self._replace_have_lookup:
+                match_have = self._replace_have_lookup.get(
+                    (name.lower(), str(sno)), []
                 )
-            ]
+            else:
+                match_have = [
+                    d
+                    for d in self.have
+                    if (
+                        (name.lower() == d["interfaces"][0]["ifName"].lower())
+                        and (sno == d["interfaces"][0]["serialNumber"])
+                    )
+                ]
             if not match_have:
                 changed_dict = copy.deepcopy(want)
 
@@ -4522,6 +4644,22 @@ class DcnmIntf:
                     changed_dict = copy.deepcopy(want)
                     if "skipResourceCheck" in changed_dict.keys():
                         changed_dict.pop("skipResourceCheck")
+
+                    if state == "replaced" and self._replace_pb_input_lookup:
+                        match_pb = self._replace_pb_input_lookup.get(
+                            (name.lower(), str(sno), fabric), []
+                        )
+                    else:
+                        match_pb = [
+                            pb
+                            for pb in self.pb_input
+                            if (
+                                (name.lower() == pb["ifname"].lower())
+                                and (sno == pb["sno"])
+                                and (fabric == pb["fabric"])
+                            )
+                        ]
+                    pb_keys = list(match_pb[0].keys()) if match_pb else []
 
                     # First check if the policies are same for want and have. If they are different, we cannot compare
                     # the profiles because each profile will have different elements. As per PRD, if policies are different
@@ -4566,8 +4704,18 @@ class DcnmIntf:
                                     ]
 
                                     for key in keys_to_check:
-                                        # Remove the key from nv_keys only if it exists and is not present in 'have'
-                                        if key in nv_keys and d[k][index][ik].get(key, None) is None:
+                                        # Some GET payloads omit optional keys altogether. Keep comparing keys that were
+                                        # explicitly requested in the playbook so merged state can correct drift when
+                                        # the current payload is incomplete.
+                                        key_missing_in_have = all(
+                                            intf.get(ik, {}).get(key, None) is None
+                                            for intf in d[k]
+                                        )
+                                        if (
+                                            key in nv_keys
+                                            and key_missing_in_have
+                                            and self.keymap.get(key) not in pb_keys
+                                        ):
                                             nv_keys.remove(key)
 
                                     for nk in nv_keys:
@@ -4580,7 +4728,7 @@ class DcnmIntf:
                                                 sno,
                                                 fabric,
                                                 want[k][0][ik][nk],
-                                                d[k][index][ik][nk],
+                                                d[k][index][ik].get(nk),
                                                 nk,
                                                 state,
                                             )
@@ -4592,16 +4740,32 @@ class DcnmIntf:
                                             ]
                                             continue
                                         if res == "merge_and_add":
-                                            want[k][0][ik][
-                                                nk
-                                            ] = self.dcnm_intf_merge_want_and_have(
+                                            merged_value = self.dcnm_intf_merge_want_and_have(
                                                 nk,
                                                 want[k][0][ik][nk],
                                                 d[k][0][ik][nk],
                                             )
-                                            changed_dict[k][0][ik][nk] = want[
-                                                k
-                                            ][0][ik][nk]
+                                            # A merged aggregate key can resolve back to the
+                                            # exact current controller value, for example
+                                            # CONF="" merged with CONF="no shutdown". Skip
+                                            # the update when the merged result is already in
+                                            # sync.
+                                            if (
+                                                self.dcnm_intf_compare_elements(
+                                                    name,
+                                                    sno,
+                                                    fabric,
+                                                    merged_value,
+                                                    d[k][0][ik].get(nk),
+                                                    nk,
+                                                    "replaced",
+                                                )
+                                                == "dont_add"
+                                            ):
+                                                changed_dict[k][0][ik].pop(nk)
+                                                continue
+                                            want[k][0][ik][nk] = merged_value
+                                            changed_dict[k][0][ik][nk] = merged_value
                                         if res != "dont_add":
                                             action = "update"
                                         else:
@@ -4627,12 +4791,25 @@ class DcnmIntf:
                                         want[k][0][ik] = d[k][0][ik]
                                         continue
                                     if res == "merge_and_add":
-                                        want[k][0][
-                                            ik
-                                        ] = self.dcnm_intf_merge_want_and_have(
+                                        merged_value = self.dcnm_intf_merge_want_and_have(
                                             ik, want[k][0][ik], d[k][0][ik]
                                         )
-                                        changed_dict[k][0][ik] = want[k][0][ik]
+                                        if (
+                                            self.dcnm_intf_compare_elements(
+                                                name,
+                                                sno,
+                                                fabric,
+                                                merged_value,
+                                                d[k][0][ik],
+                                                ik,
+                                                "replaced",
+                                            )
+                                            == "dont_add"
+                                        ):
+                                            changed_dict[k][0].pop(ik)
+                                            continue
+                                        want[k][0][ik] = merged_value
+                                        changed_dict[k][0][ik] = merged_value
                                     if res != "dont_add":
                                         action = "update"
                                     else:
@@ -4720,6 +4897,8 @@ class DcnmIntf:
         for cfg in self.config:
             self.dcnm_intf_process_config(cfg)
 
+        self.dcnm_intf_build_replace_lookups()
+
         # Compare want[] and have[] and build a list of dicts containing interface information that
         # should be sent to DCNM for updation. The list can include information on interfaces which
         # are already presnt in self.have and which differ in the values for atleast one of the keys
@@ -4753,60 +4932,134 @@ class DcnmIntf:
         intf_nv = intf.get("interfaces")[0].get("nvPairs")
         have_nv = have.get("interfaces")[0].get("nvPairs")
 
+        def normalize_default_compare_value(key, value):
+            if value is None:
+                value = ""
+
+            sval = str(value).strip().lower()
+
+            if key == "CONF":
+                # NDFC may omit explicit default CLI from stored interface
+                # intent while the module's generated default payload includes
+                # "no shutdown". Treat them as equivalent for deleted-state
+                # idempotence checks.
+                if sval in ("", "no shutdown"):
+                    return ""
+                return sval
+
+            if key in (
+                "ADMIN_STATE",
+                "BPDUGUARD_ENABLED",
+                "PORTTYPE_FAST_ENABLED",
+            ):
+                if sval in ("true", "yes"):
+                    return "true"
+                if sval in ("false", "no"):
+                    return "false"
+                return sval
+
+            return sval
+
         if (
-            str(intf_nv.get("SPEED")).lower()
-            != str(have_nv.get("SPEED")).lower()
+            normalize_default_compare_value("SPEED", intf_nv.get("SPEED"))
+            != normalize_default_compare_value("SPEED", have_nv.get("SPEED"))
         ):
             return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("DESC") != have_nv.get("DESC"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("CONF") != have_nv.get("CONF"):
-            return "DCNM_INTF_NOT_MATCH"
         if (
-            str(intf_nv.get("ADMIN_STATE")).lower()
-            != str(have_nv.get("ADMIN_STATE")).lower()
+            normalize_default_compare_value("DESC", intf_nv.get("DESC"))
+            != normalize_default_compare_value("DESC", have_nv.get("DESC"))
         ):
             return "DCNM_INTF_NOT_MATCH"
-        if str(intf_nv.get("MTU")).lower() != str(have_nv.get("MTU")).lower():
+        if (
+            normalize_default_compare_value("CONF", intf_nv.get("CONF"))
+            != normalize_default_compare_value("CONF", have_nv.get("CONF"))
+        ):
+            return "DCNM_INTF_NOT_MATCH"
+        if (
+            normalize_default_compare_value(
+                "ADMIN_STATE", intf_nv.get("ADMIN_STATE")
+            )
+            != normalize_default_compare_value(
+                "ADMIN_STATE", have_nv.get("ADMIN_STATE")
+            )
+        ):
+            return "DCNM_INTF_NOT_MATCH"
+        if (
+            normalize_default_compare_value("MTU", intf_nv.get("MTU"))
+            != normalize_default_compare_value("MTU", have_nv.get("MTU"))
+        ):
             return "DCNM_INTF_NOT_MATCH"
 
         if intf.get("policy") == "int_routed_host":
-            if intf_nv.get("INTF_VRF") != have_nv.get("INTF_VRF"):
-                return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("IP")).lower()
-                != str(have_nv.get("IP")).lower()
+                normalize_default_compare_value(
+                    "INTF_VRF", intf_nv.get("INTF_VRF")
+                )
+                != normalize_default_compare_value(
+                    "INTF_VRF", have_nv.get("INTF_VRF")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("PREFIX")).lower()
-                != str(have_nv.get("PREFIX")).lower()
+                normalize_default_compare_value("IP", intf_nv.get("IP"))
+                != normalize_default_compare_value("IP", have_nv.get("IP"))
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("ROUTING_TAG")).lower()
-                != str(have_nv.get("ROUTING_TAG")).lower()
+                normalize_default_compare_value(
+                    "PREFIX", intf_nv.get("PREFIX")
+                )
+                != normalize_default_compare_value(
+                    "PREFIX", have_nv.get("PREFIX")
+                )
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                normalize_default_compare_value(
+                    "ROUTING_TAG", intf_nv.get("ROUTING_TAG")
+                )
+                != normalize_default_compare_value(
+                    "ROUTING_TAG", have_nv.get("ROUTING_TAG")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
         elif intf.get("policy") == "int_trunk_host":
             if (
-                str(intf_nv.get("BPDUGUARD_ENABLED")).lower()
-                != str(have_nv.get("BPDUGUARD_ENABLED")).lower()
+                normalize_default_compare_value(
+                    "BPDUGUARD_ENABLED", intf_nv.get("BPDUGUARD_ENABLED")
+                )
+                != normalize_default_compare_value(
+                    "BPDUGUARD_ENABLED", have_nv.get("BPDUGUARD_ENABLED")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("PORTTYPE_FAST_ENABLED")).lower()
-                != str(have_nv.get("PORTTYPE_FAST_ENABLED")).lower()
+                normalize_default_compare_value(
+                    "PORTTYPE_FAST_ENABLED",
+                    intf_nv.get("PORTTYPE_FAST_ENABLED"),
+                )
+                != normalize_default_compare_value(
+                    "PORTTYPE_FAST_ENABLED",
+                    have_nv.get("PORTTYPE_FAST_ENABLED"),
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("ALLOWED_VLANS")).lower()
-                != str(have_nv.get("ALLOWED_VLANS")).lower()
+                normalize_default_compare_value(
+                    "ALLOWED_VLANS", intf_nv.get("ALLOWED_VLANS")
+                )
+                != normalize_default_compare_value(
+                    "ALLOWED_VLANS", have_nv.get("ALLOWED_VLANS")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("NATIVE_VLAN")).lower()
-                != str(have_nv.get("NATIVE_VLAN")).lower()
+                normalize_default_compare_value(
+                    "NATIVE_VLAN", intf_nv.get("NATIVE_VLAN")
+                )
+                != normalize_default_compare_value(
+                    "NATIVE_VLAN", have_nv.get("NATIVE_VLAN")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
         return "DCNM_INTF_MATCH"
@@ -4879,45 +5132,285 @@ class DcnmIntf:
 
         return eth_payload
 
-    def dcnm_intf_can_be_replaced(self, have):
+    def dcnm_intf_build_can_be_replaced_lookups(self):
+        """Pre-build lookup structures for O(1) dcnm_intf_can_be_replaced() checks.
+
+        Replaces the O(n) linear scan of self.pb_input that was performed
+        for every interface in have_all, turning the overall O(n*m) cost
+        into O(n+m).
+
+        Populates three instance-level lookup structures:
+          _pb_override_lookup  – set of (ifname, sno) for overridden-state match
+          _pb_member_lookup    – dict mapping expanded member ifName
+                                 to list of (parent_ifname, parent_sno)
+          _pb_peer_member_lookup – dict mapping expanded peer member ifName
+                                   to parent_ifname
+        """
+
+        self._pb_override_lookup = set()
+        self._pb_member_lookup = {}
+        self._pb_peer_member_lookup = {}
+        self._pb_deleted_parent_lookup = set()
+        self._pb_deleted_peer_parent_lookup = set()
 
         for item in self.pb_input:
-            # For overridden state, we will not touch anything that is present in incoming config,
-            # because those interfaces will anyway be modified in the current run
-            # Must check both interface name AND serial number to ensure we're comparing the same
-            # interface on the same switch (not just the same interface name on different switches)
-            if (self.module.params["state"] == "overridden") and (
-                item["ifname"] == have["ifName"]
-            ) and (
-                item.get("sno") == have.get("serialNo")
-            ):
-                return False, item["ifname"]
+            ifname = item.get("ifname")
+            sno = item.get("sno")
+
+            # Override entries: (ifname, sno) pairs for direct match
+            if ifname and sno:
+                self._pb_override_lookup.add((ifname, sno))
+
+            # Members (port-channel style)
             if item.get("members"):
-                if have["ifName"] in [
-                    self.dcnm_intf_get_if_name(mem, "eth")[0]
-                    for mem in item["members"]
-                ]:
-                    # Compare have serial_number to item serial_number return if they don't match
-                    if have.get('serialNo') != item.get('sno'):
-                        return True, None
-                    else:
-                        return False, item["ifname"]
-            elif (item.get("peer1_members")) or (item.get("peer2_members")):
-                if (
-                    have["ifName"]
-                    in [
-                        self.dcnm_intf_get_if_name(mem, "eth")[0]
-                        for mem in item["peer1_members"]
-                    ]
-                ) or (
-                    have["ifName"]
-                    in [
-                        self.dcnm_intf_get_if_name(mem, "eth")[0]
-                        for mem in item["peer2_members"]
-                    ]
-                ):
-                    return False, item["ifname"]
+                self._pb_deleted_parent_lookup.add((ifname, sno))
+                for mem in item["members"]:
+                    expanded_name = self.dcnm_intf_get_if_name(mem, "eth")[0]
+                    if expanded_name not in self._pb_member_lookup:
+                        self._pb_member_lookup[expanded_name] = []
+                    self._pb_member_lookup[expanded_name].append((ifname, sno))
+
+            # Peer members (VPC style)
+            elif item.get("peer1_members") or item.get("peer2_members"):
+                self._pb_deleted_parent_lookup.add((ifname, sno))
+                self._pb_deleted_peer_parent_lookup.add(ifname)
+                for mem in (item.get("peer1_members") or []):
+                    expanded_name = self.dcnm_intf_get_if_name(mem, "eth")[0]
+                    self._pb_peer_member_lookup[expanded_name] = ifname
+                for mem in (item.get("peer2_members") or []):
+                    expanded_name = self.dcnm_intf_get_if_name(mem, "eth")[0]
+                    self._pb_peer_member_lookup[expanded_name] = ifname
+
+    def dcnm_intf_can_be_replaced(self, have):
+
+        # Build lookup structures on first call if not already built
+        if not hasattr(self, '_pb_member_lookup'):
+            self.dcnm_intf_build_can_be_replaced_lookups()
+
+        have_ifname = have["ifName"]
+        have_sno = have.get("serialNo")
+
+        # Check 1: For overridden state, skip interfaces present in incoming
+        # config — they will be modified in the current run anyway.
+        if self.module.params["state"] == "overridden":
+            if (have_ifname, have_sno) in self._pb_override_lookup:
+                return False, have_ifname
+
+        # Check 2: Check if this interface is a member of a port-channel.
+        if have_ifname in self._pb_member_lookup:
+            for parent_ifname, parent_sno in self._pb_member_lookup[have_ifname]:
+                # Deleted state needs one extra reconciliation pass for member
+                # Ethernet defaults after parent PC/vPC delete. Execution order
+                # already sends parent deletes before member replacements, so it
+                # is safe to queue the member default in the same module run.
+                if self.module.params["state"] == "deleted":
+                    if (parent_ifname, parent_sno) in self._pb_deleted_parent_lookup:
+                        return True, parent_ifname
+                # Compare have serial_number to item serial_number return if they don't match
+                if have_sno != parent_sno:
+                    return True, None
+                else:
+                    return False, parent_ifname
+
+        # Check 3: Check if this interface is a peer member of a VPC.
+        if have_ifname in self._pb_peer_member_lookup:
+            if self.module.params["state"] == "deleted":
+                parent_ifname = self._pb_peer_member_lookup[have_ifname]
+                if parent_ifname in self._pb_deleted_peer_parent_lookup:
+                    return True, parent_ifname
+            return False, self._pb_peer_member_lookup[have_ifname]
+
         return True, None
+
+    def dcnm_intf_parent_present_in_have_all(self, parent_ifname, parent_sno=None):
+
+        parent_ifname = parent_ifname.lower()
+
+        for have in self.have_all:
+            if have.get("ifName", "").lower() != parent_ifname:
+                continue
+            if parent_sno is None or have.get("serialNo") == parent_sno:
+                return True
+
+        return False
+
+    def dcnm_intf_should_defer_deleted_member_default(self, have, parent_ifname):
+
+        if self.module.params["state"] != "deleted" or not parent_ifname:
+            return False
+
+        if not hasattr(self, "_pb_member_lookup"):
+            self.dcnm_intf_build_can_be_replaced_lookups()
+
+        have_ifname = have["ifName"]
+
+        if have_ifname in self._pb_member_lookup:
+            for candidate_parent_ifname, candidate_parent_sno in self._pb_member_lookup[have_ifname]:
+                if candidate_parent_ifname != parent_ifname:
+                    continue
+                if (
+                    (candidate_parent_ifname, candidate_parent_sno)
+                    in self._pb_deleted_parent_lookup
+                ):
+                    return self.dcnm_intf_parent_present_in_have_all(
+                        candidate_parent_ifname, candidate_parent_sno
+                    )
+
+        if have_ifname in self._pb_peer_member_lookup:
+            if (
+                self._pb_peer_member_lookup[have_ifname] == parent_ifname
+                and parent_ifname in self._pb_deleted_peer_parent_lookup
+            ):
+                return self.dcnm_intf_parent_present_in_have_all(parent_ifname)
+
+        return False
+
+    def dcnm_intf_defer_deleted_member_default(
+        self, ifname, sno, fabric, deploy, parent_ifname
+    ):
+
+        key = (str(sno), ifname.lower(), parent_ifname.lower())
+
+        if key in self._deferred_delete_member_default_keys:
+            return
+
+        self._deferred_delete_member_default_keys.add(key)
+        self.deferred_delete_member_defaults.append(
+            {
+                "ifName": ifname,
+                "serialNumber": str(sno),
+                "fabricName": fabric,
+                "deploy": deploy,
+                "parentIfName": parent_ifname,
+            }
+        )
+
+    def dcnm_intf_refresh_deferred_deleted_member_defaults(self):
+
+        if not self.deferred_delete_member_defaults:
+            return
+
+        affected_snos = sorted(
+            {
+                item["serialNumber"].split("~")[0]
+                for item in self.deferred_delete_member_defaults
+            }
+        )
+
+        max_retries = 10
+        retry_sleep = 2
+
+        for retry in range(max_retries):
+            # Refresh only the impacted switches so same-run parent deletes are
+            # reflected before we calculate default replacements for former members.
+            self.have_all = [
+                have
+                for have in self.have_all
+                if have.get("serialNo") not in affected_snos
+            ]
+
+            for sno in affected_snos:
+                stale_cache_keys = [
+                    key for key in self.intf_detail_cache if key[0] == sno
+                ]
+                for key in stale_cache_keys:
+                    self.intf_detail_cache.pop(key, None)
+                self.intf_detail_cached_snos.discard(sno)
+                self.dcnm_intf_get_have_all_with_sno(sno)
+                self.dcnm_intf_bulk_fetch_intf_info(sno)
+
+            parent_still_present = False
+            for item in self.deferred_delete_member_defaults:
+                if self.dcnm_intf_parent_present_in_have_all(item["parentIfName"]):
+                    parent_still_present = True
+                    break
+
+            if not parent_still_present:
+                break
+
+            if retry < (max_retries - 1):
+                time.sleep(retry_sleep)
+
+        for item in self.deferred_delete_member_defaults:
+            intf = {
+                "ifName": item["ifName"],
+                "serialNumber": item["serialNumber"],
+                "interfaceType": "INTERFACE_ETHERNET",
+            }
+
+            match_have = [
+                have
+                for have in self.have_all
+                if (
+                    (intf["ifName"].lower() == have["ifName"].lower())
+                    and (intf["serialNumber"] == have["serialNo"])
+                )
+            ]
+
+            if not match_have:
+                continue
+
+            if str(match_have[0].get("isPhysical")).lower() != "true":
+                continue
+
+            uelem = self.dcnm_intf_get_default_eth_payload(
+                intf["ifName"], intf["serialNumber"], item["fabricName"]
+            )
+            intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
+
+            if intf_payload != []:
+                if (
+                    self.dcnm_compare_default_payload(uelem, intf_payload)
+                    == "DCNM_INTF_MATCH"
+                ):
+                    continue
+
+            self.dcnm_intf_merge_intf_info(uelem, self.diff_replace)
+            self.changed_dict[0]["replaced"].append(copy.deepcopy(uelem))
+
+            if str(item.get("deploy", "true")).lower() == "true":
+                delem = {
+                    "serialNumber": intf["serialNumber"],
+                    "ifName": intf["ifName"],
+                    "fabricName": item["fabricName"],
+                }
+                self.diff_deploy.append(delem)
+                self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
+
+        self.deferred_delete_member_defaults = []
+        self._deferred_delete_member_default_keys = set()
+
+    def dcnm_intf_build_replace_lookups(self):
+        """Pre-build lookup structures for replaced-state comparisons.
+
+        Replaces repeated linear scans of self.have and self.pb_input during
+        dcnm_intf_compare_want_and_have("replaced") with dictionary lookups.
+        """
+
+        self._replace_have_lookup = {}
+        self._replace_pb_input_lookup = {}
+
+        for item in self.have:
+            interfaces = item.get("interfaces") or []
+            if not interfaces:
+                continue
+
+            intf = interfaces[0]
+            ifname = intf.get("ifName")
+            sno = intf.get("serialNumber")
+
+            if ifname and sno:
+                key = (ifname.lower(), str(sno))
+                self._replace_have_lookup.setdefault(key, []).append(item)
+
+        for item in self.pb_input:
+            ifname = item.get("ifname")
+            sno = item.get("sno")
+            fabric = item.get("fabric")
+
+            if ifname and sno and fabric:
+                key = (ifname.lower(), str(sno), fabric)
+                self._replace_pb_input_lookup.setdefault(key, []).append(item)
 
     def dcnm_intf_process_config(self, cfg):
 
@@ -4980,6 +5473,32 @@ class DcnmIntf:
 
         del_list = []
         defer_list = []
+
+        # Bulk pre-populate the interface detail cache for every switch
+        # present in have_all.  This replaces N per-interface HTTP GETs
+        # (inside dcnm_intf_get_intf_info) with at most S bulk GETs
+        # (one per unique serial number), dramatically speeding up the
+        # overridden diff computation for large interface counts.
+        prefetched_snos = set()
+        for h in self.have_all:
+            sno = h["serialNo"]
+            if sno not in prefetched_snos:
+                prefetched_snos.add(sno)
+                self.dcnm_intf_bulk_fetch_intf_info(sno)
+
+        # Pre-build O(1) lookup structures to replace linear scans.
+        # want_set:  replaces match_want list comprehension over self.want
+        # can_be_replaced lookups: replaces linear scan of self.pb_input
+        want_set = set()
+        for d in self.want:
+            intf0 = d["interfaces"][0]
+            want_set.add((
+                intf0["ifName"].lower(),
+                str(intf0["serialNumber"]),
+                intf0["fabricName"],
+            ))
+
+        self.dcnm_intf_build_can_be_replaced_lookups()
 
         for have in self.have_all:
 
@@ -5093,21 +5612,10 @@ class DcnmIntf:
                     # If yes, ignore the interface, because configuration from want will be applied anyway.
                     # This ensures that Ethernet interfaces removed from the playbook config are reset to default,
                     # while those still in the config are left alone to be configured later.
-                    match_want = [
-                        d
-                        for d in self.want
-                        if (
-                            (
-                                name.lower()
-                                == d["interfaces"][0]["ifName"].lower()
-                            )
-                            and (str(sno) == str(d["interfaces"][0]["serialNumber"]))
-                            and (fabric == d["interfaces"][0]["fabricName"])
-                        )
-                    ]
+                    in_want = (name.lower(), str(sno), fabric) in want_set
 
                     # Only default/reset this interface if it's NOT in the playbook config
-                    if not match_want:
+                    if not in_want:
                         # Before defaulting ethernet interfaces, check if they are
                         # member of any port-channel. If so, do not default that
                         rc, intf = self.dcnm_intf_can_be_replaced(have)
@@ -5285,19 +5793,8 @@ class DcnmIntf:
                     # Check if this interface is present in want. If yes, ignore the interface, because all
                     # configuration from want will be added to create anyway
 
-                    match_want = [
-                        d
-                        for d in self.want
-                        if (
-                            (
-                                name.lower()
-                                == d["interfaces"][0]["ifName"].lower()
-                            )
-                            and (sno == d["interfaces"][0]["serialNumber"])
-                            and (fabric == d["interfaces"][0]["fabricName"])
-                        )
-                    ]
-                    if not match_want:
+                    in_want = (name.lower(), str(sno), fabric) in want_set
+                    if not in_want:
 
                         delem = {}
 
@@ -5372,12 +5869,43 @@ class DcnmIntf:
         self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
+        self.deferred_delete_member_defaults = []
+        self._deferred_delete_member_default_keys = set()
 
         if self.config == []:
             # Now that we have all the interface information we can run override
             # and delete or reset interfaces.
             self.dcnm_intf_get_diff_overridden(self.config)
         elif self.config:
+            # Bulk pre-populate the interface detail cache for every switch
+            # referenced in the config.  This replaces N per-interface HTTP
+            # GETs (inside dcnm_intf_get_intf_info) with at most S bulk GETs
+            # (one per unique serial number), dramatically speeding up the
+            # deleted diff computation for large interface counts.
+            prefetched_snos = set()
+            for cfg in self.config:
+                if cfg.get("name") is None:
+                    continue
+                switches = cfg.get("switch", None)
+                if switches is None:
+                    switches = list(self.ip_sn.keys())
+                for sw in switches:
+                    if sw in self.ip_sn:
+                        sno = self.ip_sn[sw]
+                        if sno not in prefetched_snos:
+                            prefetched_snos.add(sno)
+                            self.dcnm_intf_bulk_fetch_intf_info(sno)
+                    # VPC/AA_FEX interfaces use vpc_ip_sn for lookups.
+                    # Pre-split the combined serial (e.g. "FOX~SAL") and
+                    # prefetch the first part so those lookups hit cache.
+                    name_lower = cfg.get("name", "")[0:3].lower()
+                    if name_lower == "vpc" and sw in self.vpc_ip_sn:
+                        vpc_sno = self.vpc_ip_sn[sw]
+                        vpc_sno_first = vpc_sno.split("~")[0] if "~" in vpc_sno else vpc_sno
+                        if vpc_sno_first not in prefetched_snos:
+                            prefetched_snos.add(vpc_sno_first)
+                            self.dcnm_intf_bulk_fetch_intf_info(vpc_sno_first)
+
             for cfg in self.config:
                 if cfg.get("name", None) is not None and cfg.get("type") == "breakout":
                     self.dcnm_intf_get_have_all(cfg["switch"][0])
@@ -5505,6 +6033,17 @@ class DcnmIntf:
                                         match_have
                                     )
                                     if rc is True:
+                                        if self.dcnm_intf_should_defer_deleted_member_default(
+                                            match_have, iface
+                                        ):
+                                            self.dcnm_intf_defer_deleted_member_default(
+                                                intf["ifName"],
+                                                intf["serialNumber"],
+                                                self.fabric,
+                                                cfg.get("deploy", "true"),
+                                                iface,
+                                            )
+                                            continue
                                         self.dcnm_intf_merge_intf_info(
                                             uelem, self.diff_replace
                                         )
@@ -5900,14 +6439,17 @@ class DcnmIntf:
         resp = None
 
         path = self.paths["GLOBAL_IF_DEPLOY"]
-        index = -1
+        # Flatten all diff_delete_deploy sublists into a single list and
+        # send one POST instead of up to 9 separate calls (one per
+        # interface type).  The deploy endpoint only needs serialNumber,
+        # ifName, and fabricName — interface type grouping is irrelevant.
+        flat_delete_deploy = []
         for delem in self.diff_delete_deploy:
+            if delem:
+                flat_delete_deploy.extend(delem)
 
-            # index = index + 1
-            if delem == []:
-                continue
-
-            json_payload = json.dumps(delem)
+        if flat_delete_deploy:
+            json_payload = json.dumps(flat_delete_deploy)
 
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
@@ -5931,6 +6473,9 @@ class DcnmIntf:
             self.result["response"].append(resp)
 
         resp = None
+
+        if self.deferred_delete_member_defaults:
+            self.dcnm_intf_refresh_deferred_deleted_member_defaults()
 
         # Add Breakout creation from self.want_breakout
         path = self.paths["BREAKOUT"]
@@ -6028,10 +6573,14 @@ class DcnmIntf:
 
         resp = None
 
-        if self.diff_deploy:
-            # Do a second deploy. Sometimes even if interfaces are created, they are
-            # not being deployed. A second deploy solves the same. Don't worry about
-            # the return values
+        if self.diff_deploy and self.module.params["check_deploy"]:
+            # Safety re-deploy: only when check_deploy is True.
+            # Sometimes NDFC does not deploy all interfaces on the first
+            # attempt.  A second deploy covers those stragglers before
+            # the deployment-status polling loop below verifies In-Sync.
+            # When check_deploy is False (default), the extra round-trip
+            # is skipped because the caller does not require deployment
+            # verification anyway.
 
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
@@ -6212,6 +6761,15 @@ class DcnmIntf:
             index = 0
             if cfg.get("switch", None) is None:
                 continue
+
+            cfg_name = cfg.get("name", "")
+            need_vpc_pair_lookup = cfg.get("type") in ("vpc", "aa_fex")
+            if not need_vpc_pair_lookup and isinstance(cfg_name, str):
+                # Deleted/query-style entries may omit type. Keep supporting
+                # vPC names without paying the VPC lookup cost for every
+                # non-vPC interface in the playbook.
+                need_vpc_pair_lookup = cfg_name.lower().startswith("vpc")
+
             for sw_elem in cfg["switch"][:]:
                 if sw_elem in self.ip_sn or sw_elem in self.hn_sn:
                     addr_info = dcnm_get_ip_addr_info(
@@ -6219,8 +6777,12 @@ class DcnmIntf:
                     )
                     cfg["switch"][index] = addr_info
 
-                    # Check if the VPC serial number information is already present. If not fetch that
-                    if self.vpc_ip_sn.get(addr_info, None) is None:
+                    # Fetch VPC pair serials only for interface types that
+                    # actually need them.
+                    if (
+                        need_vpc_pair_lookup
+                        and self.vpc_ip_sn.get(addr_info, None) is None
+                    ):
                         sno = self.dcnm_intf_get_vpc_serial_number(addr_info)
                         if "~" in sno:
                             # This switch is part of VPC pair. Populate the VPC serial number DB

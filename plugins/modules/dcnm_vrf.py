@@ -46,6 +46,19 @@ options:
       - deleted
       - query
     default: merged
+  deploy_mode:
+    description:
+    - Controls the deployment method when deploy is enabled
+    - When set to 'switch' (default), deployments use switch-level API with serial numbers
+    - When set to 'resource', deployments use resource-level API with VRF names
+    - This parameter is ignored for multicluster parent fabrics which always use switch-level deployment
+    - Applies to both create/deploy and delete/undeploy operations
+    type: str
+    required: false
+    choices:
+      - switch
+      - resource
+    default: switch
   config:
     description:
     - List of details of vrfs being managed. Not required for state deleted
@@ -1082,7 +1095,11 @@ class DcnmVrf:
         self.conf_changed = {}
         self.check_mode = False
         self.have_create = []
+        # O(1) lookup dicts populated by get_have()
+        self.have_create_by_name = {}
         self.want_create = []
+        # O(1) lookup dict populated by get_want()
+        self.want_create_by_name = {}
         self.diff_create = []
         self.diff_create_update = []
         # self.diff_create_quick holds all the create payloads which are
@@ -1093,6 +1110,8 @@ class DcnmVrf:
         self.diff_create_quick = []
         self.vrf_sn_attach_map = {}
         self.have_attach = []
+        # O(1) lookup dict populated by get_have()
+        self.have_attach_by_name = {}
         self.want_attach = []
         self.diff_attach = []
         self.validated = []
@@ -1113,6 +1132,7 @@ class DcnmVrf:
         self.diff_input_format = []
         self.deploy_payload = {}
         self.query = []
+        self.deploy_mode = module.params.get("deploy_mode", "switch")
 
         self.action_fabric_details = self.params.get("fabric_details")
 
@@ -1192,7 +1212,7 @@ class DcnmVrf:
         self.result = {"changed": False, "diff": [], "response": []}
 
         self.failed_to_rollback = False
-        self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
+        self.WAIT_TIME_FOR_DELETE_LOOP = 10  # in seconds
 
         self.vrf_lite_properties = [
             "DOT1Q_ID",
@@ -1898,8 +1918,10 @@ class DcnmVrf:
         # vlan_id_want drives the conditional below, so we cannot
         # remove it here (as we did with the other params that are
         # compared in the call to self.dict_values_differ())
+        vlan_id_have = str(json_to_dict_have.get("vrfVlanId", ""))
         vlan_id_want = str(json_to_dict_want.get("vrfVlanId", ""))
         vrfSegmentId_want = json_to_dict_want.get("vrfSegmentId")
+        enable_l3vni_no_vlan = json_to_dict_want.get("enableL3VniNoVlan", False)
 
         skip_keys = []
         if vlan_id_want == "0" or vlan_id_want == "":
@@ -1909,16 +1931,10 @@ class DcnmVrf:
 
         # BGP password/key type special handling
         bgp_password_want = json_to_dict_want.get("bgpPassword")
-        bgp_password_have = json_to_dict_have.get("bgpPassword")
-        bgp_key_type_have = json_to_dict_have.get("bgpPasswordKeyType")
-        bgp_key_type_want = json_to_dict_want.get("bgpPasswordKeyType")
 
-        # Some ND versions give empty bgpPasswordKeyType. Skip comparison if:
-        # 1. Have keytype is empty/None (ND has no password configured)
-        # 2. Both passwords are empty (no password in want or have)
-        if ((bgp_key_type_have == "" and bgp_key_type_want == 3 and
-             bgp_password_want != "") or (bgp_password_want == ""
-                                          and bgp_password_have == "")):
+        # Skip bgpPasswordKeyType comparison when want has no password —
+        # key type is irrelevant regardless of have values.
+        if bgp_password_want == "":
             skip_keys.append("bgpPasswordKeyType")
 
         template_skip_keys = self.get_template_skip_keys()
@@ -1946,6 +1962,13 @@ class DcnmVrf:
                 # vrfId from the instance of the same vrf on DCNM.
                 want["vrfId"] = have["vrfId"]
             if skip_keys:
+                if "vrfVlanId" in skip_keys:
+                    if ((enable_l3vni_no_vlan) or
+                            (vlan_id_want == "0" and vlan_id_have == "")):
+                        # When enableL3VniNoVlan is True, vrfVlanId is not
+                        # applicable, additionally, if vlan_id_want is "0" and
+                        # vlan_id_have is "", vlan id should not be copied from want.
+                        skip_keys.remove("vrfVlanId")
                 for key in skip_keys:
                     if key in json_to_dict_have:
                         json_to_dict_want[key] = json_to_dict_have[key]
@@ -2154,8 +2177,30 @@ class DcnmVrf:
         if not vrf_objects.get("DATA"):
             return
 
-        for vrf in vrf_objects["DATA"]:
+        vrf_data_to_process = vrf_objects["DATA"]
+
+        targeted_states = {"merged", "replaced", "deleted"}
+        if self.state in targeted_states and self.config:
+            wanted_vrf_names = {vrf.get("vrf_name") for vrf in self.config if vrf.get("vrf_name")}
+            vrf_data_to_process = [v for v in vrf_objects["DATA"] if v["vrfName"] in wanted_vrf_names]
+            msg = (
+                f"Targeted get_have() for state '{self.state}': "
+                f"scoping GET_VRF_ATTACH to {len(vrf_data_to_process)} of "
+                f"{len(vrf_objects['DATA'])} fabric VRF(s)."
+            )
+            self.log.debug(msg)
+
+        for vrf in vrf_data_to_process:
             curr_vrfs += vrf["vrfName"] + ","
+
+        if not curr_vrfs:
+            # All wanted VRFs are new (not on controller yet) — nothing to fetch.
+            self.have_create = have_create
+            self.have_attach = []
+            self.have_deploy = have_deploy
+            self.chg_deploy = chg_deploy
+            self.vrf_sn_attach_map = vrf_sn_attach_map
+            return
 
         vrf_attach_objects = dcnm_get_url(
             self.module,
@@ -2173,7 +2218,7 @@ class DcnmVrf:
                 vrf_attach_objects.get("DATA")
             )
 
-        for vrf in vrf_objects["DATA"]:
+        for vrf in vrf_data_to_process:
             json_to_dict = json.loads(vrf["vrfTemplateConfig"])
             t_conf = {
                 "vrfSegmentId": vrf["vrfId"],
@@ -2247,6 +2292,25 @@ class DcnmVrf:
             attach_list = vrf_attach["lanAttachList"]
             deploy_vrf = ""
             change_vrf = ""
+
+            # Batch GET_VRF_SWITCH: fetch VRF-Lite data for all switches of this VRF
+            # in one API call instead of one call per switch.
+            vrf_name_outer = vrf_attach.get("vrfName") or (
+                attach_list[0]["vrfName"] if attach_list else None
+            )
+            lite_by_sn = {}
+            if vrf_name_outer and self._has_vrf_lite_in_config(vrf_name_outer):
+                all_sns = sorted({a["switchSerialNo"] for a in attach_list})
+                batch_path = self.paths["GET_VRF_SWITCH"].format(
+                    self.fabric, vrf_name_outer, ",".join(all_sns)
+                )
+                bulk_lite = dcnm_send(self.module, "GET", batch_path)
+                for sdl in (bulk_lite.get("DATA") or []):
+                    for epv in sdl.get("switchDetailsList", []):
+                        sn = epv.get("serialNumber")
+                        if sn:
+                            lite_by_sn[sn] = epv
+
             for attach in attach_list:
                 attach_state = bool(attach.get("isLanAttached", False))
                 deploy = attach_state
@@ -2311,63 +2375,59 @@ class DcnmVrf:
                     # No VRF-Lite config for this VRF in the playbook
                     # Skip the expensive API call and set empty extensionValues
                     attach.update({"freeformConfig": ""})
-                    # extensionValues already set to "" at line 1766
                     continue
 
-                # VRF-Lite IS configured, making API call
-                lite_objects = self.get_vrf_lite_objects(attach)
+                # Use pre-fetched VRF-Lite data indexed by serial number.
+                epv = lite_by_sn.get(attach.get("serialNumber"))
 
-                if not lite_objects.get("DATA"):
+                if epv is None:
                     msg = "No VRF Lite extensions found, skipping attachment processing"
                     self.log.debug(msg)
                     attach.update({"freeformConfig": ""})
-                    # extensionValues already set to "" earlier at line 1781
                     continue
 
-                msg = f"lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
+                msg = f"epv: {json.dumps(epv, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
 
-                for sdl in lite_objects["DATA"]:
-                    for epv in sdl["switchDetailsList"]:
-                        if not epv.get("extensionValues"):
-                            attach.update({"freeformConfig": ""})
-                            continue
-                        ext_values = ast.literal_eval(epv["extensionValues"])
-                        if ext_values.get("VRF_LITE_CONN") is None:
-                            continue
-                        ext_values = ast.literal_eval(ext_values["VRF_LITE_CONN"])
-                        extension_values = {}
-                        extension_values["VRF_LITE_CONN"] = []
+                if not epv.get("extensionValues"):
+                    attach.update({"freeformConfig": ""})
+                    continue
+                ext_values = ast.literal_eval(epv["extensionValues"])
+                if ext_values.get("VRF_LITE_CONN") is None:
+                    continue
+                ext_values = ast.literal_eval(ext_values["VRF_LITE_CONN"])
+                extension_values = {}
+                extension_values["VRF_LITE_CONN"] = []
 
-                        for ev in ext_values.get("VRF_LITE_CONN"):
-                            ev_dict = copy.deepcopy(ev)
-                            ev_dict.update({"AUTO_VRF_LITE_FLAG": "false"})
-                            ev_dict.update(
-                                {"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"}
-                            )
+                for ev in ext_values.get("VRF_LITE_CONN"):
+                    ev_dict = copy.deepcopy(ev)
+                    ev_dict.update({"AUTO_VRF_LITE_FLAG": "false"})
+                    ev_dict.update(
+                        {"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"}
+                    )
 
-                            if extension_values["VRF_LITE_CONN"]:
-                                extension_values["VRF_LITE_CONN"][
-                                    "VRF_LITE_CONN"
-                                ].extend([ev_dict])
-                            else:
-                                extension_values["VRF_LITE_CONN"] = {
-                                    "VRF_LITE_CONN": [ev_dict]
-                                }
+                    if extension_values["VRF_LITE_CONN"]:
+                        extension_values["VRF_LITE_CONN"][
+                            "VRF_LITE_CONN"
+                        ].extend([ev_dict])
+                    else:
+                        extension_values["VRF_LITE_CONN"] = {
+                            "VRF_LITE_CONN": [ev_dict]
+                        }
 
-                        extension_values["VRF_LITE_CONN"] = json.dumps(
-                            extension_values["VRF_LITE_CONN"]
-                        )
+                extension_values["VRF_LITE_CONN"] = json.dumps(
+                    extension_values["VRF_LITE_CONN"]
+                )
 
-                        ms_con = {}
-                        ms_con["MULTISITE_CONN"] = []
-                        extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
-                        e_values = json.dumps(extension_values).replace(" ", "")
+                ms_con = {}
+                ms_con["MULTISITE_CONN"] = []
+                extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
+                e_values = json.dumps(extension_values).replace(" ", "")
 
-                        attach.update({"extensionValues": e_values})
+                attach.update({"extensionValues": e_values})
 
-                        ff_config = epv.get("freeformConfig", "")
-                        attach.update({"freeformConfig": ff_config})
+                ff_config = epv.get("freeformConfig", "")
+                attach.update({"freeformConfig": ff_config})
 
             if deploy_vrf:
                 upd_vrfs += deploy_vrf + ","
@@ -2385,6 +2445,9 @@ class DcnmVrf:
 
         self.have_create = have_create
         self.have_attach = have_attach
+        # Build O(1) lookup dicts for use in diff methods.
+        self.have_create_by_name = {v["vrfName"]: v for v in have_create}
+        self.have_attach_by_name = {a["vrfName"]: a for a in have_attach}
         self.have_deploy = have_deploy
         self.chg_deploy = chg_deploy
         self.vrf_sn_attach_map = vrf_sn_attach_map
@@ -2483,6 +2546,8 @@ class DcnmVrf:
             want_deploy.update({"vrfNames": vrf_names})
 
         self.want_create = copy.deepcopy(want_create)
+        # O(1) lookup dict for want_create
+        self.want_create_by_name = {v["vrfName"]: v for v in self.want_create}
         self.want_attach = copy.deepcopy(want_attach)
         self.want_deploy = copy.deepcopy(want_deploy)
         self.vrf_sn_attach_map = vrf_sn_attach_map
@@ -2545,17 +2610,15 @@ class DcnmVrf:
 
             for want_c in self.want_create:
 
-                if not self.find_dict_in_list_by_key_value(
-                    search=self.have_create, key="vrfName", value=want_c["vrfName"]
-                ):
+                # O(1) lookup instead of find_dict_in_list_by_key_value
+                if want_c["vrfName"] not in self.have_create_by_name:
                     continue
 
                 diff_delete.update({want_c["vrfName"]: "DEPLOYED"})
 
                 if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
-                    have_a = self.find_dict_in_list_by_key_value(
-                        search=self.have_attach, key="vrfName", value=want_c["vrfName"]
-                    )
+                    # O(1) lookup instead of find_dict_in_list_by_key_value
+                    have_a = self.have_attach_by_name.get(want_c["vrfName"])
 
                     if not have_a:
                         continue
@@ -2567,7 +2630,8 @@ class DcnmVrf:
                         all_vrfs.append(have_a["vrfName"])
 
             if len(all_vrfs) != 0 and self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
-                diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
+                # deduplicate before joining
+                diff_undeploy.update({"vrfNames": ",".join(sorted(set(all_vrfs)))})
 
         else:
             if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
@@ -2580,7 +2644,8 @@ class DcnmVrf:
 
                     diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
                 if len(all_vrfs) != 0:
-                    diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
+                    # deduplicate before joining
+                    diff_undeploy.update({"vrfNames": ",".join(sorted(set(all_vrfs)))})
 
         self.diff_detach = diff_detach
         self.diff_undeploy = diff_undeploy
@@ -2614,9 +2679,8 @@ class DcnmVrf:
         diff_undeploy = self.diff_undeploy
 
         for have_a in self.have_attach:
-            found = self.find_dict_in_list_by_key_value(
-                search=self.want_create, key="vrfName", value=have_a["vrfName"]
-            )
+            # O(1) lookup instead of find_dict_in_list_by_key_value
+            found = self.want_create_by_name.get(have_a["vrfName"])
 
             detach_list = []
             if not found:
@@ -2636,7 +2700,8 @@ class DcnmVrf:
                 diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
 
         if len(all_vrfs) != 0 and self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
-            diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
+            # deduplicate before joining
+            diff_undeploy.update({"vrfNames": ",".join(sorted(set(all_vrfs)))})
 
         self.diff_delete = diff_delete
         self.diff_detach = diff_detach
@@ -2695,9 +2760,8 @@ class DcnmVrf:
                     break
 
             if not h_in_w:
-                found = self.find_dict_in_list_by_key_value(
-                    search=self.want_create, key="vrfName", value=have_a["vrfName"]
-                )
+                # O(1) lookup instead of find_dict_in_list_by_key_value
+                found = self.want_create_by_name.get(have_a["vrfName"])
 
                 if found:
                     atch_h = have_a["lanAttachList"]
@@ -2833,33 +2897,34 @@ class DcnmVrf:
         payload_list = []
 
         for want_c in self.want_create:
-            vrf_found = False
-            for have_c in self.have_create:
-                if want_c["vrfName"] == have_c["vrfName"]:
-                    vrf_found = True
-                    msg = "Calling diff_for_create with: "
-                    msg += f"want_c: {json.dumps(want_c, indent=4, sort_keys=True)}, "
-                    msg += f"have_c: {json.dumps(have_c, indent=4, sort_keys=True)}"
+            # O(1) lookup instead of inner for-loop over self.have_create
+            have_c = self.have_create_by_name.get(want_c["vrfName"])
+            if have_c is not None:
+                vrf_found = True
+                msg = "Calling diff_for_create with: "
+                msg += f"want_c: {json.dumps(want_c, indent=4, sort_keys=True)}, "
+                msg += f"have_c: {json.dumps(have_c, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                diff, conf_chg = self.diff_for_create(want_c, have_c)
+
+                msg = "diff_for_create() returned with: "
+                msg += f"conf_chg {conf_chg}, "
+                msg += f"diff {json.dumps(diff, indent=4, sort_keys=True)}, "
+                self.log.debug(msg)
+
+                msg = f"Updating self.conf_changed[{want_c['vrfName']}] "
+                msg += f"with {conf_chg}"
+                self.log.debug(msg)
+                self.conf_changed.update({want_c["vrfName"]: conf_chg})
+
+                if diff:
+                    msg = "Appending diff_create_update with "
+                    msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
                     self.log.debug(msg)
-
-                    diff, conf_chg = self.diff_for_create(want_c, have_c)
-
-                    msg = "diff_for_create() returned with: "
-                    msg += f"conf_chg {conf_chg}, "
-                    msg += f"diff {json.dumps(diff, indent=4, sort_keys=True)}, "
-                    self.log.debug(msg)
-
-                    msg = f"Updating self.conf_changed[{want_c['vrfName']}] "
-                    msg += f"with {conf_chg}"
-                    self.log.debug(msg)
-                    self.conf_changed.update({want_c["vrfName"]: conf_chg})
-
-                    if diff:
-                        msg = "Appending diff_create_update with "
-                        msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
-                        self.log.debug(msg)
-                        diff_create_update.append(diff)
-                    break
+                    diff_create_update.append(diff)
+            else:
+                vrf_found = False
 
             if not vrf_found:
                 vrf_id = want_c.get("vrfId", None)
@@ -3027,28 +3092,29 @@ class DcnmVrf:
                 continue
             deploy_vrf = ""
             attach_found = False
-            for have_a in self.have_attach:
-                if want_a["vrfName"] == have_a["vrfName"]:
-                    attach_found = True
-                    diff, deploy_vrf_bool = self.diff_for_attach_deploy(
-                        want_a["lanAttachList"], have_a["lanAttachList"], replace
-                    )
-                    if diff:
-                        base = want_a.copy()
-                        del base["lanAttachList"]
-                        base.update({"lanAttachList": diff})
+            # O(1) lookup instead of inner for-loop over self.have_attach
+            have_a = self.have_attach_by_name.get(want_a["vrfName"])
+            if have_a is not None:
+                attach_found = True
+                diff, deploy_vrf_bool = self.diff_for_attach_deploy(
+                    want_a["lanAttachList"], have_a["lanAttachList"], replace
+                )
+                if diff:
+                    base = want_a.copy()
+                    del base["lanAttachList"]
+                    base.update({"lanAttachList": diff})
 
-                        diff_attach.append(base)
-                        if (want_config["deploy"] is True) and (
-                            deploy_vrf_bool is True
-                        ):
-                            deploy_vrf = want_a["vrfName"]
-                    else:
-                        if want_config["deploy"] is True and (
-                            deploy_vrf_bool
-                            or self.conf_changed.get(want_a["vrfName"], False)
-                        ):
-                            deploy_vrf = want_a["vrfName"]
+                    diff_attach.append(base)
+                    if (want_config["deploy"] is True) and (
+                        deploy_vrf_bool is True
+                    ):
+                        deploy_vrf = want_a["vrfName"]
+                else:
+                    if want_config["deploy"] is True and (
+                        deploy_vrf_bool
+                        or self.conf_changed.get(want_a["vrfName"], False)
+                    ):
+                        deploy_vrf = want_a["vrfName"]
 
             msg = f"attach_found: {attach_found}"
             self.log.debug(msg)
@@ -3113,9 +3179,17 @@ class DcnmVrf:
             self.log.debug(msg)
             return
 
+        # Build the set of VRFs already queued for deploy (added by
+        # diff_merge_attach) to prevent adding the same VRF twice.
+        already_deploying = set()
+        if self.diff_deploy:
+            already_deploying = set(self.diff_deploy["vrfNames"].split(","))
+
         for vrf_name in self.want_deploy["vrfNames"].split(","):
             msg = f"VRF Name : {vrf_name}"
             self.log.debug(msg)
+            if vrf_name in already_deploying:
+                continue
             if not self.diff_attach and vrf_name in self.chg_deploy["vrfNames"].split(","):
                 want_vrf_data = find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=vrf_name)
                 if want_vrf_data.get("deploy", True) is True:
@@ -3369,166 +3443,211 @@ class DcnmVrf:
 
         if self.config:
             query = []
+
+            # Single bulk GET_VRF_ATTACH instead of one call per VRF.
+            # Build a name→vrf_object dict for O(1) lookup and collect the VRF
+            # names that are both wanted and present on the controller.
+            vrf_objs_by_name = {v["vrfName"]: v for v in vrf_objects["DATA"]}
+            wanted_names = [
+                wc["vrfName"]
+                for wc in self.want_create
+                if wc["vrfName"] in vrf_objs_by_name
+            ]
+
+            if wanted_names:
+                bulk_path = self.paths["GET_VRF_ATTACH"].format(
+                    self.fabric, ",".join(wanted_names)
+                )
+                bulk_attach_objects = dcnm_send(self.module, "GET", bulk_path)
+                missing_fabric, not_ok = self.handle_response(
+                    bulk_attach_objects, "query_dcnm"
+                )
+                if missing_fabric or not_ok:
+                    msg0 = f"{self.class_name}.{method_name}: caller: {caller}. "
+                    msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
+                    msg2 = f"{msg0} Unable to find attachments for vrfs: "
+                    msg2 += f"{wanted_names} under fabric: {self.fabric}"
+                    self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+
+                if self.action_fabric_type == "multicluster_parent":
+                    bulk_attach_objects["DATA"] = sanitize_lan_attach_list(
+                        bulk_attach_objects.get("DATA")
+                    )
+
+                # Index attachment records by vrfName for O(1) lookup below
+                attach_by_vrf = {}
+                for rec in (bulk_attach_objects.get("DATA") or []):
+                    attach_by_vrf.setdefault(rec["vrfName"], []).append(rec)
+            else:
+                attach_by_vrf = {}
+
             for want_c in self.want_create:
-                # Query the VRF
-                for vrf in vrf_objects["DATA"]:
+                vrf = vrf_objs_by_name.get(want_c["vrfName"])
+                if vrf is None:
+                    continue
 
-                    if want_c["vrfName"] == vrf["vrfName"]:
-
-                        item = {"parent": {}, "attach": []}
-                        item["parent"] = vrf
-
-                        # Query the Attachment for the found VRF
-                        path = self.paths["GET_VRF_ATTACH"].format(
-                            self.fabric, vrf["vrfName"]
-                        )
-
-                        vrf_attach_objects = dcnm_send(self.module, "GET", path)
-
-                        missing_fabric, not_ok = self.handle_response(
-                            vrf_attach_objects, "query_dcnm"
-                        )
-
-                        if missing_fabric or not_ok:
-                            # arobel: TODO: Not covered by UT
-                            msg0 = f"{self.class_name}.{method_name}:"
-                            msg0 += f"caller: {caller}. "
-                            msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
-                            msg2 = f"{msg0} Unable to find attachments for "
-                            msg2 += f"vrfs: {vrf['vrfName']} under "
-                            msg2 += f"fabric: {self.fabric}"
-                            self.module.fail_json(msg=msg1 if missing_fabric else msg2)
-
-                        if not vrf_attach_objects["DATA"]:
-                            return
-
-                        if self.action_fabric_type == "multicluster_parent":
-                            vrf_attach_objects["DATA"] = sanitize_lan_attach_list(
-                                vrf_attach_objects.get("DATA")
-                            )
-
-                        for vrf_attach in vrf_attach_objects["DATA"]:
-                            if want_c["vrfName"] == vrf_attach["vrfName"]:
-                                if not vrf_attach.get("lanAttachList"):
-                                    continue
-                                attach_list = vrf_attach["lanAttachList"]
-
-                                for attach in attach_list:
-                                    # copy attach and update it with the keys that
-                                    # get_vrf_lite_objects() expects.
-                                    attach_copy = copy.deepcopy(attach)
-                                    attach_copy.update({"fabric": self.fabric})
-                                    attach_copy.update(
-                                        {"serialNumber": attach["switchSerialNo"]}
-                                    )
-
-                                    # Only call get_vrf_lite_objects() if VRF-Lite is configured
-                                    # in the playbook to avoid expensive API calls
-                                    use_minimal_attach = True
-                                    if self._has_vrf_lite_in_config(want_c["vrfName"]):
-                                        lite_objects = self.get_vrf_lite_objects(
-                                            attach_copy
-                                        )
-                                        # Check if DATA exists and is not empty
-                                        has_lite_data = (
-                                            lite_objects.get("DATA") is not None
-                                            and len(lite_objects.get("DATA", [])) > 0
-                                        )
-                                        if has_lite_data:
-                                            # VRF Lite extensions exist - use API response but ensure vlan field is correct
-                                            use_minimal_attach = False
-                                            lite_attach = lite_objects.get("DATA")[0]
-                                            # The vlan field should be the VRF's L3VNI vlan, not the dot1q
-                                            vlan_id = attach.get("vlanId")
-                                            vlan_str = str(vlan_id) if vlan_id is not None else ""
-                                            msg = f"Fixing vlan field in VRF lite attach for switch {attach['switchSerialNo']}: "
-                                            msg += f"vlanId={vlan_id}, setting vlan={vlan_str}"
-                                            self.log.debug(msg)
-                                            # Update vlan in all switchDetailsList entries
-                                            if lite_attach.get("switchDetailsList"):
-                                                for switch_detail in lite_attach["switchDetailsList"]:
-                                                    switch_detail["vlan"] = vlan_str
-                                            item["attach"].append(lite_attach)
-                                        else:
-                                            # No VRF Lite extensions found - will use minimal attach
-                                            msg = f"No VRF Lite extensions found for switch {attach['switchSerialNo']}"
-                                            self.log.debug(msg)
-
-                                    # Use minimal attach structure when:
-                                    # 1. VRF-Lite is not configured in playbook, OR
-                                    # 2. VRF-Lite is configured but no extensions exist on controller
-                                    if use_minimal_attach:
-                                        # Ensure extensionValues is set to empty string when no VRF Lite
-                                        attach["extensionValues"] = ""
-                                        minimal_attach = {
-                                            "fabric": self.fabric,
-                                            "vrfName": want_c["vrfName"],
-                                            "serialNumber": attach["switchSerialNo"],
-                                            "switchDetailsList": [attach]
-                                        }
-                                        item["attach"].append(minimal_attach)
-                                query.append(item)
-
-        else:
-            query = []
-            # Query the VRF
-            for vrf in vrf_objects["DATA"]:
                 item = {"parent": {}, "attach": []}
                 item["parent"] = vrf
 
-                # Query the Attachment for the found VRF
-                path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
+                vrf_attach_records = attach_by_vrf.get(want_c["vrfName"], [])
 
-                vrf_attach_objects = dcnm_send(self.module, "GET", path)
+                # Batch GET_VRF_SWITCH: fetch VRF-Lite data for all switches of
+                # this VRF in one API call instead of one call per switch.
+                lite_by_sn = {}
+                if self._has_vrf_lite_in_config(want_c["vrfName"]):
+                    all_sns = sorted({
+                        a["switchSerialNo"]
+                        for va in vrf_attach_records
+                        if va.get("lanAttachList")
+                        for a in va["lanAttachList"]
+                    })
+                    if all_sns:
+                        batch_path = self.paths["GET_VRF_SWITCH"].format(
+                            self.fabric, want_c["vrfName"], ",".join(all_sns)
+                        )
+                        bulk_lite = dcnm_send(self.module, "GET", batch_path)
+                        for sdl in (bulk_lite.get("DATA") or []):
+                            for epv in sdl.get("switchDetailsList", []):
+                                sn = epv.get("serialNumber")
+                                if sn:
+                                    lite_by_sn[sn] = (sdl, epv)
 
-                missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
-
-                if missing_fabric or not_ok:
-                    msg0 = f"caller: {caller}. "
-                    msg1 = f"{msg0} Fabric {self.fabric} not present on DCNM"
-                    msg2 = f"{msg0} Unable to find attachments for "
-                    msg2 += f"vrfs: {vrf['vrfName']} under fabric: {self.fabric}"
-
-                    self.module.fail_json(msg=msg1 if missing_fabric else msg2)
-                    # TODO: add a _pylint_: disable=inconsistent-return
-                    # at the top and remove this return
-                    return
-
-                if not vrf_attach_objects["DATA"]:
-                    return
-
-                if self.action_fabric_type == "multicluster_parent":
-                    vrf_attach_objects["DATA"] = sanitize_lan_attach_list(
-                        vrf_attach_objects.get("DATA")
-                    )
-
-                for vrf_attach in vrf_attach_objects["DATA"]:
+                for vrf_attach in vrf_attach_records:
                     if not vrf_attach.get("lanAttachList"):
                         continue
                     attach_list = vrf_attach["lanAttachList"]
 
                     for attach in attach_list:
-                        # copy attach and update it with the keys that
-                        # get_vrf_lite_objects() expects.
-                        attach_copy = copy.deepcopy(attach)
-                        attach_copy.update({"fabric": self.fabric})
-                        attach_copy.update({"serialNumber": attach["switchSerialNo"]})
+                        # Only call get_vrf_lite_objects() if VRF-Lite is configured
+                        # in the playbook to avoid expensive API calls
+                        use_minimal_attach = True
+                        if self._has_vrf_lite_in_config(want_c["vrfName"]):
+                            sn = attach["switchSerialNo"]
+                            if sn in lite_by_sn:
+                                sdl_data, epv = lite_by_sn[sn]
+                                # Reconstruct a per-switch lite_attach from the pre-fetched
+                                # batch data so each attach entry has exactly one switch.
+                                use_minimal_attach = False
+                                lite_attach = {
+                                    "vrfName": sdl_data.get("vrfName", want_c["vrfName"]),
+                                    "templateName": sdl_data.get("templateName", ""),
+                                    "switchDetailsList": [epv],
+                                }
+                                # Ensure vlan reflects the VRF's L3VNI vlan, not the dot1q.
+                                vlan_id = attach.get("vlanId")
+                                vlan_str = str(vlan_id) if vlan_id is not None else ""
+                                msg = f"Fixing vlan field in VRF lite attach for switch {attach['switchSerialNo']}: "
+                                msg += f"vlanId={vlan_id}, setting vlan={vlan_str}"
+                                self.log.debug(msg)
+                                if lite_attach.get("switchDetailsList"):
+                                    for switch_detail in lite_attach["switchDetailsList"]:
+                                        switch_detail["vlan"] = vlan_str
+                                item["attach"].append(lite_attach)
+                            else:
+                                # Switch not returned by batch call — no VRF-Lite data.
+                                msg = f"No VRF Lite extensions found for switch {attach['switchSerialNo']}"
+                                self.log.debug(msg)
 
-                        # Note: When querying without specific config (else branch),
-                        # we always call get_vrf_lite_objects() to provide complete
-                        # information in the query response, as the user expects to see
-                        # all VRF configuration including any VRF-Lite extensions present
-                        # on the controller.
-                        lite_objects = self.get_vrf_lite_objects(attach_copy)
-
-                        # Check if DATA exists and is not empty
-                        has_lite_data = (
-                            lite_objects.get("DATA") is not None
-                            and len(lite_objects.get("DATA", [])) > 0
-                        )
-                        if not has_lite_data:
-                            # No VRF Lite extensions exist - use minimal attach structure
+                        # Use minimal attach structure when:
+                        # 1. VRF-Lite is not configured in playbook, OR
+                        # 2. VRF-Lite is configured but no extensions exist on controller
+                        if use_minimal_attach:
                             # Ensure extensionValues is set to empty string when no VRF Lite
+                            attach["extensionValues"] = ""
+                            minimal_attach = {
+                                "fabric": self.fabric,
+                                "vrfName": want_c["vrfName"],
+                                "serialNumber": attach["switchSerialNo"],
+                                "switchDetailsList": [attach]
+                            }
+                            item["attach"].append(minimal_attach)
+                query.append(item)
+
+        else:
+            query = []
+
+            # Single bulk GET_VRF_ATTACH for all fabric VRFs instead of
+            # one API call per VRF in the loop.
+            all_vrf_names = ",".join(v["vrfName"] for v in vrf_objects["DATA"])
+            bulk_path = self.paths["GET_VRF_ATTACH"].format(
+                self.fabric, all_vrf_names
+            )
+            bulk_attach_objects = dcnm_send(self.module, "GET", bulk_path)
+            missing_fabric, not_ok = self.handle_response(
+                bulk_attach_objects, "query_dcnm"
+            )
+            if missing_fabric or not_ok:
+                msg0 = f"caller: {caller}. "
+                msg1 = f"{msg0} Fabric {self.fabric} not present on DCNM"
+                msg2 = f"{msg0} Unable to find attachments for "
+                msg2 += f"vrfs under fabric: {self.fabric}"
+                self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+
+            if self.action_fabric_type == "multicluster_parent":
+                bulk_attach_objects["DATA"] = sanitize_lan_attach_list(
+                    bulk_attach_objects.get("DATA")
+                )
+
+            # Index attachment records by vrfName
+            attach_by_vrf = {}
+            for rec in (bulk_attach_objects.get("DATA") or []):
+                attach_by_vrf.setdefault(rec["vrfName"], []).append(rec)
+
+            # Query the VRF
+            for vrf in vrf_objects["DATA"]:
+                item = {"parent": {}, "attach": []}
+                item["parent"] = vrf
+
+                vrf_attach_records = attach_by_vrf.get(vrf["vrfName"], [])
+
+                # Batch GET_VRF_SWITCH: fetch VRF-Lite data for all switches of
+                # this VRF in one API call instead of one call per switch.
+                all_sns = sorted({
+                    a["switchSerialNo"]
+                    for va in vrf_attach_records
+                    if va.get("lanAttachList")
+                    for a in va["lanAttachList"]
+                })
+                lite_by_sn = {}
+                if all_sns:
+                    batch_path = self.paths["GET_VRF_SWITCH"].format(
+                        self.fabric, vrf["vrfName"], ",".join(all_sns)
+                    )
+                    bulk_lite = dcnm_send(self.module, "GET", batch_path)
+                    for sdl in (bulk_lite.get("DATA") or []):
+                        for epv in sdl.get("switchDetailsList", []):
+                            sn = epv.get("serialNumber")
+                            if sn:
+                                lite_by_sn[sn] = (sdl, epv)
+
+                for vrf_attach in vrf_attach_records:
+                    if not vrf_attach.get("lanAttachList"):
+                        continue
+                    attach_list = vrf_attach["lanAttachList"]
+
+                    for attach in attach_list:
+                        # When querying without specific config (else branch),
+                        # provide complete information for all VRF-Lite extensions.
+                        sn = attach["switchSerialNo"]
+                        if sn in lite_by_sn:
+                            sdl_data, epv = lite_by_sn[sn]
+                            # Reconstruct per-switch lite_attach from batch data.
+                            lite_attach = {
+                                "vrfName": sdl_data.get("vrfName", vrf["vrfName"]),
+                                "templateName": sdl_data.get("templateName", ""),
+                                "switchDetailsList": [epv],
+                            }
+                            vlan_id = attach.get("vlanId")
+                            vlan_str = str(vlan_id) if vlan_id is not None else ""
+                            msg = f"Fixing vlan field in VRF lite attach for switch {attach['switchSerialNo']}: "
+                            msg += f"vlanId={vlan_id}, setting vlan={vlan_str}"
+                            self.log.debug(msg)
+                            if lite_attach.get("switchDetailsList"):
+                                for switch_detail in lite_attach["switchDetailsList"]:
+                                    switch_detail["vlan"] = vlan_str
+                            item["attach"].append(lite_attach)
+                        else:
+                            # No VRF Lite extensions — use minimal attach structure.
                             attach["extensionValues"] = ""
                             minimal_attach = {
                                 "fabric": self.fabric,
@@ -3537,21 +3656,7 @@ class DcnmVrf:
                                 "switchDetailsList": [attach]
                             }
                             item["attach"].append(minimal_attach)
-                        else:
-                            # VRF Lite extensions exist - use API response but ensure vlan field is correct
-                            lite_attach = lite_objects.get("DATA")[0]
-                            # The vlan field should be the VRF's L3VNI vlan, not the dot1q
-                            vlan_id = attach.get("vlanId")
-                            vlan_str = str(vlan_id) if vlan_id is not None else ""
-                            msg = f"Fixing vlan field in VRF lite attach for switch {attach['switchSerialNo']}: "
-                            msg += f"vlanId={vlan_id}, setting vlan={vlan_str}"
-                            self.log.debug(msg)
-                            # Update vlan in all switchDetailsList entries
-                            if lite_attach.get("switchDetailsList"):
-                                for switch_detail in lite_attach["switchDetailsList"]:
-                                    switch_detail["vlan"] = vlan_str
-                            item["attach"].append(lite_attach)
-                    query.append(item)
+                query.append(item)
 
         self.query = query
 
@@ -3676,10 +3781,15 @@ class DcnmVrf:
         verb = "POST"
         diff_undeploy = self.diff_undeploy
 
-        if self.action_fabric_type == "multicluster_parent":
+        # Determine deploy path and payload format
+        # For multicluster_parent, always use switch-level
+        # For all others, check deploy_mode parameter
+        if self.action_fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
+            # Use switch-level deploy: transform payload to serial number format
             deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
             diff_undeploy = self.vrf_serial_payload_transform(self.diff_undeploy)
         else:
+            # Use resource-level deploy: standard /deployments path with vrfNames
             deploy_path = path + "/deployments"
 
         self.send_to_controller(
@@ -3690,6 +3800,149 @@ class DcnmVrf:
             log_response=True,
             is_rollback=is_rollback,
         )
+
+    def bulk_delete_with_retry(self, vrfs_to_delete, action, verb, is_rollback=False):
+        """
+        # Summary
+
+        Perform bulk delete with retry logic for controller sync issues.
+
+        ## Description
+
+        The controller sometimes returns a 500 error with message
+        "Please do a Fabric Re-sync and try Again" for certain VRFs.
+        This method retries the bulk delete operation up to 3 times
+        with 30-second delays, retrying only the failed VRFs.
+
+        ## Parameters
+
+        - vrfs_to_delete: List of VRF names to delete
+        - action: Action string for logging ("delete")
+        - verb: HTTP verb ("DELETE")
+        - is_rollback: Whether this is a rollback operation
+
+        ## Raises
+
+        Calls fail_json if deletion fails after all retry attempts
+        """
+        caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"vrfs_to_delete: {vrfs_to_delete}"
+        self.log.debug(msg)
+
+        max_retries = 3
+        retry_delay = 30  # seconds
+        all_successful_vrfs = []
+        vrfs_to_retry = vrfs_to_delete.copy()
+
+        for attempt in range(1, max_retries + 1):
+            if not vrfs_to_retry:
+                # All VRFs deleted successfully
+                msg = "All VRFs deleted successfully."
+                self.log.debug(msg)
+                return
+
+            msg = f"Bulk delete attempt {attempt}/{max_retries} "
+            msg += f"for VRFs: {','.join(vrfs_to_retry)}"
+            self.log.debug(msg)
+
+            # Build the bulk delete path
+            path = self.paths["GET_VRF_FAB"].format(self.fabric)
+            delete_path = f"{path}/bulk-delete/vrfs?vrf-names={','.join(vrfs_to_retry)}"
+
+            msg = f"Attempt {attempt}: "
+            msg += f"verb: {verb}, path: {delete_path}"
+            self.log.debug(msg)
+
+            # Send the request
+            response = dcnm_send(self.module, verb, delete_path)
+
+            msg = f"Attempt {attempt} response: "
+            msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            # Always append response for visibility
+            self.result["response"].append(response)
+
+            return_code = response.get("RETURN_CODE", 0)
+
+            # Check if request was successful
+            if return_code == 200:
+                msg = f"Attempt {attempt}: Bulk delete succeeded for all VRFs."
+                self.log.debug(msg)
+                # Mark as changed if not in check mode
+                if not self.module.check_mode:
+                    self.result["changed"] = True
+                return
+
+            # Handle partial success (500 error with failureList)
+            if return_code == 500:
+                data = response.get("DATA", {})
+                success_list = data.get("successList", [])
+                failure_list = data.get("failureList", [])
+
+                # Track successful deletions
+                if success_list:
+                    all_successful_vrfs.extend(success_list)
+                    msg = f"Attempt {attempt}: Successfully deleted VRFs: "
+                    msg += f"{','.join(success_list)}"
+                    self.log.debug(msg)
+                    if not self.module.check_mode:
+                        self.result["changed"] = True
+
+                # Extract failed VRF names for retry
+                if failure_list:
+                    vrfs_to_retry = [item.get("name") for item in failure_list if item.get("name")]
+                    failure_messages = [
+                        f"{item.get('name')}: {item.get('message')}"
+                        for item in failure_list
+                    ]
+                    msg = f"Attempt {attempt}: Failed VRFs: {', '.join(failure_messages)}"
+                    self.log.debug(msg)
+
+                    # If this is the last attempt, fail
+                    if attempt == max_retries:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        msg = f"{self.class_name}.{method_name}: "
+                        msg += f"Bulk delete failed after {max_retries} attempts. "
+                        msg += f"Successfully deleted: {','.join(all_successful_vrfs) if all_successful_vrfs else 'None'}. "
+                        msg += f"Failed: {', '.join(failure_messages)}"
+                        self.log.debug(msg)
+                        self.failure(response)
+
+                    # Wait before retrying
+                    msg = f"Waiting {retry_delay} seconds before retry {attempt + 1}..."
+                    self.log.debug(msg)
+                    time.sleep(retry_delay)
+                else:
+                    # No failure list but 500 error - this shouldn't happen but handle it
+                    if attempt == max_retries:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        msg = f"{self.class_name}.{method_name}: "
+                        msg += f"Bulk delete failed with 500 error after {max_retries} attempts. "
+                        msg += "No failure details provided by controller."
+                        self.log.debug(msg)
+                        self.failure(response)
+                    time.sleep(retry_delay)
+            else:
+                # Other error codes - let handle_response deal with it
+                fail, self.result["changed"] = self.handle_response(response, action)
+                if fail:
+                    if is_rollback:
+                        self.failed_to_rollback = True
+                        return
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"Bulk delete failed with return code {return_code}"
+                    self.log.debug(msg)
+                    self.failure(response)
+                return
 
     def push_diff_delete(self, is_rollback=False):
         """
@@ -3717,7 +3970,12 @@ class DcnmVrf:
         del_failure = ""
         vrfs_to_delete = []
 
+        # First, wait for attachments to be ready for deletion (lanAttachState = NA)
+        self.wait_for_vrf_attachments_del_ready()
+
+        # Then, wait for VRF itself to be ready for deletion (vrfStatus = NA/OUT-OF-SYNC/FAILED)
         self.wait_for_vrf_del_ready()
+
         for vrf, state in self.diff_delete.items():
             if state == "OUT-OF-SYNC":
                 del_failure += vrf + ","
@@ -3739,16 +3997,12 @@ class DcnmVrf:
 
         if self.action_fabric_type != "multicluster_parent" and vrfs_to_delete and self.dcnm_version >= 12:
             self.log.debug("Sending Bulk VRF delete request")
-            # Build the bulk delete path with comma-separated VRF names
-            path = self.paths["GET_VRF_FAB"].format(self.fabric)
-            delete_path = f"{path}/bulk-delete/vrfs?vrf-names={','.join(vrfs_to_delete)}"
-            self.send_to_controller(
+            # Use retry logic for bulk delete
+            self.bulk_delete_with_retry(
+                vrfs_to_delete,
                 action,
                 verb,
-                delete_path,
-                None,  # Bulk delete uses query params, not payload
-                log_response=True,
-                is_rollback=is_rollback,
+                is_rollback
             )
 
         if del_failure:
@@ -4565,10 +4819,15 @@ class DcnmVrf:
         path = self.paths["GET_VRF"].format(self.fabric)
         diff_deploy = self.diff_deploy
 
-        if self.action_fabric_type == "multicluster_parent":
+        # Determine deploy path and payload format
+        # For multicluster_parent, always use switch-level
+        # For all others, check deploy_mode parameter
+        if self.action_fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
+            # Use switch-level deploy: transform payload to serial number format
             deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
             diff_deploy = self.vrf_serial_payload_transform(diff_deploy)
         else:
+            # Use resource-level deploy: standard /deployments path with vrfNames
             deploy_path = path + "/deployments"
 
         if self.action_fabric_type == "multicluster_parent" or self.action_fabric_type == "multisite_parent":
@@ -4840,65 +5099,218 @@ class DcnmVrf:
         self.push_diff_attach(is_rollback)
         self.push_diff_deploy(is_rollback)
 
-    def wait_for_vrf_del_ready(self, vrf_name="not_supplied"):
+    def wait_for_vrf_del_ready(self):
         """
         # Summary
 
-        Wait for VRFs to be ready for deletion.
+        Wait for VRFs to reach a terminal state ready for deletion by checking vrfStatus.
+
+        Polls the GET /vrfs API once per retry iteration to check all VRFs.
+        Terminal states (ready for deletion):
+        - NA, OUT-OF-SYNC, FAILED: Can proceed with deletion
+        - DEPLOYED, PENDING: Must wait
 
         ## Raises
 
-        Calls fail_json if VRF has associated network attachments.
+        Calls fail_json if timeout is reached while waiting for VRF to reach terminal state.
         """
         caller = inspect.stack()[1][3]
         msg = "ENTERED. "
-        msg += f"caller: {caller}, "
-        msg += f"vrf_name: {vrf_name}"
+        msg += f"caller: {caller}"
         self.log.debug(msg)
 
-        for vrf in self.diff_delete:
-            ok_to_delete = False
-            path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
-            retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
-            while not ok_to_delete:
-                resp = dcnm_send(self.module, "GET", path)
-                ok_to_delete = True
-                if resp.get("DATA") is None:
-                    time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+        # Create a list of VRFs that still need to reach terminal state
+        pending_vrfs = list(self.diff_delete.keys())
+        vrf_count = len(pending_vrfs)
+        base_timeout = max(vrf_count * 30, 500)
+        retry_count = max(base_timeout // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+
+        msg = f"Waiting for {len(pending_vrfs)} VRF(s) attachments to reach terminal state. "
+        msg += f"vrf_count: {vrf_count}, base_timeout: {base_timeout}s, retry_count: {retry_count}"
+        self.log.debug(msg)
+
+        path = self.paths["GET_VRF"].format(self.fabric)
+        retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+
+        while pending_vrfs and retry_count > 0:
+            retry_count -= 1
+
+            msg = f"Retry iteration, remaining: {retry_count}, pending VRFs: {len(pending_vrfs)}"
+            self.log.debug(msg)
+
+            # Make ONE API call to get all VRFs
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp.get("DATA") is None:
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                continue
+
+            # Build a lookup dict for faster access: {vrfName: vrfData}
+            vrfs_by_name = {vrf_data.get("vrfName"): vrf_data for vrf_data in resp["DATA"]}
+
+            # Check all pending VRFs in this response
+            vrfs_to_remove = []
+            for vrf in pending_vrfs:
+                vrf_data = vrfs_by_name.get(vrf)
+
+                if vrf_data is None:
+                    # VRF not found in response - it may have already been deleted
+                    msg = f"VRF {vrf} not found in GET /vrfs response, assuming already deleted"
+                    self.log.debug(msg)
+                    self.diff_delete.update({vrf: "NA"})
+                    vrfs_to_remove.append(vrf)
                     continue
 
-                if self.action_fabric_type == "multicluster_parent":
-                    # Sanitize the lanAttachList entries
-                    sanitized_data = sanitize_lan_attach_list(
-                        resp["DATA"]
-                    )
-                    attach_list = sanitized_data[0]["lanAttachList"]
-                else:
-                    attach_list = resp["DATA"][0]["lanAttachList"]
+                vrf_status = vrf_data.get("vrfStatus", "")
 
-                msg = f"ok_to_delete: {ok_to_delete}, "
-                msg += f"attach_list: {json.dumps(attach_list, indent=4)}"
+                msg = f"vrf: {vrf}, vrfStatus: {vrf_status}"
                 self.log.debug(msg)
 
-                for attach in attach_list:
-                    if (
-                        attach["lanAttachState"] == "OUT-OF-SYNC"
-                        or attach["lanAttachState"] == "FAILED"
-                    ):
-                        self.diff_delete.update({vrf: "OUT-OF-SYNC"})
-                        break
-                    if attach["lanAttachState"] != "NA":
-                        time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
-                        self.diff_delete.update({vrf: "DEPLOYED"})
-                        ok_to_delete = False
-                        break
+                # Check if VRF is in a terminal state ready for deletion
+                if vrf_status in ("OUT-OF-SYNC", "FAILED"):
+                    self.diff_delete.update({vrf: "OUT-OF-SYNC"})
+                    vrfs_to_remove.append(vrf)
+                elif vrf_status == "NA" or vrf_status == "":
                     self.diff_delete.update({vrf: "NA"})
-                if retry_count <= 0:
-                    msg = "Timeout waiting for VRF to be ready for deletion. "
-                    msg += f"vrf: {vrf}, "
-                    msg += f"resp: {resp}"
-                    self.module.fail_json(msg=msg)
-                retry_count -= 1
+                    vrfs_to_remove.append(vrf)
+                else:
+                    # VRF is still in DEPLOYED, PENDING, or other non-terminal state
+                    self.diff_delete.update({vrf: "DEPLOYED"})
+
+            # Remove VRFs that reached terminal state
+            for vrf in vrfs_to_remove:
+                pending_vrfs.remove(vrf)
+                msg = f"VRF {vrf} reached terminal state, removed from pending list"
+                self.log.debug(msg)
+
+            # If we still have pending VRFs, sleep before next retry
+            if pending_vrfs:
+                msg = f"Still waiting for {len(pending_vrfs)} VRF(s): {pending_vrfs}"
+                self.log.debug(msg)
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+
+        # Check if we timed out
+        if pending_vrfs:
+            msg = "Timeout waiting for VRFs to be ready for deletion. "
+            msg += f"Pending VRFs: {pending_vrfs}, "
+            msg += f"States: {[(vrf, self.diff_delete.get(vrf)) for vrf in pending_vrfs]}"
+            self.module.fail_json(msg=msg)
+
+        msg = "All VRFs reached terminal state. Ready for deletion."
+        self.log.debug(msg)
+
+    def wait_for_vrf_attachments_del_ready(self):
+        """
+        # Summary
+
+        Wait for VRF attachments to be ready for deletion by checking lanAttachState.
+
+        Uses bulk GET_VRF_ATTACH API to check all VRFs in a single call per retry iteration.
+        Terminal states (ready for deletion):
+        - NA: Attachment has been removed
+        - OUT-OF-SYNC, FAILED: Can proceed with cleanup
+        - Other states: Must wait for undeployment to complete
+
+        ## Raises
+
+        Calls fail_json if timeout is reached while waiting for attachments.
+        """
+        caller = inspect.stack()[1][3]
+        msg = f"ENTERED. caller: {caller}"
+        self.log.debug(msg)
+
+        if not self.diff_delete:
+            return True
+
+        # Create list of VRFs pending deletion readiness
+        pending_vrfs = list(self.diff_delete.keys())
+        vrf_count = len(pending_vrfs)
+        base_timeout = max(vrf_count * 30, 500)
+        retry_count = max(base_timeout // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+
+        msg = f"Waiting for {len(pending_vrfs)} VRF(s) attachments to reach terminal state. "
+        msg += f"vrf_count: {vrf_count}, base_timeout: {base_timeout}s, retry_count: {retry_count}"
+        self.log.debug(msg)
+
+        while pending_vrfs and retry_count > 0:
+            retry_count -= 1
+
+            # Make ONE bulk API call for all pending VRFs
+            vrf_names = ",".join(pending_vrfs)
+            path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf_names)
+
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp.get("DATA") is None:
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+                continue
+
+            # VRF attachments API response structure: [{vrfName, lanAttachList: [...]}, ...]
+            # Each object contains vrfName and lanAttachList array
+
+            # Sanitize if multicluster_parent
+            if self.action_fabric_type == "multicluster_parent":
+                sanitized_data = sanitize_lan_attach_list(resp["DATA"])
+            else:
+                sanitized_data = resp["DATA"]
+
+            # Build lookup dictionary: {vrfName: lanAttachList}
+            vrfs_by_name = {}
+            for vrf_data in sanitized_data:
+                vrf_name = vrf_data.get("vrfName")
+                if vrf_name:
+                    vrfs_by_name[vrf_name] = vrf_data.get("lanAttachList", [])
+
+            # Process all pending VRFs
+            vrfs_to_remove = []
+            for vrf in pending_vrfs:
+                attach_list = vrfs_by_name.get(vrf, [])
+
+                if not attach_list:
+                    # VRF not found in response, mark as ready
+                    self.diff_delete.update({vrf: "NA"})
+                    vrfs_to_remove.append(vrf)
+                    continue
+
+                # Check if all attachments are in terminal state
+                all_terminal = True
+                has_out_of_sync = False
+                for attach in attach_list:
+                    state = attach.get("lanAttachState", "")
+                    if state in ("OUT-OF-SYNC", "FAILED"):
+                        has_out_of_sync = True
+                    elif state != "NA":
+                        all_terminal = False
+                        break
+
+                if all_terminal:
+                    final_state = "OUT-OF-SYNC" if has_out_of_sync else "NA"
+                    self.diff_delete.update({vrf: final_state})
+                    vrfs_to_remove.append(vrf)
+                else:
+                    self.diff_delete.update({vrf: "DEPLOYED"})
+
+            # Remove VRFs that reached terminal state
+            for vrf in vrfs_to_remove:
+                pending_vrfs.remove(vrf)
+
+            # Sleep before next retry if there are still pending VRFs
+            if pending_vrfs:
+                msg = f"Still waiting for {len(pending_vrfs)} VRF(s): {pending_vrfs}"
+                self.log.debug(msg)
+                time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
+
+        # Check if we timed out
+        if pending_vrfs:
+            msg = f"Timeout waiting for VRF attachments. Pending: {pending_vrfs}"
+            self.log.debug(msg)
+            for vrf in pending_vrfs:
+                self.diff_delete.update({vrf: "TIMEOUT"})
+            return False
+
+        msg = "All VRF attachments reached terminal state"
+        self.log.debug(msg)
+        return True
 
     def attach_spec(self):
         """
@@ -5400,12 +5812,17 @@ class DcnmVrf:
         # to the have state whenever there is a failure in any of the APIs.
         # The idea would be to run overridden state with want=have and have=dcnm_state
         self.want_create = self.have_create
+        # rebuild lookup dict to match reassigned want_create
+        self.want_create_by_name = {v["vrfName"]: v for v in self.want_create}
         self.want_attach = self.have_attach
         self.want_deploy = self.have_deploy
 
         self.have_create = []
         self.have_attach = []
         self.have_deploy = {}
+        # reset have lookup dicts; get_have() will rebuild them
+        self.have_create_by_name = {}
+        self.have_attach_by_name = {}
         self.get_have()
         self.get_diff_override()
 
@@ -5467,6 +5884,12 @@ def main():
                 nd_version=dict(required=False, type="float"),
                 members=dict(required=False, type="list", elements="dict")
             )
+        ),
+        deploy_mode=dict(
+            required=False,
+            type="str",
+            choices=["switch", "resource"],
+            default="switch"
         )
     )
 

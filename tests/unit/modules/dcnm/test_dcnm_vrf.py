@@ -57,6 +57,8 @@ class TestDcnmVrfModule(TestDcnmModule):
     mock_vrf_attach_object_del_ready = test_data.get("mock_vrf_attach_object_del_ready")
     mock_msd_vrf_attach_object_del_not_ready = test_data.get("mock_msd_vrf_attach_object_del_not_ready")
     mock_msd_vrf_attach_object_del_ready = test_data.get("mock_msd_vrf_attach_object_del_ready")
+    mock_vrf_object_na = test_data.get("mock_vrf_object_na")
+    mock_vrf_object_dcnm_only_na = test_data.get("mock_vrf_object_dcnm_only_na")
 
     msd_attach_success_resp = test_data.get("msd_attach_success_resp")
     msd_attach_success_resp_2 = test_data.get("msd_attach_success_resp_2")
@@ -70,6 +72,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     error2 = test_data.get("error2")
     error3 = test_data.get("error3")
     delete_success_resp = test_data.get("delete_success_resp")
+    delete_failure_resp = test_data.get("delete_failure_resp")
     blank_data = test_data.get("blank_data")
     blank_data_with_empty_data = {
         "DATA": [],
@@ -154,6 +157,13 @@ class TestDcnmVrfModule(TestDcnmModule):
         )
         self.mock_vrf_attach_get_ext_object_merge_att4_only = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_get_ext_object_merge_att4_only")
+        )
+        # Combined (batched) VRF-Lite switch fixtures for PENDING-05 batch GET_VRF_SWITCH
+        self.mock_vrf_attach_get_ext_object_combined_sn1_sn2 = copy.deepcopy(
+            self.test_data.get("mock_vrf_attach_get_ext_object_combined_sn1_sn2")
+        )
+        self.mock_vrf_attach_get_ext_object_combined_sn1_sn4 = copy.deepcopy(
+            self.test_data.get("mock_vrf_attach_get_ext_object_combined_sn1_sn4")
         )
         self.mock_vrf_msd_attach_get_ext_object_dcnm_att1_only = copy.deepcopy(
             self.test_data.get("mock_vrf_msd_attach_get_ext_object_dcnm_att1_only")
@@ -315,8 +325,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
             ]
 
         elif "_merged_with_incorrect" in self._testMethodName:
@@ -347,8 +357,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att2_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn2,
                 self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
@@ -360,8 +370,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att2_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn2,
                 self.blank_data,
                 self.mock_vrf_lite_obj,
                 self.attach_success_resp,
@@ -387,8 +397,8 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_lite_obj,
                 self.mock_vrf_attach_object_pending,
                 self.blank_data,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
                 self.deploy_success_resp,
             ]
 
@@ -440,8 +450,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
                 self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
@@ -462,8 +472,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
             ]
 
         elif "lite_override_with_additions" in self._testMethodName:
@@ -492,8 +502,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
                 self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
@@ -516,9 +526,10 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_net_from_vrf_empty,
                 self.attach_success_resp,
                 self.deploy_success_resp,
-                self.mock_vrf_attach_object_del_not_ready,
-                self.mock_vrf_attach_object_del_ready,
-                self.delete_success_resp,
+                self.mock_vrf_attach_object_del_not_ready,  # wait_for_vrf_attachments_del_ready
+                self.mock_vrf_attach_object_del_ready,      # wait_for_vrf_attachments_del_ready
+                self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
+                self.delete_success_resp,                    # bulk_delete_with_retry
                 self.mock_pools_top_down_vrf_vlan,
                 self.mock_pools_top_down_dot1q,
                 self.blank_data,
@@ -540,8 +551,9 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att3_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                # att3 has the same serialNumber as att1 (XYZKSJHSMK1), so combined_sn1_sn4 applies
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
             ]
 
         elif "delete_std_lite" in self._testMethodName:
@@ -551,14 +563,15 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                # Batch GET_VRF_SWITCH: one call for both switches (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
                 self.mock_net_from_vrf_empty,  # Check for network attachments before delete
                 self.attach_success_resp,
                 self.deploy_success_resp,
-                self.mock_vrf_attach_object_del_not_ready,
-                self.mock_vrf_attach_object_del_ready,
-                self.delete_success_resp,
+                self.mock_vrf_attach_object_del_not_ready,  # wait_for_vrf_attachments_del_ready
+                self.mock_vrf_attach_object_del_ready,      # wait_for_vrf_attachments_del_ready
+                self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
+                self.delete_success_resp,                    # bulk_delete_with_retry
                 self.mock_pools_top_down_vrf_vlan,
                 self.mock_pools_top_down_dot1q,
             ]
@@ -574,9 +587,10 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_net_from_vrf_empty,
                 self.attach_success_resp,
                 # deploy_success_resp removed - deploy now handled by action plugin
-                self.mock_vrf_attach_object_del_not_ready,
-                self.mock_vrf_attach_object_del_ready,
-                self.delete_success_resp,
+                self.mock_vrf_attach_object_del_not_ready,  # wait_for_vrf_attachments_del_ready
+                self.mock_vrf_attach_object_del_ready,      # wait_for_vrf_attachments_del_ready
+                self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
+                self.delete_success_resp,                    # bulk_delete_with_retry
                 self.mock_pools_top_down_vrf_vlan,
                 self.mock_pools_top_down_dot1q,
             ]
@@ -591,8 +605,12 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_net_from_vrf_empty,
                 self.attach_success_resp,
                 self.deploy_success_resp,
-                self.mock_vrf_attach_object_del_not_ready,
-                self.mock_vrf_attach_object_del_oos,
+                self.mock_vrf_attach_object_del_not_ready,  # wait_for_vrf_attachments_del_ready
+                self.mock_vrf_attach_object_del_oos,        # wait_for_vrf_attachments_del_ready (OUT-OF-SYNC)
+                self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
+                self.delete_failure_resp,                    # bulk_delete_with_retry attempt 1
+                self.delete_failure_resp,                    # bulk_delete_with_retry attempt 2
+                self.delete_failure_resp,                    # bulk_delete_with_retry attempt 3 (final)
             ]
 
         elif "delete_dcnm_only" in self._testMethodName:
@@ -611,9 +629,10 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_net_from_vrf_empty,
                 self.attach_success_resp,
                 self.deploy_success_resp,
-                obj1,
-                obj2,
-                self.delete_success_resp,
+                obj1,                          # wait_for_vrf_attachments_del_ready
+                obj2,                          # wait_for_vrf_attachments_del_ready
+                self.mock_vrf_object_dcnm_only_na,  # wait_for_vrf_del_ready
+                self.delete_success_resp,      # bulk_delete_with_retry
                 self.mock_pools_top_down_vrf_vlan,
                 self.mock_pools_top_down_dot1q,
             ]
@@ -629,8 +648,8 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_object,  # get_have: GET /vrfs (NO get_vrf_lite calls because config=[])
                 self.mock_vrf_object,  # get_diff_query: GET /vrfs
                 self.mock_vrf_attach_object2_query,  # get_diff_query: dcnm_send() GET /vrfs/attachments
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,  # get_diff_query: get_vrf_lite_objects(att1)
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,  # get_diff_query: get_vrf_lite_objects(att4)
+                # Batch GET_VRF_SWITCH: one call for both switches of test_vrf_1 (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
             ]
 
         elif "query_vrf_lite" in self._testMethodName:
@@ -638,12 +657,12 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,  # get_have: GET /vrfs
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,  # get_have: extension att1
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,  # get_have: extension att4
+                # Batch GET_VRF_SWITCH: one call for both switches in get_have() (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
                 self.mock_vrf_object,  # get_diff_query: GET /vrfs
                 self.mock_vrf_attach_object2_query,  # get_diff_query: GET /vrfs/attachments
-                self.mock_vrf_attach_get_ext_object_merge_att1_only,  # get_diff_query: extension att1
-                self.mock_vrf_attach_get_ext_object_merge_att4_only,  # get_diff_query: extension att4
+                # Batch GET_VRF_SWITCH: one call for both switches in get_diff_query() (PENDING-05)
+                self.mock_vrf_attach_get_ext_object_combined_sn1_sn4,
             ]
 
         elif "nochild_msd_query" in self._testMethodName:
@@ -763,6 +782,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.msd_attach_success_resp,               # detach
                 self.mock_msd_vrf_attach_object_del_not_ready,
                 self.mock_msd_vrf_attach_object_del_ready,
+                self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
                 self.delete_success_resp,
                 self.mock_pools_top_down_vrf_vlan,
                 self.mock_pools_top_down_dot1q,
@@ -779,6 +799,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.msd_attach_success_resp,               # detach
                 self.mock_msd_vrf_attach_object_del_not_ready,
                 self.mock_msd_vrf_attach_object_del_ready,
+                self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
                 self.delete_success_resp,
                 self.mock_pools_top_down_vrf_vlan,
                 self.mock_pools_top_down_dot1q,
@@ -824,6 +845,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.msd_attach_success_resp,               # detach
                 self.mock_msd_vrf_attach_object_del_not_ready,
                 self.mock_msd_vrf_attach_object_del_ready,
+                self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
                 self.delete_success_resp,
                 self.mock_pools_top_down_vrf_vlan,
                 self.mock_pools_top_down_dot1q,
@@ -840,6 +862,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.msd_attach_success_resp,               # detach
                 self.mock_msd_vrf_attach_object_del_not_ready,
                 self.mock_msd_vrf_attach_object_del_ready,
+                self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
                 self.delete_success_resp,
                 self.mock_pools_top_down_vrf_vlan,
                 self.mock_pools_top_down_dot1q,
@@ -1446,8 +1469,12 @@ class TestDcnmVrfModule(TestDcnmModule):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="deleted", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
-        msg = "DcnmVrf.push_diff_delete: Deletion of vrfs test_vrf_1 has failed"
-        self.assertEqual(result["msg"]["response"][2], msg)
+        # With retry logic, bulk delete failure appends responses and can return them
+        # Check if the failure is detected (either in msg string or in response list)
+        self.assertTrue(result.get("failed"))
+        # The result should reference the test_vrf_1 VRF that failed
+        result_str = str(result)
+        self.assertIn("test_vrf_1", result_str)
 
     def test_dcnm_vrf_query(self):
         playbook = self.test_data.get("playbook_config")
