@@ -4179,8 +4179,6 @@ class DcnmNetwork:
 
             for attempt in range(0, retry_count):
                 resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
-                resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
-
                 update_in_progress = False
                 for key in resp["DATA"].keys():
                     if re.search(r"Failed.*Please try after some time", str(resp["DATA"][key])):
