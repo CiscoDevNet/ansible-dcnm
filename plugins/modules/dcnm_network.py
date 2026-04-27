@@ -2463,7 +2463,7 @@ class DcnmNetwork:
             if networks_per_navrf.get("DATA"):
                 for l2net in networks_per_navrf["DATA"]:
                     json_to_dict = json.loads(l2net["networkTemplateConfig"])
-                    if (json_to_dict.get("vrfName", "")) == "NA":
+                    if json_to_dict.get("vrfName", l2net.get("vrf", "")) == "NA":
                         normalized_net = self.normalize_have_network(l2net)
                         curr_networks.append(normalized_net["networkName"])
                         have_create.append(normalized_net)
