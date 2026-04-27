@@ -74,6 +74,19 @@ options:
       - deleted
       - query
     default: merged
+  deploy_mode:
+    description:
+    - Controls the deployment method when deploy is enabled
+    - When set to 'switch' (default), deployments use switch-level API with serial numbers
+    - When set to 'resource', deployments use resource-level API with network names
+    - This parameter is ignored for multicluster parent fabrics which always use switch-level deployment
+    - Applies to both create/deploy and delete/undeploy operations
+    type: str
+    required: false
+    choices:
+      - switch
+      - resource
+    default: switch
   config:
     description:
     - List of details of networks being managed. Not required for state deleted
@@ -1078,6 +1091,7 @@ class DcnmNetwork:
         self.diff_input_format = []
         self.query = []
         self.deployment_states = {}
+        self.deploy_mode = module.params.get("deploy_mode", "switch")
         self.network_to_sns = {}
         self.deploy_payload = {}
 
@@ -1580,9 +1594,6 @@ class DcnmNetwork:
         Returns:
             Transformed payload for multicluster_parent or original payload for other fabric types
         """
-        # Only transform for multicluster_parent, all others (including multicluster_child) use standard format
-        if self.fabric_type != "multicluster_parent":
-            return deploy_payload
 
         if not deploy_payload or "networkNames" not in deploy_payload:
             return deploy_payload
@@ -3948,13 +3959,14 @@ class DcnmNetwork:
         payload = copy.deepcopy(self.diff_undeploy)
         delete_ready = False
         if self.diff_undeploy:
-            # For multicluster_parent, use special endpoint and payload format
-            # For all others (including multicluster_child), use standard /deployments path
-            if self.fabric_type == "multicluster_parent":
+            # For multicluster_parent, always use switch-level endpoint and payload format
+            # For all others, check deploy_mode parameter
+            if self.fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
+                # Use switch-level deploy: transform payload to serial number format
                 deploy_path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
                 deploy_payload = self.transform_deploy_payload_for_multicluster(payload, use_diff_attach=False)
             else:
-                # Standard path for standalone, multisite, and multicluster_child
+                # Use resource-level deploy: standard /deployments path with networkNames
                 path = self.paths["GET_NET"].format(self.fabric)
                 deploy_path = path + "/deployments"
                 deploy_payload = payload
@@ -4174,13 +4186,14 @@ class DcnmNetwork:
 
         method = "POST"
         if self.diff_deploy:
-            # For multicluster_parent, use special endpoint and payload format
-            # For all others (including multicluster_child), use standard /deployments path
-            if self.fabric_type == "multicluster_parent":
+            # For multicluster_parent, always use switch-level endpoint and payload format
+            # For all others, check deploy_mode parameter
+            if self.fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
+                # Use switch-level deploy: transform payload to serial number format
                 deploy_path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
                 deploy_payload = self.transform_deploy_payload_for_multicluster(self.diff_deploy, use_diff_attach=True)
             else:
-                # Standard path for standalone, multisite, and multicluster_child
+                # Use resource-level deploy: standard /deployments path with networkNames
                 path = self.paths["GET_NET"].format(self.fabric)
                 deploy_path = path + "/deployments"
                 deploy_payload = self.diff_deploy
@@ -4946,6 +4959,12 @@ def main():
         state=dict(
             default="merged",
             choices=["merged", "replaced", "deleted", "overridden", "query"],
+        ),
+        deploy_mode=dict(
+            required=False,
+            type="str",
+            choices=["switch", "resource"],
+            default="switch"
         ),
     )
 

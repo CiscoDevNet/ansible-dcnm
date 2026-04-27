@@ -46,6 +46,19 @@ options:
       - deleted
       - query
     default: merged
+  deploy_mode:
+    description:
+    - Controls the deployment method when deploy is enabled
+    - When set to 'switch' (default), deployments use switch-level API with serial numbers
+    - When set to 'resource', deployments use resource-level API with VRF names
+    - This parameter is ignored for multicluster parent fabrics which always use switch-level deployment
+    - Applies to both create/deploy and delete/undeploy operations
+    type: str
+    required: false
+    choices:
+      - switch
+      - resource
+    default: switch
   config:
     description:
     - List of details of vrfs being managed. Not required for state deleted
@@ -1119,6 +1132,7 @@ class DcnmVrf:
         self.diff_input_format = []
         self.deploy_payload = {}
         self.query = []
+        self.deploy_mode = module.params.get("deploy_mode", "switch")
 
         self.action_fabric_details = self.params.get("fabric_details")
 
@@ -3767,10 +3781,15 @@ class DcnmVrf:
         verb = "POST"
         diff_undeploy = self.diff_undeploy
 
-        if self.action_fabric_type == "multicluster_parent":
+        # Determine deploy path and payload format
+        # For multicluster_parent, always use switch-level
+        # For all others, check deploy_mode parameter
+        if self.action_fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
+            # Use switch-level deploy: transform payload to serial number format
             deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
             diff_undeploy = self.vrf_serial_payload_transform(self.diff_undeploy)
         else:
+            # Use resource-level deploy: standard /deployments path with vrfNames
             deploy_path = path + "/deployments"
 
         self.send_to_controller(
@@ -4800,10 +4819,15 @@ class DcnmVrf:
         path = self.paths["GET_VRF"].format(self.fabric)
         diff_deploy = self.diff_deploy
 
-        if self.action_fabric_type == "multicluster_parent":
+        # Determine deploy path and payload format
+        # For multicluster_parent, always use switch-level
+        # For all others, check deploy_mode parameter
+        if self.action_fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
+            # Use switch-level deploy: transform payload to serial number format
             deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
             diff_deploy = self.vrf_serial_payload_transform(diff_deploy)
         else:
+            # Use resource-level deploy: standard /deployments path with vrfNames
             deploy_path = path + "/deployments"
 
         if self.action_fabric_type == "multicluster_parent" or self.action_fabric_type == "multisite_parent":
@@ -5853,6 +5877,12 @@ def main():
                 nd_version=dict(required=False, type="float"),
                 members=dict(required=False, type="list", elements="dict")
             )
+        ),
+        deploy_mode=dict(
+            required=False,
+            type="str",
+            choices=["switch", "resource"],
+            default="switch"
         )
     )
 
