@@ -3514,13 +3514,16 @@ class DcnmNetwork:
 
         # Create a list of networks that still need to reach terminal state
         pending_networks = list(self.diff_delete.keys())
+        network_count = len(pending_networks)
+        base_timeout = max(network_count * 30, 500)
+        retry_count = max(base_timeout // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
 
-        msg = f"Waiting for {len(pending_networks)} network(s) to reach terminal state: {pending_networks}"
+        msg = f"Waiting for {len(pending_networks)} network(s) to reach terminal state. "
+        msg += f"network_count: {network_count}, base_timeout: {base_timeout}s, retry_count: {retry_count}"
         self.log.debug(msg)
 
         method = "GET"
         path = self.paths["GET_NET"].format(self.fabric)
-        retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
 
         while pending_networks and retry_count > 0:
             retry_count -= 1
@@ -3616,10 +3619,14 @@ class DcnmNetwork:
 
         # Create list of networks pending deletion readiness
         pending_networks = list(self.diff_delete.keys())
-        msg = f"Waiting for {len(pending_networks)} network(s) attachments to reach terminal state"
+        network_count = len(pending_networks)
+        base_timeout = max(network_count * 30, 500)
+        retry_count = max(base_timeout // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+
+        msg = f"Waiting for {len(pending_networks)} network(s) attachments to reach terminal state. "
+        msg += f"network_count: {network_count}, base_timeout: {base_timeout}s, retry_count: {retry_count}"
         self.log.debug(msg)
 
-        retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
         deploy_triggered = set()  # Track networks that had deploy triggered
 
         while pending_networks and retry_count > 0:

@@ -5121,8 +5121,12 @@ class DcnmVrf:
 
         # Create a list of VRFs that still need to reach terminal state
         pending_vrfs = list(self.diff_delete.keys())
+        vrf_count = len(pending_vrfs)
+        base_timeout = max(vrf_count * 30, 500)
+        retry_count = max(base_timeout // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
 
-        msg = f"Waiting for {len(pending_vrfs)} VRF(s) to reach terminal state: {pending_vrfs}"
+        msg = f"Waiting for {len(pending_vrfs)} VRF(s) attachments to reach terminal state. "
+        msg += f"vrf_count: {vrf_count}, base_timeout: {base_timeout}s, retry_count: {retry_count}"
         self.log.debug(msg)
 
         path = self.paths["GET_VRF"].format(self.fabric)
@@ -5220,10 +5224,14 @@ class DcnmVrf:
 
         # Create list of VRFs pending deletion readiness
         pending_vrfs = list(self.diff_delete.keys())
-        msg = f"Waiting for {len(pending_vrfs)} VRF(s) attachments to reach terminal state"
+        vrf_count = len(pending_vrfs)
+        base_timeout = max(vrf_count * 30, 500)
+        retry_count = max(base_timeout // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
+
+        msg = f"Waiting for {len(pending_vrfs)} VRF(s) attachments to reach terminal state. "
+        msg += f"vrf_count: {vrf_count}, base_timeout: {base_timeout}s, retry_count: {retry_count}"
         self.log.debug(msg)
 
-        retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
 
         while pending_vrfs and retry_count > 0:
             retry_count -= 1
