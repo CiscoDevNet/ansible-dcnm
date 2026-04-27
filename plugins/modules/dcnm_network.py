@@ -2285,7 +2285,7 @@ class DcnmNetwork:
             if networks_per_navrf.get("DATA"):
                 for l2net in networks_per_navrf["DATA"]:
                     json_to_dict = json.loads(l2net["networkTemplateConfig"])
-                    if (json_to_dict.get("vrfName", "")) == "NA":
+                    if json_to_dict.get("vrfName", l2net.get("vrf", "")) == "NA":
                         t_conf = {
                             "vlanId": json_to_dict.get("vlanId", ""),
                             "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
