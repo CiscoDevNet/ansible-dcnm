@@ -182,6 +182,37 @@ class TestDcnmNetworkModule(TestDcnmModule):
         dcnm_net.ip_sn = copy.deepcopy(ip_sn or self.mock_ip_sn)
         return dcnm_net
 
+    def test_dcnm_net_delete_switch_config_deploy_serials_are_dynamic(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.diff_detach = [
+            {
+                "networkName": "net-a",
+                "lanAttachList": [
+                    {"serialNumber": "SERIAL1"},
+                    {"serialNumber": "SERIAL2"},
+                ],
+            },
+            {
+                "networkName": "net-b",
+                "lanAttachList": [
+                    {"serialNumber": "SERIAL2"},
+                    {"serialNumber": "SERIAL3"},
+                ],
+            },
+            {
+                "networkName": "net-c",
+                "lanAttachList": [
+                    {"serialNumber": "SERIAL4"},
+                ],
+            },
+        ]
+
+        serials = dcnm_net.get_delete_deploy_switch_serials(
+            {"networkNames": "net-a,net-b"}
+        )
+
+        self.assertEqual(serials, ["SERIAL1", "SERIAL2", "SERIAL3"])
+
     def load_fixtures(self, response=None, device=""):
 
         if self.version == 12:
@@ -922,6 +953,27 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertTrue(
             any("/bulk-delete/networks?network-names=test_network" in path for path in delete_paths)
         )
+
+        config_deploy_calls = [
+            args
+            for args, _kwargs in self.run_dcnm_send.call_args_list
+            if len(args) >= 3 and args[1] == "POST" and "/config-deploy/" in args[2]
+        ]
+        self.assertEqual(len(config_deploy_calls), 1)
+        config_deploy_path = config_deploy_calls[0][2]
+        serial_segment = config_deploy_path.split("/config-deploy/")[1].split("?")[0]
+        self.assertEqual(
+            set(serial_segment.split(",")),
+            {"9NN7E41N16A", "9YO9A29F27U"},
+        )
+        self.assertEqual(len(config_deploy_calls[0]), 3)
+
+        switch_network_deploy_calls = [
+            args
+            for args, _kwargs in self.run_dcnm_send.call_args_list
+            if len(args) >= 3 and args[1] == "POST" and args[2].endswith("/networks/deploy")
+        ]
+        self.assertEqual(switch_network_deploy_calls, [])
 
     def test_dcnm_net_delete_without_config(self):
         set_module_args(dict(state="deleted", fabric="test_network", config=[]))

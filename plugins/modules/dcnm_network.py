@@ -1033,6 +1033,7 @@ class DcnmNetwork:
             "GET_NET_STATUS": "/rest/top-down/fabrics/{}/networks/{}/status",
             "GET_NET_SWITCH_DEPLOY": "/rest/top-down/fabrics/networks/deploy",
             "GET_NET_SWITCH_DEPLOY_ONEMANAGE": "/onemanage/rest/top-down/networks/deploy",
+            "GET_NET_SWITCH_CONFIG_DEPLOY": "/rest/control/fabrics/{}/config-deploy/{}?forceShowRun=false",
         },
         12: {
             "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
@@ -1046,6 +1047,7 @@ class DcnmNetwork:
             "GET_NET_STATUS": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}/status",
             "GET_NET_SWITCH_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/networks/deploy",
             "GET_NET_SWITCH_DEPLOY_ONEMANAGE": "/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/top-down/networks/deploy",
+            "GET_NET_SWITCH_CONFIG_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/{}?forceShowRun=false",
         },
     }
 
@@ -1653,6 +1655,65 @@ class DcnmNetwork:
             multicluster_payload[serial] = ",".join(networks)
 
         return multicluster_payload
+
+    def get_delete_deploy_switch_serials(self, network_names=None, attach_source=None):
+        """
+        Return ordered, unique switch serials affected by delete-time network detaches.
+        """
+
+        if isinstance(network_names, dict):
+            network_names = network_names.get("networkNames")
+
+        wanted_networks = None
+        if network_names:
+            if isinstance(network_names, str):
+                wanted_networks = set(
+                    name.strip() for name in network_names.split(",") if name.strip()
+                )
+            else:
+                wanted_networks = set(network_names)
+
+        source = attach_source
+        if source is None:
+            source = getattr(self, "diff_detach", [])
+        if isinstance(source, dict):
+            source = [source]
+
+        serials = []
+        seen = set()
+        for net_attach in source or []:
+            network_name = net_attach.get("networkName")
+            if wanted_networks and network_name not in wanted_networks:
+                continue
+
+            attach_list = net_attach.get("lanAttachList", net_attach.get("switchList", []))
+            for attach in attach_list:
+                serial = attach.get("serialNumber") or attach.get("switchSerialNo")
+                if not serial or serial in seen:
+                    continue
+                seen.add(serial)
+                serials.append(serial)
+
+        return serials
+
+    def deploy_deleted_network_switches(self, network_names=None, attach_source=None):
+        """
+        Trigger switch-level config deploy for switches touched by network deletion.
+        """
+
+        serials = self.get_delete_deploy_switch_serials(network_names, attach_source)
+        if not serials:
+            msg = "No switch serials found for delete-time config deploy."
+            self.log.debug(msg)
+            return None
+
+        method = "POST"
+        deploy_path = self.paths["GET_NET_SWITCH_CONFIG_DEPLOY"].format(
+            self.fabric,
+            ",".join(serials)
+        )
+
+        return dcnm_send(self.module, method, deploy_path)
 
     def diff_for_create(self, want, have):
         caller = inspect.stack()[1][3]
@@ -3478,9 +3539,22 @@ class DcnmNetwork:
             if fail:
                 self.failure(resp)
 
+        if not deploy_payload:
+            return
+
         method = "POST"
-        path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
-        resp = dcnm_send(self.module, method, path, json.dumps(deploy_payload))
+        if self.fabric_type != "multicluster_parent" and self.deploy_mode == "switch":
+            resp = self.deploy_deleted_network_switches(
+                network_names=[net["networkName"]],
+                attach_source=[payload_net]
+            )
+        else:
+            path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
+            resp = dcnm_send(self.module, method, path, json.dumps(deploy_payload))
+
+        if resp is None:
+            return
+
         self.result["response"].append(resp)
         fail, dummy_changed = self.handle_response(resp, "deploy")
         if fail:
@@ -3966,19 +4040,27 @@ class DcnmNetwork:
         payload = copy.deepcopy(self.diff_undeploy)
         delete_ready = False
         if self.diff_undeploy:
+            use_delete_config_deploy = (
+                self.fabric_type != "multicluster_parent"
+                and self.deploy_mode == "switch"
+                and bool(self.diff_delete)
+            )
             # For multicluster_parent, always use switch-level endpoint and payload format
             # For all others, check deploy_mode parameter
-            if self.fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
+            if use_delete_config_deploy:
+                resp = self.deploy_deleted_network_switches(payload)
+            elif self.fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
                 # Use switch-level deploy: transform payload to serial number format
                 deploy_path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
                 deploy_payload = self.transform_deploy_payload_for_multicluster(payload, use_diff_attach=False)
+                resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
             else:
                 # Use resource-level deploy: standard /deployments path with networkNames
                 path = self.paths["GET_NET"].format(self.fabric)
                 deploy_path = path + "/deployments"
                 deploy_payload = payload
+                resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
 
-            resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
             # Use the self.wait_for_network_attachments_del_ready() function to refresh the state
             # of self.diff_delete dict and re-attempt the undeploy action if
             # the state of the network is "OUT-OF-SYNC"
@@ -3987,16 +4069,20 @@ class DcnmNetwork:
                 str(state).upper() == "OUT-OF-SYNC" for state in self.diff_delete.values()
             )
             if delete_ready and undeploy_retry_needed:
-                resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_undeploy))
+                if use_delete_config_deploy:
+                    resp = self.deploy_deleted_network_switches(payload)
+                else:
+                    resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
                 delete_ready = False
 
-            self.result["response"].append(resp)
-            fail, self.result["changed"] = self.handle_response(resp, "deploy")
-            if fail:
-                if is_rollback:
-                    self.failed_to_rollback = True
-                    return
-                self.failure(resp)
+            if resp is not None:
+                self.result["response"].append(resp)
+                fail, self.result["changed"] = self.handle_response(resp, "deploy")
+                if fail:
+                    if is_rollback:
+                        self.failed_to_rollback = True
+                        return
+                    self.failure(resp)
 
         method = "DELETE"
         del_failure = ""
