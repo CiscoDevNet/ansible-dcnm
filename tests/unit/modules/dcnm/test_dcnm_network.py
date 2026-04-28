@@ -17,7 +17,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 # from units.compat.mock import patch
 
@@ -212,6 +212,34 @@ class TestDcnmNetworkModule(TestDcnmModule):
         )
 
         self.assertEqual(serials, ["SERIAL1", "SERIAL2", "SERIAL3"])
+
+    def test_dcnm_net_delete_out_of_sync_networks_are_bulk_deleted(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.paths = {"GET_NET": "/networks/{}"}
+        dcnm_net.module = Mock(check_mode=False)
+        dcnm_net.result = {"changed": False, "response": []}
+        dcnm_net.diff_create_update = []
+        dcnm_net.diff_detach = []
+        dcnm_net.diff_undeploy = {}
+        dcnm_net.diff_delete = {"net-a": "OUT-OF-SYNC"}
+        dcnm_net.diff_create = []
+        dcnm_net.diff_attach = []
+        dcnm_net.diff_deploy = {}
+        dcnm_net.wait_for_network_attachments_del_ready = Mock(return_value=True)
+        dcnm_net.wait_for_network_del_ready = Mock(return_value=True)
+        dcnm_net.bulk_delete_networks_with_retry = Mock()
+
+        dcnm_net.push_to_remote()
+
+        dcnm_net.bulk_delete_networks_with_retry.assert_called_once_with(
+            ["net-a"],
+            "/networks/test-fabric",
+            "DELETE",
+            False,
+        )
 
     def load_fixtures(self, response=None, device=""):
 

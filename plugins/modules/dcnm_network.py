@@ -4107,12 +4107,9 @@ class DcnmNetwork:
 
             # Separate networks by state
             for net, state in self.diff_delete.items():
-                if state.upper() == "OUT-OF-SYNC" or state == "TIMEOUT":
+                if state == "TIMEOUT":
                     del_failure += net + ","
-                    if state == "TIMEOUT":
-                        resp = "Timeout waiting for network to be in delete ready state.\n"
-                    if state == "OUT-OF-SYNC":
-                        resp = "Network is out of sync.\n"
+                    resp = "Timeout waiting for network to be in delete ready state.\n"
                     continue
 
                 if supports_bulk_delete:
