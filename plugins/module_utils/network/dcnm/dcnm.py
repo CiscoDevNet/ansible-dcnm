@@ -1589,7 +1589,7 @@ def obtain_fabric_associations(action_module, task_vars, tmp):
         return action_module.error_handler.handle_exception(e, "fabric_discovery")
 
 
-def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_payload, entity_type):
+def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_payload, deploy_mode, entity_type):
     """
     Deploy VRF or Network configurations to fabric on ND controller.
 
@@ -1620,8 +1620,11 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
         tmp (str): Temporary directory path for module operations
         fabric (str): Fabric name to deploy to
         fabric_type (str): Fabric type (standard, multicluster_parent, multicluster_child, etc.)
-        deploy_payload (list): List of VRFs/Networks or deployment payload to deploy
-        entity_type (str): Type of entity to deploy ("vrfs" or "networks")
+        deploy_payload (list|dict): Deployment payload whose type depends on deploy_mode:
+            - list: When deploy_mode="switch", contains serial numbers of switches
+            - dict: When deploy_mode="resource", maps serial numbers to comma-separated VRF/Network names
+        deploy_mode (str): Deployment mode ("switch" or "resource")
+        entity_type (str): Type of entity to deploy ("vrf" or "network")
 
     Returns:
         dict: Deployment response from NDFC:
@@ -1635,6 +1638,7 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
             }
 
     Raises:
+        TypeError: If deploy_payload type doesn't match deploy_mode requirements
         ActionError: On API failure or invalid response structure
     """
     # Log deployment initiation
@@ -1643,25 +1647,51 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
         operation=f"{entity_type}_deployment"
     )
 
+    # Type check deploy_payload based on deploy_mode
+    if deploy_mode == "switch":
+        if not isinstance(deploy_payload, list):
+            error_msg = f"Invalid deploy_payload for switch mode. Expected list, got: {type(deploy_payload).__name__}"
+            action_module.logger.error(error_msg, fabric=fabric, operation=f"{entity_type}_deployment")
+            raise TypeError(error_msg)
+    else:  # resource mode
+        if not isinstance(deploy_payload, dict):
+            error_msg = f"Invalid deploy_payload for resource mode. Expected dict, got: {type(deploy_payload).__name__}"
+            action_module.logger.error(error_msg, fabric=fabric, operation=f"{entity_type}_deployment")
+            raise TypeError(error_msg)
+
     # Ensure entity_type is pluralized for API paths
     entity_type_plural = entity_type + "s" if not entity_type.endswith("s") else entity_type
 
     # Get fabric type and build appropriate path
-    base_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric}/{entity_type_plural}"
-
-    # Determine deployment path and payload based on fabric type
-    if fabric_type == "multicluster_parent":
-        # Multicluster parent always uses /onemanage prefix and special endpoint
-        if action_module.ndfc_version >= 12.2:
-            # NDFC 12.4+: /onemanage/appcenter/cisco/ndfc/api/v1/onemanage/top-down/{entity_type}/deploy
-            deploy_path = f"/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/top-down/{entity_type_plural}/deploy"
-        else:
-            deploy_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/{entity_type_plural}/deploy"
-    else:
-        # Standard fabric or MSD fabric deployment
-        deploy_path = base_path + "/deployments"
+    base_path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest"
 
     try:
+        # Determine deployment path and payload based on fabric type
+        if fabric_type == "multicluster_parent":
+            # Multicluster parent always uses /onemanage prefix and special endpoint
+            if action_module.ndfc_version >= 12.2:
+                # NDFC 12.4+: /onemanage/appcenter/cisco/ndfc/api/v1/onemanage/top-down/{entity_type}/deploy
+                if deploy_mode == "switch":
+                    deploy_path = f"/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabric}/config-deploy/{','.join(deploy_payload)}?forceShowRun=false"
+                    deploy_payload = None  # Payload is not needed for switch-based deployment
+                else:
+                    deploy_path = f"/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/top-down/{entity_type_plural}/deploy"
+            else:
+                if deploy_mode == "switch":
+                    deploy_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/fabrics/{fabric}/config-deploy/{','.join(deploy_payload)}?forceShowRun=false"
+                    deploy_payload = None  # Payload is not needed for switch-based deployment
+                else:
+                    deploy_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/{entity_type_plural}/deploy"
+        else:
+            if action_module.ndfc_version >= 12:
+                if deploy_mode == "switch":
+                    deploy_path = base_path + f"/control/fabrics/{fabric}" f"/config-deploy/{','.join(deploy_payload)}?forceShowRun=false"
+                    deploy_payload = None  # Payload is not needed for switch-based deployment
+                else:
+                    deploy_path = f"/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/{entity_type_plural}/deploy"
+            else:
+                deploy_path = base_path + f"/top-down/fabrics/{fabric}/{entity_type_plural}" + "/deployments"
+
         # Execute NDFC REST API call to deploy configurations
         deployment_response = action_module._execute_module(
             module_name="cisco.dcnm.dcnm_rest",

@@ -1014,6 +1014,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     validate_list_of_dicts,
     sanitize_lan_attach_list
 )
+from ..module_utils.common.log_v2 import Log
 
 
 class DcnmNetwork:
@@ -1096,6 +1097,12 @@ class DcnmNetwork:
         self.deploy_mode = module.params.get("deploy_mode", "switch")
         self.network_to_sns = {}
         self.deploy_payload = {}
+        # Centralized map tracking network-to-serial attachments
+        # Format: {network_name: set(serial_numbers)}
+        self.network_sn_attach_map = {}
+        # Centralized map tracking network-to-serial detachments for undeploy operations
+        # Format: {network_name: set(serial_numbers)}
+        self.network_sn_detach_map = {}
 
         # Get fabric details from parameter (set by action plugin) - MUST be done before inventory call
         fabric_details = module.params.get("_fabric_details")
@@ -1576,136 +1583,199 @@ class DcnmNetwork:
 
         return attach
 
-    def transform_deploy_payload_for_multicluster(self, deploy_payload, use_diff_attach=True):
+    def update_network_sn_attach_map(self):
         """
-        Transform deploy payload for multicluster parent fabrics ONLY.
+        Build/update centralized map of network-to-serial attachments.
 
-        For multicluster parent, the deploy API expects:
-        {"serialNumber1": "net1,net2,net3", "serialNumber2": "net1,net2,net3"}
+        Called after diff_attach is populated to create a single source of truth
+        for network attachment mappings. Uses set() for automatic deduplication.
 
-        For all other fabric types (including multicluster_child), use standard format:
-        {"networkNames": "net1,net2,net3"}
+        Map format: {network_name: set(serial_numbers)}
+        """
+        caller = inspect.stack()[1][3]
 
-        Uses diff_attach (for deploy) or have_attach (for undeploy) to build the serial number to networks mapping.
+        msg = "ENTERED. "
+        msg += f"caller: {caller}."
+        self.log.debug(msg)
+
+        self.network_sn_attach_map.clear()
+
+        for net_attach in self.diff_attach:
+            network_name = net_attach.get("networkName")
+            if not network_name:
+                continue
+
+            if network_name not in self.network_sn_attach_map:
+                self.network_sn_attach_map[network_name] = set()
+
+            for attach in net_attach.get("lanAttachList", []):
+                serial = attach.get("serialNumber")
+                if serial:
+                    self.network_sn_attach_map[network_name].add(serial)
+
+        msg = "self.network_sn_attach_map: "
+        msg += f"{json.dumps({k: list(v) for k, v in self.network_sn_attach_map.items()}, indent=4)}"
+        self.log.debug(msg)
+
+    def update_network_sn_detach_map(self):
+        """
+        Build/update centralized map of network-to-serial detachments.
+
+        Called after diff_detach is populated to create a single source of truth
+        for network detachment mappings during undeploy operations. Uses set() for
+        automatic deduplication.
+
+        Map format: {network_name: set(serial_numbers)}
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}."
+        self.log.debug(msg)
+
+        self.network_sn_detach_map.clear()
+
+        for net_detach in self.diff_detach:
+            network_name = net_detach.get("networkName")
+            if not network_name:
+                continue
+
+            if network_name not in self.network_sn_detach_map:
+                self.network_sn_detach_map[network_name] = set()
+
+            for detach in net_detach.get("lanAttachList", []):
+                serial = detach.get("serialNumber")
+                if serial:
+                    self.network_sn_detach_map[network_name].add(serial)
+
+        msg = "self.network_sn_detach_map: "
+        msg += f"{json.dumps({k: list(v) for k, v in self.network_sn_detach_map.items()}, indent=4)}"
+        self.log.debug(msg)
+
+    def get_deploy_switch_serials(self, network_names, is_undeploy=False):
+        """
+        Return list of switch serials affected by network deployments or undeployments.
+
+        Uses centralized network_sn_attach_map for deploy operations and
+        network_sn_detach_map for undeploy operations. The is_undeploy parameter
+        explicitly controls which map to use.
 
         Args:
-            deploy_payload: Original payload with networkNames format
-            use_diff_attach: If True, use diff_attach (for deploy operations).
-                           If False, use have_attach (for undeploy/delete operations).
+            network_names: Can be dict with "networkNames" key, string (comma-separated),
+                         or list of network names
+            is_undeploy: If True, reads from network_sn_detach_map (undeploy operations).
+                        If False (default), reads from network_sn_attach_map (deploy operations).
 
         Returns:
-            Transformed payload for multicluster_parent or original payload for other fabric types
+            list: Ordered list of unique serial numbers
         """
+        caller = inspect.stack()[1][3]
 
-        if not deploy_payload or "networkNames" not in deploy_payload:
-            return deploy_payload
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"network_names type: {type(network_names)}, is_undeploy: {is_undeploy}"
+        self.log.debug(msg)
 
-        network_names_str = deploy_payload["networkNames"]
-        if not network_names_str:
-            return {}
-
-        # Parse the comma-separated network names that need to be deployed
-        network_names_list = [name.strip() for name in network_names_str.split(",")]
-
-        # Choose attach source based on parameter
-        # For deploy operations: use diff_attach
-        # For undeploy/delete operations: use have_attach
-        attach_source = None
-        if use_diff_attach:
-            if hasattr(self, 'diff_attach') and self.diff_attach:
-                attach_source = self.diff_attach
-        else:
-            if hasattr(self, 'have_attach') and self.have_attach:
-                attach_source = self.have_attach
-
-        if not attach_source:
-            return deploy_payload
-
-        # Build serial -> networks mapping from attach source
-        # Only include networks that are in the deploy_payload
-        serial_to_networks = {}
-
-        for net_attach in attach_source:
-            network_name = net_attach.get("networkName")
-
-            # Only process networks that are in the deploy list
-            if not network_name or network_name not in network_names_list:
-                continue
-
-            lan_attach_list = net_attach.get("lanAttachList", [])
-            for attach in lan_attach_list:
-                serial = attach.get("serialNumber")
-
-                if not serial:
-                    continue
-
-                # Add this network to the serial's list
-                if serial not in serial_to_networks:
-                    serial_to_networks[serial] = []
-                if network_name not in serial_to_networks[serial]:
-                    serial_to_networks[serial].append(network_name)
-
-        # If we couldn't build the mapping, fall back to original payload
-        if not serial_to_networks:
-            return deploy_payload
-
-        # Build the multicluster format payload: {serialNumber: "net1,net2,net3"}
-        multicluster_payload = {}
-        for serial, networks in serial_to_networks.items():
-            multicluster_payload[serial] = ",".join(networks)
-
-        return multicluster_payload
-
-    def get_delete_deploy_switch_serials(self, network_names=None, attach_source=None):
-        """
-        Return ordered, unique switch serials affected by delete-time network detaches.
-        """
-
+        # Parse network_names to list format
         if isinstance(network_names, dict):
-            network_names = network_names.get("networkNames")
+            network_names = network_names.get("networkNames", "").split(",")
+        elif isinstance(network_names, str):
+            network_names = network_names.split(",")
 
-        wanted_networks = None
-        if network_names:
-            if isinstance(network_names, str):
-                wanted_networks = set(
-                    name.strip() for name in network_names.split(",") if name.strip()
-                )
-            else:
-                wanted_networks = set(network_names)
+        # Select the appropriate map based on operation type
+        serial_map = self.network_sn_detach_map if is_undeploy else self.network_sn_attach_map
+        
+        map_type = "detach" if is_undeploy else "attach"
+        msg = f"Using network_sn_{map_type}_map for serial lookup."
+        self.log.debug(msg)
 
-        source = attach_source
-        if source is None:
-            source = getattr(self, "diff_detach", [])
-        if isinstance(source, dict):
-            source = [source]
-
+        # Collect serials maintaining order while avoiding duplicates
         serials = []
         seen = set()
-        for net_attach in source or []:
-            network_name = net_attach.get("networkName")
-            if wanted_networks and network_name not in wanted_networks:
+        for network_name in network_names:
+            network_name = network_name.strip()
+            if not network_name:
                 continue
 
-            attach_list = net_attach.get("lanAttachList", net_attach.get("switchList", []))
-            for attach in attach_list:
-                serial = attach.get("serialNumber") or attach.get("switchSerialNo")
-                if not serial or serial in seen:
-                    continue
-                seen.add(serial)
-                serials.append(serial)
+            for serial in serial_map.get(network_name, set()):
+                if serial not in seen:
+                    seen.add(serial)
+                    serials.append(serial)
+
+        msg = f"Returning {len(serials)} serials for networks: {network_names}"
+        self.log.debug(msg)
 
         return serials
 
-    def deploy_deleted_network_switches(self, network_names=None, attach_source=None):
+    def network_serial_payload_transform(self, payload: dict) -> dict:
         """
-        Trigger switch-level config deploy for switches touched by network deletion.
+        Transform network deploy payload for multicluster/resource mode.
+
+        Converts from:
+            {"networkNames": "net1,net2,net3"}
+        To:
+            {"serial1": "net1,net2", "serial2": "net3"}
+
+        Uses centralized network_sn_attach_map as single source of truth.
+
+        Args:
+            payload: Deployment payload with networkNames key
+
+        Returns:
+            Transformed payload mapping serial numbers to comma-separated network names
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}."
+        self.log.debug(msg)
+
+        if not payload or "networkNames" not in payload:
+            return payload
+
+        network_names_str = payload["networkNames"]
+        if not network_names_str:
+            return {}
+
+        # Parse the comma-separated network names
+        network_names_list = [n.strip() for n in network_names_str.split(",")]
+
+        # Build serial -> networks mapping from centralized map
+        serial_to_networks = {}
+        for network_name in network_names_list:
+            for serial in self.network_sn_attach_map.get(network_name, set()):
+                if serial not in serial_to_networks:
+                    serial_to_networks[serial] = []
+                serial_to_networks[serial].append(network_name)
+
+        # Convert to multicluster format: {serialNumber: "net1,net2,net3"}
+        result = {serial: ",".join(nets) for serial, nets in serial_to_networks.items()}
+
+        msg = "Returning transformed payload: "
+        msg += f"{json.dumps(result, indent=4)}"
+        self.log.debug(msg)
+
+        return result
+
+    def deploy_network_switches(self, network_names=None, is_rollback=False, is_undeploy=False):
+        """
+        Trigger switch-level config deploy for switches affected by network operations.
+        
+        Uses network attachment data to determine affected switches.
+        Works for both deploy and undeploy operations.
+        Handles response internally and updates self.result.
+        
+        Args:
+            network_names: Networks to deploy/undeploy
+            is_rollback: Whether this is a rollback operation
+            is_undeploy: If True, uses detach map for undeploy. If False, uses attach map for deploy.
         """
 
-        serials = self.get_delete_deploy_switch_serials(network_names, attach_source)
+        serials = self.get_deploy_switch_serials(network_names, is_undeploy=is_undeploy)
         if not serials:
-            msg = "No switch serials found for delete-time config deploy."
+            msg = "No switch serials found for config deploy."
             self.log.debug(msg)
-            return None
+            return
 
         method = "POST"
         deploy_path = self.paths["GET_NET_SWITCH_CONFIG_DEPLOY"].format(
@@ -1713,7 +1783,16 @@ class DcnmNetwork:
             ",".join(serials)
         )
 
-        return dcnm_send(self.module, method, deploy_path)
+        resp = dcnm_send(self.module, method, deploy_path)
+        
+        if resp is not None:
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "deploy")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
 
     def diff_for_create(self, want, have):
         caller = inspect.stack()[1][3]
@@ -2567,6 +2646,15 @@ class DcnmNetwork:
                     dep_net = attach["networkName"]
 
                 sn = attach["switchSerialNo"]
+                
+                # Build network_sn_attach_map from have_attach (like VRF does)
+                # This ensures serials are available for networks with config-only changes
+                network_name = attach.get("networkName")
+                if network_name:
+                    if network_name not in self.network_sn_attach_map:
+                        self.network_sn_attach_map[network_name] = set()
+                    self.network_sn_attach_map[network_name].add(sn)
+                
                 vlan = attach.get("vlanId")
 
                 ports = ""
@@ -2676,6 +2764,10 @@ class DcnmNetwork:
         msg += f"{json.dumps(self.have_deploy, indent=4)}"
         self.log.debug(msg)
 
+        msg = "self.network_sn_attach_map (built from have_attach in get_have): "
+        msg += f"{json.dumps({k: list(v) for k, v in self.network_sn_attach_map.items()}, indent=4)}"
+        self.log.debug(msg)
+
     def get_want(self):
         caller = inspect.stack()[1][3]
 
@@ -2708,6 +2800,13 @@ class DcnmNetwork:
                 result = self.update_attach_params(attach, net["net_name"], deploy)
 
                 networks.append(result)
+                
+                # Update network_sn_attach_map from want_attach (like VRF does)
+                network_name = net["net_name"]
+                if network_name not in self.network_sn_attach_map:
+                    self.network_sn_attach_map[network_name] = set()
+                self.network_sn_attach_map[network_name].add(result["serialNumber"])
+                
             if networks:
                 self.normalize_vpc_torports(networks)
                 for attch in net["attach"]:
@@ -2768,6 +2867,10 @@ class DcnmNetwork:
         msg += f"{json.dumps(self.want_deploy, indent=4)}"
         self.log.debug(msg)
 
+        msg = "self.network_sn_attach_map (updated from want_attach in get_want): "
+        msg += f"{json.dumps({k: list(v) for k, v in self.network_sn_attach_map.items()}, indent=4)}"
+        self.log.debug(msg)
+
     def get_diff_delete(self):
         caller = inspect.stack()[1][3]
 
@@ -2781,6 +2884,9 @@ class DcnmNetwork:
 
         all_nets = ""
 
+        # Clear detach map at start of delete processing
+        self.network_sn_detach_map.clear()
+
         if self.config:
 
             for want_c in self.want_create:
@@ -2789,23 +2895,37 @@ class DcnmNetwork:
                     None,
                 ):
                     continue
-                diff_delete.update({want_c["networkName"]: "DEPLOYED"})
+
+                network_name = want_c["networkName"]
+                diff_delete.update({network_name: "DEPLOYED"})
 
                 have_a = next(
-                    (attach for attach in self.have_attach if attach["networkName"] == want_c["networkName"]),
+                    (attach for attach in self.have_attach if attach["networkName"] == network_name),
                     None,
                 )
 
                 if not have_a:
                     continue
 
+                # Build detach map inline while processing delete
+                # Initialize network entry in detach map
+                if network_name not in self.network_sn_detach_map:
+                    self.network_sn_detach_map[network_name] = set()
+
                 to_del = []
                 atch_h = have_a["lanAttachList"]
                 for a_h in atch_h:
+                    # Add serial to detach map for all attachments (needed for undeploy)
+                    serial = a_h.get("serialNumber")
+                    if serial:
+                        self.network_sn_detach_map[network_name].add(serial)
+
+                    # Only add to diff_detach if actually attached
                     if a_h["isAttached"]:
                         del a_h["isAttached"]
                         a_h.update({"deployment": False})
                         to_del.append(a_h)
+
                 if to_del:
                     have_a.update({"lanAttachList": to_del})
                     diff_detach.append(have_a)
@@ -2815,19 +2935,33 @@ class DcnmNetwork:
 
         else:
             for have_a in self.have_attach:
+                network_name = have_a["networkName"]
+                diff_delete.update({network_name: "DEPLOYED"})
+
+                # Build detach map inline while processing delete
+                # Initialize network entry in detach map
+                if network_name not in self.network_sn_detach_map:
+                    self.network_sn_detach_map[network_name] = set()
+
                 to_del = []
                 atch_h = have_a["lanAttachList"]
                 for a_h in atch_h:
+                    # Add serial to detach map for all attachments (needed for undeploy)
+                    serial = a_h.get("serialNumber")
+                    if serial:
+                        self.network_sn_detach_map[network_name].add(serial)
+
+                    # Only add to diff_detach if actually attached
                     if a_h["isAttached"]:
                         del a_h["isAttached"]
                         a_h.update({"deployment": False})
                         to_del.append(a_h)
+
                 if to_del:
                     have_a.update({"lanAttachList": to_del})
                     diff_detach.append(have_a)
                     all_nets += have_a["networkName"] + ","
 
-                diff_delete.update({have_a["networkName"]: "DEPLOYED"})
             if all_nets:
                 diff_undeploy.update({"networkNames": all_nets[:-1]})
 
@@ -2845,6 +2979,10 @@ class DcnmNetwork:
 
         msg = "self.diff_delete: "
         msg += f"{json.dumps(self.diff_delete, indent=4)}"
+        self.log.debug(msg)
+        
+        msg = "self.network_sn_detach_map (built inline during DELETE processing): "
+        msg += f"{json.dumps({k: list(v) for k, v in self.network_sn_detach_map.items()}, indent=4)}"
         self.log.debug(msg)
 
     def get_diff_override(self):
@@ -2877,8 +3015,21 @@ class DcnmNetwork:
 
             to_del = []
             if not found:
+                network_name = have_a["networkName"]
+                
+                # Build detach map inline for networks being deleted in override
+                # Initialize network entry in detach map
+                if network_name not in self.network_sn_detach_map:
+                    self.network_sn_detach_map[network_name] = set()
+                
                 atch_h = have_a["lanAttachList"]
                 for a_h in atch_h:
+                    # Add serial to detach map for all attachments (needed for undeploy)
+                    serial = a_h.get("serialNumber")
+                    if serial:
+                        self.network_sn_detach_map[network_name].add(serial)
+                    
+                    # Only add to diff_detach if actually attached
                     if a_h["isAttached"]:
                         del a_h["isAttached"]
                         a_h.update({"deployment": False})
@@ -2891,7 +3042,7 @@ class DcnmNetwork:
 
                 # The following is added just to help in deletion, we need to wait for detach transaction to complete
                 # before attempting to delete the network.
-                diff_delete.update({have_a["networkName"]: "DEPLOYED"})
+                diff_delete.update({network_name: "DEPLOYED"})
 
         if all_nets:
             diff_undeploy.update({"networkNames": all_nets[:-1]})
@@ -2902,6 +3053,11 @@ class DcnmNetwork:
         self.diff_undeploy = diff_undeploy
         self.diff_delete = diff_delete
         self.diff_detach = diff_detach
+        
+        msg = "self.network_sn_detach_map (built inline during OVERRIDE processing): "
+        msg += f"{json.dumps({k: list(v) for k, v in self.network_sn_detach_map.items()}, indent=4)}"
+        self.log.debug(msg)
+
         return warn_msg
 
     def get_diff_replace(self):
@@ -3271,6 +3427,10 @@ class DcnmNetwork:
         self.diff_deploy = diff_deploy
         self.diff_create_quick = diff_create_quick
 
+        # Note: network_sn_attach_map is now built from have_attach (in get_have)
+        # and want_attach (in get_want), similar to how VRF module handles it.
+        # This ensures serials are available for networks with config-only changes.
+
         return warn_msg
 
     def format_diff(self):
@@ -3543,22 +3703,36 @@ class DcnmNetwork:
             return
 
         method = "POST"
-        if self.fabric_type != "multicluster_parent" and self.deploy_mode == "switch":
-            resp = self.deploy_deleted_network_switches(
-                network_names=[net["networkName"]],
-                attach_source=[payload_net]
-            )
+        if self.dcnm_version >= 12:
+            # Version 12+: Determine deploy path and payload format based on deploy_mode
+            if self.deploy_mode == "switch":
+                # Use switch-level deploy (undeploy operation for delete)
+                self.deploy_network_switches(
+                    network_names=[net["networkName"]],
+                    is_rollback=False,
+                    is_undeploy=True
+                )
+            else:
+                # Use resource-level deploy: /networks/deploy path with SN:networkNames
+                path = self.paths["GET_NET"].format(self.fabric)
+                deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
+                resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
+                if resp is not None:
+                    self.result["response"].append(resp)
+                    fail, dummy_changed = self.handle_response(resp, "deploy")
+                    if fail:
+                        self.failure(resp)
         else:
+            # Version < 12: use legacy /deployments path
             path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
             resp = dcnm_send(self.module, method, path, json.dumps(deploy_payload))
+            if resp is None:
+                return
 
-        if resp is None:
-            return
-
-        self.result["response"].append(resp)
-        fail, dummy_changed = self.handle_response(resp, "deploy")
-        if fail:
-            self.failure(resp)
+            self.result["response"].append(resp)
+            fail, dummy_changed = self.handle_response(resp, "deploy")
+            if fail:
+                self.failure(resp)
 
     def wait_for_network_del_ready(self):
         """
@@ -4040,26 +4214,39 @@ class DcnmNetwork:
         payload = copy.deepcopy(self.diff_undeploy)
         delete_ready = False
         if self.diff_undeploy:
-            use_delete_config_deploy = (
-                self.fabric_type != "multicluster_parent"
-                and self.deploy_mode == "switch"
-                and bool(self.diff_delete)
-            )
-            # For multicluster_parent, always use switch-level endpoint and payload format
-            # For all others, check deploy_mode parameter
-            if use_delete_config_deploy:
-                resp = self.deploy_deleted_network_switches(payload)
-            elif self.fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
-                # Use switch-level deploy: transform payload to serial number format
-                deploy_path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
-                deploy_payload = self.transform_deploy_payload_for_multicluster(payload, use_diff_attach=False)
-                resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
+            if self.dcnm_version >= 12:
+                # Determine deploy path and payload format
+                if self.deploy_mode == "switch":
+                    # Use switch-level deploy (undeploy operation)
+                    self.deploy_network_switches(payload, is_rollback, is_undeploy=True)
+                else:
+                    # Use resource-level deploy: /networks/deploy path with SN:networkNames
+                    path = self.paths["GET_NET"].format(self.fabric)
+                    deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
+                    deploy_payload = self.network_serial_payload_transform(payload)
+                    resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
+                    if resp is not None:
+                        self.result["response"].append(resp)
+                        fail, self.result["changed"] = self.handle_response(resp, "deploy")
+                        if fail:
+                            if is_rollback:
+                                self.failed_to_rollback = True
+                                return
+                            self.failure(resp)
             else:
-                # Use resource-level deploy: standard /deployments path with networkNames
+                # Version < 12: use legacy /deployments path with networkNames
                 path = self.paths["GET_NET"].format(self.fabric)
                 deploy_path = path + "/deployments"
                 deploy_payload = payload
                 resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
+                if resp is not None:
+                    self.result["response"].append(resp)
+                    fail, self.result["changed"] = self.handle_response(resp, "deploy")
+                    if fail:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        self.failure(resp)
 
             # Use the self.wait_for_network_attachments_del_ready() function to refresh the state
             # of self.diff_delete dict and re-attempt the undeploy action if
@@ -4069,20 +4256,45 @@ class DcnmNetwork:
                 str(state).upper() == "OUT-OF-SYNC" for state in self.diff_delete.values()
             )
             if delete_ready and undeploy_retry_needed:
-                if use_delete_config_deploy:
-                    resp = self.deploy_deleted_network_switches(payload)
-                else:
-                    resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
+                msg = "Networks in OUT-OF-SYNC state detected. Retrying undeploy."
+                self.log.debug(msg)
+
+                # Reset delete_ready since we're performing another deploy operation
                 delete_ready = False
 
-            if resp is not None:
-                self.result["response"].append(resp)
-                fail, self.result["changed"] = self.handle_response(resp, "deploy")
-                if fail:
-                    if is_rollback:
-                        self.failed_to_rollback = True
-                        return
-                    self.failure(resp)
+                if self.dcnm_version >= 12:
+                    # Version 12+: Determine deploy path and payload format
+                    if self.deploy_mode == "switch":
+                        # Use switch-level deploy (undeploy retry)
+                        self.deploy_network_switches(payload, is_rollback, is_undeploy=True)
+                    else:
+                        # Use resource-level deploy: /networks/deploy path with SN:networkNames
+                        path = self.paths["GET_NET"].format(self.fabric)
+                        deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
+                        deploy_payload = self.network_serial_payload_transform(payload)
+                        resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
+                        if resp is not None:
+                            self.result["response"].append(resp)
+                            fail, self.result["changed"] = self.handle_response(resp, "deploy")
+                            if fail:
+                                if is_rollback:
+                                    self.failed_to_rollback = True
+                                    return
+                                self.failure(resp)
+                else:
+                    # Version < 12: use legacy /deployments path with networkNames
+                    path = self.paths["GET_NET"].format(self.fabric)
+                    deploy_path = path + "/deployments"
+                    deploy_payload = payload
+                    resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
+                    if resp is not None:
+                        self.result["response"].append(resp)
+                        fail, self.result["changed"] = self.handle_response(resp, "deploy")
+                        if fail:
+                            if is_rollback:
+                                self.failed_to_rollback = True
+                                return
+                            self.failure(resp)
 
         method = "DELETE"
         del_failure = ""
@@ -4284,17 +4496,38 @@ class DcnmNetwork:
 
         method = "POST"
         if self.diff_deploy:
-            # For multicluster_parent, always use switch-level endpoint and payload format
-            # For all others, check deploy_mode parameter
-            if self.fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
-                # Use switch-level deploy: transform payload to serial number format
-                deploy_path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
-                deploy_payload = self.transform_deploy_payload_for_multicluster(self.diff_deploy, use_diff_attach=True)
+            # For multicluster_parent and multisite_parent, prepare payload for action plugin
+            if self.fabric_type == "multicluster_parent" or self.fabric_type == "multisite_parent":
+                # Transform payload based on deploy_mode
+                if self.deploy_mode == "switch":
+                    # Use centralized method to get switch serials (normal deploy)
+                    diff_deploy = self.get_deploy_switch_serials(self.diff_deploy, is_undeploy=False)
+                else:
+                    # Use resource mode: transform to serial->networks mapping
+                    diff_deploy = self.network_serial_payload_transform(self.diff_deploy)
+
+                # Wrap in structured format for type checking in action plugin
+                self.deploy_payload = {"payload": diff_deploy}
+                return
+
+            # For standalone/child fabrics, deploy directly with version-dependent paths
+            if self.dcnm_version >= 12:
+                # Version 12+: Determine deploy path and payload format based on deploy_mode
+                if self.deploy_mode == "switch":
+                    # Use switch-level deploy (normal deploy operation)
+                    self.deploy_network_switches(self.diff_deploy, is_rollback, is_undeploy=False)
+                    return
+                else:
+                    # Use resource-level deploy: /networks/deploy path with networkNames
+                    path = self.paths["GET_NET"].format(self.fabric)
+                    deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
+                    deploy_payload = self.network_serial_payload_transform(self.diff_deploy)
             else:
-                # Use resource-level deploy: standard /deployments path with networkNames
+                # Version < 12: use legacy /deployments path with networkNames
                 path = self.paths["GET_NET"].format(self.fabric)
                 deploy_path = path + "/deployments"
                 deploy_payload = self.diff_deploy
+
             resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
             self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "deploy")
@@ -5037,6 +5270,13 @@ class DcnmNetwork:
 
 def main():
     """main entry point for module execution"""
+
+    # Logging setup
+    try:
+        log = Log()
+        log.commit()
+    except (TypeError, ValueError):
+        pass
 
     element_spec = dict(
         fabric=dict(required=True, type="str"),

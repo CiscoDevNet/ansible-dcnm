@@ -1036,7 +1036,8 @@ dcnm_vrf_paths = {
         "GET_VRF_SWITCH": "/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
         "GET_VRF_ID": "/rest/managed-pool/fabrics/{}/partitions/ids",
         "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
-        "GET_NET_VRF": "/rest/resource-manager/fabrics/{}/networks?vrf-name={}"
+        "GET_NET_VRF": "/rest/resource-manager/fabrics/{}/networks?vrf-name={}",
+        "GET_VRF_SWITCH_CONFIG_DEPLOY": "/rest/control/fabrics/{}/config-deploy/{}?forceShowRun=false",
     },
     12: {
         "GET_VRF_FAB": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}",
@@ -1047,6 +1048,7 @@ dcnm_vrf_paths = {
         "GET_VRF_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfinfo",
         "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
         "GET_NET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
+        "GET_VRF_SWITCH_CONFIG_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/{}?forceShowRun=false",
         "RESERVE_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/reserve-id",
     },
 }
@@ -1109,6 +1111,9 @@ class DcnmVrf:
         # "check_mode" and to print diffs[] in the output of each task.
         self.diff_create_quick = []
         self.vrf_sn_attach_map = {}
+        # Centralized map tracking VRF-to-serial detachments for undeploy operations
+        # Format: {vrf_name: set(serial_numbers)}
+        self.vrf_sn_detach_map = {}
         self.have_attach = []
         # O(1) lookup dict populated by get_have()
         self.have_attach_by_name = {}
@@ -1200,7 +1205,10 @@ class DcnmVrf:
             if self.dcnm_version >= 12.2:
                 proxy = "/onemanage"
             for path in self.paths:
-                self.paths[path] = proxy + self.paths[path].replace("lan-fabric/rest", "onemanage")
+                if path == "GET_VRF_SWITCH_CONFIG_DEPLOY":
+                    self.paths[path] = proxy + self.paths[path.replace("lan-fabric/rest/control", "onemanage")]
+                else:
+                    self.paths[path] = proxy + self.paths[path].replace("lan-fabric/rest", "onemanage")
             # onepath proxy paths
             if self.dcnm_version >= 12.4:
                 proxy = "/fedproxy/"
@@ -1898,6 +1906,130 @@ class DcnmVrf:
         self.log.debug(msg)
         return False
 
+    def update_vrf_sn_detach_map(self):
+        """
+        Build/update centralized map of VRF-to-serial detachments.
+
+        Called after diff_detach is populated to create a single source of truth
+        for VRF detachment mappings during undeploy operations. Uses set() for
+        automatic deduplication.
+
+        Map format: {vrf_name: set(serial_numbers)}
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}."
+        self.log.debug(msg)
+
+        self.vrf_sn_detach_map.clear()
+
+        for vrf_detach in self.diff_detach:
+            vrf_name = vrf_detach.get("vrfName")
+            if not vrf_name:
+                continue
+
+            if vrf_name not in self.vrf_sn_detach_map:
+                self.vrf_sn_detach_map[vrf_name] = set()
+
+            for detach in vrf_detach.get("lanAttachList", []):
+                serial = detach.get("serialNumber")
+                if serial:
+                    self.vrf_sn_detach_map[vrf_name].add(serial)
+
+        msg = "self.vrf_sn_detach_map: "
+        msg += f"{json.dumps({k: list(v) for k, v in self.vrf_sn_detach_map.items()}, indent=4)}"
+        self.log.debug(msg)
+
+    def get_deploy_switch_serials(self, vrf_names=None, is_undeploy=False):
+        """
+        Return ordered, unique switch serials affected by VRF deployments or undeployments.
+        
+        Uses centralized vrf_sn_attach_map for deploy operations and
+        vrf_sn_detach_map for undeploy operations. The is_undeploy parameter
+        explicitly controls which map to use.
+        
+        Args:
+            vrf_names: Can be dict with "vrfNames" key, string (comma-separated),
+                      or list of VRF names
+            is_undeploy: If True, reads from vrf_sn_detach_map (undeploy operations).
+                        If False (default), reads from vrf_sn_attach_map (deploy operations).
+        
+        Returns:
+            list: Ordered list of unique serial numbers
+        """
+
+        if isinstance(vrf_names, dict):
+            vrf_names = vrf_names.get("vrfNames")
+
+        wanted_vrfs = None
+        if vrf_names:
+            if isinstance(vrf_names, str):
+                wanted_vrfs = set(
+                    name.strip() for name in vrf_names.split(",") if name.strip()
+                )
+            else:
+                wanted_vrfs = set(vrf_names)
+
+        # Select the appropriate map based on operation type
+        serial_map = self.vrf_sn_detach_map if is_undeploy else self.vrf_sn_attach_map
+        
+        map_type = "detach" if is_undeploy else "attach"
+        msg = f"Using vrf_sn_{map_type}_map for serial lookup."
+        self.log.debug(msg)
+
+        serials = []
+        seen = set()
+        
+        # Iterate through all VRFs in the selected map
+        for vrf_name, serial_set in serial_map.items():
+            if wanted_vrfs and vrf_name not in wanted_vrfs:
+                continue
+            
+            for serial in serial_set:
+                if serial not in seen:
+                    seen.add(serial)
+                    serials.append(serial)
+
+        return serials
+
+    def deploy_vrf_switches(self, vrf_names=None, is_rollback=False, is_undeploy=False):
+        """
+        Trigger switch-level config deploy for switches affected by VRF operations.
+        
+        Uses VRF attachment/detachment data to determine affected switches.
+        Works for both deploy and undeploy operations.
+        Handles response internally and updates self.result.
+        
+        Args:
+            vrf_names: VRFs to deploy/undeploy
+            is_rollback: Whether this is a rollback operation
+            is_undeploy: If True, uses detach map for undeploy. If False, uses attach map for deploy.
+        """
+
+        serials = self.get_deploy_switch_serials(vrf_names, is_undeploy=is_undeploy)
+        if not serials:
+            msg = "No switch serials found for config deploy."
+            self.log.debug(msg)
+            return
+
+        method = "POST"
+        deploy_path = self.paths["GET_VRF_SWITCH_CONFIG_DEPLOY"].format(
+            self.fabric,
+            ",".join(serials)
+        )
+
+        resp = dcnm_send(self.module, method, deploy_path)
+        
+        if resp is not None:
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "deploy")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
+
     def diff_for_create(self, want, have):
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
@@ -2589,22 +2721,15 @@ class DcnmVrf:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        @staticmethod
-        def get_items_to_detach(attach_list):
-            detach_list = []
-            for item in attach_list:
-                if "isAttached" in item:
-                    if item["isAttached"]:
-                        del item["isAttached"]
-                        item.update({"deployment": False})
-                        detach_list.append(item)
-            return detach_list
-
         diff_detach = []
         diff_undeploy = {}
         diff_delete = {}
 
         all_vrfs = []
+
+        # Clear detach map at start of delete processing
+        if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
+            self.vrf_sn_detach_map.clear()
 
         if self.config:
 
@@ -2614,16 +2739,35 @@ class DcnmVrf:
                 if want_c["vrfName"] not in self.have_create_by_name:
                     continue
 
-                diff_delete.update({want_c["vrfName"]: "DEPLOYED"})
+                vrf_name = want_c["vrfName"]
+                diff_delete.update({vrf_name: "DEPLOYED"})
 
                 if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
                     # O(1) lookup instead of find_dict_in_list_by_key_value
-                    have_a = self.have_attach_by_name.get(want_c["vrfName"])
+                    have_a = self.have_attach_by_name.get(vrf_name)
 
                     if not have_a:
                         continue
 
-                    detach_items = get_items_to_detach(have_a["lanAttachList"])
+                    # Build detach map inline while processing delete
+                    # Initialize VRF entry in detach map
+                    if vrf_name not in self.vrf_sn_detach_map:
+                        self.vrf_sn_detach_map[vrf_name] = set()
+
+                    detach_items = []
+                    for item in have_a["lanAttachList"]:
+                        # Add serial to detach map for all attachments (needed for undeploy)
+                        serial = item.get("serialNumber")
+                        if serial:
+                            self.vrf_sn_detach_map[vrf_name].add(serial)
+
+                        # Only add to diff_detach if actually attached
+                        if "isAttached" in item:
+                            if item["isAttached"]:
+                                del item["isAttached"]
+                                item.update({"deployment": False})
+                                detach_items.append(item)
+
                     if detach_items:
                         have_a.update({"lanAttachList": detach_items})
                         diff_detach.append(have_a)
@@ -2636,13 +2780,33 @@ class DcnmVrf:
         else:
             if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
                 for have_a in self.have_attach:
-                    detach_items = get_items_to_detach(have_a["lanAttachList"])
+                    vrf_name = have_a["vrfName"]
+                    diff_delete.update({vrf_name: "DEPLOYED"})
+
+                    # Build detach map inline while processing delete
+                    # Initialize VRF entry in detach map
+                    if vrf_name not in self.vrf_sn_detach_map:
+                        self.vrf_sn_detach_map[vrf_name] = set()
+
+                    detach_items = []
+                    for item in have_a["lanAttachList"]:
+                        # Add serial to detach map for all attachments (needed for undeploy)
+                        serial = item.get("serialNumber")
+                        if serial:
+                            self.vrf_sn_detach_map[vrf_name].add(serial)
+
+                        # Only add to diff_detach if actually attached
+                        if "isAttached" in item:
+                            if item["isAttached"]:
+                                del item["isAttached"]
+                                item.update({"deployment": False})
+                                detach_items.append(item)
+
                     if detach_items:
                         have_a.update({"lanAttachList": detach_items})
                         diff_detach.append(have_a)
                         all_vrfs.append(have_a["vrfName"])
 
-                    diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
                 if len(all_vrfs) != 0:
                     # deduplicate before joining
                     diff_undeploy.update({"vrfNames": ",".join(sorted(set(all_vrfs)))})
@@ -2654,6 +2818,11 @@ class DcnmVrf:
         msg = "self.diff_detach: "
         msg += f"{json.dumps(self.diff_detach, indent=4)}"
         self.log.debug(msg)
+
+        if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
+            msg = "self.vrf_sn_detach_map (built inline during DELETE processing): "
+            msg += f"{json.dumps({k: list(v) for k, v in self.vrf_sn_detach_map.items()}, indent=4)}"
+            self.log.debug(msg)
 
         msg = "self.diff_undeploy: "
         msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
@@ -2684,8 +2853,21 @@ class DcnmVrf:
 
             detach_list = []
             if not found:
+                vrf_name = have_a["vrfName"]
+
                 if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
+                    # Build detach map inline for VRFs being deleted in override
+                    # Initialize VRF entry in detach map
+                    if vrf_name not in self.vrf_sn_detach_map:
+                        self.vrf_sn_detach_map[vrf_name] = set()
+
                     for item in have_a["lanAttachList"]:
+                        # Add serial to detach map for all attachments (needed for undeploy)
+                        serial = item.get("serialNumber")
+                        if serial:
+                            self.vrf_sn_detach_map[vrf_name].add(serial)
+
+                        # Only add to diff_detach if actually attached
                         if "isAttached" in item:
                             if item["isAttached"]:
                                 del item["isAttached"]
@@ -2697,7 +2879,7 @@ class DcnmVrf:
                         diff_detach.append(have_a)
                         all_vrfs.append(have_a["vrfName"])
 
-                diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
+                diff_delete.update({vrf_name: "DEPLOYED"})
 
         if len(all_vrfs) != 0 and self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
             # deduplicate before joining
@@ -2714,6 +2896,11 @@ class DcnmVrf:
         msg = "self.diff_detach: "
         msg += f"{json.dumps(self.diff_detach, indent=4)}"
         self.log.debug(msg)
+
+        if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
+            msg = "self.vrf_sn_detach_map (built inline during OVERRIDE processing): "
+            msg += f"{json.dumps({k: list(v) for k, v in self.vrf_sn_detach_map.items()}, indent=4)}"
+            self.log.debug(msg)
 
         msg = "self.diff_undeploy: "
         msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
@@ -3781,25 +3968,75 @@ class DcnmVrf:
         verb = "POST"
         diff_undeploy = self.diff_undeploy
 
-        # Determine deploy path and payload format
-        # For multicluster_parent, always use switch-level
-        # For all others, check deploy_mode parameter
-        if self.action_fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
-            # Use switch-level deploy: transform payload to serial number format
-            deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
-            diff_undeploy = self.vrf_serial_payload_transform(self.diff_undeploy)
+        if self.dcnm_version >= 12:
+            # Determine deploy path and payload format
+            if self.deploy_mode == "switch":
+                # Use switch-level config-deploy (undeploy operation)
+                self.deploy_vrf_switches(diff_undeploy, is_rollback, is_undeploy=True)
+            else:
+                # Use resource-level deploy: transform payload to serial number format
+                deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
+                diff_undeploy = self.vrf_serial_payload_transform(self.diff_undeploy)
+                self.send_to_controller(
+                    action,
+                    verb,
+                    deploy_path,
+                    diff_undeploy,
+                    log_response=True,
+                    is_rollback=is_rollback,
+                )
         else:
-            # Use resource-level deploy: standard /deployments path with vrfNames
+            # for dcnm versions < 12, use the original deploy path and payload format
             deploy_path = path + "/deployments"
+            self.send_to_controller(
+                action,
+                verb,
+                deploy_path,
+                diff_undeploy,
+                log_response=True,
+                is_rollback=is_rollback,
+            )
 
-        self.send_to_controller(
-            action,
-            verb,
-            deploy_path,
-            diff_undeploy,
-            log_response=True,
-            is_rollback=is_rollback,
-        )
+    def push_diff_undeploy_with_retry(self, is_rollback=False):
+        """
+        # Summary
+
+        Send diff_undeploy to the controller with OUT-OF-SYNC retry logic.
+
+        ## Description
+
+        This wrapper method handles the undeploy operation and automatically
+        retries if VRFs are in OUT-OF-SYNC state after the initial undeploy.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}."
+        self.log.debug(msg)
+
+        # Initial undeploy
+        self.push_diff_undeploy(is_rollback)
+
+        # Check for OUT-OF-SYNC state and retry if needed
+        if self.diff_undeploy:
+            delete_ready = self.wait_for_vrf_attachments_del_ready()
+            undeploy_retry_needed = any(
+                str(state).upper() == "OUT-OF-SYNC" for state in self.diff_delete.values()
+            )
+            if delete_ready and undeploy_retry_needed:
+                msg = "VRFs in OUT-OF-SYNC state detected. Retrying undeploy."
+                self.log.debug(msg)
+
+                use_delete_config_deploy = (
+                    self.action_fabric_type != "multicluster_parent"
+                    and self.deploy_mode == "switch"
+                    and bool(self.diff_delete)
+                )
+
+                if use_delete_config_deploy:
+                    self.deploy_vrf_switches(self.diff_undeploy, is_rollback, is_undeploy=True)
+                else:
+                    self.push_diff_undeploy(is_rollback)
 
     def bulk_delete_with_retry(self, vrfs_to_delete, action, verb, is_rollback=False):
         """
@@ -4808,9 +5045,9 @@ class DcnmVrf:
         msg += "ENTERED."
         self.log.debug(msg)
 
-        if not self.diff_deploy:
+        if not self.diff_deploy or self.action_fabric_type == "multisite_child" or self.action_fabric_type == "multicluster_child":
             msg = f"Early return. Fabric Type:{self.action_fabric_type}"
-            msg += f"diff_deploy: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
+            msg += f"diff_deploy: {json.dumps(self.diff_deploy, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             return
 
@@ -4819,20 +5056,30 @@ class DcnmVrf:
         path = self.paths["GET_VRF"].format(self.fabric)
         diff_deploy = self.diff_deploy
 
-        # Determine deploy path and payload format
-        # For multicluster_parent, always use switch-level
-        # For all others, check deploy_mode parameter
-        if self.action_fabric_type == "multicluster_parent" or self.deploy_mode == "switch":
-            # Use switch-level deploy: transform payload to serial number format
-            deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
-            diff_deploy = self.vrf_serial_payload_transform(diff_deploy)
-        else:
-            # Use resource-level deploy: standard /deployments path with vrfNames
-            deploy_path = path + "/deployments"
-
         if self.action_fabric_type == "multicluster_parent" or self.action_fabric_type == "multisite_parent":
-            self.deploy_payload = diff_deploy
+            # For multisite/multicluster parent, set deploy_payload and return
+            # Deployment will be handled differently for these fabric types
+            if self.deploy_mode == "switch":
+                diff_deploy = self.get_deploy_switch_serials(diff_deploy, is_undeploy=False)
+            else:
+                diff_deploy = self.vrf_serial_payload_transform(diff_deploy)
+            # Wrap in structured format for type checking in action plugin
+            self.deploy_payload = {"payload": diff_deploy}
             return
+
+        if self.dcnm_version >= 12:
+            # Determine deploy path and payload format
+            if self.deploy_mode == "switch":
+                # Use switch-level config-deploy (normal deploy operation)
+                self.deploy_vrf_switches(diff_deploy, is_rollback, is_undeploy=False)
+                return
+            else:
+                # Use resource-level deploy: standard /deployments path with vrfNames
+                deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
+                diff_deploy = self.vrf_serial_payload_transform(self.diff_deploy)
+        else:
+            # for dcnm versions < 12, use the original deploy path and payload format
+            deploy_path = path + "/deployments"
 
         self.send_to_controller(
             action,
@@ -5080,7 +5327,7 @@ class DcnmVrf:
                 self.module.fail_json(msg=msg)
 
         self.push_diff_detach(is_rollback)
-        self.push_diff_undeploy(is_rollback)
+        self.push_diff_undeploy_with_retry(is_rollback)
 
         msg = "Calling self.push_diff_delete"
         self.log.debug(msg)
@@ -5125,12 +5372,11 @@ class DcnmVrf:
         base_timeout = max(vrf_count * 30, 500)
         retry_count = max(base_timeout // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
 
-        msg = f"Waiting for {len(pending_vrfs)} VRF(s) attachments to reach terminal state. "
+        msg = f"Waiting for {len(pending_vrfs)} VRF(s) to reach terminal state. "
         msg += f"vrf_count: {vrf_count}, base_timeout: {base_timeout}s, retry_count: {retry_count}"
         self.log.debug(msg)
 
         path = self.paths["GET_VRF"].format(self.fabric)
-        retry_count = max(500 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
 
         while pending_vrfs and retry_count > 0:
             retry_count -= 1
