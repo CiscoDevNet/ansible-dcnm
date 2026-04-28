@@ -672,6 +672,7 @@ class ActionModule(ActionBase):
         child_fabric_results = []
         deploy_payload_wrapper = {}
         deploy_payload = None
+        deploy_mode = None
         parent_fabric_name = None
         parent_fabric_type = None
 

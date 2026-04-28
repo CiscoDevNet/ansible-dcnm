@@ -1187,6 +1187,8 @@ class DcnmNetwork:
                 if path_key == "GET_NET_SWITCH_DEPLOY":
                     # Use the dedicated onemanage deploy endpoint
                     self.paths[path_key] = self.paths["GET_NET_SWITCH_DEPLOY_ONEMANAGE"]
+                elif path_key == "GET_NET_SWITCH_CONFIG_DEPLOY":
+                    self.paths[path_key] = proxy + self.paths[path_key.replace("lan-fabric/rest/control", "onemanage")]
                 else:
                     # Always replace lan-fabric/rest with onemanage AND prepend /onemanage for ALL versions
                     self.paths[path_key] = proxy + self.paths[path_key].replace("lan-fabric/rest", "onemanage")

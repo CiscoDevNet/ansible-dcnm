@@ -4182,7 +4182,7 @@ class DcnmVrf:
             if state == "OUT-OF-SYNC":
                 del_failure += vrf + ","
                 continue
-            if self.action_fabric_type == "multicluster_parent" or self.dcnm_version < 12:
+            if self.dcnm_version < 12:
                 self.log.debug("Sending individual VRF delete request")
                 path = self.paths["GET_VRF"].format(self.fabric)
                 delete_path = f"{path}/{vrf}"
@@ -4197,7 +4197,7 @@ class DcnmVrf:
             else:
                 vrfs_to_delete.append(vrf)
 
-        if self.action_fabric_type != "multicluster_parent" and vrfs_to_delete and self.dcnm_version >= 12:
+        if vrfs_to_delete and self.dcnm_version >= 12:
             self.log.debug("Sending Bulk VRF delete request")
             # Use retry logic for bulk delete
             self.bulk_delete_with_retry(
