@@ -745,8 +745,8 @@ class ActionModule(ActionBase):
                     'response': fabric_result.get('response', []),
                     'diff': fabric_result.get('diff', [])
                 }
-                # Collect deploy_payload only from multicluster_parent for deployment at the end
-                if fabric_type == 'multicluster_parent':
+                # Collect deploy_payload for multisite/multicluster parent fabrics to use for deployment at the end
+                if fabric_type in ['multicluster_parent', 'multisite_parent']:
                     deploy_payload_wrapper = fabric_result.get('deploy_payload', None)
                     parent_fabric_name = fabric_config['fabric']
                     parent_fabric_type = fabric_type
