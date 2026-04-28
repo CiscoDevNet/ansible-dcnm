@@ -1906,41 +1906,6 @@ class DcnmVrf:
         self.log.debug(msg)
         return False
 
-    def update_vrf_sn_detach_map(self):
-        """
-        Build/update centralized map of VRF-to-serial detachments.
-
-        Called after diff_detach is populated to create a single source of truth
-        for VRF detachment mappings during undeploy operations. Uses set() for
-        automatic deduplication.
-
-        Map format: {vrf_name: set(serial_numbers)}
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}."
-        self.log.debug(msg)
-
-        self.vrf_sn_detach_map.clear()
-
-        for vrf_detach in self.diff_detach:
-            vrf_name = vrf_detach.get("vrfName")
-            if not vrf_name:
-                continue
-
-            if vrf_name not in self.vrf_sn_detach_map:
-                self.vrf_sn_detach_map[vrf_name] = set()
-
-            for detach in vrf_detach.get("lanAttachList", []):
-                serial = detach.get("serialNumber")
-                if serial:
-                    self.vrf_sn_detach_map[vrf_name].add(serial)
-
-        msg = "self.vrf_sn_detach_map: "
-        msg += f"{json.dumps({k: list(v) for k, v in self.vrf_sn_detach_map.items()}, indent=4)}"
-        self.log.debug(msg)
-
     def get_deploy_switch_serials(self, vrf_names=None, is_undeploy=False):
         """
         Return ordered, unique switch serials affected by VRF deployments or undeployments.
@@ -3976,7 +3941,7 @@ class DcnmVrf:
             else:
                 # Use resource-level deploy: transform payload to serial number format
                 deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
-                diff_undeploy = self.vrf_serial_payload_transform(self.diff_undeploy)
+                diff_undeploy = self.vrf_serial_payload_transform(self.diff_undeploy, is_undeploy=True)
                 self.send_to_controller(
                     action,
                     verb,
@@ -4019,11 +3984,11 @@ class DcnmVrf:
 
         # Check for OUT-OF-SYNC state and retry if needed
         if self.diff_undeploy:
-            delete_ready = self.wait_for_vrf_attachments_del_ready()
+            self.wait_for_vrf_attachments_del_ready()
             undeploy_retry_needed = any(
                 str(state).upper() == "OUT-OF-SYNC" for state in self.diff_delete.values()
             )
-            if delete_ready and undeploy_retry_needed:
+            if undeploy_retry_needed:
                 msg = "VRFs in OUT-OF-SYNC state detected. Retrying undeploy."
                 self.log.debug(msg)
 
@@ -4990,7 +4955,7 @@ class DcnmVrf:
             is_rollback=is_rollback,
         )
 
-    def vrf_serial_payload_transform(self, payload: dict) -> dict:
+    def vrf_serial_payload_transform(self, payload: dict, is_undeploy: bool = False) -> dict:
         """
         # Summary
 
@@ -5002,21 +4967,35 @@ class DcnmVrf:
         payload format for vrf_deploy operations.  This method
         transforms the standard payload into the required format.
 
-        Returns a dictionary mapping serial numbers to comma-separated VRF names.
+        ## Args
+
+        - payload: Dictionary with "vrfNames" key containing comma-separated VRF names
+        - is_undeploy: If True, uses vrf_sn_detach_map (undeploy). If False (default), uses vrf_sn_attach_map (deploy).
+
+        ## Returns
+
+        Dictionary mapping serial numbers to comma-separated VRF names.
         """
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
+        msg += f"is_undeploy: {is_undeploy}"
+        self.log.debug(msg)
+
+        # Select the appropriate map based on operation type
+        vrf_to_serial_map = self.vrf_sn_detach_map if is_undeploy else self.vrf_sn_attach_map
+        
+        map_type = "detach" if is_undeploy else "attach"
+        msg = f"Using vrf_sn_{map_type}_map for payload transformation."
         self.log.debug(msg)
 
         new_payload = {}
-        vrf_to_serial_attach = self.vrf_sn_attach_map
         payload_list = payload["vrfNames"].split(",")
 
         for vrf in payload_list:
-            # vrf_sn_attach_map stores sets of serial numbers per VRF
-            vrf_serial_set = vrf_to_serial_attach.get(vrf, set())
+            # Map stores sets of serial numbers per VRF
+            vrf_serial_set = vrf_to_serial_map.get(vrf, set())
 
             for serial in vrf_serial_set:
                 if serial not in new_payload:
@@ -5062,7 +5041,7 @@ class DcnmVrf:
             if self.deploy_mode == "switch":
                 diff_deploy = self.get_deploy_switch_serials(diff_deploy, is_undeploy=False)
             else:
-                diff_deploy = self.vrf_serial_payload_transform(diff_deploy)
+                diff_deploy = self.vrf_serial_payload_transform(diff_deploy, is_undeploy=False)
             # Wrap in structured format for type checking in action plugin
             self.deploy_payload = {"payload": diff_deploy}
             return
@@ -5076,7 +5055,7 @@ class DcnmVrf:
             else:
                 # Use resource-level deploy: standard /deployments path with vrfNames
                 deploy_path = path.replace(f"/fabrics/{self.fabric}/vrfs", "/vrfs/deploy")
-                diff_deploy = self.vrf_serial_payload_transform(self.diff_deploy)
+                diff_deploy = self.vrf_serial_payload_transform(self.diff_deploy, is_undeploy=False)
         else:
             # for dcnm versions < 12, use the original deploy path and payload format
             deploy_path = path + "/deployments"
@@ -5550,13 +5529,10 @@ class DcnmVrf:
         if pending_vrfs:
             msg = f"Timeout waiting for VRF attachments. Pending: {pending_vrfs}"
             self.log.debug(msg)
-            for vrf in pending_vrfs:
-                self.diff_delete.update({vrf: "TIMEOUT"})
-            return False
+            self.module.fail_json(msg=msg)
 
         msg = "All VRF attachments reached terminal state"
         self.log.debug(msg)
-        return True
 
     def attach_spec(self):
         """

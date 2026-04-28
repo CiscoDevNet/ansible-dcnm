@@ -1583,75 +1583,6 @@ class DcnmNetwork:
 
         return attach
 
-    def update_network_sn_attach_map(self):
-        """
-        Build/update centralized map of network-to-serial attachments.
-
-        Called after diff_attach is populated to create a single source of truth
-        for network attachment mappings. Uses set() for automatic deduplication.
-
-        Map format: {network_name: set(serial_numbers)}
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}."
-        self.log.debug(msg)
-
-        self.network_sn_attach_map.clear()
-
-        for net_attach in self.diff_attach:
-            network_name = net_attach.get("networkName")
-            if not network_name:
-                continue
-
-            if network_name not in self.network_sn_attach_map:
-                self.network_sn_attach_map[network_name] = set()
-
-            for attach in net_attach.get("lanAttachList", []):
-                serial = attach.get("serialNumber")
-                if serial:
-                    self.network_sn_attach_map[network_name].add(serial)
-
-        msg = "self.network_sn_attach_map: "
-        msg += f"{json.dumps({k: list(v) for k, v in self.network_sn_attach_map.items()}, indent=4)}"
-        self.log.debug(msg)
-
-    def update_network_sn_detach_map(self):
-        """
-        Build/update centralized map of network-to-serial detachments.
-
-        Called after diff_detach is populated to create a single source of truth
-        for network detachment mappings during undeploy operations. Uses set() for
-        automatic deduplication.
-
-        Map format: {network_name: set(serial_numbers)}
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}."
-        self.log.debug(msg)
-
-        self.network_sn_detach_map.clear()
-
-        for net_detach in self.diff_detach:
-            network_name = net_detach.get("networkName")
-            if not network_name:
-                continue
-
-            if network_name not in self.network_sn_detach_map:
-                self.network_sn_detach_map[network_name] = set()
-
-            for detach in net_detach.get("lanAttachList", []):
-                serial = detach.get("serialNumber")
-                if serial:
-                    self.network_sn_detach_map[network_name].add(serial)
-
-        msg = "self.network_sn_detach_map: "
-        msg += f"{json.dumps({k: list(v) for k, v in self.network_sn_detach_map.items()}, indent=4)}"
-        self.log.debug(msg)
-
     def get_deploy_switch_serials(self, network_names, is_undeploy=False):
         """
         Return list of switch serials affected by network deployments or undeployments.
@@ -1707,7 +1638,7 @@ class DcnmNetwork:
 
         return serials
 
-    def network_serial_payload_transform(self, payload: dict) -> dict:
+    def network_serial_payload_transform(self, payload: dict, is_undeploy: bool = False) -> dict:
         """
         Transform network deploy payload for multicluster/resource mode.
 
@@ -1716,10 +1647,11 @@ class DcnmNetwork:
         To:
             {"serial1": "net1,net2", "serial2": "net3"}
 
-        Uses centralized network_sn_attach_map as single source of truth.
+        Uses centralized network_sn_attach_map or network_sn_detach_map based on operation type.
 
         Args:
             payload: Deployment payload with networkNames key
+            is_undeploy: If True, uses network_sn_detach_map (undeploy). If False (default), uses network_sn_attach_map (deploy).
 
         Returns:
             Transformed payload mapping serial numbers to comma-separated network names
@@ -1727,7 +1659,8 @@ class DcnmNetwork:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}."
+        msg += f"caller: {caller}. "
+        msg += f"is_undeploy: {is_undeploy}"
         self.log.debug(msg)
 
         if not payload or "networkNames" not in payload:
@@ -1740,10 +1673,17 @@ class DcnmNetwork:
         # Parse the comma-separated network names
         network_names_list = [n.strip() for n in network_names_str.split(",")]
 
+        # Select the appropriate map based on operation type
+        network_to_serial_map = self.network_sn_detach_map if is_undeploy else self.network_sn_attach_map
+        
+        map_type = "detach" if is_undeploy else "attach"
+        msg = f"Using network_sn_{map_type}_map for payload transformation."
+        self.log.debug(msg)
+
         # Build serial -> networks mapping from centralized map
         serial_to_networks = {}
         for network_name in network_names_list:
-            for serial in self.network_sn_attach_map.get(network_name, set()):
+            for serial in network_to_serial_map.get(network_name, set()):
                 if serial not in serial_to_networks:
                     serial_to_networks[serial] = []
                 serial_to_networks[serial].append(network_name)
@@ -4223,7 +4163,7 @@ class DcnmNetwork:
                     # Use resource-level deploy: /networks/deploy path with SN:networkNames
                     path = self.paths["GET_NET"].format(self.fabric)
                     deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
-                    deploy_payload = self.network_serial_payload_transform(payload)
+                    deploy_payload = self.network_serial_payload_transform(payload, is_undeploy=True)
                     resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
                     if resp is not None:
                         self.result["response"].append(resp)
@@ -4271,7 +4211,7 @@ class DcnmNetwork:
                         # Use resource-level deploy: /networks/deploy path with SN:networkNames
                         path = self.paths["GET_NET"].format(self.fabric)
                         deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
-                        deploy_payload = self.network_serial_payload_transform(payload)
+                        deploy_payload = self.network_serial_payload_transform(payload, is_undeploy=True)
                         resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
                         if resp is not None:
                             self.result["response"].append(resp)
@@ -4504,7 +4444,7 @@ class DcnmNetwork:
                     diff_deploy = self.get_deploy_switch_serials(self.diff_deploy, is_undeploy=False)
                 else:
                     # Use resource mode: transform to serial->networks mapping
-                    diff_deploy = self.network_serial_payload_transform(self.diff_deploy)
+                    diff_deploy = self.network_serial_payload_transform(self.diff_deploy, is_undeploy=False)
 
                 # Wrap in structured format for type checking in action plugin
                 self.deploy_payload = {"payload": diff_deploy}
@@ -4521,7 +4461,7 @@ class DcnmNetwork:
                     # Use resource-level deploy: /networks/deploy path with networkNames
                     path = self.paths["GET_NET"].format(self.fabric)
                     deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
-                    deploy_payload = self.network_serial_payload_transform(self.diff_deploy)
+                    deploy_payload = self.network_serial_payload_transform(self.diff_deploy, is_undeploy=False)
             else:
                 # Version < 12: use legacy /deployments path with networkNames
                 path = self.paths["GET_NET"].format(self.fabric)
