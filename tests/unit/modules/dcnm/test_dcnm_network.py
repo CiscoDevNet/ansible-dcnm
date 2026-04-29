@@ -241,6 +241,70 @@ class TestDcnmNetworkModule(TestDcnmModule):
             False,
         )
 
+    def test_dcnm_net_delete_attachment_wait_batches_pending_networks(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.paths = {"GET_NET_ATTACH": "/attach/{}/{}"}
+        dcnm_net.module = Mock()
+        dcnm_net.WAIT_TIME_FOR_DELETE_LOOP = 5
+        dcnm_net.detach_and_deploy_for_del = Mock()
+
+        networks = [f"net-{index}" for index in range(31)]
+        dcnm_net.diff_delete = {network: "DEPLOYED" for network in networks}
+
+        self.run_dcnm_send.side_effect = [
+            {
+                "RETURN_CODE": 200,
+                "DATA": [
+                    {"networkName": network, "lanAttachList": []}
+                    for network in networks[:30]
+                ],
+            },
+            {
+                "RETURN_CODE": 200,
+                "DATA": [
+                    {"networkName": network, "lanAttachList": []}
+                    for network in networks[30:]
+                ],
+            },
+        ]
+
+        self.assertTrue(dcnm_net.wait_for_network_attachments_del_ready())
+
+        self.assertEqual(self.run_dcnm_send.call_count, 2)
+        paths = [call_args[0][2] for call_args in self.run_dcnm_send.call_args_list]
+        self.assertEqual(paths[0], "/attach/test-fabric/" + ",".join(networks[:30]))
+        self.assertEqual(paths[1], "/attach/test-fabric/" + networks[30])
+        self.assertEqual(set(dcnm_net.diff_delete.values()), {"NA"})
+        dcnm_net.detach_and_deploy_for_del.assert_not_called()
+
+    def test_dcnm_net_delete_attachment_wait_fails_on_unexpected_data(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.paths = {"GET_NET_ATTACH": "/attach/{}/{}"}
+        dcnm_net.module = Mock()
+        dcnm_net.module.fail_json.side_effect = Exception("fail_json")
+        dcnm_net.WAIT_TIME_FOR_DELETE_LOOP = 5
+        dcnm_net.diff_delete = {"net-a": "DEPLOYED"}
+
+        self.run_dcnm_send.return_value = {
+            "RETURN_CODE": 414,
+            "DATA": "<html>URI Too Long</html>",
+        }
+
+        with self.assertRaises(Exception):
+            dcnm_net.wait_for_network_attachments_del_ready()
+
+        dcnm_net.module.fail_json.assert_called_once()
+        self.assertIn(
+            "Unexpected DATA while waiting for network attachments",
+            dcnm_net.module.fail_json.call_args[1]["msg"],
+        )
+
     def load_fixtures(self, response=None, device=""):
 
         if self.version == 12:

@@ -1640,6 +1640,39 @@ class DcnmNetwork:
 
         return serials
 
+    def get_delete_deploy_switch_serials(self, network_names):
+        """
+        Return switch serials affected by deleted networks using diff_detach data.
+
+        This keeps compatibility with delete-specific callers while the main
+        deploy path uses get_deploy_switch_serials(..., is_undeploy=True).
+        """
+        if isinstance(network_names, dict):
+            network_names = network_names.get("networkNames", "").split(",")
+        elif isinstance(network_names, str):
+            network_names = network_names.split(",")
+
+        requested_networks = [network_name.strip() for network_name in network_names if network_name.strip()]
+        serials = []
+        seen = set()
+
+        for network in getattr(self, "diff_detach", []):
+            if network.get("networkName") not in requested_networks:
+                continue
+            for attach in network.get("lanAttachList", []):
+                serial = attach.get("serialNumber") or attach.get("switchSerialNo")
+                if serial and serial not in seen:
+                    seen.add(serial)
+                    serials.append(serial)
+
+        if serials:
+            return serials
+
+        if hasattr(self, "network_sn_detach_map"):
+            return self.get_deploy_switch_serials(network_names, is_undeploy=True)
+
+        return []
+
     def network_serial_payload_transform(self, payload: dict, is_undeploy: bool = False) -> dict:
         """
         Transform network deploy payload for multicluster/resource mode.
@@ -3645,25 +3678,23 @@ class DcnmNetwork:
             return
 
         method = "POST"
-        if self.dcnm_version >= 12:
-            # Version 12+: Determine deploy path and payload format based on deploy_mode
-            if self.deploy_mode == "switch":
-                # Use switch-level deploy (undeploy operation for delete)
-                self.deploy_network_switches(
-                    network_names=[net["networkName"]],
-                    is_rollback=False,
-                    is_undeploy=True
-                )
-            else:
-                # Use resource-level deploy: /networks/deploy path with SN:networkNames
-                path = self.paths["GET_NET"].format(self.fabric)
-                deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
-                resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
-                if resp is not None:
-                    self.result["response"].append(resp)
-                    fail, dummy_changed = self.handle_response(resp, "deploy")
-                    if fail:
-                        self.failure(resp)
+        if self.deploy_mode == "switch":
+            # Use switch-level deploy (undeploy operation for delete)
+            self.deploy_network_switches(
+                network_names=[net["networkName"]],
+                is_rollback=False,
+                is_undeploy=True
+            )
+        elif self.dcnm_version >= 12:
+            # Version 12+: use resource-level deploy with SN:networkNames payload.
+            path = self.paths["GET_NET"].format(self.fabric)
+            deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
+            resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
+            if resp is not None:
+                self.result["response"].append(resp)
+                fail, dummy_changed = self.handle_response(resp, "deploy")
+                if fail:
+                    self.failure(resp)
         else:
             # Version < 12: use legacy /deployments path
             path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
@@ -3789,7 +3820,7 @@ class DcnmNetwork:
 
         Wait for network attachments to be ready for deletion by checking lanAttachState.
 
-        Uses bulk GET_NET_ATTACH API to check all networks in a single call per retry iteration.
+        Uses batched GET_NET_ATTACH API calls to check all networks per retry iteration.
         Terminal states (ready for deletion):
         - NA: Attachment has been removed
         - OUT-OF-SYNC, FAILED: Can proceed with cleanup
@@ -3818,31 +3849,55 @@ class DcnmNetwork:
         self.log.debug(msg)
 
         deploy_triggered = set()  # Track networks that had deploy triggered
+        batch_size = 30
 
         while pending_networks and retry_count > 0:
             retry_count -= 1
 
-            # Make ONE bulk API call for all pending networks
-            network_names = ",".join(pending_networks)
+            networks_by_name = {}
+            poll_incomplete = False
 
-            if self.fabric_type == "multicluster_parent":
+            # Keep the query string small enough for large delete batches.
+            for index in range(0, len(pending_networks), batch_size):
+                network_names = ",".join(pending_networks[index:index + batch_size])
                 path = self.paths["GET_NET_ATTACH"].format(self.fabric, network_names)
-            else:
-                # For non-multicluster, use GET_NET_ATTACH for consistency and bulk support
-                path = self.paths["GET_NET_ATTACH"].format(self.fabric, network_names)
+                resp = dcnm_send(self.module, method, path)
 
-            resp = dcnm_send(self.module, method, path)
+                if not isinstance(resp, dict):
+                    msg = "Unexpected response while waiting for network attachments. "
+                    msg += f"path: {path}, response_type: {type(resp).__name__}, response: {str(resp)[:500]}"
+                    self.module.fail_json(msg=msg)
 
-            if resp.get("DATA") is None:
+                data = resp.get("DATA")
+                if data is None:
+                    poll_incomplete = True
+                    break
+
+                if not isinstance(data, list):
+                    msg = "Unexpected DATA while waiting for network attachments. "
+                    msg += f"path: {path}, return_code: {resp.get('RETURN_CODE')}, "
+                    msg += f"data_type: {type(data).__name__}, data: {str(data)[:500]}"
+                    self.module.fail_json(msg=msg)
+
+                sanitized_data = sanitize_lan_attach_list(data) if data else []
+                if not isinstance(sanitized_data, list):
+                    msg = "Unexpected sanitized DATA while waiting for network attachments. "
+                    msg += f"path: {path}, data_type: {type(sanitized_data).__name__}"
+                    self.module.fail_json(msg=msg)
+
+                for net_data in sanitized_data:
+                    if not isinstance(net_data, dict):
+                        msg = "Unexpected network attachment entry while waiting for network attachments. "
+                        msg += f"path: {path}, entry_type: {type(net_data).__name__}, entry: {str(net_data)[:500]}"
+                        self.module.fail_json(msg=msg)
+
+                    network_name = net_data.get("networkName")
+                    if network_name:
+                        networks_by_name[network_name] = net_data
+
+            if poll_incomplete:
                 time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
                 continue
-
-            # Sanitize and build lookup dictionary
-            sanitized_data = sanitize_lan_attach_list(resp["DATA"]) if resp["DATA"] else []
-            networks_by_name = {
-                net_data.get("networkName"): net_data
-                for net_data in sanitized_data
-            }
 
             # Process all pending networks
             networks_to_remove = []
@@ -4156,25 +4211,23 @@ class DcnmNetwork:
         payload = copy.deepcopy(self.diff_undeploy)
         delete_ready = False
         if self.diff_undeploy:
-            if self.dcnm_version >= 12:
-                # Determine deploy path and payload format
-                if self.deploy_mode == "switch":
-                    # Use switch-level deploy (undeploy operation)
-                    self.deploy_network_switches(payload, is_rollback, is_undeploy=True)
-                else:
-                    # Use resource-level deploy: /networks/deploy path with SN:networkNames
-                    path = self.paths["GET_NET"].format(self.fabric)
-                    deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
-                    deploy_payload = self.network_serial_payload_transform(payload, is_undeploy=True)
-                    resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
-                    if resp is not None:
-                        self.result["response"].append(resp)
-                        fail, self.result["changed"] = self.handle_response(resp, "deploy")
-                        if fail:
-                            if is_rollback:
-                                self.failed_to_rollback = True
-                                return
-                            self.failure(resp)
+            if self.deploy_mode == "switch":
+                # Use switch-level deploy (undeploy operation)
+                self.deploy_network_switches(payload, is_rollback, is_undeploy=True)
+            elif self.dcnm_version >= 12:
+                # Use resource-level deploy: /networks/deploy path with SN:networkNames
+                path = self.paths["GET_NET"].format(self.fabric)
+                deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
+                deploy_payload = self.network_serial_payload_transform(payload, is_undeploy=True)
+                resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
+                if resp is not None:
+                    self.result["response"].append(resp)
+                    fail, self.result["changed"] = self.handle_response(resp, "deploy")
+                    if fail:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        self.failure(resp)
             else:
                 # Version < 12: use legacy /deployments path with networkNames
                 path = self.paths["GET_NET"].format(self.fabric)
@@ -4204,25 +4257,23 @@ class DcnmNetwork:
                 # Reset delete_ready since we're performing another deploy operation
                 delete_ready = False
 
-                if self.dcnm_version >= 12:
-                    # Version 12+: Determine deploy path and payload format
-                    if self.deploy_mode == "switch":
-                        # Use switch-level deploy (undeploy retry)
-                        self.deploy_network_switches(payload, is_rollback, is_undeploy=True)
-                    else:
-                        # Use resource-level deploy: /networks/deploy path with SN:networkNames
-                        path = self.paths["GET_NET"].format(self.fabric)
-                        deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
-                        deploy_payload = self.network_serial_payload_transform(payload, is_undeploy=True)
-                        resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
-                        if resp is not None:
-                            self.result["response"].append(resp)
-                            fail, self.result["changed"] = self.handle_response(resp, "deploy")
-                            if fail:
-                                if is_rollback:
-                                    self.failed_to_rollback = True
-                                    return
-                                self.failure(resp)
+                if self.deploy_mode == "switch":
+                    # Use switch-level deploy (undeploy retry)
+                    self.deploy_network_switches(payload, is_rollback, is_undeploy=True)
+                elif self.dcnm_version >= 12:
+                    # Use resource-level deploy: /networks/deploy path with SN:networkNames
+                    path = self.paths["GET_NET"].format(self.fabric)
+                    deploy_path = path.replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
+                    deploy_payload = self.network_serial_payload_transform(payload, is_undeploy=True)
+                    resp = dcnm_send(self.module, method, deploy_path, json.dumps(deploy_payload))
+                    if resp is not None:
+                        self.result["response"].append(resp)
+                        fail, self.result["changed"] = self.handle_response(resp, "deploy")
+                        if fail:
+                            if is_rollback:
+                                self.failed_to_rollback = True
+                                return
+                            self.failure(resp)
                 else:
                     # Version < 12: use legacy /deployments path with networkNames
                     path = self.paths["GET_NET"].format(self.fabric)
