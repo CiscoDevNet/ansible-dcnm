@@ -2003,6 +2003,212 @@ class DcnmVrf:
                     return
                 self.failure(resp)
 
+    def populate_sn_maps_from_diffs(self):
+        """
+        Populate vrf_sn_attach_map and vrf_sn_detach_map from calculated diff structures.
+
+        This function is called after all diffs have been calculated and before any
+        push operations. It ensures the serial number maps contain only switches
+        affected by the current operation.
+
+        Processing Logic:
+        1. Clear both maps for clean state
+        2. Process diff_attach:
+           - Both deployment:True and deployment:False → add to vrf_sn_attach_map
+           - Both attachment and detachment operations use the same config-deploy endpoint
+           - The 'deployment' flag in the attachment payload tells the controller what to do
+        3. Process diff_detach:
+           - All serials → add to vrf_sn_detach_map (state:deleted operations ONLY)
+           - diff_detach is only for VRF deletion, uses undeploy endpoint
+        4. Handle config-only changes (diff_create_update or conf_changed):
+           - Add ALL currently attached switches from have_attach to vrf_sn_attach_map
+           - Exclude any switches in vrf_sn_detach_map
+        5. Handle deploy-only operations (diff_deploy without attachment changes):
+           - VRFs from diff_merge_no_attach() (PENDING/OUT-OF-SYNC states)
+           - Add all attached switches to vrf_sn_attach_map
+
+        This approach ensures:
+        - New attachments: Deploy only to newly attached switches
+        - Detachments: Deploy removal config to detached switches (same endpoint as attach)
+        - Config changes: Deploy to all currently attached switches
+        - VRF deletion: Undeploy from all switches before deletion
+        - Mixed operations: Correct switch selection for each operation type
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}."
+        self.log.debug(msg)
+
+        # Step 1: Clear maps for clean state
+        self.vrf_sn_attach_map.clear()
+        self.vrf_sn_detach_map.clear()
+
+        msg = "Cleared vrf_sn_attach_map and vrf_sn_detach_map"
+        self.log.debug(msg)
+
+        # Step 2: Process diff_attach for attachments and detachments
+        # Both attachment (deployment:True) and detachment (deployment:False) operations
+        # use the SAME config-deploy endpoint. The deployment flag in the attachment payload
+        # tells the controller what to do. Therefore, BOTH need to be in vrf_sn_attach_map.
+        for vrf_attach in self.diff_attach:
+            vrf_name = vrf_attach.get("vrfName")
+            if not vrf_name:
+                continue
+
+            for attach in vrf_attach.get("lanAttachList", []):
+                serial = attach.get("serialNumber")
+                if not serial:
+                    continue
+
+                deployment = attach.get("deployment", True)
+
+                # Both attachment and detachment operations need config-deploy
+                if vrf_name not in self.vrf_sn_attach_map:
+                    self.vrf_sn_attach_map[vrf_name] = set()
+                self.vrf_sn_attach_map[vrf_name].add(serial)
+
+                deploy_type = "attachment" if deployment else "detachment"
+                msg = f"Added serial {serial} to vrf_sn_attach_map[{vrf_name}] from diff_attach ({deploy_type}, deployment:{deployment})"
+                self.log.debug(msg)
+
+        # Step 3: Process diff_detach (DELETE operations only)
+        # diff_detach is ONLY used for state:deleted operations where the entire VRF is being removed.
+        # Regular detachments (removing an attachment but keeping the VRF) go through diff_attach
+        # with deployment:False and use the regular config-deploy endpoint (handled in Step 2).
+        for vrf_detach in self.diff_detach:
+            vrf_name = vrf_detach.get("vrfName")
+            if not vrf_name:
+                continue
+
+            if vrf_name not in self.vrf_sn_detach_map:
+                self.vrf_sn_detach_map[vrf_name] = set()
+
+            for attach in vrf_detach.get("lanAttachList", []):
+                serial = attach.get("serialNumber")
+                if serial:
+                    self.vrf_sn_detach_map[vrf_name].add(serial)
+
+                    msg = f"Added serial {serial} to vrf_sn_detach_map[{vrf_name}] from diff_detach"
+                    self.log.debug(msg)
+
+        # Step 4: Handle config-only changes
+        # If there are VRF updates (config changes) but no attachment changes,
+        # we need to deploy to ALL currently attached switches
+
+        config_changed_vrfs = set()
+
+        # Check diff_create_update for VRF configuration changes
+        for vrf_update in self.diff_create_update:
+            vrf_name = vrf_update.get("vrfName")
+            if vrf_name:
+                config_changed_vrfs.add(vrf_name)
+
+        # Also check conf_changed dictionary
+        for vrf_name, changed in self.conf_changed.items():
+            if changed:
+                config_changed_vrfs.add(vrf_name)
+
+        # For each VRF with config changes, add all attached switches
+        for vrf_name in config_changed_vrfs:
+            # Find this VRF in have_attach
+            have_vrf = self.have_attach_by_name.get(vrf_name)
+            if not have_vrf:
+                continue
+
+            # Initialize map entry if needed
+            if vrf_name not in self.vrf_sn_attach_map:
+                self.vrf_sn_attach_map[vrf_name] = set()
+
+            # Add all attached switches, excluding any in detach_map
+            for attach in have_vrf.get("lanAttachList", []):
+                serial = attach.get("serialNumber")
+                is_attached = attach.get("isAttached", False)
+
+                if serial and is_attached:
+                    # Check if this switch is being detached
+                    if serial not in self.vrf_sn_detach_map.get(vrf_name, set()):
+                        self.vrf_sn_attach_map[vrf_name].add(serial)
+
+                        msg = f"Added serial {serial} to vrf_sn_attach_map[{vrf_name}] for config change (isAttached:True, not in detach_map)"
+                        self.log.debug(msg)
+
+        # Step 5: Handle VRFs in diff_deploy that need deployment but have no attachment changes
+        # This covers the case where diff_merge_no_attach() added VRFs (PENDING/OUT-OF-SYNC states)
+        # For VRFs in diff_deploy, we look for attachments with is_deploy=False (PENDING/OUT-OF-SYNC)
+        # Note: We do NOT skip VRFs already in the map because there may be additional PENDING serials
+        # Example: switch1 already PENDING from previous run, switch2 newly detached in current run
+        # Step 2 adds switch2, but we still need Step 5 to add switch1
+        if self.diff_deploy:
+            deploy_vrf_names = [v.strip() for v in self.diff_deploy.get("vrfNames", "").split(",") if v.strip()]
+
+            for vrf_name in deploy_vrf_names:
+                # Find this VRF in have_attach
+                have_vrf = self.have_attach_by_name.get(vrf_name)
+                if not have_vrf:
+                    continue
+
+                # Initialize map entry if needed (may already exist from Steps 2-4)
+                if vrf_name not in self.vrf_sn_attach_map:
+                    self.vrf_sn_attach_map[vrf_name] = set()
+
+                # Add ALL switches that are in PENDING/OUT-OF-SYNC state (is_deploy=False)
+                # Sets automatically handle duplicates, so safe to add even if already present
+                for attach in have_vrf.get("lanAttachList", []):
+                    serial = attach.get("serialNumber")
+                    is_deploy = attach.get("is_deploy", True)  # True=IN-SYNC/DEPLOYED, False=PENDING/OUT-OF-SYNC
+
+                    # Add switches that need deployment (is_deploy=False means PENDING or OUT-OF-SYNC)
+                    if serial and not is_deploy:
+                        # Check if this switch is being detached (state:deleted)
+                        if serial not in self.vrf_sn_detach_map.get(vrf_name, set()):
+                            # Only log if this is a new addition (avoid duplicate logs)
+                            if serial not in self.vrf_sn_attach_map[vrf_name]:
+                                is_attached = attach.get("isAttached", False)
+                                state = "PENDING-ATTACH" if is_attached else "PENDING-DETACH"
+                                msg = f"Added serial {serial} to vrf_sn_attach_map[{vrf_name}] from diff_deploy (state:{state}, is_deploy:False)"
+                                self.log.debug(msg)
+
+                            self.vrf_sn_attach_map[vrf_name].add(serial)
+        # diff_detach only contains isAttached switches, but undeploy needs ALL (pending, failed, out-of-sync, etc.)
+
+        # Determine which VRFs need undeploy
+        undeploy_vrfs = []
+        if self.diff_undeploy:
+            # Normal case: VRFs in diff_undeploy
+            undeploy_vrfs = [v.strip() for v in self.diff_undeploy.get("vrfNames", "").split(",") if v.strip()]
+        elif self.diff_delete:
+            # DELETE state with no isAttached attachments (all PENDING): use diff_delete
+            # This handles the case where attachments are in PENDING state and won't be in diff_undeploy
+            undeploy_vrfs = list(self.diff_delete.keys())
+
+        for vrf_name in undeploy_vrfs:
+            # Initialize detach_map if needed
+            if vrf_name not in self.vrf_sn_detach_map:
+                self.vrf_sn_detach_map[vrf_name] = set()
+
+            # Get ALL switches from have_attach, regardless of isAttached state
+            # This ensures undeploy happens for all attachment states
+            have_entry = self.have_attach_by_name.get(vrf_name)
+            if have_entry:
+                for attach in have_entry.get("lanAttachList", []):
+                    serial = attach.get("serialNumber")
+                    if serial:
+                        # Add ALL switches, regardless of isAttached state
+                        # This fixes the bug where pending/failed switches were excluded
+                        self.vrf_sn_detach_map[vrf_name].add(serial)
+
+                        msg = f"Added serial {serial} to vrf_sn_detach_map[{vrf_name}] from have_attach for undeploy (all states)"
+                        self.log.debug(msg)
+
+        msg = "Final vrf_sn_attach_map: "
+        msg += f"{json.dumps({k: list(v) for k, v in self.vrf_sn_attach_map.items()}, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "Final vrf_sn_detach_map: "
+        msg += f"{json.dumps({k: list(v) for k, v in self.vrf_sn_detach_map.items()}, indent=4)}"
+        self.log.debug(msg)
+
     def diff_for_create(self, want, have):
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
@@ -2273,7 +2479,6 @@ class DcnmVrf:
         have_create = []
         have_deploy = {}
         chg_deploy = {}
-        vrf_sn_attach_map = self.vrf_sn_attach_map
 
         curr_vrfs = ""
 
@@ -2304,7 +2509,6 @@ class DcnmVrf:
             self.have_attach = []
             self.have_deploy = have_deploy
             self.chg_deploy = chg_deploy
-            self.vrf_sn_attach_map = vrf_sn_attach_map
             return
 
         vrf_attach_objects = dcnm_get_url(
@@ -2420,10 +2624,8 @@ class DcnmVrf:
                 attach_state = bool(attach.get("isLanAttached", False))
                 deploy = attach_state
                 deployed = False
-                if attach_state and (
-                    attach["lanAttachState"] == "OUT-OF-SYNC"
-                    or attach["lanAttachState"] == "PENDING"
-                ):
+                # Check if attachment needs deployment: PENDING or OUT-OF-SYNC means not deployed
+                if attach["lanAttachState"] in ("OUT-OF-SYNC", "PENDING"):
                     deployed = False
                 else:
                     deployed = True
@@ -2432,10 +2634,6 @@ class DcnmVrf:
                     deploy_vrf = attach["vrfName"]
 
                 sn = attach["switchSerialNo"]
-
-                if attach["vrfName"] not in vrf_sn_attach_map:
-                    vrf_sn_attach_map[attach["vrfName"]] = set()
-                vrf_sn_attach_map[attach["vrfName"]].add(sn)
 
                 if attach["lanAttachState"] in ("OUT-OF-SYNC", "PENDING"):
                     change_vrf = attach["vrfName"]
@@ -2555,7 +2753,6 @@ class DcnmVrf:
         self.have_attach_by_name = {a["vrfName"]: a for a in have_attach}
         self.have_deploy = have_deploy
         self.chg_deploy = chg_deploy
-        self.vrf_sn_attach_map = vrf_sn_attach_map
 
         msg = "self.have_create: "
         msg += f"{json.dumps(self.have_create, indent=4)}"
@@ -2586,7 +2783,6 @@ class DcnmVrf:
         want_create = []
         want_attach = []
         want_deploy = {}
-        vrf_sn_attach_map = self.vrf_sn_attach_map
 
         msg = "self.config "
         msg += f"{json.dumps(self.config, indent=4)}"
@@ -2637,9 +2833,6 @@ class DcnmVrf:
                 deploy = vrf_deploy
                 vrf_attach_obj = self.update_attach_params(attach, vrf_name, deploy, vlan_id)
                 vrfs.append(vrf_attach_obj)
-                if vrf_sn_attach_map.get(vrf_name) is None:
-                    vrf_sn_attach_map[vrf_name] = set()
-                vrf_sn_attach_map[vrf_name].add(vrf_attach_obj["serialNumber"])
 
             if vrfs:
                 vrf_attach.update({"vrfName": vrf_name})
@@ -2655,7 +2848,6 @@ class DcnmVrf:
         self.want_create_by_name = {v["vrfName"]: v for v in self.want_create}
         self.want_attach = copy.deepcopy(want_attach)
         self.want_deploy = copy.deepcopy(want_deploy)
-        self.vrf_sn_attach_map = vrf_sn_attach_map
 
         msg = "self.want_create: "
         msg += f"{json.dumps(self.want_create, indent=4)}"
@@ -2722,18 +2914,8 @@ class DcnmVrf:
                     if not have_a:
                         continue
 
-                    # Build detach map inline while processing delete
-                    # Initialize VRF entry in detach map
-                    if vrf_name not in self.vrf_sn_detach_map:
-                        self.vrf_sn_detach_map[vrf_name] = set()
-
                     detach_items = []
                     for item in have_a["lanAttachList"]:
-                        # Add serial to detach map for all attachments (needed for undeploy)
-                        serial = item.get("serialNumber")
-                        if serial:
-                            self.vrf_sn_detach_map[vrf_name].add(serial)
-
                         # Only add to diff_detach if actually attached
                         if "isAttached" in item:
                             if item["isAttached"]:
@@ -2756,18 +2938,8 @@ class DcnmVrf:
                     vrf_name = have_a["vrfName"]
                     diff_delete.update({vrf_name: "DEPLOYED"})
 
-                    # Build detach map inline while processing delete
-                    # Initialize VRF entry in detach map
-                    if vrf_name not in self.vrf_sn_detach_map:
-                        self.vrf_sn_detach_map[vrf_name] = set()
-
                     detach_items = []
                     for item in have_a["lanAttachList"]:
-                        # Add serial to detach map for all attachments (needed for undeploy)
-                        serial = item.get("serialNumber")
-                        if serial:
-                            self.vrf_sn_detach_map[vrf_name].add(serial)
-
                         # Only add to diff_detach if actually attached
                         if "isAttached" in item:
                             if item["isAttached"]:
@@ -2829,17 +3001,7 @@ class DcnmVrf:
                 vrf_name = have_a["vrfName"]
 
                 if self.action_fabric_type != "multisite_child" and self.action_fabric_type != "multicluster_child":
-                    # Build detach map inline for VRFs being deleted in override
-                    # Initialize VRF entry in detach map
-                    if vrf_name not in self.vrf_sn_detach_map:
-                        self.vrf_sn_detach_map[vrf_name] = set()
-
                     for item in have_a["lanAttachList"]:
-                        # Add serial to detach map for all attachments (needed for undeploy)
-                        serial = item.get("serialNumber")
-                        if serial:
-                            self.vrf_sn_detach_map[vrf_name].add(serial)
-
                         # Only add to diff_detach if actually attached
                         if "isAttached" in item:
                             if item["isAttached"]:
@@ -5355,6 +5517,11 @@ class DcnmVrf:
         msg = "ENTERED. "
         msg += f"caller: {caller}."
         self.log.debug(msg)
+
+        # Populate serial number maps from calculated diffs before any push operations
+        # This ensures maps contain only switches affected by current operation
+        if self.action_fabric_type not in ["multisite_child", "multicluster_child"]:
+            self.populate_sn_maps_from_diffs()
 
         self.push_diff_create_update(is_rollback)
 
