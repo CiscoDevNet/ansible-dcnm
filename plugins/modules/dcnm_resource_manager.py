@@ -317,7 +317,6 @@ class DcnmResManager:
     }
 
     def __init__(self, module):
-        self.log = logging.getLogger(f"DcnmResManager")
         self.module = module
         self.params = module.params
         self.fabric = module.params["fabric"]

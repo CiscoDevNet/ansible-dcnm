@@ -5003,7 +5003,7 @@ class DcnmNetwork:
 
         # Responses to all other operations POST and PUT are handled here.
         # Accept both 200 (OK) and 207 (Multi-Status) for bulk operations
-        if res.get("MESSAGE") != "OK" or res["RETURN_CODE"] not in [200, 207]:
+        if res.get("MESSAGE") not in ["OK", "Multi-Status"] or res["RETURN_CODE"] not in [200, 207]:
             fail = True
             changed = False
             return fail, changed

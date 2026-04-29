@@ -880,7 +880,7 @@ class DcnmLinks:
             "LINKS_CREATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links",
             "LINKS_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/",
             "LINKS_UPDATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/",
-            "LINKS_UPDATE_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/",
+            "LINKS_UPDATE_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/modify",
             "LINKS_GET_BY_FABRIC": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/links/fabrics/{}",
             "LINKS_CFG_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/",
             "CONFIG_PREVIEW": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-preview/",
@@ -3659,7 +3659,7 @@ class DcnmLinks:
             if self.has_bulk_api:
                 path = self.paths["LINKS_UPDATE_BULK"]
                 json_payload = json.dumps(self.diff_modify)
-                resp = dcnm_send(self.module, "POST", path, json_payload)
+                resp = dcnm_send(self.module, "PUT", path, json_payload)
                 if resp != []:
                     self.result["response"].append(resp)
                 # Accept both 200 (OK) and 207 (Multi-Status) for bulk operations

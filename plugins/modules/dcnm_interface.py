@@ -6508,7 +6508,7 @@ class DcnmIntf:
                 self.result["response"].append(resp)
 
                 # Accept both 200 (OK) and 207 (Multi-Status) for bulk operations
-                if (resp.get("MESSAGE") != "OK") or (
+                if (resp.get("MESSAGE") not in ["OK", "Multi-Status"]) or (
                     resp.get("RETURN_CODE") not in [200, 207]
                 ):
                     resp["CHANGED"] = self.changed_dict
