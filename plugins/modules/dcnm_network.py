@@ -1131,7 +1131,8 @@ class DcnmNetwork:
         self.log.debug(msg)
         # Check for bulk API support
         self.has_bulk_api = dcnm_get_bulk_api_support(self.module)
-
+        msg = f"Bulk API support detected: {self.has_bulk_api}"
+        self.log.debug(msg)
 
         self.inventory_data = get_nd_fabric_inventory_details(self.module, self.dcnm_version, self.fabric, self.fabric_details)
 
@@ -1643,6 +1644,8 @@ class DcnmNetwork:
         msg = f"Returning {len(serials)} serials for networks: {network_names}"
         self.log.debug(msg)
 
+        msg = f"Serials: {serials}"
+        self.log.debug(msg)
         return serials
 
     def get_delete_deploy_switch_serials(self, network_names):
@@ -1715,7 +1718,7 @@ class DcnmNetwork:
 
         # Select the appropriate map based on operation type
         network_to_serial_map = self.network_sn_detach_map if is_undeploy else self.network_sn_attach_map
-        
+
         map_type = "detach" if is_undeploy else "attach"
         msg = f"Using network_sn_{map_type}_map for payload transformation."
         self.log.debug(msg)
@@ -1744,7 +1747,7 @@ class DcnmNetwork:
         Uses network attachment data to determine affected switches.
         Works for both deploy and undeploy operations.
         Handles response internally and updates self.result.
-        
+
         Args:
             network_names: Networks to deploy/undeploy
             is_rollback: Whether this is a rollback operation
@@ -1764,7 +1767,7 @@ class DcnmNetwork:
         )
 
         resp = dcnm_send(self.module, method, deploy_path)
-        
+
         if resp is not None:
             self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "deploy")
@@ -4166,25 +4169,71 @@ class DcnmNetwork:
                 if attr in template_mapping:
                     skipped_template_keys.add(template_mapping[attr])
 
-            for net in self.diff_create_update:
-                # Remove skipped attributes from template config for parent fabrics
-                if net.get("networkTemplateConfig") and skipped_template_keys:
-                    json_to_dict = json.loads(net["networkTemplateConfig"])
-                    for key in list(json_to_dict.keys()):
-                        if key in skipped_template_keys:
-                            del json_to_dict[key]
-                    net["networkTemplateConfig"] = json.dumps(json_to_dict)
+            action = "create"
+            use_bulk = self.has_bulk_api and self.fabric_type != "multicluster_parent"
+            # Initialize based on API type
+            if use_bulk:
+                bulk_payload = []
+                verb = "PUT"
+                bulk_path = self.paths["UPDATE_NET_BULK"]
+            else:
+                verb = "PUT"
+                base_path = self.paths["GET_NET"].format(self.fabric)
 
-                update_path = path + "/{0}".format(net["networkName"])
-                resp = dcnm_send(self.module, method, update_path, json.dumps(net))
+            # Process each network
+            for net in self.diff_create_update:
+                # Parse template config
+                json_to_dict = json.loads(net["networkTemplateConfig"])
+                network_name = json_to_dict.get("networkName")
+
+                msg = f"Processing network {network_name}"
+                self.log.debug(msg)
+
+                # Remove skipped attributes
+                for key in list(json_to_dict.keys()):
+                    if key in skipped_template_keys:
+                        del json_to_dict[key]
+
+                if use_bulk:
+                    # Build network object for bulk API (dict template config)
+                    network_obj = {
+                        "fabric": net["fabric"],
+                        "networkName": net["networkName"],
+                        "displayName": net.get("displayName", net["networkName"]),
+                        "networkId": net["networkId"],
+                        "networkTemplate": net["networkTemplate"],
+                        "networkExtensionTemplate": net["networkExtensionTemplate"],
+                        "vrf": net["vrf"],
+                        "networkTemplateConfig": json_to_dict  # Dict
+                    }
+                    bulk_payload.append(network_obj)
+                else:
+                    # Individual update - keep JSON string format
+                    net["networkTemplateConfig"] = json.dumps(json_to_dict)
+                    update_path = base_path + "/{0}".format(net["networkName"])
+
+                    resp = dcnm_send(self.module, verb, update_path, json.dumps(net))
+                    self.result["response"].append(resp)
+                    fail, self.result["changed"] = self.handle_response(resp, action)
+                    if fail:
+                        if is_rollback:
+                            self.failed_to_rollback = True
+                            return
+                        self.failure(resp)
+
+            # Send bulk request if applicable
+            if use_bulk and bulk_payload:
+                msg = f"Sending v2 bulk-update request for {len(bulk_payload)} network(s)"
+                self.log.debug(msg)
+
+                resp = dcnm_send(self.module, verb, bulk_path, json.dumps(bulk_payload))
                 self.result["response"].append(resp)
-                fail, self.result["changed"] = self.handle_response(resp, "create")
+                fail, self.result["changed"] = self.handle_response(resp, action)
                 if fail:
                     if is_rollback:
                         self.failed_to_rollback = True
                         return
                     self.failure(resp)
-
         #
         # The detach and un-deploy operations are executed before the create,attach and deploy to particularly
         # address cases where a VLAN of a network being deleted is re-used on a new network being created. This is
@@ -4534,276 +4583,6 @@ class DcnmNetwork:
                     self.failed_to_rollback = True
                     return
                 self.failure(resp)
-
-    def _push_diff_create_update_bulk(self, is_rollback=False):
-        """
-        # Summary
-
-        Send diff_create_update to controller using v2 bulk-update API.
-        Used exclusively for dcnm_version == -1.
-
-        ## V2 Bulk Update API:
-        - Method: PUT
-        - Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/bulk-update/networks
-        - Payload: Array of network objects
-        - networkTemplateConfig: dict object (not JSON string)
-
-        ## Response Format:
-        {
-          "successList": [
-            {"name": "net1", "id": 30001, "message": "Network updated successfully.", "status": "Success"}
-          ]
-        }
-        """
-        method_name = inspect.stack()[0][3]
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}."
-        self.log.debug(msg)
-
-        bulk_payload = []
-
-        msg = f"Processing {len(self.diff_create_update)} network(s) for bulk update"
-        self.log.debug(msg)
-
-        # Get skipped attributes for parent fabrics
-        skipped_attributes = self.get_skipped_attributes()
-        template_mapping = self.get_template_config_mapping()
-
-        # Convert skipped spec attributes to template config keys
-        skipped_template_keys = set()
-        for attr in skipped_attributes:
-            if attr in template_mapping:
-                skipped_template_keys.add(template_mapping[attr])
-
-        self.log.debug(f"Create_update {self.diff_create_update}")
-        for network in self.diff_create_update:
-            # Parse JSON string template config
-            json_to_dict = json.loads(network["networkTemplateConfig"])
-            network_name = json_to_dict.get("networkName")
-
-            msg = f"Processing network {network_name} for bulk update"
-            self.log.debug(msg)
-
-            msg = f"Network {network_name} template config: "
-            msg += f"{json.dumps(json_to_dict, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            # Remove skipped attributes from template config for parent fabrics
-            for key in list(json_to_dict.keys()):
-                if key in skipped_template_keys:
-                    del json_to_dict[key]
-
-            # Build network object for v2 bulk API
-            # Key difference: networkTemplateConfig is dict, NOT JSON string
-            network_obj = {
-                "fabric": network["fabric"],
-                "networkName": network["networkName"],
-                "displayName": network.get("displayName", network["networkName"]),
-                "networkId": network["networkId"],
-                "networkTemplate": network["networkTemplate"],
-                "networkExtensionTemplate": network["networkExtensionTemplate"],
-                "vrf": network["vrf"],
-                "networkTemplateConfig": json_to_dict  # Dict object, not JSON string
-            }
-
-            msg = f"Network {network_name} bulk payload object: "
-            msg += f"{json.dumps(network_obj, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            bulk_payload.append(network_obj)
-
-        if bulk_payload:
-            action = "bulk_update"
-            verb = "PUT"
-            path = self.paths["UPDATE_NET_BULK"]
-
-            msg = f"Sending v2 bulk-update request for {len(bulk_payload)} network(s)"
-            self.log.debug(msg)
-
-            msg = "Complete bulk update payload: "
-            msg += f"{json.dumps(bulk_payload, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            resp = dcnm_send(self.module, verb, path, json.dumps(bulk_payload))
-            self.result["response"].append(resp)
-            fail, self.result["changed"] = self.handle_response(resp, action)
-            if fail:
-                if is_rollback:
-                    self.failed_to_rollback = True
-                    return
-                self.failure(resp)
-
-    def _push_diff_create_update_individual(self, is_rollback=False):
-        """
-        # Summary
-
-        Send diff_create_update to controller using individual PUT per network.
-        Used for all versions except dcnm_version == -1.
-
-        ## Individual Update API:
-        - Method: PUT
-        - Path: .../fabrics/{fabric}/networks/{networkName}
-        - Payload: Single network object
-        - networkTemplateConfig: JSON string
-        """
-        method_name = inspect.stack()[0][3]
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}."
-        self.log.debug(msg)
-
-        msg = f"Processing {len(self.diff_create_update)} network(s) for individual update"
-        self.log.debug(msg)
-
-        self.log.debug(f"Processing create/update operations for networks: {json.dumps(self.diff_create_update)}")
-
-        # Get skipped attributes for parent fabrics
-        skipped_attributes = self.get_skipped_attributes()
-        template_mapping = self.get_template_config_mapping()
-
-        # Convert skipped spec attributes to template config keys
-        skipped_template_keys = set()
-        for attr in skipped_attributes:
-            if attr in template_mapping:
-                skipped_template_keys.add(template_mapping[attr])
-
-        action = "create"
-        verb = "PUT"
-        base_path = self.paths["GET_NET"].format(self.fabric)
-
-        for net in self.diff_create_update:
-            # Remove skipped attributes from template config for parent fabrics
-            if net.get("networkTemplateConfig") and skipped_template_keys:
-                json_to_dict = json.loads(net["networkTemplateConfig"])
-                for key in list(json_to_dict.keys()):
-                    if key in skipped_template_keys:
-                        del json_to_dict[key]
-                net["networkTemplateConfig"] = json.dumps(json_to_dict)
-
-            update_path = base_path + "/{0}".format(net["networkName"])
-
-            msg = f"Sending individual update for network {net['networkName']}"
-            self.log.debug(msg)
-
-            msg = f"Network {net['networkName']} payload: "
-            msg += f"{json.dumps(net, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            resp = dcnm_send(self.module, verb, update_path, json.dumps(net))
-            self.result["response"].append(resp)
-            fail, self.result["changed"] = self.handle_response(resp, action)
-            if fail:
-                if is_rollback:
-                    self.failed_to_rollback = True
-                    return
-                self.failure(resp)
-
-    # ========================================================================
-    # COMMENTED OUT: CONSOLIDATED SINGLE-METHOD APPROACH
-    # ========================================================================
-    # Alternative implementation using a single method with inline conditionals.
-    # This approach is more compact but less testable and maintainable.
-    # Uncomment and replace the three methods above if you prefer this style.
-    # ========================================================================
-    #
-    # def push_to_remote(self, is_rollback=False):
-    #     caller = inspect.stack()[1][3]
-    #
-    #     msg = "ENTERED. "
-    #     msg += f"caller: {caller}. "
-    #     msg += f"is_rollback: {is_rollback}"
-    #     self.log.debug(msg)
-    #
-    #     path = self.paths["GET_NET"].format(self.fabric)
-    #
-    #     # Handle network create/update operations
-    #     if self.diff_create_update:
-    #         # Determine if using bulk API
-    #         use_bulk_api = (self.dcnm_version == -1)
-    #
-    #         msg = f"Using {'v2 bulk-update' if use_bulk_api else 'individual update'} API"
-    #         self.log.debug(msg)
-    #
-    #         # Get skipped attributes for parent fabrics
-    #         skipped_attributes = self.get_skipped_attributes()
-    #         template_mapping = self.get_template_config_mapping()
-    #
-    #         # Convert skipped spec attributes to template config keys
-    #         skipped_template_keys = set()
-    #         for attr in skipped_attributes:
-    #             if attr in template_mapping:
-    #                 skipped_template_keys.add(template_mapping[attr])
-    #
-    #         # Initialize based on API type
-    #         if use_bulk_api:
-    #             bulk_payload = []
-    #             action = "bulk_update"
-    #             verb = "PUT"
-    #             bulk_path = self.paths["UPDATE_NET_BULK"]
-    #         else:
-    #             action = "create"
-    #             verb = "PUT"
-    #             base_path = self.paths["GET_NET"].format(self.fabric)
-    #
-    #         # Process each network
-    #         for net in self.diff_create_update:
-    #             # Parse template config
-    #             json_to_dict = json.loads(net["networkTemplateConfig"])
-    #             network_name = json_to_dict.get("networkName")
-    #
-    #             msg = f"Processing network {network_name}"
-    #             self.log.debug(msg)
-    #
-    #             # Remove skipped attributes
-    #             for key in list(json_to_dict.keys()):
-    #                 if key in skipped_template_keys:
-    #                     del json_to_dict[key]
-    #
-    #             if use_bulk_api:
-    #                 # Build network object for bulk API (dict template config)
-    #                 network_obj = {
-    #                     "fabric": net["fabric"],
-    #                     "networkName": net["networkName"],
-    #                     "displayName": net.get("displayName", net["networkName"]),
-    #                     "networkId": net["networkId"],
-    #                     "networkTemplate": net["networkTemplate"],
-    #                     "networkExtensionTemplate": net["networkExtensionTemplate"],
-    #                     "vrf": net["vrf"],
-    #                     "networkTemplateConfig": json_to_dict  # Dict
-    #                 }
-    #                 bulk_payload.append(network_obj)
-    #             else:
-    #                 # Individual update - keep JSON string format
-    #                 net["networkTemplateConfig"] = json.dumps(json_to_dict)
-    #                 update_path = base_path + "/{0}".format(net["networkName"])
-    #
-    #                 resp = dcnm_send(self.module, verb, update_path, json.dumps(net))
-    #                 self.result["response"].append(resp)
-    #                 fail, self.result["changed"] = self.handle_response(resp, action)
-    #                 if fail:
-    #                     if is_rollback:
-    #                         self.failed_to_rollback = True
-    #                         return
-    #                     self.failure(resp)
-    #
-    #         # Send bulk request if applicable
-    #         if use_bulk_api and bulk_payload:
-    #             msg = f"Sending v2 bulk-update request for {len(bulk_payload)} network(s)"
-    #             self.log.debug(msg)
-    #             resp = dcnm_send(self.module, verb, bulk_path, json.dumps(bulk_payload))
-    #             self.result["response"].append(resp)
-    #             fail, self.result["changed"] = self.handle_response(resp, action)
-    #             if fail:
-    #                 if is_rollback:
-    #                     self.failed_to_rollback = True
-    #                     return
-    #                 self.failure(resp)
-    #
-    #     # ... rest of existing code for detach, deploy, etc ...
-    # ========================================================================
 
     def get_fabric_multicast_group_address(self) -> str:
         """
@@ -5223,7 +5002,8 @@ class DcnmNetwork:
             return False, False
 
         # Responses to all other operations POST and PUT are handled here.
-        if res.get("MESSAGE") != "OK" or res["RETURN_CODE"] != 200:
+        # Accept both 200 (OK) and 207 (Multi-Status) for bulk operations
+        if res.get("MESSAGE") != "OK" or res["RETURN_CODE"] not in [200, 207]:
             fail = True
             changed = False
             return fail, changed

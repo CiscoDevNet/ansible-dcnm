@@ -1230,11 +1230,11 @@ class DcnmResManager:
                 # Build bulk payload
                 bulk_payload = self.dcnm_rm_build_bulk_payload(self.diff_create)
                 path = self.paths["RM_BULK_CREATE_RESOURCE"]
-            
+
                 json_payload = json.dumps(bulk_payload)
                 resp = dcnm_send(self.module, "POST", path, json_payload)
                 create_flag = True
-                
+  
                 self.result["response"].append(resp)
                 # Accept both 200 (OK) and 207 (Multi-Status) as success for bulk operations
                 if resp and resp.get("RETURN_CODE") not in [200, 207]:
@@ -1243,7 +1243,7 @@ class DcnmResManager:
             else:
                 # Use individual API calls for other versions
                 path = self.paths["RM_CREATE_RESOURCE"].format(self.fabric)
-                
+
                 for res in self.diff_create:
                     json_payload = json.dumps(res)
                     resp = dcnm_send(self.module, "POST", path, json_payload)

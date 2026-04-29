@@ -6504,11 +6504,12 @@ class DcnmIntf:
                 path = self.paths["UPDATE_INTERFACE_BULK"]
                 
                 json_payload = json.dumps(self.diff_replace)
-                resp = self.dcnm_send_with_logging("POST", path, json_payload)
+                resp = dcnm_send(self.module, "POST", path, json_payload)
                 self.result["response"].append(resp)
 
+                # Accept both 200 (OK) and 207 (Multi-Status) for bulk operations
                 if (resp.get("MESSAGE") != "OK") or (
-                    resp.get("RETURN_CODE") != 200
+                    resp.get("RETURN_CODE") not in [200, 207]
                 ):
                     resp["CHANGED"] = self.changed_dict
                     self.module.fail_json(msg=resp)

@@ -3662,7 +3662,8 @@ class DcnmLinks:
                 resp = dcnm_send(self.module, "POST", path, json_payload)
                 if resp != []:
                     self.result["response"].append(resp)
-                if resp and resp.get("RETURN_CODE") != 200:
+                # Accept both 200 (OK) and 207 (Multi-Status) for bulk operations
+                if resp and resp.get("RETURN_CODE") not in [200, 207]:
                     resp["CHANGED"] = self.changed_dict[0]
                     self.module.fail_json(msg=resp)
                 else:

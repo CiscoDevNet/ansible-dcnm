@@ -1915,17 +1915,17 @@ class DcnmVrf:
     def get_deploy_switch_serials(self, vrf_names=None, is_undeploy=False):
         """
         Return ordered, unique switch serials affected by VRF deployments or undeployments.
-        
+
         Uses centralized vrf_sn_attach_map for deploy operations and
         vrf_sn_detach_map for undeploy operations. The is_undeploy parameter
         explicitly controls which map to use.
-        
+
         Args:
             vrf_names: Can be dict with "vrfNames" key, string (comma-separated),
                       or list of VRF names
             is_undeploy: If True, reads from vrf_sn_detach_map (undeploy operations).
                         If False (default), reads from vrf_sn_attach_map (deploy operations).
-        
+
         Returns:
             list: Ordered list of unique serial numbers
         """
@@ -1944,34 +1944,36 @@ class DcnmVrf:
 
         # Select the appropriate map based on operation type
         serial_map = self.vrf_sn_detach_map if is_undeploy else self.vrf_sn_attach_map
-        
+
         map_type = "detach" if is_undeploy else "attach"
         msg = f"Using vrf_sn_{map_type}_map for serial lookup."
         self.log.debug(msg)
 
         serials = []
         seen = set()
-        
+
         # Iterate through all VRFs in the selected map
         for vrf_name, serial_set in serial_map.items():
             if wanted_vrfs and vrf_name not in wanted_vrfs:
                 continue
-            
+
             for serial in serial_set:
                 if serial not in seen:
                     seen.add(serial)
                     serials.append(serial)
 
+        msg = f"Returning serials: {serials}"
+        self.log.debug(msg)
         return serials
 
     def deploy_vrf_switches(self, vrf_names=None, is_rollback=False, is_undeploy=False):
         """
         Trigger switch-level config deploy for switches affected by VRF operations.
-        
+
         Uses VRF attachment/detachment data to determine affected switches.
         Works for both deploy and undeploy operations.
         Handles response internally and updates self.result.
-        
+
         Args:
             vrf_names: VRFs to deploy/undeploy
             is_rollback: Whether this is a rollback operation
@@ -1991,7 +1993,7 @@ class DcnmVrf:
         )
 
         resp = dcnm_send(self.module, method, deploy_path)
-        
+
         if resp is not None:
             self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "deploy")
@@ -3822,13 +3824,17 @@ class DcnmVrf:
         """
         # Summary
 
-        Wrapper method to send diff_create_update to the controller.
-        Delegates to appropriate method based on dcnm_version.
+        Send diff_create_update to the controller.
 
-        ## Behavior:
-        - dcnm_version == -1: Calls _push_diff_create_update_bulk() for v2 bulk API
-        - Other versions: Calls _push_diff_create_update() for per-VRF updates
+        ## Behavior by Version:
+        - dcnm_version == -1: Use v2 bulk-update API (PUT to bulk endpoint)
+        - Other versions: Use individual PUT per VRF (existing behavior)
+
+        ## Key Differences:
+        - Bulk API: vrfTemplateConfig as dict, array payload, exclude serviceVrfTemplate/source
+        - Individual API: vrfTemplateConfig as JSON string, single payload per VRF
         """
+        method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
@@ -3840,59 +3846,32 @@ class DcnmVrf:
             self.log.debug(msg)
             return
 
-        # Route to appropriate method based on version
-        if self.has_bulk_api:
-            msg = "Routing to _push_diff_create_update_bulk() for bulk API"
-            self.log.debug(msg)
-            self._push_diff_create_update_bulk(is_rollback)
+        use_bulk = self.has_bulk_api and self.fabric_type != "multicluster_parent"
+        # Initialize based on API type
+        if use_bulk:
+            bulk_payload = []
+            action = "bulk_update"
+            verb = "PUT"
+            path = self.paths["UPDATE_VRF_BULK"]
         else:
-            msg = f"Routing to _push_diff_create_update() for dcnm_version {self.dcnm_version}"
-            self.log.debug(msg)
-            self._push_diff_create_update(is_rollback)
+            action = "create"
+            verb = "PUT"
+            base_path = self.paths["GET_VRF"].format(self.fabric)
 
-    def _push_diff_create_update_bulk(self, is_rollback=False):
-        """
-        # Summary
-
-        Send diff_create_update to the controller using v2 bulk-update API.
-        Used exclusively when bulk API is available.
-
-        ## V2 Bulk Update API:
-        - Method: PUT
-        - Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/bulk-update/vrfs
-        - Payload: Array of VRF objects
-        - vrfTemplateConfig: dict object (not JSON string)
-        - Excludes: serviceVrfTemplate, source fields
-
-        ## Response Format:
-        {
-          "successList": [
-            {"name": "vrf1", "id": 50001, "message": "VRF is successfully updated.", "status": "Success"}
-          ]
-        }
-        """
-        method_name = inspect.stack()[0][3]
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        self.log.debug(msg)
-
-        bulk_payload = []
-
+        # Process each VRF
         for vrf in self.diff_create_update:
-            # Parse JSON string template config
+            # Parse JSON string template config (common to both)
             json_to_dict = json.loads(vrf["vrfTemplateConfig"])
             vrf_name = json_to_dict.get("vrfName")
 
-            msg = f"Processing VRF {vrf_name} for bulk update"
+            msg = f"Processing VRF {vrf_name}"
             self.log.debug(msg)
 
             msg = f"VRF {vrf_name} template config: "
             msg += f"{json.dumps(json_to_dict, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            # Handle VLAN ID auto-allocation if needed
+            # Handle VLAN ID auto-allocation (common to both)
             vlan_id = json_to_dict.get("vrfVlanId", 0)
             if vlan_id == 0:
                 msg = f"VRF {vrf_name}: auto-allocating VLAN ID"
@@ -3914,34 +3893,39 @@ class DcnmVrf:
                 msg = f"VRF {vrf_name}: allocated VLAN ID {vlan_id}"
                 self.log.debug(msg)
 
-            # Build VRF object for v2 bulk API
-            # Key difference: vrfTemplateConfig is dict, NOT JSON string
-            # Also: exclude serviceVrfTemplate and source fields
-            vrf_obj = {
-                "fabric": vrf["fabric"],
-                "vrfName": vrf["vrfName"],
-                "vrfId": vrf["vrfId"],
-                "vrfTemplate": vrf["vrfTemplate"],
-                "vrfExtensionTemplate": vrf["vrfExtensionTemplate"],
-                "vrfTemplateConfig": json_to_dict  # Dict object, not JSON string
-            }
+            # Build payload based on API type
+            if use_bulk:
+                # Bulk API: vrfTemplateConfig as dict, exclude serviceVrfTemplate/source
+                vrf_obj = {
+                    "fabric": vrf["fabric"],
+                    "vrfName": vrf["vrfName"],
+                    "vrfId": vrf["vrfId"],
+                    "vrfTemplate": vrf["vrfTemplate"],
+                    "vrfExtensionTemplate": vrf["vrfExtensionTemplate"],
+                    "vrfTemplateConfig": json_to_dict  # Dict object
+                }
 
-            msg = f"VRF {vrf_name} bulk payload object: "
-            msg += f"{json.dumps(vrf_obj, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
+                bulk_payload.append(vrf_obj)
+            else:
+                # Individual API: vrfTemplateConfig as JSON string, keep all fields
+                vrf["vrfTemplateConfig"] = json.dumps(json_to_dict)
+                update_path = f"{base_path}/{vrf['vrfName']}"
 
-            bulk_payload.append(vrf_obj)
+                msg = f"Sending individual update for VRF {vrf_name}"
+                self.log.debug(msg)
 
-        if bulk_payload:
-            action = "bulk_update"
-            verb = "PUT"
-            path = self.paths["UPDATE_VRF_BULK"]
+                self.send_to_controller(
+                    action,
+                    verb,
+                    update_path,
+                    vrf,
+                    log_response=True,
+                    is_rollback=is_rollback,
+                )
 
+        # Send bulk request if using bulk API
+        if use_bulk and bulk_payload:
             msg = f"Sending v2 bulk-update request with {len(bulk_payload)} VRF(s)"
-            self.log.debug(msg)
-
-            msg = "Complete bulk update payload: "
-            msg += f"{json.dumps(bulk_payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
             self.send_to_controller(
@@ -3953,201 +3937,6 @@ class DcnmVrf:
                 is_rollback=is_rollback,
             )
 
-    def _push_diff_create_update(self, is_rollback=False):
-        """
-        # Summary
-
-        Send diff_create_update to the controller using individual PUT per VRF.
-        Used for all versions except dcnm_version == -1.
-
-        ## Individual Update API:
-        - Method: PUT
-        - Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric}/vrfs/{vrfName}
-        - Payload: Single VRF object
-        - vrfTemplateConfig: JSON string
-        - Includes: serviceVrfTemplate, source fields
-        """
-        method_name = inspect.stack()[0][3]
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        self.log.debug(msg)
-
-        action = "create"
-        path = self.paths["GET_VRF"].format(self.fabric)
-        verb = "PUT"
-
-        msg = "Pushing diff_create_update to controller (individual updates): "
-        msg += f"{json.dumps(self.diff_create_update, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        for vrf in self.diff_create_update:
-            update_path = f"{path}/{vrf['vrfName']}"
-
-            # Check for VRF VLAN ID in the template
-            json_to_dict = json.loads(vrf["vrfTemplateConfig"])
-
-            msg = f"VRF {vrf['vrfName']} template config: "
-            msg += f"{json.dumps(json_to_dict, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            vlan_id = json_to_dict.get("vrfVlanId", "0")
-
-            if vlan_id == 0:
-                # Get the next available VLAN ID, vlan 0 shouldn't be pushed
-                # to the controller
-                vlan_path = self.paths["GET_VLAN"].format(self.fabric)
-                vlan_data = dcnm_send(self.module, "GET", vlan_path)
-
-                if vlan_data["RETURN_CODE"] != 200:
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += f"caller: {caller}, "
-                    msg += f"vrf_name: {vrf['vrfName']}. "
-                    msg += f"Failure getting autogenerated vlan_id {vlan_data}"
-                    self.module.fail_json(msg=msg)
-
-                vlan_id = vlan_data["DATA"]
-                json_to_dict.update({"vrfVlanId": vlan_id})
-                vrf.update({"vrfTemplateConfig": json.dumps(json_to_dict)})
-
-            self.send_to_controller(
-                action,
-                verb,
-                update_path,
-                vrf,
-                log_response=True,
-                is_rollback=is_rollback,
-            )
-    # def push_diff_create_update(self, is_rollback=False):
-    #     """
-    #     # Summary
-
-    #     Send diff_create_update to the controller.
-        
-    #     ## Behavior by Version:
-    #     - dcnm_version == -1: Use v2 bulk-update API (PUT to bulk endpoint)
-    #     - Other versions: Use individual PUT per VRF (existing behavior)
-        
-    #     ## Key Differences:
-    #     - Bulk API: vrfTemplateConfig as dict, array payload, exclude serviceVrfTemplate/source
-    #     - Individual API: vrfTemplateConfig as JSON string, single payload per VRF
-    #     """
-    #     method_name = inspect.stack()[0][3]
-    #     caller = inspect.stack()[1][3]
-
-    #     msg = "ENTERED. "
-    #     msg += f"caller: {caller}. "
-    #     self.log.debug(msg)
-
-    #     if not self.diff_create_update:
-    #         msg = "Early return. self.diff_create_update is empty."
-    #         self.log.debug(msg)
-    #         return
-
-    #     # Determine if using bulk API
-    #     use_bulk_api = (self.dcnm_version == -1)
-        
-    #     msg = f"Using {'v2 bulk-update' if use_bulk_api else 'individual update'} API"
-    #     self.log.debug(msg)
-
-    #     # Initialize based on API type
-    #     if use_bulk_api:
-    #         bulk_payload = []
-    #         action = "bulk_update"
-    #         verb = "PUT"
-    #         path = self.paths["UPDATE_VRF_BULK"]
-    #     else:
-    #         action = "create"
-    #         verb = "PUT"
-    #         base_path = self.paths["GET_VRF"].format(self.fabric)
-
-    #     # Process each VRF
-    #     for vrf in self.diff_create_update:
-    #         # Parse JSON string template config (common to both)
-    #         json_to_dict = json.loads(vrf["vrfTemplateConfig"])
-    #         vrf_name = json_to_dict.get("vrfName")
-            
-    #         msg = f"Processing VRF {vrf_name}"
-    #         self.log.debug(msg)
-
-    #         msg = f"VRF {vrf_name} template config: "
-    #         msg += f"{json.dumps(json_to_dict, indent=4, sort_keys=True)}"
-    #         self.log.debug(msg)
-
-    #         # Handle VLAN ID auto-allocation (common to both)
-    #         vlan_id = json_to_dict.get("vrfVlanId", 0)
-    #         if vlan_id == 0:
-    #             msg = f"VRF {vrf_name}: auto-allocating VLAN ID"
-    #             self.log.debug(msg)
-                
-    #             vlan_path = self.paths["GET_VLAN"].format(self.fabric)
-    #             vlan_data = dcnm_send(self.module, "GET", vlan_path)
-
-    #             if vlan_data["RETURN_CODE"] != 200:
-    #                 msg = f"{self.class_name}.{method_name}: "
-    #                 msg += f"caller: {caller}, "
-    #                 msg += f"vrf_name: {vrf_name}. "
-    #                 msg += f"Failure getting autogenerated vlan_id {vlan_data}"
-    #                 self.module.fail_json(msg=msg)
-
-    #             vlan_id = vlan_data["DATA"]
-    #             json_to_dict["vrfVlanId"] = vlan_id
-                
-    #             msg = f"VRF {vrf_name}: allocated VLAN ID {vlan_id}"
-    #             self.log.debug(msg)
-
-    #         # Build payload based on API type
-    #         if use_bulk_api:
-    #             # Bulk API: vrfTemplateConfig as dict, exclude serviceVrfTemplate/source
-    #             vrf_obj = {
-    #                 "fabric": vrf["fabric"],
-    #                 "vrfName": vrf["vrfName"],
-    #                 "vrfId": vrf["vrfId"],
-    #                 "vrfTemplate": vrf["vrfTemplate"],
-    #                 "vrfExtensionTemplate": vrf["vrfExtensionTemplate"],
-    #                 "vrfTemplateConfig": json_to_dict  # Dict object
-    #             }
-                
-    #             msg = f"VRF {vrf_name} bulk payload: "
-    #             msg += f"{json.dumps(vrf_obj, indent=4, sort_keys=True)}"
-    #             self.log.debug(msg)
-                
-    #             bulk_payload.append(vrf_obj)
-    #         else:
-    #             # Individual API: vrfTemplateConfig as JSON string, keep all fields
-    #             vrf["vrfTemplateConfig"] = json.dumps(json_to_dict)
-    #             update_path = f"{base_path}/{vrf['vrfName']}"
-                
-    #             msg = f"Sending individual update for VRF {vrf_name}"
-    #             self.log.debug(msg)
-                
-    #             self.send_to_controller(
-    #                 action,
-    #                 verb,
-    #                 update_path,
-    #                 vrf,
-    #                 log_response=True,
-    #                 is_rollback=is_rollback,
-    #             )
-
-    #     # Send bulk request if using bulk API
-    #     if use_bulk_api and bulk_payload:
-    #         msg = f"Sending v2 bulk-update request with {len(bulk_payload)} VRF(s)"
-    #         self.log.debug(msg)
-            
-    #         msg = "Complete bulk update payload: "
-    #         msg += f"{json.dumps(bulk_payload, indent=4, sort_keys=True)}"
-    #         self.log.debug(msg)
-            
-    #         self.send_to_controller(
-    #             action,
-    #             verb,
-    #             path,
-    #             bulk_payload,
-    #             log_response=True,
-    #             is_rollback=is_rollback,
-    #         )
     def push_diff_detach(self, is_rollback=False):
         """
         # Summary
@@ -6293,7 +6082,8 @@ class DcnmVrf:
             return False, False
 
         # Responses to all other operations POST and PUT are handled here.
-        if res.get("MESSAGE") != "OK" or res["RETURN_CODE"] != 200:
+        # Accept both 200 (OK) and 207 (Multi-Status) for bulk operations
+        if res.get("MESSAGE") != "OK" or res["RETURN_CODE"] not in [200, 207]:
             fail = True
             changed = False
             return fail, changed
