@@ -1556,7 +1556,11 @@ class DcnmNetwork:
 
                 if not serial:
                     continue
-
+                # Skip switches being detached (deployment=False) — for multicluster_parent,
+                # the onemanage attach API with deployment=True already handles attach+deploy
+                # in one step; detached switches should not be included in a separate deploy call.
+                if attach.get("deployment") is False:
+                    continue
                 # Add this network to the serial's list
                 if serial not in serial_to_networks:
                     serial_to_networks[serial] = []
