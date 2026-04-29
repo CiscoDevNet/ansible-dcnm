@@ -3895,15 +3895,9 @@ class DcnmVrf:
 
             # Build payload based on API type
             if use_bulk:
-                # Bulk API: vrfTemplateConfig as dict, exclude serviceVrfTemplate/source
-                vrf_obj = {
-                    "fabric": vrf["fabric"],
-                    "vrfName": vrf["vrfName"],
-                    "vrfId": vrf["vrfId"],
-                    "vrfTemplate": vrf["vrfTemplate"],
-                    "vrfExtensionTemplate": vrf["vrfExtensionTemplate"],
-                    "vrfTemplateConfig": json_to_dict  # Dict object
-                }
+                # Bulk API: vrfTemplateConfig as dict
+                vrf_obj = vrf.copy()
+                vrf_obj["vrfTemplateConfig"] = json_to_dict
 
                 bulk_payload.append(vrf_obj)
             else:
