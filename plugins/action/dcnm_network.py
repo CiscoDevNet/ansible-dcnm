@@ -551,7 +551,12 @@ class ActionModule(ActionBase):
                 # For merged, keep them parent-only so omitted child fields preserve
                 # controller state after NDFC propagates the parent update.
                 for key in ['secondary_ip_gw1', 'secondary_ip_gw2', 'secondary_ip_gw3', 'secondary_ip_gw4']:
-                    continue
+                    if state == 'merged':
+                        continue
+                    if key in net_config:
+                        child_net_config[key] = net_config[key]
+                    elif state in ['replaced', 'overridden']:
+                        child_net_config[key] = ''
 
                 # Always inherit deploy flag from parent level (default to True if not specified)
                 if 'deploy' in net_config:
