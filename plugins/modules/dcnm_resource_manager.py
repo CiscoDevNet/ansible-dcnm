@@ -1144,6 +1144,14 @@ class DcnmResManager:
             bulk_payload - formatted payload for bulk creation API
         """
 
+        scope_type_xlate_reverse = {
+            "Fabric": "fabric",
+            "Device": "device",
+            "DeviceInterface": "deviceInterface",
+            "DevicePair": "devicePair",
+            "Link": "link",
+        }
+
         resources = []
 
         for res in diff_create:
@@ -1160,7 +1168,8 @@ class DcnmResManager:
 
             # Build scopeDetails based on scopeType
             scope_details = {}
-            scope_details["scopeType"] = res["scopeType"]
+            scope_type = scope_type_xlate_reverse.get(res["scopeType"], "fabric")
+            scope_details["scopeType"] = scope_type
 
             if res["scopeType"] == "Fabric":
                 scope_details["fabricName"] = self.fabric
