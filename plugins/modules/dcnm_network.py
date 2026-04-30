@@ -1266,6 +1266,22 @@ class DcnmNetwork:
                     merged_ports.append(port)
         return ",".join(merged_ports)
 
+    @staticmethod
+    def get_secondary_gws_template_config(template_conf):
+        """
+        Build NDFC's aggregate secondary gateway template value from secondaryGW1-4.
+        """
+
+        secondary_gws = []
+        for key in ["secondaryGW1", "secondaryGW2", "secondaryGW3", "secondaryGW4"]:
+            secondary_gw = template_conf.get(key, "")
+            if secondary_gw is None:
+                secondary_gw = ""
+            if secondary_gw != "":
+                secondary_gws.append({"gatewayIpAddress": secondary_gw})
+
+        return json.dumps({"secondaryGWs": secondary_gws}, separators=(",", ":"))
+
     def normalize_vpc_torports(self, networks):
         """
         NDFC reflects TOR attachments on both VPC peers even when the playbook
@@ -2365,6 +2381,7 @@ class DcnmNetwork:
             template_conf["secondaryGW3"] = ""
         if template_conf["secondaryGW4"] is None:
             template_conf["secondaryGW4"] = ""
+        template_conf["secondaryGWs"] = self.get_secondary_gws_template_config(template_conf)
         if self.dcnm_version > 11:
             if template_conf["SVI_NETFLOW_MONITOR"] is None:
                 template_conf["SVI_NETFLOW_MONITOR"] = ""
@@ -2415,6 +2432,8 @@ class DcnmNetwork:
             t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
             t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
             t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+
+        t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
 
         if "mcastGroup" not in json_to_dict:
             del t_conf["mcastGroup"]
@@ -4635,6 +4654,8 @@ class DcnmNetwork:
                     t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
 
+                t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
+
                 # Remove skipped attributes from template config for parent fabrics
                 for key in list(t_conf.keys()):
                     if key in skipped_template_keys:
@@ -4892,6 +4913,10 @@ class DcnmNetwork:
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_servers=dict(type="list", elements="dict", default=[]),
+                secondary_ip_gw1=dict(type="ipv4"),
+                secondary_ip_gw2=dict(type="ipv4"),
+                secondary_ip_gw3=dict(type="ipv4"),
+                secondary_ip_gw4=dict(type="ipv4"),
                 deploy=dict(type="bool", default=True if not is_query_state else None),
                 is_l2only=dict(type="bool", default=False),
             )
@@ -5292,6 +5317,31 @@ class DcnmNetwork:
         json_to_dict_want = json.loads(want["networkTemplateConfig"])
         json_to_dict_have = json.loads(have["networkTemplateConfig"])
 
+        # NDFC stores secondary gateways as a compact list.  In merged state,
+        # clearing a middle slot while omitting later slots is ambiguous and
+        # would remove a different gateway on the next idempotency pass.
+        if self.module.params["state"] == "merged":
+            secondary_keys = ["secondary_ip_gw1", "secondary_ip_gw2", "secondary_ip_gw3", "secondary_ip_gw4"]
+            for index, key in enumerate(secondary_keys):
+                if cfg.get(key, None) != "":
+                    continue
+
+                higher_have = []
+                higher_omitted = []
+                for higher_index, higher_key in enumerate(secondary_keys[index + 1:], start=index + 2):
+                    if json_to_dict_have.get(f"secondaryGW{higher_index}", "") in ("", None):
+                        continue
+                    higher_have.append(higher_key)
+                    if higher_key not in cfg:
+                        higher_omitted.append(higher_key)
+
+                if higher_have and higher_omitted:
+                    msg = "Network '{0}': state merged cannot clear {1} while higher secondary gateway values exist and are omitted. ".format(
+                        want["networkName"], key
+                    )
+                    msg += "NDFC stores secondary gateways as a compact list; specify the remaining secondary gateways in order or use state replaced to declare the full desired set."
+                    self.module.fail_json(msg=msg)
+
         # Update template configuration - common attributes
         if cfg.get("vlan_id", None) is None:
             json_to_dict_want["vlanId"] = json_to_dict_have["vlanId"]
@@ -5346,6 +5396,8 @@ class DcnmNetwork:
 
         if cfg.get("secondary_ip_gw4", None) is None:
             json_to_dict_want["secondaryGW4"] = json_to_dict_have["secondaryGW4"]
+
+        json_to_dict_want["secondaryGWs"] = self.get_secondary_gws_template_config(json_to_dict_want)
 
         # Route target configuration (common for all fabric types)
         if cfg.get("route_target_both", None) is None:
