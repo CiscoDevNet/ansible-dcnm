@@ -225,15 +225,19 @@ class TestDcnmModule(ModuleTestCase):
                 if '/about/version' in path:
                     if hasattr(self, 'nd_support_version'):
                         return {'response': self.nd_support_version, 'failed': False}
+                if (
+                    'config-deploy' in path
+                    or 'top-down' in path
+                    or '/vrfs' in path
+                    or '/networks' in path
+                ):
+                    return {'response': self.deploy_success_resp, 'failed': False}
                 if '/onemanage/fabrics' in path:
                     if hasattr(self, 'multicluster_fabric_associations'):
                         return {'response': self.multicluster_fabric_associations, 'failed': False}
                 elif '/fabric-associations' in path:
                     if hasattr(self, 'fabric_associations'):
                         return {'response': self.fabric_associations, 'failed': False}
-                elif 'vrfs' in path:
-                    if '/vrfs' in path or 'top-down' in path:
-                        return {'response': self.deploy_success_resp, 'failed': False}
                 return {'failed': True, 'msg': 'Rest Module Mocks not provided'}
 
             # Set the module args if provided for dcnm_network module
