@@ -1873,6 +1873,7 @@ import time
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    dcnm_get_bulk_api_support,
     dcnm_send,
     get_fabric_inventory_details,
     dcnm_get_ip_addr_info,
@@ -1917,6 +1918,7 @@ class DcnmIntf:
             "GLOBAL_IF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface",
             "GLOBAL_IF_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface/deploy",
             "INTERFACE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface",
+            "UPDATE_INTERFACE_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/modify",
             "IF_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/markdelete",
             "FABRIC_ACCESS_MODE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/accessmode",
             "BREAKOUT": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/breakout",
@@ -1981,6 +1983,9 @@ class DcnmIntf:
         ]
 
         self.dcnm_version = dcnm_version_supported(self.module)
+
+        # Check for bulk API support
+        self.has_bulk_api = dcnm_get_bulk_api_support(self.module)
 
         self.inventory_data = {}
         self.manageable = []
@@ -6492,21 +6497,41 @@ class DcnmIntf:
                 create = True
 
         # Update interfaces
-        path = self.paths["INTERFACE"]
-        for payload in self.diff_replace:
-            json_payload = json.dumps(payload)
+        # For bulk API support, use bulk update API. For other versions, use individual update API.
+        if self.diff_replace:
+            if self.has_bulk_api:
+                # Bulk update API for bulk-capable controllers
+                path = self.paths["UPDATE_INTERFACE_BULK"]
+                
+                json_payload = json.dumps(self.diff_replace)
+                resp = dcnm_send(self.module, "POST", path, json_payload)
+                self.result["response"].append(resp)
 
-            resp = dcnm_send(self.module, "PUT", path, json_payload)
-
-            self.result["response"].append(resp)
-
-            if (resp.get("MESSAGE") != "OK") or (
-                resp.get("RETURN_CODE") != 200
-            ):
-                resp["CHANGED"] = self.changed_dict
-                self.module.fail_json(msg=resp)
+                # Accept both 200 (OK) and 207 (Multi-Status) for bulk operations
+                if (resp.get("MESSAGE") not in ["OK", "Multi-Status"]) or (
+                    resp.get("RETURN_CODE") not in [200, 207]
+                ):
+                    resp["CHANGED"] = self.changed_dict
+                    self.module.fail_json(msg=resp)
+                else:
+                    replace = True
             else:
-                replace = True
+                # Individual update API for versions 11 and 12
+                path = self.paths["INTERFACE"]
+                for payload in self.diff_replace:
+                    json_payload = json.dumps(payload)
+
+                    resp = dcnm_send(self.module, "PUT", path, json_payload)
+
+                    self.result["response"].append(resp)
+
+                    if (resp.get("MESSAGE") != "OK") or (
+                        resp.get("RETURN_CODE") != 200
+                    ):
+                        resp["CHANGED"] = self.changed_dict
+                        self.module.fail_json(msg=resp)
+                    else:
+                        replace = True
 
         resp = None
 

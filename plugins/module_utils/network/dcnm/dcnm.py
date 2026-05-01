@@ -697,6 +697,42 @@ def dcnm_version_supported(module):
     return supported
 
 
+def dcnm_get_bulk_api_support(module):
+    """
+    Check if NDFC bulk API endpoints are available.
+
+    Tests for the presence of v2 bulk-update APIs by sending a POST
+    request to the bulk-update endpoint. This API was introduced in
+    NDFC 12.x with specific patches and may not be present in all
+    NDFC 12.x installations.
+
+    Parameters:
+        module: Ansible module instance
+
+    Returns:
+        bool: True if bulk API is supported, False otherwise
+    """
+
+    method = "POST"
+    path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/bulk-update/networks"
+    data = {}
+
+    try:
+        response = dcnm_send(module, method, path, data)
+
+        # 404 means endpoint doesn't exist (bulk API not available)
+        if response.get("RETURN_CODE") == 404:
+            return False
+
+        # 405 (Method Not Allowed) or any other response means endpoint exists
+        # Even errors indicate the endpoint is present, just not called correctly
+        return True
+
+    except Exception:
+        # If there's an exception, assume bulk API is not available
+        return False
+
+
 def parse_response(response):
 
     if response.get("ERROR") == "Not Found" and response["RETURN_CODE"] == 404:
