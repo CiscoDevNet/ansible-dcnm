@@ -2503,7 +2503,7 @@ class TestDcnmLinksModule(TestDcnmModule):
         self.mock_hn_sn = self.payloads_data.get("mock_hn_sn")
         self.mock_fab_inv = self.payloads_data.get("mock_fab_inv_data")
         self.mock_unnum_fab_info = self.payloads_data.get(
-            "mock_umnum_fab_data"
+            "mock_unnum_fab_data"
         )
         self.mock_monitor_true_resp = self.payloads_data.get("mock_monitor_true_resp")
         self.mock_monitor_false_resp = self.payloads_data.get("mock_monitor_false_resp")
