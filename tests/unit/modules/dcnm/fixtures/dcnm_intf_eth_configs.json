@@ -202,7 +202,40 @@
 			},
 			"name": "eth1/34",
 			"deploy": "False"
-		}], 
+		}],
+
+		"eth_merged_config_missing_native_vlan" : [
+		{
+			"type": "eth",
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"description": "eth interface  acting as trunk",
+				"bpdu_guard": "True",
+				"sno": "SAL1819SAN8",
+				"mtu": "jumbo",
+				"admin_state": "True",
+				"mode": "trunk",
+				"port_type_fast": "True",
+				"policy": "int_trunk_host_11_1",
+				"allowed_vlans": "none",
+				"native_vlan": 10,
+				"orphan_port": false,
+				"enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
+				"duplex": "auto",
+				"cmds": [
+					"no shutdown"
+				],
+				"speed": "Auto",
+				"ifname": "Ethernet1/30",
+				"fabric": "test_fabric"
+			},
+			"name": "eth1/30",
+			"deploy": "True"
+		}],
 
 		"eth_replaced_config" : [
 		{

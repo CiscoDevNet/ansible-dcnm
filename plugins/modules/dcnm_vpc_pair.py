@@ -480,7 +480,6 @@ class DcnmVpcPair:
         self.result = dict(changed=False, diff=[], response=[])
 
     def log_msg(self, msg):
-
         if self.fd is None:
             self.fd = open("dcnm_vpc_pair.log", "a+")
         if self.fd is not None:
@@ -489,7 +488,6 @@ class DcnmVpcPair:
             self.fd.flush()
 
     def dcnm_vpc_pair_merge_want_and_have_objects(self, want, have):
-
         """
         Routine to merge the 'want' and 'have' if required. If an object requires mering, then the
         values from 'want' and 'have' will be combined into one instead of overwriting.
@@ -503,7 +501,6 @@ class DcnmVpcPair:
         """
 
         for key in list(want.keys()):
-
             # Check if <key>_defaulted is present in 'want'. If present merge the original key if
             # <key>_defaulted is True.
 
@@ -520,14 +517,11 @@ class DcnmVpcPair:
                     # NOTE: key requires a merge between 'want' and 'have'. The following utility
                     #       function must do the appropriate checks and merge the key values from 'want'
                     #       and 'have'.
-                    dcnm_vpc_pair_utils_merge_want_and_have(
-                        self, want, have, key
-                    )
+                    dcnm_vpc_pair_utils_merge_want_and_have(self, want, have, key)
                 # Remove the <key>_defaulted from want
                 want.pop(key + "_defaulted")
 
     def dcnm_vpc_pair_merge_want_and_have(self, want, have):
-
         """
         Routine to check for mergeable keys in want and merge the same with whatever is already exsiting
         in have.
@@ -554,17 +548,12 @@ class DcnmVpcPair:
         self.dcnm_vpc_pair_merge_want_and_have_objects(want, have)
 
         # If "nvPairs" object is not present in 'want' or 'have' then nothing to be merged
-        if (want.get("nvPairs", None) is None) or (
-            (have.get("nvPairs", None) is None)
-        ):
+        if (want.get("nvPairs", None) is None) or (have.get("nvPairs", None) is None):
             return
 
-        self.dcnm_vpc_pair_merge_want_and_have_objects(
-            want["nvPairs"], have["nvPairs"]
-        )
+        self.dcnm_vpc_pair_merge_want_and_have_objects(want["nvPairs"], have["nvPairs"])
 
     def dcnm_vpc_pair_get_diff_query(self):
-
         """
         Routine to retrieve vPC switch pairs from controller. This routine extracts information provided by the
         user and filters the output based on that.
@@ -576,14 +565,11 @@ class DcnmVpcPair:
             None
         """
 
-        vpc_pair_list = dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs(
-            self
-        )
+        vpc_pair_list = dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs(self)
         if vpc_pair_list != []:
             self.result["response"].extend(vpc_pair_list)
 
     def dcnm_vpc_pair_get_diff_overridden(self, cfg):
-
         """
         Routine to override existing vPC information with what is included in the playbook. This routine
         deletes all vPC pairs which are not part of the current config and creates new ones based on what is
@@ -613,7 +599,6 @@ class DcnmVpcPair:
             rc = self.dcnm_vpc_pair_get_diff_merge()
 
     def dcnm_vpc_pair_get_diff_deleted(self):
-
         """
         Routine to get a list of payload information that will be used to delete Vpc_pair.
         This routine updates self.diff_delete with payloads that are used to delete Vpc_pair
@@ -632,7 +617,6 @@ class DcnmVpcPair:
             return
 
         for elem in self.vpc_pair_info:
-
             # Perform any translations that may be required on the vpc_pair_info.
             xelem = dcnm_vpc_pair_utils_translate_vpc_pair_info(self, elem)
             have = dcnm_vpc_pair_utils_get_vpc_pair_info(self, xelem)
@@ -640,8 +624,14 @@ class DcnmVpcPair:
             # Check the peering before deleting. Delete only the peering that is requested for.
             if (
                 (have == [])
-                or (xelem["peerOneId"] != have["peerOneId"] and xelem["peerOneId"] != have["peerTwoId"])
-                or (xelem["peerTwoId"] != have["peerTwoId"] and xelem["peerTwoId"] != have["peerOneId"])
+                or (
+                    xelem["peerOneId"] != have["peerOneId"]
+                    and xelem["peerOneId"] != have["peerTwoId"]
+                )
+                or (
+                    xelem["peerTwoId"] != have["peerTwoId"]
+                    and xelem["peerTwoId"] != have["peerOneId"]
+                )
             ):
                 continue
 
@@ -649,7 +639,6 @@ class DcnmVpcPair:
                 self.dcnm_vpc_pair_update_delete_payloads(have)
 
     def dcnm_vpc_pair_update_delete_payloads(self, have):
-
         # Get the delete payload based on 'have'
         del_payload = dcnm_vpc_pair_utils_get_delete_payload(self, have)
 
@@ -668,13 +657,10 @@ class DcnmVpcPair:
                 del_deploy_payload != {}
                 and del_deploy_payload not in self.diff_delete_deploy
             ):
-                self.changed_dict[0]["delete_deploy"].append(
-                    del_deploy_payload
-                )
+                self.changed_dict[0]["delete_deploy"].append(del_deploy_payload)
                 self.diff_delete_deploy.append(del_deploy_payload)
 
     def dcnm_vpc_pair_get_diff_merge(self):
-
         """
         Routine to populate a list of payload information in self.diff_create to create/update Vpc_pair.
 
@@ -689,10 +675,7 @@ class DcnmVpcPair:
             return
 
         for elem in self.want:
-
-            rc, reasons, have = dcnm_vpc_pair_utils_compare_want_and_have(
-                self, elem
-            )
+            rc, reasons, have = dcnm_vpc_pair_utils_compare_want_and_have(self, elem)
 
             if rc == "DCNM_VPC_PAIR_CREATE":
                 # Object does not exists, create a new one.
@@ -712,33 +695,26 @@ class DcnmVpcPair:
                         self.dcnm_vpc_pair_merge_want_and_have(elem, have)
                     self.diff_modify.append(elem)
 
-            # Check if "deploy" flag is True. If True, deploy the changes.
             if self.deploy:
-                # Before building deploy payload, check
-                #  - if something is being created
-                #  - if something that is existing is being updated
-                #  - if switches are in "In-Sync" state already
-
-                sync_state = dcnm_vpc_pair_utils_get_sync_status(self, elem)
-
-                if (
-                    (rc == "DCNM_VPC_PAIR_CREATE")
-                    or (rc == "DCNM_VPC_PAIR_MERGE")
-                    or (sync_state != "In-Sync")
-                ):
+                if (rc == "DCNM_VPC_PAIR_CREATE") or (rc == "DCNM_VPC_PAIR_MERGE"):
                     payload = dcnm_vpc_pair_utils_get_vpc_pair_deploy_payload(
                         self, elem
                     )
                     if payload != {} and payload not in self.diff_deploy:
                         self.diff_deploy.append(payload)
+                else:
+                    sync_state = dcnm_vpc_pair_utils_get_sync_status(self, elem)
+                    if sync_state != "In-Sync":
+                        payload = dcnm_vpc_pair_utils_get_vpc_pair_deploy_payload(
+                            self, elem
+                        )
+                        if payload != {} and payload not in self.diff_deploy:
+                            self.diff_deploy.append(payload)
 
         if self.diff_deploy != []:
-            self.changed_dict[0]["deploy"].extend(
-                copy.deepcopy(self.diff_deploy)
-            )
+            self.changed_dict[0]["deploy"].extend(copy.deepcopy(self.diff_deploy))
 
     def dcnm_vpc_pair_update_want(self):
-
         """
         This routine does the following when the state is 'merged'. For every object in self.want
 
@@ -757,7 +733,6 @@ class DcnmVpcPair:
             return
 
         for want in self.want:
-
             match_have = dcnm_vpc_pair_utils_get_matching_have(self, want)
             match_cfg = dcnm_vpc_pair_utils_get_matching_cfg(self, want)
 
@@ -770,7 +745,6 @@ class DcnmVpcPair:
                 )
 
     def dcnm_vpc_pair_get_want(self):
-
         """
         This routine updates self.want with the payload information based on the playbook configuration.
 
@@ -788,7 +762,6 @@ class DcnmVpcPair:
             return
 
         for elem in self.vpc_pair_info:
-
             # If a separate payload is required for every switch included in the payload, then modify this
             # code to loop over the switches. Also the get payload routine should be modified appropriately.
 
@@ -798,7 +771,6 @@ class DcnmVpcPair:
                 self.want.append(payload)
 
     def dcnm_vpc_pair_get_have(self):
-
         """
         Routine to get exisitng vpc_pair information from DCNM that matches information in self.want.
         This routine updates self.have with all the vpc_pair that match the given playbook configuration
@@ -845,7 +817,6 @@ class DcnmVpcPair:
                 self.have.append(have)
 
     def dcnm_vpc_pair_validate_deleted_state_input(self, cfg):
-
         """
         Playbook input will be different for differnt states. This routine validates the
         deleted state input. This routine updates self.vpc_pair_info with
@@ -872,7 +843,6 @@ class DcnmVpcPair:
             self.vpc_pair_info.extend(vpc_pair_info)
 
     def dcnm_vpc_pair_validate_query_state_input(self, cfg):
-
         """
         Playbook input will be different for differnt states. This routine validates the
         query state input. This routine updates self.vpc_pair_info with
@@ -899,7 +869,6 @@ class DcnmVpcPair:
             self.vpc_pair_info.extend(vpc_pair_info)
 
     def dcnm_vpc_pair_validate_input(self, cfg):
-
         # The generator hanldes only the case where:
         #   - there are some common paremeters that are included in the playbook
         #   - and a profile which is a 'dict' and which is either based on a template or some fixed structure
@@ -921,9 +890,7 @@ class DcnmVpcPair:
         # Even 'common_spec' may require some updates based on other information.
         dcnm_vpc_pair_utils_update_common_spec(self, common_spec)
 
-        vpc_pair_info, invalid_params = validate_list_of_dicts(
-            cfg, common_spec
-        )
+        vpc_pair_info, invalid_params = validate_list_of_dicts(cfg, common_spec)
         if invalid_params:
             mesg = "Invalid parameters in playbook: {0}".format(invalid_params)
             self.module.fail_json(msg=mesg)
@@ -962,7 +929,6 @@ class DcnmVpcPair:
         self.vpc_pair_info.append(vpc_pair_info[0])
 
     def dcnm_vpc_pair_validate_all_input(self):
-
         """
         Routine to validate playbook input based on the state. Since each state has a different
         config structure, this routine handles the validation based on the given state
@@ -979,7 +945,6 @@ class DcnmVpcPair:
 
         cfg = []
         for item in self.config:
-
             citem = copy.deepcopy(item)
 
             cfg.append(citem)
@@ -995,7 +960,6 @@ class DcnmVpcPair:
             cfg.remove(citem)
 
     def dcnm_vpc_pair_get_payload(self, vpc_pair_info):
-
         """
         This routine builds the complete object payload based on the information in self.want
 
@@ -1006,14 +970,11 @@ class DcnmVpcPair:
             vpc_pair_payload (dict): Object payload information populated with appropriate data from playbook config
         """
 
-        vpc_pair_payload = dcnm_vpc_pair_utils_get_vpc_pair_payload(
-            self, vpc_pair_info
-        )
+        vpc_pair_payload = dcnm_vpc_pair_utils_get_vpc_pair_payload(self, vpc_pair_info)
 
         return vpc_pair_payload
 
     def dcnm_vpc_pair_update_inventory_data(self):
-
         """
         Routine to update inventory data for all fabrics included in the playbook. This routine
         also updates ip_sn, sn_hn and hn_sn objetcs from the updated inventory data.
@@ -1086,7 +1047,6 @@ class DcnmVpcPair:
             )
 
     def dcnm_vpc_pair_translate_playbook_info(self, config, ip_sn, hn_sn):
-
         """
         Routine to translate parameters in playbook if required.
             - This routine converts the hostname information included in
@@ -1105,12 +1065,10 @@ class DcnmVpcPair:
             return
 
         for cfg in config:
-
             # Add other translations as required
             dcnm_vpc_pair_utils_translate_config(self, cfg)
 
     def dcnm_vpc_pair_fetch_template_details(self, template_info):
-
         """
         Routine to fetch details of all templates inlcuded in 'template_info'. The template information
         obtained will be formatted appropriately to represent playbook format with other details to assist
@@ -1126,9 +1084,7 @@ class DcnmVpcPair:
 
         template_list = []
         for name in template_info:
-            tinfo = dcnm_get_template_specs(
-                self.module, name, self.dcnm_version
-            )
+            tinfo = dcnm_get_template_specs(self.module, name, self.dcnm_version)
             # While fetching template details we will not require arg_spec for the same. Remove that from
             # the result
             tinfo.pop(name + "_spec")
@@ -1139,7 +1095,6 @@ class DcnmVpcPair:
         return template_list
 
     def dcnm_vpc_pair_send_message_to_dcnm(self):
-
         """
         Routine to push payloads to DCNM server. This routine implements required error checks and retry mechanisms to handle
         transient errors. This routine checks self.diff_create, self.diff_delete lists and push appropriate requests to DCNM.
@@ -1169,7 +1124,6 @@ class DcnmVpcPair:
         )
 
     def dcnm_vpc_pair_update_module_info(self):
-
         """
         Routine to update version and fabric details
 
@@ -1181,18 +1135,14 @@ class DcnmVpcPair:
         """
 
         self.dcnm_version = dcnm_version_supported(self.module)
-        self.inventory_data = get_fabric_inventory_details(
-            self.module, self.fabric
-        )
+        self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
 
         self.src_fabric_info = get_fabric_details(self.module, self.fabric)
         self.paths = dcnm_vpc_pair_utils_get_paths(self.dcnm_version)
 
 
 def main():
-
-    """ main entry point for module execution
-    """
+    """main entry point for module execution"""
     element_spec = dict(
         src_fabric=dict(required=True, type="str"),
         config=dict(required=False, type="list", elements="dict", default=[]),
@@ -1212,9 +1162,7 @@ def main():
         templates=dict(type="list", elements="str", default=[]),
     )
 
-    module = AnsibleModule(
-        argument_spec=element_spec, supports_check_mode=True
-    )
+    module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
     dcnm_vpc_pair = DcnmVpcPair(module)
 
@@ -1254,10 +1202,7 @@ def main():
 
     dcnm_vpc_pair.dcnm_vpc_pair_validate_all_input()
 
-    if (
-        module.params["state"] != "query"
-        and module.params["state"] != "deleted"
-    ):
+    if module.params["state"] != "query" and module.params["state"] != "deleted":
         dcnm_vpc_pair.dcnm_vpc_pair_get_want()
         dcnm_vpc_pair.dcnm_vpc_pair_get_have()
 
@@ -1268,9 +1213,7 @@ def main():
 
         dcnm_vpc_pair.dcnm_vpc_pair_update_want()
 
-    if (module.params["state"] == "merged") or (
-        module.params["state"] == "replaced"
-    ):
+    if (module.params["state"] == "merged") or (module.params["state"] == "replaced"):
         dcnm_vpc_pair.dcnm_vpc_pair_get_diff_merge()
 
     if module.params["state"] == "deleted":

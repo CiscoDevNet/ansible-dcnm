@@ -934,7 +934,7 @@
         "managable": true,
         "fabricName": "mmudigon-svi",
         "logicalName": "dt-n9k86-174-1",
-        "switchDbID": 777660,
+        "switchDbID": 777680,
         "serialNumber": "SAL1820SDPR",
         "switchRoleEnum": "leaf"
       },
@@ -943,7 +943,7 @@
         "managable": true,
         "fabricName": "mmudigon-svi",
         "logicalName": "dt-n9k86-175-2",
-        "switchDbID": 777620,
+        "switchDbID": 777640,
         "serialNumber": "SAL1819S6K5",
         "switchRoleEnum": "leaf"
       },

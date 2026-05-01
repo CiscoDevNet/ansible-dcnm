@@ -17,10 +17,11 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 # from units.compat.mock import patch
 
+from ansible_collections.cisco.dcnm.plugins.action import dcnm_network as dcnm_network_action
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_network
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
@@ -42,6 +43,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
     nd_version_11 = test_data.get("nd_version_11")
     mock_ip_sn = test_data.get("mock_ip_sn")
     net_inv_data = test_data.get("net_inv_data")
+    net_inv_data_vpc_tor = test_data.get("net_inv_data_vpc_tor")
     fabric_details = test_data.get("fabric_details")
     fabric_details_vxlan_fabric = test_data.get("fabric_details_vxlan_fabric")
     fabric_associations = test_data.get("fabric_associations")
@@ -55,6 +57,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
     playbook_tor_config = test_data.get("playbook_tor_config")
     playbook_tor_roleerr_config = test_data.get("playbook_tor_roleerr_config")
     playbook_tor_config_update = test_data.get("playbook_tor_config_update")
+    playbook_tor_only_config_update = test_data.get("playbook_tor_only_config_update")
+    playbook_tor_vpc_one_sided_config = test_data.get("playbook_tor_vpc_one_sided_config")
+    playbook_tor_vpc_one_sided_update = test_data.get("playbook_tor_vpc_one_sided_update")
 
     playbook_config_replace = test_data.get("playbook_config_replace")
     playbook_config_replace_no_atch = test_data.get("playbook_config_replace_no_atch")
@@ -63,7 +68,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         "mock_net_attach_object_del_not_ready"
     )
     mock_net_attach_object_del_ready = test_data.get("mock_net_attach_object_del_ready")
-
+    mock_net_del_ready = test_data.get("mock_net_del_ready")
     attach_success_resp = test_data.get("attach_success_resp")
     attach_success_resp2 = test_data.get("attach_success_resp2")
     deploy_success_resp = test_data.get("deploy_success_resp")
@@ -117,6 +122,12 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.mock_net_query_object = copy.deepcopy(self.test_data.get("mock_net_query_object"))
         self.mock_vlan_get = copy.deepcopy(self.test_data.get("mock_vlan_get"))
         self.mock_net_attach_tor_object = copy.deepcopy(self.test_data.get("mock_net_attach_tor_object"))
+        self.mock_net_attach_tor_only_object = copy.deepcopy(
+            self.test_data.get("mock_net_attach_tor_only_object")
+        )
+        self.mock_net_attach_tor_vpc_object = copy.deepcopy(
+            self.test_data.get("mock_net_attach_tor_vpc_object")
+        )
 
     def setUp(self):
         super(TestDcnmNetworkModule, self).setUp()
@@ -147,6 +158,393 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.mock_dcnm_ip_sn.stop()
         self.mock_dcnm_fabric_details.stop()
         self.mock_dcnm_get_url.stop()
+
+    @staticmethod
+    def _build_attach_state(serial, switch_ports, torports=None, vlan=202):
+        return {
+            "serialNumber": serial,
+            "networkName": "test_network",
+            "switchPorts": switch_ports,
+            "isAttached": True,
+            "deployment": True,
+            "is_deploy": True,
+            "vlan": vlan,
+            "torports": copy.deepcopy(torports or []),
+        }
+
+    @staticmethod
+    def _build_test_logger():
+        return type("Logger", (), {"debug": lambda *args, **kwargs: None})()
+
+    @staticmethod
+    def _build_secondary_ip_network_template(secondary_gw1="", secondary_gw2="", secondary_gw3="", secondary_gw4=""):
+        return {
+            "vlanId": 993,
+            "gatewayIpAddress": "10.250.93.1/24",
+            "isLayer2Only": False,
+            "tag": "",
+            "vlanName": "",
+            "intfDescription": "",
+            "mtu": "",
+            "suppressArp": False,
+            "dhcpServerAddr1": "",
+            "dhcpServerAddr2": "",
+            "dhcpServerAddr3": "",
+            "vrfDhcp": "",
+            "vrfDhcp2": "",
+            "vrfDhcp3": "",
+            "dhcpServers": "",
+            "loopbackId": "",
+            "mcastGroup": "",
+            "gatewayIpV6Address": "",
+            "secondaryGW1": secondary_gw1,
+            "secondaryGW2": secondary_gw2,
+            "secondaryGW3": secondary_gw3,
+            "secondaryGW4": secondary_gw4,
+            "trmEnabled": False,
+            "rtBothAuto": False,
+            "enableL3OnBorder": False,
+            "networkName": "sec-ip-test",
+        }
+
+    def _build_diff_network(self, inventory_data, ip_sn=None):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.inventory_data = copy.deepcopy(inventory_data)
+        dcnm_net.ip_sn = copy.deepcopy(ip_sn or self.mock_ip_sn)
+        return dcnm_net
+
+    def _build_secondary_ip_update_network(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.module = Mock(params={"state": "merged"})
+        dcnm_net.is_ms_fabric = False
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.dcnm_version = 11
+        return dcnm_net
+
+    def _build_secondary_ip_update_payload(self, template_conf):
+        return {
+            "fabric": "test-fabric",
+            "vrf": "test-vrf",
+            "networkName": "sec-ip-test",
+            "displayName": "sec-ip-test",
+            "networkId": 50993,
+            "networkTemplate": "Default_Network_Universal",
+            "networkExtensionTemplate": "Default_Network_Extension_Universal",
+            "networkTemplateConfig": json.dumps(template_conf),
+        }
+
+    def test_dcnm_net_secondary_gws_template_config(self):
+        template_conf = self._build_secondary_ip_network_template(
+            secondary_gw1="192.166.88.1/24",
+            secondary_gw2="",
+            secondary_gw3=None,
+            secondary_gw4="192.169.88.1/24",
+        )
+
+        secondary_gws = json.loads(dcnm_network.DcnmNetwork.get_secondary_gws_template_config(template_conf))
+
+        self.assertEqual(
+            secondary_gws,
+            {
+                "secondaryGWs": [
+                    {"gatewayIpAddress": "192.166.88.1/24"},
+                    {"gatewayIpAddress": "192.169.88.1/24"},
+                ]
+            },
+        )
+
+    def test_dcnm_net_update_existing_network_adds_secondary_gws_payload(self):
+        dcnm_net = self._build_secondary_ip_update_network()
+        have = self._build_secondary_ip_update_payload(self._build_secondary_ip_network_template())
+        want = self._build_secondary_ip_update_payload(
+            self._build_secondary_ip_network_template(
+                secondary_gw1="192.166.88.1/24",
+                secondary_gw2="192.167.88.1/24",
+            )
+        )
+
+        dcnm_net.dcnm_update_network_information(
+            want,
+            have,
+            {
+                "secondary_ip_gw1": "192.166.88.1/24",
+                "secondary_ip_gw2": "192.167.88.1/24",
+            },
+        )
+
+        updated_template = json.loads(want["networkTemplateConfig"])
+        self.assertEqual(updated_template["secondaryGW1"], "192.166.88.1/24")
+        self.assertEqual(updated_template["secondaryGW2"], "192.167.88.1/24")
+        self.assertEqual(
+            json.loads(updated_template["secondaryGWs"]),
+            {
+                "secondaryGWs": [
+                    {"gatewayIpAddress": "192.166.88.1/24"},
+                    {"gatewayIpAddress": "192.167.88.1/24"},
+                ]
+            },
+        )
+
+    def test_dcnm_net_update_existing_network_clears_last_secondary_gw_payload(self):
+        dcnm_net = self._build_secondary_ip_update_network()
+        have = self._build_secondary_ip_update_payload(
+            self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+        )
+        want = self._build_secondary_ip_update_payload(self._build_secondary_ip_network_template())
+
+        dcnm_net.dcnm_update_network_information(want, have, {"secondary_ip_gw1": ""})
+
+        updated_template = json.loads(want["networkTemplateConfig"])
+        self.assertEqual(updated_template["secondaryGW1"], "")
+        self.assertEqual(json.loads(updated_template["secondaryGWs"]), {"secondaryGWs": []})
+
+    def test_dcnm_net_update_existing_network_clears_trailing_explicit_secondary_gw_payload(self):
+        dcnm_net = self._build_secondary_ip_update_network()
+        have = self._build_secondary_ip_update_payload(
+            self._build_secondary_ip_network_template(
+                secondary_gw1="192.166.88.1/24",
+                secondary_gw2="192.167.88.1/24",
+            )
+        )
+        want = self._build_secondary_ip_update_payload(self._build_secondary_ip_network_template())
+
+        dcnm_net.dcnm_update_network_information(want, have, {"secondary_ip_gw2": ""})
+
+        updated_template = json.loads(want["networkTemplateConfig"])
+        self.assertEqual(updated_template["secondaryGW1"], "192.166.88.1/24")
+        self.assertEqual(updated_template["secondaryGW2"], "")
+        self.assertEqual(
+            json.loads(updated_template["secondaryGWs"]),
+            {
+                "secondaryGWs": [
+                    {"gatewayIpAddress": "192.166.88.1/24"},
+                ]
+            },
+        )
+
+    def test_dcnm_net_update_existing_network_rejects_ambiguous_merged_secondary_gw_clear(self):
+        dcnm_net = self._build_secondary_ip_update_network()
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+        have = self._build_secondary_ip_update_payload(
+            self._build_secondary_ip_network_template(
+                secondary_gw1="192.166.88.1/24",
+                secondary_gw2="192.167.88.1/24",
+                secondary_gw3="192.168.88.1/24",
+            )
+        )
+        want = self._build_secondary_ip_update_payload(self._build_secondary_ip_network_template())
+
+        with self.assertRaises(RuntimeError):
+            dcnm_net.dcnm_update_network_information(want, have, {"secondary_ip_gw2": ""})
+
+        fail_msg = dcnm_net.module.fail_json.call_args[1]["msg"]
+        self.assertIn("cannot clear secondary_ip_gw2", fail_msg)
+        self.assertIn("compact list", fail_msg)
+
+    def test_dcnm_net_split_msd_merged_keeps_secondary_gws_parent_only(self):
+        action = dcnm_network_action.ActionModule.__new__(dcnm_network_action.ActionModule)
+        fabrics = {
+            "msd-parent": {
+                "type": "multisite_parent",
+                "fabricParent": "None",
+                "cluster_name": "",
+            },
+            "msd-child-1": {
+                "type": "multisite_child",
+                "fabricParent": "msd-parent",
+                "cluster_name": "",
+            },
+        }
+        config = [
+            {
+                "net_name": "ansible-msd-net1",
+                "vrf_name": "Tenant-1",
+                "is_l2only": False,
+                "secondary_ip_gw1": "192.166.88.1/24",
+                "secondary_ip_gw2": "",
+                "child_fabric_config": [
+                    {
+                        "fabric": "msd-child-1",
+                        "dhcp_loopback_id": 204,
+                    }
+                ],
+            }
+        ]
+
+        configs, error_msg = action._split_config(fabrics, "msd-parent", config, "merged", {}, 12)
+
+        self.assertIsNone(error_msg)
+        self.assertEqual(configs[0]["config"][0]["secondary_ip_gw1"], "192.166.88.1/24")
+        self.assertEqual(configs[0]["config"][0]["secondary_ip_gw2"], "")
+        child_config = configs[1]["config"][0]
+        self.assertNotIn("secondary_ip_gw1", child_config)
+        self.assertNotIn("secondary_ip_gw2", child_config)
+        self.assertEqual(child_config["dhcp_loopback_id"], 204)
+
+    def test_dcnm_net_split_msd_replaced_sends_full_secondary_gw_intent_to_child(self):
+        action = dcnm_network_action.ActionModule.__new__(dcnm_network_action.ActionModule)
+        fabrics = {
+            "msd-parent": {
+                "type": "multisite_parent",
+                "fabricParent": "None",
+                "cluster_name": "",
+            },
+            "msd-child-1": {
+                "type": "multisite_child",
+                "fabricParent": "msd-parent",
+                "cluster_name": "",
+            },
+        }
+        config = [
+            {
+                "net_name": "ansible-msd-net1",
+                "vrf_name": "Tenant-1",
+                "is_l2only": False,
+                "secondary_ip_gw1": "192.166.88.1/24",
+                "child_fabric_config": [
+                    {
+                        "fabric": "msd-child-1",
+                        "dhcp_loopback_id": 204,
+                    }
+                ],
+            }
+        ]
+
+        configs, error_msg = action._split_config(fabrics, "msd-parent", config, "replaced", {}, 12)
+
+        self.assertIsNone(error_msg)
+        child_config = configs[1]["config"][0]
+        self.assertEqual(child_config["secondary_ip_gw1"], "192.166.88.1/24")
+        self.assertEqual(child_config["secondary_ip_gw2"], "")
+        self.assertEqual(child_config["secondary_ip_gw3"], "")
+        self.assertEqual(child_config["secondary_ip_gw4"], "")
+
+    def test_dcnm_net_delete_switch_config_deploy_serials_are_dynamic(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.diff_detach = [
+            {
+                "networkName": "net-a",
+                "lanAttachList": [
+                    {"serialNumber": "SERIAL1"},
+                    {"serialNumber": "SERIAL2"},
+                ],
+            },
+            {
+                "networkName": "net-b",
+                "lanAttachList": [
+                    {"serialNumber": "SERIAL2"},
+                    {"serialNumber": "SERIAL3"},
+                ],
+            },
+            {
+                "networkName": "net-c",
+                "lanAttachList": [
+                    {"serialNumber": "SERIAL4"},
+                ],
+            },
+        ]
+
+        serials = dcnm_net.get_delete_deploy_switch_serials(
+            {"networkNames": "net-a,net-b"}
+        )
+
+        self.assertEqual(serials, ["SERIAL1", "SERIAL2", "SERIAL3"])
+
+    def test_dcnm_net_delete_out_of_sync_networks_are_bulk_deleted(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.paths = {"GET_NET": "/networks/{}"}
+        dcnm_net.module = Mock(check_mode=False)
+        dcnm_net.result = {"changed": False, "response": []}
+        dcnm_net.diff_create_update = []
+        dcnm_net.diff_detach = []
+        dcnm_net.diff_undeploy = {}
+        dcnm_net.diff_delete = {"net-a": "OUT-OF-SYNC"}
+        dcnm_net.diff_create = []
+        dcnm_net.diff_attach = []
+        dcnm_net.diff_deploy = {}
+        dcnm_net.network_sn_attach_map = {}
+        dcnm_net.network_sn_detach_map = {}
+        dcnm_net.have_attach_by_name = {}
+        dcnm_net.wait_for_network_attachments_del_ready = Mock(return_value=True)
+        dcnm_net.wait_for_network_del_ready = Mock(return_value=True)
+        dcnm_net.bulk_delete_networks_with_retry = Mock()
+
+        dcnm_net.push_to_remote()
+
+        dcnm_net.bulk_delete_networks_with_retry.assert_called_once_with(
+            ["net-a"],
+            "/networks/test-fabric",
+            "DELETE",
+            False,
+        )
+
+    def test_dcnm_net_delete_attachment_wait_batches_pending_networks(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.paths = {"GET_NET_ATTACH": "/attach/{}/{}"}
+        dcnm_net.module = Mock()
+        dcnm_net.WAIT_TIME_FOR_DELETE_LOOP = 5
+        dcnm_net.detach_and_deploy_for_del = Mock()
+
+        networks = [f"net-{index}" for index in range(31)]
+        dcnm_net.diff_delete = {network: "DEPLOYED" for network in networks}
+
+        self.run_dcnm_send.side_effect = [
+            {
+                "RETURN_CODE": 200,
+                "DATA": [
+                    {"networkName": network, "lanAttachList": []}
+                    for network in networks[:30]
+                ],
+            },
+            {
+                "RETURN_CODE": 200,
+                "DATA": [
+                    {"networkName": network, "lanAttachList": []}
+                    for network in networks[30:]
+                ],
+            },
+        ]
+
+        self.assertTrue(dcnm_net.wait_for_network_attachments_del_ready())
+
+        self.assertEqual(self.run_dcnm_send.call_count, 2)
+        paths = [call_args[0][2] for call_args in self.run_dcnm_send.call_args_list]
+        self.assertEqual(paths[0], "/attach/test-fabric/" + ",".join(networks[:30]))
+        self.assertEqual(paths[1], "/attach/test-fabric/" + networks[30])
+        self.assertEqual(set(dcnm_net.diff_delete.values()), {"NA"})
+        dcnm_net.detach_and_deploy_for_del.assert_not_called()
+
+    def test_dcnm_net_delete_attachment_wait_fails_on_unexpected_data(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.paths = {"GET_NET_ATTACH": "/attach/{}/{}"}
+        dcnm_net.module = Mock()
+        dcnm_net.module.fail_json.side_effect = Exception("fail_json")
+        dcnm_net.WAIT_TIME_FOR_DELETE_LOOP = 5
+        dcnm_net.diff_delete = {"net-a": "DEPLOYED"}
+
+        self.run_dcnm_send.return_value = {
+            "RETURN_CODE": 414,
+            "DATA": "<html>URI Too Long</html>",
+        }
+
+        with self.assertRaises(Exception):
+            dcnm_net.wait_for_network_attachments_del_ready()
+
+        dcnm_net.module.fail_json.assert_called_once()
+        self.assertIn(
+            "Unexpected DATA while waiting for network attachments",
+            dcnm_net.module.fail_json.call_args[1]["msg"],
+        )
 
     def load_fixtures(self, response=None, device=""):
 
@@ -342,10 +740,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.mock_net_object,
                 self.attach_success_resp,
                 self.deploy_success_resp,
-                self.mock_net_attach_object_del_not_ready,
-                self.mock_net_attach_object_del_ready,
-                self.mock_net_attach_object_del_ready,
-                self.delete_success_resp,
+                self.mock_net_attach_object_del_not_ready,  # wait_for_network_attachments_del_ready
+                self.mock_net_attach_object_del_ready,      # wait_for_network_attachments_del_ready
+                self.mock_net_del_ready,                     # wait_for_network_del_ready
+                self.delete_success_resp,                    # bulk_delete_networks_with_retry
                 self.blank_data,
                 self.attach_success_resp2,
                 self.deploy_success_resp,
@@ -357,13 +755,12 @@ class TestDcnmNetworkModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
                 self.mock_net_object,
-                self.blank_data,
                 self.attach_success_resp,
                 self.deploy_success_resp,
-                self.mock_net_attach_object_del_not_ready,
-                self.mock_net_attach_object_del_ready,
-                self.mock_net_attach_object_del_ready,
-                self.delete_success_resp,
+                self.mock_net_attach_object_del_not_ready,  # wait_for_network_attachments_del_ready
+                self.mock_net_attach_object_del_ready,      # wait_for_network_attachments_del_ready
+                self.mock_net_del_ready,                     # wait_for_network_del_ready
+                self.delete_success_resp,                    # bulk_delete_networks_with_retry
             ]
 
         elif "delete_without_config" in self._testMethodName:
@@ -375,10 +772,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.blank_data,
                 self.attach_success_resp,
                 self.deploy_success_resp,
-                self.mock_net_attach_object_del_not_ready,
-                self.mock_net_attach_object_del_ready,
-                self.mock_net_attach_object_del_ready,
-                self.delete_success_resp,
+                self.mock_net_attach_object_del_not_ready,  # wait_for_network_attachments_del_ready
+                self.mock_net_attach_object_del_ready,      # wait_for_network_attachments_del_ready
+                self.mock_net_del_ready,                     # wait_for_network_del_ready
+                self.delete_success_resp,                    # bulk_delete_networks_with_retry
             ]
 
         elif "query_with_config" in self._testMethodName:
@@ -430,6 +827,29 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.deploy_success_resp,
             ]
 
+        elif "_merged_tor_only_with_update" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_get_url.side_effect = [self.mock_net_attach_tor_only_object]
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf_object,
+                self.mock_net_object,
+                self.blank_data,
+                self.attach_success_resp,
+                self.deploy_success_resp,
+            ]
+
+        elif "_merged_tor_vpc_one_sided_with_update" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_ip_sn.side_effect = [self.net_inv_data_vpc_tor]
+            self.run_dcnm_get_url.side_effect = [self.mock_net_attach_tor_vpc_object]
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf_object,
+                self.mock_net_object,
+                self.blank_data,
+                self.attach_success_resp,
+                self.deploy_success_resp,
+            ]
+
         elif "_replace_tor_ports" in self._testMethodName:
             self.init_data()
             self.run_dcnm_get_url.side_effect = [self.mock_net_attach_tor_object]
@@ -468,12 +888,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.empty_network_list,
                 self.mock_msd_net_create_response,
                 self.mock_msd_net_attach_response,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object,
                 self.mock_msd_child_net_object,
                 self.mock_msd_child_net_attach_object,
                 self.mock_msd_child_net_update_response,
-                self.deploy_success_resp,
             ]
 
         elif "_merged_msd_dhcp" in self._testMethodName:
@@ -492,12 +910,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.empty_network_list,
                 self.mock_msd_dhcp_net_create_response,
                 self.mock_msd_dhcp_net_attach_response,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object,
                 self.mock_msd_dhcp_child_net_object,
                 self.mock_msd_dhcp_child_net_attach_object,
                 self.mock_msd_dhcp_child_net_update_response,
-                self.deploy_success_resp,
             ]
 
         elif "_msd_override_with_different_attachments" in self._testMethodName:
@@ -516,7 +932,6 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.empty_network_list,
                 self.mock_msd_override_parent_net_object,
                 self.mock_msd_override_attach_response,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object,
                 self.mock_msd_override_child_net_object,
                 self.mock_msd_override_child_net_attach_object,
@@ -704,6 +1119,29 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(result["response"][1]["DATA"]["status"], "")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
+    def test_dcnm_net_replace_with_changes_bulk_inventory(self):
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_network",
+                config=self.playbook_config_replace,
+            )
+        )
+        with patch.object(dcnm_network.DcnmNetwork, "BULK_GET_HAVE_NETWORK_THRESHOLD", 1):
+            result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+
+        request_calls = [(call.args[1], call.args[2]) for call in self.run_dcnm_send.call_args_list]
+        get_net_path = dcnm_network.DcnmNetwork.dcnm_network_paths[self.version]["GET_NET"].format("test_network")
+        get_net_name_path = dcnm_network.DcnmNetwork.dcnm_network_paths[self.version]["GET_NET_NAME"].format(
+            "test_network", "test_network"
+        )
+
+        self.assertIn(("GET", get_net_path), request_calls)
+        self.assertNotIn(("GET", get_net_name_path), request_calls)
+        self.assertEqual(result.get("diff")[0]["vlan_id"], 203)
+        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
+        self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
+
     def test_dcnm_net_replace_with_no_atch(self):
         set_module_args(
             dict(
@@ -835,6 +1273,36 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(result["response"][1]["DATA"]["status"], "")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
+        delete_paths = [
+            args[2]
+            for args, _kwargs in self.run_dcnm_send.call_args_list
+            if len(args) >= 3 and args[1] == "DELETE"
+        ]
+        self.assertTrue(
+            any("/bulk-delete/networks?network-names=test_network" in path for path in delete_paths)
+        )
+
+        config_deploy_calls = [
+            args
+            for args, _kwargs in self.run_dcnm_send.call_args_list
+            if len(args) >= 3 and args[1] == "POST" and "/config-deploy/" in args[2]
+        ]
+        self.assertEqual(len(config_deploy_calls), 1)
+        config_deploy_path = config_deploy_calls[0][2]
+        serial_segment = config_deploy_path.split("/config-deploy/")[1].split("?")[0]
+        self.assertEqual(
+            set(serial_segment.split(",")),
+            {"9NN7E41N16A", "9YO9A29F27U"},
+        )
+        self.assertEqual(len(config_deploy_calls[0]), 3)
+
+        switch_network_deploy_calls = [
+            args
+            for args, _kwargs in self.run_dcnm_send.call_args_list
+            if len(args) >= 3 and args[1] == "POST" and args[2].endswith("/networks/deploy")
+        ]
+        self.assertEqual(switch_network_deploy_calls, [])
+
     def test_dcnm_net_delete_without_config(self):
         set_module_args(dict(state="deleted", fabric="test_network", config=[]))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
@@ -952,6 +1420,320 @@ class TestDcnmNetworkModule(TestDcnmModule):
         )
         self.assertEqual(result.get("diff")[0]["vrf_name"], "ansible-vrf-int1")
 
+    def test_dcnm_net_merged_tor_only_with_update(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_network",
+                config=self.playbook_tor_only_config_update,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+        self.version = 11
+
+        attach_by_ip = {
+            attach["ip_address"]: attach for attach in result.get("diff")[0]["attach"]
+        }
+        self.assertIn("10.10.10.217", attach_by_ip)
+        self.assertEqual(attach_by_ip["10.10.10.217"]["ports"], "")
+        self.assertIn(
+            "dt-n9k7(Ethernet1/13,Ethernet1/12)",
+            attach_by_ip["10.10.10.217"]["tor_ports"],
+        )
+        self.assertEqual(result.get("diff")[0]["net_name"], "test_network")
+
+    def test_dcnm_net_merged_tor_vpc_idempotent(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = type("Logger", (), {"debug": lambda *args, **kwargs: None})()
+        dcnm_net.inventory_data = copy.deepcopy(self.net_inv_data_vpc_tor)
+        dcnm_net.ip_sn = copy.deepcopy(self.mock_ip_sn)
+
+        have_attach = [
+            {
+                "serialNumber": "9YO9A29F27U",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "vlan": 202,
+                "torports": [
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/12"},
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/12"},
+                ],
+            },
+            {
+                "serialNumber": "9NN7E41N16A",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "vlan": 202,
+                "torports": [
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/12"},
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/12"},
+                ],
+            },
+        ]
+        want_attach = copy.deepcopy(have_attach)
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
+
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
+
+    def test_dcnm_net_merged_tor_vpc_one_sided_with_update(self):
+        self.version = 12
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_network",
+                config=self.playbook_tor_vpc_one_sided_update,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+        self.version = 11
+
+        attach_by_ip = {
+            attach["ip_address"]: attach for attach in result.get("diff")[0]["attach"]
+        }
+        self.assertIn("10.10.10.217", attach_by_ip)
+        self.assertIn("10.10.10.218", attach_by_ip)
+        self.assertIn("dt-n9k6(Ethernet1/13,Ethernet1/14,Ethernet1/12)", attach_by_ip["10.10.10.217"]["tor_ports"])
+        self.assertIn("dt-n9k7(Ethernet1/13,Ethernet1/14,Ethernet1/12)", attach_by_ip["10.10.10.217"]["tor_ports"])
+        self.assertIn("dt-n9k6(Ethernet1/13,Ethernet1/14,Ethernet1/12)", attach_by_ip["10.10.10.218"]["tor_ports"])
+        self.assertIn("dt-n9k7(Ethernet1/13,Ethernet1/14,Ethernet1/12)", attach_by_ip["10.10.10.218"]["tor_ports"])
+
+    def test_dcnm_net_replace_tor_vpc_one_sided_idempotent(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = type("Logger", (), {"debug": lambda *args, **kwargs: None})()
+        dcnm_net.inventory_data = copy.deepcopy(self.net_inv_data_vpc_tor)
+        dcnm_net.ip_sn = copy.deepcopy(self.mock_ip_sn)
+
+        want_attach = [
+            {
+                "serialNumber": "9NN7E41N16A",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "torports": [],
+            },
+            {
+                "serialNumber": "9YO9A29F27U",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "torports": [
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/12"},
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/12"},
+                ],
+            },
+        ]
+        have_attach = [
+            {
+                "serialNumber": "9NN7E41N16A",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "vlan": 202,
+                "torports": [
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/12"},
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/12"},
+                ],
+            },
+            {
+                "serialNumber": "9YO9A29F27U",
+                "networkName": "test_network",
+                "switchPorts": "Ethernet1/13,Ethernet1/14",
+                "isAttached": True,
+                "deployment": True,
+                "is_deploy": True,
+                "vlan": 202,
+                "torports": [
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/12"},
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/12"},
+                ],
+            },
+        ]
+
+        dcnm_net.normalize_vpc_torports(want_attach)
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach), replace=True)
+
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
+
+    def test_dcnm_net_merged_tor_vpc_single_tor_with_update(self):
+        dcnm_net = self._build_diff_network(self.net_inv_data_vpc_tor)
+
+        have_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/12"}],
+            ),
+            self._build_attach_state(
+                "9YO9A29F27U",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/12"}],
+            ),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14"),
+            self._build_attach_state(
+                "9YO9A29F27U",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            ),
+        ]
+
+        dcnm_net.normalize_vpc_torports(want_attach)
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(
+            copy.deepcopy(want_attach), copy.deepcopy(have_attach)
+        )
+
+        attach_by_serial = {attach["serialNumber"]: attach for attach in diff}
+        self.assertTrue(dep_net)
+        self.assertEqual(len(diff), 2)
+        self.assertEqual(
+            attach_by_serial["9NN7E41N16A"]["torPorts"],
+            "dt-n9k6(Ethernet1/13,Ethernet1/14,Ethernet1/12)",
+        )
+        self.assertEqual(
+            attach_by_serial["9YO9A29F27U"]["torPorts"],
+            "dt-n9k6(Ethernet1/13,Ethernet1/14,Ethernet1/12)",
+        )
+
+    def test_dcnm_net_replace_tor_vpc_single_tor_idempotent(self):
+        dcnm_net = self._build_diff_network(self.net_inv_data_vpc_tor)
+
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14"),
+            self._build_attach_state(
+                "9YO9A29F27U",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            ),
+        ]
+        have_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            ),
+            self._build_attach_state(
+                "9YO9A29F27U",
+                "Ethernet1/13,Ethernet1/14",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            ),
+        ]
+
+        dcnm_net.normalize_vpc_torports(want_attach)
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(
+            copy.deepcopy(want_attach), copy.deepcopy(have_attach), replace=True
+        )
+
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
+
+    def test_dcnm_net_merged_tor_single_leaf_single_tor_with_update(self):
+        inventory_data = {
+            "10.10.10.217": {
+                "ipAddress": "10.10.10.217",
+                "logicalName": "dt-n9k1",
+                "serialNumber": "9NN7E41N16A",
+                "switchRole": "leaf",
+                "isVpcConfigured": False,
+            },
+            "10.10.10.219": {
+                "ipAddress": "10.10.10.219",
+                "logicalName": "dt-n9k6",
+                "serialNumber": "9YO9A29F28C",
+                "switchRole": "tor",
+            },
+        }
+        ip_sn = {
+            "10.10.10.217": "9NN7E41N16A",
+            "10.10.10.219": "9YO9A29F28C",
+        }
+        dcnm_net = self._build_diff_network(inventory_data, ip_sn)
+
+        have_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/12"}],
+            )
+        ]
+        want_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            )
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(
+            copy.deepcopy(want_attach), copy.deepcopy(have_attach)
+        )
+
+        self.assertTrue(dep_net)
+        self.assertEqual(len(diff), 1)
+        self.assertEqual(
+            diff[0]["torPorts"], "dt-n9k6(Ethernet1/13,Ethernet1/14,Ethernet1/12)"
+        )
+
+    def test_dcnm_net_replace_tor_single_leaf_single_tor_idempotent(self):
+        inventory_data = {
+            "10.10.10.217": {
+                "ipAddress": "10.10.10.217",
+                "logicalName": "dt-n9k1",
+                "serialNumber": "9NN7E41N16A",
+                "switchRole": "leaf",
+                "isVpcConfigured": False,
+            },
+            "10.10.10.219": {
+                "ipAddress": "10.10.10.219",
+                "logicalName": "dt-n9k6",
+                "serialNumber": "9YO9A29F28C",
+                "switchRole": "tor",
+            },
+        }
+        ip_sn = {
+            "10.10.10.217": "9NN7E41N16A",
+            "10.10.10.219": "9YO9A29F28C",
+        }
+        dcnm_net = self._build_diff_network(inventory_data, ip_sn)
+
+        want_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            )
+        ]
+        have_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/14"}],
+            )
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(
+            copy.deepcopy(want_attach), copy.deepcopy(have_attach), replace=True
+        )
+
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
+
     def test_dcnm_net_replace_tor_ports(self):
         self.version = 12
         set_module_args(
@@ -1048,9 +1830,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertTrue(parent_diff["attach"][0]["deploy"])
         self.assertTrue(parent_diff["attach"][1]["deploy"])
 
-        # Verify parent fabric response (create, attach, deploy)
+        # Verify parent fabric response (create, attach); deploy is aggregated separately
         parent_response = parent.get("response")
-        self.assertEqual(len(parent_response), 3)
+        self.assertEqual(len(parent_response), 2)
 
         # Verify create response
         self.assertEqual(parent_response[0]["RETURN_CODE"], 200)
@@ -1065,8 +1847,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertIn("ansible-msd-net1", str(parent_response[1]["DATA"]))
 
         # Verify deploy response
-        self.assertEqual(parent_response[2]["RETURN_CODE"], 200)
-        self.assertEqual(parent_response[2]["METHOD"], "POST")
+        self.assertIn("deployment", parent)
+        self.assertEqual(parent["deployment"]["RETURN_CODE"], 200)
+        self.assertEqual(parent["deployment"]["METHOD"], "POST")
 
         # Verify child fabrics section
         child_fabrics = result.get("child_fabrics")
@@ -1164,13 +1947,15 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(parent_diff["attach"][0]["ip_address"], "192.168.10.203")
         self.assertEqual(parent_diff["attach"][1]["ip_address"], "192.168.10.204")
 
-        # Verify parent fabric response
+        # Verify parent fabric response; deploy is aggregated separately
         parent_response = parent.get("response")
-        self.assertEqual(len(parent_response), 3)
+        self.assertEqual(len(parent_response), 2)
         self.assertEqual(parent_response[0]["DATA"]["Network Id"], 8004)
         self.assertEqual(parent_response[0]["DATA"]["Network Name"], "ansible-msd-dhcp-net")
         self.assertIn("9R518K2AT3R", str(parent_response[1]["DATA"]))
         self.assertIn("915KQ8P3NS8", str(parent_response[1]["DATA"]))
+        self.assertIn("deployment", parent)
+        self.assertEqual(parent["deployment"]["RETURN_CODE"], 200)
 
         # Verify child fabrics section
         child_fabrics = result.get("child_fabrics")
@@ -1271,9 +2056,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(attach2["ports"], "Ethernet1/16,Ethernet1/17")
         self.assertTrue(attach2["deploy"])
 
-        # Verify parent fabric response includes attachment update and deploy
+        # Verify parent fabric response includes attachment update; deploy is aggregated separately
         parent_response = parent.get("response")
-        self.assertEqual(len(parent_response), 3)
+        self.assertEqual(len(parent_response), 2)
 
         # Verify attachment update response (index 1)
         attach_resp = parent_response[1]
@@ -1284,8 +2069,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertIn("ansible-msd-dhcp-net-[915KQ8P3NS8/leaf4]", attach_resp["DATA"])
         self.assertEqual(attach_resp["DATA"]["ansible-msd-dhcp-net-[915KQ8P3NS8/leaf4]"], "SUCCESS")
 
-        # Verify deploy response (index 2)
-        deploy_resp = parent_response[2]
+        # Verify deploy response
+        self.assertIn("deployment", parent)
+        deploy_resp = parent["deployment"]
         self.assertEqual(deploy_resp["RETURN_CODE"], 200)
         self.assertEqual(deploy_resp["METHOD"], "POST")
         self.assertIn("status", deploy_resp["DATA"])
