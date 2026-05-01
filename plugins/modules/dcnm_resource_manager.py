@@ -902,7 +902,8 @@ class DcnmResManager:
 
         mismatch_values = []
 
-        if res1["entityType"] != res2["scopeType"]:
+        # Case-insensitive comparison for entityType/scopeType since DCNM may return lowercase
+        if res1["entityType"].lower() != res2["scopeType"].lower():
             mismatch_values.append(
                 {
                     "have_entity_type": res1["entityType"],
@@ -954,7 +955,8 @@ class DcnmResManager:
             res1["entityName"], res2["entityName"]
         ):
             return False
-        if res1["entityType"] != res2["scopeType"]:
+        # Case-insensitive comparison for entityType/scopeType since DCNM may return lowercase
+        if res1["entityType"].lower() != res2["scopeType"].lower():
             return False
         if res1["resourcePool"]["poolName"] != res2["poolName"]:
             return False
@@ -1151,7 +1153,7 @@ class DcnmResManager:
         }
 
         resources = []
-        
+
         for res in diff_create:
             resource_item = {
                 "entityName": res["entityName"],
@@ -1159,16 +1161,16 @@ class DcnmResManager:
                 "poolName": res["poolName"],
                 "vrfName": res.get("vrfName", "default")  # Use vrfName from resource if available
             }
-            
+
             # Add resourceValue if resource is present
             if res.get("resource") is not None:
                 resource_item["resourceValue"] = str(res["resource"])
-            
+
             # Build scopeDetails based on scopeType
             scope_details = {}
             scope_type = scope_type_xlate_reverse.get(res["scopeType"], "fabric")
             scope_details["scopeType"] = scope_type
-            
+
             if res["scopeType"] == "Fabric":
                 scope_details["fabricName"] = self.fabric
             elif res["scopeType"] == "Device":
@@ -1177,33 +1179,45 @@ class DcnmResManager:
                 # Parse entity name to get interface: format is "SERIAL~InterfaceName"
                 entity_parts = res["entityName"].split("~")
                 scope_details["switchId"] = res["scopeValue"]
-                if len(entity_parts) > 1:
-                    scope_details["interfaceName"] = entity_parts[1]
+                if len(entity_parts) < 2:
+                    self.module.fail_json(
+                        msg=f"Invalid entity_name format for device_interface scope: '{res['entityName']}'. "
+                            f"Expected format: 'SERIAL~InterfaceName'"
+                    )
+                scope_details["interfaceName"] = entity_parts[1]
             elif res["scopeType"] == "DevicePair":
                 # Parse entity name: format is "SERIAL1~SERIAL2~..."
                 entity_parts = res["entityName"].split("~")
-                if len(entity_parts) >= 2:
-                    scope_details["srcSwitchId"] = entity_parts[0]
-                    scope_details["dstSwitchId"] = entity_parts[1]
+                if len(entity_parts) < 2:
+                    self.module.fail_json(
+                        msg=f"Invalid entity_name format for device_pair scope: '{res['entityName']}'. "
+                            f"Expected format: 'SERIAL1~SERIAL2'"
+                    )
+                scope_details["srcSwitchId"] = entity_parts[0]
+                scope_details["dstSwitchId"] = entity_parts[1]
             elif res["scopeType"] == "Link":
                 # Parse entity name: format is "SERIAL1~Interface1~SERIAL2~Interface2"
                 entity_parts = res["entityName"].split("~")
-                if len(entity_parts) >= 4:
-                    scope_details["srcSwitchId"] = entity_parts[0]
-                    scope_details["srcInterfaceName"] = entity_parts[1]
-                    scope_details["dstSwitchId"] = entity_parts[2]
-                    scope_details["dstInterfaceName"] = entity_parts[3]
-            
+                if len(entity_parts) < 4:
+                    self.module.fail_json(
+                        msg=f"Invalid entity_name format for link scope: '{res['entityName']}'. "
+                            f"Expected format: 'SERIAL1~Interface1~SERIAL2~Interface2'"
+                    )
+                scope_details["srcSwitchId"] = entity_parts[0]
+                scope_details["srcInterfaceName"] = entity_parts[1]
+                scope_details["dstSwitchId"] = entity_parts[2]
+                scope_details["dstInterfaceName"] = entity_parts[3]
+
             resource_item["scopeDetails"] = scope_details
             resources.append(resource_item)
-        
+
         bulk_payload = {
             "fabricName": self.fabric,
             "Body": {
                 "resources": resources
             }
         }
-        
+
         return bulk_payload
 
     def dcnm_rm_send_message_to_dcnm(self):
