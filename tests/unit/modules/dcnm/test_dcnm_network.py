@@ -21,6 +21,7 @@ from unittest.mock import Mock, patch
 
 # from units.compat.mock import patch
 
+from ansible_collections.cisco.dcnm.plugins.action import dcnm_network as dcnm_network_action
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_network
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
@@ -175,12 +176,249 @@ class TestDcnmNetworkModule(TestDcnmModule):
     def _build_test_logger():
         return type("Logger", (), {"debug": lambda *args, **kwargs: None})()
 
+    @staticmethod
+    def _build_secondary_ip_network_template(secondary_gw1="", secondary_gw2="", secondary_gw3="", secondary_gw4=""):
+        return {
+            "vlanId": 993,
+            "gatewayIpAddress": "10.250.93.1/24",
+            "isLayer2Only": False,
+            "tag": "",
+            "vlanName": "",
+            "intfDescription": "",
+            "mtu": "",
+            "suppressArp": False,
+            "dhcpServerAddr1": "",
+            "dhcpServerAddr2": "",
+            "dhcpServerAddr3": "",
+            "vrfDhcp": "",
+            "vrfDhcp2": "",
+            "vrfDhcp3": "",
+            "dhcpServers": "",
+            "loopbackId": "",
+            "mcastGroup": "",
+            "gatewayIpV6Address": "",
+            "secondaryGW1": secondary_gw1,
+            "secondaryGW2": secondary_gw2,
+            "secondaryGW3": secondary_gw3,
+            "secondaryGW4": secondary_gw4,
+            "trmEnabled": False,
+            "rtBothAuto": False,
+            "enableL3OnBorder": False,
+            "networkName": "sec-ip-test",
+        }
+
     def _build_diff_network(self, inventory_data, ip_sn=None):
         dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
         dcnm_net.log = self._build_test_logger()
         dcnm_net.inventory_data = copy.deepcopy(inventory_data)
         dcnm_net.ip_sn = copy.deepcopy(ip_sn or self.mock_ip_sn)
         return dcnm_net
+
+    def _build_secondary_ip_update_network(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.module = Mock(params={"state": "merged"})
+        dcnm_net.is_ms_fabric = False
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.dcnm_version = 11
+        return dcnm_net
+
+    def _build_secondary_ip_update_payload(self, template_conf):
+        return {
+            "fabric": "test-fabric",
+            "vrf": "test-vrf",
+            "networkName": "sec-ip-test",
+            "displayName": "sec-ip-test",
+            "networkId": 50993,
+            "networkTemplate": "Default_Network_Universal",
+            "networkExtensionTemplate": "Default_Network_Extension_Universal",
+            "networkTemplateConfig": json.dumps(template_conf),
+        }
+
+    def test_dcnm_net_secondary_gws_template_config(self):
+        template_conf = self._build_secondary_ip_network_template(
+            secondary_gw1="192.166.88.1/24",
+            secondary_gw2="",
+            secondary_gw3=None,
+            secondary_gw4="192.169.88.1/24",
+        )
+
+        secondary_gws = json.loads(dcnm_network.DcnmNetwork.get_secondary_gws_template_config(template_conf))
+
+        self.assertEqual(
+            secondary_gws,
+            {
+                "secondaryGWs": [
+                    {"gatewayIpAddress": "192.166.88.1/24"},
+                    {"gatewayIpAddress": "192.169.88.1/24"},
+                ]
+            },
+        )
+
+    def test_dcnm_net_update_existing_network_adds_secondary_gws_payload(self):
+        dcnm_net = self._build_secondary_ip_update_network()
+        have = self._build_secondary_ip_update_payload(self._build_secondary_ip_network_template())
+        want = self._build_secondary_ip_update_payload(
+            self._build_secondary_ip_network_template(
+                secondary_gw1="192.166.88.1/24",
+                secondary_gw2="192.167.88.1/24",
+            )
+        )
+
+        dcnm_net.dcnm_update_network_information(
+            want,
+            have,
+            {
+                "secondary_ip_gw1": "192.166.88.1/24",
+                "secondary_ip_gw2": "192.167.88.1/24",
+            },
+        )
+
+        updated_template = json.loads(want["networkTemplateConfig"])
+        self.assertEqual(updated_template["secondaryGW1"], "192.166.88.1/24")
+        self.assertEqual(updated_template["secondaryGW2"], "192.167.88.1/24")
+        self.assertEqual(
+            json.loads(updated_template["secondaryGWs"]),
+            {
+                "secondaryGWs": [
+                    {"gatewayIpAddress": "192.166.88.1/24"},
+                    {"gatewayIpAddress": "192.167.88.1/24"},
+                ]
+            },
+        )
+
+    def test_dcnm_net_update_existing_network_clears_last_secondary_gw_payload(self):
+        dcnm_net = self._build_secondary_ip_update_network()
+        have = self._build_secondary_ip_update_payload(
+            self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+        )
+        want = self._build_secondary_ip_update_payload(self._build_secondary_ip_network_template())
+
+        dcnm_net.dcnm_update_network_information(want, have, {"secondary_ip_gw1": ""})
+
+        updated_template = json.loads(want["networkTemplateConfig"])
+        self.assertEqual(updated_template["secondaryGW1"], "")
+        self.assertEqual(json.loads(updated_template["secondaryGWs"]), {"secondaryGWs": []})
+
+    def test_dcnm_net_update_existing_network_clears_trailing_explicit_secondary_gw_payload(self):
+        dcnm_net = self._build_secondary_ip_update_network()
+        have = self._build_secondary_ip_update_payload(
+            self._build_secondary_ip_network_template(
+                secondary_gw1="192.166.88.1/24",
+                secondary_gw2="192.167.88.1/24",
+            )
+        )
+        want = self._build_secondary_ip_update_payload(self._build_secondary_ip_network_template())
+
+        dcnm_net.dcnm_update_network_information(want, have, {"secondary_ip_gw2": ""})
+
+        updated_template = json.loads(want["networkTemplateConfig"])
+        self.assertEqual(updated_template["secondaryGW1"], "192.166.88.1/24")
+        self.assertEqual(updated_template["secondaryGW2"], "")
+        self.assertEqual(
+            json.loads(updated_template["secondaryGWs"]),
+            {
+                "secondaryGWs": [
+                    {"gatewayIpAddress": "192.166.88.1/24"},
+                ]
+            },
+        )
+
+    def test_dcnm_net_update_existing_network_rejects_ambiguous_merged_secondary_gw_clear(self):
+        dcnm_net = self._build_secondary_ip_update_network()
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+        have = self._build_secondary_ip_update_payload(
+            self._build_secondary_ip_network_template(
+                secondary_gw1="192.166.88.1/24",
+                secondary_gw2="192.167.88.1/24",
+                secondary_gw3="192.168.88.1/24",
+            )
+        )
+        want = self._build_secondary_ip_update_payload(self._build_secondary_ip_network_template())
+
+        with self.assertRaises(RuntimeError):
+            dcnm_net.dcnm_update_network_information(want, have, {"secondary_ip_gw2": ""})
+
+        fail_msg = dcnm_net.module.fail_json.call_args[1]["msg"]
+        self.assertIn("cannot clear secondary_ip_gw2", fail_msg)
+        self.assertIn("compact list", fail_msg)
+
+    def test_dcnm_net_split_msd_merged_keeps_secondary_gws_parent_only(self):
+        action = dcnm_network_action.ActionModule.__new__(dcnm_network_action.ActionModule)
+        fabrics = {
+            "msd-parent": {
+                "type": "multisite_parent",
+                "fabricParent": "None",
+                "cluster_name": "",
+            },
+            "msd-child-1": {
+                "type": "multisite_child",
+                "fabricParent": "msd-parent",
+                "cluster_name": "",
+            },
+        }
+        config = [
+            {
+                "net_name": "ansible-msd-net1",
+                "vrf_name": "Tenant-1",
+                "is_l2only": False,
+                "secondary_ip_gw1": "192.166.88.1/24",
+                "secondary_ip_gw2": "",
+                "child_fabric_config": [
+                    {
+                        "fabric": "msd-child-1",
+                        "dhcp_loopback_id": 204,
+                    }
+                ],
+            }
+        ]
+
+        configs, error_msg = action._split_config(fabrics, "msd-parent", config, "merged", {}, 12)
+
+        self.assertIsNone(error_msg)
+        self.assertEqual(configs[0]["config"][0]["secondary_ip_gw1"], "192.166.88.1/24")
+        self.assertEqual(configs[0]["config"][0]["secondary_ip_gw2"], "")
+        child_config = configs[1]["config"][0]
+        self.assertNotIn("secondary_ip_gw1", child_config)
+        self.assertNotIn("secondary_ip_gw2", child_config)
+        self.assertEqual(child_config["dhcp_loopback_id"], 204)
+
+    def test_dcnm_net_split_msd_replaced_sends_full_secondary_gw_intent_to_child(self):
+        action = dcnm_network_action.ActionModule.__new__(dcnm_network_action.ActionModule)
+        fabrics = {
+            "msd-parent": {
+                "type": "multisite_parent",
+                "fabricParent": "None",
+                "cluster_name": "",
+            },
+            "msd-child-1": {
+                "type": "multisite_child",
+                "fabricParent": "msd-parent",
+                "cluster_name": "",
+            },
+        }
+        config = [
+            {
+                "net_name": "ansible-msd-net1",
+                "vrf_name": "Tenant-1",
+                "is_l2only": False,
+                "secondary_ip_gw1": "192.166.88.1/24",
+                "child_fabric_config": [
+                    {
+                        "fabric": "msd-child-1",
+                        "dhcp_loopback_id": 204,
+                    }
+                ],
+            }
+        ]
+
+        configs, error_msg = action._split_config(fabrics, "msd-parent", config, "replaced", {}, 12)
+
+        self.assertIsNone(error_msg)
+        child_config = configs[1]["config"][0]
+        self.assertEqual(child_config["secondary_ip_gw1"], "192.166.88.1/24")
+        self.assertEqual(child_config["secondary_ip_gw2"], "")
+        self.assertEqual(child_config["secondary_ip_gw3"], "")
+        self.assertEqual(child_config["secondary_ip_gw4"], "")
 
     def test_dcnm_net_delete_switch_config_deploy_serials_are_dynamic(self):
         dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
@@ -228,6 +466,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         dcnm_net.diff_create = []
         dcnm_net.diff_attach = []
         dcnm_net.diff_deploy = {}
+        dcnm_net.network_sn_attach_map = {}
+        dcnm_net.network_sn_detach_map = {}
+        dcnm_net.have_attach_by_name = {}
         dcnm_net.wait_for_network_attachments_del_ready = Mock(return_value=True)
         dcnm_net.wait_for_network_del_ready = Mock(return_value=True)
         dcnm_net.bulk_delete_networks_with_retry = Mock()
@@ -239,6 +480,70 @@ class TestDcnmNetworkModule(TestDcnmModule):
             "/networks/test-fabric",
             "DELETE",
             False,
+        )
+
+    def test_dcnm_net_delete_attachment_wait_batches_pending_networks(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.paths = {"GET_NET_ATTACH": "/attach/{}/{}"}
+        dcnm_net.module = Mock()
+        dcnm_net.WAIT_TIME_FOR_DELETE_LOOP = 5
+        dcnm_net.detach_and_deploy_for_del = Mock()
+
+        networks = [f"net-{index}" for index in range(31)]
+        dcnm_net.diff_delete = {network: "DEPLOYED" for network in networks}
+
+        self.run_dcnm_send.side_effect = [
+            {
+                "RETURN_CODE": 200,
+                "DATA": [
+                    {"networkName": network, "lanAttachList": []}
+                    for network in networks[:30]
+                ],
+            },
+            {
+                "RETURN_CODE": 200,
+                "DATA": [
+                    {"networkName": network, "lanAttachList": []}
+                    for network in networks[30:]
+                ],
+            },
+        ]
+
+        self.assertTrue(dcnm_net.wait_for_network_attachments_del_ready())
+
+        self.assertEqual(self.run_dcnm_send.call_count, 2)
+        paths = [call_args[0][2] for call_args in self.run_dcnm_send.call_args_list]
+        self.assertEqual(paths[0], "/attach/test-fabric/" + ",".join(networks[:30]))
+        self.assertEqual(paths[1], "/attach/test-fabric/" + networks[30])
+        self.assertEqual(set(dcnm_net.diff_delete.values()), {"NA"})
+        dcnm_net.detach_and_deploy_for_del.assert_not_called()
+
+    def test_dcnm_net_delete_attachment_wait_fails_on_unexpected_data(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.paths = {"GET_NET_ATTACH": "/attach/{}/{}"}
+        dcnm_net.module = Mock()
+        dcnm_net.module.fail_json.side_effect = Exception("fail_json")
+        dcnm_net.WAIT_TIME_FOR_DELETE_LOOP = 5
+        dcnm_net.diff_delete = {"net-a": "DEPLOYED"}
+
+        self.run_dcnm_send.return_value = {
+            "RETURN_CODE": 414,
+            "DATA": "<html>URI Too Long</html>",
+        }
+
+        with self.assertRaises(Exception):
+            dcnm_net.wait_for_network_attachments_del_ready()
+
+        dcnm_net.module.fail_json.assert_called_once()
+        self.assertIn(
+            "Unexpected DATA while waiting for network attachments",
+            dcnm_net.module.fail_json.call_args[1]["msg"],
         )
 
     def load_fixtures(self, response=None, device=""):
@@ -583,12 +888,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.empty_network_list,
                 self.mock_msd_net_create_response,
                 self.mock_msd_net_attach_response,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object,
                 self.mock_msd_child_net_object,
                 self.mock_msd_child_net_attach_object,
                 self.mock_msd_child_net_update_response,
-                self.deploy_success_resp,
             ]
 
         elif "_merged_msd_dhcp" in self._testMethodName:
@@ -607,12 +910,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.empty_network_list,
                 self.mock_msd_dhcp_net_create_response,
                 self.mock_msd_dhcp_net_attach_response,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object,
                 self.mock_msd_dhcp_child_net_object,
                 self.mock_msd_dhcp_child_net_attach_object,
                 self.mock_msd_dhcp_child_net_update_response,
-                self.deploy_success_resp,
             ]
 
         elif "_msd_override_with_different_attachments" in self._testMethodName:
@@ -631,7 +932,6 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.empty_network_list,
                 self.mock_msd_override_parent_net_object,
                 self.mock_msd_override_attach_response,
-                self.deploy_success_resp,
                 self.mock_msd_vrf_object,
                 self.mock_msd_override_child_net_object,
                 self.mock_msd_override_child_net_attach_object,
@@ -1530,9 +1830,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertTrue(parent_diff["attach"][0]["deploy"])
         self.assertTrue(parent_diff["attach"][1]["deploy"])
 
-        # Verify parent fabric response (create, attach, deploy)
+        # Verify parent fabric response (create, attach); deploy is aggregated separately
         parent_response = parent.get("response")
-        self.assertEqual(len(parent_response), 3)
+        self.assertEqual(len(parent_response), 2)
 
         # Verify create response
         self.assertEqual(parent_response[0]["RETURN_CODE"], 200)
@@ -1547,8 +1847,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertIn("ansible-msd-net1", str(parent_response[1]["DATA"]))
 
         # Verify deploy response
-        self.assertEqual(parent_response[2]["RETURN_CODE"], 200)
-        self.assertEqual(parent_response[2]["METHOD"], "POST")
+        self.assertIn("deployment", parent)
+        self.assertEqual(parent["deployment"]["RETURN_CODE"], 200)
+        self.assertEqual(parent["deployment"]["METHOD"], "POST")
 
         # Verify child fabrics section
         child_fabrics = result.get("child_fabrics")
@@ -1646,13 +1947,15 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(parent_diff["attach"][0]["ip_address"], "192.168.10.203")
         self.assertEqual(parent_diff["attach"][1]["ip_address"], "192.168.10.204")
 
-        # Verify parent fabric response
+        # Verify parent fabric response; deploy is aggregated separately
         parent_response = parent.get("response")
-        self.assertEqual(len(parent_response), 3)
+        self.assertEqual(len(parent_response), 2)
         self.assertEqual(parent_response[0]["DATA"]["Network Id"], 8004)
         self.assertEqual(parent_response[0]["DATA"]["Network Name"], "ansible-msd-dhcp-net")
         self.assertIn("9R518K2AT3R", str(parent_response[1]["DATA"]))
         self.assertIn("915KQ8P3NS8", str(parent_response[1]["DATA"]))
+        self.assertIn("deployment", parent)
+        self.assertEqual(parent["deployment"]["RETURN_CODE"], 200)
 
         # Verify child fabrics section
         child_fabrics = result.get("child_fabrics")
@@ -1753,9 +2056,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(attach2["ports"], "Ethernet1/16,Ethernet1/17")
         self.assertTrue(attach2["deploy"])
 
-        # Verify parent fabric response includes attachment update and deploy
+        # Verify parent fabric response includes attachment update; deploy is aggregated separately
         parent_response = parent.get("response")
-        self.assertEqual(len(parent_response), 3)
+        self.assertEqual(len(parent_response), 2)
 
         # Verify attachment update response (index 1)
         attach_resp = parent_response[1]
@@ -1766,8 +2069,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertIn("ansible-msd-dhcp-net-[915KQ8P3NS8/leaf4]", attach_resp["DATA"])
         self.assertEqual(attach_resp["DATA"]["ansible-msd-dhcp-net-[915KQ8P3NS8/leaf4]"], "SUCCESS")
 
-        # Verify deploy response (index 2)
-        deploy_resp = parent_response[2]
+        # Verify deploy response
+        self.assertIn("deployment", parent)
+        deploy_resp = parent["deployment"]
         self.assertEqual(deploy_resp["RETURN_CODE"], 200)
         self.assertEqual(deploy_resp["METHOD"], "POST")
         self.assertIn("status", deploy_resp["DATA"])

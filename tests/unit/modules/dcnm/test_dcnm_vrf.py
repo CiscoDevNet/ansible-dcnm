@@ -586,7 +586,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 # and get_have() skips get_vrf_lite_objects() calls for optimization
                 self.mock_net_from_vrf_empty,
                 self.attach_success_resp,
-                # deploy_success_resp removed - deploy now handled by action plugin
+                self.deploy_success_resp,
                 self.mock_vrf_attach_object_del_not_ready,  # wait_for_vrf_attachments_del_ready
                 self.mock_vrf_attach_object_del_ready,      # wait_for_vrf_attachments_del_ready
                 self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
@@ -780,6 +780,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_msd_parent_vrf_object,            # get_vrf_objects
                 self.mock_net_from_vrf_empty,               # Check for network attachments before delete
                 self.msd_attach_success_resp,               # detach
+                self.deploy_success_resp,                   # undeploy
                 self.mock_msd_vrf_attach_object_del_not_ready,
                 self.mock_msd_vrf_attach_object_del_ready,
                 self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
@@ -797,6 +798,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_msd_parent_vrf_object,            # Parent: get_vrf_objects
                 self.mock_net_from_vrf_empty,               # Check for network attachments before delete
                 self.msd_attach_success_resp,               # detach
+                self.deploy_success_resp,                   # undeploy
                 self.mock_msd_vrf_attach_object_del_not_ready,
                 self.mock_msd_vrf_attach_object_del_ready,
                 self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
@@ -843,6 +845,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_msd_parent_vrf_object,            # get_vrf_objects
                 self.mock_net_from_vrf_empty,               # Check for network attachments before delete
                 self.msd_attach_success_resp,               # detach
+                self.deploy_success_resp,                   # undeploy
                 self.mock_msd_vrf_attach_object_del_not_ready,
                 self.mock_msd_vrf_attach_object_del_ready,
                 self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
@@ -860,6 +863,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_msd_parent_vrf_object,            # Parent: get_vrf_objects
                 self.mock_net_from_vrf_empty,               # Check for network attachments before delete
                 self.msd_attach_success_resp,               # detach
+                self.deploy_success_resp,                   # undeploy
                 self.mock_msd_vrf_attach_object_del_not_ready,
                 self.mock_msd_vrf_attach_object_del_ready,
                 self.mock_vrf_object_na,                     # wait_for_vrf_del_ready
