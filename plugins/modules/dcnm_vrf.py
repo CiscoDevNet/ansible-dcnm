@@ -5583,8 +5583,19 @@ class DcnmVrf:
         msg += f"caller: {caller}"
         self.log.debug(msg)
 
-        # Create a list of VRFs that still need to reach terminal state
-        pending_vrfs = list(self.diff_delete.keys())
+        # Create a list of VRFs that still need to reach terminal state.
+        # VRFs already marked OUT-OF-SYNC/FAILED by the attachment readiness
+        # check are terminal for this workflow and should not consume another
+        # controller poll here.
+        pending_vrfs = [
+            vrf for vrf, state in self.diff_delete.items()
+            if str(state).upper() not in ("OUT-OF-SYNC", "FAILED")
+        ]
+        if not pending_vrfs:
+            msg = "No VRFs pending vrfStatus readiness check."
+            self.log.debug(msg)
+            return
+
         vrf_count = len(pending_vrfs)
         base_timeout = max(vrf_count * 30, 500)
         retry_count = max(base_timeout // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
@@ -5685,8 +5696,18 @@ class DcnmVrf:
         if not self.diff_delete:
             return True
 
-        # Create list of VRFs pending deletion readiness
-        pending_vrfs = list(self.diff_delete.keys())
+        # Create list of VRFs pending deletion readiness.  This method may be
+        # called after push_diff_undeploy_with_retry() has already polled and
+        # marked attachments terminal, so avoid duplicate GET_VRF_ATTACH calls.
+        pending_vrfs = [
+            vrf for vrf, state in self.diff_delete.items()
+            if str(state).upper() not in ("NA", "OUT-OF-SYNC", "FAILED")
+        ]
+        if not pending_vrfs:
+            msg = "No VRFs pending attachment deletion readiness check."
+            self.log.debug(msg)
+            return True
+
         vrf_count = len(pending_vrfs)
         base_timeout = max(vrf_count * 30, 500)
         retry_count = max(base_timeout // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
