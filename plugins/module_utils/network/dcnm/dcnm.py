@@ -1708,7 +1708,10 @@ def deploy_fabric(action_module, task_vars, tmp, fabric, fabric_type, deploy_pay
             if action_module.ndfc_version >= 12.2:
                 # NDFC 12.4+: /onemanage/appcenter/cisco/ndfc/api/v1/onemanage/top-down/{entity_type}/deploy
                 if deploy_mode == "switch":
-                    deploy_path = f"/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabric}/config-deploy/{','.join(deploy_payload)}?forceShowRun=false"
+                    deploy_path = (
+                        f"/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabric}"
+                        f"/config-deploy/{','.join(deploy_payload)}?forceShowRun=false"
+                    )
                     deploy_payload = None  # Payload is not needed for switch-based deployment
                 else:
                     deploy_path = f"/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/top-down/{entity_type_plural}/deploy"

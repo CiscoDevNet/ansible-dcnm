@@ -1247,7 +1247,7 @@ class DcnmResManager:
                 json_payload = json.dumps(bulk_payload)
                 resp = dcnm_send(self.module, "POST", path, json_payload)
                 create_flag = True
-  
+
                 self.result["response"].append(resp)
                 # Accept both 200 (OK) and 207 (Multi-Status) as success for bulk operations
                 if resp and resp.get("RETURN_CODE") not in [200, 207]:

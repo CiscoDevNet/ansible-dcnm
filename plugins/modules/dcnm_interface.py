@@ -6502,7 +6502,7 @@ class DcnmIntf:
             if self.has_bulk_api:
                 # Bulk update API for bulk-capable controllers
                 path = self.paths["UPDATE_INTERFACE_BULK"]
-                
+
                 json_payload = json.dumps(self.diff_replace)
                 resp = dcnm_send(self.module, "POST", path, json_payload)
                 self.result["response"].append(resp)

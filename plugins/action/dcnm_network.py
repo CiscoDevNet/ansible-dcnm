@@ -801,17 +801,6 @@ class ActionModule(ActionBase):
                     display.vvvv(f"deploy_payload_wrapper type: {type(deploy_payload_wrapper)}")
                     display.vvvv(f"deploy_payload_wrapper keys: {list(deploy_payload_wrapper.keys()) if isinstance(deploy_payload_wrapper, dict) else 'N/A'}")
 
-                # Write deploy_payload_wrapper to dcnm.log file
-                try:
-                    with open("/tmp/dcnm.log", "a") as f:
-                        f.write("\n" + "=" * 80 + "\n")
-                        f.write(f"[ACTION PLUGIN] deploy_payload_wrapper collected from parent fabric '{parent_fabric_name}':\n")
-                        f.write(json.dumps(deploy_payload_wrapper, indent=4))
-                        f.write(f"\deploy_payload_wrapper type: {type(deploy_payload_wrapper)}\n")
-                        f.write(f"deploy_payload_wrapper keys: {list(deploy_payload_wrapper.keys()) if isinstance(deploy_payload_wrapper, dict) else 'N/A'}\n")
-                        f.write("=" * 80 + "\n")
-                except Exception as e:
-                    pass  # Silently ignore file write errors
             elif fabric_type in ['multisite_child', 'multicluster_child']:
                 child_fabric_results.append({
                     'fabric_name': fabric_config['fabric'],

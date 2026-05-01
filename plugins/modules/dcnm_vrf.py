@@ -5218,7 +5218,7 @@ class DcnmVrf:
 
         # Select the appropriate map based on operation type
         vrf_to_serial_map = self.vrf_sn_detach_map if is_undeploy else self.vrf_sn_attach_map
-        
+
         map_type = "detach" if is_undeploy else "attach"
         msg = f"Using vrf_sn_{map_type}_map for payload transformation."
         self.log.debug(msg)

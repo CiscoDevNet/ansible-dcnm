@@ -1641,7 +1641,7 @@ class DcnmNetwork:
 
         # Select the appropriate map based on operation type
         serial_map = self.network_sn_detach_map if is_undeploy else self.network_sn_attach_map
-        
+
         map_type = "detach" if is_undeploy else "attach"
         msg = f"Using network_sn_{map_type}_map for serial lookup."
         self.log.debug(msg)
@@ -1761,7 +1761,7 @@ class DcnmNetwork:
     def deploy_network_switches(self, network_names=None, is_rollback=False, is_undeploy=False):
         """
         Trigger switch-level config deploy for switches affected by network operations.
-        
+
         Uses network attachment data to determine affected switches.
         Works for both deploy and undeploy operations.
         Handles response internally and updates self.result.
@@ -2792,7 +2792,7 @@ class DcnmNetwork:
                 result = self.update_attach_params(attach, net["net_name"], deploy)
 
                 networks.append(result)
-                
+
             if networks:
                 self.normalize_vpc_torports(networks)
                 for attch in net["attach"]:
@@ -2971,7 +2971,7 @@ class DcnmNetwork:
             to_del = []
             if not found:
                 network_name = have_a["networkName"]
-                
+
                 atch_h = have_a["lanAttachList"]
                 for a_h in atch_h:
                     # Only add to diff_detach if actually attached
@@ -4242,7 +4242,7 @@ class DcnmNetwork:
                 network_names = ','.join(batch)
                 delete_path = path.replace("/networks", "") + "/bulk-delete/networks?network-names=" + network_names
 
-                msg = f"Attempt {attempt}, batch {i//max_batch_size + 1}: "
+                msg = f"Attempt {attempt}, batch {i // max_batch_size + 1}: "
                 msg += f"method: {method}, path: {delete_path}"
                 self.log.debug(msg)
 
@@ -4351,7 +4351,6 @@ class DcnmNetwork:
         # This ensures maps contain only switches affected by current operation
         if self.fabric_type not in ["multisite_child", "multicluster_child"]:
             self.populate_sn_maps_from_diffs()
-
 
         path = self.paths["GET_NET"].format(self.fabric)
 
@@ -5339,7 +5338,10 @@ class DcnmNetwork:
                     msg = "Network '{0}': state merged cannot clear {1} while higher secondary gateway values exist and are omitted. ".format(
                         want["networkName"], key
                     )
-                    msg += "NDFC stores secondary gateways as a compact list; specify the remaining secondary gateways in order or use state replaced to declare the full desired set."
+                    msg += (
+                        "NDFC stores secondary gateways as a compact list; specify the remaining secondary gateways "
+                        "in order or use state replaced to declare the full desired set."
+                    )
                     self.module.fail_json(msg=msg)
 
         # Update template configuration - common attributes
