@@ -17,6 +17,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import copy
 from unittest.mock import patch
 
 # from units.compat.mock import patch
@@ -194,6 +195,63 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
             ]
+
+        if (
+            "test_dcnm_intf_override_eth_intf_types_skip_non_resolvable_deferred"
+            in self._testMethodName
+        ):
+
+            playbook_have_all_data = copy.deepcopy(
+                self.have_all_payloads_data.get("payloads")
+            )
+            for intf in playbook_have_all_data["DATA"]:
+                if intf["ifName"] == "Ethernet1/1":
+                    intf["deletable"] = "False"
+                    intf["underlayPolicies"] = None
+                    break
+
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
+            )
+            self.breakout_policies_data = loadPlaybookData(
+                "dcnm_intf_breakout_policies"
+            )
+            empty_breakout_resp = self.breakout_policies_data.get(
+                "empty_breakout_policies"
+            )
+
+            def dcnm_send_side_effect(*args, **kwargs):
+                path = args[2]
+
+                if path.endswith("/accessmode"):
+                    return self.mock_monitor_false_resp
+                if "/control/policies/switches/" in path:
+                    return empty_breakout_resp
+                if "interface/detail?serialNumber=" in path:
+                    return playbook_have_all_data
+                if (
+                    "interface?serialNumber=" in path
+                    and "ifName=Ethernet1/1" in path
+                ):
+                    raise AssertionError(
+                        "Skipped deferred interface should not be queried again"
+                    )
+                if (
+                    "interface?serialNumber=" in path
+                    and "ifName=Ethernet1/2" in path
+                ):
+                    return eth_1_2_access_intf
+                if (
+                    "interface?serialNumber=" in path
+                    and "ifName=Ethernet3/2" in path
+                ):
+                    return eth_3_2_access_intf
+                return self.playbook_mock_succ_resp
+
+            self.run_dcnm_send.side_effect = dcnm_send_side_effect
 
         if (
             "test_dcnm_intf_override_eth_intf_types_only"
@@ -5811,6 +5869,65 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["replaced"]), 2)
         self.assertEqual(len(result["diff"][0]["overridden"]), 0)
+
+    def test_dcnm_intf_override_eth_intf_types_skip_non_resolvable_deferred(
+        self,
+    ):
+
+        self.config_data = loadPlaybookData("dcnm_intf_common_configs")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        self.playbook_config = self.config_data.get("override_eth_only_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deferred"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertLessEqual(len(result["diff"][0]["replaced"]), 2)
+        self.assertEqual(len(result["diff"][0]["overridden"]), 0)
+
+        self.assertFalse(
+            any(
+                intf["interfaces"][0]["ifName"].lower() == "ethernet1/1"
+                for intf in result["diff"][0]["replaced"]
+            )
+        )
+        self.assertTrue(
+            all(
+                intf["interfaces"][0]["ifName"].lower()
+                in ["ethernet1/2", "ethernet3/2"]
+                for intf in result["diff"][0]["replaced"]
+            )
+        )
+        self.assertTrue(
+            any(
+                intf["Name"].lower() == "ethernet1/1"
+                and intf["Reason"]
+                == "Non-deletable interface without resolvable underlay policy source"
+                for intf in result["diff"][0]["skipped"]
+            )
+        )
 
     def test_dcnm_intf_override_sub_int_intf_types_only(self):
 

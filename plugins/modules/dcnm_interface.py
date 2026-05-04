@@ -4919,6 +4919,29 @@ class DcnmIntf:
                     return False, item["ifname"]
         return True, None
 
+    def dcnm_intf_get_underlay_policy_source(self, intf):
+
+        underlay_policies = intf.get("underlayPolicies") or []
+
+        for policy in underlay_policies:
+            source = policy.get("source")
+            if source:
+                return source
+
+        return None
+
+    def dcnm_intf_skip_non_resolvable_deferred(self, intf):
+
+        self.changed_dict[0]["skipped"].append(
+            {
+                "Name": intf["ifName"],
+                "Alias": intf.get("alias"),
+                "Deletable": intf.get("deletable"),
+                "Underlay Policies": intf.get("underlayPolicies"),
+                "Reason": "Non-deletable interface without resolvable underlay policy source",
+            }
+        )
+
     def dcnm_intf_process_config(self, cfg):
 
         processed = []
@@ -5043,6 +5066,12 @@ class DcnmIntf:
                         continue
 
                 if str(have["deletable"]).lower() == "false":
+                    source = self.dcnm_intf_get_underlay_policy_source(have)
+
+                    if source is None:
+                        self.dcnm_intf_skip_non_resolvable_deferred(have)
+                        continue
+
                     # Add this 'have to a deferred list. We will process this list once we have processed all the 'haves'
                     defer_list.append(have)
                     self.changed_dict[0]["deferred"].append(
@@ -5050,6 +5079,7 @@ class DcnmIntf:
                             "Name": name,
                             "Deletable": have["deletable"],
                             "Underlay Policies": have["underlayPolicies"],
+                            "Source": source,
                         }
                     )
                     continue
@@ -5335,7 +5365,11 @@ class DcnmIntf:
             delem = {}
             sno = intf["serialNo"]
             fabric = intf["fabricName"]
-            name = intf["underlayPolicies"][0]["source"]
+            name = self.dcnm_intf_get_underlay_policy_source(intf)
+
+            if name is None:
+                self.dcnm_intf_skip_non_resolvable_deferred(intf)
+                continue
 
             match = [
                 d
