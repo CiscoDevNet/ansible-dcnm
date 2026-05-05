@@ -774,7 +774,7 @@ class DcnmPolicy:
             key = "templateName"
 
         for have in self.have:
-            if (have[key] == policy[key]) and (
+            if (have.get(key) == policy.get(key)) and (
                 have.get("serialNumber", None) == policy["serialNumber"]
             ):
                 found.append(have)
