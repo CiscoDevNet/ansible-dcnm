@@ -1025,7 +1025,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_bulk_api_support, dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
     get_nd_fabric_details, get_nd_fabric_inventory_details, get_ip_sn_dict,
     get_sn_fabric_dict, validate_list_of_dicts, search_nested_json,
-    find_dict_in_list_by_key_value, sanitize_lan_attach_list)
+    sanitize_lan_attach_list)
 
 from ..module_utils.common.log_v2 import Log
 
