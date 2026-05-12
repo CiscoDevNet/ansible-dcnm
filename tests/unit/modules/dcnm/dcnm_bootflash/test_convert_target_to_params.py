@@ -16,11 +16,14 @@
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 # Due to the above, we also need to disable unused-import
 # Also, fixtures need to use *args to match the signature of the function they are mocking
+"""
+Unit tests for ConvertTargetToParams class
+"""
 # pylint: disable=unused-import, protected-access, use-implicit-booleaness-not-comparison
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -52,12 +55,12 @@ def test_convert_target_to_params_00000() -> None:
     assert instance.action == "convert_target_to_params"
     assert instance.class_name == "ConvertTargetToParams"
 
-    assert instance._filename is None
-    assert instance._filepath is None
-    assert instance._target is None
-    assert instance._partition is None
-    assert instance._supervisor is None
-    assert instance.committed is False
+    assert instance._filename == ""
+    assert instance._filepath == ""
+    assert instance._target == {}
+    assert instance._partition == ""
+    assert instance._supervisor == ""
+    assert instance._committed is False
 
 
 def test_convert_target_to_params_00100() -> None:
