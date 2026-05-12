@@ -1,4 +1,7 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+"""
+Utility functions and fixtures for dcnm_maintenance_mode unit tests
+"""
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,22 +17,17 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 
 from contextlib import contextmanager
 
 import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByName as FabricDetailsByNameV2
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import \
-    Common
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.fixture import \
-    load_fixture
+from ansible_collections.ansible.netcommon.tests.unit.modules.utils import AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import FabricDetailsByName as FabricDetailsByNameV2
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import Common
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.fixture import load_fixture
 
 params_query = {
     "state": "query",
