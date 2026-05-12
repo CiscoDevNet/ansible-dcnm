@@ -23,11 +23,11 @@ import copy
 import inspect
 import logging
 
+from ..fabric.fabric_details_v2 import FabricDetailsByName
 from .conversion import ConversionUtils
 from .exceptions import ControllerResponseError
 from .properties import Properties
 from .switch_details import SwitchDetails
-from ..fabric.fabric_details_v2 import FabricDetailsByName
 
 
 @Properties.add_rest_send
@@ -327,9 +327,7 @@ class MaintenanceModeInfo:
             msg += "the controller."
             raise ValueError(msg)
 
-        return self.conversion.make_boolean(
-            self.conversion.make_none(self._info[self.filter].get(item))
-        )
+        return self.conversion.make_boolean(self.conversion.make_none(self._info[self.filter].get(item)))
 
     @property
     def filter(self):
