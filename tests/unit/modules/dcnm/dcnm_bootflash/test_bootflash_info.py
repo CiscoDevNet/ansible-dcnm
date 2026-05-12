@@ -31,7 +31,7 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import BootflashInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
@@ -76,7 +76,7 @@ def test_bootflash_info_00000() -> None:
     assert instance._rest_send.params == {}
     assert instance._rest_send.class_name == "RestSend"
     assert instance._results.class_name == "Results"
-    assert instance.switch_details.class_name == "SwitchDetails"
+    assert instance._switch_details.class_name == "SwitchDetails"
     assert instance.switches == []
 
     assert instance.filter_filepath == ""
@@ -176,8 +176,8 @@ def test_bootflash_info_00110() -> None:
         instance.results = Results()
         instance.switches = ["192.168.1.1"]
 
-    match = r"BootflashInfo\.rest_send: "
-    match += r"RestSend.params must be set before accessing\."
+    match = r"BootflashInfo\.validate_refresh_parameters: "
+    match += r"rest_send must be set prior to calling refresh\."
     with pytest.raises(ValueError, match=match):
         instance.refresh()
 

@@ -34,11 +34,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details_v2 import \
     SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_bootflash import \
     Deleted
