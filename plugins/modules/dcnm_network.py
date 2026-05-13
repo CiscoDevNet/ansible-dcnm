@@ -2381,7 +2381,8 @@ class DcnmNetwork:
             template_conf["secondaryGW3"] = ""
         if template_conf["secondaryGW4"] is None:
             template_conf["secondaryGW4"] = ""
-        template_conf["secondaryGWs"] = self.get_secondary_gws_template_config(template_conf)
+        if self.fabric_type not in ["multisite_child", "multicluster_child"]:
+            template_conf["secondaryGWs"] = self.get_secondary_gws_template_config(template_conf)
         if self.dcnm_version > 11:
             if template_conf["SVI_NETFLOW_MONITOR"] is None:
                 template_conf["SVI_NETFLOW_MONITOR"] = ""
@@ -2433,7 +2434,8 @@ class DcnmNetwork:
             t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
             t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
 
-        t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
+        if self.fabric_type not in ["multisite_child", "multicluster_child"]:
+            t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
 
         if "mcastGroup" not in json_to_dict:
             del t_conf["mcastGroup"]
@@ -4653,7 +4655,8 @@ class DcnmNetwork:
                     t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
 
-                t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
+                if self.fabric_type not in ["multisite_child", "multicluster_child"]:
+                    t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
 
                 # Remove skipped attributes from template config for parent fabrics
                 for key in list(t_conf.keys()):
@@ -4912,10 +4915,6 @@ class DcnmNetwork:
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_servers=dict(type="list", elements="dict", default=[]),
-                secondary_ip_gw1=dict(type="ipv4"),
-                secondary_ip_gw2=dict(type="ipv4"),
-                secondary_ip_gw3=dict(type="ipv4"),
-                secondary_ip_gw4=dict(type="ipv4"),
                 deploy=dict(type="bool", default=True if not is_query_state else None),
                 is_l2only=dict(type="bool", default=False),
             )
@@ -5399,7 +5398,8 @@ class DcnmNetwork:
         if cfg.get("secondary_ip_gw4", None) is None:
             json_to_dict_want["secondaryGW4"] = json_to_dict_have["secondaryGW4"]
 
-        json_to_dict_want["secondaryGWs"] = self.get_secondary_gws_template_config(json_to_dict_want)
+        if self.fabric_type not in ["multisite_child", "multicluster_child"]:
+            json_to_dict_want["secondaryGWs"] = self.get_secondary_gws_template_config(json_to_dict_want)
 
         # Route target configuration (common for all fabric types)
         if cfg.get("route_target_both", None) is None:
