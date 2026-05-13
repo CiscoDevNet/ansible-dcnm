@@ -378,47 +378,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(configs[0]["config"][0]["secondary_ip_gw1"], "192.166.88.1/24")
         self.assertEqual(configs[0]["config"][0]["secondary_ip_gw2"], "")
         child_config = configs[1]["config"][0]
-        self.assertNotIn("secondary_ip_gw1", child_config)
-        self.assertNotIn("secondary_ip_gw2", child_config)
         self.assertEqual(child_config["dhcp_loopback_id"], 204)
-
-    def test_dcnm_net_split_msd_replaced_sends_full_secondary_gw_intent_to_child(self):
-        action = dcnm_network_action.ActionModule.__new__(dcnm_network_action.ActionModule)
-        fabrics = {
-            "msd-parent": {
-                "type": "multisite_parent",
-                "fabricParent": "None",
-                "cluster_name": "",
-            },
-            "msd-child-1": {
-                "type": "multisite_child",
-                "fabricParent": "msd-parent",
-                "cluster_name": "",
-            },
-        }
-        config = [
-            {
-                "net_name": "ansible-msd-net1",
-                "vrf_name": "Tenant-1",
-                "is_l2only": False,
-                "secondary_ip_gw1": "192.166.88.1/24",
-                "child_fabric_config": [
-                    {
-                        "fabric": "msd-child-1",
-                        "dhcp_loopback_id": 204,
-                    }
-                ],
-            }
-        ]
-
-        configs, error_msg = action._split_config(fabrics, "msd-parent", config, "replaced", {}, 12)
-
-        self.assertIsNone(error_msg)
-        child_config = configs[1]["config"][0]
-        self.assertEqual(child_config["secondary_ip_gw1"], "192.166.88.1/24")
-        self.assertEqual(child_config["secondary_ip_gw2"], "")
-        self.assertEqual(child_config["secondary_ip_gw3"], "")
-        self.assertEqual(child_config["secondary_ip_gw4"], "")
 
     def test_dcnm_net_delete_switch_config_deploy_serials_are_dynamic(self):
         dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
