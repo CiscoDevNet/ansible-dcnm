@@ -2616,9 +2616,9 @@ class DcnmIntf:
         sub_prof_spec = dict(
             mode=dict(required=True, type="str"),
             vlan=dict(required=True, type="int", range_min=2, range_max=3967),
-            ipv4_addr=dict(required=True, type="ipv4"),
+            ipv4_addr=dict(required=False, type="ipv4"),
             ipv4_mask_len=dict(
-                required=True, type="int", range_min=8, range_max=31
+                required=False, type="int", range_min=8, range_max=31
             ),
             int_vrf=dict(type="str", default="default"),
             ipv6_addr=dict(type="ipv6", default=""),
@@ -3428,11 +3428,13 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
             "int_vrf"
         ]
-        intf["interfaces"][0]["nvPairs"]["IP"] = str(
-            delem[profile]["ipv4_addr"]
+        ipv4_addr = delem[profile].get("ipv4_addr")
+        ipv4_mask_len = delem[profile].get("ipv4_mask_len")
+        intf["interfaces"][0]["nvPairs"]["IP"] = (
+            "" if ipv4_addr is None else str(ipv4_addr)
         )
-        intf["interfaces"][0]["nvPairs"]["PREFIX"] = str(
-            delem[profile]["ipv4_mask_len"]
+        intf["interfaces"][0]["nvPairs"]["PREFIX"] = (
+            "" if ipv4_mask_len is None else str(ipv4_mask_len)
         )
         intf["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = delem[profile][
             "route_tag"
