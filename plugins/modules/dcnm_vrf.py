@@ -1375,8 +1375,7 @@ class DcnmVrf:
                         have_inst_values = {}
                         if (
                             (want["instanceValues"] is not None and want["instanceValues"] != "")
-                            and
-                            (have["instanceValues"] is not None and have["instanceValues"] != "")
+                            and (have["instanceValues"] is not None and have["instanceValues"] != "")
                         ):
                             want_inst_values = ast.literal_eval(want["instanceValues"])
                             have_inst_values = ast.literal_eval(have["instanceValues"])
@@ -1916,9 +1915,10 @@ class DcnmVrf:
         # Some ND versions give empty bgpPasswordKeyType. Skip comparison if:
         # 1. Have keytype is empty/None (ND has no password configured)
         # 2. Both passwords are empty (no password in want or have)
-        if ((bgp_key_type_have == "" and bgp_key_type_want == 3 and
-             bgp_password_want != "") or (bgp_password_want == ""
-                                          and bgp_password_have == "")):
+        if (
+            (bgp_key_type_have == "" and bgp_key_type_want == 3 and bgp_password_want != "")
+            or (bgp_password_want == "" and bgp_password_have == "")
+        ):
             skip_keys.append("bgpPasswordKeyType")
 
         template_skip_keys = self.get_template_skip_keys()
@@ -2448,7 +2448,7 @@ class DcnmVrf:
                 if vrf.get("vlan_id"):
                     vlan_id = vrf.get("vlan_id")
                 else:
-                    if self.action_fabric_type in ["multisite_parent", "multicluster_parent"]:
+                    if self.dcnm_version > 11 or self.action_fabric_type in ["multisite_parent", "multicluster_parent"]:
                         vlan_id = ""
                     else:
                         # TODO: After DCNM 11.x support is ended, change the default vlan_id to ""
@@ -3578,7 +3578,11 @@ class DcnmVrf:
                 # Check for VRF VLAN ID in the template
                 json_to_dict = json.loads(vrf["vrfTemplateConfig"])
                 vlan_id = json_to_dict.get("vrfVlanId", "0")
-                if vlan_id == 0:
+                if vlan_id == 0 and self.dcnm_version > 11:
+                    vlan_id = ""
+                    json_to_dict.update({"vrfVlanId": vlan_id})
+                    vrf.update({"vrfTemplateConfig": json.dumps(json_to_dict)})
+                elif vlan_id == 0:
                     # Get the next available VLAN ID, vlan 0 shouldn't be pushed
                     # to the controller
                     vlan_path = self.paths["GET_VLAN"].format(self.fabric)
@@ -3787,7 +3791,9 @@ class DcnmVrf:
             vlan_id = json_to_dict.get("vrfVlanId", "0")
             vrf_name = json_to_dict.get("vrfName")
 
-            if vlan_id == 0:
+            if vlan_id == 0 and self.dcnm_version > 11:
+                vlan_id = ""
+            elif vlan_id == 0:
                 vlan_path = self.paths["GET_VLAN"].format(self.fabric)
                 vlan_data = dcnm_send(self.module, "GET", vlan_path)
 

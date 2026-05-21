@@ -18,6 +18,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
+import json
 from unittest.mock import patch
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_vrf
@@ -1603,6 +1604,34 @@ class TestDcnmVrfModule(TestDcnmModule):
             result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS"
         )
         self.assertEqual(result["response"][2]["DATA"]["status"], "")
+        self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+
+    def test_dcnm_vrf_12merged_new_multiple_auto_vlan(self):
+        self.version = 12
+        playbook = copy.deepcopy(self.test_data.get("playbook_config"))
+        playbook[0].pop("vlan_id")
+        playbook.append(copy.deepcopy(playbook[0]))
+        playbook[1]["vrf_name"] = "test_vrf_2"
+        playbook[1]["vrf_id"] = "9008012"
+
+        set_module_args(dict(state="merged", fabric="standalone_fabric", config=playbook))
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+        self.version = 11
+
+        bulk_create_payload = None
+        for call in self.run_dcnm_send.call_args_list:
+            args = call.args
+            if len(args) < 4:
+                continue
+            if args[1] == "POST" and args[2].endswith("/bulk-create/vrfs"):
+                bulk_create_payload = json.loads(args[3])
+                break
+
+        self.assertIsNotNone(bulk_create_payload)
+        self.assertEqual(len(bulk_create_payload), 2)
+        for vrf in bulk_create_payload:
+            vrf_template_config = json.loads(vrf["vrfTemplateConfig"])
+            self.assertEqual(vrf_template_config["vrfVlanId"], "")
         self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_msd_merged(self):
