@@ -1915,6 +1915,7 @@ class DcnmIntf:
             "IF_WITH_SNO_IFNAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber={}&ifName={}",
             "IF_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber={}",
             "IF_DETAIL_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/detail?serialNumber={}",
+            "IF_DETAIL_FILTER_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/detail/filter?serialNumber={}&ifTypes={}&excludes=PO_MEMBER,VPC_MEMBER&sort=ASC",
             "GLOBAL_IF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface",
             "GLOBAL_IF_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface/deploy",
             "INTERFACE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface",
@@ -1966,6 +1967,7 @@ class DcnmIntf:
         self._replace_pb_input_lookup = {}
         self.deferred_delete_member_defaults = []
         self._deferred_delete_member_default_keys = set()
+        self.bulk_modify_switch_chunk_size = 50
 
         self.changed_dict = [
             {
@@ -4060,6 +4062,55 @@ class DcnmIntf:
                 return
         if_head.append(intf_info)
 
+    def dcnm_intf_get_bulk_replace_chunks(self, payload, chunk_size):
+        """
+        Split policy-grouped interface update payloads by switch count.
+        """
+
+        if not payload:
+            return []
+
+        if chunk_size < 1:
+            return [payload]
+
+        serial_numbers = []
+        seen = set()
+        for policy_payload in payload:
+            for interface in policy_payload.get("interfaces", []):
+                serial_number = interface.get("serialNumber")
+                if serial_number not in seen:
+                    serial_numbers.append(serial_number)
+                    seen.add(serial_number)
+
+        if not serial_numbers:
+            return [payload]
+
+        chunks = []
+        for index in range(0, len(serial_numbers), chunk_size):
+            chunk_serials = set(serial_numbers[index:index + chunk_size])
+            chunk_payload = []
+            for policy_payload in payload:
+                interfaces = [
+                    interface
+                    for interface in policy_payload.get("interfaces", [])
+                    if interface.get("serialNumber") in chunk_serials
+                ]
+                if not interfaces:
+                    continue
+
+                policy_chunk = {
+                    key: value
+                    for key, value in policy_payload.items()
+                    if key != "interfaces"
+                }
+                policy_chunk["interfaces"] = interfaces
+                chunk_payload.append(policy_chunk)
+
+            if chunk_payload:
+                chunks.append(chunk_payload)
+
+        return chunks
+
     def dcnm_intf_get_want(self):
 
         if self.config == []:
@@ -4204,11 +4255,45 @@ class DcnmIntf:
             intf["ifName"], intf["serialNumber"], intf["interfaceType"]
         )
 
+    def dcnm_intf_get_config_if_types(self):
+        """Derive the set of NDFC ifType strings needed from self.config."""
+
+        needed = set()
+        for cfg in self.config:
+            cfg_type = cfg.get("type", "")
+            if cfg_type in self.int_types:
+                needed.add(self.int_types[cfg_type])
+        # Always include INTERFACE_ETHERNET - members are Ethernet
+        # interfaces that may need compliance checks
+        needed.add("INTERFACE_ETHERNET")
+        return ",".join(sorted(needed))
+
     def dcnm_intf_get_have_all_with_sno(self, sno):
 
         if "~" in sno:
             sno = sno.split("~")[0]
-        path = self.paths["IF_DETAIL_WITH_SNO"].format(sno)
+
+        state = self.module.params.get("state", "")
+
+        # Use filtered endpoint on NDFC 12.x to reduce response size by
+        # excluding PO_MEMBER/VPC_MEMBER interfaces (which the module never
+        # manages) and limiting to relevant ifTypes.
+        if (
+            self.dcnm_version == 12
+            and state in ("replaced", "merged", "overridden", "deleted")
+            and "IF_DETAIL_FILTER_WITH_SNO" in self.paths
+        ):
+            if state in ("replaced", "merged"):
+                # Only fetch ifTypes present in the playbook config
+                if_types = self.dcnm_intf_get_config_if_types()
+            else:
+                # overridden/deleted need all manageable types to ensure
+                # every interface the module manages can be reset or deleted
+                if_types = ",".join(sorted(self.int_index.keys()))
+            path = self.paths["IF_DETAIL_FILTER_WITH_SNO"].format(sno, if_types)
+        else:
+            path = self.paths["IF_DETAIL_WITH_SNO"].format(sno)
+
         resp = dcnm_send(self.module, "GET", path)
 
         if resp and "DATA" in resp and resp["DATA"]:
@@ -6505,18 +6590,39 @@ class DcnmIntf:
                 # Bulk update API for bulk-capable controllers
                 path = self.paths["UPDATE_INTERFACE_BULK"]
 
-                json_payload = json.dumps(self.diff_replace)
-                resp = dcnm_send(self.module, "POST", path, json_payload)
-                self.result["response"].append(resp)
+                chunked_payloads = self.dcnm_intf_get_bulk_replace_chunks(
+                    self.diff_replace,
+                    self.bulk_modify_switch_chunk_size,
+                )
+                for index, payload in enumerate(chunked_payloads, 1):
+                    interface_count = sum(
+                        len(item.get("interfaces", [])) for item in payload
+                    )
+                    switch_count = len(
+                        {
+                            interface.get("serialNumber")
+                            for item in payload
+                            for interface in item.get("interfaces", [])
+                        }
+                    )
+                    msg = "Sending bulk interface modify chunk "
+                    msg += f"{index}/{len(chunked_payloads)} with "
+                    msg += f"{switch_count} switch(es) and "
+                    msg += f"{interface_count} interface(s)"
+                    self.log.debug(msg)
 
-                # Accept both 200 (OK) and 207 (Multi-Status) for bulk operations
-                if (resp.get("MESSAGE") not in ["OK", "Multi-Status"]) or (
-                    resp.get("RETURN_CODE") not in [200, 207]
-                ):
-                    resp["CHANGED"] = self.changed_dict
-                    self.module.fail_json(msg=resp)
-                else:
-                    replace = True
+                    json_payload = json.dumps(payload)
+                    resp = dcnm_send(self.module, "POST", path, json_payload)
+                    self.result["response"].append(resp)
+
+                    # Accept both 200 (OK) and 207 (Multi-Status) for bulk operations
+                    if (resp.get("MESSAGE") not in ["OK", "Multi-Status"]) or (
+                        resp.get("RETURN_CODE") not in [200, 207]
+                    ):
+                        resp["CHANGED"] = self.changed_dict
+                        self.module.fail_json(msg=resp)
+                    else:
+                        replace = True
             else:
                 # Individual update API for versions 11 and 12
                 path = self.paths["INTERFACE"]

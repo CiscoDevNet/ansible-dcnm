@@ -632,11 +632,28 @@ def dcnm_send(module, method, path, data=None, data_type="json"):
     conn = Connection(module._socket_path)
 
     if data_type == "json":
-        return conn.send_request(method, path, data)
+        resp = conn.send_request(method, path, data)
     elif data_type == "urlencoded":
-        return conn.send_urlencoded_request(method, path, data)
+        resp = conn.send_urlencoded_request(method, path, data)
     elif data_type == "text":
-        return conn.send_txt_request(method, path, data)
+        resp = conn.send_txt_request(method, path, data)
+    else:
+        return None
+
+    # Retry on transient 500 errors (e.g. proxy errors from NDFC)
+    if isinstance(resp, dict) and resp.get("RETURN_CODE") == 500:
+        for _attempt in range(5):
+            time.sleep(180)
+            if data_type == "json":
+                resp = conn.send_request(method, path, data)
+            elif data_type == "urlencoded":
+                resp = conn.send_urlencoded_request(method, path, data)
+            elif data_type == "text":
+                resp = conn.send_txt_request(method, path, data)
+            if not (isinstance(resp, dict) and resp.get("RETURN_CODE") == 500):
+                break
+
+    return resp
 
 
 def dcnm_reset_connection(module):
