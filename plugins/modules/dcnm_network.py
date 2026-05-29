@@ -79,7 +79,7 @@ options:
     - Controls the deployment method when deploy is enabled
     - When set to 'switch' (default), deployments use switch-level API with serial numbers
     - When set to 'resource', deployments use resource-level API with network names
-    - This parameter is ignored for multicluster parent fabrics which always use switch-level deployment
+    - Multicluster parent network deployments use resource-level API internally
     - Applies to both create/deploy and delete/undeploy operations
     type: str
     required: false
@@ -1323,6 +1323,46 @@ class DcnmNetwork:
             elif peer_torports and not network_torports:
                 network["torports"] = copy.deepcopy(peer_torports)
 
+    @staticmethod
+    def torports_to_payload_string(torports):
+        if not torports:
+            return ""
+
+        if isinstance(torports, str):
+            return torports
+
+        torconfig_list = []
+        if isinstance(torports, list):
+            for torport in torports:
+                if isinstance(torport, dict):
+                    switch_name = torport.get("switch")
+                    ports = torport.get("torPorts", "")
+                    if switch_name:
+                        torconfig_list.append(f"{switch_name}({ports})")
+                    continue
+                if torport:
+                    torconfig_list.append(str(torport))
+            return " ".join(torconfig_list)
+
+        return str(torports)
+
+    def get_attachment_torports_string(self, attachment):
+        for key in ("torPorts", "torports", "tor_ports"):
+            if key in attachment:
+                return self.torports_to_payload_string(attachment.get(key))
+        return ""
+
+    def normalize_attachment_torports_for_payload(self, attachment):
+        torports = self.get_attachment_torports_string(attachment)
+
+        if "torports" in attachment:
+            del attachment["torports"]
+        if "tor_ports" in attachment:
+            del attachment["tor_ports"]
+
+        if torports or "torPorts" in attachment:
+            attachment["torPorts"] = torports
+
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
         caller = inspect.stack()[1][3]
 
@@ -1753,6 +1793,55 @@ class DcnmNetwork:
         result = {serial: ",".join(nets) for serial, nets in serial_to_networks.items()}
 
         msg = "Returning transformed payload: "
+        msg += f"{json.dumps(result, indent=4)}"
+        self.log.debug(msg)
+
+        return result
+
+    def network_serial_payload_transform_for_deploy(self, payload: dict) -> dict:
+        """
+        Transform final deploy payload using both attach and detach serial maps.
+
+        The replaced/overridden paths can put both attach and detach work under
+        diff_deploy.  Resource deploy must target every switch touched by either
+        side of that diff.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}."
+        self.log.debug(msg)
+
+        if not payload or "networkNames" not in payload:
+            return payload
+
+        network_names_str = payload["networkNames"]
+        if not network_names_str:
+            return {}
+
+        network_names_list = []
+        seen_networks = set()
+        for network_name in network_names_str.split(","):
+            network_name = network_name.strip()
+            if network_name and network_name not in seen_networks:
+                seen_networks.add(network_name)
+                network_names_list.append(network_name)
+
+        serial_to_networks = {}
+        for network_name in network_names_list:
+            serials = set()
+            serials.update(self.network_sn_attach_map.get(network_name, set()))
+            serials.update(self.network_sn_detach_map.get(network_name, set()))
+
+            for serial in sorted(serials):
+                if serial not in serial_to_networks:
+                    serial_to_networks[serial] = []
+                if network_name not in serial_to_networks[serial]:
+                    serial_to_networks[serial].append(network_name)
+
+        result = {serial: ",".join(networks) for serial, networks in serial_to_networks.items()}
+
+        msg = "Returning combined transformed payload: "
         msg += f"{json.dumps(result, indent=4)}"
         self.log.debug(msg)
 
@@ -3626,8 +3715,9 @@ class DcnmNetwork:
                     found_c["attach"].append(detach_d)
                 attach_d.update({"ports": a_w["switchPorts"]})
                 attach_d.update({"deploy": a_w["deployment"]})
-                if a_w.get("torPorts"):
-                    attach_d.update({"tor_ports": a_w["torPorts"]})
+                torports = self.get_attachment_torports_string(a_w)
+                if torports:
+                    attach_d.update({"tor_ports": torports})
                 found_c["attach"].append(attach_d)
 
             diff.append(found_c)
@@ -3654,8 +3744,9 @@ class DcnmNetwork:
                     new_attach_list.append(detach_d)
                 attach_d.update({"ports": a_w["switchPorts"]})
                 attach_d.update({"deploy": a_w["deployment"]})
-                if a_w.get("torPorts"):
-                    attach_d.update({"tor_ports": a_w["torPorts"]})
+                torports = self.get_attachment_torports_string(a_w)
+                if torports:
+                    attach_d.update({"tor_ports": torports})
                 new_attach_list.append(attach_d)
 
             if new_attach_list:
@@ -3807,7 +3898,7 @@ class DcnmNetwork:
             return
 
         method = "POST"
-        if self.deploy_mode == "switch":
+        if self.deploy_mode == "switch" and self.fabric_type != "multicluster_parent":
             # Use switch-level deploy (undeploy operation for delete)
             self.deploy_network_switches(
                 network_names=[net["networkName"]],
@@ -4126,7 +4217,7 @@ class DcnmNetwork:
                 msg = f"Batch deploying (undeploy) {len(batch_deploy_payload)} attachment(s)"
                 self.log.debug(msg)
 
-                if self.deploy_mode == "switch":
+                if self.deploy_mode == "switch" and self.fabric_type != "multicluster_parent":
                     # Use switch-level deploy (undeploy operation for delete)
                     self.deploy_network_switches(
                         network_names=networks_needing_deploy,
@@ -4450,6 +4541,7 @@ class DcnmNetwork:
                 for v_a in d_a["lanAttachList"]:
                     if v_a.get("is_deploy"):
                         del v_a["is_deploy"]
+                    self.normalize_attachment_torports_for_payload(v_a)
 
             resp = dcnm_send(self.module, method, detach_path, json.dumps(self.diff_detach))
             self.result["response"].append(resp)
@@ -4464,7 +4556,7 @@ class DcnmNetwork:
         payload = copy.deepcopy(self.diff_undeploy)
         delete_ready = False
         if self.diff_undeploy:
-            if self.deploy_mode == "switch":
+            if self.deploy_mode == "switch" and self.fabric_type != "multicluster_parent":
                 # Use switch-level deploy (undeploy operation)
                 self.deploy_network_switches(payload, is_rollback, is_undeploy=True)
             elif self.dcnm_version >= 12:
@@ -4510,7 +4602,7 @@ class DcnmNetwork:
                 # Reset delete_ready since we're performing another deploy operation
                 delete_ready = False
 
-                if self.deploy_mode == "switch":
+                if self.deploy_mode == "switch" and self.fabric_type != "multicluster_parent":
                     # Use switch-level deploy (undeploy retry)
                     self.deploy_network_switches(payload, is_rollback, is_undeploy=True)
                 elif self.dcnm_version >= 12:
@@ -4704,13 +4796,7 @@ class DcnmNetwork:
                 for v_a in d_a["lanAttachList"]:
                     if v_a.get("is_deploy"):
                         del v_a["is_deploy"]
-                    # Clean up tor_ports/torports keys if they exist and are empty
-                    if v_a.get("tor_ports") is not None:
-                        if not v_a["tor_ports"]:
-                            del v_a["tor_ports"]
-                    if v_a.get("torports") is not None:
-                        if not v_a["torports"]:
-                            del v_a["torports"]
+                    self.normalize_attachment_torports_for_payload(v_a)
 
             # Calculate dynamic retry count based on number of attachments
             attachment_count = sum(len(net.get("lanAttachList", [])) for net in self.diff_attach)
@@ -4724,8 +4810,17 @@ class DcnmNetwork:
             for attempt in range(0, retry_count):
                 resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))
                 update_in_progress = False
-                for key in resp["DATA"].keys():
-                    if re.search(r"Failed.*Please try after some time", str(resp["DATA"][key])):
+                data = resp.get("DATA", {})
+                if isinstance(data, dict):
+                    response_values = data.values()
+                elif isinstance(data, list):
+                    response_values = data
+                elif data is None:
+                    response_values = []
+                else:
+                    response_values = [data]
+                for value in response_values:
+                    if re.search(r"Failed.*Please try after some time", str(value)):
                         update_in_progress = True
                 if update_in_progress:
                     time.sleep(1)
@@ -4747,7 +4842,14 @@ class DcnmNetwork:
         if self.diff_deploy:
             # For multicluster_parent and multisite_parent, prepare payload for action plugin
             if self.fabric_type == "multicluster_parent" or self.fabric_type == "multisite_parent":
-                # Transform payload based on deploy_mode
+                if self.fabric_type == "multicluster_parent":
+                    # NDFC accepts multicluster parent network deploys through
+                    # the top-down resource endpoint, not switch config-deploy.
+                    diff_deploy = self.network_serial_payload_transform_for_deploy(self.diff_deploy)
+                    self.deploy_payload = {"payload": diff_deploy, "deploy_mode": "resource"}
+                    return
+
+                # Transform multisite parent payload based on deploy_mode
                 if self.deploy_mode == "switch":
                     # Use centralized method to get switch serials (normal deploy)
                     diff_deploy = self.get_deploy_switch_serials(self.diff_deploy, is_undeploy=False)
@@ -5235,6 +5337,12 @@ class DcnmNetwork:
                     fail = True
                     changed = False
                     break
+        if op == "attach" and isinstance(res.get("DATA"), str):
+            data_text = res["DATA"].lower()
+            error_markers = ["failed", "error", "invalid", "exception", "unable"]
+            if any(marker in data_text for marker in error_markers):
+                fail = True
+                changed = False
 
         return fail, changed
 
