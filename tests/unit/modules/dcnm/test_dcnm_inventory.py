@@ -235,6 +235,81 @@ class TestDcnmInvModule(TestDcnmModule):
         self.mock_dcnm_fabric_details.stop()
         self.mock_dcnm_ip_sn.stop()
 
+    def _send_route(self, method, pattern, responses, repeat_last=False, match="contains"):
+        if isinstance(responses, (list, tuple)):
+            response_list = list(responses)
+        else:
+            response_list = [responses]
+
+        return {
+            "method": method,
+            "pattern": pattern,
+            "responses": response_list,
+            "repeat_last": repeat_last,
+            "match": match,
+        }
+
+    def _route_matches(self, route, method, path):
+        if route["method"] != method:
+            return False
+
+        if route["match"] == "contains":
+            return route["pattern"] in path
+        if route["match"] == "endswith":
+            return path.endswith(route["pattern"])
+        if route["match"] == "exact":
+            return path == route["pattern"]
+
+        raise AssertionError("Unsupported route match mode: {0}".format(route["match"]))
+
+    def _set_send_routes(self, *routes):
+        prepared_routes = []
+
+        for route in routes:
+            prepared_route = copy.deepcopy(route)
+            prepared_route["last"] = None
+            prepared_routes.append(prepared_route)
+
+        def side_effect(module, method, path, data=None):
+            for route in prepared_routes:
+                if not self._route_matches(route, method, path):
+                    continue
+
+                if route["responses"]:
+                    response = copy.deepcopy(route["responses"].pop(0))
+                    route["last"] = copy.deepcopy(response)
+                    return response
+
+                if route["repeat_last"] and route["last"] is not None:
+                    return copy.deepcopy(route["last"])
+
+            raise AssertionError(
+                "Unexpected dcnm_send call: {0} {1}".format(method, path)
+            )
+
+        self.run_dcnm_send.side_effect = side_effect
+
+    def _inventory_route(self, responses, repeat_last=True):
+        return self._send_route(
+            "GET",
+            "/inventory/switchesByFabric",
+            responses,
+            repeat_last=repeat_last,
+        )
+
+    def _poap_inventory_route(self, responses, repeat_last=True):
+        return self._send_route(
+            "GET", "/inventory/poap", responses, repeat_last=repeat_last
+        )
+
+    def _fabric_id_route(self, response):
+        return self._send_route(
+            "GET",
+            "/rest/control/fabrics/kharicha-fabric",
+            response,
+            match="endswith",
+        )
+
     def load_fixtures(self, response=None, device=""):
 
         if self.version == 12:
@@ -247,543 +322,802 @@ class TestDcnmInvModule(TestDcnmModule):
         }
 
         self.run_dcnm_ip_sn.side_effect = [self.rma_inv_data]
+        self._set_send_routes()
 
         if "get_have_failure" in self._testMethodName:
-            self.run_dcnm_send.side_effect = [
-                self.get_have_failure,
-            ]
-
-        elif "merge_switch" in self._testMethodName:
-            self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_initial_switch_success,
-                self.mock_inv_discover_params,
-                self.get_have_initial_success,
-                self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_lan_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.get_inventory_initial_switch_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_have_failure, repeat_last=False)
+            )
 
         elif "merge_role_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_initial_switch_success,
-                self.mock_inv_discover_params,
-                self.get_have_initial_success,
-                self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_lan_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.get_inventory_initial_switch_success,
-                self.set_assign_bg_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_inventory_initial_switch_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    self.set_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_bg_role_success),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
         elif "merge_brownfield_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_initial_switch_success,
-                self.mock_inv_discover_params,
-                self.get_have_initial_success,
-                self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_lan_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.get_inventory_initial_switch_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
-
-        elif "merge_multiple_switch" in self._testMethodName:
-            self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.mock_inv_discover109_params,
-                self.mock_inv_discover_params,
-                self.import_switch_discover_success,
-                self.import_switch_discover_success,
-                self.get_inventory_multiple_switch_success,
-                self.get_inventory_multiple_switch_success,
-                self.get_inventory_multiple_switch_success,
-                self.rediscover_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_multiple_switch_success,
-                self.get_inventory_multiple_switch_success,
-                self.get_lan_multiple_new_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.get_inventory_multiple_switch_success,
-                self.set_assign_role_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
-
-        elif "merge_multiple_brownfield_switch" in self._testMethodName:
-            self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.mock_inv_discover_params,
-                self.mock_inv_discover107_params,
-                self.import_switch_discover_success,
-                self.import_switch_discover_success,
-                self.get_inventory_multiple_bf_switch_success,
-                self.get_inventory_multiple_bf_switch_success,
-                self.rediscover_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_multiple_bf_switch_success,
-                self.get_inventory_multiple_bf_switch_success,
-                self.get_lan_multiple_new_bf_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.get_inventory_multiple_bf_switch_success,
-                self.set_assign_role_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_inventory_initial_switch_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    self.set_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_role_success),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
         elif "merge_multiple_dcnm12_brown_green_field_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.mock_inv_discover_params,
-                self.mock_inv_discover107_params,
-                self.import_switch_discover_success,
-                self.import_switch_discover_success,
-                self.get_inventory_multiple_bf_gf_switch_success,
-                self.get_inventory_multiple_bf_gf_switch_success,
-                self.rediscover_switch107_success,
-                self.rediscover_switch_success,
-                self.get_inventory_multiple_bf_gf_switch_success,
-                self.get_inventory_multiple_bf_gf_switch_success,
-                self.get_lan_multiple_new_bf_switch_cred_success,
-                self.get_inventory_multiple_bf_gf_switch_success,
-                self.set_assign_role_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [
+                        self.get_have_initial_success,
+                        self.get_inventory_multiple_bf_gf_switch_success,
+                    ]
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/test-reachability",
+                    [self.mock_inv_discover_params, self.mock_inv_discover107_params],
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    [
+                        self.import_switch_discover_success,
+                        self.import_switch_discover_success,
+                    ],
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/rediscover/",
+                    [self.rediscover_switch107_success, self.rediscover_switch_success],
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_multiple_new_bf_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST", "/rest/control/switches/roles", self.set_assign_role_success
+                ),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
         elif "merge_multiple_brown_green_field_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.mock_inv_discover_params,
-                self.mock_inv_discover107_params,
-                self.import_switch_discover_success,
-                self.import_switch_discover_success,
-                self.get_inventory_multiple_bf_gf_switch_success,
-                self.get_inventory_multiple_bf_gf_switch_success,
-                self.rediscover_switch107_success,
-                self.rediscover_switch_success,
-                self.get_inventory_multiple_bf_gf_switch_success,
-                self.get_inventory_multiple_bf_gf_switch_success,
-                self.get_lan_multiple_new_bf_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.get_inventory_multiple_bf_gf_switch_success,
-                self.set_assign_role_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [
+                        self.get_have_initial_success,
+                        self.get_inventory_multiple_bf_gf_switch_success,
+                    ]
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/test-reachability",
+                    [self.mock_inv_discover_params, self.mock_inv_discover107_params],
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    [
+                        self.import_switch_discover_success,
+                        self.import_switch_discover_success,
+                    ],
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/rediscover/",
+                    [self.rediscover_switch107_success, self.rediscover_switch_success],
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_multiple_new_bf_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    [
+                        self.set_lan_switch_cred_success,
+                        self.set_lan_switch_cred_success,
+                    ],
+                ),
+                self._send_route(
+                    "PUT",
+                    "/topology/role/",
+                    [self.set_assign_role_success, self.set_assign_role_success],
+                ),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
+
+        elif "merge_multiple_brownfield_switch" in self._testMethodName:
+            self.init_data()
+            self._set_send_routes(
+                self._inventory_route(
+                    [
+                        self.get_have_initial_success,
+                        self.get_inventory_multiple_bf_switch_success,
+                    ]
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/test-reachability",
+                    [self.mock_inv_discover_params, self.mock_inv_discover107_params],
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/rediscover/",
+                    [self.rediscover_switch_success, self.rediscover_switch_success],
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_multiple_new_bf_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    [
+                        self.set_lan_switch_cred_success,
+                        self.set_lan_switch_cred_success,
+                    ],
+                ),
+                self._send_route(
+                    "PUT",
+                    "/topology/role/",
+                    [self.set_assign_role_success, self.set_assign_role_success],
+                ),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
+
+        elif "merge_multiple_switch" in self._testMethodName:
+            self.init_data()
+            self._set_send_routes(
+                self._inventory_route(
+                    [self.get_have_initial_success, self.get_inventory_multiple_switch_success]
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/test-reachability",
+                    [self.mock_inv_discover109_params, self.mock_inv_discover_params],
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/rediscover/",
+                    [self.rediscover_switch_success, self.rediscover_switch_success],
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_multiple_new_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    [
+                        self.set_lan_switch_cred_success,
+                        self.set_lan_switch_cred_success,
+                    ],
+                ),
+                self._send_route(
+                    "PUT",
+                    "/topology/role/",
+                    [self.set_assign_role_success, self.set_assign_role_success],
+                ),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
+
+        elif "merge_switch" in self._testMethodName:
+            self.init_data()
+            self._set_send_routes(
+                self._inventory_route(self.get_inventory_initial_switch_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    self.set_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_role_success),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
         elif "delete_dcnm12_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_one_switch_success,
-                self.delete_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_have_one_switch_success, repeat_last=False),
+                self._send_route("DELETE", "/switches/", self.delete_switch_success),
+            )
 
         elif "delete_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_one_switch_success,
-                self.delete_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_have_one_switch_success, repeat_last=False),
+                self._send_route("DELETE", "/switches/", self.delete_switch_success),
+            )
 
         elif "delete_multiple_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_multiple_switch_success,
-                self.delete_switch109_success,
-                self.delete_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    self.get_have_multiple_switch_success, repeat_last=False
+                ),
+                self._send_route(
+                    "DELETE",
+                    "/switches/",
+                    [self.delete_switch109_success, self.delete_switch_success],
+                ),
+            )
 
         elif "delete_all_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_null_config_switch_success,
-                self.delete_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    self.get_have_null_config_switch_success, repeat_last=False
+                ),
+                self._send_route("DELETE", "/switches/", self.delete_switch_success),
+            )
 
         elif "query_dcnm12_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_one_switch_success,
-                self.get_inventory_query_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [self.get_have_one_switch_success, self.get_inventory_query_switch_success],
+                    repeat_last=False,
+                )
+            )
 
         elif "query_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_one_switch_success,
-                self.get_inventory_query_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [self.get_have_one_switch_success, self.get_inventory_query_switch_success],
+                    repeat_last=False,
+                )
+            )
 
         elif "query_no_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_one_switch_success,
-                self.get_inventory_query_no_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [self.get_have_one_switch_success, self.get_inventory_query_no_switch_success],
+                    repeat_last=False,
+                )
+            )
 
         elif "override_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_override_switch_success,
-                self.mock_inv_discover_params,
-                self.delete_switch107_success,
-                self.import_switch_discover_success,
-                self.get_inventory_override_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_override_switch_success,
-                self.get_inventory_override_switch_success,
-                self.get_lan_switch_override_cred_success,
-                self.set_lan_switch_cred_success,
-                self.get_inventory_override_switch_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [
+                        self.get_have_override_switch_success,
+                        self.get_inventory_override_switch_success,
+                    ]
+                ),
+                self._send_route(
+                    "POST", "/inventory/test-reachability", self.mock_inv_discover_params
+                ),
+                self._send_route("DELETE", "/switches/", self.delete_switch107_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_override_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    self.set_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_role_success),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
         elif "migration_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_migration_switch_success,
-                self.mock_inv_discover_params,
-                self.get_inventory_initial_switch_success,
-                self.set_assign_role_success,
-                self.get_inventory_initial_switch_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [
+                        self.get_have_migration_switch_success,
+                        self.get_inventory_initial_switch_success,
+                    ]
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_role_success),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
         elif "invalid_param_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = []
 
         elif "have_initial_failure" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_failure,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_have_initial_failure, repeat_last=False)
+            )
 
         elif "import_switch_discover_failure" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.mock_inv_discover_params,
-                self.import_switch_discover_failure,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_have_initial_success, repeat_last=False),
+                self._send_route(
+                    "POST", "/inventory/test-reachability", self.mock_inv_discover_params
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_failure,
+                ),
+            )
 
         elif "get_inventory_initial_switch_failure" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_initial_switch_failure,
-                self.mock_inv_discover_params,
-                self.get_have_initial_success,
-                self.import_switch_discover_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    self.get_inventory_initial_switch_failure, repeat_last=False
+                )
+            )
 
         elif "rediscover_switch_failure" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_initial_switch_success,
-                self.mock_inv_discover_params,
-                self.get_have_initial_success,
-                self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.rediscover_switch_failure,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_inventory_initial_switch_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_failure
+                ),
+            )
 
         elif "get_lan_switch_cred_failure" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_initial_switch_success,
-                self.mock_inv_discover_params,
-                self.get_have_initial_success,
-                self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_lan_switch_cred_failure,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_inventory_initial_switch_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_failure,
+                ),
+            )
 
         elif "set_lan_switch_cred_failure" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_initial_switch_success,
-                self.mock_inv_discover_params,
-                self.get_have_initial_success,
-                self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_lan_switch_cred_success,
-                self.set_lan_switch_cred_failure,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_inventory_initial_switch_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    self.set_lan_switch_cred_failure,
+                ),
+            )
 
         elif "set_assign_role_failure" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_initial_switch_success,
-                self.mock_inv_discover_params,
-                self.get_have_initial_success,
-                self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_lan_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.get_inventory_initial_switch_success,
-                self.set_assign_role_failure,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_inventory_initial_switch_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    self.set_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_role_failure),
+            )
 
         elif "get_fabric_id_failure" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.mock_inv_discover_params,
-                self.get_have_initial_success,
-                self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_lan_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.get_inventory_initial_switch_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_failure,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_inventory_initial_switch_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    self.set_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_role_success),
+                self._fabric_id_route(self.get_fabric_id_failure),
+            )
 
         elif "config_save_switch_failure" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_initial_switch_success,
-                self.mock_inv_discover_params,
-                self.get_have_initial_success,
-                self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_lan_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.get_inventory_initial_switch_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_failure,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_inventory_initial_switch_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    self.set_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_role_success),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_failure),
+            )
 
         elif "config_deploy_switch_failure" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_initial_switch_success,
-                self.mock_inv_discover_params,
-                self.get_have_initial_success,
-                self.import_switch_discover_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_inventory_initial_switch_success,
-                self.get_lan_switch_cred_success,
-                self.set_lan_switch_cred_success,
-                self.get_inventory_initial_switch_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_failure,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_inventory_initial_switch_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST",
+                    "saveSwitchCredentials",
+                    self.set_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_role_success),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_failure
+                ),
+            )
 
         elif "invalid_remove_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_one_switch_success,
-                self.invalid_remove_switch,
-            ]
+            self._set_send_routes(
+                self._inventory_route(self.get_have_one_switch_success, repeat_last=False),
+                self._send_route("DELETE", "/switches/", self.invalid_remove_switch),
+            )
 
         elif "blank_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = []
 
         elif "already_created_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_already_created_switch_success,
-                self.mock_inv_discover_params,
+            routes = [
+                self._inventory_route(
+                    self.get_have_already_created_switch_success, repeat_last=False
+                )
             ]
+            if "save_fast_path" in self._testMethodName:
+                routes.extend(
+                    [
+                        self._fabric_id_route(self.get_fabric_id_success),
+                        self._send_route(
+                            "POST", "/config-save", self.config_save_switch_success
+                        ),
+                    ]
+                )
+            self._set_send_routes(*routes)
 
         elif "already_deleted_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [self.get_inventory_blank_success]
+            self._set_send_routes(
+                self._inventory_route(self.get_inventory_blank_success, repeat_last=False)
+            )
 
         elif "query_poap_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_one_switch_success,
-                self.get_inventory_query_poap_switch_success,
-                self.get_inventory_query_poap_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [
+                        self.get_have_one_switch_success,
+                        self.get_inventory_query_poap_switch_success,
+                    ],
+                    repeat_last=False,
+                ),
+                self._poap_inventory_route(
+                    self.get_inventory_query_poap_success, repeat_last=False
+                ),
+            )
 
         elif "poap_dcnm12_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.get_inventory_query_poap_success,
-                self.config_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_lan_switch_cred_success,
-                self.get_inventory_poap_switch_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
-
-        elif "poap_switch" in self._testMethodName:
-            self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.get_inventory_query_poap_success,
-                self.config_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_lan_switch_cred_success,
-                self.get_inventory_poap_switch_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [self.get_have_initial_success, self.get_inventory_poap_switch_success]
+                ),
+                self._poap_inventory_route(
+                    self.get_inventory_query_poap_success, repeat_last=False
+                ),
+                self._send_route("POST", "/inventory/poap", self.config_poap_switch_success),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST", "/rest/control/switches/roles", self.set_assign_role_success
+                ),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
         elif "poap_swap_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.get_inventory_query_poap_success,
-                self.config_poap_switch_success,
-                self.get_inventory_query_poap_success,
-                self.config_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_lan_switch_cred_success,
-                self.get_inventory_poap_switch_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [self.get_have_initial_success, self.get_inventory_poap_switch_success]
+                ),
+                self._poap_inventory_route(
+                    [
+                        self.get_inventory_query_poap_success,
+                        self.get_inventory_query_poap_success,
+                    ],
+                    repeat_last=False,
+                ),
+                self._send_route("POST", "/swapSN/", self.config_poap_switch_success),
+                self._send_route("POST", "/inventory/poap", self.config_poap_switch_success),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route(
+                    "POST", "/rest/control/switches/roles", self.set_assign_role_success
+                ),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
         elif "poap_role_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.get_inventory_query_poap_success,
-                self.config_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_lan_switch_cred_success,
-                self.get_inventory_poap_switch_success,
-                self.set_assign_bg_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [self.get_have_initial_success, self.get_inventory_poap_switch_success]
+                ),
+                self._poap_inventory_route(
+                    self.get_inventory_query_poap_success, repeat_last=False
+                ),
+                self._send_route("POST", "/inventory/poap", self.config_poap_switch_success),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_bg_role_success),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
-        elif "preprovision_switch" in self._testMethodName:
+        elif "poap_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.config_poap_switch_success,
-                self.get_inventory_prepro_switch_success,
-                self.get_inventory_prepro_switch_success,
-                self.get_inventory_prepro_switch_success,
-                self.get_inventory_prepro_switch_success,
-                self.get_lan_switch_cred_success,
-                self.get_inventory_prepro_switch_success,
-                self.set_assign_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [self.get_have_initial_success, self.get_inventory_poap_switch_success]
+                ),
+                self._poap_inventory_route(
+                    self.get_inventory_query_poap_success, repeat_last=False
+                ),
+                self._send_route("POST", "/inventory/poap", self.config_poap_switch_success),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_role_success),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
         elif "preprovision_role_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.config_poap_switch_success,
-                self.get_inventory_prepro_switch_success,
-                self.get_inventory_prepro_switch_success,
-                self.get_inventory_prepro_switch_success,
-                self.get_inventory_prepro_switch_success,
-                self.get_lan_switch_cred_success,
-                self.get_inventory_prepro_switch_success,
-                self.set_assign_bg_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [self.get_have_initial_success, self.get_inventory_prepro_switch_success]
+                ),
+                self._send_route("POST", "/inventory/poap", self.config_poap_switch_success),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_bg_role_success),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+            )
+
+        elif "preprovision_switch" in self._testMethodName:
+            self.init_data()
+            self._set_send_routes(
+                self._inventory_route(
+                    [self.get_have_initial_success, self.get_inventory_prepro_switch_success]
+                ),
+                self._send_route("POST", "/inventory/poap", self.config_poap_switch_success),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route("PUT", "/topology/role/", self.set_assign_role_success),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+            )
 
         elif "poap_wrong_user_switch" in self._testMethodName:
             self.init_data()
@@ -814,40 +1148,66 @@ class TestDcnmInvModule(TestDcnmModule):
 
         elif "poap_idempotent_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_merge_multi_type_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    self.get_inventory_merge_multi_type_switch_success, repeat_last=False
+                )
+            )
 
         elif "prepro_idempotent_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_inventory_merge_multi_type_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    self.get_inventory_merge_multi_type_switch_success, repeat_last=False
+                )
+            )
 
         elif "merge_multi_type_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.get_inventory_query_poap_success,
-                self.poap_inv_discover_params,
-                self.import_switch_discover_success,
-                self.config_poap_switch_success,
-                self.get_inventory_merge_multi_type_switch_success,
-                self.get_inventory_merge_multi_type_switch_success,
-                self.get_inventory_merge_multi_type_switch_success,
-                self.rediscover_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_merge_multi_type_switch_success,
-                self.get_inventory_merge_multi_type_switch_success,
-                self.get_lan_switch_cred_success,
-                self.get_inventory_merge_multi_type_switch_success,
-                self.set_assign_bg_role_success,
-                self.set_assign_bg_role_success,
-                self.set_assign_bg_role_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
+            self._set_send_routes(
+                self._inventory_route(
+                    [
+                        self.get_have_initial_success,
+                        self.get_inventory_merge_multi_type_switch_success,
+                    ]
+                ),
+                self._poap_inventory_route(
+                    self.get_inventory_query_poap_success, repeat_last=False
+                ),
+                self._send_route(
+                    "POST", "/inventory/test-reachability", self.poap_inv_discover_params
+                ),
+                self._send_route(
+                    "POST",
+                    "/inventory/discover?setAndUseDiscoveryCredForLan=true",
+                    self.import_switch_discover_success,
+                ),
+                self._send_route("POST", "/inventory/poap", self.config_poap_switch_success),
+                self._send_route(
+                    "POST",
+                    "/inventory/rediscover/",
+                    [self.rediscover_switch_success, self.rediscover_switch_success],
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._send_route(
+                    "PUT",
+                    "/topology/role/",
+                    [
+                        self.set_assign_bg_role_success,
+                        self.set_assign_bg_role_success,
+                        self.set_assign_bg_role_success,
+                    ],
+                ),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
         elif "rma_no_ser_switch" in self._testMethodName:
             self.init_data()
@@ -857,24 +1217,28 @@ class TestDcnmInvModule(TestDcnmModule):
 
         elif "rma_switch" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_send.side_effect = [
-                self.get_have_initial_success,
-                self.get_inventory_query_poap_success,
-                self.config_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.rediscover_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_inventory_poap_switch_success,
-                self.get_lan_switch_cred_success,
-                self.get_inventory_poap_switch_success,
-                self.get_fabric_id_success,
-                self.config_save_switch_success,
-                self.config_deploy_switch_success,
-            ]
-
-        else:
-            pass
+            self._set_send_routes(
+                self._inventory_route(
+                    [self.get_have_initial_success, self.get_inventory_poap_switch_success]
+                ),
+                self._poap_inventory_route(
+                    self.get_inventory_query_poap_success, repeat_last=False
+                ),
+                self._send_route("POST", "/rma", self.config_poap_switch_success),
+                self._send_route(
+                    "POST", "/inventory/rediscover/", self.rediscover_switch_success
+                ),
+                self._send_route(
+                    "GET",
+                    "getLanSwitchCredentials",
+                    self.get_lan_switch_cred_success,
+                ),
+                self._fabric_id_route(self.get_fabric_id_success),
+                self._send_route("POST", "/config-save", self.config_save_switch_success),
+                self._send_route(
+                    "POST", "/config-deploy/", self.config_deploy_switch_success
+                ),
+            )
 
     def test_dcnm_inv_merge_switch_fabric(self):
         set_module_args(
@@ -1222,6 +1586,8 @@ class TestDcnmInvModule(TestDcnmModule):
                 state="merged",
                 fabric="kharicha-fabric",
                 config=self.playbook_merge_switch_config,
+                save=False,
+                deploy=False,
             )
         )
         result = self.execute_module(changed=False, failed=False)
@@ -1229,6 +1595,19 @@ class TestDcnmInvModule(TestDcnmModule):
             result["response"],
             "The switch provided is already part of the fabric and cannot be created again",
         )
+
+    def test_dcnm_inv_already_created_switch_save_fast_path_fabric(self):
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="kharicha-fabric",
+                config=self.playbook_merge_switch_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.assertEqual(len(result["response"]), 1)
+        self.assertEqual(result["response"][0]["RETURN_CODE"], 200)
+        self.assertEqual(result["response"][0]["MESSAGE"], "OK")
 
     def test_dcnm_inv_already_deleted_switch_fabric(self):
         set_module_args(
@@ -1505,6 +1884,8 @@ class TestDcnmInvModule(TestDcnmModule):
                 state="merged",
                 fabric="kharicha-fabric",
                 config=self.playbook_poap_switch_config,
+                save=False,
+                deploy=False,
             )
         )
 
@@ -1521,6 +1902,8 @@ class TestDcnmInvModule(TestDcnmModule):
                 state="merged",
                 fabric="kharicha-fabric",
                 config=self.playbook_preprovision_switch_config,
+                save=False,
+                deploy=False,
             )
         )
 

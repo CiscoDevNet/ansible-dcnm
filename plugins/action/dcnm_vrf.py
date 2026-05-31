@@ -451,6 +451,7 @@ class ActionModule(ActionNetworkModule):
             # Step 1: Validate and split parent/child configurations
             config = module_args.get("config")
             state = module_args.get("state")
+            deploy_mode = module_args.get("deploy_mode", "switch")  # Default to "switch" mode for VRF deployments
             parent_config = []
             child_tasks_dict = {}
             child_fabric_associations = []
@@ -545,11 +546,79 @@ class ActionModule(ActionNetworkModule):
 
             # Step 4: Retrieve deployment payload from parent module
             # result, if any
-            deploy_payload = parent_result.get("deploy_payload", {})
+            deploy_payload_wrapper = parent_result.get("deploy_payload", None)
 
             # Step 5: Deploy VRF(s) on parent fabric, if applicable
-            if deploy_payload:
-                parent_result["deployment"] = deploy_fabric(self, task_vars, tmp, parent_fabric, fabric_type, deploy_payload, "vrf")
+            self.logger.debug(
+                f"Checking deployment eligibility: deploy_payload_wrapper={deploy_payload_wrapper}, "
+                f"deploy_mode={deploy_mode}",
+                fabric=parent_fabric,
+                operation="parent_deploy"
+            )
+
+            if deploy_payload_wrapper and deploy_mode:
+                self.logger.info(
+                    f"Starting VRF deployment on parent fabric with deploy_mode={deploy_mode}",
+                    fabric=parent_fabric,
+                    operation="parent_deploy"
+                )
+
+                # Type check and extract payload
+                if not isinstance(deploy_payload_wrapper, dict) or "payload" not in deploy_payload_wrapper:
+                    error_msg = f"Invalid deploy_payload structure. Expected dict with 'payload' key, got: {type(deploy_payload_wrapper)}"
+                    self.logger.error(error_msg, fabric=parent_fabric, operation="parent_deploy")
+                    return self.error_handler.handle_failure(error_msg)
+
+                deploy_payload = deploy_payload_wrapper.get("payload", None)
+
+                self.logger.debug(
+                    f"Extracted deploy_payload: type={type(deploy_payload)}, content={deploy_payload}",
+                    fabric=parent_fabric,
+                    operation="parent_deploy"
+                )
+
+                # Validate payload type based on deploy_mode
+                if deploy_mode == "switch":
+                    if not isinstance(deploy_payload, list):
+                        error_msg = f"Invalid deploy_payload for switch mode. Expected list, got: {type(deploy_payload)}"
+                        self.logger.error(error_msg, fabric=parent_fabric, operation="parent_deploy")
+                        return self.error_handler.handle_failure(error_msg)
+                    self.logger.debug(
+                        f"Switch mode deployment: {len(deploy_payload)} serial number(s) to deploy",
+                        fabric=parent_fabric,
+                        operation="parent_deploy"
+                    )
+                else:  # resource mode
+                    if not isinstance(deploy_payload, dict):
+                        error_msg = f"Invalid deploy_payload for resource mode. Expected dict, got: {type(deploy_payload)}"
+                        self.logger.error(error_msg, fabric=parent_fabric, operation="parent_deploy")
+                        return self.error_handler.handle_failure(error_msg)
+                    self.logger.debug(
+                        f"Resource mode deployment: {len(deploy_payload)} serial->VRF mapping(s)",
+                        fabric=parent_fabric,
+                        operation="parent_deploy"
+                    )
+
+                if deploy_payload is not None:
+                    self.logger.info(
+                        f"Invoking deploy_fabric: fabric={parent_fabric}, fabric_type={fabric_type}, "
+                        f"deploy_mode={deploy_mode}, resource_type=vrf",
+                        fabric=parent_fabric,
+                        operation="parent_deploy"
+                    )
+                    deployment_result = deploy_fabric(self, task_vars, tmp, parent_fabric, fabric_type, deploy_payload, deploy_mode, "vrf")
+                    parent_result["deployment"] = deployment_result
+                    self.logger.info(
+                        f"Deployment completed: result={deployment_result}",
+                        fabric=parent_fabric,
+                        operation="parent_deploy"
+                    )
+                else:
+                    self.logger.warning(
+                        "deploy_payload is None, skipping deployment",
+                        fabric=parent_fabric,
+                        operation="parent_deploy"
+                    )
 
             # Step 6: Create structured results
             result = self.create_structured_results(parent_result, child_results, parent_fabric, log_type)
