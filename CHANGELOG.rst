@@ -8,6 +8,31 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 .. contents:: ``Release Versions``
 
+`3.12.0`_
+=====================
+
+**Release Date:** ``2026-05-31``
+
+Added
+-----
+
+- Performance improvements for the following modules
+    - dcnm_inventory
+    - dcnm_interface
+    - dcnm_links
+    - dcnm_network
+    - dcnm_resource_manager
+    - dcnm_vpc_pari
+    - dcnm_vrf
+    - [Full List Of Changes](https://github.com/CiscoDevNet/ansible-dcnm/pull/682)
+
+Fixed
+-----
+
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/673
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/668
+
+
 `3.11.1`_
 =====================
 
