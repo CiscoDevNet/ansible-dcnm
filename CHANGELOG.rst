@@ -8,6 +8,31 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 .. contents:: ``Release Versions``
 
+`3.12.0`_
+=====================
+
+**Release Date:** ``2026-05-31``
+
+Added
+-----
+
+- Performance improvements for the following modules
+    - dcnm_inventory
+    - dcnm_interface
+    - dcnm_links
+    - dcnm_network
+    - dcnm_resource_manager
+    - dcnm_vpc_pari
+    - dcnm_vrf
+    - `Full List Of Changes <https://github.com/CiscoDevNet/ansible-dcnm/pull/682>`_
+
+Fixed
+-----
+
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/673
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/668
+
+
 `3.11.1`_
 =====================
 
@@ -731,6 +756,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 - cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 - cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+.. _3.12.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.11.1...3.12.0
 .. _3.11.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.11.0...3.11.1
 .. _3.11.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.10.0...3.11.0
 .. _3.10.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.9.1...3.10.0
