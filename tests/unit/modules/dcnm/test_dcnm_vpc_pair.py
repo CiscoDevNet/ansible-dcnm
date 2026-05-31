@@ -1739,9 +1739,6 @@ class TestDcnmVpcPairModule(TestDcnmModule):
         dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
         dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
         dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_sync_status_in_sync"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_sync_status_in_sync"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_sync_status_in_sync"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_create_succ_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_create_succ_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_create_succ_resp"))
@@ -2168,22 +2165,18 @@ class TestDcnmVpcPairModule(TestDcnmModule):
         dcnm_send_side_effect_3 = []
 
         # dcnm_send() invoked from module_utils/dcnm_vpc_pair_utils.py
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
 
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-
-        dcnm_send_side_effect.append(resp.get("vpc_pair_sync_status_in_sync"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_sync_status_in_sync"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_sync_status_in_sync"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_create_succ_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_create_succ_resp"))
@@ -2287,30 +2280,17 @@ class TestDcnmVpcPairModule(TestDcnmModule):
         dcnm_send_side_effect_3 = []
 
         # dcnm_send() invoked from module_utils/dcnm_vpc_pair_utils.py
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_85"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_85"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_86"))
-
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_85"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
-        dcnm_send_side_effect.append(
-            copy.deepcopy(resp.get("vpc_pair_policy_resp_85"))
-        )
-        dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
-        dcnm_send_side_effect.append(
-            copy.deepcopy(resp.get("vpc_pair_policy_resp_86"))
-        )
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-
-        dcnm_send_side_effect.append(resp.get("vpc_pair_sync_status_in_sync"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
+        dcnm_send_side_effect.append(data.get("vpc_pair_null_have"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_delete_succ_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_delete_succ_resp"))
@@ -2430,24 +2410,6 @@ class TestDcnmVpcPairModule(TestDcnmModule):
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_86"))
-
-        dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_84"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
-        dcnm_send_side_effect.append(
-            copy.deepcopy(resp.get("vpc_pair_policy_resp_84"))
-        )
-        dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_85"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
-        dcnm_send_side_effect.append(
-            copy.deepcopy(resp.get("vpc_pair_policy_resp_85"))
-        )
-        dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
-        dcnm_send_side_effect.append(
-            copy.deepcopy(resp.get("vpc_pair_policy_resp_86"))
-        )
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
-        dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_delete_succ_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_delete_succ_resp"))
