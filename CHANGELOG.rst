@@ -24,7 +24,7 @@ Added
     - dcnm_resource_manager
     - dcnm_vpc_pari
     - dcnm_vrf
-    - [Full List Of Changes](https://github.com/CiscoDevNet/ansible-dcnm/pull/682)
+    - `Full List Of Changes <https://github.com/CiscoDevNet/ansible-dcnm/pull/682>`_
 
 Fixed
 -----
