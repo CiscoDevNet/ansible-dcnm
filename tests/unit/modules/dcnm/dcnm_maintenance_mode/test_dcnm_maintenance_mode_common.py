@@ -29,12 +29,9 @@ import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import \
-    Common
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import (
-    common_fixture, configs_common, does_not_raise, params)
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import Common
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import common_fixture, configs_common, does_not_raise, params
 
 
 def test_dcnm_maintenance_mode_common_00000(common) -> None:
