@@ -15,9 +15,10 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import ast
 import copy
-import socket
 import json
+import socket
 import time
 import html
 import re
@@ -1448,13 +1449,45 @@ def obtain_federated_fabric_associations(action_module, task_vars, tmp):
             tmp=tmp
         )
 
+        if isinstance(federated_fabric_associations, str):
+            try:
+                federated_fabric_associations = json.loads(federated_fabric_associations)
+            except ValueError:
+                return action_module.error_handler.handle_failure(
+                    "Unexpected response format from federated fabric associations API: "
+                    f"{type(federated_fabric_associations).__name__}"
+                )
+
+        if not isinstance(federated_fabric_associations, dict):
+            return action_module.error_handler.handle_failure(
+                "Unexpected response format from federated fabric associations API: "
+                f"{type(federated_fabric_associations).__name__}"
+            )
+
         # Special handling for the following cases:
         #   * Federation manager does not exist (standalone or MSD fabrics in a non-clustered environment)
         #   * ND3.2 returns an invalid JSON response for remote users
         if federated_fabric_associations.get('failed') and federated_fabric_associations.get('msg'):
             message = federated_fabric_associations.get('msg')
-            error_msg = message.get('DATA')
-            error_code = message.get('RETURN_CODE')
+
+            if isinstance(message, str):
+                try:
+                    parsed_message = json.loads(message)
+                except ValueError:
+                    try:
+                        parsed_message = ast.literal_eval(message)
+                    except (ValueError, SyntaxError):
+                        parsed_message = None
+
+                if isinstance(parsed_message, dict):
+                    message = parsed_message
+
+            if isinstance(message, dict):
+                error_msg = message.get('DATA')
+                error_code = message.get('RETURN_CODE')
+            else:
+                error_msg = message
+                error_code = federated_fabric_associations.get('RETURN_CODE')
 
             # For ND3.2 error_msg will be a string
             # For ND4.X error_msg will be a dict
@@ -1472,7 +1505,8 @@ def obtain_federated_fabric_associations(action_module, task_vars, tmp):
                     details=error_details
                 )
 
-            if error_msg in FEDERATION_MANAGER_NOT_FOUND_ERRORS:
+            if error_msg in FEDERATION_MANAGER_NOT_FOUND_ERRORS or \
+               any(error in error_msg for error in FEDERATION_MANAGER_NOT_FOUND_ERRORS):
                 # Return the same error message for both ND3.2 and ND4.X for consistency
                 return 'A federation manager does not exist'
 
