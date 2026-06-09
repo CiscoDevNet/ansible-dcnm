@@ -2113,8 +2113,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         dcnm_net = self._build_diff_network(self.net_inv_data)
 
         have_attach = [
-            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", 
-                freeform_config="interface Vlan202\n  description Test"),
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config="interface Vlan202\n  description Test"),
         ]
         want_attach = [
             self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config=""),
@@ -2131,12 +2130,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
         dcnm_net = self._build_diff_network(self.net_inv_data)
 
         have_attach = [
-            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", 
-                freeform_config="interface Vlan202\n  description Old"),
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config="interface Vlan202\n  description Old"),
         ]
         want_attach = [
-            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", 
-                freeform_config="interface Vlan202\n  description New"),
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config="interface Vlan202\n  description New"),
         ]
 
         diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
