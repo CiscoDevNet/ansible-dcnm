@@ -658,7 +658,7 @@ def dcnm_vpc_pair_utils_get_sync_status(self, elem):
     switches = [
         self.sn_ip[elem[peer]]
         for peer in ["peerOneId", "peerTwoId"]
-        if self.sn_ip.get(elem[peer], "") in self.managable
+        if not self.managable or self.sn_ip.get(elem[peer], "") in self.managable
     ]
 
     if not switches:
@@ -731,7 +731,7 @@ def dcnm_vpc_pair_utils_deploy_elem(self, elem):
     for peer in ["peerOneId", "peerTwoId"]:
         # Skip deploy for switches that are not managable (e.g. preprovision/unreachable)
         peer_ip = self.sn_ip.get(elem[peer], "")
-        if peer_ip not in self.managable:
+        if self.managable and peer_ip not in self.managable:
             continue
 
         path = self.paths["VPC_PAIR_DEPLOY_PATH"].format(elem["fabric"], elem[peer])
