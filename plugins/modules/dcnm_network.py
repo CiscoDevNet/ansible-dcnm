@@ -336,6 +336,13 @@ options:
             type: list
             elements: str
             required: true
+          vlan_id:
+            description:
+            - VLAN ID override for this specific switch attachment
+            - If not specified, uses the network-level vlan_id
+            - If neither is specified, NDFC will auto-select an available VLAN
+            type: int
+            required: false
           deploy:
             description:
             - Per switch knob to control whether to deploy the attachment
@@ -1418,7 +1425,7 @@ class DcnmNetwork:
                                 # This is needed to handle cases where vlan is updated after deploying the network
                                 # and attachments. This ensures that the attachments before vlan update will use previous
                                 # vlan id. All the active attachments on ND will have a vlan-id.
-                                if have.get("vlan"):
+                                if want.get("vlan") == 0 and have.get("vlan"):
                                     want["vlan"] = have.get("vlan")
 
                                 if sorted(h_sw_ports) != sorted(w_sw_ports):
@@ -1577,7 +1584,7 @@ class DcnmNetwork:
         attach.update({"serialNumber": serial})
         attach.update({"switchPorts": ",".join(attach["ports"])})
         attach.update({"detachSwitchPorts": ""})  # Is this supported??Need to handle correct
-        attach.update({"vlan": 0})
+        attach.update({"vlan": attach.get("vlan_id", 0)})     # Use attachment vlan_id if provided
         attach.update({"dot1QVlan": 0})
         attach.update({"untagged": False})
         # This flag is not to be confused for deploy of attachment.
@@ -1601,6 +1608,11 @@ class DcnmNetwork:
                 torlist.append(torports)
             del attach["tor_ports"]
         attach.update({"torports": torlist})
+
+        # Clean up vlan_id from attach dict before sending to API
+        if "vlan_id" in attach:
+            del attach["vlan_id"]
+    
 
         if "deploy" in attach:
             del attach["deploy"]
@@ -5041,6 +5053,7 @@ class DcnmNetwork:
                 ip_address=dict(required=True, type="str"),
                 ports=dict(type="list", default=[]),
                 deploy=dict(type="bool", default=True),
+                vlan_id=dict(type="int", required=False),
             )
 
             if self.config:
@@ -5079,6 +5092,7 @@ class DcnmNetwork:
                 ports=dict(type="list", default=[]),
                 deploy=dict(type="bool", default=True),
                 tor_ports=dict(required=False, type="list", elements="dict"),
+                vlan_id=dict(type="int", required=False),
             )
             tor_att_spec = dict(
                 ip_address=dict(required=True, type="str"),

@@ -64,6 +64,8 @@ class TestDcnmNetworkModule(TestDcnmModule):
     playbook_config_replace = test_data.get("playbook_config_replace")
     playbook_config_replace_no_atch = test_data.get("playbook_config_replace_no_atch")
     playbook_config_override = test_data.get("playbook_config_override")
+    playbook_config_attach_vlan_override = test_data.get("playbook_config_attach_vlan_override")
+    mock_net_attach_object_vlan_override = test_data.get("mock_net_attach_object_vlan_override")
     mock_net_attach_object_del_not_ready = test_data.get(
         "mock_net_attach_object_del_not_ready"
     )
@@ -632,6 +634,25 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.blank_data,
                 self.attach_success_resp,
                 self.deploy_success_resp,
+            ]
+
+        elif "_merged_attach_vlan_override_new" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf_object,
+                self.blank_data,
+                self.blank_data,
+                self.attach_success_resp,
+                self.deploy_success_resp,
+            ]
+
+        elif "_merged_attach_vlan_override_idempotent" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_get_url.side_effect = [self.mock_net_attach_object_vlan_override]
+            self.run_dcnm_fabric_details.side_effect = [self.fabric_details_vxlan_fabric]
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf_object,
+                self.mock_net_object,
             ]
 
         elif "replace_with_no_atch" in self._testMethodName:
@@ -2104,3 +2125,48 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(leaf4_attach["portNames"], "Ethernet1/16,Ethernet1/17")
         self.assertEqual(leaf4_attach["lanAttachState"], "IN PROGRESS")
         self.assertTrue(leaf4_attach["isLanAttached"])
+
+    # ==================== Attachment-level VLAN Override Tests ====================
+
+    def test_dcnm_net_merged_attach_vlan_override_new(self):
+        """Test creating a new network with attachment-level vlan_id override.
+
+        First attachment (10.10.10.217) specifies vlan_id=300 to override network-level vlan_id=202.
+        Second attachment (10.10.10.218) uses network-level vlan_id (no override).
+        """
+        set_module_args(
+            dict(state="merged", fabric="test_network", config=self.playbook_config_attach_vlan_override)
+        )
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
+        self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
+
+    def test_dcnm_net_merged_attach_vlan_override_idempotent(self):
+        """Test idempotency when attachment-level vlan_id matches existing state.
+
+        Network already deployed with first switch having vlan 300 (override) and
+        second switch having vlan 202 (network default). Re-running with same config
+        should produce no changes.
+        """
+        set_module_args(
+            dict(state="merged", fabric="test_network", config=self.playbook_config_attach_vlan_override)
+        )
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
+        self.assertFalse(result.get("diff"))
+
+    def test_dcnm_net_diff_for_attach_deploy_vlan_inherit(self):
+        """Test that vlan=0 in want inherits vlan from have (no change detected)."""
+        dcnm_net = self._build_diff_network(self.net_inv_data)
+
+        have_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", vlan=300),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", vlan=0),
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
+
+        # No diff - vlan=0 inherits existing vlan 300
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
