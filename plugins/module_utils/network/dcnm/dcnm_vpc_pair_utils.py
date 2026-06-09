@@ -733,7 +733,7 @@ def dcnm_vpc_pair_utils_deploy_elem(self, elem):
         peer_ip = self.sn_ip.get(elem[peer], "")
         if peer_ip not in self.managable:
             continue
-            
+
         path = self.paths["VPC_PAIR_DEPLOY_PATH"].format(elem["fabric"], elem[peer])
 
         resp = dcnm_send(self.module, "POST", path)
