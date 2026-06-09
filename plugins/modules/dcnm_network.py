@@ -1612,7 +1612,6 @@ class DcnmNetwork:
         # Clean up vlan_id from attach dict before sending to API
         if "vlan_id" in attach:
             del attach["vlan_id"]
-    
 
         if "deploy" in attach:
             del attach["deploy"]
