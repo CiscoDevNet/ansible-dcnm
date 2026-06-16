@@ -21,8 +21,7 @@ import copy
 import inspect
 import logging
 
-from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabricConfigSave
+from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import EpFabricConfigSave
 from ..common.conversion import ConversionUtils
 from ..common.properties import Properties
 
