@@ -228,6 +228,11 @@ class TestDcnmIntfModule(TestDcnmModule):
             eth_3_2_access_intf = self.have_all_payloads_data.get(
                 "eth_3_2_access_payload"
             )
+            eth_bulk_payload = self.build_bulk_payload(
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
+            )
+            eth_vpc_empty_payload = self.build_bulk_payload()
             self.breakout_policies_data = loadPlaybookData(
                 "dcnm_intf_breakout_policies"
             )
@@ -244,6 +249,16 @@ class TestDcnmIntfModule(TestDcnmModule):
                     return empty_breakout_resp
                 if "interface/detail?serialNumber=" in path:
                     return playbook_have_all_data
+                if (
+                    "interface?serialNumber=SAL1819SAN8" in path
+                    and "ifName=" not in path
+                ):
+                    return eth_bulk_payload
+                if (
+                    "interface?serialNumber=" in path
+                    and "ifName=" not in path
+                ):
+                    return eth_vpc_empty_payload
                 if (
                     "interface?serialNumber=" in path
                     and "ifName=Ethernet1/1" in path
