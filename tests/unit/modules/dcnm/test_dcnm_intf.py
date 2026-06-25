@@ -6185,21 +6185,15 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         self.assertEqual(len(result["diff"][0]["deferred"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
-        self.assertLessEqual(len(result["diff"][0]["replaced"]), 2)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 2)
         self.assertEqual(len(result["diff"][0]["overridden"]), 0)
 
-        self.assertFalse(
-            any(
-                intf["interfaces"][0]["ifName"].lower() == "ethernet1/1"
-                for intf in result["diff"][0]["replaced"]
-            )
-        )
-        self.assertTrue(
-            all(
+        self.assertEqual(
+            {
                 intf["interfaces"][0]["ifName"].lower()
-                in ["ethernet1/2", "ethernet3/2"]
                 for intf in result["diff"][0]["replaced"]
-            )
+            },
+            {"ethernet1/2", "ethernet3/2"},
         )
         self.assertTrue(
             any(
