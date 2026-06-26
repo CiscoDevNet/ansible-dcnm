@@ -1915,7 +1915,10 @@ class DcnmIntf:
             "IF_WITH_SNO_IFNAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber={}&ifName={}",
             "IF_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber={}",
             "IF_DETAIL_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/detail?serialNumber={}",
-            "IF_DETAIL_FILTER_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/detail/filter?serialNumber={}&ifTypes={}&excludes=PO_MEMBER,VPC_MEMBER&sort=ASC",
+            "IF_DETAIL_FILTER_WITH_SNO": (
+                "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/detail/filter"
+                "?serialNumber={}&ifTypes={}&excludes=PO_MEMBER,VPC_MEMBER&sort=ASC"
+            ),
             "GLOBAL_IF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface",
             "GLOBAL_IF_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface/deploy",
             "INTERFACE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface",
