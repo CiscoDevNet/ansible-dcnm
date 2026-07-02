@@ -766,12 +766,14 @@ def dcnm_vpc_pair_utils_process_deploy_payloads(self, deploy_list):
     resp = None
     deploy_flag = False
 
-    if deploy_list:
-        # Perform a config-save first before config-deploy
-        dcnm_vpc_pair_utils_save_config_changes(self)
-        dcnm_vpc_pair_utils_invalidate_sync_cache(self)
-    else:
+    if not deploy_list:
         return deploy_flag
+
+    if not self.managable:
+        return deploy_flag
+
+    dcnm_vpc_pair_utils_save_config_changes(self)
+    dcnm_vpc_pair_utils_invalidate_sync_cache(self)
 
     for elem in deploy_list:
         rc, resp = dcnm_vpc_pair_utils_deploy_elem(self, elem)
