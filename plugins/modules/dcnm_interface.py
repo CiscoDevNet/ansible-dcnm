@@ -3129,29 +3129,41 @@ class DcnmIntf:
         if "~" in vpc_pair_sn:
             vpc_sn_parts = vpc_pair_sn.split("~")
             switch_0_sn = self.ip_sn.get(delem["switch"][0], "")
-            switch_1_sn = self.ip_sn.get(delem["switch"][1], "")
 
-            # Check if playbook switch order matches ND vPC pair order
-            if switch_0_sn == vpc_sn_parts[0] and switch_1_sn == vpc_sn_parts[1]:
-                # Playbook order matches ND order - no swap needed
-                pass
-            elif switch_0_sn == vpc_sn_parts[1] and switch_1_sn == vpc_sn_parts[0]:
-                # Playbook order is reversed from ND order - swap all peer parameters
-                peer1_members, peer2_members = peer2_members, peer1_members
-                peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
-                peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
-                peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
-                peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
-                peer1_description, peer2_description = peer2_description, peer1_description
-                peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
+            if len(delem["switch"]) < 2:
+                # Single switch in playbook - swap if it maps to ND's PEER2
+                if switch_0_sn == vpc_sn_parts[1]:
+                    peer1_members, peer2_members = peer2_members, peer1_members
+                    peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
+                    peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
+                    peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
+                    peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
+                    peer1_description, peer2_description = peer2_description, peer1_description
+                    peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
             else:
-                # Serial numbers don't match vPC pair - this is an error condition
-                self.module.fail_json(
-                    msg=f"vPC {ifname} configuration error: Switch serial numbers "
-                        f"[{switch_0_sn}, {switch_1_sn}] do not match ND vPC pair "
-                        f"[{vpc_sn_parts[0]}, {vpc_sn_parts[1]}]. Verify that the "
-                        f"switches specified in the playbook are part of the same vPC pair."
-                )
+                switch_1_sn = self.ip_sn.get(delem["switch"][1], "")
+
+                # Check if playbook switch order matches ND vPC pair order
+                if switch_0_sn == vpc_sn_parts[0] and switch_1_sn == vpc_sn_parts[1]:
+                    # Playbook order matches ND order - no swap needed
+                    pass
+                elif switch_0_sn == vpc_sn_parts[1] and switch_1_sn == vpc_sn_parts[0]:
+                    # Playbook order is reversed from ND order - swap all peer parameters
+                    peer1_members, peer2_members = peer2_members, peer1_members
+                    peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
+                    peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
+                    peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
+                    peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
+                    peer1_description, peer2_description = peer2_description, peer1_description
+                    peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
+                else:
+                    # Serial numbers don't match vPC pair - this is an error condition
+                    self.module.fail_json(
+                        msg=f"vPC {ifname} configuration error: Switch serial numbers "
+                            f"[{switch_0_sn}, {switch_1_sn}] do not match ND vPC pair "
+                            f"[{vpc_sn_parts[0]}, {vpc_sn_parts[1]}]. Verify that the "
+                            f"switches specified in the playbook are part of the same vPC pair."
+                    )
 
         if delem[profile]["mode"] == "trunk":
 
