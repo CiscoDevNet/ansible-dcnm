@@ -476,7 +476,7 @@ class DcnmVpcPair:
                 "debugs": [],
             }
         ]
-
+        self.managable = {}
         self.result = dict(changed=False, diff=[], response=[])
 
     def log_msg(self, msg):

@@ -655,7 +655,14 @@ def dcnm_vpc_pair_utils_get_sync_status(self, elem):
         'In-sync', if the switches configuration is "In-Sync" state, 'Not-In-Sync' otherwise
     """
 
-    switches = [self.sn_ip[elem["peerOneId"]], self.sn_ip[elem["peerTwoId"]]]
+    switches = [
+        self.sn_ip[elem[peer]]
+        for peer in ["peerOneId", "peerTwoId"]
+        if not self.managable or self.sn_ip.get(elem[peer], "") in self.managable
+    ]
+
+    if not switches:
+        return "In-Sync"
 
     if getattr(self, "_vpc_sync_status_cache", None) is None:
         path = self.paths["VPC_PAIR_GET_SYNC_STATUS"].format(self.fabric)
@@ -722,6 +729,11 @@ def dcnm_vpc_pair_utils_deploy_elem(self, elem):
     deploy_flag = False
 
     for peer in ["peerOneId", "peerTwoId"]:
+        # Skip deploy for switches that are not managable (e.g. preprovision/unreachable)
+        peer_ip = self.sn_ip.get(elem[peer], "")
+        if self.managable and peer_ip not in self.managable:
+            continue
+
         path = self.paths["VPC_PAIR_DEPLOY_PATH"].format(elem["fabric"], elem[peer])
 
         resp = dcnm_send(self.module, "POST", path)
@@ -754,12 +766,14 @@ def dcnm_vpc_pair_utils_process_deploy_payloads(self, deploy_list):
     resp = None
     deploy_flag = False
 
-    if deploy_list:
-        # Perform a config-save first before config-deploy
-        dcnm_vpc_pair_utils_save_config_changes(self)
-        dcnm_vpc_pair_utils_invalidate_sync_cache(self)
-    else:
+    if not deploy_list:
         return deploy_flag
+
+    if not self.managable:
+        return deploy_flag
+
+    dcnm_vpc_pair_utils_save_config_changes(self)
+    dcnm_vpc_pair_utils_invalidate_sync_cache(self)
 
     for elem in deploy_list:
         rc, resp = dcnm_vpc_pair_utils_deploy_elem(self, elem)
