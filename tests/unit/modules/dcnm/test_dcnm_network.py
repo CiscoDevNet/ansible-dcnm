@@ -925,7 +925,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 config=self.playbook_config,
             )
         )
-        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff"))
         self.assertFalse(result.get("response"))
 
@@ -939,7 +939,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 config=self.playbook_config,
             )
         )
-        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.version = 11
         self.assertTrue(result.get("diff"))
         self.assertFalse(result.get("response"))
@@ -1529,6 +1529,59 @@ class TestDcnmNetworkModule(TestDcnmModule):
 
         self.assertFalse(diff)
         self.assertFalse(dep_net)
+
+    def test_dcnm_net_normalize_vpc_torports_rejects_asymmetric_intent(self):
+        dcnm_net = self._build_diff_network(self.net_inv_data_vpc_tor)
+        expected_msg = (
+            "Invalid tor_ports configuration for network test_network: vPC peers 10.10.10.217 and 10.10.10.218 "
+            "have different ToR intent. Configure identical ToR switches and ports on both leaf attachments, or "
+            "specify tor_ports on only one peer."
+        )
+        dcnm_net.module = Mock()
+        dcnm_net.module.fail_json.side_effect = ValueError(expected_msg)
+        want_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13",
+                [{"switch": "dt-n9k6", "torPorts": "Ethernet1/12"}],
+            ),
+            self._build_attach_state(
+                "9YO9A29F27U",
+                "Ethernet1/14",
+                [{"switch": "dt-n9k7", "torPorts": "Ethernet1/13"}],
+            ),
+        ]
+
+        with self.assertRaisesRegex(ValueError, expected_msg.replace(".", r"\.")):
+            dcnm_net.normalize_vpc_torports(want_attach)
+
+        dcnm_net.module.fail_json.assert_called_once_with(msg=expected_msg)
+
+    def test_dcnm_net_normalize_vpc_torports_accepts_equivalent_ordering(self):
+        dcnm_net = self._build_diff_network(self.net_inv_data_vpc_tor)
+        want_attach = [
+            self._build_attach_state(
+                "9NN7E41N16A",
+                "Ethernet1/13",
+                [
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/12,Ethernet1/13"},
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/14"},
+                ],
+            ),
+            self._build_attach_state(
+                "9YO9A29F27U",
+                "Ethernet1/14",
+                [
+                    {"switch": "dt-n9k7", "torPorts": "Ethernet1/14"},
+                    {"switch": "dt-n9k6", "torPorts": "Ethernet1/13,Ethernet1/12"},
+                ],
+            ),
+        ]
+
+        dcnm_net.normalize_vpc_torports(want_attach)
+
+        self.assertEqual(want_attach[0]["torports"][0]["switch"], "dt-n9k6")
+        self.assertEqual(want_attach[1]["torports"][0]["switch"], "dt-n9k7")
 
     def test_dcnm_net_merged_tor_vpc_single_tor_with_update(self):
         dcnm_net = self._build_diff_network(self.net_inv_data_vpc_tor)

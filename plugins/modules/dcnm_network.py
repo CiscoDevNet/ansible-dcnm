@@ -1282,6 +1282,17 @@ class DcnmNetwork:
 
         return json.dumps({"secondaryGWs": secondary_gws}, separators=(",", ":"))
 
+    @staticmethod
+    def _torports_comparison_key(torports):
+        normalized = []
+        for torport in torports:
+            switch_name = str(torport.get("switch") or "")
+            ports = torport.get("torPorts") or ""
+            port_values = ports.split(",") if isinstance(ports, str) else ports
+            normalized_ports = tuple(sorted(port.strip() for port in port_values if port.strip()))
+            normalized.append((switch_name, normalized_ports))
+        return tuple(sorted(normalized))
+
     def normalize_vpc_torports(self, networks):
         """
         NDFC reflects TOR attachments on both VPC peers even when the playbook
@@ -1322,6 +1333,15 @@ class DcnmNetwork:
                 peer_network["torports"] = copy.deepcopy(network_torports)
             elif peer_torports and not network_torports:
                 network["torports"] = copy.deepcopy(peer_torports)
+            elif self._torports_comparison_key(network_torports) != self._torports_comparison_key(peer_torports):
+                peer_ip_address = next((ip for ip, ser in self.ip_sn.items() if ser == peer_serial), peer_serial)
+                network_name = network.get("networkName", "unknown")
+                msg = (
+                    f"Invalid tor_ports configuration for network {network_name}: vPC peers {ip_address} and "
+                    f"{peer_ip_address} have different ToR intent. Configure identical ToR switches and ports on "
+                    "both leaf attachments, or specify tor_ports on only one peer."
+                )
+                self.module.fail_json(msg=msg)
 
     @staticmethod
     def torports_to_payload_string(torports):
@@ -5751,7 +5771,6 @@ def main():
     dcnm_net.result["diff"] = dcnm_net.diff_input_format
 
     if module.check_mode:
-        dcnm_net.result["changed"] = False
         module.exit_json(**dcnm_net.result)
 
     dcnm_net.push_to_remote()
