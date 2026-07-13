@@ -1765,6 +1765,99 @@ class TestDcnmNetworkModule(TestDcnmModule):
             "dt-n9k6(Ethernet1/13,Ethernet1/14) dt-n9k7(Ethernet1/15,Ethernet1/16)",
         )
 
+    def test_dcnm_net_populate_detach_serial_map_includes_tor_serials(self):
+        dcnm_net = self._build_diff_network(self.net_inv_data_vpc_tor)
+        dcnm_net.logical_name_inventory = {
+            details["logicalName"].lower(): details
+            for details in dcnm_net.inventory_data.values()
+        }
+        dcnm_net.network_sn_attach_map = {}
+        dcnm_net.network_sn_detach_map = {}
+        dcnm_net.diff_attach = []
+        dcnm_net.diff_detach = [
+            {
+                "networkName": "test_network",
+                "lanAttachList": [
+                    {
+                        "serialNumber": "9NN7E41N16A",
+                        "deployment": False,
+                        "torports": [
+                            {"switch": "dt-n9k6", "torPorts": "Ethernet1/13"},
+                            {"switch": "dt-n9k7", "torPorts": "Ethernet1/14"},
+                        ],
+                    }
+                ],
+            }
+        ]
+        dcnm_net.diff_create_update = []
+        dcnm_net.diff_deploy = {}
+        dcnm_net.diff_undeploy = {"networkNames": "test_network"}
+        dcnm_net.diff_delete = {"test_network": "DEPLOYED"}
+        dcnm_net.have_attach_by_name = {}
+
+        dcnm_net.populate_sn_maps_from_diffs()
+
+        self.assertEqual(
+            dcnm_net.network_sn_detach_map["test_network"],
+            {"9NN7E41N16A", "9YO9A29F28C", "9YO9A29F29D"},
+        )
+
+    def test_dcnm_net_populate_attach_serial_map_excludes_tor_serials(self):
+        dcnm_net = self._build_diff_network(self.net_inv_data_vpc_tor)
+        dcnm_net.logical_name_inventory = {
+            details["logicalName"].lower(): details
+            for details in dcnm_net.inventory_data.values()
+        }
+        dcnm_net.network_sn_attach_map = {}
+        dcnm_net.network_sn_detach_map = {}
+        dcnm_net.diff_attach = [
+            {
+                "networkName": "test_network",
+                "lanAttachList": [
+                    {
+                        "serialNumber": "9NN7E41N16A",
+                        "deployment": True,
+                        "torports": [
+                            {"switch": "dt-n9k6", "torPorts": "Ethernet1/13"},
+                            {"switch": "dt-n9k7", "torPorts": "Ethernet1/14"},
+                        ],
+                    }
+                ],
+            }
+        ]
+        dcnm_net.diff_detach = []
+        dcnm_net.diff_create_update = []
+        dcnm_net.diff_deploy = {}
+        dcnm_net.diff_undeploy = {}
+        dcnm_net.diff_delete = {}
+        dcnm_net.have_attach_by_name = {}
+
+        dcnm_net.populate_sn_maps_from_diffs()
+
+        self.assertEqual(
+            dcnm_net.network_sn_attach_map["test_network"],
+            {"9NN7E41N16A"},
+        )
+        self.assertEqual(dcnm_net.network_sn_detach_map, {})
+
+    def test_dcnm_net_get_attachment_tor_serials_accepts_payload_string(self):
+        dcnm_net = self._build_diff_network(self.net_inv_data_vpc_tor)
+        dcnm_net.logical_name_inventory = {
+            details["logicalName"].lower(): details
+            for details in dcnm_net.inventory_data.values()
+        }
+
+        serials = dcnm_net.get_attachment_tor_serials(
+            {
+                "torPorts": (
+                    "dt-n9k6(Ethernet1/13,Ethernet1/14) "
+                    "dt-n9k7(Ethernet1/15,Ethernet1/16)"
+                )
+            }
+        )
+
+        self.assertEqual(serials, {"9YO9A29F28C", "9YO9A29F29D"})
+
     def test_dcnm_net_network_serial_payload_transform_for_deploy(self):
         dcnm_net = self._build_diff_network({})
         dcnm_net.network_sn_attach_map = {

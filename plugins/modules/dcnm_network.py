@@ -1383,6 +1383,26 @@ class DcnmNetwork:
         if torports or "torPorts" in attachment:
             attachment["torPorts"] = torports
 
+    def get_attachment_tor_serials(self, attachment):
+        """Resolve ToR switch names in an attachment to inventory serials."""
+        torports = self.get_attachment_torports_string(attachment)
+        if not torports:
+            return set()
+
+        serials = set()
+        inventory = getattr(self, "logical_name_inventory", {})
+        for switch_name in re.findall(r"([^\s(]+)\([^)]*\)", torports):
+            switch_details = inventory.get(switch_name.lower(), {})
+            serial = switch_details.get("serialNumber")
+            if serial:
+                serials.add(serial)
+            else:
+                self.log.debug(
+                    "Unable to resolve ToR switch %s from attachment inventory",
+                    switch_name,
+                )
+        return serials
+
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
         caller = inspect.stack()[1][3]
 
@@ -3521,26 +3541,37 @@ class DcnmNetwork:
 
             for attach in attach_entry.get("lanAttachList", []):
                 serial = attach.get("serialNumber")
-                if not serial:
-                    continue
-
                 deployment = attach.get("deployment", True)
+                affected_serials = {serial} if serial else set()
+                if not deployment:
+                    affected_serials.update(self.get_attachment_tor_serials(attach))
+
+                if not affected_serials:
+                    continue
 
                 if deployment:
                     # Attachment or update operation
                     if network_name not in self.network_sn_attach_map:
                         self.network_sn_attach_map[network_name] = set()
-                    self.network_sn_attach_map[network_name].add(serial)
+                    self.network_sn_attach_map[network_name].update(affected_serials)
 
-                    msg = f"Added serial {serial} to network_sn_attach_map[{network_name}] from diff_attach (deployment:True)"
+                    msg = (
+                        f"Added serials {sorted(affected_serials)} to "
+                        f"network_sn_attach_map[{network_name}] from diff_attach "
+                        "(deployment:True)"
+                    )
                     self.log.debug(msg)
                 else:
                     # Detachment operation
                     if network_name not in self.network_sn_detach_map:
                         self.network_sn_detach_map[network_name] = set()
-                    self.network_sn_detach_map[network_name].add(serial)
+                    self.network_sn_detach_map[network_name].update(affected_serials)
 
-                    msg = f"Added serial {serial} to network_sn_detach_map[{network_name}] from diff_attach (deployment:False)"
+                    msg = (
+                        f"Added serials {sorted(affected_serials)} to "
+                        f"network_sn_detach_map[{network_name}] from diff_attach "
+                        "(deployment:False)"
+                    )
                     self.log.debug(msg)
 
         # Step 3: Process diff_detach (from DELETE/OVERRIDE states)
@@ -3554,10 +3585,15 @@ class DcnmNetwork:
 
             for attach in detach_entry.get("lanAttachList", []):
                 serial = attach.get("serialNumber")
-                if serial:
-                    self.network_sn_detach_map[network_name].add(serial)
+                affected_serials = {serial} if serial else set()
+                affected_serials.update(self.get_attachment_tor_serials(attach))
+                if affected_serials:
+                    self.network_sn_detach_map[network_name].update(affected_serials)
 
-                    msg = f"Added serial {serial} to network_sn_detach_map[{network_name}] from diff_detach"
+                    msg = (
+                        f"Added serials {sorted(affected_serials)} to "
+                        f"network_sn_detach_map[{network_name}] from diff_detach"
+                    )
                     self.log.debug(msg)
 
         # Step 4: Handle config-only changes
@@ -3630,12 +3666,18 @@ class DcnmNetwork:
             if have_entry:
                 for attach in have_entry.get("lanAttachList", []):
                     serial = attach.get("serialNumber")
-                    if serial:
+                    affected_serials = {serial} if serial else set()
+                    affected_serials.update(self.get_attachment_tor_serials(attach))
+                    if affected_serials:
                         # Add ALL switches, regardless of isAttached state
                         # This fixes the bug where pending/failed switches were excluded
-                        self.network_sn_detach_map[network_name].add(serial)
+                        self.network_sn_detach_map[network_name].update(affected_serials)
 
-                        msg = f"Added serial {serial} to network_sn_detach_map[{network_name}] from have_attach for undeploy (all states)"
+                        msg = (
+                            f"Added serials {sorted(affected_serials)} to "
+                            f"network_sn_detach_map[{network_name}] from have_attach "
+                            "for undeploy (all states)"
+                        )
                         self.log.debug(msg)
 
         msg = "Final network_sn_attach_map: "
