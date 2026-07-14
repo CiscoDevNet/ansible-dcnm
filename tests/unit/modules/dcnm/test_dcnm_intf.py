@@ -54,6 +54,89 @@ class TestDcnmIntfModule(TestDcnmModule):
             "DATA": data,
         }
 
+    def test_dcnm_intf_is_vpc_peer_link_port_channel_null_alias_template(self):
+
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        intf = {
+            "ifType": "INTERFACE_PORT_CHANNEL",
+            "alias": None,
+            "underlayPolicies": [
+                {
+                    "templateName": "int_vpc_peer_link_po",
+                }
+            ],
+        }
+
+        self.assertEqual(
+            dcnm_intf.dcnm_intf_is_vpc_peer_link_port_channel(intf),
+            True,
+        )
+
+    def test_dcnm_intf_is_vpc_peer_link_port_channel_alias(self):
+
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        intf = {
+            "ifType": "INTERFACE_PORT_CHANNEL",
+            "alias": "vpc-peer-link leaf1--leaf2",
+            "underlayPolicies": [],
+        }
+
+        self.assertEqual(
+            dcnm_intf.dcnm_intf_is_vpc_peer_link_port_channel(intf),
+            True,
+        )
+
+    def test_dcnm_intf_is_vpc_peer_link_port_channel_regular_pc(self):
+
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        intf = {
+            "ifType": "INTERFACE_PORT_CHANNEL",
+            "alias": None,
+            "underlayPolicies": [
+                {
+                    "templateName": "int_port_channel_trunk",
+                }
+            ],
+        }
+
+        self.assertEqual(
+            dcnm_intf.dcnm_intf_is_vpc_peer_link_port_channel(intf),
+            False,
+        )
+
+    def test_dcnm_intf_is_vpc_peer_link_port_channel_none_policies(self):
+
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        intf = {
+            "ifType": "INTERFACE_PORT_CHANNEL",
+            "alias": None,
+            "underlayPolicies": None,
+        }
+
+        self.assertEqual(
+            dcnm_intf.dcnm_intf_is_vpc_peer_link_port_channel(intf),
+            False,
+        )
+
+    def test_dcnm_intf_is_vpc_peer_link_port_channel_none_policy_item(self):
+
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        intf = {
+            "ifType": "INTERFACE_PORT_CHANNEL",
+            "alias": None,
+            "underlayPolicies": [
+                None,
+                {
+                    "templateName": "int_vpc_peer_link_po",
+                },
+            ],
+        }
+
+        self.assertEqual(
+            dcnm_intf.dcnm_intf_is_vpc_peer_link_port_channel(intf),
+            True,
+        )
+
     def setUp(self):
 
         super(TestDcnmIntfModule, self).setUp()
