@@ -5473,6 +5473,22 @@ class DcnmIntf:
             }
         )
 
+    def dcnm_intf_is_vpc_peer_link_port_channel(self, intf):
+
+        if intf.get("ifType") != "INTERFACE_PORT_CHANNEL":
+            return False
+
+        alias = intf.get("alias")
+        if alias is not None and "vpc-peer-link" in alias:
+            return True
+
+        underlay_policies = intf.get("underlayPolicies") or []
+        for policy in underlay_policies:
+            if (policy or {}).get("templateName") == "int_vpc_peer_link_po":
+                return True
+
+        return False
+
     def dcnm_intf_process_config(self, cfg):
 
         processed = []
@@ -5736,10 +5752,7 @@ class DcnmIntf:
                 ):
                     # Port-channel which are created as part of VPC peer link should not be deleted
                     if have["ifType"] == "INTERFACE_PORT_CHANNEL":
-                        if (
-                            have["alias"] is not None
-                            and "vpc-peer-link" in have["alias"]
-                        ):
+                        if self.dcnm_intf_is_vpc_peer_link_port_channel(have):
                             self.changed_dict[0]["skipped"].append(
                                 {
                                     "Name": name,
