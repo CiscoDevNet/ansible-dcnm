@@ -1870,6 +1870,23 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result.get("diff")[0]["vrf_name"], "test_vrf_1")
         self.assertNotIn("vrf_id", result.get("diff")[0])
         # Deploy response removed - now handled by action plugin
+        request_paths = [
+            call.args[2]
+            for call in self.run_dcnm_send.call_args_list
+            if len(call.args) > 2
+        ]
+        self.assertTrue(any(
+            path.startswith(
+                "/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/"
+                "parent_fabric/config-deploy/"
+            )
+            for path in request_paths
+        ))
+        self.assertFalse(any(
+            "/onemanage/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/"
+            in path
+            for path in request_paths
+        ))
 
     def test_dcnm_vrf_mcfg_override(self):
         self.version = 12
