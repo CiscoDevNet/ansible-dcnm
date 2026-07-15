@@ -768,7 +768,10 @@ class ActionModule(ActionBase):
 
                         # Extract actual payload and validate type based on deploy_mode
                         deploy_payload = deploy_payload_wrapper.get("payload", None)
-                        deploy_mode = fabric_module_args.get("deploy_mode", "switch")
+                        deploy_mode = deploy_payload_wrapper.get(
+                            "deploy_mode",
+                            fabric_module_args.get("deploy_mode", "switch")
+                        )
 
                         if deploy_mode == "switch":
                             if not isinstance(deploy_payload, list):

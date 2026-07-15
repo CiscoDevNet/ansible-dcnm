@@ -1221,7 +1221,7 @@ class DcnmVrf:
                 proxy = "/onemanage"
             for path in self.paths:
                 if path == "GET_VRF_SWITCH_CONFIG_DEPLOY":
-                    self.paths[path] = proxy + self.paths[path.replace("lan-fabric/rest/control", "onemanage")]
+                    self.paths[path] = proxy + self.paths[path].replace("lan-fabric/rest/control", "onemanage")
                 else:
                     self.paths[path] = proxy + self.paths[path].replace("lan-fabric/rest", "onemanage")
             # onepath proxy paths

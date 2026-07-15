@@ -442,6 +442,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm_vpc_p
     dcnm_vpc_pair_utils_get_sync_status,
     dcnm_vpc_pair_utils_get_delete_list,
     dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs,
+    dcnm_vpc_pair_utils_pairs_match,
 )
 
 
@@ -476,7 +477,7 @@ class DcnmVpcPair:
                 "debugs": [],
             }
         ]
-
+        self.managable = {}
         self.result = dict(changed=False, diff=[], response=[])
 
     def log_msg(self, msg):
@@ -787,21 +788,19 @@ class DcnmVpcPair:
 
         for elem in self.want:
             have = dcnm_vpc_pair_utils_get_vpc_pair_info(self, elem)
+            same_pair = have != [] and dcnm_vpc_pair_utils_pairs_match(
+                elem, have
+            )
 
             # Check if the peers in 'want' and 'have' match. If not raise an error. This may be the case
             # when a peering already exists between, say, peer1 and peer2. Now if the playbook requests a
             # another peering, say, peer1 and peer3 or peer2 and peer4, then this should be flagged as an error.
 
-            if have != [] and (
-                (
-                    elem["peerOneId"] != have["peerOneId"]
-                    and elem["peerOneId"] != have["peerTwoId"]
-                )
-                or (
-                    elem["peerTwoId"] != have["peerTwoId"]
-                    and elem["peerTwoId"] != have["peerOneId"]
-                )
-            ):
+            if have != [] and not same_pair:
+                if self.module.params["state"] == "overridden":
+                    if have not in self.have:
+                        self.have.append(have)
+                    continue
                 mesg = f"Peering {have['peerOneId']}-{have['peerTwoId']} already exists. Cannot create peering for {elem['peerOneId']}-{elem['peerTwoId']}"
                 self.module.fail_json(msg=mesg)
 
@@ -809,11 +808,11 @@ class DcnmVpcPair:
             # happens based on some internal logic. Users may not be aware of which switch is peer1 and which is peer2.
             # To handle such cases transparently, we will swap the peerOneId and peerTwoId fields in WANT, to be consistent with 'have'.
             # Otherwise idempotence cases may fail.
-            if have != []:
+            if same_pair:
                 elem["peerOneId"] = have["peerOneId"]
                 elem["peerTwoId"] = have["peerTwoId"]
 
-            if (have != []) and (have not in self.have):
+            if same_pair and (have not in self.have):
                 self.have.append(have)
 
     def dcnm_vpc_pair_validate_deleted_state_input(self, cfg):
