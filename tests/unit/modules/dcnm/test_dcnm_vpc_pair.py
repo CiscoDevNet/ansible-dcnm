@@ -1280,6 +1280,396 @@ def test_dcnm_vpc_pair_00018(
         assert len(template_list) == 2
 
 
+def test_vpc_pair_discovery_ignores_stale_inventory_without_policy(
+    monkeypatch, dcnm_vpc_pair_fixture
+):
+    vpc_pair = dcnm_vpc_pair_fixture
+    vpc_pair.paths = vpc_pair_paths[12]
+    vpc_pair._vpc_pair_info_cache = {}
+
+    inventory = {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": {
+            "peerOneDbId": 101,
+            "peerTwoDbId": 102,
+            "peerOneSerialNumber": "SERIAL1",
+            "peerTwoSerialNumber": "SERIAL2",
+            "logicalInterfaces": {"vPC": 0},
+        },
+    }
+    recommendation = {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "serialNumber": "SERIAL2",
+                "currentPeer": False,
+                "useVirtualPeerlink": False,
+            }
+        ],
+    }
+    empty_policy = {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": {"template": "", "nv_pairs": {}},
+    }
+    mock_dcnm_send = Mock(
+        side_effect=[inventory, recommendation, empty_policy]
+    )
+    monkeypatch.setattr(
+        dcnm_vpc_pair_utils, "dcnm_send", mock_dcnm_send
+    )
+
+    result = dcnm_vpc_pair_utils.dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(
+        vpc_pair, 101
+    )
+
+    assert result == []
+    assert vpc_pair._vpc_pair_info_cache == {101: [], 102: []}
+    assert dcnm_vpc_pair_utils.dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(
+        vpc_pair, 102
+    ) == []
+    assert mock_dcnm_send.call_count == 3
+
+
+def test_vpc_pair_discovery_keeps_active_pair_with_empty_policy(
+    monkeypatch, dcnm_vpc_pair_fixture
+):
+    vpc_pair = dcnm_vpc_pair_fixture
+    vpc_pair.paths = vpc_pair_paths[12]
+    vpc_pair._vpc_pair_info_cache = {}
+
+    inventory = {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": {
+            "peerOneDbId": 101,
+            "peerTwoDbId": 102,
+            "peerOneSerialNumber": "SERIAL1",
+            "peerTwoSerialNumber": "SERIAL2",
+            "logicalInterfaces": {"vPC": 1},
+        },
+    }
+    recommendation = {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "serialNumber": "SERIAL2",
+                "currentPeer": True,
+                "useVirtualPeerlink": True,
+            }
+        ],
+    }
+    empty_policy = {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": {"template": "", "nv_pairs": {}},
+    }
+    mock_dcnm_send = Mock(
+        side_effect=[inventory, recommendation, empty_policy]
+    )
+    monkeypatch.setattr(
+        dcnm_vpc_pair_utils, "dcnm_send", mock_dcnm_send
+    )
+
+    result = dcnm_vpc_pair_utils.dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(
+        vpc_pair, 101
+    )
+
+    assert result == {
+        "peerOneId": "SERIAL1",
+        "peerTwoId": "SERIAL2",
+        "peerOneDbId": 101,
+        "peerTwoDbId": 102,
+        "useVirtualPeerlink": True,
+        "templateName": "",
+        "nvPairs": {},
+    }
+    assert vpc_pair._vpc_pair_info_cache == {101: result, 102: result}
+    assert (
+        dcnm_vpc_pair_utils.dcnm_vpc_pair_utils_compare_want_and_have(
+            vpc_pair,
+            {
+                "peerOneId": "SERIAL2",
+                "peerTwoId": "SERIAL1",
+                "useVirtualPeerlink": True,
+            },
+        )[0]
+        == "DCNM_VPC_PAIR_CREATE"
+    )
+
+    vpc_pair.have = [result]
+    assert (
+        dcnm_vpc_pair_utils.dcnm_vpc_pair_utils_compare_want_and_have(
+            vpc_pair,
+            {
+                "peerOneId": "SERIAL2",
+                "peerTwoId": "SERIAL1",
+                "useVirtualPeerlink": True,
+            },
+        )[0]
+        == "DCNM_VPC_PAIR_EXIST"
+    )
+
+
+def test_vpc_pair_discovery_keeps_valid_managed_policy(
+    monkeypatch, dcnm_vpc_pair_fixture
+):
+    vpc_pair = dcnm_vpc_pair_fixture
+    vpc_pair.paths = vpc_pair_paths[12]
+    vpc_pair._vpc_pair_info_cache = {}
+
+    inventory = {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": {
+            "peerOneDbId": 101,
+            "peerTwoDbId": 102,
+            "peerOneSerialNumber": "SERIAL1",
+            "peerTwoSerialNumber": "SERIAL2",
+        },
+    }
+    recommendation = {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": [{"useVirtualPeerlink": False}],
+    }
+    policy = {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": {
+            "template": "vpc_pair",
+            "nv_pairs": {"DOMAIN_ID": "88"},
+        },
+    }
+    mock_dcnm_send = Mock(side_effect=[inventory, recommendation, policy])
+    monkeypatch.setattr(
+        dcnm_vpc_pair_utils, "dcnm_send", mock_dcnm_send
+    )
+
+    result = dcnm_vpc_pair_utils.dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(
+        vpc_pair, 101
+    )
+
+    assert result["peerOneId"] == "SERIAL1"
+    assert result["peerTwoId"] == "SERIAL2"
+    assert result["templateName"] == "vpc_pair"
+    assert result["nvPairs"] == {"DOMAIN_ID": "88"}
+    assert dcnm_vpc_pair_utils.dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(
+        vpc_pair, 102
+    ) == result
+    assert mock_dcnm_send.call_count == 3
+
+
+def test_vpc_pair_delete_continues_after_already_absent_pair(
+    monkeypatch, dcnm_vpc_pair_fixture
+):
+    vpc_pair = dcnm_vpc_pair_fixture
+    vpc_pair.paths = vpc_pair_paths[12]
+    vpc_pair._vpc_pair_info_cache = {101: {"stale": True}}
+    vpc_pair._vpc_sync_status_cache = {"stale": True}
+    vpc_pair.diff_delete = [
+        {"peerOneId": "STALE1", "peerTwoId": "STALE2"},
+        {"peerOneId": "VALID1", "peerTwoId": "VALID2"},
+    ]
+    vpc_pair.diff_delete_deploy = [
+        {
+            "fabric": "test-fabric",
+            "peerOneId": "STALE1",
+            "peerTwoId": "STALE2",
+        },
+        {
+            "fabric": "test-fabric",
+            "peerOneId": "VALID1",
+            "peerTwoId": "VALID2",
+        },
+    ]
+    already_absent = {
+        "RETURN_CODE": 500,
+        "MESSAGE": "",
+        "DATA": "STALE1 not a part of any vPC pair",
+    }
+    deleted = {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": "VPC pair successfully deleted",
+    }
+    mock_dcnm_send = Mock(side_effect=[already_absent, deleted])
+    monkeypatch.setattr(
+        dcnm_vpc_pair_utils, "dcnm_send", mock_dcnm_send
+    )
+    mock_process_deploy = Mock(return_value=True)
+    monkeypatch.setattr(
+        dcnm_vpc_pair_utils,
+        "dcnm_vpc_pair_utils_process_deploy_payloads",
+        mock_process_deploy,
+    )
+
+    changed = dcnm_vpc_pair_utils.dcnm_vpc_pair_utils_process_delete_payloads(
+        vpc_pair
+    )
+
+    assert changed is True
+    assert vpc_pair.diff_delete_deploy == [
+        {
+            "fabric": "test-fabric",
+            "peerOneId": "VALID1",
+            "peerTwoId": "VALID2",
+        }
+    ]
+    mock_process_deploy.assert_called_once_with(
+        vpc_pair, vpc_pair.diff_delete_deploy
+    )
+    assert vpc_pair._vpc_pair_info_cache == {}
+    assert vpc_pair._vpc_sync_status_cache is None
+
+
+def test_vpc_pair_create_accepts_exact_pair_after_already_paired_response(
+    monkeypatch, dcnm_vpc_pair_fixture
+):
+    vpc_pair = dcnm_vpc_pair_fixture
+    vpc_pair.paths = vpc_pair_paths[12]
+    vpc_pair.sn_swid = {"SERIAL1": 101, "SERIAL2": 102}
+    vpc_pair._vpc_pair_info_cache = {101: []}
+    vpc_pair._vpc_sync_status_cache = {"stale": True}
+    desired = {"peerOneId": "SERIAL1", "peerTwoId": "SERIAL2"}
+    vpc_pair.diff_create = [desired]
+    vpc_pair.diff_deploy = [dict(desired, fabric="test-fabric")]
+
+    already_paired = {
+        "RETURN_CODE": 500,
+        "MESSAGE": "Internal Server Error",
+        "DATA": "Selected device is already part of a vPC Pair",
+    }
+    mock_dcnm_send = Mock(return_value=already_paired)
+    monkeypatch.setattr(
+        dcnm_vpc_pair_utils, "dcnm_send", mock_dcnm_send
+    )
+    mock_get_info = Mock(
+        return_value={"peerOneId": "SERIAL2", "peerTwoId": "SERIAL1"}
+    )
+    monkeypatch.setattr(
+        dcnm_vpc_pair_utils,
+        "dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm",
+        mock_get_info,
+    )
+
+    changed = dcnm_vpc_pair_utils.dcnm_vpc_pair_utils_process_create_payloads(
+        vpc_pair
+    )
+
+    assert changed is False
+    assert vpc_pair.diff_deploy == []
+    assert vpc_pair._vpc_pair_info_cache == {}
+    assert vpc_pair._vpc_sync_status_cache is None
+    mock_dcnm_send.assert_called_once()
+
+
+def test_vpc_pair_create_retries_while_old_pair_converges(
+    monkeypatch, dcnm_vpc_pair_fixture
+):
+    vpc_pair = dcnm_vpc_pair_fixture
+    vpc_pair.paths = vpc_pair_paths[12]
+    vpc_pair.sn_swid = {"SERIAL1": 101, "SERIAL3": 103}
+    desired = {"peerOneId": "SERIAL1", "peerTwoId": "SERIAL3"}
+    vpc_pair.diff_create = [desired]
+
+    already_paired = {
+        "RETURN_CODE": 500,
+        "MESSAGE": "Internal Server Error",
+        "DATA": "Selected device is already part of a vPC Pair",
+    }
+    created = {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "DATA": "vPC pair successfully created",
+    }
+    mock_dcnm_send = Mock(side_effect=[already_paired, created])
+    monkeypatch.setattr(
+        dcnm_vpc_pair_utils, "dcnm_send", mock_dcnm_send
+    )
+    monkeypatch.setattr(
+        dcnm_vpc_pair_utils,
+        "dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm",
+        Mock(return_value={"peerOneId": "SERIAL1", "peerTwoId": "SERIAL2"}),
+    )
+    mock_sleep = Mock()
+    monkeypatch.setattr(dcnm_vpc_pair_utils.time, "sleep", mock_sleep)
+
+    changed = dcnm_vpc_pair_utils.dcnm_vpc_pair_utils_process_create_payloads(
+        vpc_pair
+    )
+
+    assert changed is True
+    assert mock_dcnm_send.call_count == 2
+    mock_sleep.assert_called_once_with(
+        dcnm_vpc_pair_utils.VPC_CREATE_RETRY_DELAY
+    )
+
+
+def test_vpc_pair_overridden_allows_conflicting_pair_replacement(
+    monkeypatch, dcnm_vpc_pair_fixture
+):
+    vpc_pair = dcnm_vpc_pair_fixture
+    monkeypatch.setitem(vpc_pair.module.params, "state", "overridden")
+    desired = {"peerOneId": "SERIAL1", "peerTwoId": "SERIAL3"}
+    current = {"peerOneId": "SERIAL1", "peerTwoId": "SERIAL2"}
+    vpc_pair.want = [desired.copy()]
+    monkeypatch.setattr(
+        dcnm_vpc_pair,
+        "dcnm_vpc_pair_utils_get_vpc_pair_info",
+        Mock(return_value=current),
+    )
+
+    vpc_pair.dcnm_vpc_pair_get_have()
+
+    assert vpc_pair.want == [desired]
+    assert vpc_pair.have == [current]
+
+
+def test_vpc_pair_delete_keeps_unrelated_server_errors_fatal(
+    monkeypatch, dcnm_vpc_pair_fixture
+):
+    vpc_pair = dcnm_vpc_pair_fixture
+    vpc_pair.paths = vpc_pair_paths[12]
+    vpc_pair.diff_delete = [
+        {"peerOneId": "SERIAL1", "peerTwoId": "SERIAL2"}
+    ]
+    vpc_pair.diff_delete_deploy = [
+        {
+            "fabric": "test-fabric",
+            "peerOneId": "SERIAL1",
+            "peerTwoId": "SERIAL2",
+        }
+    ]
+    server_error = {
+        "RETURN_CODE": 500,
+        "MESSAGE": "",
+        "DATA": "unrelated server failure",
+    }
+    monkeypatch.setattr(
+        dcnm_vpc_pair_utils,
+        "dcnm_send",
+        Mock(return_value=server_error),
+    )
+    mock_process_deploy = Mock(return_value=True)
+    monkeypatch.setattr(
+        dcnm_vpc_pair_utils,
+        "dcnm_vpc_pair_utils_process_deploy_payloads",
+        mock_process_deploy,
+    )
+
+    with pytest.raises(Exception) as exc_info:
+        dcnm_vpc_pair_utils.dcnm_vpc_pair_utils_process_delete_payloads(
+            vpc_pair
+        )
+
+    assert "unrelated server failure" in str(exc_info.value)
+    mock_process_deploy.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "tc_id, del_list_key, del_resp_key, deploy_list_key, deploy_resp_key",
     [
