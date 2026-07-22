@@ -1501,8 +1501,12 @@ class DcnmNetwork:
                                 if have.get("vlan"):
                                     want["vlan"] = have.get("vlan")
 
+                                atch_sw_ports = []
                                 if sorted(h_sw_ports) != sorted(w_sw_ports):
                                     atch_sw_ports = list(set(w_sw_ports) - set(h_sw_ports))
+
+                                if not want.get("freeformConfig") and have.get("freeformConfig"):
+                                    want["freeformConfig"] = have.get("freeformConfig")
 
                                     # Adding some logic which is needed for replace and override.
                                     if replace:
@@ -1667,7 +1671,7 @@ class DcnmNetwork:
         attach.update({"isAttached": True})
         attach.update({"extensionValues": ""})
         attach.update({"instanceValues": ""})
-        attach.update({"freeformConfig": ""})
+        attach.update({"freeformConfig": attach.get("freeform_config", "")})
         attach.update({"is_deploy": deploy})
 
         if attach.get("tor_ports"):
@@ -1681,6 +1685,9 @@ class DcnmNetwork:
                 torlist.append(torports)
             del attach["tor_ports"]
         attach.update({"torports": torlist})
+
+        if "freeform_config" in attach:
+            del attach["freeform_config"]
 
         if "deploy" in attach:
             del attach["deploy"]
@@ -2836,7 +2843,7 @@ class DcnmNetwork:
                 attach.update({"deployment": deploy})
                 attach.update({"extensionValues": ""})
                 attach.update({"instanceValues": ""})
-                attach.update({"freeformConfig": ""})
+                attach.update({"freeformConfig": attach.get("freeformConfig", "")})
                 attach.update({"isAttached": attach_state})
                 attach.update({"dot1QVlan": 0})
                 attach.update({"detachSwitchPorts": ""})
@@ -5205,6 +5212,7 @@ class DcnmNetwork:
                 ip_address=dict(required=True, type="str"),
                 ports=dict(type="list", default=[]),
                 deploy=dict(type="bool", default=True),
+                freeform_config=dict(type="str", required=False),
             )
 
             if self.config:
@@ -5243,6 +5251,7 @@ class DcnmNetwork:
                 ports=dict(type="list", default=[]),
                 deploy=dict(type="bool", default=True),
                 tor_ports=dict(required=False, type="list", elements="dict"),
+                freeform_config=dict(type="str", required=False),
             )
             tor_att_spec = dict(
                 ip_address=dict(required=True, type="str"),
