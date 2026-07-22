@@ -343,12 +343,6 @@ options:
               There will not be any functional impact if specified in playbook.
             type: bool
             default: true
-          freeform_config:
-            description:
-            - Freeform CLI configuration for this specific switch attachment
-            - Allows custom configuration to be applied to the network attachment on the switch
-            type: str
-            required: false
           tor_ports:
             description:
             - List of interfaces in the paired TOR switch for this leaf where the network will be attached
