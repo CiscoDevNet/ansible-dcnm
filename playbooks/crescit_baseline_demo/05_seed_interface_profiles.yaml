@@ -1,0 +1,44 @@
+---
+# Seed interface policy intent used as known-good baseline for comparison.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+    deploy_changes: false
+    leaf1: 192.168.10.211
+    leaf2: 192.168.10.212
+
+  tasks:
+    - name: Seed routed uplink interface profile
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - name: Ethernet1/31
+            type: int_routed
+            switch:
+              - "{{ leaf1 }}"
+              - "{{ leaf2 }}"
+            profile:
+              admin_state: true
+              mtu: 9216
+              desc: "Baseline routed uplink for transit"
+
+    - name: Seed SVI profile for app VRF handoff
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - name: Vlan2300
+            type: svi
+            switch:
+              - "{{ leaf1 }}"
+            profile:
+              int_vrf: PROD_VRF_App
+              ipv4_addr: 10.130.0.1/24
+              mtu: 9216
+              desc: "Baseline gateway SVI for PROD_VRF_App"
+        deploy: "{{ deploy_changes }}"
