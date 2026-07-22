@@ -1883,6 +1883,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     find_dict_in_list_by_key_value,
 )
 from ..module_utils.common.log_v2 import Log
+from ..module_utils.common.controller_version_v2 import ControllerVersion
+from ..module_utils.common.rest_send_v2 import RestSend
+from ..module_utils.common.response_handler import ResponseHandler
+from ..module_utils.common.sender_dcnm import Sender
+from ..module_utils.common.exceptions import ControllerResponseError
 
 
 def json_pretty(msg):
@@ -1983,6 +1988,7 @@ class DcnmIntf:
         ]
 
         self.dcnm_version = dcnm_version_supported(self.module)
+        self.ndfc_version = self._get_ndfc_version()
 
         # Check for bulk API support
         self.has_bulk_api = dcnm_get_bulk_api_support(self.module)
@@ -2079,6 +2085,12 @@ class DcnmIntf:
             "QUEUING_POLICY": "queuing_policy",
 
         }
+
+        # NDFC 12.4.1+ (ND 4.1.1+) parameters
+        if self._ndfc_version_gte("12.4.1"):
+            self.keymap.update({
+                "FEC": "fec",
+            })
 
         # New Interfaces
         self.pol_types = {
@@ -2178,6 +2190,35 @@ class DcnmIntf:
 
         msg = "ENTERED DcnmIntf: "
         self.log.debug(msg)
+
+    def _get_ndfc_version(self):
+        """Return the full NDFC version string (e.g. '12.4.1.245') using ControllerVersion, or None on failure."""
+        try:
+            sender = Sender()
+            sender.ansible_module = self.module
+            rest_send = RestSend(self.module.params)
+            rest_send.response_handler = ResponseHandler()
+            rest_send.sender = sender
+            controller_version = ControllerVersion()
+            controller_version.rest_send = rest_send
+            controller_version.refresh()
+            raw_version = controller_version.version
+            if raw_version:
+                return re.sub(r'[a-zA-Z]+$', '', raw_version)
+        except (ControllerResponseError, ValueError, AssertionError, Exception):
+            pass
+        return None
+
+    def _ndfc_version_gte(self, target):
+        """Check if NDFC version >= target. Uses tuple comparison on version segments."""
+        if not getattr(self, 'ndfc_version', None):
+            return False
+        try:
+            current = tuple(int(x) for x in self.ndfc_version.split(".")[:3])
+            required = tuple(int(x) for x in target.split(".")[:3])
+            return current >= required
+        except (ValueError, AttributeError):
+            return False
 
     def dcnm_intf_breakout_format(self, if_name):
         # Define the pattern to match '1/x/y' where x and y are integers
@@ -2694,6 +2735,11 @@ class DcnmIntf:
             queuing_policy=dict(type="str", default=""),
         )
 
+        if self._ndfc_version_gte("12.4.1"):
+            eth_prof_spec_trunk.update({
+                "fec": dict(type="str", default="auto", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+            })
+
         eth_prof_spec_access = dict(
             mode=dict(required=True, type="str"),
             bpdu_guard=dict(type="str", default="true"),
@@ -2717,6 +2763,11 @@ class DcnmIntf:
             queuing_policy=dict(type="str", default=""),
         )
 
+        if self._ndfc_version_gte("12.4.1"):
+            eth_prof_spec_access.update({
+                "fec": dict(type="str", default="auto", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+            })
+
         eth_prof_spec_routed_host = dict(
             int_vrf=dict(type="str", default="default"),
             ipv4_addr=dict(type="ipv4", default=""),
@@ -2731,6 +2782,11 @@ class DcnmIntf:
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
         )
+
+        if self._ndfc_version_gte("12.4.1"):
+            eth_prof_spec_routed_host.update({
+                "fec": dict(type="str", default="auto", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+            })
 
         eth_prof_spec_epl_routed_host = dict(
             mode=dict(required=True, type="str"),
@@ -2763,6 +2819,11 @@ class DcnmIntf:
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
+
+        if self._ndfc_version_gte("12.4.1"):
+            eth_prof_spec_dot1q_tunnel_host.update({
+                "fec": dict(type="str", default="auto", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+            })
 
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
@@ -3616,6 +3677,8 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
             else:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+            if self._ndfc_version_gte("12.4.1"):
+                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
         if delem[profile]["mode"] == "access":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
                 profile
@@ -3653,6 +3716,8 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
             else:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+            if self._ndfc_version_gte("12.4.1"):
+                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
         if delem[profile]["mode"] == "routed":
             intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
                 "int_vrf"
@@ -3686,6 +3751,8 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
             else:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+            if self._ndfc_version_gte("12.4.1"):
+                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         if delem[profile]["mode"] == "epl_routed":
@@ -3743,6 +3810,8 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if self._ndfc_version_gte("12.4.1"):
+                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
 
     def dcnm_intf_get_st_fex_payload(self, delem, intf, profile):
 
@@ -4740,6 +4809,9 @@ class DcnmIntf:
                                         "QOS_POLICY",
                                         "QUEUING_POLICY"
                                     ]
+
+                                    if self._ndfc_version_gte("12.4.1"):
+                                        keys_to_check.append("FEC")
 
                                     for key in keys_to_check:
                                         # Some GET payloads omit optional keys altogether. Keep comparing keys that were
