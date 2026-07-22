@@ -5064,13 +5064,13 @@ class DcnmNetwork:
             raw_version = controller_version.version
             if raw_version:
                 return re.sub(r'[a-zA-Z]+$', '', raw_version)
-        except (ControllerResponseError, ValueError):
+        except (ControllerResponseError, ValueError, AssertionError, Exception):
             pass
         return None
 
     def _ndfc_version_gte(self, target):
         """Check if NDFC version >= target. Uses tuple comparison on version segments."""
-        if not self.ndfc_version:
+        if not getattr(self, 'ndfc_version', None):
             return False
         try:
             current = tuple(int(x) for x in self.ndfc_version.split(".")[:3])
