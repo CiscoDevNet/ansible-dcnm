@@ -336,13 +336,6 @@ options:
             type: list
             elements: str
             required: true
-          vlan_id:
-            description:
-            - VLAN ID override for this specific switch attachment
-            - If not specified, uses the network-level vlan_id
-            - If neither is specified, NDFC will auto-select an available VLAN
-            type: int
-            required: false
           deploy:
             description:
             - Per switch knob to control whether to deploy the attachment
