@@ -1686,9 +1686,13 @@ class DcnmNetwork:
         # NDFC expects lowercase-string booleans inside the instanceValues JSON payload.
         # NDFC-managed keys already present in have (isVPC, isActive, ...) are merged
         # back in later by diff_for_attach_deploy.
-        svi_enabled = bool(attach.pop("svi_enabled", True))
-        inst_values = {"sviEnabled": "true" if svi_enabled else "false"}
-        attach.update({"instanceValues": json.dumps(inst_values)})
+        nd_version = get_nd_version(self._action_module, self._task_vars, self._tmp)
+        if nd_version >= 12.4:
+            svi_enabled = bool(attach.pop("svi_enabled", True))
+            inst_values = {"sviEnabled": "true" if svi_enabled else "false"}
+            attach.update({"instanceValues": json.dumps(inst_values)})
+        else:
+            attach.update({"instanceValues": ""})
         attach.update({"freeformConfig": ""})
         attach.update({"is_deploy": deploy})
 
