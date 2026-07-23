@@ -224,6 +224,42 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
         self.assertEqual(result, "dont_add")
 
+    def test_dcnm_intf_storm_control_invalid_action_lists_choices(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.module = Mock()
+        dcnm_intf.intf_info = []
+
+        def fail_json(**kwargs):
+            raise ValueError(kwargs["msg"])
+
+        dcnm_intf.module.fail_json.side_effect = fail_json
+        config = [
+            {
+                "name": "Ethernet1/15",
+                "switch": ["10.122.84.181"],
+                "type": "eth",
+                "profile": {
+                    "storm_control_action": "no",
+                },
+            }
+        ]
+        common_spec = {
+            "name": {"required": True, "type": "str"},
+            "switch": {"required": True, "type": "list"},
+            "type": {"required": True, "type": "str"},
+            "profile": {"required": True, "type": "dict"},
+        }
+
+        with self.assertRaisesRegex(
+            ValueError,
+            r"Valid choices are: shutdown, trap, default",
+        ):
+            dcnm_intf.dcnm_intf_validate_interface_input(
+                config,
+                common_spec,
+                dcnm_intf.dcnm_intf_storm_control_spec(),
+            )
+
     def test_dcnm_intf_storm_control_percent_and_pps_are_mutually_exclusive(self):
         dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
         dcnm_intf.module = Mock()
