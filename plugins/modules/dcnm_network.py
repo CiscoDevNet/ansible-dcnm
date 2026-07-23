@@ -343,12 +343,6 @@ options:
               There will not be any functional impact if specified in playbook.
             type: bool
             default: true
-          svi_enabled:
-            description:
-            - Per switch knob to control whether the Switched Virtual Interface (SVI) is enabled
-            type: bool
-            required: false
-            default: true
           tor_ports:
             description:
             - List of interfaces in the paired TOR switch for this leaf where the network will be attached
