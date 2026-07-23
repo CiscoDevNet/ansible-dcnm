@@ -15,6 +15,11 @@
     mtu: jumbo
     allowed_vlans: none
     enable_qos: true
+    enable_storm_control: true
+    storm_control_action: shutdown
+    storm_control_broadcast_level_percent: "12"
+    storm_control_multicast_level_percent: "13"
+    storm_control_unicast_level_percent: "14"
     cmds:
       - no shutdown
     description: "eth interface acting as trunk"
@@ -33,6 +38,11 @@
     mtu: default
     access_vlan: 31
     enable_qos: true
+    enable_storm_control: true
+    storm_control_action: trap
+    storm_control_broadcast_level_pps: 1000
+    storm_control_multicast_level_pps: 2000
+    storm_control_unicast_level_pps: 3000
     cmds:
       - no shutdown
     description: "eth interface acting as access"

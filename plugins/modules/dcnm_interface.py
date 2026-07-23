@@ -234,6 +234,60 @@ options:
               This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'l3'
             type: str
             default: ""
+          copy_description:
+            description:
+            - Copy the port-channel description to its member interfaces.
+            type: bool
+            default: false
+          enable_storm_control:
+            description:
+            - Enable storm control on the interface.
+            - This option is applicable only to trunk, access, and dot1q host interface modes.
+            type: bool
+            default: false
+          storm_control_action:
+            description:
+            - Action taken when a storm-control threshold is exceeded.
+            - This option is valid only when 'enable_storm_control' is true.
+            type: str
+            choices: ['shutdown', 'trap', 'no']
+            default: 'no'
+          storm_control_broadcast_level_percent:
+            description:
+            - Broadcast storm-control threshold as a percentage.
+            - Valid values are 0 through 100 with up to two decimal places.
+            - This option is mutually exclusive with 'storm_control_broadcast_level_pps'.
+            type: str
+            default: ""
+          storm_control_broadcast_level_pps:
+            description:
+            - Broadcast storm-control threshold in packets per second.
+            - This option is mutually exclusive with 'storm_control_broadcast_level_percent'.
+            type: int
+          storm_control_multicast_level_percent:
+            description:
+            - Multicast storm-control threshold as a percentage.
+            - Valid values are 0 through 100 with up to two decimal places.
+            - This option is mutually exclusive with 'storm_control_multicast_level_pps'.
+            type: str
+            default: ""
+          storm_control_multicast_level_pps:
+            description:
+            - Multicast storm-control threshold in packets per second.
+            - This option is mutually exclusive with 'storm_control_multicast_level_percent'.
+            type: int
+          storm_control_unicast_level_percent:
+            description:
+            - Unicast storm-control threshold as a percentage.
+            - Valid values are 0 through 100 with up to two decimal places.
+            - This option is mutually exclusive with 'storm_control_unicast_level_pps'.
+            type: str
+            default: ""
+          storm_control_unicast_level_pps:
+            description:
+            - Unicast storm-control threshold in packets per second.
+            - This option is mutually exclusive with 'storm_control_unicast_level_percent'.
+            type: int
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -404,6 +458,60 @@ options:
               This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
             type: str
             default: ""
+          copy_description:
+            description:
+            - Copy each peer port-channel description to that peer's member interfaces.
+            type: bool
+            default: false
+          enable_storm_control:
+            description:
+            - Enable storm control on the interface.
+            - This option is applicable only to trunk and access host interface modes.
+            type: bool
+            default: false
+          storm_control_action:
+            description:
+            - Action taken when a storm-control threshold is exceeded.
+            - This option is valid only when 'enable_storm_control' is true.
+            type: str
+            choices: ['shutdown', 'trap', 'no']
+            default: 'no'
+          storm_control_broadcast_level_percent:
+            description:
+            - Broadcast storm-control threshold as a percentage.
+            - Valid values are 0 through 100 with up to two decimal places.
+            - This option is mutually exclusive with 'storm_control_broadcast_level_pps'.
+            type: str
+            default: ""
+          storm_control_broadcast_level_pps:
+            description:
+            - Broadcast storm-control threshold in packets per second.
+            - This option is mutually exclusive with 'storm_control_broadcast_level_percent'.
+            type: int
+          storm_control_multicast_level_percent:
+            description:
+            - Multicast storm-control threshold as a percentage.
+            - Valid values are 0 through 100 with up to two decimal places.
+            - This option is mutually exclusive with 'storm_control_multicast_level_pps'.
+            type: str
+            default: ""
+          storm_control_multicast_level_pps:
+            description:
+            - Multicast storm-control threshold in packets per second.
+            - This option is mutually exclusive with 'storm_control_multicast_level_percent'.
+            type: int
+          storm_control_unicast_level_percent:
+            description:
+            - Unicast storm-control threshold as a percentage.
+            - Valid values are 0 through 100 with up to two decimal places.
+            - This option is mutually exclusive with 'storm_control_unicast_level_pps'.
+            type: str
+            default: ""
+          storm_control_unicast_level_pps:
+            description:
+            - Unicast storm-control threshold in packets per second.
+            - This option is mutually exclusive with 'storm_control_unicast_level_percent'.
+            type: int
       profile_subint:
         description:
         - Though the key shown here is 'profile_subint' the actual key to be used in playbook
@@ -692,6 +800,55 @@ options:
               This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'routed'
             type: str
             default: ""
+          enable_storm_control:
+            description:
+            - Enable storm control on the interface.
+            - This option is applicable only to trunk, access, and dot1q host interface modes.
+            type: bool
+            default: false
+          storm_control_action:
+            description:
+            - Action taken when a storm-control threshold is exceeded.
+            - This option is valid only when 'enable_storm_control' is true.
+            type: str
+            choices: ['shutdown', 'trap', 'no']
+            default: 'no'
+          storm_control_broadcast_level_percent:
+            description:
+            - Broadcast storm-control threshold as a percentage.
+            - Valid values are 0 through 100 with up to two decimal places.
+            - This option is mutually exclusive with 'storm_control_broadcast_level_pps'.
+            type: str
+            default: ""
+          storm_control_broadcast_level_pps:
+            description:
+            - Broadcast storm-control threshold in packets per second.
+            - This option is mutually exclusive with 'storm_control_broadcast_level_percent'.
+            type: int
+          storm_control_multicast_level_percent:
+            description:
+            - Multicast storm-control threshold as a percentage.
+            - Valid values are 0 through 100 with up to two decimal places.
+            - This option is mutually exclusive with 'storm_control_multicast_level_pps'.
+            type: str
+            default: ""
+          storm_control_multicast_level_pps:
+            description:
+            - Multicast storm-control threshold in packets per second.
+            - This option is mutually exclusive with 'storm_control_multicast_level_percent'.
+            type: int
+          storm_control_unicast_level_percent:
+            description:
+            - Unicast storm-control threshold as a percentage.
+            - Valid values are 0 through 100 with up to two decimal places.
+            - This option is mutually exclusive with 'storm_control_unicast_level_pps'.
+            type: str
+            default: ""
+          storm_control_unicast_level_pps:
+            description:
+            - Unicast storm-control threshold in packets per second.
+            - This option is mutually exclusive with 'storm_control_unicast_level_percent'.
+            type: int
       profile_svi:
         description:
         - Though the key shown here is 'profile_svi' the actual key to be used in playbook
@@ -1869,6 +2026,7 @@ import logging
 import re
 import sys
 import time
+from decimal import Decimal, InvalidOperation
 
 
 from ansible.module_utils.basic import AnsibleModule
@@ -1924,6 +2082,27 @@ class DcnmIntf:
             "BREAKOUT": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/breakout",
         },
     }
+
+    storm_control_level_pairs = (
+        (
+            "storm_control_broadcast_level_percent",
+            "storm_control_broadcast_level_pps",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+        ),
+        (
+            "storm_control_multicast_level_percent",
+            "storm_control_multicast_level_pps",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+        ),
+        (
+            "storm_control_unicast_level_percent",
+            "storm_control_unicast_level_pps",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
+        ),
+    )
 
     def __init__(self, module):
         self.class_name = self.__class__.__name__
@@ -2077,6 +2256,15 @@ class DcnmIntf:
             "ENABLE_QOS": "enable_qos",
             "QOS_POLICY": "qos_policy",
             "QUEUING_POLICY": "queuing_policy",
+            "COPY_DESC": "copy_description",
+            "ENABLE_STORM_CONTROL": "enable_storm_control",
+            "STORM_CONTROL_ACTION": "storm_control_action",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT": "storm_control_broadcast_level_percent",
+            "STORM_CONTROL_BCAST_LEVEL_PPS": "storm_control_broadcast_level_pps",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT": "storm_control_multicast_level_percent",
+            "STORM_CONTROL_MCAST_LEVEL_PPS": "storm_control_multicast_level_pps",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT": "storm_control_unicast_level_percent",
+            "STORM_CONTROL_UCAST_LEVEL_PPS": "storm_control_unicast_level_pps",
 
         }
 
@@ -2310,6 +2498,126 @@ class DcnmIntf:
         else:
             return ""
 
+    @staticmethod
+    def dcnm_intf_storm_control_spec():
+        return dict(
+            enable_storm_control=dict(type="bool", default=False),
+            storm_control_action=dict(
+                type="str", default="no", choices=["shutdown", "trap", "no"]
+            ),
+            storm_control_broadcast_level_percent=dict(type="str", default=""),
+            storm_control_broadcast_level_pps=dict(
+                type="int", default=None, range_min=0, range_max=200000000
+            ),
+            storm_control_multicast_level_percent=dict(type="str", default=""),
+            storm_control_multicast_level_pps=dict(
+                type="int", default=None, range_min=0, range_max=200000000
+            ),
+            storm_control_unicast_level_percent=dict(type="str", default=""),
+            storm_control_unicast_level_pps=dict(
+                type="int", default=None, range_min=0, range_max=200000000
+            ),
+        )
+
+    def dcnm_intf_expand_storm_control_intent(self, profile):
+        """Mark dependent storm-control fields as explicitly managed."""
+        storm_keys = {
+            "enable_storm_control",
+            "storm_control_action",
+        }
+        for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+            storm_keys.update((percent_key, pps_key))
+
+        if not storm_keys.intersection(profile):
+            return
+
+        enabled = profile.get("enable_storm_control")
+        explicitly_disabled = enabled is False or (
+            isinstance(enabled, str)
+            and enabled.lower() in ("false", "no", "off", "0")
+        )
+        if explicitly_disabled:
+            profile["storm_control_action"] = "no"
+            for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+                profile[percent_key] = ""
+                profile[pps_key] = None
+            return
+
+        for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+            percent_value = profile.get(percent_key)
+            pps_value = profile.get(pps_key)
+            if percent_value not in (None, "") and pps_value in (None, ""):
+                profile[pps_key] = None
+            elif pps_value not in (None, "") and percent_value in (None, ""):
+                profile[percent_key] = ""
+
+    def dcnm_intf_validate_storm_control_profile(self, profile, interface_name):
+        enabled = profile["enable_storm_control"]
+        action = profile["storm_control_action"]
+        dependent_values = [action] if action != "no" else []
+
+        for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+            percent_value = profile.get(percent_key, "")
+            pps_value = profile.get(pps_key)
+
+            if percent_value not in (None, ""):
+                dependent_values.append(percent_value)
+                if not re.fullmatch(r"\d{1,3}(?:\.\d{1,2})?", percent_value):
+                    self.module.fail_json(
+                        msg="Invalid parameters in playbook: while processing interface "
+                        + interface_name
+                        + ", "
+                        + percent_key
+                        + " must be between 0 and 100 with at most two decimal places"
+                    )
+                try:
+                    if Decimal(percent_value) > Decimal("100"):
+                        raise InvalidOperation
+                except InvalidOperation:
+                    self.module.fail_json(
+                        msg="Invalid parameters in playbook: while processing interface "
+                        + interface_name
+                        + ", "
+                        + percent_key
+                        + " must be between 0 and 100 with at most two decimal places"
+                    )
+
+            if pps_value is not None:
+                dependent_values.append(pps_value)
+
+            if percent_value not in (None, "") and pps_value is not None:
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface "
+                    + interface_name
+                    + ", "
+                    + percent_key
+                    + " and "
+                    + pps_key
+                    + " are mutually exclusive"
+                )
+
+        if not enabled and dependent_values:
+            self.module.fail_json(
+                msg="Invalid parameters in playbook: while processing interface "
+                + interface_name
+                + ", storm-control action and levels require enable_storm_control: true"
+            )
+
+    def dcnm_intf_set_storm_control_nv_pairs(self, profile, nv_pairs):
+        enabled = profile.get("enable_storm_control", False)
+        nv_pairs["ENABLE_STORM_CONTROL"] = enabled
+        nv_pairs["STORM_CONTROL_ACTION"] = (
+            profile.get("storm_control_action", "no") if enabled else "no"
+        )
+
+        for percent_key, pps_key, percent_nvpair, pps_nvpair in self.storm_control_level_pairs:
+            percent_value = profile.get(percent_key, "") if enabled else ""
+            pps_value = profile.get(pps_key) if enabled else None
+            nv_pairs[percent_nvpair] = (
+                "" if percent_value in (None, "") else str(percent_value)
+            )
+            nv_pairs[pps_nvpair] = "" if pps_value is None else str(pps_value)
+
     # Flatten the incoming config database and have the required fields updated.
     # This modified config DB will be used while creating payloads. To avoid
     # messing up the incoming config make a copy of it.
@@ -2366,6 +2674,7 @@ class DcnmIntf:
                         c[ck]["policy"] = self.pol_types[self.dcnm_version][
                             pol_ind_str
                         ]
+                        self.dcnm_intf_expand_storm_control_intent(c[ck])
                         self.pb_input.append(c[ck])
 
     def dcnm_intf_validate_interface_input(
@@ -2388,6 +2697,12 @@ class DcnmIntf:
 
         if prof_spec is not None:
 
+            if "enable_storm_control" in prof_spec:
+                for config_item in config:
+                    for _percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+                        if config_item["profile"].get(pps_key) == "":
+                            config_item["profile"][pps_key] = None
+
             for item in intf_info:
 
                 plist.append(item["profile"])
@@ -2409,6 +2724,11 @@ class DcnmIntf:
                         + ", ".join(invalid_params)
                     )
                     self.module.fail_json(msg=mesg)
+
+                if "enable_storm_control" in prof_spec:
+                    self.dcnm_intf_validate_storm_control_profile(
+                        item["profile"], config[0]["name"]
+                    )
 
     def dcnm_intf_validate_port_channel_input(self, config):
 
@@ -2445,7 +2765,9 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
         )
+        pc_prof_spec_trunk.update(self.dcnm_intf_storm_control_spec())
 
         pc_prof_spec_access = dict(
             mode=dict(required=True, type="str"),
@@ -2471,7 +2793,9 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
         )
+        pc_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
 
         pc_prof_spec_l3 = dict(
             mode=dict(required=True, type="str"),
@@ -2489,6 +2813,7 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
         )
 
         pc_prof_spec_dot1q = dict(
@@ -2503,7 +2828,9 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            copy_description=dict(type="bool", default=False),
         )
+        pc_prof_spec_dot1q.update(self.dcnm_intf_storm_control_spec())
 
         if "trunk" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
@@ -2565,7 +2892,9 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
         )
+        vpc_prof_spec_trunk.update(self.dcnm_intf_storm_control_spec())
 
         vpc_prof_spec_access = dict(
             mode=dict(required=True, type="str"),
@@ -2592,7 +2921,9 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
         )
+        vpc_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
 
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
@@ -2693,6 +3024,7 @@ class DcnmIntf:
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
         )
+        eth_prof_spec_trunk.update(self.dcnm_intf_storm_control_spec())
 
         eth_prof_spec_access = dict(
             mode=dict(required=True, type="str"),
@@ -2716,6 +3048,7 @@ class DcnmIntf:
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
         )
+        eth_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
 
         eth_prof_spec_routed_host = dict(
             int_vrf=dict(type="str", default="default"),
@@ -2762,6 +3095,9 @@ class DcnmIntf:
             admin_state=dict(type="bool", default=True),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+        )
+        eth_prof_spec_dot1q_tunnel_host.update(
+            self.dcnm_intf_storm_control_spec()
         )
 
         if "trunk" == cfg[0]["profile"]["mode"]:
@@ -3221,7 +3557,15 @@ class DcnmIntf:
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
+        if delem[profile]["mode"] in ("trunk", "access", "dot1q"):
+            self.dcnm_intf_set_storm_control_nv_pairs(
+                delem[profile], intf["interfaces"][0]["nvPairs"]
+            )
+
         if delem[profile]["mode"] != "monitor":
+            intf["interfaces"][0]["nvPairs"]["COPY_DESC"] = delem[profile][
+                "copy_description"
+            ]
             intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile][
                 "description"
             ]
@@ -3412,6 +3756,9 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
+        intf["interfaces"][0]["nvPairs"]["COPY_DESC"] = delem[profile][
+            "copy_description"
+        ]
         if delem[profile].get("disable_lacp_suspend_individual"):
             intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
         else:
@@ -3441,6 +3788,9 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
         else:
             intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+        self.dcnm_intf_set_storm_control_nv_pairs(
+            delem[profile], intf["interfaces"][0]["nvPairs"]
+        )
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
             str(delem[profile].get("speed", ""))
@@ -3743,6 +4093,11 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+
+        if delem[profile]["mode"] in ("trunk", "access", "dot1q"):
+            self.dcnm_intf_set_storm_control_nv_pairs(
+                delem[profile], intf["interfaces"][0]["nvPairs"]
+            )
 
     def dcnm_intf_get_st_fex_payload(self, delem, intf, profile):
 
@@ -4410,14 +4765,21 @@ class DcnmIntf:
             "ENABLE_PFC",
             "ENABLE_MONITOR",
             "CDP_ENABLE",
-            "ENABLE_QOS"
+            "ENABLE_QOS",
+            "COPY_DESC",
+            "ENABLE_STORM_CONTROL",
         ]
         if k in boolean_keys:
             # This is a special case where the value is a boolean and we need to compare it as such
             t_e1 = str(t_e1).lower()
             t_e2 = str(t_e2).lower()
 
-        numeric_keys = ["LACP_PORT_PRIO"]
+        numeric_keys = [
+            "LACP_PORT_PRIO",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
+        ]
         if k in numeric_keys:
             # Controller responses may return numeric nvPairs as strings while
             # desired state keeps them as integers. Normalize both sides so
@@ -4426,6 +4788,20 @@ class DcnmIntf:
                 t_e1 = int(t_e1)
                 t_e2 = int(t_e2)
             except (TypeError, ValueError):
+                pass
+
+        decimal_keys = [
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+        ]
+        if k in decimal_keys:
+            try:
+                if t_e1 not in (None, ""):
+                    t_e1 = Decimal(str(t_e1))
+                if t_e2 not in (None, ""):
+                    t_e2 = Decimal(str(t_e2))
+            except InvalidOperation:
                 pass
 
         if t_e1 != t_e2:
@@ -4738,7 +5114,16 @@ class DcnmIntf:
                                         "SPEED",
                                         "ENABLE_QOS",
                                         "QOS_POLICY",
-                                        "QUEUING_POLICY"
+                                        "QUEUING_POLICY",
+                                        "COPY_DESC",
+                                        "ENABLE_STORM_CONTROL",
+                                        "STORM_CONTROL_ACTION",
+                                        "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+                                        "STORM_CONTROL_BCAST_LEVEL_PPS",
+                                        "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+                                        "STORM_CONTROL_MCAST_LEVEL_PPS",
+                                        "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+                                        "STORM_CONTROL_UCAST_LEVEL_PPS",
                                     ]
 
                                     for key in keys_to_check:

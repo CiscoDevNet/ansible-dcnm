@@ -18,7 +18,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 # from units.compat.mock import patch
 
@@ -136,6 +136,151 @@ class TestDcnmIntfModule(TestDcnmModule):
             dcnm_intf.dcnm_intf_is_vpc_peer_link_port_channel(intf),
             True,
         )
+
+    def test_dcnm_intf_storm_control_percent_payload(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        nv_pairs = {}
+        profile = {
+            "enable_storm_control": True,
+            "storm_control_action": "shutdown",
+            "storm_control_broadcast_level_percent": "12",
+            "storm_control_multicast_level_percent": "13.00",
+            "storm_control_unicast_level_percent": "14.5",
+        }
+
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(
+            nv_pairs,
+            {
+                "ENABLE_STORM_CONTROL": True,
+                "STORM_CONTROL_ACTION": "shutdown",
+                "STORM_CONTROL_BCAST_LEVEL_PERCENT": "12",
+                "STORM_CONTROL_BCAST_LEVEL_PPS": "",
+                "STORM_CONTROL_MCAST_LEVEL_PERCENT": "13.00",
+                "STORM_CONTROL_MCAST_LEVEL_PPS": "",
+                "STORM_CONTROL_UCAST_LEVEL_PERCENT": "14.5",
+                "STORM_CONTROL_UCAST_LEVEL_PPS": "",
+            },
+        )
+
+    def test_dcnm_intf_storm_control_pps_payload(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        nv_pairs = {}
+        profile = {
+            "enable_storm_control": True,
+            "storm_control_action": "trap",
+            "storm_control_broadcast_level_pps": 1000,
+            "storm_control_multicast_level_pps": 2000,
+            "storm_control_unicast_level_pps": 3000,
+        }
+
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(nv_pairs["STORM_CONTROL_ACTION"], "trap")
+        self.assertEqual(nv_pairs["STORM_CONTROL_BCAST_LEVEL_PPS"], "1000")
+        self.assertEqual(nv_pairs["STORM_CONTROL_MCAST_LEVEL_PPS"], "2000")
+        self.assertEqual(nv_pairs["STORM_CONTROL_UCAST_LEVEL_PPS"], "3000")
+        self.assertEqual(nv_pairs["STORM_CONTROL_BCAST_LEVEL_PERCENT"], "")
+
+    def test_dcnm_intf_storm_control_disable_clears_dependent_values(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        profile = {
+            "enable_storm_control": False,
+            "storm_control_action": "shutdown",
+            "storm_control_broadcast_level_percent": "12",
+        }
+        nv_pairs = {}
+
+        dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(profile["storm_control_action"], "no")
+        self.assertEqual(nv_pairs["ENABLE_STORM_CONTROL"], False)
+        self.assertEqual(nv_pairs["STORM_CONTROL_ACTION"], "no")
+        for key, value in nv_pairs.items():
+            if key.startswith("STORM_CONTROL_") and key != "STORM_CONTROL_ACTION":
+                self.assertEqual(value, "")
+
+    def test_dcnm_intf_storm_control_percent_and_pps_are_mutually_exclusive(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.module = Mock()
+
+        def fail_json(**kwargs):
+            raise ValueError(kwargs["msg"])
+
+        dcnm_intf.module.fail_json.side_effect = fail_json
+        profile = {
+            "enable_storm_control": True,
+            "storm_control_action": "shutdown",
+            "storm_control_broadcast_level_percent": "12",
+            "storm_control_broadcast_level_pps": 1000,
+        }
+
+        with self.assertRaisesRegex(ValueError, "mutually exclusive"):
+            dcnm_intf.dcnm_intf_validate_storm_control_profile(
+                profile, "Ethernet1/15"
+            )
+
+    def test_dcnm_intf_storm_control_percent_comparison_normalizes_precision(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Ethernet1/15",
+            "SERIAL1",
+            "fabric1",
+            "12",
+            "12.00",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "replaced",
+        )
+
+        self.assertEqual(result, "dont_add")
+
+    def test_dcnm_intf_copy_description_comparison(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.keymap = {"COPY_DESC": "copy_description"}
+        dcnm_intf.pb_input = [
+            {
+                "ifname": "Port-channel511",
+                "sno": "SERIAL1",
+                "fabric": "fabric1",
+            }
+        ]
+
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Port-channel511",
+            "SERIAL1",
+            "fabric1",
+            False,
+            "true",
+            "COPY_DESC",
+            "merged",
+        )
+        self.assertEqual(result, "copy_and_add")
+
+        dcnm_intf.pb_input[0]["copy_description"] = False
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Port-channel511",
+            "SERIAL1",
+            "fabric1",
+            False,
+            "true",
+            "COPY_DESC",
+            "merged",
+        )
+        self.assertEqual(result, "add")
+
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Port-channel511",
+            "SERIAL1",
+            "fabric1",
+            True,
+            "true",
+            "COPY_DESC",
+            "replaced",
+        )
+        self.assertEqual(result, "dont_add")
 
     def setUp(self):
 
@@ -3490,7 +3635,16 @@ class TestDcnmIntfModule(TestDcnmModule):
             "LACP_RATE",
             "ENABLE_QOS",
             "QOS_POLICY",
-            "QUEUING_POLICY"
+            "QUEUING_POLICY",
+            "COPY_DESC",
+            "ENABLE_STORM_CONTROL",
+            "STORM_CONTROL_ACTION",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
         ]
 
         for d in result["diff"][0]["replaced"]:
@@ -3783,6 +3937,14 @@ class TestDcnmIntfModule(TestDcnmModule):
             "ENABLE_QOS",
             "QOS_POLICY",
             "QUEUING_POLICY",
+            "ENABLE_STORM_CONTROL",
+            "STORM_CONTROL_ACTION",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
         ]
 
         for d in result["diff"][0]["replaced"]:
@@ -4766,7 +4928,16 @@ class TestDcnmIntfModule(TestDcnmModule):
             "LACP_RATE",
             "ENABLE_QOS",
             "QOS_POLICY",
-            "QUEUING_POLICY"
+            "QUEUING_POLICY",
+            "COPY_DESC",
+            "ENABLE_STORM_CONTROL",
+            "STORM_CONTROL_ACTION",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
         ]
 
         for d in result["diff"][0]["replaced"]:
