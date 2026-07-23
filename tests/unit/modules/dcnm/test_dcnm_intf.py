@@ -195,12 +195,34 @@ class TestDcnmIntfModule(TestDcnmModule):
         dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
         dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
 
-        self.assertEqual(profile["storm_control_action"], "no")
+        self.assertEqual(profile["storm_control_action"], "default")
         self.assertEqual(nv_pairs["ENABLE_STORM_CONTROL"], False)
         self.assertEqual(nv_pairs["STORM_CONTROL_ACTION"], "no")
         for key, value in nv_pairs.items():
             if key.startswith("STORM_CONTROL_") and key != "STORM_CONTROL_ACTION":
                 self.assertEqual(value, "")
+
+    def test_dcnm_intf_storm_control_default_action_uses_controller_no(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        nv_pairs = {}
+        profile = {
+            "enable_storm_control": True,
+            "storm_control_action": "default",
+        }
+
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(nv_pairs["STORM_CONTROL_ACTION"], "no")
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Ethernet1/15",
+            "SERIAL1",
+            "fabric1",
+            "no",
+            "default",
+            "STORM_CONTROL_ACTION",
+            "replaced",
+        )
+        self.assertEqual(result, "dont_add")
 
     def test_dcnm_intf_storm_control_percent_and_pps_are_mutually_exclusive(self):
         dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)

@@ -78,3 +78,30 @@ def test_copy_description_is_omitted_when_not_configured():
     nvpairs = get_nvpairs_by_interface_name(parsed)
 
     assert "COPY_DESC" not in nvpairs["port-channel511"]
+
+
+def test_storm_control_default_action_maps_to_controller_no():
+    config = [
+        {
+            "name": "port-channel511",
+            "type": "pc",
+            "switch": ["10.122.84.181"],
+            "profile": {
+                "mode": "access",
+                "enable_storm_control": True,
+                "storm_control_action": "default",
+            },
+        },
+    ]
+
+    expected = DcnmInterfaceQuerySchema.yaml_config_to_dict(
+        config,
+        "test_fabric",
+        {"10.122.84.181": "SERIAL1"},
+    )
+    parsed = DcnmInterfaceQuerySchema.model_validate(expected).model_dump(
+        exclude_none=True
+    )
+    nvpairs = get_nvpairs_by_interface_name(parsed)
+
+    assert nvpairs["port-channel511"]["STORM_CONTROL_ACTION"] == "no"

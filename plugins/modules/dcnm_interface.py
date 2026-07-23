@@ -249,9 +249,10 @@ options:
             description:
             - Action taken when a storm-control threshold is exceeded.
             - This option is valid only when 'enable_storm_control' is true.
+            - Use 'default' to return the storm-control action to its default setting.
             type: str
-            choices: ['shutdown', 'trap', 'no']
-            default: 'no'
+            choices: ['shutdown', 'trap', 'default']
+            default: 'default'
           storm_control_broadcast_level_percent:
             description:
             - Broadcast storm-control threshold as a percentage.
@@ -479,9 +480,10 @@ options:
             description:
             - Action taken when a storm-control threshold is exceeded.
             - This option is valid only when 'enable_storm_control' is true.
+            - Use 'default' to return the storm-control action to its default setting.
             type: str
-            choices: ['shutdown', 'trap', 'no']
-            default: 'no'
+            choices: ['shutdown', 'trap', 'default']
+            default: 'default'
           storm_control_broadcast_level_percent:
             description:
             - Broadcast storm-control threshold as a percentage.
@@ -822,9 +824,10 @@ options:
             description:
             - Action taken when a storm-control threshold is exceeded.
             - This option is valid only when 'enable_storm_control' is true.
+            - Use 'default' to return the storm-control action to its default setting.
             type: str
-            choices: ['shutdown', 'trap', 'no']
-            default: 'no'
+            choices: ['shutdown', 'trap', 'default']
+            default: 'default'
           storm_control_broadcast_level_percent:
             description:
             - Broadcast storm-control threshold as a percentage.
@@ -2521,7 +2524,9 @@ class DcnmIntf:
         return dict(
             enable_storm_control=dict(type="bool", default=False),
             storm_control_action=dict(
-                type="str", default="no", choices=["shutdown", "trap", "no"]
+                type="str",
+                default="default",
+                choices=["shutdown", "trap", "default"],
             ),
             storm_control_broadcast_level_percent=dict(type="str", default=""),
             storm_control_broadcast_level_pps=dict(
@@ -2536,6 +2541,12 @@ class DcnmIntf:
                 type="int", default=None, range_min=0, range_max=200000000
             ),
         )
+
+    @staticmethod
+    def dcnm_intf_normalize_storm_control_action(action):
+        """Translate the public default action to NDFC's low-level nvPair value."""
+        normalized_action = str(action).lower()
+        return "no" if normalized_action == "default" else normalized_action
 
     def dcnm_intf_expand_storm_control_intent(self, profile):
         """Mark dependent storm-control fields as explicitly managed."""
@@ -2555,7 +2566,7 @@ class DcnmIntf:
             and enabled.lower() in ("false", "no", "off", "0")
         )
         if explicitly_disabled:
-            profile["storm_control_action"] = "no"
+            profile["storm_control_action"] = "default"
             for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
                 profile[percent_key] = ""
                 profile[pps_key] = None
@@ -2572,7 +2583,7 @@ class DcnmIntf:
     def dcnm_intf_validate_storm_control_profile(self, profile, interface_name):
         enabled = profile["enable_storm_control"]
         action = profile["storm_control_action"]
-        dependent_values = [action] if action != "no" else []
+        dependent_values = [action] if action != "default" else []
         percent_keys = []
         pps_keys = []
 
@@ -2628,8 +2639,15 @@ class DcnmIntf:
     def dcnm_intf_set_storm_control_nv_pairs(self, profile, nv_pairs):
         enabled = profile.get("enable_storm_control", False)
         nv_pairs["ENABLE_STORM_CONTROL"] = enabled
+        storm_control_action = (
+            profile.get("storm_control_action", "default")
+            if enabled
+            else "default"
+        )
         nv_pairs["STORM_CONTROL_ACTION"] = (
-            profile.get("storm_control_action", "no") if enabled else "no"
+            self.dcnm_intf_normalize_storm_control_action(
+                storm_control_action
+            )
         )
 
         for percent_key, pps_key, percent_nvpair, pps_nvpair in self.storm_control_level_pairs:
@@ -4779,6 +4797,10 @@ class DcnmIntf:
                 t_e2 = e2.lower()
             else:
                 t_e2 = e2
+
+        if k == "STORM_CONTROL_ACTION":
+            t_e1 = self.dcnm_intf_normalize_storm_control_action(t_e1)
+            t_e2 = self.dcnm_intf_normalize_storm_control_action(t_e2)
 
         boolean_keys = [
             "ENABLE_ORPHAN_PORT",

@@ -193,7 +193,6 @@ class DcnmInterfaceQuerySchema(BaseModel):
             'INTF_VRF',
             'MTU',
             'SPEED',
-            'STORM_CONTROL_ACTION',
         )
         @classmethod
         def normalize_string_fields(cls, v):
@@ -201,6 +200,15 @@ class DcnmInterfaceQuerySchema(BaseModel):
             if v is not None:
                 return v.lower()
             return v
+
+        @field_validator('STORM_CONTROL_ACTION')
+        @classmethod
+        def normalize_storm_control_action(cls, v):
+            """Normalize the public default action to NDFC's low-level nvPair value."""
+            if v is None:
+                return v
+            normalized_action = v.lower()
+            return "no" if normalized_action == "default" else normalized_action
 
         @field_validator(
             'STORM_CONTROL_BCAST_LEVEL_PERCENT',
