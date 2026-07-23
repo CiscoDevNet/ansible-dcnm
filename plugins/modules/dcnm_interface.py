@@ -256,37 +256,43 @@ options:
             description:
             - Broadcast storm-control threshold as a percentage.
             - Valid values are 0 through 100 with up to two decimal places.
-            - This option is mutually exclusive with 'storm_control_broadcast_level_pps'.
+            - Percentage thresholds cannot be combined with any packets-per-second threshold
+              on the same interface.
             type: str
             default: ""
           storm_control_broadcast_level_pps:
             description:
             - Broadcast storm-control threshold in packets per second.
-            - This option is mutually exclusive with 'storm_control_broadcast_level_percent'.
+            - Packets-per-second thresholds cannot be combined with any percentage threshold
+              on the same interface.
             type: int
           storm_control_multicast_level_percent:
             description:
             - Multicast storm-control threshold as a percentage.
             - Valid values are 0 through 100 with up to two decimal places.
-            - This option is mutually exclusive with 'storm_control_multicast_level_pps'.
+            - Percentage thresholds cannot be combined with any packets-per-second threshold
+              on the same interface.
             type: str
             default: ""
           storm_control_multicast_level_pps:
             description:
             - Multicast storm-control threshold in packets per second.
-            - This option is mutually exclusive with 'storm_control_multicast_level_percent'.
+            - Packets-per-second thresholds cannot be combined with any percentage threshold
+              on the same interface.
             type: int
           storm_control_unicast_level_percent:
             description:
             - Unicast storm-control threshold as a percentage.
             - Valid values are 0 through 100 with up to two decimal places.
-            - This option is mutually exclusive with 'storm_control_unicast_level_pps'.
+            - Percentage thresholds cannot be combined with any packets-per-second threshold
+              on the same interface.
             type: str
             default: ""
           storm_control_unicast_level_pps:
             description:
             - Unicast storm-control threshold in packets per second.
-            - This option is mutually exclusive with 'storm_control_unicast_level_percent'.
+            - Packets-per-second thresholds cannot be combined with any percentage threshold
+              on the same interface.
             type: int
       profile_vpc:
         description:
@@ -480,37 +486,43 @@ options:
             description:
             - Broadcast storm-control threshold as a percentage.
             - Valid values are 0 through 100 with up to two decimal places.
-            - This option is mutually exclusive with 'storm_control_broadcast_level_pps'.
+            - Percentage thresholds cannot be combined with any packets-per-second threshold
+              on the same interface.
             type: str
             default: ""
           storm_control_broadcast_level_pps:
             description:
             - Broadcast storm-control threshold in packets per second.
-            - This option is mutually exclusive with 'storm_control_broadcast_level_percent'.
+            - Packets-per-second thresholds cannot be combined with any percentage threshold
+              on the same interface.
             type: int
           storm_control_multicast_level_percent:
             description:
             - Multicast storm-control threshold as a percentage.
             - Valid values are 0 through 100 with up to two decimal places.
-            - This option is mutually exclusive with 'storm_control_multicast_level_pps'.
+            - Percentage thresholds cannot be combined with any packets-per-second threshold
+              on the same interface.
             type: str
             default: ""
           storm_control_multicast_level_pps:
             description:
             - Multicast storm-control threshold in packets per second.
-            - This option is mutually exclusive with 'storm_control_multicast_level_percent'.
+            - Packets-per-second thresholds cannot be combined with any percentage threshold
+              on the same interface.
             type: int
           storm_control_unicast_level_percent:
             description:
             - Unicast storm-control threshold as a percentage.
             - Valid values are 0 through 100 with up to two decimal places.
-            - This option is mutually exclusive with 'storm_control_unicast_level_pps'.
+            - Percentage thresholds cannot be combined with any packets-per-second threshold
+              on the same interface.
             type: str
             default: ""
           storm_control_unicast_level_pps:
             description:
             - Unicast storm-control threshold in packets per second.
-            - This option is mutually exclusive with 'storm_control_unicast_level_percent'.
+            - Packets-per-second thresholds cannot be combined with any percentage threshold
+              on the same interface.
             type: int
       profile_subint:
         description:
@@ -817,37 +829,43 @@ options:
             description:
             - Broadcast storm-control threshold as a percentage.
             - Valid values are 0 through 100 with up to two decimal places.
-            - This option is mutually exclusive with 'storm_control_broadcast_level_pps'.
+            - Percentage thresholds cannot be combined with any packets-per-second threshold
+              on the same interface.
             type: str
             default: ""
           storm_control_broadcast_level_pps:
             description:
             - Broadcast storm-control threshold in packets per second.
-            - This option is mutually exclusive with 'storm_control_broadcast_level_percent'.
+            - Packets-per-second thresholds cannot be combined with any percentage threshold
+              on the same interface.
             type: int
           storm_control_multicast_level_percent:
             description:
             - Multicast storm-control threshold as a percentage.
             - Valid values are 0 through 100 with up to two decimal places.
-            - This option is mutually exclusive with 'storm_control_multicast_level_pps'.
+            - Percentage thresholds cannot be combined with any packets-per-second threshold
+              on the same interface.
             type: str
             default: ""
           storm_control_multicast_level_pps:
             description:
             - Multicast storm-control threshold in packets per second.
-            - This option is mutually exclusive with 'storm_control_multicast_level_percent'.
+            - Packets-per-second thresholds cannot be combined with any percentage threshold
+              on the same interface.
             type: int
           storm_control_unicast_level_percent:
             description:
             - Unicast storm-control threshold as a percentage.
             - Valid values are 0 through 100 with up to two decimal places.
-            - This option is mutually exclusive with 'storm_control_unicast_level_pps'.
+            - Percentage thresholds cannot be combined with any packets-per-second threshold
+              on the same interface.
             type: str
             default: ""
           storm_control_unicast_level_pps:
             description:
             - Unicast storm-control threshold in packets per second.
-            - This option is mutually exclusive with 'storm_control_unicast_level_percent'.
+            - Packets-per-second thresholds cannot be combined with any percentage threshold
+              on the same interface.
             type: int
       profile_svi:
         description:
@@ -2555,12 +2573,15 @@ class DcnmIntf:
         enabled = profile["enable_storm_control"]
         action = profile["storm_control_action"]
         dependent_values = [action] if action != "no" else []
+        percent_keys = []
+        pps_keys = []
 
         for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
             percent_value = profile.get(percent_key, "")
             pps_value = profile.get(pps_key)
 
             if percent_value not in (None, ""):
+                percent_keys.append(percent_key)
                 dependent_values.append(percent_value)
                 if not re.fullmatch(r"\d{1,3}(?:\.\d{1,2})?", percent_value):
                     self.module.fail_json(
@@ -2583,18 +2604,19 @@ class DcnmIntf:
                     )
 
             if pps_value is not None:
+                pps_keys.append(pps_key)
                 dependent_values.append(pps_value)
 
-            if percent_value not in (None, "") and pps_value is not None:
-                self.module.fail_json(
-                    msg="Invalid parameters in playbook: while processing interface "
-                    + interface_name
-                    + ", "
-                    + percent_key
-                    + " and "
-                    + pps_key
-                    + " are mutually exclusive"
-                )
+        if percent_keys and pps_keys:
+            self.module.fail_json(
+                msg="Invalid parameters in playbook: while processing interface "
+                + interface_name
+                + ", percentage and PPS storm-control levels are mutually exclusive; "
+                + "configure only one rate mode per interface. Percentage fields: "
+                + ", ".join(percent_keys)
+                + "; PPS fields: "
+                + ", ".join(pps_keys)
+            )
 
         if not enabled and dependent_values:
             self.module.fail_json(

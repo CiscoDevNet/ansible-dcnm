@@ -210,17 +210,34 @@ class TestDcnmIntfModule(TestDcnmModule):
             raise ValueError(kwargs["msg"])
 
         dcnm_intf.module.fail_json.side_effect = fail_json
-        profile = {
-            "enable_storm_control": True,
-            "storm_control_action": "shutdown",
-            "storm_control_broadcast_level_percent": "12",
-            "storm_control_broadcast_level_pps": 1000,
-        }
+        percent_keys = [
+            "storm_control_broadcast_level_percent",
+            "storm_control_multicast_level_percent",
+            "storm_control_unicast_level_percent",
+        ]
+        pps_keys = [
+            "storm_control_broadcast_level_pps",
+            "storm_control_multicast_level_pps",
+            "storm_control_unicast_level_pps",
+        ]
 
-        with self.assertRaisesRegex(ValueError, "mutually exclusive"):
-            dcnm_intf.dcnm_intf_validate_storm_control_profile(
-                profile, "Ethernet1/15"
-            )
+        for percent_key in percent_keys:
+            for pps_key in pps_keys:
+                with self.subTest(percent_key=percent_key, pps_key=pps_key):
+                    profile = {
+                        "enable_storm_control": True,
+                        "storm_control_action": "shutdown",
+                        percent_key: "12",
+                        pps_key: 1000,
+                    }
+
+                    with self.assertRaisesRegex(
+                        ValueError,
+                        "configure only one rate mode per interface",
+                    ):
+                        dcnm_intf.dcnm_intf_validate_storm_control_profile(
+                            profile, "Ethernet1/15"
+                        )
 
     def test_dcnm_intf_storm_control_percent_comparison_normalizes_precision(self):
         dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
