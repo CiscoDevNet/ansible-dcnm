@@ -2324,3 +2324,101 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(leaf4_attach["portNames"], "Ethernet1/16,Ethernet1/17")
         self.assertEqual(leaf4_attach["lanAttachState"], "IN PROGRESS")
         self.assertTrue(leaf4_attach["isLanAttached"])
+
+    def _make_bare_dcnm_net(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = type("Logger", (), {"debug": lambda *a, **k: None})()
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.ip_sn = {"10.10.10.217": "9NN7E41N16A"}
+        dcnm_net.inventory_data = {"10.10.10.217": {"switchRole": "leaf"}}
+        dcnm_net.dcnm_version = 12.4
+
+        class _Module:
+            def fail_json(self, **kwargs):
+                raise AssertionError(kwargs)
+
+        dcnm_net.module = _Module()
+        return dcnm_net
+
+    def test_dcnm_net_update_attach_params_serializes_svi_enabled_true(self):
+        dcnm_net = self._make_bare_dcnm_net()
+        with patch.object(dcnm_network, "dcnm_get_ip_addr_info", lambda module, ip, a, b: ip):
+            attach = {
+                "ip_address": "10.10.10.217",
+                "ports": ["Ethernet1/3"],
+                "svi_enabled": True,
+            }
+            out = dcnm_net.update_attach_params(attach, "Test_Network1", deploy=True)
+
+        self.assertNotIn("svi_enabled", out)
+        self.assertIn("instanceValues", out)
+        inst = json.loads(out["instanceValues"])
+        self.assertEqual(inst["sviEnabled"], "true")
+        self.assertEqual(out["serialNumber"], "9NN7E41N16A")
+        self.assertEqual(out["networkName"], "Test_Network1")
+
+    def test_dcnm_net_update_attach_params_defaults_svi_enabled_to_true_when_omitted(self):
+        dcnm_net = self._make_bare_dcnm_net()
+        with patch.object(dcnm_network, "dcnm_get_ip_addr_info", lambda module, ip, a, b: ip):
+            attach = {"ip_address": "10.10.10.217", "ports": ["Ethernet1/3"]}
+            out = dcnm_net.update_attach_params(attach, "Test_Network1", deploy=True)
+
+        self.assertEqual(json.loads(out["instanceValues"])["sviEnabled"], "true")
+
+    def test_dcnm_net_update_attach_params_serializes_svi_enabled_false_when_explicit(self):
+        dcnm_net = self._make_bare_dcnm_net()
+        with patch.object(dcnm_network, "dcnm_get_ip_addr_info", lambda module, ip, a, b: ip):
+            attach = {
+                "ip_address": "10.10.10.217",
+                "ports": ["Ethernet1/3"],
+                "svi_enabled": False,
+            }
+            out = dcnm_net.update_attach_params(attach, "Test_Network1", deploy=True)
+
+        self.assertEqual(json.loads(out["instanceValues"])["sviEnabled"], "false")
+
+    def test_dcnm_net_diff_for_attach_deploy_svi_enabled_flip_triggers_change(self):
+        dcnm_net = self._make_bare_dcnm_net()
+
+        have_attach = [{
+            "serialNumber": "9NN7E41N16A",
+            "networkName": "Test_Network1",
+            "switchPorts": "Ethernet1/3",
+            "isAttached": True,
+            "deployment": True,
+            "is_deploy": True,
+            "vlan": 1111,
+            "instanceValues": json.dumps({"isVPC": "false", "sviEnabled": "false", "isActive": "false"}),
+        }]
+        want_attach = copy.deepcopy(have_attach)
+        want_attach[0]["instanceValues"] = json.dumps({"sviEnabled": "true"})
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
+
+        self.assertTrue(diff)
+        self.assertTrue(dep_net)
+        merged = json.loads(diff[0]["instanceValues"])
+        self.assertEqual(merged["sviEnabled"], "true")
+        self.assertEqual(merged["isVPC"], "false")
+        self.assertEqual(merged["isActive"], "false")
+
+    def test_dcnm_net_diff_for_attach_deploy_svi_enabled_idempotent(self):
+        dcnm_net = self._make_bare_dcnm_net()
+
+        have_attach = [{
+            "serialNumber": "9NN7E41N16A",
+            "networkName": "Test_Network1",
+            "switchPorts": "Ethernet1/3",
+            "isAttached": True,
+            "deployment": True,
+            "is_deploy": True,
+            "vlan": 1111,
+            "instanceValues": json.dumps({"isVPC": "false", "sviEnabled": "true", "isActive": "false"}),
+        }]
+        want_attach = copy.deepcopy(have_attach)
+        want_attach[0]["instanceValues"] = json.dumps({"sviEnabled": "true"})
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
+
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)

@@ -1427,6 +1427,23 @@ class DcnmNetwork:
                     if want["serialNumber"] == have["serialNumber"] and want["networkName"] == have["networkName"]:
                         found = True
 
+                        # Merge instanceValues so playbook-driven keys (sviEnabled) override
+                        # while NDFC-managed keys (isVPC, isActive) are preserved from have.
+                        want_inst_raw = want.get("instanceValues") or ""
+                        have_inst_raw = have.get("instanceValues") or ""
+                        want_inst = json.loads(want_inst_raw) if want_inst_raw else {}
+                        have_inst = json.loads(have_inst_raw) if have_inst_raw else {}
+                        merged_inst = dict(have_inst)
+                        merged_inst.update(want_inst)
+                        want["instanceValues"] = json.dumps(merged_inst) if merged_inst else ""
+                        # Only diff on sviEnabled when NDFC actually returned it.
+                        # Absence in have means "no opinion" - avoids spurious re-deploys
+                        # driven purely by the playbook default.
+                        svi_changed = (
+                            "sviEnabled" in have_inst
+                            and have_inst["sviEnabled"] != want_inst.get("sviEnabled", "false")
+                        )
+
                         if want.get("isAttached") is not None:
                             if bool(have["isAttached"]) and bool(want["isAttached"]):
                                 torports_configured = False
@@ -1544,7 +1561,7 @@ class DcnmNetwork:
                                         dep_net = True
                                     continue
 
-                                elif torports_configured:
+                                elif torports_configured or svi_changed:
                                     del want["isAttached"]
                                     attach_list.append(want)
                                     if bool(want["is_deploy"]):
@@ -1666,7 +1683,15 @@ class DcnmNetwork:
         attach.update({"deployment": True})
         attach.update({"isAttached": True})
         attach.update({"extensionValues": ""})
-        attach.update({"instanceValues": ""})
+        # NDFC expects lowercase-string booleans inside the instanceValues JSON payload.
+        # NDFC-managed keys already present in have (isVPC, isActive, ...) are merged
+        # back in later by diff_for_attach_deploy.
+        if self.dcnm_version >= 12.4:
+            svi_enabled = bool(attach.pop("svi_enabled", True))
+            inst_values = {"sviEnabled": "true" if svi_enabled else "false"}
+            attach.update({"instanceValues": json.dumps(inst_values)})
+        else:
+            attach.update({"instanceValues": ""})
         attach.update({"freeformConfig": ""})
         attach.update({"is_deploy": deploy})
 
@@ -2835,7 +2860,10 @@ class DcnmNetwork:
                 attach.update({"serialNumber": sn})
                 attach.update({"deployment": deploy})
                 attach.update({"extensionValues": ""})
-                attach.update({"instanceValues": ""})
+                # Preserve instanceValues from NDFC so diff can honor sviEnabled.
+                # NDFC returns null for unattached switches; normalize to "".
+                raw_inst = attach.get("instanceValues")
+                attach.update({"instanceValues": raw_inst if raw_inst else ""})
                 attach.update({"freeformConfig": ""})
                 attach.update({"isAttached": attach_state})
                 attach.update({"dot1QVlan": 0})
@@ -5205,6 +5233,7 @@ class DcnmNetwork:
                 ip_address=dict(required=True, type="str"),
                 ports=dict(type="list", default=[]),
                 deploy=dict(type="bool", default=True),
+                svi_enabled=dict(type="bool", default=True),
             )
 
             if self.config:
@@ -5243,6 +5272,7 @@ class DcnmNetwork:
                 ports=dict(type="list", default=[]),
                 deploy=dict(type="bool", default=True),
                 tor_ports=dict(required=False, type="list", elements="dict"),
+                svi_enabled=dict(type="bool", default=True),
             )
             tor_att_spec = dict(
                 ip_address=dict(required=True, type="str"),
