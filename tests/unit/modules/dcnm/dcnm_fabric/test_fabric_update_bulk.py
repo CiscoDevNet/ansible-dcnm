@@ -77,6 +77,141 @@ def test_fabric_update_bulk_00000(fabric_update_bulk) -> None:
     assert instance.fabric_types.class_name == "FabricTypes"
 
 
+@pytest.mark.parametrize(
+    "input_value, expected_value",
+    [
+        ("", "false"),
+        ("false", "false"),
+        ("true", "true"),
+    ],
+)
+def test_remove_nd4x_problematic_keys_normalizes_boolean_previous_values(fabric_update_bulk, input_value, expected_value) -> None:
+    """
+    ND 4.2 can return empty previous boolean values, but rejects those values
+    when dcnm_fabric sends the complete nvPairs payload on update.
+    """
+    payload = {
+        "INBAND_MGMT": "",
+        "INBAND_MGMT_PREV": input_value,
+        "MPLS_ISIS_AREA_NUM_PREV": "",
+        "securityGroupTagMacSegmentation": "",
+        "securityGroupTagMacSegmentation_PREV": input_value,
+    }
+
+    fabric_update_bulk._remove_nd4x_problematic_keys(payload)
+
+    assert payload["INBAND_MGMT"] == ""
+    assert payload["INBAND_MGMT_PREV"] == expected_value
+    assert payload["MPLS_ISIS_AREA_NUM_PREV"] == ""
+    assert payload["securityGroupTagMacSegmentation"] == ""
+    assert payload["securityGroupTagMacSegmentation_PREV"] == expected_value
+
+
+def test_remove_nd4x_problematic_keys_does_not_add_absent_previous_values(fabric_update_bulk) -> None:
+    payload = {"SYSLOG_SEV": "4,4"}
+
+    fabric_update_bulk._remove_nd4x_problematic_keys(payload)
+
+    assert payload == {"SYSLOG_SEV": "4,4"}
+
+
+@pytest.mark.parametrize(
+    "is_controller_version_4x, expected_payload",
+    [
+        (
+            True,
+            {
+                "BGP_AS": "65001",
+                "DEPLOY": False,
+                "FABRIC_NAME": "f1",
+                "FABRIC_TYPE": "VXLAN_EVPN",
+                "INBAND_MGMT": "",
+                "INBAND_MGMT_PREV": "false",
+                "SYSLOG_SEV": "4,4",
+                "securityGroupTagMacSegmentation": "",
+                "securityGroupTagMacSegmentation_PREV": "false",
+            },
+        ),
+        (
+            False,
+            {
+                "DEPLOY": False,
+                "FABRIC_NAME": "f1",
+                "FABRIC_TYPE": "VXLAN_EVPN",
+                "SYSLOG_SEV": "4,4",
+            },
+        ),
+    ],
+)
+def test_fabric_update_payload_normalizes_nd4x_boolean_previous_values(
+    fabric_update_bulk,
+    is_controller_version_4x,
+    expected_payload,
+) -> None:
+    """Normalize controller nvPairs only in the ND 4.x full-payload path."""
+    controller_version = MockControllerVersion()
+    controller_version.is_controller_version_4x = is_controller_version_4x
+
+    fabric_update_bulk.controller_version = controller_version
+    fabric_update_bulk.fabric_details = FabricDetailsByName()
+    fabric_update_bulk.fabric_details.data = {
+        "f1": {
+            "nvPairs": {
+                "BGP_AS": "65001",
+                "FABRIC_NAME": "f1",
+                "INBAND_MGMT": "",
+                "INBAND_MGMT_PREV": "",
+                "SYSLOG_SEV": "3,3",
+                "securityGroupTagMacSegmentation": "",
+                "securityGroupTagMacSegmentation_PREV": "",
+            }
+        }
+    }
+    payload = {
+        "BGP_AS": "65001",
+        "DEPLOY": False,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "SYSLOG_SEV": "4,4",
+    }
+
+    fabric_update_bulk._fabric_needs_update_for_merged_state(payload)
+
+    assert fabric_update_bulk._fabric_changes_payload["f1"] == expected_payload
+
+
+def test_fabric_update_idempotent_payload_does_not_trigger_nd4x_normalization(fabric_update_bulk) -> None:
+    """No full payload or update is built when the requested settings already match."""
+    controller_version = MockControllerVersion()
+    controller_version.is_controller_version_4x = True
+
+    fabric_update_bulk.controller_version = controller_version
+    fabric_update_bulk.fabric_details = FabricDetailsByName()
+    fabric_update_bulk.fabric_details.data = {
+        "f1": {
+            "nvPairs": {
+                "BGP_AS": "65001",
+                "FABRIC_NAME": "f1",
+                "INBAND_MGMT_PREV": "",
+                "SYSLOG_SEV": "4,4",
+                "securityGroupTagMacSegmentation_PREV": "",
+            }
+        }
+    }
+    payload = {
+        "BGP_AS": "65001",
+        "DEPLOY": False,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "SYSLOG_SEV": "4,4",
+    }
+
+    fabric_update_bulk._fabric_needs_update_for_merged_state(payload)
+
+    assert True not in fabric_update_bulk._fabric_update_required
+    assert fabric_update_bulk._fabric_changes_payload["f1"] == payload
+
+
 def test_fabric_update_bulk_00020(fabric_update_bulk) -> None:
     """
     ### Classes and Methods
