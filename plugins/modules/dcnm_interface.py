@@ -2404,13 +2404,24 @@ class DcnmIntf:
                 profile[pps_key] = None
             return
 
-        for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
-            percent_value = profile.get(percent_key)
-            pps_value = profile.get(pps_key)
-            if percent_value not in (None, "") and pps_value in (None, ""):
-                profile[pps_key] = None
-            elif pps_value not in (None, "") and percent_value in (None, ""):
-                profile[percent_key] = ""
+        percent_mode_requested = any(
+            profile.get(level_pair[0]) not in (None, "")
+            for level_pair in self.storm_control_level_pairs
+        )
+        pps_mode_requested = any(
+            profile.get(level_pair[1]) not in (None, "")
+            for level_pair in self.storm_control_level_pairs
+        )
+
+        # A rate mode applies to the whole interface, not just one traffic
+        # class. Mark every field in the opposite mode as explicitly cleared
+        # so merged state cannot copy stale values from HAVE.
+        if percent_mode_requested and not pps_mode_requested:
+            for level_pair in self.storm_control_level_pairs:
+                profile[level_pair[1]] = None
+        elif pps_mode_requested and not percent_mode_requested:
+            for level_pair in self.storm_control_level_pairs:
+                profile[level_pair[0]] = ""
 
     def dcnm_intf_validate_storm_control_profile(self, profile, interface_name):
         enabled = profile["enable_storm_control"]

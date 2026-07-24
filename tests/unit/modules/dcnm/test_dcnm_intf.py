@@ -202,6 +202,82 @@ class TestDcnmIntfModule(TestDcnmModule):
             if key.startswith("STORM_CONTROL_") and key != "STORM_CONTROL_ACTION":
                 self.assertEqual(value, "")
 
+    def test_dcnm_intf_merged_percent_transition_clears_all_pps_fields(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        profile = {
+            "ifname": "Ethernet1/15",
+            "sno": "SERIAL1",
+            "fabric": "fabric1",
+            "enable_storm_control": True,
+            "storm_control_broadcast_level_percent": "12.00",
+        }
+
+        dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+        dcnm_intf.pb_input = [profile]
+        dcnm_intf.keymap = {
+            pps_nvpair: pps_key
+            for _percent_key, pps_key, _percent_nvpair, pps_nvpair
+            in dcnm_intf.storm_control_level_pairs
+        }
+
+        for _percent_key, pps_key, _percent_nvpair, pps_nvpair in (
+            dcnm_intf.storm_control_level_pairs
+        ):
+            with self.subTest(pps_key=pps_key):
+                self.assertIn(pps_key, profile)
+                self.assertIsNone(profile[pps_key])
+                result = dcnm_intf.dcnm_intf_compare_elements(
+                    profile["ifname"],
+                    profile["sno"],
+                    profile["fabric"],
+                    profile[pps_key],
+                    1000,
+                    pps_nvpair,
+                    "merged",
+                )
+                self.assertEqual(result, "add")
+
+        self.assertNotIn("storm_control_multicast_level_percent", profile)
+        self.assertNotIn("storm_control_unicast_level_percent", profile)
+
+    def test_dcnm_intf_merged_pps_transition_clears_all_percent_fields(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        profile = {
+            "ifname": "Ethernet1/15",
+            "sno": "SERIAL1",
+            "fabric": "fabric1",
+            "enable_storm_control": True,
+            "storm_control_multicast_level_pps": 2000,
+        }
+
+        dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+        dcnm_intf.pb_input = [profile]
+        dcnm_intf.keymap = {
+            percent_nvpair: percent_key
+            for percent_key, _pps_key, percent_nvpair, _pps_nvpair
+            in dcnm_intf.storm_control_level_pairs
+        }
+
+        for percent_key, _pps_key, percent_nvpair, _pps_nvpair in (
+            dcnm_intf.storm_control_level_pairs
+        ):
+            with self.subTest(percent_key=percent_key):
+                self.assertIn(percent_key, profile)
+                self.assertEqual(profile[percent_key], "")
+                result = dcnm_intf.dcnm_intf_compare_elements(
+                    profile["ifname"],
+                    profile["sno"],
+                    profile["fabric"],
+                    profile[percent_key],
+                    "10.00",
+                    percent_nvpair,
+                    "merged",
+                )
+                self.assertEqual(result, "add")
+
+        self.assertNotIn("storm_control_broadcast_level_pps", profile)
+        self.assertNotIn("storm_control_unicast_level_pps", profile)
+
     def test_dcnm_intf_storm_control_default_action_uses_controller_no(self):
         dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
         nv_pairs = {}
