@@ -24,7 +24,15 @@
 						"ENABLE_ORPHAN_PORT": false,
 						"ENABLE_PFC": false,
 						"CDP_ENABLE": true,
-						"ENABLE_MONITOR": false
+						"ENABLE_MONITOR": false,
+						"ENABLE_STORM_CONTROL": true,
+						"STORM_CONTROL_ACTION": "shutdown",
+						"STORM_CONTROL_BCAST_LEVEL_PERCENT": "12.00",
+						"STORM_CONTROL_BCAST_LEVEL_PPS": "",
+						"STORM_CONTROL_MCAST_LEVEL_PERCENT": "13.00",
+						"STORM_CONTROL_MCAST_LEVEL_PPS": "",
+						"STORM_CONTROL_UCAST_LEVEL_PERCENT": "14.00",
+						"STORM_CONTROL_UCAST_LEVEL_PPS": ""
 					},
 					"ifName": "Ethernet1/30",
 					"serialNumber": "SAL1819SAN8",
@@ -96,7 +104,15 @@
 						"CDP_ENABLE": true,
 						"ENABLE_MONITOR": false,
 						"PORT_DUPLEX_MODE": "auto",
-						"DESC": "eth interface acting as access"
+						"DESC": "eth interface acting as access",
+						"ENABLE_STORM_CONTROL": "true",
+						"STORM_CONTROL_ACTION": "trap",
+						"STORM_CONTROL_BCAST_LEVEL_PERCENT": "",
+						"STORM_CONTROL_BCAST_LEVEL_PPS": "1000",
+						"STORM_CONTROL_MCAST_LEVEL_PERCENT": "",
+						"STORM_CONTROL_MCAST_LEVEL_PPS": "2000",
+						"STORM_CONTROL_UCAST_LEVEL_PERCENT": "",
+						"STORM_CONTROL_UCAST_LEVEL_PPS": "3000"
 					},
 					"ifName": "Ethernet1/31",
 					"serialNumber": "SAL1819SAN8",
