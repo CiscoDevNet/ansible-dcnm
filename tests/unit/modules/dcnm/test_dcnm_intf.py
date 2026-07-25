@@ -432,6 +432,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "replaced",
         )
         self.assertEqual(result, "dont_add")
+
     def _build_intf_skeleton(self, interface_type):
         return {
             "deploy": True,
