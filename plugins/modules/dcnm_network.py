@@ -1403,7 +1403,7 @@ class DcnmNetwork:
                 )
         return serials
 
-    def diff_for_attach_deploy(self, want_a, have_a, replace=False):
+    def diff_for_attach_deploy(self, want_a, have_a, replace=False, network_vlan=0):
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
@@ -1495,11 +1495,17 @@ class DcnmNetwork:
                                 h_sw_ports = have["switchPorts"].split(",") if have["switchPorts"] else []
                                 w_sw_ports = want["switchPorts"].split(",") if want["switchPorts"] else []
 
-                                # This is needed to handle cases where vlan is updated after deploying the network
-                                # and attachments. This ensures that the attachments before vlan update will use previous
-                                # vlan id. All the active attachments on ND will have a vlan-id.
-                                if want.get("vlan") == 0 and have.get("vlan"):
-                                    want["vlan"] = have.get("vlan")
+                                want_vlan = int(want.get("vlan") or 0)
+                                have_vlan = int(have.get("vlan") or 0)
+
+                                if not replace and want_vlan == 0 and have_vlan:
+                                    want_vlan = have_vlan
+                                    want["vlan"] = have_vlan
+                                elif replace and want_vlan == 0 and network_vlan:
+                                    want_vlan = int(network_vlan)
+                                    want["vlan"] = int(network_vlan)
+
+                                vlan_changed = want_vlan != have_vlan
 
                                 if sorted(h_sw_ports) != sorted(w_sw_ports):
                                     atch_sw_ports = list(set(w_sw_ports) - set(h_sw_ports))
@@ -1509,7 +1515,7 @@ class DcnmNetwork:
                                         dtach_sw_ports = list(set(h_sw_ports) - set(w_sw_ports))
 
                                         if not atch_sw_ports and not dtach_sw_ports:
-                                            if torports_configured:
+                                            if torports_configured or vlan_changed:
                                                 del want["isAttached"]
                                                 attach_list.append(want)
                                                 if bool(want["is_deploy"]):
@@ -1528,7 +1534,7 @@ class DcnmNetwork:
 
                                     if not atch_sw_ports:
                                         # The attachments in the have consist of attachments in want and more.
-                                        if torports_configured:
+                                        if torports_configured or vlan_changed:
                                             del want["isAttached"]
                                             attach_list.append(want)
                                             if bool(want["is_deploy"]):
@@ -1545,6 +1551,13 @@ class DcnmNetwork:
                                     continue
 
                                 elif torports_configured:
+                                    del want["isAttached"]
+                                    attach_list.append(want)
+                                    if bool(want["is_deploy"]):
+                                        dep_net = True
+                                    continue
+
+                                elif vlan_changed:
                                     del want["isAttached"]
                                     attach_list.append(want)
                                     if bool(want["is_deploy"]):
@@ -1657,7 +1670,7 @@ class DcnmNetwork:
         attach.update({"serialNumber": serial})
         attach.update({"switchPorts": ",".join(attach["ports"])})
         attach.update({"detachSwitchPorts": ""})  # Is this supported??Need to handle correct
-        attach.update({"vlan": attach.get("vlan_id", 0)})     # Use attachment vlan_id if provided
+        attach.update({"vlan": attach.get("vlan_id") or 0})     # Use attachment vlan_id if provided; None/omitted -> 0
         attach.update({"dot1QVlan": 0})
         attach.update({"untagged": False})
         # This flag is not to be confused for deploy of attachment.
@@ -2965,6 +2978,7 @@ class DcnmNetwork:
                             # )
                 net_attach.update({"networkName": net["net_name"]})
                 net_attach.update({"lanAttachList": networks})
+                net_attach.update({"vlan_id": net.get("vlan_id") or 0})
                 want_attach.append(net_attach)
 
             all_networks += net["net_name"] + ","
@@ -3418,11 +3432,17 @@ class DcnmNetwork:
                 if want_a["networkName"] == have_a["networkName"]:
 
                     found = True
-                    diff, net = self.diff_for_attach_deploy(want_a["lanAttachList"], have_a["lanAttachList"], replace)
+                    diff, net = self.diff_for_attach_deploy(
+                        want_a["lanAttachList"],
+                        have_a["lanAttachList"],
+                        replace,
+                        network_vlan=want_a.get("vlan_id") or 0,
+                    )
 
                     if diff:
                         base = want_a.copy()
                         del base["lanAttachList"]
+                        base.pop("vlan_id", None)
                         base.update({"lanAttachList": diff})
                         diff_attach.append(base)
                         if net:
@@ -3474,6 +3494,7 @@ class DcnmNetwork:
                 if atch_list:
                     base = want_a.copy()
                     del base["lanAttachList"]
+                    base.pop("vlan_id", None)
                     base.update({"lanAttachList": atch_list})
                     diff_attach.append(base)
                     if bool(attach["is_deploy"]):

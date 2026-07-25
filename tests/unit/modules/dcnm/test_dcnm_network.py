@@ -1089,8 +1089,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
         )
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertEqual(result.get("diff")[0]["vlan_id"], 203)
-        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
-        self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
+        deploy_by_ip = {a["ip_address"]: a["deploy"] for a in result.get("diff")[0]["attach"]}
+        self.assertTrue(deploy_by_ip["10.10.10.218"])
+        self.assertTrue(deploy_by_ip["10.10.10.226"])
+        self.assertFalse(deploy_by_ip["10.10.10.217"])
         self.assertEqual(
             result["response"][0]["DATA"]["test-network--9NN7E41N16A(leaf1)"], "SUCCESS"
         )
@@ -1120,8 +1122,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertIn(("GET", get_net_path), request_calls)
         self.assertNotIn(("GET", get_net_name_path), request_calls)
         self.assertEqual(result.get("diff")[0]["vlan_id"], 203)
-        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
-        self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
+        deploy_by_ip = {a["ip_address"]: a["deploy"] for a in result.get("diff")[0]["attach"]}
+        self.assertTrue(deploy_by_ip["10.10.10.218"])
+        self.assertTrue(deploy_by_ip["10.10.10.226"])
+        self.assertFalse(deploy_by_ip["10.10.10.217"])
 
     def test_dcnm_net_replace_with_no_atch(self):
         set_module_args(
@@ -1501,6 +1505,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 "isAttached": True,
                 "deployment": True,
                 "is_deploy": True,
+                "vlan": 0,
                 "torports": [],
             },
             {
@@ -1510,6 +1515,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 "isAttached": True,
                 "deployment": True,
                 "is_deploy": True,
+                "vlan": 0,
                 "torports": [
                     {"switch": "dt-n9k6", "torPorts": "Ethernet1/12"},
                     {"switch": "dt-n9k7", "torPorts": "Ethernet1/12"},
@@ -1546,7 +1552,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         ]
 
         dcnm_net.normalize_vpc_torports(want_attach)
-        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach), replace=True)
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach), replace=True, network_vlan=202)
 
         self.assertFalse(diff)
         self.assertFalse(dep_net)
@@ -2390,3 +2396,55 @@ class TestDcnmNetworkModule(TestDcnmModule):
         # No diff - vlan=0 inherits existing vlan 300
         self.assertFalse(diff)
         self.assertFalse(dep_net)
+
+    def test_dcnm_net_diff_for_attach_deploy_vlan_only_change_merged(self):
+        """Vlan-only change under merged must produce a diff with the new vlan."""
+        dcnm_net = self._build_diff_network(self.net_inv_data)
+
+        have_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", vlan=300),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", vlan=301),
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
+
+        self.assertEqual(len(diff), 1)
+        self.assertEqual(diff[0]["vlan"], 301)
+        self.assertEqual(diff[0]["switchPorts"], "Ethernet1/13,Ethernet1/14")
+        self.assertTrue(dep_net)
+
+    def test_dcnm_net_diff_for_attach_deploy_vlan_only_change_replaced(self):
+        """Vlan-only change under replaced must produce a diff with the new vlan."""
+        dcnm_net = self._build_diff_network(self.net_inv_data)
+
+        have_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", vlan=300),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", vlan=301),
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach), replace=True)
+
+        self.assertEqual(len(diff), 1)
+        self.assertEqual(diff[0]["vlan"], 301)
+        self.assertTrue(dep_net)
+
+    def test_dcnm_net_diff_for_attach_deploy_vlan_reset_replaced(self):
+        """Replaced with omitted attach vlan_id must send vlan=0 to reset the override."""
+        dcnm_net = self._build_diff_network(self.net_inv_data)
+
+        have_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", vlan=300),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", vlan=0),
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach), replace=True)
+
+        self.assertEqual(len(diff), 1)
+        self.assertEqual(diff[0]["vlan"], 0)
+        self.assertTrue(dep_net)
