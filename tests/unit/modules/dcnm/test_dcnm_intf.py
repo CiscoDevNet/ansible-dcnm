@@ -490,6 +490,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "enable_qos": False,
             "qos_policy": "",
             "queuing_policy": "",
+            "copy_description": False,
             "enable_cdp": enable_cdp,
         }
         if mode == "trunk":
