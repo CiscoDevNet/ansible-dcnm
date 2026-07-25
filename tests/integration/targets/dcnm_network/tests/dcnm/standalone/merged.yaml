@@ -1435,6 +1435,33 @@
       - result.response | length == 0
   tags: merged
 
+- name: MERGED - TC16 - Create Network with invalid attachment vlan id
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net13
+        vrf_name: Tenant-1
+        net_id: 7005
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 1500
+        gw_ip_subnet: '192.168.30.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            vlan_id: 15000
+        deploy: true
+  register: result
+  ignore_errors: true
+  tags: merged
+
+- name: MERGED - TC16 - ASSERT - Check invalid attachment vlan id
+  ansible.builtin.assert:
+    that:
+      - '"Invalid parameters in playbook: vlan_id:15000 : The item exceeds the allowed range of max 4094" in result.msg'
+      - result.changed == false
+  tags: merged
+
 ##############################################
 ##                 CLEAN-UP                 ##
 ##############################################

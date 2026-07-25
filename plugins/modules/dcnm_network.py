@@ -5230,7 +5230,7 @@ class DcnmNetwork:
                 ip_address=dict(required=True, type="str"),
                 ports=dict(type="list", default=[]),
                 deploy=dict(type="bool", default=True),
-                vlan_id=dict(type="int", required=False),
+                vlan_id=dict(type="int", range_max=4094, required=False),
             )
 
             if self.config:
@@ -5269,7 +5269,7 @@ class DcnmNetwork:
                 ports=dict(type="list", default=[]),
                 deploy=dict(type="bool", default=True),
                 tor_ports=dict(required=False, type="list", elements="dict"),
-                vlan_id=dict(type="int", required=False),
+                vlan_id=dict(type="int", range_max=4094, required=False),
             )
             tor_att_spec = dict(
                 ip_address=dict(required=True, type="str"),
