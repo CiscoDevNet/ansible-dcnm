@@ -65,6 +65,9 @@ class FabricUpdateCommon(FabricCommon):
         -   Initialize STP_BRIDGE_PRIORITY to empty string if:
             - STP_ROOT_OPTION is "unmanaged"
             - STP_BRIDGE_PRIORITY is not already present in payload
+        -   Normalize boolean previous-value fields to "false" if empty:
+            - INBAND_MGMT_PREV
+            - securityGroupTagMacSegmentation_PREV
 
         Args:
             payload: Dictionary containing fabric parameters
@@ -77,6 +80,14 @@ class FabricUpdateCommon(FabricCommon):
         if "STP_ROOT_OPTION" in payload and payload["STP_ROOT_OPTION"] == "unmanaged":
             if "STP_BRIDGE_PRIORITY" not in payload:
                 payload["STP_BRIDGE_PRIORITY"] = ""
+
+        boolean_previous_value_keys = [
+            "INBAND_MGMT_PREV",
+            "securityGroupTagMacSegmentation_PREV",
+        ]
+        for key in boolean_previous_value_keys:
+            if payload.get(key) == "":
+                payload[key] = "false"
 
         problematic_keys = [
             "dcnmUser",
