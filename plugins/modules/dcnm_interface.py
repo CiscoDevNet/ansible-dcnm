@@ -2776,6 +2776,7 @@ class DcnmIntf:
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
             copy_description=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
         )
         vpc_prof_spec_trunk.update(self.dcnm_intf_storm_control_spec())
 
@@ -2805,6 +2806,7 @@ class DcnmIntf:
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
             copy_description=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
         )
         vpc_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
 
@@ -2976,6 +2978,7 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            enable_cdp=dict(type="bool", default=True),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -3642,6 +3645,7 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["COPY_DESC"] = delem[profile][
             "copy_description"
         ]
+        intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"] = delem[profile]["enable_cdp"]
         if delem[profile].get("disable_lacp_suspend_individual"):
             intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
         else:
@@ -3974,6 +3978,8 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
 

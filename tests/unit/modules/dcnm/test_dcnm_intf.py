@@ -432,6 +432,154 @@ class TestDcnmIntfModule(TestDcnmModule):
             "replaced",
         )
         self.assertEqual(result, "dont_add")
+    def _build_intf_skeleton(self, interface_type):
+        return {
+            "deploy": True,
+            "policy": "",
+            "interfaceType": interface_type,
+            "interfaces": [
+                {
+                    "serialNumber": "",
+                    "interfaceType": interface_type,
+                    "ifName": "",
+                    "fabricName": "test_fabric",
+                    "nvPairs": {"SPEED": "Auto"},
+                }
+            ],
+        }
+
+    def _build_eth_dot1q_delem(self, enable_cdp):
+        return {
+            "name": "eth1/4",
+            "type": "eth",
+            "switch": ["10.1.1.1"],
+            "deploy": True,
+            "profile": {
+                "mode": "dot1q",
+                "bpdu_guard": "true",
+                "port_type_fast": True,
+                "mtu": "jumbo",
+                "speed": "Auto",
+                "access_vlan": "10",
+                "cmds": None,
+                "description": "test",
+                "admin_state": True,
+                "enable_cdp": enable_cdp,
+                "duplex": "auto",
+            },
+        }
+
+    def _build_vpc_delem(self, mode, enable_cdp):
+        profile = {
+            "mode": mode,
+            "peer1_pcid": 10,
+            "peer2_pcid": 10,
+            "peer1_members": ["eth1/1"],
+            "peer2_members": ["eth1/1"],
+            "pc_mode": "active",
+            "bpdu_guard": "true",
+            "port_type_fast": True,
+            "mtu": "jumbo",
+            "speed": "Auto",
+            "peer1_cmds": None,
+            "peer2_cmds": None,
+            "peer1_description": "",
+            "peer2_description": "",
+            "admin_state": True,
+            "enable_qos": False,
+            "qos_policy": "",
+            "queuing_policy": "",
+            "enable_cdp": enable_cdp,
+        }
+        if mode == "trunk":
+            profile.update({
+                "peer1_allowed_vlans": "none",
+                "peer2_allowed_vlans": "none",
+                "peer1_native_vlan": "",
+                "peer2_native_vlan": "",
+                "disable_lacp_suspend_individual": False,
+                "enable_lacp_vpc_convergence": False,
+                "lacp_port_priority": 32768,
+                "lacp_rate": "normal",
+            })
+        else:
+            profile.update({
+                "peer1_access_vlan": "10",
+                "peer2_access_vlan": "10",
+            })
+        return {
+            "name": "vpc10",
+            "type": "vpc",
+            "switch": ["10.1.1.1"],
+            "deploy": True,
+            "profile": profile,
+        }
+
+    def test_dcnm_intf_eth_dot1q_payload_disables_cdp(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        delem = self._build_eth_dot1q_delem(enable_cdp=False)
+        intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+
+        dcnm_intf.dcnm_intf_get_eth_payload(delem, intf, "profile")
+
+        self.assertEqual(intf["interfaces"][0]["ifName"], "Ethernet1/4")
+        self.assertIn("CDP_ENABLE", intf["interfaces"][0]["nvPairs"])
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"], False
+        )
+
+    def test_dcnm_intf_eth_dot1q_payload_enables_cdp(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        delem = self._build_eth_dot1q_delem(enable_cdp=True)
+        intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+
+        dcnm_intf.dcnm_intf_get_eth_payload(delem, intf, "profile")
+
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"], True
+        )
+
+    def test_dcnm_intf_vpc_trunk_payload_disables_cdp(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.vpc_ip_sn = {}
+        dcnm_intf.ip_sn = {"10.1.1.1": "TESTSN1"}
+        delem = self._build_vpc_delem(mode="trunk", enable_cdp=False)
+        intf = self._build_intf_skeleton("INTERFACE_VPC")
+
+        dcnm_intf.dcnm_intf_get_vpc_payload(delem, intf, "profile")
+
+        self.assertEqual(intf["interfaces"][0]["ifName"], "vPC10")
+        self.assertIn("CDP_ENABLE", intf["interfaces"][0]["nvPairs"])
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"], False
+        )
+
+    def test_dcnm_intf_vpc_trunk_payload_enables_cdp(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.vpc_ip_sn = {}
+        dcnm_intf.ip_sn = {"10.1.1.1": "TESTSN1"}
+        delem = self._build_vpc_delem(mode="trunk", enable_cdp=True)
+        intf = self._build_intf_skeleton("INTERFACE_VPC")
+
+        dcnm_intf.dcnm_intf_get_vpc_payload(delem, intf, "profile")
+
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"], True
+        )
+
+    def test_dcnm_intf_vpc_access_payload_disables_cdp(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.vpc_ip_sn = {}
+        dcnm_intf.ip_sn = {"10.1.1.1": "TESTSN1"}
+        delem = self._build_vpc_delem(mode="access", enable_cdp=False)
+        intf = self._build_intf_skeleton("INTERFACE_VPC")
+
+        dcnm_intf.dcnm_intf_get_vpc_payload(delem, intf, "profile")
+
+        self.assertIn("CDP_ENABLE", intf["interfaces"][0]["nvPairs"])
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"], False
+        )
 
     def setUp(self):
 
@@ -5089,6 +5237,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "STORM_CONTROL_MCAST_LEVEL_PPS",
             "STORM_CONTROL_UCAST_LEVEL_PERCENT",
             "STORM_CONTROL_UCAST_LEVEL_PPS",
+            "CDP_ENABLE",
         ]
 
         for d in result["diff"][0]["replaced"]:
