@@ -1585,13 +1585,6 @@ class DcnmNetwork:
                                         dep_net = True
                                     continue
 
-                                elif vlan_changed:
-                                    del want["isAttached"]
-                                    attach_list.append(want)
-                                    if bool(want["is_deploy"]):
-                                        dep_net = True
-                                    continue
-
                             if bool(have["isAttached"]) is not bool(want["isAttached"]):
                                 # When the attachment is to be detached and undeployed, ignore any changes
                                 # to the attach section in the want(i.e in the playbook).
