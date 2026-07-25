@@ -2366,6 +2366,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
+        attach_by_ip = {a["ip_address"]: a for a in result.get("diff")[0]["attach"]}
+        self.assertEqual(attach_by_ip["10.10.10.217"]["vlan_id"], 300)
+        self.assertNotIn("vlan_id", attach_by_ip["10.10.10.218"])
 
     def test_dcnm_net_merged_attach_vlan_override_idempotent(self):
         """Test idempotency when attachment-level vlan_id matches existing state.

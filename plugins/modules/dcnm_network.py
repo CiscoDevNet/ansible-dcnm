@@ -3802,6 +3802,8 @@ class DcnmNetwork:
                     found_c["attach"].append(detach_d)
                 attach_d.update({"ports": a_w["switchPorts"]})
                 attach_d.update({"deploy": a_w["deployment"]})
+                if a_w.get("vlan"):
+                    attach_d.update({"vlan_id": a_w["vlan"]})
                 torports = self.get_attachment_torports_string(a_w)
                 if torports:
                     attach_d.update({"tor_ports": torports})
@@ -3831,6 +3833,8 @@ class DcnmNetwork:
                     new_attach_list.append(detach_d)
                 attach_d.update({"ports": a_w["switchPorts"]})
                 attach_d.update({"deploy": a_w["deployment"]})
+                if a_w.get("vlan"):
+                    attach_d.update({"vlan_id": a_w["vlan"]})
                 torports = self.get_attachment_torports_string(a_w)
                 if torports:
                     attach_d.update({"tor_ports": torports})
