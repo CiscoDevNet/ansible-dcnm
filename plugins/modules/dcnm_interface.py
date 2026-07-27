@@ -1883,6 +1883,7 @@ from decimal import Decimal, InvalidOperation
 
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.common.validation import check_type_bool
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_get_bulk_api_support,
     dcnm_send,
@@ -2393,10 +2394,14 @@ class DcnmIntf:
             return
 
         enabled = profile.get("enable_storm_control")
-        explicitly_disabled = enabled is False or (
-            isinstance(enabled, str)
-            and enabled.lower() in ("false", "no", "off", "0")
-        )
+        explicitly_disabled = False
+        if "enable_storm_control" in profile:
+            try:
+                explicitly_disabled = not check_type_bool(enabled)
+            except TypeError:
+                # Leave invalid values for the normal profile validation path,
+                # which reports the established user-facing error.
+                pass
         if explicitly_disabled:
             profile["storm_control_action"] = "default"
             for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
@@ -5274,6 +5279,18 @@ class DcnmIntf:
                     return "false"
                 return sval
 
+            if key == "ENABLE_STORM_CONTROL":
+                if sval in ("true", "yes", "on", "1", "y", "t"):
+                    return "true"
+                if sval in ("", "false", "no", "off", "0", "n", "f"):
+                    return "false"
+                return sval
+
+            if key == "STORM_CONTROL_ACTION":
+                if sval in ("", "default", "no"):
+                    return "no"
+                return sval
+
             return sval
 
         if (
@@ -5378,6 +5395,25 @@ class DcnmIntf:
                 )
             ):
                 return "DCNM_INTF_NOT_MATCH"
+
+            # Storm control is supported by the leaf role-default trunk
+            # template. Treat omitted controller defaults as disabled, while
+            # detecting any enabled action or retained threshold as drift.
+            storm_control_keys = (
+                "ENABLE_STORM_CONTROL",
+                "STORM_CONTROL_ACTION",
+                "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+                "STORM_CONTROL_BCAST_LEVEL_PPS",
+                "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+                "STORM_CONTROL_MCAST_LEVEL_PPS",
+                "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+                "STORM_CONTROL_UCAST_LEVEL_PPS",
+            )
+            for key in storm_control_keys:
+                if normalize_default_compare_value(
+                    key, intf_nv.get(key)
+                ) != normalize_default_compare_value(key, have_nv.get(key)):
+                    return "DCNM_INTF_NOT_MATCH"
         return "DCNM_INTF_MATCH"
 
     def dcnm_intf_get_default_eth_payload(self, ifname, sno, fabric):
@@ -5423,6 +5459,9 @@ class DcnmIntf:
             eth_payload["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = "none"
             eth_payload["interfaces"][0]["nvPairs"]["NATIVE_VLAN"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            self.dcnm_intf_set_storm_control_nv_pairs(
+                {}, eth_payload["interfaces"][0]["nvPairs"]
+            )
 
             eth_payload["interfaces"][0]["ifName"] = ifname
             eth_payload["interfaces"][0]["serialNumber"] = sno
