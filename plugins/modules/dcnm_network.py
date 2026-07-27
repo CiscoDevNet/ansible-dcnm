@@ -1435,16 +1435,21 @@ class DcnmNetwork:
                         have_inst_raw = have.get("instanceValues") or ""
                         want_inst = json.loads(want_inst_raw) if want_inst_raw else {}
                         have_inst = json.loads(have_inst_raw) if have_inst_raw else {}
+                        svi_supplied = bool(want.get("_svi_supplied"))
+                        # Under merged, an omitted svi_enabled must preserve have's value
+                        # even when the payload requires a sviEnabled key: drop want's
+                        # default sviEnabled from the merge so have wins.
+                        if not svi_supplied and not replace:
+                            want_inst_for_merge = {k: v for k, v in want_inst.items() if k != "sviEnabled"}
+                        else:
+                            want_inst_for_merge = want_inst
                         merged_inst = dict(have_inst)
-                        merged_inst.update(want_inst)
+                        merged_inst.update(want_inst_for_merge)
                         want["instanceValues"] = json.dumps(merged_inst) if merged_inst else ""
-                        # Only diff on sviEnabled when NDFC actually returned it.
-                        # Absence in have means "no opinion" - avoids spurious re-deploys
-                        # driven purely by the playbook default.
-                        svi_changed = (
-                            "sviEnabled" in have_inst
-                            and have_inst["sviEnabled"] != want_inst.get("sviEnabled", "false")
-                        )
+                        if svi_supplied or replace:
+                            svi_changed = want_inst.get("sviEnabled") != have_inst.get("sviEnabled")
+                        else:
+                            svi_changed = False
 
                         if want.get("isAttached") is not None:
                             if bool(have["isAttached"]) and bool(want["isAttached"]):
@@ -1704,11 +1709,27 @@ class DcnmNetwork:
         # NDFC expects lowercase-string booleans inside the instanceValues JSON payload.
         # NDFC-managed keys already present in have (isVPC, isActive, ...) are merged
         # back in later by diff_for_attach_deploy.
+        # svi_enabled is an Ansible-side input; strip it before the version branch
+        # so the raw key can never survive to the outgoing NDFC payload.
+        svi_raw = attach.pop("svi_enabled", None)
+
         if self.dcnm_version >= 12.4:
-            svi_enabled = bool(attach.pop("svi_enabled", True))
-            inst_values = {"sviEnabled": "true" if svi_enabled else "false"}
-            attach.update({"instanceValues": json.dumps(inst_values)})
+            if svi_raw is None:
+                svi_val = "true"
+                attach["_svi_supplied"] = False
+            else:
+                svi_val = "true" if bool(svi_raw) else "false"
+                attach["_svi_supplied"] = True
+            attach.update({"instanceValues": json.dumps({"sviEnabled": svi_val})})
         else:
+            if svi_raw is not None:
+                self.module.fail_json(
+                    msg=(
+                        "svi_enabled is only supported on NDFC 12.4+. "
+                        "Detected NDFC version: {0}. Remove svi_enabled from the "
+                        "playbook or upgrade the controller.".format(self.dcnm_version)
+                    )
+                )
             attach.update({"instanceValues": ""})
         attach.update({"freeformConfig": attach.get("freeform_config")})
         attach.update({"is_deploy": deploy})
@@ -3948,6 +3969,14 @@ class DcnmNetwork:
                 if a_w.get("vlan"):
                     attach_d.update({"vlan_id": a_w["vlan"]})
                 attach_d.update({"freeform_config": a_w.get("freeformConfig") or ""})
+                inst_raw = a_w.get("instanceValues") or ""
+                if inst_raw:
+                    try:
+                        inst_dict = json.loads(inst_raw)
+                    except (json.JSONDecodeError, TypeError):
+                        inst_dict = {}
+                    if "sviEnabled" in inst_dict:
+                        attach_d.update({"svi_enabled": inst_dict["sviEnabled"] == "true"})
                 torports = self.get_attachment_torports_string(a_w)
                 if torports:
                     attach_d.update({"tor_ports": torports})
@@ -3980,6 +4009,14 @@ class DcnmNetwork:
                 if a_w.get("vlan"):
                     attach_d.update({"vlan_id": a_w["vlan"]})
                 attach_d.update({"freeform_config": a_w.get("freeformConfig") or ""})
+                inst_raw = a_w.get("instanceValues") or ""
+                if inst_raw:
+                    try:
+                        inst_dict = json.loads(inst_raw)
+                    except (json.JSONDecodeError, TypeError):
+                        inst_dict = {}
+                    if "sviEnabled" in inst_dict:
+                        attach_d.update({"svi_enabled": inst_dict["sviEnabled"] == "true"})
                 torports = self.get_attachment_torports_string(a_w)
                 if torports:
                     attach_d.update({"tor_ports": torports})
@@ -5032,6 +5069,7 @@ class DcnmNetwork:
                 for v_a in d_a["lanAttachList"]:
                     if v_a.get("is_deploy"):
                         del v_a["is_deploy"]
+                    v_a.pop("_svi_supplied", None)
                     self.normalize_attachment_torports_for_payload(v_a)
 
             # Calculate dynamic retry count based on number of attachments
@@ -5381,7 +5419,7 @@ class DcnmNetwork:
                 deploy=dict(type="bool", default=True),
                 vlan_id=dict(type="int", range_max=4094, required=False),
                 freeform_config=dict(type="str", required=False),
-                svi_enabled=dict(type="bool", default=True),
+                svi_enabled=dict(type="bool"),
             )
 
             if self.config:
@@ -5422,7 +5460,7 @@ class DcnmNetwork:
                 tor_ports=dict(required=False, type="list", elements="dict"),
                 vlan_id=dict(type="int", range_max=4094, required=False),
                 freeform_config=dict(type="str", required=False),
-                svi_enabled=dict(type="bool", default=True),
+                svi_enabled=dict(type="bool"),
             )
             tor_att_spec = dict(
                 ip_address=dict(required=True, type="str"),
