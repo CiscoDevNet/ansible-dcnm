@@ -5679,10 +5679,32 @@ class DcnmIntf:
                         )
                         continue
 
-                if (
-                    str(have.get("deletable")).strip().lower()
-                    == "false"
-                ):
+                is_deleted = self.module.params["state"] == "deleted"
+                deletable = self.dcnm_intf_capability_enabled(
+                    have, "deletable"
+                )
+                edit_allowed = self.dcnm_intf_capability_enabled(
+                    have, "editAllowed"
+                )
+
+                # A bulk deleted request must make the same fail-closed
+                # capability decision as a named deleted request. Missing or
+                # unrecognized controller metadata is not authorization to
+                # reset a physical interface.
+                if is_deleted and not deletable and not edit_allowed:
+                    self.dcnm_intf_skip_physical_default_not_allowed(have)
+                    continue
+
+                raw_deletable_is_false = (
+                    str(have.get("deletable")).strip().lower() == "false"
+                )
+                needs_dependency_handling = (
+                    not deletable
+                    if is_deleted
+                    else raw_deletable_is_false
+                )
+
+                if needs_dependency_handling:
                     source = self.dcnm_intf_get_underlay_policy_source(have)
 
                     if source is not None:
@@ -5691,21 +5713,15 @@ class DcnmIntf:
                         self.changed_dict[0]["deferred"].append(
                             {
                                 "Name": name,
-                                "Deletable": have["deletable"],
+                                "Deletable": have.get("deletable"),
                                 "Underlay Policies": have["underlayPolicies"],
                                 "Source": source,
                             }
                         )
                         continue
 
-                    if self.module.params["state"] != "deleted":
+                    if not is_deleted:
                         self.dcnm_intf_skip_non_resolvable_deferred(have)
-                        continue
-
-                    if not self.dcnm_intf_capability_enabled(
-                        have, "editAllowed"
-                    ):
-                        self.dcnm_intf_skip_physical_default_not_allowed(have)
                         continue
 
                 uelem = self.dcnm_intf_get_default_eth_payload(
@@ -7106,14 +7122,15 @@ def main():
         or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_VLAN"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["STRAIGHT_TROUGH_FEX"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["AA_FEX"]]
-        or dcnm_intf.diff_delete_deploy
+        or any(dcnm_intf.diff_delete_deploy)
+        or dcnm_intf.diff_create_breakout
+        or dcnm_intf.diff_delete_breakout
     ):
         dcnm_intf.result["changed"] = True
     else:
         module.exit_json(**dcnm_intf.result)
 
     if module.check_mode:
-        dcnm_intf.result["changed"] = False
         module.exit_json(**dcnm_intf.result)
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()

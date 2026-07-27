@@ -54,6 +54,17 @@ class TestDcnmIntfModule(TestDcnmModule):
             "DATA": data,
         }
 
+    def assert_no_mutating_dcnm_calls(self):
+
+        mutating_methods = {"POST", "PUT", "DELETE"}
+        self.assertFalse(
+            any(
+                call.args[1] in mutating_methods
+                for call in self.run_dcnm_send.call_args_list
+                if len(call.args) > 1
+            )
+        )
+
     def test_dcnm_intf_is_vpc_peer_link_port_channel_null_alias_template(self):
 
         dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
@@ -3323,10 +3334,11 @@ class TestDcnmIntfModule(TestDcnmModule):
                 config=self.playbook_config,
             )
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=True, failed=False)
 
         self.assertEqual(len(result["diff"][0]["merged"]), 5)
         self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
         for d in result["diff"][0]["merged"]:
             for intf in d["interfaces"]:
                 self.assertEqual(
@@ -4005,7 +4017,13 @@ class TestDcnmIntfModule(TestDcnmModule):
             else:
                 intf["editAllowed"] = edit_allowed
 
-    def prepare_nd42_deleted_all_eth_test(self):
+    def prepare_nd42_deleted_all_eth_test(
+        self,
+        deletable=False,
+        edit_allowed=True,
+        omit_deletable=False,
+        omit_edit_allowed=False,
+    ):
 
         self.config_data = loadPlaybookData("dcnm_intf_common_configs")
         self.have_all_payloads_data = copy.deepcopy(
@@ -4017,8 +4035,14 @@ class TestDcnmIntfModule(TestDcnmModule):
                 intf["ifType"] == "INTERFACE_ETHERNET"
                 and str(intf["isPhysical"]).lower() == "true"
             ):
-                intf["deletable"] = False
-                intf["editAllowed"] = True
+                if omit_deletable:
+                    intf.pop("deletable", None)
+                else:
+                    intf["deletable"] = deletable
+                if omit_edit_allowed:
+                    intf.pop("editAllowed", None)
+                else:
+                    intf["editAllowed"] = edit_allowed
 
         self.playbook_config = self.config_data.get("override_eth_only_config")
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
@@ -4031,6 +4055,32 @@ class TestDcnmIntfModule(TestDcnmModule):
             "mock_monitor_false_resp"
         )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+    def set_eth_deleted_payloads_to_role_default(self):
+
+        payload_names = [
+            "eth_merged_trunk_payloads",
+            "eth_merged_access_payloads",
+            "eth_merged_routed_payloads",
+            "eth_merged_epl_routed_payloads",
+            "eth_merged_monitor_payloads",
+        ]
+        for payload_name in payload_names:
+            payload = self.payloads_data[payload_name]["DATA"][0]
+            ifname = payload["interfaces"][0]["ifName"]
+            payload["policy"] = "int_routed_host_11_1"
+            payload["interfaces"][0]["nvPairs"] = {
+                "MTU": 9216,
+                "SPEED": "Auto",
+                "DESC": "",
+                "CONF": "no shutdown",
+                "ADMIN_STATE": True,
+                "INTF_NAME": ifname,
+                "INTF_VRF": "",
+                "IP": "",
+                "PREFIX": "",
+                "ROUTING_TAG": "",
+            }
 
     def test_dcnm_intf_eth_deleted_existing(self):
 
@@ -4103,39 +4153,17 @@ class TestDcnmIntfModule(TestDcnmModule):
                 config=self.playbook_config,
             )
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=True, failed=False)
 
         self.assertEqual(len(result["diff"][0]["replaced"]), 5)
         self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
 
     def test_dcnm_intf_eth_deleted_existing_nd42_idempotent(self):
 
         self.prepare_eth_deleted_existing_test()
         self.set_eth_deleted_capabilities(False, True)
-
-        payload_names = [
-            "eth_merged_trunk_payloads",
-            "eth_merged_access_payloads",
-            "eth_merged_routed_payloads",
-            "eth_merged_epl_routed_payloads",
-            "eth_merged_monitor_payloads",
-        ]
-        for payload_name in payload_names:
-            payload = self.payloads_data[payload_name]["DATA"][0]
-            ifname = payload["interfaces"][0]["ifName"]
-            payload["policy"] = "int_routed_host_11_1"
-            payload["interfaces"][0]["nvPairs"] = {
-                "MTU": 9216,
-                "SPEED": "Auto",
-                "DESC": "",
-                "CONF": "no shutdown",
-                "ADMIN_STATE": True,
-                "INTF_NAME": ifname,
-                "INTF_VRF": "",
-                "IP": "",
-                "PREFIX": "",
-                "ROUTING_TAG": "",
-            }
+        self.set_eth_deleted_payloads_to_role_default()
 
         set_module_args(
             dict(
@@ -4149,6 +4177,27 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["replaced"]), 0)
         self.assertEqual(len(result["diff"][0]["skipped"]), 0)
         self.assertFalse(result.get("response"))
+
+    def test_dcnm_intf_eth_deleted_existing_nd42_check_mode_idempotent(self):
+
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_capabilities(False, True)
+        self.set_eth_deleted_payloads_to_role_default()
+
+        set_module_args(
+            dict(
+                state="deleted",
+                _ansible_check_mode=True,
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
 
     def test_dcnm_intf_eth_deleted_existing_nd42_underlay_dependency(self):
 
@@ -4202,6 +4251,25 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         self.prepare_eth_deleted_existing_test()
         self.set_eth_deleted_capabilities(False)
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 5)
+
+    def test_dcnm_intf_eth_deleted_existing_unknown_deletable_not_editable(
+        self,
+    ):
+
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_capabilities(None, False)
 
         set_module_args(
             dict(
@@ -6640,6 +6708,125 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["replaced"]), 3)
         self.assertEqual(len(result["diff"][0]["skipped"]), 0)
 
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_fail_closed(
+        self,
+    ):
+
+        invalid_capabilities = [
+            ("missing deletable", None, False, True, False),
+            ("null deletable", None, False, False, False),
+            ("blank deletable", "", False, False, False),
+            ("numeric zero deletable", 0, False, False, False),
+            ("unknown deletable", "unknown", False, False, False),
+            ("both false", False, False, False, False),
+            ("both missing", None, None, True, True),
+        ]
+
+        for (
+            description,
+            deletable,
+            edit_allowed,
+            omit_deletable,
+            omit_edit_allowed,
+        ) in invalid_capabilities:
+            with self.subTest(description):
+                self.prepare_nd42_deleted_all_eth_test(
+                    deletable=deletable,
+                    edit_allowed=edit_allowed,
+                    omit_deletable=omit_deletable,
+                    omit_edit_allowed=omit_edit_allowed,
+                )
+
+                set_module_args(
+                    dict(
+                        state="deleted",
+                        fabric="test_fabric",
+                        override_intf_types=["eth"],
+                        deploy=False,
+                        config=[],
+                    )
+                )
+                result = self.execute_module(changed=False, failed=False)
+
+                self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+                self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+                self.assertEqual(len(result["diff"][0]["deploy"]), 0)
+                self.assertEqual(len(result["diff"][0]["skipped"]), 3)
+                self.assertTrue(
+                    all(
+                        skipped["Reason"]
+                        == (
+                            "Physical interface reset is not allowed because "
+                            "neither deletable nor editAllowed is true"
+                        )
+                        for skipped in result["diff"][0]["skipped"]
+                    )
+                )
+                self.assertFalse(result.get("response"))
+                self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_capability_true(
+        self,
+    ):
+
+        valid_capabilities = [
+            ("boolean deletable", True, False, False, False),
+            ("string deletable", " TRUE ", None, False, True),
+            ("boolean edit allowed", False, True, False, False),
+            ("string edit allowed", None, " TRUE ", True, False),
+        ]
+
+        for (
+            description,
+            deletable,
+            edit_allowed,
+            omit_deletable,
+            omit_edit_allowed,
+        ) in valid_capabilities:
+            with self.subTest(description):
+                self.prepare_nd42_deleted_all_eth_test(
+                    deletable=deletable,
+                    edit_allowed=edit_allowed,
+                    omit_deletable=omit_deletable,
+                    omit_edit_allowed=omit_edit_allowed,
+                )
+
+                set_module_args(
+                    dict(
+                        state="deleted",
+                        fabric="test_fabric",
+                        override_intf_types=["eth"],
+                        deploy=False,
+                        config=[],
+                    )
+                )
+                result = self.execute_module(changed=True, failed=False)
+
+                self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+                self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_check_mode(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+
+        set_module_args(
+            dict(
+                state="deleted",
+                _ansible_check_mode=True,
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
+
     def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_switch_only(
         self,
     ):
@@ -6673,6 +6860,75 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["skipped"]), 0)
 
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_switch_only_fail_closed(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test(
+            edit_allowed=False,
+            omit_deletable=True,
+        )
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[
+                    {
+                        "switch": ["192.168.1.108"],
+                        "deploy": False,
+                    }
+                ],
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 3)
+        self.assertTrue(
+            all(
+                skipped["Reason"]
+                == (
+                    "Physical interface reset is not allowed because neither "
+                    "deletable nor editAllowed is true"
+                )
+                for skipped in result["diff"][0]["skipped"]
+            )
+        )
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_switch_only_check_mode(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+
+        set_module_args(
+            dict(
+                state="deleted",
+                _ansible_check_mode=True,
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[
+                    {
+                        "switch": ["192.168.1.108"],
+                        "deploy": False,
+                    }
+                ],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
+
     def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_dependency(
         self,
     ):
@@ -6680,6 +6936,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.prepare_nd42_deleted_all_eth_test()
         for intf in self.have_all_payloads_data["payloads"]["DATA"]:
             if intf["ifName"] == "Ethernet1/1":
+                intf.pop("deletable", None)
                 intf["underlayPolicies"] = [
                     {"source": "port-channel300"}
                 ]
