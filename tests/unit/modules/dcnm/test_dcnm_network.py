@@ -72,6 +72,10 @@ class TestDcnmNetworkModule(TestDcnmModule):
     playbook_config_attach_freeform_config = test_data.get("playbook_config_attach_freeform_config")
     mock_net_attach_object_freeform_config = test_data.get("mock_net_attach_object_freeform_config")
     mock_net_attach_object_del_ready = test_data.get("mock_net_attach_object_del_ready")
+
+    _real_overlay_have_freeform_from_switch_details = staticmethod(
+        dcnm_network.DcnmNetwork._overlay_have_freeform_from_switch_details
+    )
     mock_net_del_ready = test_data.get("mock_net_del_ready")
     attach_success_resp = test_data.get("attach_success_resp")
     attach_success_resp2 = test_data.get("attach_success_resp2")
@@ -156,12 +160,20 @@ class TestDcnmNetworkModule(TestDcnmModule):
         )
         self.run_dcnm_get_url = self.mock_dcnm_get_url.start()
 
+        self.mock_freeform_overlay = patch.object(
+            dcnm_network.DcnmNetwork,
+            "_overlay_have_freeform_from_switch_details",
+            lambda *args, **kwargs: None,
+        )
+        self.mock_freeform_overlay.start()
+
     def tearDown(self):
         super(TestDcnmNetworkModule, self).tearDown()
         self.mock_dcnm_send.stop()
         self.mock_dcnm_ip_sn.stop()
         self.mock_dcnm_fabric_details.stop()
         self.mock_dcnm_get_url.stop()
+        self.mock_freeform_overlay.stop()
 
     @staticmethod
     def _build_attach_state(serial, switch_ports, torports=None, vlan=202, freeform_config=""):
@@ -640,6 +652,16 @@ class TestDcnmNetworkModule(TestDcnmModule):
             ]
 
         elif "_merged_attach_vlan_override_new" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_send.side_effect = [
+                self.mock_vrf_object,
+                self.blank_data,
+                self.blank_data,
+                self.attach_success_resp,
+                self.deploy_success_resp,
+            ]
+
+        elif "_merged_attach_freeform_new" in self._testMethodName:
             self.init_data()
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -2373,6 +2395,40 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(attach_by_ip["10.10.10.217"]["vlan_id"], 300)
         self.assertNotIn("vlan_id", attach_by_ip["10.10.10.218"])
 
+    def test_dcnm_net_merged_attach_freeform_new(self):
+        """Formatted user-facing diff must include attachment-level freeform_config when set."""
+        inline_config = [
+            {
+                "net_name": "test_network",
+                "vrf_name": "ansible-vrf-int1",
+                "net_id": "9008011",
+                "net_template": "Default_Network_Universal",
+                "net_extension_template": "Default_Network_Extension_Universal",
+                "vlan_id": "202",
+                "gw_ip_subnet": "192.168.30.1/24",
+                "attach": [
+                    {
+                        "ip_address": "10.10.10.217",
+                        "ports": ["Ethernet1/13", "Ethernet1/14"],
+                        "freeform_config": "interface Vlan202\n  description New",
+                        "deploy": True,
+                    },
+                    {
+                        "ip_address": "10.10.10.218",
+                        "ports": ["Ethernet1/13", "Ethernet1/14"],
+                        "deploy": True,
+                    },
+                ],
+                "deploy": True,
+            }
+        ]
+        set_module_args(dict(state="merged", fabric="test_network", config=inline_config))
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+
+        attach_by_ip = {a["ip_address"]: a for a in result.get("diff")[0]["attach"]}
+        self.assertEqual(attach_by_ip["10.10.10.217"]["freeform_config"], "interface Vlan202\n  description New")
+        self.assertEqual(attach_by_ip["10.10.10.218"]["freeform_config"], "")
+
     def test_dcnm_net_merged_attach_vlan_override_idempotent(self):
         """Test idempotency when attachment-level vlan_id matches existing state.
 
@@ -2456,24 +2512,23 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertTrue(dep_net)
 
     def test_dcnm_net_diff_for_attach_deploy_freeform_config_inherit(self):
-        """Test that empty freeformConfig inwant inherits from have (no change detected)."""
+        """Merged: omitted freeform_config (want=None) inherits current controller value, no diff."""
         dcnm_net = self._build_diff_network(self.net_inv_data)
 
         have_attach = [
             self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config="interface Vlan202\n  description Test"),
         ]
         want_attach = [
-            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config=""),
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config=None),
         ]
 
         diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
 
-        # No diff - empty freeformConfig inherits existing config
         self.assertFalse(diff)
         self.assertFalse(dep_net)
 
     def test_dcnm_net_diff_for_attach_deploy_freeform_config_change(self):
-        """Test that different freeformConfig values trigger a diff."""
+        """Merged: old->new freeform_config with unchanged ports produces a diff with the new value."""
         dcnm_net = self._build_diff_network(self.net_inv_data)
 
         have_attach = [
@@ -2485,10 +2540,81 @@ class TestDcnmNetworkModule(TestDcnmModule):
 
         diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
 
-        # Diff should be detected due to freeformConfig change
-        # Current Implementation inherits if want is empty, but explicit change should diff
-        # This test documents expected behavior - adjust assertions based on actual implementation
-        self.assertEqual(want_attach[0]["freeformConfig"], "interface Vlan202\n  description New")
+        self.assertEqual(len(diff), 1)
+        self.assertEqual(diff[0]["freeformConfig"], "interface Vlan202\n  description New")
+        self.assertTrue(dep_net)
+
+    def test_dcnm_net_diff_for_attach_deploy_freeform_config_explicit_clear_merged(self):
+        """Merged: explicit freeform_config='' clears an existing non-empty controller value."""
+        dcnm_net = self._build_diff_network(self.net_inv_data)
+
+        have_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config="interface Vlan202\n  description Old"),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config=""),
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
+
+        self.assertEqual(len(diff), 1)
+        self.assertEqual(diff[0]["freeformConfig"], "")
+        self.assertTrue(dep_net)
+
+    def test_dcnm_net_diff_for_attach_deploy_freeform_config_explicit_clear_replaced(self):
+        """Replaced: explicit freeform_config='' clears an existing non-empty controller value (reviewer Example 2)."""
+        dcnm_net = self._build_diff_network(self.net_inv_data)
+
+        have_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config="interface Vlan202\n  description Old"),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config=""),
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach), replace=True)
+
+        self.assertEqual(len(diff), 1)
+        self.assertEqual(diff[0]["freeformConfig"], "")
+        self.assertTrue(dep_net)
+
+    def test_dcnm_net_diff_for_attach_deploy_freeform_config_omitted_resets_replaced(self):
+        """Replaced: omitted freeform_config (want=None) resets an existing non-empty controller value to empty."""
+        dcnm_net = self._build_diff_network(self.net_inv_data)
+
+        have_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config="interface Vlan202\n  description Old"),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config=None),
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach), replace=True)
+
+        self.assertEqual(len(diff), 1)
+        self.assertEqual(diff[0]["freeformConfig"], "")
+        self.assertTrue(dep_net)
+
+    def test_dcnm_net_diff_for_attach_deploy_freeform_config_idempotent_both_empty(self):
+        """Idempotency: matching empty freeform on both sides produces no diff under merged and replaced."""
+        dcnm_net = self._build_diff_network(self.net_inv_data)
+
+        have_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config=""),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/13,Ethernet1/14", freeform_config=""),
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(
+            copy.deepcopy(want_attach), copy.deepcopy(have_attach), replace=True, network_vlan=202
+        )
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
 
     def _make_bare_dcnm_net(self):
         dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
@@ -2587,3 +2713,340 @@ class TestDcnmNetworkModule(TestDcnmModule):
 
         self.assertFalse(diff)
         self.assertFalse(dep_net)
+
+    def test_dcnm_net_diff_for_attach_deploy_port_add_merged_empty_freeform(self):
+        """Merged: adding a port on an attach with empty freeform on both sides must produce a diff."""
+        dcnm_net = self._build_diff_network(self.net_inv_data)
+
+        have_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/1"),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/1,Ethernet1/2"),
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
+
+        self.assertEqual(len(diff), 1)
+        self.assertEqual(diff[0]["switchPorts"], "Ethernet1/2")
+        self.assertTrue(dep_net)
+
+    def test_dcnm_net_diff_for_attach_deploy_port_swap_replaced_empty_freeform(self):
+        """Replaced: swapping a port on an attach with empty freeform on both sides must attach the new and detach the old."""
+        dcnm_net = self._build_diff_network(self.net_inv_data)
+
+        have_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/1"),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/2"),
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach), replace=True)
+
+        self.assertEqual(len(diff), 1)
+        self.assertEqual(diff[0]["switchPorts"], "Ethernet1/2")
+        self.assertEqual(diff[0]["detachSwitchPorts"], "Ethernet1/1")
+        self.assertTrue(dep_net)
+
+    def test_dcnm_net_diff_for_attach_deploy_port_unchanged_empty_freeform_idempotent(self):
+        """Idempotency: identical attach with empty freeform on both sides must produce no diff under both merged and replaced."""
+        dcnm_net = self._build_diff_network(self.net_inv_data)
+
+        have_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/1,Ethernet1/2"),
+        ]
+        want_attach = [
+            self._build_attach_state("9NN7E41N16A", "Ethernet1/1,Ethernet1/2"),
+        ]
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(want_attach, copy.deepcopy(have_attach))
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
+
+        diff, dep_net = dcnm_net.diff_for_attach_deploy(
+            copy.deepcopy(want_attach), copy.deepcopy(have_attach), replace=True, network_vlan=202
+        )
+        self.assertFalse(diff)
+        self.assertFalse(dep_net)
+
+    def test_dcnm_net_overlay_have_freeform_from_switch_details(self):
+        """The overlay fetches per-switch policies, filters for
+        switch_freeform_config, and overlays nvPairs.CONF onto matching
+        have_attach entries so diff_for_attach_deploy can see it."""
+        dcnm_net = self._make_bare_dcnm_net()
+        dcnm_net.paths = dcnm_network.DcnmNetwork.dcnm_network_paths[12]
+
+        have_attach = [
+            {
+                "networkName": "test_network",
+                "lanAttachList": [
+                    {"serialNumber": "SN_A", "freeformConfig": ""},
+                    {"serialNumber": "SN_B", "freeformConfig": ""},
+                ],
+            }
+        ]
+        network_to_sns = {"test_network": ["SN_A", "SN_B"]}
+
+        self.run_dcnm_send.side_effect = [
+            {
+                "MESSAGE": "OK",
+                "METHOD": "GET",
+                "RETURN_CODE": 200,
+                "DATA": [
+                    {
+                        "policyId": "POLICY-A1",
+                        "templateName": "switch_freeform_config",
+                        "serialNumber": "SN_A",
+                        "entityName": "test_network",
+                        "nvPairs": {"CONF": "interface Vlan202\n  no autostate"},
+                    },
+                    {
+                        "policyId": "POLICY-A2",
+                        "templateName": "some_other_template",
+                        "serialNumber": "SN_A",
+                        "nvPairs": {"CONF": "ignore me"},
+                    },
+                ],
+            },
+            {
+                "MESSAGE": "OK",
+                "METHOD": "GET",
+                "RETURN_CODE": 200,
+                "DATA": [],
+            },
+        ]
+
+        self._real_overlay_have_freeform_from_switch_details(
+            dcnm_net, have_attach, network_to_sns
+        )
+
+        by_sn = {a["serialNumber"]: a for a in have_attach[0]["lanAttachList"]}
+        self.assertEqual(by_sn["SN_A"]["freeformConfig"], "interface Vlan202\n  no autostate")
+        self.assertEqual(by_sn["SN_B"]["freeformConfig"], "")
+
+    def test_dcnm_net_overlay_have_freeform_fetch_failure_is_soft(self):
+        """A failing switch-policies GET must not raise; have_attach is left unchanged."""
+        dcnm_net = self._make_bare_dcnm_net()
+        dcnm_net.paths = dcnm_network.DcnmNetwork.dcnm_network_paths[12]
+
+        have_attach = [
+            {
+                "networkName": "test_network",
+                "lanAttachList": [
+                    {"serialNumber": "SN_A", "freeformConfig": ""},
+                ],
+            }
+        ]
+        network_to_sns = {"test_network": ["SN_A"]}
+
+        self.run_dcnm_send.side_effect = [
+            {"MESSAGE": "Not Found", "METHOD": "GET", "RETURN_CODE": 404, "DATA": None}
+        ]
+
+        self._real_overlay_have_freeform_from_switch_details(
+            dcnm_net, have_attach, network_to_sns
+        )
+
+        self.assertEqual(have_attach[0]["lanAttachList"][0]["freeformConfig"], "")
+
+    def _make_multinet_overlay_fixture(self):
+        dcnm_net = self._make_bare_dcnm_net()
+        dcnm_net.paths = dcnm_network.DcnmNetwork.dcnm_network_paths[12]
+        have_attach = [
+            {
+                "networkName": "net_A",
+                "lanAttachList": [
+                    {"serialNumber": "SN1", "freeformConfig": ""},
+                ],
+            },
+            {
+                "networkName": "net_B",
+                "lanAttachList": [
+                    {"serialNumber": "SN1", "freeformConfig": ""},
+                ],
+            },
+        ]
+        network_to_sns = {"net_A": ["SN1"], "net_B": ["SN1"]}
+        return dcnm_net, have_attach, network_to_sns
+
+    def test_dcnm_net_overlay_multinet_matches_by_entity_name(self):
+        """Two networks on one switch: policies scoped by entityName go to the right network."""
+        dcnm_net, have_attach, network_to_sns = self._make_multinet_overlay_fixture()
+
+        self.run_dcnm_send.side_effect = [
+            {
+                "MESSAGE": "OK", "METHOD": "GET", "RETURN_CODE": 200,
+                "DATA": [
+                    {
+                        "policyId": "P1",
+                        "templateName": "switch_freeform_config",
+                        "serialNumber": "SN1",
+                        "entityName": "net_A",
+                        "nvPairs": {"CONF": "cli for A"},
+                    },
+                    {
+                        "policyId": "P2",
+                        "templateName": "switch_freeform_config",
+                        "serialNumber": "SN1",
+                        "entityName": "net_B",
+                        "nvPairs": {"CONF": "cli for B"},
+                    },
+                ],
+            },
+        ]
+
+        self._real_overlay_have_freeform_from_switch_details(
+            dcnm_net, have_attach, network_to_sns
+        )
+
+        by_net = {n["networkName"]: n["lanAttachList"][0]["freeformConfig"] for n in have_attach}
+        self.assertEqual(by_net["net_A"], "cli for A")
+        self.assertEqual(by_net["net_B"], "cli for B")
+
+    def test_dcnm_net_overlay_multinet_matches_by_description(self):
+        """entityName missing/empty: fall back to description substring match."""
+        dcnm_net, have_attach, network_to_sns = self._make_multinet_overlay_fixture()
+
+        self.run_dcnm_send.side_effect = [
+            {
+                "MESSAGE": "OK", "METHOD": "GET", "RETURN_CODE": 200,
+                "DATA": [
+                    {
+                        "policyId": "P1",
+                        "templateName": "switch_freeform_config",
+                        "serialNumber": "SN1",
+                        "entityName": "",
+                        "description": "freeform for net_A on SN1",
+                        "nvPairs": {"CONF": "cli for A"},
+                    },
+                    {
+                        "policyId": "P2",
+                        "templateName": "switch_freeform_config",
+                        "serialNumber": "SN1",
+                        "entityName": "",
+                        "description": "freeform for net_B on SN1",
+                        "nvPairs": {"CONF": "cli for B"},
+                    },
+                ],
+            },
+        ]
+
+        self._real_overlay_have_freeform_from_switch_details(
+            dcnm_net, have_attach, network_to_sns
+        )
+
+        by_net = {n["networkName"]: n["lanAttachList"][0]["freeformConfig"] for n in have_attach}
+        self.assertEqual(by_net["net_A"], "cli for A")
+        self.assertEqual(by_net["net_B"], "cli for B")
+
+    def test_dcnm_net_overlay_multinet_matches_by_nvpairs_network_name(self):
+        """entityName and description miss: fall back to nvPairs.NETWORK_NAME."""
+        dcnm_net, have_attach, network_to_sns = self._make_multinet_overlay_fixture()
+
+        self.run_dcnm_send.side_effect = [
+            {
+                "MESSAGE": "OK", "METHOD": "GET", "RETURN_CODE": 200,
+                "DATA": [
+                    {
+                        "policyId": "P1",
+                        "templateName": "switch_freeform_config",
+                        "serialNumber": "SN1",
+                        "entityName": "",
+                        "description": "",
+                        "nvPairs": {"CONF": "cli for A", "NETWORK_NAME": "net_A"},
+                    },
+                    {
+                        "policyId": "P2",
+                        "templateName": "switch_freeform_config",
+                        "serialNumber": "SN1",
+                        "entityName": "",
+                        "description": "",
+                        "nvPairs": {"CONF": "cli for B", "NETWORK_NAME": "net_B"},
+                    },
+                ],
+            },
+        ]
+
+        self._real_overlay_have_freeform_from_switch_details(
+            dcnm_net, have_attach, network_to_sns
+        )
+
+        by_net = {n["networkName"]: n["lanAttachList"][0]["freeformConfig"] for n in have_attach}
+        self.assertEqual(by_net["net_A"], "cli for A")
+        self.assertEqual(by_net["net_B"], "cli for B")
+
+    def test_dcnm_net_overlay_multinet_no_matching_field_is_safe_no_op(self):
+        """No scoping field matches: policies are silently skipped, freeformConfig stays empty."""
+        dcnm_net, have_attach, network_to_sns = self._make_multinet_overlay_fixture()
+
+        self.run_dcnm_send.side_effect = [
+            {
+                "MESSAGE": "OK", "METHOD": "GET", "RETURN_CODE": 200,
+                "DATA": [
+                    {
+                        "policyId": "P1",
+                        "templateName": "switch_freeform_config",
+                        "serialNumber": "SN1",
+                        "entityName": "unrelated_thing",
+                        "description": "no network hint here",
+                        "nvPairs": {"CONF": "cli for A"},
+                    },
+                ],
+            },
+        ]
+
+        self._real_overlay_have_freeform_from_switch_details(
+            dcnm_net, have_attach, network_to_sns
+        )
+
+        for net_attach in have_attach:
+            self.assertEqual(net_attach["lanAttachList"][0]["freeformConfig"], "")
+
+    def test_dcnm_net_match_freeform_policy_to_network_strategies(self):
+        """_match_freeform_policy_to_network isolates each disambiguation strategy."""
+        matcher = dcnm_network.DcnmNetwork._match_freeform_policy_to_network
+
+        self.assertIsNone(matcher({"entityName": "net_A"}, []))
+
+        self.assertEqual(matcher({"entityName": "ignored"}, ["only_net"]), "only_net")
+
+        self.assertEqual(
+            matcher({"entityName": "net_B"}, ["net_A", "net_B"]),
+            "net_B",
+        )
+
+        self.assertEqual(
+            matcher(
+                {"entityName": "", "description": "freeform for net_A on SN1"},
+                ["net_A", "net_B"],
+            ),
+            "net_A",
+        )
+
+        self.assertEqual(
+            matcher(
+                {"entityName": "", "description": "", "nvPairs": {"NETWORK_NAME": "net_B"}},
+                ["net_A", "net_B"],
+            ),
+            "net_B",
+        )
+
+        self.assertEqual(
+            matcher(
+                {"entityName": "", "description": "", "nvPairs": {"networkName": "net_A"}},
+                ["net_A", "net_B"],
+            ),
+            "net_A",
+        )
+
+        self.assertIsNone(
+            matcher(
+                {
+                    "entityName": "not_a_match",
+                    "description": "nothing useful",
+                    "nvPairs": {"CONF": "just cli"},
+                },
+                ["net_A", "net_B"],
+            )
+        )

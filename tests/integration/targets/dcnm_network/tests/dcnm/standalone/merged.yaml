@@ -1462,6 +1462,144 @@
       - result.changed == false
   tags: merged
 
+- name: MERGED - TC17 - Baseline - Create Network with single-port attach and empty freeform
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net-portadd
+        vrf_name: Tenant-1
+        net_id: 7017
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2317
+        gw_ip_subnet: '192.168.31.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int1 }}"
+        deploy: true
+  register: result
+  tags: merged
+
+- name: MERGED - TC17 - ASSERT - Baseline created
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC17 - Add a port to the existing attach (empty freeform)
+  cisco.dcnm.dcnm_network: &conf17_add
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net-portadd
+        vrf_name: Tenant-1
+        net_id: 7017
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2317
+        gw_ip_subnet: '192.168.31.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int1 }}"
+              - "{{ test_data_common.sw1_int2 }}"
+        deploy: true
+  register: result
+  tags: merged
+
+- name: MERGED - TC17 - ASSERT - Port addition produced a diff
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+      - result.diff | length > 0
+  tags: merged
+
+- name: MERGED - TC17 - Idempotence - Rerun the port addition
+  cisco.dcnm.dcnm_network: *conf17_add
+  register: result
+  tags: merged
+
+- name: MERGED - TC17 - ASSERT - Idempotent rerun changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: merged
+
+- name: MERGED - TC18 - DELETED - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: merged
+
+- name: MERGED - TC18 - Baseline - Create Network with attach and initial freeform config
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net-ffupd
+        vrf_name: Tenant-1
+        net_id: 7018
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2318
+        gw_ip_subnet: '192.168.34.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int1 }}"
+            freeform_config: "interface Vlan2318\n  description Old"
+        deploy: true
+  register: result
+  tags: merged
+
+- name: MERGED - TC18 - ASSERT - Baseline created
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: merged
+
+- name: MERGED - TC18 - Update freeform config on existing attach (ports unchanged)
+  cisco.dcnm.dcnm_network: &conf18_update
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net-ffupd
+        vrf_name: Tenant-1
+        net_id: 7018
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2318
+        gw_ip_subnet: '192.168.34.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int1 }}"
+            freeform_config: "interface Vlan2318\n  description New"
+        deploy: true
+  register: result
+  tags: merged
+
+- name: MERGED - TC18 - ASSERT - Freeform update produced a diff
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+      - result.diff | length > 0
+      - "'description New' in (result.diff[0].attach[0].freeform_config | default(''))"
+  tags: merged
+
+- name: MERGED - TC18 - Idempotence - Rerun the freeform update
+  cisco.dcnm.dcnm_network: *conf18_update
+  register: result
+  tags: merged
+
+- name: MERGED - TC18 - ASSERT - Idempotent rerun changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: merged
+
 ##############################################
 ##                 CLEAN-UP                 ##
 ##############################################

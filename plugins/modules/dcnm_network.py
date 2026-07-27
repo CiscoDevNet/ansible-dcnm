@@ -1027,6 +1027,7 @@ class DcnmNetwork:
             "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
             "GET_VRF_NET": "/rest/top-down/fabrics/{}/networks?vrf-name={}",
             "GET_NET_ATTACH": "/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
+            "GET_SWITCH_POLICIES": "/rest/control/policies/switches?serialNumber={}",
             "GET_NET_ID": "/rest/managed-pool/fabrics/{}/segments/ids",
             "GET_NET": "/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
@@ -1041,6 +1042,7 @@ class DcnmNetwork:
             "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
             "GET_VRF_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
             "GET_NET_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
+            "GET_SWITCH_POLICIES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches?serialNumber={}",
             "GET_NET_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/netinfo",
             "GET_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
@@ -1524,19 +1526,24 @@ class DcnmNetwork:
 
                                 vlan_changed = want_vlan != have_vlan
 
-                                atch_sw_ports = []
+                                if not replace and want.get("freeformConfig") is None and have.get("freeformConfig"):
+                                    want["freeformConfig"] = have.get("freeformConfig")
+
+                                if want.get("freeformConfig") is None:
+                                    want["freeformConfig"] = ""
+
+                                freeform_changed = want.get("freeformConfig", "") != (have.get("freeformConfig") or "")
+
+                                any_non_port_change = torports_configured or svi_changed or vlan_changed or freeform_changed
+
                                 if sorted(h_sw_ports) != sorted(w_sw_ports):
                                     atch_sw_ports = list(set(w_sw_ports) - set(h_sw_ports))
 
-                                if not want.get("freeformConfig") and have.get("freeformConfig"):
-                                    want["freeformConfig"] = have.get("freeformConfig")
-
-                                    # Adding some logic which is needed for replace and override.
                                     if replace:
                                         dtach_sw_ports = list(set(h_sw_ports) - set(w_sw_ports))
 
                                         if not atch_sw_ports and not dtach_sw_ports:
-                                            if torports_configured or vlan_changed:
+                                            if any_non_port_change:
                                                 del want["isAttached"]
                                                 attach_list.append(want)
                                                 if bool(want["is_deploy"]):
@@ -1554,8 +1561,7 @@ class DcnmNetwork:
                                         continue
 
                                     if not atch_sw_ports:
-                                        # The attachments in the have consist of attachments in want and more.
-                                        if torports_configured or vlan_changed:
+                                        if any_non_port_change:
                                             del want["isAttached"]
                                             attach_list.append(want)
                                             if bool(want["is_deploy"]):
@@ -1571,14 +1577,7 @@ class DcnmNetwork:
                                         dep_net = True
                                     continue
 
-                                elif torports_configured or svi_changed:
-                                    del want["isAttached"]
-                                    attach_list.append(want)
-                                    if bool(want["is_deploy"]):
-                                        dep_net = True
-                                    continue
-
-                                elif vlan_changed:
+                                elif any_non_port_change:
                                     del want["isAttached"]
                                     attach_list.append(want)
                                     if bool(want["is_deploy"]):
@@ -1630,6 +1629,8 @@ class DcnmNetwork:
                     del want["torports"]
                     del want["isAttached"]
                     want["deployment"] = True
+                    if want.get("freeformConfig") is None:
+                        want["freeformConfig"] = ""
                     attach_list.append(want)
                     if bool(want["is_deploy"]):
                         dep_net = True
@@ -1709,7 +1710,7 @@ class DcnmNetwork:
             attach.update({"instanceValues": json.dumps(inst_values)})
         else:
             attach.update({"instanceValues": ""})
-        attach.update({"freeformConfig": attach.get("freeform_config", "")})
+        attach.update({"freeformConfig": attach.get("freeform_config")})
         attach.update({"is_deploy": deploy})
 
         if attach.get("tor_ports"):
@@ -2654,6 +2655,111 @@ class DcnmNetwork:
 
         return False
 
+    def _overlay_have_freeform_from_switch_details(self, have_attach, network_to_sns):
+        """
+        NDFC's /networks/attachments GET does not include per-attach freeformConfig.
+        The per-attach freeform CLI is stored as a switch policy with template
+        switch_freeform_config. This method fetches all policies for each switch
+        that has attachments in have_attach, filters for the freeform template,
+        and overlays nvPairs.CONF onto the matching have_attach entries so
+        diff_for_attach_deploy can detect freeform-only updates and explicit clears.
+
+        Policy-to-network matching is a two-stage best-effort:
+          1. If only one attached network exists on the switch, that network wins.
+          2. Otherwise match by entityName == networkName, then by
+             description containing the network name.
+        Raw policy dicts are logged at debug level so we can refine matching once
+        we have concrete NDFC responses.
+        """
+        if not network_to_sns:
+            return
+
+        attach_by_key = {}
+        for net_attach in have_attach:
+            net_name = net_attach.get("networkName")
+            for attach in net_attach.get("lanAttachList", []):
+                sn = attach.get("serialNumber")
+                if net_name and sn:
+                    attach_by_key[(net_name, sn)] = attach
+
+        serial_to_networks = {}
+        for net, serials in network_to_sns.items():
+            for sn in serials or []:
+                serial_to_networks.setdefault(sn, []).append(net)
+
+        for serial in sorted(serial_to_networks.keys()):
+            path = self.paths["GET_SWITCH_POLICIES"].format(serial)
+            try:
+                resp = dcnm_send(self.module, "GET", path)
+            except Exception as exc:
+                self.log.debug(
+                    f"_overlay_have_freeform_from_switch_details: fetch failed for serial {serial}: {exc}"
+                )
+                continue
+
+            if not isinstance(resp, dict) or resp.get("RETURN_CODE") != 200:
+                continue
+            data = resp.get("DATA")
+            if not isinstance(data, list):
+                continue
+
+            candidate_networks = serial_to_networks[serial]
+            for policy in data:
+                if not isinstance(policy, dict):
+                    continue
+                if policy.get("templateName") not in ("switch_freeform_config", "switch_freeform"):
+                    continue
+                nv_pairs = policy.get("nvPairs") or {}
+                conf = nv_pairs.get("CONF")
+                if conf is None:
+                    continue
+
+                self.log.debug(
+                    f"_overlay_have_freeform_from_switch_details: candidate policy on {serial}: "
+                    f"entityName={policy.get('entityName')!r} description={policy.get('description')!r} "
+                    f"nvPairs.keys={list(nv_pairs.keys())}"
+                )
+
+                scope_network = self._match_freeform_policy_to_network(policy, candidate_networks)
+                if scope_network is None:
+                    continue
+
+                target = attach_by_key.get((scope_network, serial))
+                if target is None:
+                    continue
+                target["freeformConfig"] = conf
+
+    @staticmethod
+    def _match_freeform_policy_to_network(policy, candidate_networks):
+        """Best-effort match a switch_freeform_config policy to one of the
+        candidate networks attached to the same switch. Returns the matched
+        network name or None."""
+        if not candidate_networks:
+            return None
+        if len(candidate_networks) == 1:
+            return candidate_networks[0]
+
+        entity_name = policy.get("entityName") or ""
+        for net in candidate_networks:
+            if entity_name == net:
+                return net
+
+        description = policy.get("description") or ""
+        for net in candidate_networks:
+            if net and net in description:
+                return net
+
+        nv_pairs = policy.get("nvPairs") or {}
+        for candidate_field in ("NETWORK_NAME", "networkName", "network_name"):
+            value = nv_pairs.get(candidate_field)
+            if not value:
+                continue
+            for net in candidate_networks:
+                if value == net:
+                    return net
+
+        return None
+
     def get_have(self):
         caller = inspect.stack()[1][3]
 
@@ -2924,6 +3030,8 @@ class DcnmNetwork:
                     network_to_sns[network_name] = []
                 if serial not in network_to_sns[network_name]:
                     network_to_sns[network_name].append(serial)
+
+        self._overlay_have_freeform_from_switch_details(have_attach, network_to_sns)
 
         self.have_create = have_create
         self.have_attach = have_attach
@@ -3839,6 +3947,7 @@ class DcnmNetwork:
                 attach_d.update({"deploy": a_w["deployment"]})
                 if a_w.get("vlan"):
                     attach_d.update({"vlan_id": a_w["vlan"]})
+                attach_d.update({"freeform_config": a_w.get("freeformConfig") or ""})
                 torports = self.get_attachment_torports_string(a_w)
                 if torports:
                     attach_d.update({"tor_ports": torports})
@@ -3870,6 +3979,7 @@ class DcnmNetwork:
                 attach_d.update({"deploy": a_w["deployment"]})
                 if a_w.get("vlan"):
                     attach_d.update({"vlan_id": a_w["vlan"]})
+                attach_d.update({"freeform_config": a_w.get("freeformConfig") or ""})
                 torports = self.get_attachment_torports_string(a_w)
                 if torports:
                     attach_d.update({"tor_ports": torports})
