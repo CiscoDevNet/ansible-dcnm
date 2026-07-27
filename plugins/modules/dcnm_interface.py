@@ -2717,10 +2717,9 @@ class DcnmIntf:
             queuing_policy=dict(type="str", default=""),
         )
 
-        if self._ndfc_version_gte("12.4.1"):
-            eth_prof_spec_trunk.update({
-                "fec": dict(type="str", default="auto", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
-            })
+        eth_prof_spec_trunk.update({
+            "fec": dict(type="str", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+        })
 
         eth_prof_spec_access = dict(
             mode=dict(required=True, type="str"),
@@ -2745,10 +2744,9 @@ class DcnmIntf:
             queuing_policy=dict(type="str", default=""),
         )
 
-        if self._ndfc_version_gte("12.4.1"):
-            eth_prof_spec_access.update({
-                "fec": dict(type="str", default="auto", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
-            })
+        eth_prof_spec_access.update({
+            "fec": dict(type="str", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+        })
 
         eth_prof_spec_routed_host = dict(
             int_vrf=dict(type="str", default="default"),
@@ -2765,10 +2763,9 @@ class DcnmIntf:
             queuing_policy=dict(type="str", default=""),
         )
 
-        if self._ndfc_version_gte("12.4.1"):
-            eth_prof_spec_routed_host.update({
-                "fec": dict(type="str", default="auto", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
-            })
+        eth_prof_spec_routed_host.update({
+            "fec": dict(type="str", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+        })
 
         eth_prof_spec_epl_routed_host = dict(
             mode=dict(required=True, type="str"),
@@ -2802,10 +2799,9 @@ class DcnmIntf:
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
-        if self._ndfc_version_gte("12.4.1"):
-            eth_prof_spec_dot1q_tunnel_host.update({
-                "fec": dict(type="str", default="auto", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
-            })
+        eth_prof_spec_dot1q_tunnel_host.update({
+            "fec": dict(type="str", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+        })
 
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
@@ -2829,6 +2825,19 @@ class DcnmIntf:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_dot1q_tunnel_host
             )
+
+        fec_value = cfg[0]["profile"].get("fec")
+        if fec_value is not None:
+            if self.ndfc_version is None:
+                self.module.fail_json(
+                    msg=f"Interface '{cfg[0]['name']}': fec='{fec_value}' requested but "
+                    "NDFC version could not be determined. Ensure the controller is reachable."
+                )
+            if not self._ndfc_version_gte("12.4.1"):
+                self.module.fail_json(
+                    msg=f"Interface '{cfg[0]['name']}': fec requires NDFC >= 12.4.1 "
+                    f"(current: {self.ndfc_version})."
+                )
 
     def dcnm_intf_validate_vlan_interface_input(self, cfg):
 
