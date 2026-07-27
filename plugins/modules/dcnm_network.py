@@ -5226,8 +5226,7 @@ class DcnmNetwork:
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
             )
-            if self._ndfc_version_gte("12.4.1"):
-                net_spec["xconnect"] = dict(type="bool", default=False)
+            net_spec["xconnect"] = dict(type="bool", default=False)
             # Adjust deploy field for query state
             if is_query_state:
                 net_spec["deploy"] = dict(type="bool")
@@ -5305,6 +5304,23 @@ class DcnmNetwork:
                         if net.get("vrf_name", "") is None or net.get("vrf_name", "") == "":
                             net["vrf_name"] = "NA"
 
+                    if net.get("xconnect", False) is True:
+                        if net.get("is_l2only", False) is not True:
+                            invalid_params.append(
+                                f"Network '{net.get('net_name', 'unknown')}': "
+                                "xconnect requires is_l2only=true"
+                            )
+                        if self.ndfc_version is None:
+                            invalid_params.append(
+                                f"Network '{net.get('net_name', 'unknown')}': "
+                                "cannot validate xconnect — NDFC version lookup failed"
+                            )
+                        elif not self._ndfc_version_gte("12.4.1"):
+                            invalid_params.append(
+                                f"Network '{net.get('net_name', 'unknown')}': "
+                                f"xconnect requires NDFC >= 12.4.1 (current: {self.ndfc_version})"
+                            )
+
                     self.validated.append(net)
 
                 if invalid_params:
@@ -5368,6 +5384,23 @@ class DcnmNetwork:
                         else:
                             if net.get("vrf_name", "") is None:
                                 invalid_params.append("vrf_name is required for L3 Networks")
+
+                        if net.get("xconnect", False) is True:
+                            if net.get("is_l2only", False) is not True:
+                                invalid_params.append(
+                                    f"Network '{net.get('net_name', 'unknown')}': "
+                                    "xconnect requires is_l2only=true"
+                                )
+                            if self.ndfc_version is None:
+                                invalid_params.append(
+                                    f"Network '{net.get('net_name', 'unknown')}': "
+                                    "cannot validate xconnect — NDFC version lookup failed"
+                                )
+                            elif not self._ndfc_version_gte("12.4.1"):
+                                invalid_params.append(
+                                    f"Network '{net.get('net_name', 'unknown')}': "
+                                    f"xconnect requires NDFC >= 12.4.1 (current: {self.ndfc_version})"
+                                )
 
                         if any(has_partial_dhcp_config(srvr) for srvr in [
                             dict(srvr_ip=net.get("dhcp_srvr1_ip"), srvr_vrf=net.get("dhcp_srvr1_vrf")),
