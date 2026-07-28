@@ -5226,7 +5226,7 @@ class DcnmNetwork:
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
             )
-            net_spec["xconnect"] = dict(type="bool", default=False)
+            net_spec["xconnect"] = dict(type="bool")
             # Adjust deploy field for query state
             if is_query_state:
                 net_spec["deploy"] = dict(type="bool")
@@ -5304,7 +5304,7 @@ class DcnmNetwork:
                         if net.get("vrf_name", "") is None or net.get("vrf_name", "") == "":
                             net["vrf_name"] = "NA"
 
-                    if "xconnect" in net:
+                    if net.get("xconnect") is not None:
                         if net.get("xconnect", False) is True and net.get("is_l2only", False) is not True:
                             invalid_params.append(
                                 f"Network '{net.get('net_name', 'unknown')}': "
@@ -5385,7 +5385,7 @@ class DcnmNetwork:
                             if net.get("vrf_name", "") is None:
                                 invalid_params.append("vrf_name is required for L3 Networks")
 
-                        if "xconnect" in net:
+                        if net.get("xconnect") is not None:
                             if net.get("xconnect", False) is True and net.get("is_l2only", False) is not True:
                                 invalid_params.append(
                                     f"Network '{net.get('net_name', 'unknown')}': "
