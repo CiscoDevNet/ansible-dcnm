@@ -2714,7 +2714,7 @@ class DcnmNetwork:
                 resp = dcnm_send(self.module, "GET", path)
             except Exception as exc:
                 self.log.debug(
-                    f"_overlay_have_freeform_from_switch_details: fetch failed for serial %s:%s", serial, exc
+                    "_overlay_have_freeform_from_switch_details: fetch failed for serial %s:%s", serial, exc
                 )
                 continue
 
@@ -2736,8 +2736,8 @@ class DcnmNetwork:
                     continue
 
                 self.log.debug(
-                    f"_overlay_have_freeform_from_switch_details: candidate policy on %s: "
-                    f"entityName= %r description=%r nvPairs.keys=%r", serial, 
+                    "_overlay_have_freeform_from_switch_details: candidate policy on %s: "
+                    "entityName= %r description=%r nvPairs.keys=%r", serial, 
                     policy.get('entityName'), policy.get('description'), list(nv_pairs.keys())
                 )
 
