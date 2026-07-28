@@ -5304,8 +5304,8 @@ class DcnmNetwork:
                         if net.get("vrf_name", "") is None or net.get("vrf_name", "") == "":
                             net["vrf_name"] = "NA"
 
-                    if net.get("xconnect", False) is True:
-                        if net.get("is_l2only", False) is not True:
+                    if "xconnect" in net:
+                        if net.get("xconnect", False) is True and net.get("is_l2only", False) is not True:
                             invalid_params.append(
                                 f"Network '{net.get('net_name', 'unknown')}': "
                                 "xconnect requires is_l2only=true"
@@ -5385,8 +5385,8 @@ class DcnmNetwork:
                             if net.get("vrf_name", "") is None:
                                 invalid_params.append("vrf_name is required for L3 Networks")
 
-                        if net.get("xconnect", False) is True:
-                            if net.get("is_l2only", False) is not True:
+                        if "xconnect" in net:
+                            if net.get("xconnect", False) is True and net.get("is_l2only", False) is not True:
                                 invalid_params.append(
                                     f"Network '{net.get('net_name', 'unknown')}': "
                                     "xconnect requires is_l2only=true"
