@@ -2737,7 +2737,7 @@ class DcnmNetwork:
 
                 self.log.debug(
                     "_overlay_have_freeform_from_switch_details: candidate policy on %s: "
-                    "entityName= %r description=%r nvPairs.keys=%r", serial, 
+                    "entityName= %r description=%r nvPairs.keys=%r", serial,
                     policy.get('entityName'), policy.get('description'), list(nv_pairs.keys())
                 )
 
