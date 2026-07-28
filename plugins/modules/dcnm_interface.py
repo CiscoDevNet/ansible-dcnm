@@ -4890,6 +4890,14 @@ class DcnmIntf:
                 != str(have_nv.get("NATIVE_VLAN")).lower()
             ):
                 return "DCNM_INTF_NOT_MATCH"
+
+        if self._ndfc_version_gte("12.4.1"):
+            if (
+                str(intf_nv.get("FEC", "auto")).lower()
+                != str(have_nv.get("FEC", "auto")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+
         return "DCNM_INTF_MATCH"
 
     def dcnm_intf_get_default_eth_payload(self, ifname, sno, fabric):
@@ -4936,6 +4944,9 @@ class DcnmIntf:
             eth_payload["interfaces"][0]["nvPairs"]["NATIVE_VLAN"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
+            if self._ndfc_version_gte("12.4.1"):
+                eth_payload["interfaces"][0]["nvPairs"]["FEC"] = "auto"
+
             eth_payload["interfaces"][0]["ifName"] = ifname
             eth_payload["interfaces"][0]["serialNumber"] = sno
             eth_payload["interfaces"][0]["fabricName"] = fabric
@@ -4953,6 +4964,9 @@ class DcnmIntf:
             eth_payload["interfaces"][0]["nvPairs"]["IP"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["PREFIX"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = ""
+
+            if self._ndfc_version_gte("12.4.1"):
+                eth_payload["interfaces"][0]["nvPairs"]["FEC"] = "auto"
 
             eth_payload["interfaces"][0]["ifName"] = ifname
             eth_payload["interfaces"][0]["serialNumber"] = sno
