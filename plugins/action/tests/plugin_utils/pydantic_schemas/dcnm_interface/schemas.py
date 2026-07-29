@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+from decimal import Decimal, InvalidOperation
 from typing import List, Optional
 import re
 
@@ -87,6 +88,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
         ENABLE_PFC: Optional[str] = None
         ENABLE_PIM_SPARSE: Optional[str] = None
         ENABLE_QOS: Optional[str] = None
+        ENABLE_STORM_CONTROL: Optional[str] = None
         FABRIC_NAME: Optional[str] = None
         INTF_NAME: Optional[str] = None
         INTF_VRF: Optional[str] = None
@@ -129,6 +131,13 @@ class DcnmInterfaceQuerySchema(BaseModel):
         ROUTE_MAP_TAG: Optional[str] = None
         SERIAL_NUMBER: Optional[str] = None
         SPEED: Optional[str] = None
+        STORM_CONTROL_ACTION: Optional[str] = None
+        STORM_CONTROL_BCAST_LEVEL_PERCENT: Optional[str] = None
+        STORM_CONTROL_BCAST_LEVEL_PPS: Optional[str] = None
+        STORM_CONTROL_MCAST_LEVEL_PERCENT: Optional[str] = None
+        STORM_CONTROL_MCAST_LEVEL_PPS: Optional[str] = None
+        STORM_CONTROL_UCAST_LEVEL_PERCENT: Optional[str] = None
+        STORM_CONTROL_UCAST_LEVEL_PPS: Optional[str] = None
         V6IP: Optional[str] = None
         createVpc: Optional[str] = None
 
@@ -176,13 +185,45 @@ class DcnmInterfaceQuerySchema(BaseModel):
             expanded = expand_interface_name(v)
             return expanded.lower()
 
-        @field_validator('ADMIN_STATE', 'BPDUGUARD_ENABLED', 'PORTTYPE_FAST_ENABLED', 'PC_MODE', 'INTF_VRF', 'MTU', 'SPEED')
+        @field_validator(
+            'ADMIN_STATE',
+            'BPDUGUARD_ENABLED',
+            'PORTTYPE_FAST_ENABLED',
+            'PC_MODE',
+            'INTF_VRF',
+            'MTU',
+            'SPEED',
+        )
         @classmethod
         def normalize_string_fields(cls, v):
             """Convert common string fields to lowercase for case-insensitive comparison."""
             if v is not None:
                 return v.lower()
             return v
+
+        @field_validator('STORM_CONTROL_ACTION')
+        @classmethod
+        def normalize_storm_control_action(cls, v):
+            """Normalize the public default action to NDFC's low-level nvPair value."""
+            if v is None:
+                return v
+            normalized_action = v.lower()
+            return "no" if normalized_action == "default" else normalized_action
+
+        @field_validator(
+            'STORM_CONTROL_BCAST_LEVEL_PERCENT',
+            'STORM_CONTROL_MCAST_LEVEL_PERCENT',
+            'STORM_CONTROL_UCAST_LEVEL_PERCENT',
+        )
+        @classmethod
+        def normalize_storm_control_percent(cls, v):
+            """Normalize equivalent percentage representations such as 12 and 12.00."""
+            if v in (None, ""):
+                return v
+            try:
+                return format(Decimal(v).normalize(), "f")
+            except InvalidOperation:
+                return v
 
     class Interface(BaseModel):
         ifName: str
@@ -225,6 +266,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
         - admin_state → ADMIN_STATE (boolean → string)
         - speed → SPEED (string)
         - description → DESC (string)
+        - copy_description → COPY_DESC (boolean → string)
         - mtu → MTU (string)
         - bpdu_guard → BPDUGUARD_ENABLED (boolean/string → string)
         - port_type_fast → PORTTYPE_FAST_ENABLED (boolean → string)
@@ -292,6 +334,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
             "admin_state": "ADMIN_STATE",
             "speed": "SPEED",
             "description": "DESC",
+            "copy_description": "COPY_DESC",
             "mtu": "MTU",
             "bpdu_guard": "BPDUGUARD_ENABLED",
             "port_type_fast": "PORTTYPE_FAST_ENABLED",
@@ -303,7 +346,15 @@ class DcnmInterfaceQuerySchema(BaseModel):
             "ipv4_mask_len": "PREFIX",
             "ipv6_addr": "IPv6",
             "ipv6_mask_len": "IPv6_PREFIX",
-            "route_tag": "ROUTING_TAG"
+            "route_tag": "ROUTING_TAG",
+            "enable_storm_control": "ENABLE_STORM_CONTROL",
+            "storm_control_action": "STORM_CONTROL_ACTION",
+            "storm_control_broadcast_level_percent": "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "storm_control_broadcast_level_pps": "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "storm_control_multicast_level_percent": "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "storm_control_multicast_level_pps": "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "storm_control_unicast_level_percent": "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "storm_control_unicast_level_pps": "STORM_CONTROL_UCAST_LEVEL_PPS",
         }
 
         # Mode to policy mapping

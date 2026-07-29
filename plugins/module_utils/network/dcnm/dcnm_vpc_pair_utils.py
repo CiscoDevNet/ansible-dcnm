@@ -4,6 +4,7 @@ __metaclass__ = type
 
 import json
 import time
+import copy
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
@@ -27,13 +28,15 @@ dcnm_vpc_pair_paths = {
     },
 }
 
+VPC_CREATE_RETRY_COUNT = 3
+VPC_CREATE_RETRY_DELAY = 5
+
 
 def dcnm_vpc_pair_utils_get_paths(version):
     return dcnm_vpc_pair_paths[version]
 
 
 def dcnm_vpc_pair_utils_update_common_spec(self, common_spec):
-
     if (
         self.src_fabric_info["fabricTechnology"] == "LANClassic"
         or self.src_fabric_info["fabricTechnology"] == "External"
@@ -44,7 +47,6 @@ def dcnm_vpc_pair_utils_update_common_spec(self, common_spec):
 
 
 def dcnm_vpc_pair_utils_validate_profile(self, profile, arg_spec):
-
     vpc_pair_profile_info = []
 
     # Only LANClassic/External fabrics require profile information.
@@ -53,7 +55,6 @@ def dcnm_vpc_pair_utils_validate_profile(self, profile, arg_spec):
         self.src_fabric_info["fabricTechnology"] == "LANClassic"
         or self.src_fabric_info["fabricTechnology"] == "External"
     ):
-
         vpc_pair_profile_info, invalid_params = validate_list_of_dicts(
             [profile], arg_spec
         )
@@ -66,7 +67,6 @@ def dcnm_vpc_pair_utils_validate_profile(self, profile, arg_spec):
 
 
 def dcnm_vpc_pair_utils_translate_config(self, cfg):
-
     if cfg.get("peerOneId", "") != "":
         cfg["peerOneId"] = dcnm_get_ip_addr_info(
             self.module, cfg["peerOneId"], self.ip_sn, self.hn_sn
@@ -90,7 +90,6 @@ def dcnm_vpc_pair_utils_translate_config(self, cfg):
 
 
 def dcnm_vpc_pair_utils_update_other_information(self):
-
     """
     Routine to update 'self' with serial number to switch DB Id translation information.
 
@@ -100,6 +99,9 @@ def dcnm_vpc_pair_utils_update_other_information(self):
     Returns:
         None
     """
+
+    self._vpc_pair_info_cache = {}
+    self._vpc_sync_status_cache = None
 
     sn_swid = {}
 
@@ -113,7 +115,6 @@ def dcnm_vpc_pair_utils_update_other_information(self):
 
 
 def dcnm_vpc_pair_utils_translate_vpc_pair_info(self, elem):
-
     elem["peerOneId"] = self.ip_sn[elem.get("peerOneId", None)]
     elem["peerTwoId"] = self.ip_sn[elem.get("peerTwoId", None)]
 
@@ -121,7 +122,6 @@ def dcnm_vpc_pair_utils_translate_vpc_pair_info(self, elem):
 
 
 def dcnm_vpc_pair_utils_update_have(self, have):
-
     """
     Routine to update vertain keys in the given 'have' object to be consistent with 'want.
 
@@ -143,7 +143,6 @@ def dcnm_vpc_pair_utils_update_have(self, have):
 
 
 def dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid):
-
     """
     Routine to get existing information from DCNM with serial number and switch DB id.
 
@@ -155,6 +154,20 @@ def dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid):
         resp["DATA"] (dict): VPC information obtained from the DCNM server if it exists
         [] otherwise
     """
+
+    if swid is None:
+        return []
+
+    cache = getattr(self, "_vpc_pair_info_cache", None)
+    if cache is not None and swid in cache:
+        return copy.deepcopy(cache[swid])
+
+    def cache_result(result, *switch_ids):
+        if cache is None:
+            return
+        for switch_id in set(switch_ids):
+            if switch_id is not None:
+                cache[switch_id] = copy.deepcopy(result)
 
     # Get the Peer information first
     path = self.paths["VPC_PAIR_GET_PATH"]
@@ -168,59 +181,108 @@ def dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid):
         and (resp["MESSAGE"] == "OK")
         and resp["DATA"]
     ):
-        peerOneId = resp["DATA"].get("peerOneSerialNumber", None)
-        peerTwoId = resp["DATA"].get("peerTwoSerialNumber", None)
-        peerOneDbId = resp["DATA"].get("peerOneDbId", None)
-        peerTwoDbId = resp["DATA"].get("peerTwoDbId", None)
+        inventory_data = resp["DATA"]
+        peerOneId = inventory_data.get("peerOneSerialNumber", None)
+        peerTwoId = inventory_data.get("peerTwoSerialNumber", None)
+        peerOneDbId = inventory_data.get("peerOneDbId", None)
+        peerTwoDbId = inventory_data.get("peerTwoDbId", None)
     else:
         return []
 
-    # Get useVirtualPeerlink information
+    # Both serials are required for a valid pair.
+    if not peerOneId or not peerTwoId:
+        cache_result([], swid, peerOneDbId, peerTwoDbId)
+        return []
+
+    # Preserve the established discovery call order while collecting the
+    # virtual peer-link and current-peer state.
     path = self.paths["VPC_PEER_LINK_GET_PATH"]
     path = path.format(peerOneId)
 
     resp = dcnm_send(self.module, "GET", path)
 
+    recommendations = []
     if (
         resp
         and (resp["RETURN_CODE"] == 200)
         and (resp["MESSAGE"] == "OK")
-        and resp["DATA"]
+        and isinstance(resp["DATA"], list)
     ):
-        useVirtualPeerlink = resp["DATA"][0].get("useVirtualPeerlink", None)
-    else:
-        return []
+        recommendations = resp["DATA"]
 
-    # Get the Profile information now and combine both the first response data and the current one to
-    # form the 'have' object. There is no direct call to get this combined information.
+    recommendation = next(
+        (
+            item
+            for item in recommendations
+            if item.get("serialNumber") == peerTwoId
+        ),
+        None,
+    )
+    if recommendation is None:
+        recommendation = next(
+            (item for item in recommendations if item.get("currentPeer") is True),
+            None,
+        )
+    if recommendation is None and len(recommendations) == 1:
+        recommendation = recommendations[0]
+
+    useVirtualPeerlink = None
+    recommendation_active = False
+    if recommendation is not None:
+        useVirtualPeerlink = recommendation.get("useVirtualPeerlink", None)
+        recommendation_active = recommendation.get("currentPeer") is True
+
+    # The policy endpoint provides optional profile details. It is not a
+    # reliable existence signal for VXLAN leaf pairs because NDFC can return
+    # an empty policy for a valid operational pair.
     path = self.paths["VPC_PAIR_GET_POLICY_PATH"]
     path = path.format(peerOneId)
 
     resp = dcnm_send(self.module, "GET", path)
 
+    policy_data = {}
     if (
         resp
         and (resp["RETURN_CODE"] == 200)
         and (resp["MESSAGE"] == "OK")
-        and resp["DATA"]
+        and isinstance(resp["DATA"], dict)
     ):
-        resp["DATA"]["peerOneId"] = peerOneId
-        resp["DATA"]["peerTwoId"] = peerTwoId
-        resp["DATA"]["peerOneDbId"] = peerOneDbId
-        resp["DATA"]["peerTwoDbId"] = peerTwoDbId
-        resp["DATA"]["useVirtualPeerlink"] = useVirtualPeerlink
+        policy_data = resp["DATA"]
 
-        # Some of the fields in 'have' may be different than what is sent in CREATE/UPDATE/DELETE payloads to DCNM. Update these
-        # fields,if any, so that all keys are consistent between 'want' and 'have'. This will be necessary for compare function to
-        # work properly.
-        dcnm_vpc_pair_utils_update_have(self, resp["DATA"])
-        return resp["DATA"]
-    else:
+    policy_active = bool(
+        policy_data.get("template") or policy_data.get("nv_pairs")
+    )
+    logical_interfaces = inventory_data.get("logicalInterfaces", {})
+    try:
+        inventory_active = int(logical_interfaces.get("vPC", 0) or 0) > 0
+    except (TypeError, ValueError):
+        inventory_active = bool(logical_interfaces.get("vPC"))
+
+    # A stale inventory record can retain peer identifiers after deletion.
+    # Require at least one active signal before treating it as an existing
+    # pair, while allowing a populated policy to support older controllers.
+    if not (inventory_active or recommendation_active or policy_active):
+        cache_result([], swid, peerOneDbId, peerTwoDbId)
         return []
+
+    # Combine optional policy and inventory details into the 'have' object.
+    policy_data.setdefault("template", "")
+    policy_data.setdefault("nv_pairs", {})
+    policy_data["peerOneId"] = peerOneId
+    policy_data["peerTwoId"] = peerTwoId
+    policy_data["peerOneDbId"] = peerOneDbId
+    policy_data["peerTwoDbId"] = peerTwoDbId
+    policy_data["useVirtualPeerlink"] = useVirtualPeerlink
+
+    # Some fields in 'have' differ from CREATE/UPDATE/DELETE payloads. Update
+    # them so comparison uses the same keys as 'want'.
+    dcnm_vpc_pair_utils_update_have(self, policy_data)
+    result = copy.deepcopy(policy_data)
+    cache_result(result, swid, peerOneDbId, peerTwoDbId)
+    return result
 
 
 def dcnm_vpc_pair_utils_get_vpc_pair_info(self, wobj):
-
     """
     Routine to get existing information from DCNM which matches the given object.
 
@@ -238,7 +300,6 @@ def dcnm_vpc_pair_utils_get_vpc_pair_info(self, wobj):
 
 
 def dcnm_vpc_pair_utils_get_vpc_pair_payload(self, vpc_pair_info):
-
     vpc_pair_payload = {}
 
     for key in vpc_pair_info:
@@ -258,52 +319,58 @@ def dcnm_vpc_pair_utils_get_vpc_pair_payload(self, vpc_pair_info):
             )
 
     # VPC payload carries serial numbers for peerOneId and peerTwoId fields. Translate then approriatley now
-    vpc_pair_payload["peerOneId"] = self.ip_sn[
-        vpc_pair_info.get("peerOneId", None)
-    ]
-    vpc_pair_payload["peerTwoId"] = self.ip_sn[
-        vpc_pair_info.get("peerTwoId", None)
-    ]
+    vpc_pair_payload["peerOneId"] = self.ip_sn[vpc_pair_info.get("peerOneId", None)]
+    vpc_pair_payload["peerTwoId"] = self.ip_sn[vpc_pair_info.get("peerTwoId", None)]
 
     return vpc_pair_payload
 
 
-def dcnm_vpc_pair_utils_get_matching_want(self, vpc_pair_info):
+def dcnm_vpc_pair_utils_pair_key(vpc_pair_info):
+    """Return an order-independent identity for a complete vPC pair."""
 
+    peer_one = vpc_pair_info.get("peerOneId")
+    peer_two = vpc_pair_info.get("peerTwoId")
+    if not peer_one or not peer_two:
+        return None
+    return frozenset((peer_one, peer_two))
+
+
+def dcnm_vpc_pair_utils_pairs_match(first, second):
+    first_key = dcnm_vpc_pair_utils_pair_key(first)
+    second_key = dcnm_vpc_pair_utils_pair_key(second)
+    return first_key is not None and first_key == second_key
+
+
+def dcnm_vpc_pair_utils_get_matching_want(self, vpc_pair_info):
     match_want = [
         want
         for want in self.want
-        if (
-            (vpc_pair_info["peerOneId"] == want["peerOneId"])
-            and (vpc_pair_info["peerTwoId"] == want["peerTwoId"])
-        )
+        if dcnm_vpc_pair_utils_pairs_match(vpc_pair_info, want)
     ]
 
     return match_want
 
 
 def dcnm_vpc_pair_utils_get_matching_have(self, want):
-
     match_have = [
         have
         for have in self.have
-        if (
-            (have["peerOneId"] == want["peerOneId"])
-            and (have["peerTwoId"] == want["peerTwoId"])
-        )
+        if dcnm_vpc_pair_utils_pairs_match(have, want)
     ]
 
     return match_have
 
 
 def dcnm_vpc_pair_utils_get_matching_cfg(self, want):
-
     match_cfg = [
         cfg
         for cfg in self.config
-        if (
-            (self.ip_sn.get(cfg["peerOneId"], None) == want["peerOneId"])
-            and (self.ip_sn.get(cfg["peerTwoId"], None) == want["peerTwoId"])
+        if dcnm_vpc_pair_utils_pairs_match(
+            {
+                "peerOneId": self.ip_sn.get(cfg["peerOneId"], None),
+                "peerTwoId": self.ip_sn.get(cfg["peerTwoId"], None),
+            },
+            want,
         )
     ]
 
@@ -311,7 +378,6 @@ def dcnm_vpc_pair_utils_get_matching_cfg(self, want):
 
 
 def dcnm_vpc_pair_utils_merge_want_and_have(self, want, have, key):
-
     if want.get(key, "") == "":
         want[key] = have.get(key)
     elif have.get(key, "") == "":
@@ -326,7 +392,6 @@ def dcnm_vpc_pair_utils_merge_want_and_have(self, want, have, key):
 
 
 def dcnm_vpc_pair_utils_update_vpc_pair_information(self, want, have, cfg):
-
     # Some fields like Member interfaces and Freefrom config are mergeable i.e. information from 'want' must be merged with
     # whatever is existing in 'have' if the state is 'merged'
     mergeable_fields = [
@@ -339,7 +404,6 @@ def dcnm_vpc_pair_utils_update_vpc_pair_information(self, want, have, cfg):
     ]
 
     for key in list(want.keys()):
-
         if key == "nvPairs":
             continue
 
@@ -360,7 +424,6 @@ def dcnm_vpc_pair_utils_update_vpc_pair_information(self, want, have, cfg):
     if want.get("nvPairs", None) is not None:
         # compare the keys here and update appropriately
         for nv_key in list(want["nvPairs"].keys()):
-
             if (cfg.get("profile", None) is None) or (
                 cfg["profile"].get(nv_key, None) is None
             ):
@@ -373,7 +436,6 @@ def dcnm_vpc_pair_utils_update_vpc_pair_information(self, want, have, cfg):
 
 
 def dcnm_vpc_pair_compare_vpc_pair_objects(self, wobj, hobj):
-
     """
     Routine to compare have and want objects and update mismatch information.
 
@@ -388,8 +450,12 @@ def dcnm_vpc_pair_compare_vpc_pair_objects(self, wobj, hobj):
     """
 
     mismatch_reasons = []
+    same_pair = dcnm_vpc_pair_utils_pairs_match(wobj, hobj)
     for key in wobj:
         if "_defaulted" in key:
+            continue
+
+        if key in ("peerOneId", "peerTwoId") and same_pair:
             continue
 
         # Special handling for useVirtualPeerlink to treat None and False as equivalent
@@ -418,13 +484,19 @@ def dcnm_vpc_pair_compare_vpc_pair_objects(self, wobj, hobj):
                 hval = bool(hobj["nvPairs"].get(key, False))
                 wval = bool(wobj["nvPairs"][key])
                 if hval != wval:
-                    mismatch_reasons.append(
-                        {key.upper() + "_MISMATCH": [wval, hval]}
-                    )
+                    mismatch_reasons.append({key.upper() + "_MISMATCH": [wval, hval]})
             else:
-                if str(hobj["nvPairs"].get(key, False)).lower() != str(wobj["nvPairs"][key]).lower():
+                if (
+                    str(hobj["nvPairs"].get(key, False)).lower()
+                    != str(wobj["nvPairs"][key]).lower()
+                ):
                     mismatch_reasons.append(
-                        {key.upper() + "_MISMATCH": [wobj["nvPairs"][key], hobj["nvPairs"].get(key, None)]}
+                        {
+                            key.upper() + "_MISMATCH": [
+                                wobj["nvPairs"][key],
+                                hobj["nvPairs"].get(key, None),
+                            ]
+                        }
                     )
 
     if mismatch_reasons != []:
@@ -434,7 +506,6 @@ def dcnm_vpc_pair_compare_vpc_pair_objects(self, wobj, hobj):
 
 
 def dcnm_vpc_pair_utils_compare_want_and_have(self, want):
-
     """
     This routine finds an object in self.have that matches the given information. If the given
     object already exist then it is not added to the object list to be created on
@@ -458,12 +529,10 @@ def dcnm_vpc_pair_utils_compare_want_and_have(self, want):
 
 
 def dcnm_vpc_pair_utils_get_delete_payload(self, elem):
-
     return {"peerOneId": elem["peerOneId"], "peerTwoId": elem["peerTwoId"]}
 
 
 def dcnm_vpc_pair_utils_get_delete_deploy_payload(self, elem):
-
     # VPC pairing uses switch level deploy to deploy the changes. This requires a 'fabric' name
     # and switches details. Fetch the 'fabric' from the 'elem' or 'self' and thr switches from
     # 'elem'
@@ -476,7 +545,6 @@ def dcnm_vpc_pair_utils_get_delete_deploy_payload(self, elem):
 
 
 def dcnm_vpc_pair_utils_get_vpc_pair_deploy_payload(self, elem):
-
     # VPC pairing uses switch level deploy to deploy the changes. This requires a 'fabric' name
     # and switches details. Fetch the 'fabric' from the 'elem' or 'self' and thr switches from
     # 'elem'
@@ -489,7 +557,6 @@ def dcnm_vpc_pair_utils_get_vpc_pair_deploy_payload(self, elem):
 
 
 def dcnm_vpc_pair_utils_delete_from_deploy_list(self, elem, deploy_list):
-
     """
     Routine to delete the given element from the deploy_list
 
@@ -502,14 +569,20 @@ def dcnm_vpc_pair_utils_delete_from_deploy_list(self, elem, deploy_list):
     """
 
     for ind in range(len(deploy_list)):
-        if (elem["peerOneId"] == deploy_list[ind]["peerOneId"]) and (
-            elem["peerTwoId"] == deploy_list[ind]["peerTwoId"]
-        ):
+        if dcnm_vpc_pair_utils_pairs_match(elem, deploy_list[ind]):
             del deploy_list[ind]
+            return
+
+
+def dcnm_vpc_pair_utils_invalidate_pair_cache(self):
+    self._vpc_pair_info_cache = {}
+
+
+def dcnm_vpc_pair_utils_invalidate_sync_cache(self):
+    self._vpc_sync_status_cache = None
 
 
 def dcnm_vpc_pair_utils_process_delete_payloads(self):
-
     """
     Routine to push delete payloads to DCNM server. This routine implements required error checks and retry mechanisms to handle
     transient errors.
@@ -526,7 +599,6 @@ def dcnm_vpc_pair_utils_process_delete_payloads(self):
     deploy_flag = False
 
     for elem in self.diff_delete:
-
         path = self.paths["VPC_PAIR_DELETE_PATH"]
         path = path.format(elem["peerOneId"])
 
@@ -536,18 +608,28 @@ def dcnm_vpc_pair_utils_process_delete_payloads(self):
             self.result["response"].append(resp)
 
         if resp and resp.get("RETURN_CODE") != 200:
+            response_data = str(resp.get("DATA", "")).lower()
+            if "not a part of any vpc pair" in response_data:
+                dcnm_vpc_pair_utils_invalidate_pair_cache(self)
+                dcnm_vpc_pair_utils_invalidate_sync_cache(self)
+                dcnm_vpc_pair_utils_delete_from_deploy_list(
+                    self, elem, self.diff_delete_deploy
+                )
+                continue
+
             resp["CHANGED"] = self.changed_dict[0]
             self.module.fail_json(msg=resp)
         else:
+            dcnm_vpc_pair_utils_invalidate_pair_cache(self)
+            dcnm_vpc_pair_utils_invalidate_sync_cache(self)
+
             # Check if the pair is already in "unpaired state". In this case the response contains
             # 'VPC Pair could not be deleted'. If that is the case check if the switches are already in
             # 'In-Sync' state. If they are then no need to deploy for this case.
 
             if isinstance(resp["DATA"], str):
                 if "VPC Pair could not be deleted" in resp["DATA"]:
-                    sync_state = dcnm_vpc_pair_utils_get_sync_status(
-                        self, elem
-                    )
+                    sync_state = dcnm_vpc_pair_utils_get_sync_status(self, elem)
                     if sync_state == "In-Sync":
                         # No need to deploy for this pair
                         dcnm_vpc_pair_utils_delete_from_deploy_list(
@@ -567,7 +649,6 @@ def dcnm_vpc_pair_utils_process_delete_payloads(self):
 
 
 def dcnm_vpc_pair_utils_process_create_payloads(self):
-
     """
     Routine to push create payloads to DCNM server. This routine implements required error checks and retry mechanisms to handle
     transient errors.
@@ -585,22 +666,43 @@ def dcnm_vpc_pair_utils_process_create_payloads(self):
     path = self.paths["VPC_PAIR_CREATE_PATH"]
 
     for elem in self.diff_create:
+        for attempt in range(VPC_CREATE_RETRY_COUNT):
+            json_payload = json.dumps(elem)
+            resp = dcnm_send(self.module, "POST", path, json_payload)
 
-        json_payload = json.dumps(elem)
-        resp = dcnm_send(self.module, "POST", path, json_payload)
+            if resp != []:
+                self.result["response"].append(resp)
+            if not resp or resp.get("RETURN_CODE") == 200:
+                create_flag = True
+                dcnm_vpc_pair_utils_invalidate_pair_cache(self)
+                dcnm_vpc_pair_utils_invalidate_sync_cache(self)
+                break
 
-        if resp != []:
-            self.result["response"].append(resp)
-        if resp and resp.get("RETURN_CODE") != 200:
+            response_data = str(resp.get("DATA", "")).lower()
+            if "already part of a vpc pair" not in response_data:
+                resp["CHANGED"] = self.changed_dict[0]
+                self.module.fail_json(msg=resp)
+
+            dcnm_vpc_pair_utils_invalidate_pair_cache(self)
+            dcnm_vpc_pair_utils_invalidate_sync_cache(self)
+            swid = getattr(self, "sn_swid", {}).get(elem["peerOneId"])
+            have = dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid)
+            if have and dcnm_vpc_pair_utils_pairs_match(elem, have):
+                dcnm_vpc_pair_utils_delete_from_deploy_list(
+                    self, elem, self.diff_deploy
+                )
+                break
+
+            if attempt + 1 < VPC_CREATE_RETRY_COUNT:
+                time.sleep(VPC_CREATE_RETRY_DELAY)
+                continue
+
             resp["CHANGED"] = self.changed_dict[0]
             self.module.fail_json(msg=resp)
-        else:
-            create_flag = True
     return create_flag
 
 
 def dcnm_vpc_pair_utils_process_modify_payloads(self):
-
     """
     Routine to push modify payloads to DCNM server. This routine implements required error checks and retry mechanisms to handle
     transient errors.
@@ -616,7 +718,6 @@ def dcnm_vpc_pair_utils_process_modify_payloads(self):
     modify_flag = False
 
     for elem in self.diff_modify:
-
         path = self.paths["VPC_PAIR_UPDATE_PATH"]
 
         json_payload = json.dumps(elem)
@@ -633,11 +734,12 @@ def dcnm_vpc_pair_utils_process_modify_payloads(self):
             self.module.fail_json(msg=resp)
         else:
             modify_flag = True
+            dcnm_vpc_pair_utils_invalidate_pair_cache(self)
+            dcnm_vpc_pair_utils_invalidate_sync_cache(self)
     return modify_flag
 
 
 def dcnm_vpc_pair_utils_get_sync_status(self, elem):
-
     """
     Routine to get switch status information for a given fabric. This information can be processed to get
     the "In-Sync" status for the required switches.
@@ -650,22 +752,32 @@ def dcnm_vpc_pair_utils_get_sync_status(self, elem):
         'In-sync', if the switches configuration is "In-Sync" state, 'Not-In-Sync' otherwise
     """
 
-    switches = [self.sn_ip[elem["peerOneId"]], self.sn_ip[elem["peerTwoId"]]]
-    resp = None
+    switches = [
+        self.sn_ip[elem[peer]]
+        for peer in ["peerOneId", "peerTwoId"]
+        if not self.managable or self.sn_ip.get(elem[peer], "") in self.managable
+    ]
 
-    path = self.paths["VPC_PAIR_GET_SYNC_STATUS"].format(self.fabric)
+    if not switches:
+        return "In-Sync"
 
-    resp = dcnm_send(self.module, "GET", path)
+    if getattr(self, "_vpc_sync_status_cache", None) is None:
+        path = self.paths["VPC_PAIR_GET_SYNC_STATUS"].format(self.fabric)
+        resp = dcnm_send(self.module, "GET", path)
 
-    if resp and (resp["RETURN_CODE"] != 200):
-        resp["CHANGED"] = self.changed_dict[0]
-        self.module.fail_json(msg=resp)
+        if resp and (resp["RETURN_CODE"] != 200):
+            resp["CHANGED"] = self.changed_dict[0]
+            self.module.fail_json(msg=resp)
+
+        self._vpc_sync_status_cache = resp
+
+    resp = self._vpc_sync_status_cache
 
     # Check if all switches reached the "In-Sync" state
-    for elem in resp["DATA"]:
-        if elem["ipAddress"] in switches:
-            if elem["ccStatus"] == "In-Sync":
-                switches.remove(elem["ipAddress"])
+    for switch_info in resp["DATA"]:
+        if switch_info["ipAddress"] in switches:
+            if switch_info["ccStatus"] == "In-Sync":
+                switches.remove(switch_info["ipAddress"])
     if switches:
         # There are some switches which were deployed during this run but did not reach "In-Sync" state. Retry
         # after a delay
@@ -675,7 +787,6 @@ def dcnm_vpc_pair_utils_get_sync_status(self, elem):
 
 
 def dcnm_vpc_pair_utils_save_config_changes(self):
-
     """
     Routine to save configuration changes for the given fabric.
 
@@ -701,7 +812,6 @@ def dcnm_vpc_pair_utils_save_config_changes(self):
 
 
 def dcnm_vpc_pair_utils_deploy_elem(self, elem):
-
     """
     Routine to deploy a VPC switch pair to DCNM server.
 
@@ -716,12 +826,15 @@ def dcnm_vpc_pair_utils_deploy_elem(self, elem):
     deploy_flag = False
 
     for peer in ["peerOneId", "peerTwoId"]:
+        # Skip deploy for switches that are not managable (e.g. preprovision/unreachable)
+        peer_ip = self.sn_ip.get(elem[peer], "")
+        if self.managable and peer_ip not in self.managable:
+            continue
 
-        path = self.paths["VPC_PAIR_DEPLOY_PATH"].format(
-            elem["fabric"], elem[peer]
-        )
+        path = self.paths["VPC_PAIR_DEPLOY_PATH"].format(elem["fabric"], elem[peer])
 
         resp = dcnm_send(self.module, "POST", path)
+        dcnm_vpc_pair_utils_invalidate_sync_cache(self)
 
         if resp != []:
             self.result["response"].append(resp)
@@ -736,7 +849,6 @@ def dcnm_vpc_pair_utils_deploy_elem(self, elem):
 
 
 def dcnm_vpc_pair_utils_process_deploy_payloads(self, deploy_list):
-
     """
     Routine to push deploy payloads to DCNM server. This routine implements required error checks and retry mechanisms to handle
     transient errors.
@@ -751,11 +863,14 @@ def dcnm_vpc_pair_utils_process_deploy_payloads(self, deploy_list):
     resp = None
     deploy_flag = False
 
-    if deploy_list:
-        # Perform a config-save first before config-deploy
-        dcnm_vpc_pair_utils_save_config_changes(self)
-    else:
+    if not deploy_list:
         return deploy_flag
+
+    if not self.managable:
+        return deploy_flag
+
+    dcnm_vpc_pair_utils_save_config_changes(self)
+    dcnm_vpc_pair_utils_invalidate_sync_cache(self)
 
     for elem in deploy_list:
         rc, resp = dcnm_vpc_pair_utils_deploy_elem(self, elem)
@@ -766,6 +881,7 @@ def dcnm_vpc_pair_utils_process_deploy_payloads(self, deploy_list):
         for elem in deploy_list:
             retries = 0
             while retries < 10:
+                dcnm_vpc_pair_utils_invalidate_sync_cache(self)
                 sync_state = dcnm_vpc_pair_utils_get_sync_status(self, elem)
                 if sync_state != "In-Sync":
                     # Sometimes a deploy retry may be required. Retry deploy to see if things get normal
@@ -784,15 +900,11 @@ def dcnm_vpc_pair_utils_process_deploy_payloads(self, deploy_list):
 
 
 def dcnm_vpc_pair_utils_get_delete_list(self):
-
     del_list = []
     swid_list = self.sn_swid.values()
     for swid in swid_list:
-
         # Get the VPC inventory using the swid.
-        vpc_pair_info = dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(
-            self, swid
-        )
+        vpc_pair_info = dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid)
 
         if vpc_pair_info == []:
             continue
@@ -808,16 +920,13 @@ def dcnm_vpc_pair_utils_get_delete_list(self):
 
 
 def dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs(self):
-
     vpc_pair_list = []
 
     # If filters are provided, use the values to build the appropriate list.
     if self.vpc_pair_info == []:
         swid_list = self.sn_swid.values()
         for swid in swid_list:
-            vpc_pair_info = dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(
-                self, swid
-            )
+            vpc_pair_info = dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid)
 
             if vpc_pair_info == []:
                 continue
@@ -826,19 +935,14 @@ def dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs(self):
                 vpc_pair_list.append(vpc_pair_info)
     else:
         for elem in self.vpc_pair_info:
-
             if (elem.get("peerOneId", None) is not None) and (
                 self.ip_sn.get(elem["peerOneId"], None) is not None
             ):
-                swid = self.sn_swid.get(
-                    self.ip_sn.get(elem["peerOneId"], None), None
-                )
+                swid = self.sn_swid.get(self.ip_sn.get(elem["peerOneId"], None), None)
             elif (elem.get("peerTwoId", None) is not None) and (
                 self.ip_sn.get(elem["peerTwoId"], None) is not None
             ):
-                swid = self.sn_swid.get(
-                    self.ip_sn.get(elem["peerTwoId"], None), None
-                )
+                swid = self.sn_swid.get(self.ip_sn.get(elem["peerTwoId"], None), None)
             else:
                 swid = None
 
@@ -846,9 +950,7 @@ def dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs(self):
                 continue
 
             # Get the VPC inventory using the swid.
-            vpc_pair_info = dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(
-                self, swid
-            )
+            vpc_pair_info = dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid)
 
             if vpc_pair_info == []:
                 continue

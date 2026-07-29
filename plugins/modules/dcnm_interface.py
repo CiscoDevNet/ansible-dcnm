@@ -234,6 +234,11 @@ options:
               This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'l3'
             type: str
             default: ""
+          copy_description:
+            description:
+            - Copy the port-channel description to its member interfaces.
+            type: bool
+            default: false
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -404,6 +409,11 @@ options:
               This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
             type: str
             default: ""
+          copy_description:
+            description:
+            - Copy each peer port-channel description to that peer's member interfaces.
+            type: bool
+            default: false
       profile_subint:
         description:
         - Though the key shown here is 'profile_subint' the actual key to be used in playbook
@@ -1869,10 +1879,13 @@ import logging
 import re
 import sys
 import time
+from decimal import Decimal, InvalidOperation
 
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.common.validation import check_type_bool
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    dcnm_get_bulk_api_support,
     dcnm_send,
     get_fabric_inventory_details,
     dcnm_get_ip_addr_info,
@@ -1905,6 +1918,7 @@ class DcnmIntf:
         11: {
             "VPC_SNO": "/rest/interface/vpcpair_serial_number?serial_number={}",
             "IF_WITH_SNO_IFNAME": "/rest/interface?serialNumber={}&ifName={}",
+            "IF_WITH_SNO": "/rest/interface?serialNumber={}",
             "IF_DETAIL_WITH_SNO": "/rest/interface/detail?serialNumber={}",
             "GLOBAL_IF": "/rest/globalInterface",
             "GLOBAL_IF_DEPLOY": "/rest/globalInterface/deploy",
@@ -1916,15 +1930,38 @@ class DcnmIntf:
         12: {
             "VPC_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/vpcpair_serial_number?serial_number={}",
             "IF_WITH_SNO_IFNAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber={}&ifName={}",
+            "IF_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber={}",
             "IF_DETAIL_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/detail?serialNumber={}",
             "GLOBAL_IF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface",
             "GLOBAL_IF_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/globalInterface/deploy",
             "INTERFACE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface",
+            "UPDATE_INTERFACE_BULK": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/modify",
             "IF_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/markdelete",
             "FABRIC_ACCESS_MODE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/accessmode",
             "BREAKOUT": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/breakout",
         },
     }
+
+    storm_control_level_pairs = (
+        (
+            "storm_control_broadcast_level_percent",
+            "storm_control_broadcast_level_pps",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+        ),
+        (
+            "storm_control_multicast_level_percent",
+            "storm_control_multicast_level_pps",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+        ),
+        (
+            "storm_control_unicast_level_percent",
+            "storm_control_unicast_level_pps",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
+        ),
+    )
 
     def __init__(self, module):
         self.class_name = self.__class__.__name__
@@ -1957,6 +1994,17 @@ class DcnmIntf:
         self.hn_sn = {}
         self.monitoring = []
 
+        # Cache for bulk-fetched interface policy details.
+        # Keyed by (serialNumber, ifName_lower) -> interface detail dict.
+        # This avoids per-interface HTTP GETs which are the primary
+        # performance bottleneck when managing many interfaces.
+        self.intf_detail_cache = {}
+        self.intf_detail_cached_snos = set()
+        self._replace_have_lookup = {}
+        self._replace_pb_input_lookup = {}
+        self.deferred_delete_member_defaults = []
+        self._deferred_delete_member_default_keys = set()
+
         self.changed_dict = [
             {
                 "merged": [],
@@ -1974,6 +2022,9 @@ class DcnmIntf:
 
         self.dcnm_version = dcnm_version_supported(self.module)
         self.ndfc_version = self._get_ndfc_version()
+
+        # Check for bulk API support
+        self.has_bulk_api = dcnm_get_bulk_api_support(self.module)
 
         self.inventory_data = {}
         self.manageable = []
@@ -2065,6 +2116,15 @@ class DcnmIntf:
             "ENABLE_QOS": "enable_qos",
             "QOS_POLICY": "qos_policy",
             "QUEUING_POLICY": "queuing_policy",
+            "COPY_DESC": "copy_description",
+            "ENABLE_STORM_CONTROL": "enable_storm_control",
+            "STORM_CONTROL_ACTION": "storm_control_action",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT": "storm_control_broadcast_level_percent",
+            "STORM_CONTROL_BCAST_LEVEL_PPS": "storm_control_broadcast_level_pps",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT": "storm_control_multicast_level_percent",
+            "STORM_CONTROL_MCAST_LEVEL_PPS": "storm_control_multicast_level_pps",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT": "storm_control_unicast_level_percent",
+            "STORM_CONTROL_UCAST_LEVEL_PPS": "storm_control_unicast_level_pps",
 
         }
 
@@ -2333,6 +2393,160 @@ class DcnmIntf:
         else:
             return ""
 
+    @staticmethod
+    def dcnm_intf_storm_control_spec():
+        return dict(
+            enable_storm_control=dict(type="bool", default=False),
+            storm_control_action=dict(
+                type="str",
+                default="default",
+                choices=["shutdown", "trap", "default"],
+            ),
+            storm_control_broadcast_level_percent=dict(type="str", default=""),
+            storm_control_broadcast_level_pps=dict(
+                type="int", default=None, range_min=0, range_max=200000000
+            ),
+            storm_control_multicast_level_percent=dict(type="str", default=""),
+            storm_control_multicast_level_pps=dict(
+                type="int", default=None, range_min=0, range_max=200000000
+            ),
+            storm_control_unicast_level_percent=dict(type="str", default=""),
+            storm_control_unicast_level_pps=dict(
+                type="int", default=None, range_min=0, range_max=200000000
+            ),
+        )
+
+    @staticmethod
+    def dcnm_intf_normalize_storm_control_action(action):
+        """Translate the public default action to NDFC's low-level nvPair value."""
+        normalized_action = str(action).lower()
+        return "no" if normalized_action == "default" else normalized_action
+
+    def dcnm_intf_expand_storm_control_intent(self, profile):
+        """Mark dependent storm-control fields as explicitly managed."""
+        storm_keys = {
+            "enable_storm_control",
+            "storm_control_action",
+        }
+        for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+            storm_keys.update((percent_key, pps_key))
+
+        if not storm_keys.intersection(profile):
+            return
+
+        enabled = profile.get("enable_storm_control")
+        explicitly_disabled = False
+        if "enable_storm_control" in profile:
+            try:
+                explicitly_disabled = not check_type_bool(enabled)
+            except TypeError:
+                # Leave invalid values for the normal profile validation path,
+                # which reports the established user-facing error.
+                pass
+        if explicitly_disabled:
+            profile["storm_control_action"] = "default"
+            for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+                profile[percent_key] = ""
+                profile[pps_key] = None
+            return
+
+        percent_mode_requested = any(
+            profile.get(level_pair[0]) not in (None, "")
+            for level_pair in self.storm_control_level_pairs
+        )
+        pps_mode_requested = any(
+            profile.get(level_pair[1]) not in (None, "")
+            for level_pair in self.storm_control_level_pairs
+        )
+
+        # A rate mode applies to the whole interface, not just one traffic
+        # class. Mark every field in the opposite mode as explicitly cleared
+        # so merged state cannot copy stale values from HAVE.
+        if percent_mode_requested and not pps_mode_requested:
+            for level_pair in self.storm_control_level_pairs:
+                profile[level_pair[1]] = None
+        elif pps_mode_requested and not percent_mode_requested:
+            for level_pair in self.storm_control_level_pairs:
+                profile[level_pair[0]] = ""
+
+    def dcnm_intf_validate_storm_control_profile(self, profile, interface_name):
+        enabled = profile["enable_storm_control"]
+        action = profile["storm_control_action"]
+        dependent_values = [action] if action != "default" else []
+        percent_keys = []
+        pps_keys = []
+
+        for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+            percent_value = profile.get(percent_key, "")
+            pps_value = profile.get(pps_key)
+
+            if percent_value not in (None, ""):
+                percent_keys.append(percent_key)
+                dependent_values.append(percent_value)
+                if not re.fullmatch(r"\d{1,3}(?:\.\d{1,2})?", percent_value):
+                    self.module.fail_json(
+                        msg="Invalid parameters in playbook: while processing interface "
+                        + interface_name
+                        + ", "
+                        + percent_key
+                        + " must be between 0 and 100 with at most two decimal places"
+                    )
+                try:
+                    if Decimal(percent_value) > Decimal("100"):
+                        raise InvalidOperation
+                except InvalidOperation:
+                    self.module.fail_json(
+                        msg="Invalid parameters in playbook: while processing interface "
+                        + interface_name
+                        + ", "
+                        + percent_key
+                        + " must be between 0 and 100 with at most two decimal places"
+                    )
+
+            if pps_value is not None:
+                pps_keys.append(pps_key)
+                dependent_values.append(pps_value)
+
+        if percent_keys and pps_keys:
+            self.module.fail_json(
+                msg="Invalid parameters in playbook: while processing interface "
+                + interface_name
+                + ", percentage and PPS storm-control levels are mutually exclusive; "
+                + "configure only one rate mode per interface. Percentage fields: "
+                + ", ".join(percent_keys)
+                + "; PPS fields: "
+                + ", ".join(pps_keys)
+            )
+
+        if not enabled and dependent_values:
+            self.module.fail_json(
+                msg="Invalid parameters in playbook: while processing interface "
+                + interface_name
+                + ", storm-control action and levels require enable_storm_control: true"
+            )
+
+    def dcnm_intf_set_storm_control_nv_pairs(self, profile, nv_pairs):
+        enabled = profile.get("enable_storm_control", False)
+        nv_pairs["ENABLE_STORM_CONTROL"] = enabled
+        storm_control_action = (
+            profile.get("storm_control_action", "default")
+            if enabled
+            else "default"
+        )
+        nv_pairs["STORM_CONTROL_ACTION"] = (
+            self.dcnm_intf_normalize_storm_control_action(
+                storm_control_action
+            )
+        )
+
+        for percent_key, pps_key, percent_nvpair, pps_nvpair in self.storm_control_level_pairs:
+            percent_value = profile.get(percent_key, "") if enabled else ""
+            pps_value = profile.get(pps_key) if enabled else None
+            nv_pairs[percent_nvpair] = (
+                "" if percent_value in (None, "") else str(percent_value)
+            )
+            nv_pairs[pps_nvpair] = "" if pps_value is None else str(pps_value)
+
     # Flatten the incoming config database and have the required fields updated.
     # This modified config DB will be used while creating payloads. To avoid
     # messing up the incoming config make a copy of it.
@@ -2389,6 +2603,7 @@ class DcnmIntf:
                         c[ck]["policy"] = self.pol_types[self.dcnm_version][
                             pol_ind_str
                         ]
+                        self.dcnm_intf_expand_storm_control_intent(c[ck])
                         self.pb_input.append(c[ck])
 
     def dcnm_intf_validate_interface_input(
@@ -2411,6 +2626,12 @@ class DcnmIntf:
 
         if prof_spec is not None:
 
+            if "enable_storm_control" in prof_spec:
+                for config_item in config:
+                    for _percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+                        if config_item["profile"].get(pps_key) == "":
+                            config_item["profile"][pps_key] = None
+
             for item in intf_info:
 
                 plist.append(item["profile"])
@@ -2432,6 +2653,11 @@ class DcnmIntf:
                         + ", ".join(invalid_params)
                     )
                     self.module.fail_json(msg=mesg)
+
+                if "enable_storm_control" in prof_spec:
+                    self.dcnm_intf_validate_storm_control_profile(
+                        item["profile"], config[0]["name"]
+                    )
 
     def dcnm_intf_validate_port_channel_input(self, config):
 
@@ -2468,7 +2694,9 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
         )
+        pc_prof_spec_trunk.update(self.dcnm_intf_storm_control_spec())
 
         pc_prof_spec_access = dict(
             mode=dict(required=True, type="str"),
@@ -2494,7 +2722,9 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
         )
+        pc_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
 
         pc_prof_spec_l3 = dict(
             mode=dict(required=True, type="str"),
@@ -2512,6 +2742,7 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
         )
 
         pc_prof_spec_dot1q = dict(
@@ -2526,7 +2757,9 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            copy_description=dict(type="bool", default=False),
         )
+        pc_prof_spec_dot1q.update(self.dcnm_intf_storm_control_spec())
 
         if "trunk" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
@@ -2588,7 +2821,10 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
         )
+        vpc_prof_spec_trunk.update(self.dcnm_intf_storm_control_spec())
 
         vpc_prof_spec_access = dict(
             mode=dict(required=True, type="str"),
@@ -2615,7 +2851,10 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
         )
+        vpc_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
 
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
@@ -2639,9 +2878,9 @@ class DcnmIntf:
         sub_prof_spec = dict(
             mode=dict(required=True, type="str"),
             vlan=dict(required=True, type="int", range_min=2, range_max=3967),
-            ipv4_addr=dict(required=True, type="ipv4"),
+            ipv4_addr=dict(required=False, type="ipv4"),
             ipv4_mask_len=dict(
-                required=True, type="int", range_min=8, range_max=31
+                required=False, type="int", range_min=8, range_max=31
             ),
             int_vrf=dict(type="str", default="default"),
             ipv6_addr=dict(type="ipv6", default=""),
@@ -2716,6 +2955,7 @@ class DcnmIntf:
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
         )
+        eth_prof_spec_trunk.update(self.dcnm_intf_storm_control_spec())
 
         eth_prof_spec_trunk.update({
             "fec": dict(type="str", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
@@ -2743,6 +2983,7 @@ class DcnmIntf:
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
         )
+        eth_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
 
         eth_prof_spec_access.update({
             "fec": dict(type="str", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
@@ -2795,8 +3036,12 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            enable_cdp=dict(type="bool", default=True),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+        )
+        eth_prof_spec_dot1q_tunnel_host.update(
+            self.dcnm_intf_storm_control_spec()
         )
 
         eth_prof_spec_dot1q_tunnel_host.update({
@@ -3273,7 +3518,15 @@ class DcnmIntf:
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
+        if delem[profile]["mode"] in ("trunk", "access", "dot1q"):
+            self.dcnm_intf_set_storm_control_nv_pairs(
+                delem[profile], intf["interfaces"][0]["nvPairs"]
+            )
+
         if delem[profile]["mode"] != "monitor":
+            intf["interfaces"][0]["nvPairs"]["COPY_DESC"] = delem[profile][
+                "copy_description"
+            ]
             intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile][
                 "description"
             ]
@@ -3301,25 +3554,84 @@ class DcnmIntf:
         )
         intf["interfaces"][0].update({"ifName": ifname})
 
+        # Dynamic Peer Mapping: Determine the actual ND PEER1/PEER2 assignment
+        # based on the vpc_pair_sn order, regardless of playbook switch order
+        peer1_members = delem[profile]["peer1_members"]
+        peer2_members = delem[profile]["peer2_members"]
+        peer1_allowed_vlans = delem[profile].get("peer1_allowed_vlans")
+        peer2_allowed_vlans = delem[profile].get("peer2_allowed_vlans")
+        peer1_native_vlan = delem[profile].get("peer1_native_vlan")
+        peer2_native_vlan = delem[profile].get("peer2_native_vlan")
+        peer1_access_vlan = delem[profile].get("peer1_access_vlan")
+        peer2_access_vlan = delem[profile].get("peer2_access_vlan")
+        peer1_pcid = delem[profile]["peer1_pcid"]
+        peer2_pcid = delem[profile]["peer2_pcid"]
+        peer1_description = delem[profile]["peer1_description"]
+        peer2_description = delem[profile]["peer2_description"]
+        peer1_cmds = delem[profile]["peer1_cmds"]
+        peer2_cmds = delem[profile]["peer2_cmds"]
+
+        # Get the vPC pair serial number from ND (format: SERIAL1~SERIAL2)
+        vpc_pair_sn = self.vpc_ip_sn.get(delem["switch"][0], "")
+
+        if "~" in vpc_pair_sn:
+            vpc_sn_parts = vpc_pair_sn.split("~")
+            switch_0_sn = self.ip_sn.get(delem["switch"][0], "")
+
+            if len(delem["switch"]) < 2:
+                # Single switch in playbook - swap if it maps to ND's PEER2
+                if switch_0_sn == vpc_sn_parts[1]:
+                    peer1_members, peer2_members = peer2_members, peer1_members
+                    peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
+                    peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
+                    peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
+                    peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
+                    peer1_description, peer2_description = peer2_description, peer1_description
+                    peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
+            else:
+                switch_1_sn = self.ip_sn.get(delem["switch"][1], "")
+
+                # Check if playbook switch order matches ND vPC pair order
+                if switch_0_sn == vpc_sn_parts[0] and switch_1_sn == vpc_sn_parts[1]:
+                    # Playbook order matches ND order - no swap needed
+                    pass
+                elif switch_0_sn == vpc_sn_parts[1] and switch_1_sn == vpc_sn_parts[0]:
+                    # Playbook order is reversed from ND order - swap all peer parameters
+                    peer1_members, peer2_members = peer2_members, peer1_members
+                    peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
+                    peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
+                    peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
+                    peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
+                    peer1_description, peer2_description = peer2_description, peer1_description
+                    peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
+                else:
+                    # Serial numbers don't match vPC pair - this is an error condition
+                    self.module.fail_json(
+                        msg=f"vPC {ifname} configuration error: Switch serial numbers "
+                            f"[{switch_0_sn}, {switch_1_sn}] do not match ND vPC pair "
+                            f"[{vpc_sn_parts[0]}, {vpc_sn_parts[1]}]. Verify that the "
+                            f"switches specified in the playbook are part of the same vPC pair."
+                    )
+
         if delem[profile]["mode"] == "trunk":
 
-            if delem[profile]["peer1_members"] is None:
+            if peer1_members is None:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER1_MEMBER_INTERFACES"
                 ] = ""
             else:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER1_MEMBER_INTERFACES"
-                ] = ",".join(delem[profile]["peer1_members"])
+                ] = ",".join(peer1_members)
 
-            if delem[profile]["peer2_members"] is None:
+            if peer2_members is None:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER2_MEMBER_INTERFACES"
                 ] = ""
             else:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER2_MEMBER_INTERFACES"
-                ] = ",".join(delem[profile]["peer2_members"])
+                ] = ",".join(peer2_members)
 
             intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
                 "pc_mode"
@@ -3333,51 +3645,39 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
-            intf["interfaces"][0]["nvPairs"]["PEER1_ALLOWED_VLANS"] = delem[
-                profile
-            ]["peer1_allowed_vlans"]
-            intf["interfaces"][0]["nvPairs"]["PEER2_ALLOWED_VLANS"] = delem[
-                profile
-            ]["peer2_allowed_vlans"]
-            intf["interfaces"][0]["nvPairs"]["PEER1_NATIVE_VLAN"] = delem[
-                profile
-            ]["peer1_native_vlan"]
-            intf["interfaces"][0]["nvPairs"]["PEER2_NATIVE_VLAN"] = delem[
-                profile
-            ]["peer2_native_vlan"]
-            if delem[profile]["peer1_pcid"] == 0:
+            intf["interfaces"][0]["nvPairs"]["PEER1_ALLOWED_VLANS"] = peer1_allowed_vlans
+            intf["interfaces"][0]["nvPairs"]["PEER2_ALLOWED_VLANS"] = peer2_allowed_vlans
+            intf["interfaces"][0]["nvPairs"]["PEER1_NATIVE_VLAN"] = peer1_native_vlan
+            intf["interfaces"][0]["nvPairs"]["PEER2_NATIVE_VLAN"] = peer2_native_vlan
+            if peer1_pcid == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(port_id)
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(
-                    delem[profile]["peer1_pcid"]
-                )
+                intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(peer1_pcid)
 
-            if delem[profile]["peer2_pcid"] == 0:
+            if peer2_pcid == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(port_id)
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(
-                    delem[profile]["peer2_pcid"]
-                )
+                intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(peer2_pcid)
 
         if delem[profile]["mode"] == "access":
 
-            if delem[profile]["peer1_members"] is None:
+            if peer1_members is None:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER1_MEMBER_INTERFACES"
                 ] = ""
             else:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER1_MEMBER_INTERFACES"
-                ] = ",".join(delem[profile]["peer1_members"])
+                ] = ",".join(peer1_members)
 
-            if delem[profile]["peer2_members"] is None:
+            if peer2_members is None:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER2_MEMBER_INTERFACES"
                 ] = ""
             else:
                 intf["interfaces"][0]["nvPairs"][
                     "PEER2_MEMBER_INTERFACES"
-                ] = ",".join(delem[profile]["peer2_members"])
+                ] = ",".join(peer2_members)
 
             intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
                 "pc_mode"
@@ -3391,48 +3691,36 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
-            intf["interfaces"][0]["nvPairs"]["PEER1_ACCESS_VLAN"] = delem[
-                profile
-            ]["peer1_access_vlan"]
-            intf["interfaces"][0]["nvPairs"]["PEER2_ACCESS_VLAN"] = delem[
-                profile
-            ]["peer2_access_vlan"]
+            intf["interfaces"][0]["nvPairs"]["PEER1_ACCESS_VLAN"] = peer1_access_vlan
+            intf["interfaces"][0]["nvPairs"]["PEER2_ACCESS_VLAN"] = peer2_access_vlan
 
-            if delem[profile]["peer1_pcid"] == 0:
+            if peer1_pcid == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(port_id)
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(
-                    delem[profile]["peer1_pcid"]
-                )
+                intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(peer1_pcid)
 
-            if delem[profile]["peer2_pcid"] == 0:
+            if peer2_pcid == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(port_id)
             else:
-                intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(
-                    delem[profile]["peer2_pcid"]
-                )
+                intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(peer2_pcid)
 
-        intf["interfaces"][0]["nvPairs"]["PEER1_PO_DESC"] = delem[profile][
-            "peer1_description"
-        ]
-        intf["interfaces"][0]["nvPairs"]["PEER2_PO_DESC"] = delem[profile][
-            "peer2_description"
-        ]
-        if delem[profile]["peer1_cmds"] is None:
+        intf["interfaces"][0]["nvPairs"]["PEER1_PO_DESC"] = peer1_description
+        intf["interfaces"][0]["nvPairs"]["PEER2_PO_DESC"] = peer2_description
+        if peer1_cmds is None:
             intf["interfaces"][0]["nvPairs"]["PEER1_PO_CONF"] = ""
         else:
-            intf["interfaces"][0]["nvPairs"]["PEER1_PO_CONF"] = "\n".join(
-                delem[profile]["peer1_cmds"]
-            )
-        if delem[profile]["peer2_cmds"] is None:
+            intf["interfaces"][0]["nvPairs"]["PEER1_PO_CONF"] = "\n".join(peer1_cmds)
+        if peer2_cmds is None:
             intf["interfaces"][0]["nvPairs"]["PEER2_PO_CONF"] = ""
         else:
-            intf["interfaces"][0]["nvPairs"]["PEER2_PO_CONF"] = "\n".join(
-                delem[profile]["peer2_cmds"]
-            )
+            intf["interfaces"][0]["nvPairs"]["PEER2_PO_CONF"] = "\n".join(peer2_cmds)
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
+        intf["interfaces"][0]["nvPairs"]["COPY_DESC"] = delem[profile][
+            "copy_description"
+        ]
+        intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"] = delem[profile]["enable_cdp"]
         if delem[profile].get("disable_lacp_suspend_individual"):
             intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
         else:
@@ -3462,6 +3750,9 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
         else:
             intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+        self.dcnm_intf_set_storm_control_nv_pairs(
+            delem[profile], intf["interfaces"][0]["nvPairs"]
+        )
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
             str(delem[profile].get("speed", ""))
@@ -3480,11 +3771,13 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
             "int_vrf"
         ]
-        intf["interfaces"][0]["nvPairs"]["IP"] = str(
-            delem[profile]["ipv4_addr"]
+        ipv4_addr = delem[profile].get("ipv4_addr")
+        ipv4_mask_len = delem[profile].get("ipv4_mask_len")
+        intf["interfaces"][0]["nvPairs"]["IP"] = (
+            "" if ipv4_addr is None else str(ipv4_addr)
         )
-        intf["interfaces"][0]["nvPairs"]["PREFIX"] = str(
-            delem[profile]["ipv4_mask_len"]
+        intf["interfaces"][0]["nvPairs"]["PREFIX"] = (
+            "" if ipv4_mask_len is None else str(ipv4_mask_len)
         )
         intf["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = delem[profile][
             "route_tag"
@@ -3767,9 +4060,16 @@ class DcnmIntf:
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
             intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
             if self._ndfc_version_gte("12.4.1"):
                 intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
+
+        if delem[profile]["mode"] in ("trunk", "access", "dot1q"):
+            self.dcnm_intf_set_storm_control_nv_pairs(
+                delem[profile], intf["interfaces"][0]["nvPairs"]
+            )
 
     def dcnm_intf_get_st_fex_payload(self, delem, intf, profile):
 
@@ -4148,6 +4448,66 @@ class DcnmIntf:
                             else:
                                 self.want.append(intf_payload)
 
+    def dcnm_intf_bulk_fetch_intf_info(self, serialNumber):
+        """Bulk-fetch all interface policy details for a switch and populate the cache.
+
+        Instead of making one HTTP GET per interface via IF_WITH_SNO_IFNAME,
+        this fetches ALL interfaces for a serial number in a single call and
+        caches the results.  Subsequent calls to dcnm_intf_get_intf_info()
+        will resolve from the cache in O(1) instead of making a network
+        round-trip.
+
+        Parameters:
+            serialNumber (str): The serial number of the switch. For VPC/AA_FEX
+                                combined serial numbers pass only one side.
+        """
+
+        sno = serialNumber.split("~")[0] if "~" in serialNumber else serialNumber
+
+        if sno in self.intf_detail_cached_snos:
+            return
+
+        path = self.paths["IF_WITH_SNO"].format(sno)
+
+        retry_count = 0
+        resp = []
+        while retry_count < 3:
+            retry_count += 1
+            resp = dcnm_send(self.module, "GET", path)
+
+            if resp == [] or (isinstance(resp, dict) and resp.get("RETURN_CODE") == 200):
+                break
+            time.sleep(1)
+
+        if (
+            resp
+            and isinstance(resp, dict)
+            and "DATA" in resp
+            and resp["DATA"]
+            and resp["RETURN_CODE"] == 200
+        ):
+            for item in resp["DATA"]:
+                # The bulk endpoint may group multiple interfaces under the
+                # same policy in a single DATA element.  We must iterate ALL
+                # interfaces in the group — not just [0] — and create a
+                # separate cache entry for each one that looks identical to
+                # what the individual endpoint would return (i.e. a single
+                # interface in the "interfaces" list).
+                for intf in item.get("interfaces", []):
+                    if_name = intf.get("ifName", "")
+                    if if_name:
+                        # Build a per-interface entry that mirrors the
+                        # individual-GET response structure.
+                        single_item = {}
+                        for key in item:
+                            if key != "interfaces":
+                                single_item[key] = item[key]
+                        single_item["interfaces"] = [intf]
+                        cache_key = (sno, if_name.lower())
+                        self.intf_detail_cache[cache_key] = single_item
+
+        self.intf_detail_cached_snos.add(sno)
+
     def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
 
         # For VPC and AA_FEX interfaces the serialNumber will be a combined one. But GET on interface cannot
@@ -4158,6 +4518,21 @@ class DcnmIntf:
         else:
             sno = serialNumber
 
+        # Check the bulk-fetched cache first to avoid a per-interface HTTP GET
+        cache_key = (sno, ifName.lower())
+        cached = self.intf_detail_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        # If we already bulk-fetched all interfaces for this serial number
+        # and this interface was not in the response, it does not exist on
+        # the controller.  Return empty without an additional HTTP call.
+        if sno in self.intf_detail_cached_snos:
+            return []
+
+        # No bulk fetch done for this serial number — fall back to
+        # individual GET (this path is taken when bulk pre-population
+        # was not triggered, e.g. for states other than overridden).
         path = self.paths["IF_WITH_SNO_IFNAME"].format(sno, ifName)
 
         retry_count = 0
@@ -4175,6 +4550,8 @@ class DcnmIntf:
             and resp["DATA"]
             and resp["RETURN_CODE"] == 200
         ):
+            # Store in cache so subsequent lookups for this interface are free
+            self.intf_detail_cache[cache_key] = resp["DATA"][0]
             return resp["DATA"][0]
         else:
             return []
@@ -4233,6 +4610,22 @@ class DcnmIntf:
 
         if not self.want:
             return
+
+        # Bulk-prefetch interface details for all switches referenced in self.want.
+        # This populates the cache so that individual dcnm_intf_get_intf_info calls
+        # below become O(1) lookups instead of individual HTTP GETs.
+        prefetched_snos = set()
+        for elem in self.want:
+            for intf in elem["interfaces"]:
+                sno = intf.get("serialNumber", "")
+                if not sno:
+                    continue
+                # For VPC/AA_FEX, use the first part of the ~-separated pair
+                if intf.get("interfaceType") in ("INTERFACE_VPC", "AA_FEX"):
+                    sno = sno.split("~")[0]
+                if sno not in prefetched_snos:
+                    prefetched_snos.add(sno)
+                    self.dcnm_intf_bulk_fetch_intf_info(sno)
 
         # We have all the requested interface config in self.want. Interfaces are grouped together based on the
         # policy string and the interface name in a single dict entry.
@@ -4337,6 +4730,10 @@ class DcnmIntf:
             else:
                 t_e2 = e2
 
+        if k == "STORM_CONTROL_ACTION":
+            t_e1 = self.dcnm_intf_normalize_storm_control_action(t_e1)
+            t_e2 = self.dcnm_intf_normalize_storm_control_action(t_e2)
+
         boolean_keys = [
             "ENABLE_ORPHAN_PORT",
             "DISABLE_LACP_SUSPEND",
@@ -4344,12 +4741,44 @@ class DcnmIntf:
             "ENABLE_PFC",
             "ENABLE_MONITOR",
             "CDP_ENABLE",
-            "ENABLE_QOS"
+            "ENABLE_QOS",
+            "COPY_DESC",
+            "ENABLE_STORM_CONTROL",
         ]
         if k in boolean_keys:
             # This is a special case where the value is a boolean and we need to compare it as such
             t_e1 = str(t_e1).lower()
             t_e2 = str(t_e2).lower()
+
+        numeric_keys = [
+            "LACP_PORT_PRIO",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
+        ]
+        if k in numeric_keys:
+            # Controller responses may return numeric nvPairs as strings while
+            # desired state keeps them as integers. Normalize both sides so
+            # default-valued port-channel/vPC settings remain idempotent.
+            try:
+                t_e1 = int(t_e1)
+                t_e2 = int(t_e2)
+            except (TypeError, ValueError):
+                pass
+
+        decimal_keys = [
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+        ]
+        if k in decimal_keys:
+            try:
+                if t_e1 not in (None, ""):
+                    t_e1 = Decimal(str(t_e1))
+                if t_e2 not in (None, ""):
+                    t_e2 = Decimal(str(t_e2))
+            except InvalidOperation:
+                pass
 
         if t_e1 != t_e2:
 
@@ -4570,14 +4999,19 @@ class DcnmIntf:
             intf_changed = False
 
             want.pop("deploy")
-            match_have = [
-                d
-                for d in self.have
-                if (
-                    (name.lower() == d["interfaces"][0]["ifName"].lower())
-                    and (sno == d["interfaces"][0]["serialNumber"])
+            if state == "replaced" and self._replace_have_lookup:
+                match_have = self._replace_have_lookup.get(
+                    (name.lower(), str(sno)), []
                 )
-            ]
+            else:
+                match_have = [
+                    d
+                    for d in self.have
+                    if (
+                        (name.lower() == d["interfaces"][0]["ifName"].lower())
+                        and (sno == d["interfaces"][0]["serialNumber"])
+                    )
+                ]
             if not match_have:
                 changed_dict = copy.deepcopy(want)
 
@@ -4600,6 +5034,22 @@ class DcnmIntf:
                     changed_dict = copy.deepcopy(want)
                     if "skipResourceCheck" in changed_dict.keys():
                         changed_dict.pop("skipResourceCheck")
+
+                    if state == "replaced" and self._replace_pb_input_lookup:
+                        match_pb = self._replace_pb_input_lookup.get(
+                            (name.lower(), str(sno), fabric), []
+                        )
+                    else:
+                        match_pb = [
+                            pb
+                            for pb in self.pb_input
+                            if (
+                                (name.lower() == pb["ifname"].lower())
+                                and (sno == pb["sno"])
+                                and (fabric == pb["fabric"])
+                            )
+                        ]
+                    pb_keys = list(match_pb[0].keys()) if match_pb else []
 
                     # First check if the policies are same for want and have. If they are different, we cannot compare
                     # the profiles because each profile will have different elements. As per PRD, if policies are different
@@ -4640,15 +5090,34 @@ class DcnmIntf:
                                         "SPEED",
                                         "ENABLE_QOS",
                                         "QOS_POLICY",
-                                        "QUEUING_POLICY"
+                                        "QUEUING_POLICY",
+                                        "COPY_DESC",
+                                        "ENABLE_STORM_CONTROL",
+                                        "STORM_CONTROL_ACTION",
+                                        "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+                                        "STORM_CONTROL_BCAST_LEVEL_PPS",
+                                        "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+                                        "STORM_CONTROL_MCAST_LEVEL_PPS",
+                                        "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+                                        "STORM_CONTROL_UCAST_LEVEL_PPS",
                                     ]
 
                                     if self._ndfc_version_gte("12.4.1"):
                                         keys_to_check.append("FEC")
 
                                     for key in keys_to_check:
-                                        # Remove the key from nv_keys only if it exists and is not present in 'have'
-                                        if key in nv_keys and d[k][index][ik].get(key, None) is None:
+                                        # Some GET payloads omit optional keys altogether. Keep comparing keys that were
+                                        # explicitly requested in the playbook so merged state can correct drift when
+                                        # the current payload is incomplete.
+                                        key_missing_in_have = all(
+                                            intf.get(ik, {}).get(key, None) is None
+                                            for intf in d[k]
+                                        )
+                                        if (
+                                            key in nv_keys
+                                            and key_missing_in_have
+                                            and self.keymap.get(key) not in pb_keys
+                                        ):
                                             nv_keys.remove(key)
 
                                     for nk in nv_keys:
@@ -4661,7 +5130,7 @@ class DcnmIntf:
                                                 sno,
                                                 fabric,
                                                 want[k][0][ik][nk],
-                                                d[k][index][ik][nk],
+                                                d[k][index][ik].get(nk),
                                                 nk,
                                                 state,
                                             )
@@ -4673,16 +5142,32 @@ class DcnmIntf:
                                             ]
                                             continue
                                         if res == "merge_and_add":
-                                            want[k][0][ik][
-                                                nk
-                                            ] = self.dcnm_intf_merge_want_and_have(
+                                            merged_value = self.dcnm_intf_merge_want_and_have(
                                                 nk,
                                                 want[k][0][ik][nk],
                                                 d[k][0][ik][nk],
                                             )
-                                            changed_dict[k][0][ik][nk] = want[
-                                                k
-                                            ][0][ik][nk]
+                                            # A merged aggregate key can resolve back to the
+                                            # exact current controller value, for example
+                                            # CONF="" merged with CONF="no shutdown". Skip
+                                            # the update when the merged result is already in
+                                            # sync.
+                                            if (
+                                                self.dcnm_intf_compare_elements(
+                                                    name,
+                                                    sno,
+                                                    fabric,
+                                                    merged_value,
+                                                    d[k][0][ik].get(nk),
+                                                    nk,
+                                                    "replaced",
+                                                )
+                                                == "dont_add"
+                                            ):
+                                                changed_dict[k][0][ik].pop(nk)
+                                                continue
+                                            want[k][0][ik][nk] = merged_value
+                                            changed_dict[k][0][ik][nk] = merged_value
                                         if res != "dont_add":
                                             action = "update"
                                         else:
@@ -4708,12 +5193,25 @@ class DcnmIntf:
                                         want[k][0][ik] = d[k][0][ik]
                                         continue
                                     if res == "merge_and_add":
-                                        want[k][0][
-                                            ik
-                                        ] = self.dcnm_intf_merge_want_and_have(
+                                        merged_value = self.dcnm_intf_merge_want_and_have(
                                             ik, want[k][0][ik], d[k][0][ik]
                                         )
-                                        changed_dict[k][0][ik] = want[k][0][ik]
+                                        if (
+                                            self.dcnm_intf_compare_elements(
+                                                name,
+                                                sno,
+                                                fabric,
+                                                merged_value,
+                                                d[k][0][ik],
+                                                ik,
+                                                "replaced",
+                                            )
+                                            == "dont_add"
+                                        ):
+                                            changed_dict[k][0].pop(ik)
+                                            continue
+                                        want[k][0][ik] = merged_value
+                                        changed_dict[k][0][ik] = merged_value
                                     if res != "dont_add":
                                         action = "update"
                                     else:
@@ -4801,6 +5299,8 @@ class DcnmIntf:
         for cfg in self.config:
             self.dcnm_intf_process_config(cfg)
 
+        self.dcnm_intf_build_replace_lookups()
+
         # Compare want[] and have[] and build a list of dicts containing interface information that
         # should be sent to DCNM for updation. The list can include information on interfaces which
         # are already presnt in self.have and which differ in the values for atleast one of the keys
@@ -4834,62 +5334,167 @@ class DcnmIntf:
         intf_nv = intf.get("interfaces")[0].get("nvPairs")
         have_nv = have.get("interfaces")[0].get("nvPairs")
 
+        def normalize_default_compare_value(key, value):
+            if value is None:
+                value = ""
+
+            sval = str(value).strip().lower()
+
+            if key == "CONF":
+                # NDFC may omit explicit default CLI from stored interface
+                # intent while the module's generated default payload includes
+                # "no shutdown". Treat them as equivalent for deleted-state
+                # idempotence checks.
+                if sval in ("", "no shutdown"):
+                    return ""
+                return sval
+
+            if key in (
+                "ADMIN_STATE",
+                "BPDUGUARD_ENABLED",
+                "PORTTYPE_FAST_ENABLED",
+            ):
+                if sval in ("true", "yes"):
+                    return "true"
+                if sval in ("false", "no"):
+                    return "false"
+                return sval
+
+            if key == "ENABLE_STORM_CONTROL":
+                if sval in ("true", "yes", "on", "1", "y", "t"):
+                    return "true"
+                if sval in ("", "false", "no", "off", "0", "n", "f"):
+                    return "false"
+                return sval
+
+            if key == "STORM_CONTROL_ACTION":
+                if sval in ("", "default", "no"):
+                    return "no"
+                return sval
+
+            return sval
+
         if (
-            str(intf_nv.get("SPEED")).lower()
-            != str(have_nv.get("SPEED")).lower()
+            normalize_default_compare_value("SPEED", intf_nv.get("SPEED"))
+            != normalize_default_compare_value("SPEED", have_nv.get("SPEED"))
         ):
             return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("DESC") != have_nv.get("DESC"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("CONF") != have_nv.get("CONF"):
-            return "DCNM_INTF_NOT_MATCH"
         if (
-            str(intf_nv.get("ADMIN_STATE")).lower()
-            != str(have_nv.get("ADMIN_STATE")).lower()
+            normalize_default_compare_value("DESC", intf_nv.get("DESC"))
+            != normalize_default_compare_value("DESC", have_nv.get("DESC"))
         ):
             return "DCNM_INTF_NOT_MATCH"
-        if str(intf_nv.get("MTU")).lower() != str(have_nv.get("MTU")).lower():
+        if (
+            normalize_default_compare_value("CONF", intf_nv.get("CONF"))
+            != normalize_default_compare_value("CONF", have_nv.get("CONF"))
+        ):
+            return "DCNM_INTF_NOT_MATCH"
+        if (
+            normalize_default_compare_value(
+                "ADMIN_STATE", intf_nv.get("ADMIN_STATE")
+            )
+            != normalize_default_compare_value(
+                "ADMIN_STATE", have_nv.get("ADMIN_STATE")
+            )
+        ):
+            return "DCNM_INTF_NOT_MATCH"
+        if (
+            normalize_default_compare_value("MTU", intf_nv.get("MTU"))
+            != normalize_default_compare_value("MTU", have_nv.get("MTU"))
+        ):
             return "DCNM_INTF_NOT_MATCH"
 
         if intf.get("policy") == "int_routed_host":
-            if intf_nv.get("INTF_VRF") != have_nv.get("INTF_VRF"):
-                return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("IP")).lower()
-                != str(have_nv.get("IP")).lower()
+                normalize_default_compare_value(
+                    "INTF_VRF", intf_nv.get("INTF_VRF")
+                )
+                != normalize_default_compare_value(
+                    "INTF_VRF", have_nv.get("INTF_VRF")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("PREFIX")).lower()
-                != str(have_nv.get("PREFIX")).lower()
+                normalize_default_compare_value("IP", intf_nv.get("IP"))
+                != normalize_default_compare_value("IP", have_nv.get("IP"))
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("ROUTING_TAG")).lower()
-                != str(have_nv.get("ROUTING_TAG")).lower()
+                normalize_default_compare_value(
+                    "PREFIX", intf_nv.get("PREFIX")
+                )
+                != normalize_default_compare_value(
+                    "PREFIX", have_nv.get("PREFIX")
+                )
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                normalize_default_compare_value(
+                    "ROUTING_TAG", intf_nv.get("ROUTING_TAG")
+                )
+                != normalize_default_compare_value(
+                    "ROUTING_TAG", have_nv.get("ROUTING_TAG")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
         elif intf.get("policy") == "int_trunk_host":
             if (
-                str(intf_nv.get("BPDUGUARD_ENABLED")).lower()
-                != str(have_nv.get("BPDUGUARD_ENABLED")).lower()
+                normalize_default_compare_value(
+                    "BPDUGUARD_ENABLED", intf_nv.get("BPDUGUARD_ENABLED")
+                )
+                != normalize_default_compare_value(
+                    "BPDUGUARD_ENABLED", have_nv.get("BPDUGUARD_ENABLED")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("PORTTYPE_FAST_ENABLED")).lower()
-                != str(have_nv.get("PORTTYPE_FAST_ENABLED")).lower()
+                normalize_default_compare_value(
+                    "PORTTYPE_FAST_ENABLED",
+                    intf_nv.get("PORTTYPE_FAST_ENABLED"),
+                )
+                != normalize_default_compare_value(
+                    "PORTTYPE_FAST_ENABLED",
+                    have_nv.get("PORTTYPE_FAST_ENABLED"),
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("ALLOWED_VLANS")).lower()
-                != str(have_nv.get("ALLOWED_VLANS")).lower()
+                normalize_default_compare_value(
+                    "ALLOWED_VLANS", intf_nv.get("ALLOWED_VLANS")
+                )
+                != normalize_default_compare_value(
+                    "ALLOWED_VLANS", have_nv.get("ALLOWED_VLANS")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
             if (
-                str(intf_nv.get("NATIVE_VLAN")).lower()
-                != str(have_nv.get("NATIVE_VLAN")).lower()
+                normalize_default_compare_value(
+                    "NATIVE_VLAN", intf_nv.get("NATIVE_VLAN")
+                )
+                != normalize_default_compare_value(
+                    "NATIVE_VLAN", have_nv.get("NATIVE_VLAN")
+                )
             ):
                 return "DCNM_INTF_NOT_MATCH"
+
+            # Storm control is supported by the leaf role-default trunk
+            # template. Treat omitted controller defaults as disabled, while
+            # detecting any enabled action or retained threshold as drift.
+            storm_control_keys = (
+                "ENABLE_STORM_CONTROL",
+                "STORM_CONTROL_ACTION",
+                "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+                "STORM_CONTROL_BCAST_LEVEL_PPS",
+                "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+                "STORM_CONTROL_MCAST_LEVEL_PPS",
+                "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+                "STORM_CONTROL_UCAST_LEVEL_PPS",
+            )
+            for key in storm_control_keys:
+                if normalize_default_compare_value(
+                    key, intf_nv.get(key)
+                ) != normalize_default_compare_value(key, have_nv.get(key)):
+                    return "DCNM_INTF_NOT_MATCH"
 
         if self._ndfc_version_gte("12.4.1"):
             if (
@@ -4943,6 +5548,9 @@ class DcnmIntf:
             eth_payload["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = "none"
             eth_payload["interfaces"][0]["nvPairs"]["NATIVE_VLAN"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            self.dcnm_intf_set_storm_control_nv_pairs(
+                {}, eth_payload["interfaces"][0]["nvPairs"]
+            )
 
             if self._ndfc_version_gte("12.4.1"):
                 eth_payload["interfaces"][0]["nvPairs"]["FEC"] = "auto"
@@ -4974,45 +5582,359 @@ class DcnmIntf:
 
         return eth_payload
 
-    def dcnm_intf_can_be_replaced(self, have):
+    def dcnm_intf_build_can_be_replaced_lookups(self):
+        """Pre-build lookup structures for O(1) dcnm_intf_can_be_replaced() checks.
+
+        Replaces the O(n) linear scan of self.pb_input that was performed
+        for every interface in have_all, turning the overall O(n*m) cost
+        into O(n+m).
+
+        Populates three instance-level lookup structures:
+          _pb_override_lookup  – set of (ifname, sno) for overridden-state match
+          _pb_member_lookup    – dict mapping expanded member ifName
+                                 to list of (parent_ifname, parent_sno)
+          _pb_peer_member_lookup – dict mapping expanded peer member ifName
+                                   to parent_ifname
+        """
+
+        self._pb_override_lookup = set()
+        self._pb_member_lookup = {}
+        self._pb_peer_member_lookup = {}
+        self._pb_deleted_parent_lookup = set()
+        self._pb_deleted_peer_parent_lookup = set()
 
         for item in self.pb_input:
-            # For overridden state, we will not touch anything that is present in incoming config,
-            # because those interfaces will anyway be modified in the current run
-            # Must check both interface name AND serial number to ensure we're comparing the same
-            # interface on the same switch (not just the same interface name on different switches)
-            if (self.module.params["state"] == "overridden") and (
-                item["ifname"] == have["ifName"]
-            ) and (
-                item.get("sno") == have.get("serialNo")
-            ):
-                return False, item["ifname"]
+            ifname = item.get("ifname")
+            sno = item.get("sno")
+
+            # Override entries: (ifname, sno) pairs for direct match
+            if ifname and sno:
+                self._pb_override_lookup.add((ifname, sno))
+
+            # Members (port-channel style)
             if item.get("members"):
-                if have["ifName"] in [
-                    self.dcnm_intf_get_if_name(mem, "eth")[0]
-                    for mem in item["members"]
-                ]:
-                    # Compare have serial_number to item serial_number return if they don't match
-                    if have.get('serialNo') != item.get('sno'):
-                        return True, None
-                    else:
-                        return False, item["ifname"]
-            elif (item.get("peer1_members")) or (item.get("peer2_members")):
-                if (
-                    have["ifName"]
-                    in [
-                        self.dcnm_intf_get_if_name(mem, "eth")[0]
-                        for mem in item["peer1_members"]
-                    ]
-                ) or (
-                    have["ifName"]
-                    in [
-                        self.dcnm_intf_get_if_name(mem, "eth")[0]
-                        for mem in item["peer2_members"]
-                    ]
-                ):
-                    return False, item["ifname"]
+                self._pb_deleted_parent_lookup.add((ifname, sno))
+                for mem in item["members"]:
+                    expanded_name = self.dcnm_intf_get_if_name(mem, "eth")[0]
+                    if expanded_name not in self._pb_member_lookup:
+                        self._pb_member_lookup[expanded_name] = []
+                    self._pb_member_lookup[expanded_name].append((ifname, sno))
+
+            # Peer members (VPC style)
+            elif item.get("peer1_members") or item.get("peer2_members"):
+                self._pb_deleted_parent_lookup.add((ifname, sno))
+                self._pb_deleted_peer_parent_lookup.add(ifname)
+                for mem in (item.get("peer1_members") or []):
+                    expanded_name = self.dcnm_intf_get_if_name(mem, "eth")[0]
+                    self._pb_peer_member_lookup[expanded_name] = ifname
+                for mem in (item.get("peer2_members") or []):
+                    expanded_name = self.dcnm_intf_get_if_name(mem, "eth")[0]
+                    self._pb_peer_member_lookup[expanded_name] = ifname
+
+    def dcnm_intf_can_be_replaced(self, have):
+
+        # Build lookup structures on first call if not already built
+        if not hasattr(self, '_pb_member_lookup'):
+            self.dcnm_intf_build_can_be_replaced_lookups()
+
+        have_ifname = have["ifName"]
+        have_sno = have.get("serialNo")
+
+        # Check 1: For overridden state, skip interfaces present in incoming
+        # config — they will be modified in the current run anyway.
+        if self.module.params["state"] == "overridden":
+            if (have_ifname, have_sno) in self._pb_override_lookup:
+                return False, have_ifname
+
+        # Check 2: Check if this interface is a member of a port-channel.
+        if have_ifname in self._pb_member_lookup:
+            for parent_ifname, parent_sno in self._pb_member_lookup[have_ifname]:
+                # Deleted state needs one extra reconciliation pass for member
+                # Ethernet defaults after parent PC/vPC delete. Execution order
+                # already sends parent deletes before member replacements, so it
+                # is safe to queue the member default in the same module run.
+                if self.module.params["state"] == "deleted":
+                    if (parent_ifname, parent_sno) in self._pb_deleted_parent_lookup:
+                        return True, parent_ifname
+                # Compare have serial_number to item serial_number return if they don't match
+                if have_sno != parent_sno:
+                    return True, None
+                else:
+                    return False, parent_ifname
+
+        # Check 3: Check if this interface is a peer member of a VPC.
+        if have_ifname in self._pb_peer_member_lookup:
+            if self.module.params["state"] == "deleted":
+                parent_ifname = self._pb_peer_member_lookup[have_ifname]
+                if parent_ifname in self._pb_deleted_peer_parent_lookup:
+                    return True, parent_ifname
+            return False, self._pb_peer_member_lookup[have_ifname]
+
         return True, None
+
+    def dcnm_intf_parent_present_in_have_all(self, parent_ifname, parent_sno=None):
+
+        parent_ifname = parent_ifname.lower()
+
+        for have in self.have_all:
+            if have.get("ifName", "").lower() != parent_ifname:
+                continue
+            if parent_sno is None or have.get("serialNo") == parent_sno:
+                return True
+
+        return False
+
+    def dcnm_intf_should_defer_deleted_member_default(self, have, parent_ifname):
+
+        if self.module.params["state"] != "deleted" or not parent_ifname:
+            return False
+
+        if not hasattr(self, "_pb_member_lookup"):
+            self.dcnm_intf_build_can_be_replaced_lookups()
+
+        have_ifname = have["ifName"]
+
+        if have_ifname in self._pb_member_lookup:
+            for candidate_parent_ifname, candidate_parent_sno in self._pb_member_lookup[have_ifname]:
+                if candidate_parent_ifname != parent_ifname:
+                    continue
+                if (
+                    (candidate_parent_ifname, candidate_parent_sno)
+                    in self._pb_deleted_parent_lookup
+                ):
+                    return self.dcnm_intf_parent_present_in_have_all(
+                        candidate_parent_ifname, candidate_parent_sno
+                    )
+
+        if have_ifname in self._pb_peer_member_lookup:
+            if (
+                self._pb_peer_member_lookup[have_ifname] == parent_ifname
+                and parent_ifname in self._pb_deleted_peer_parent_lookup
+            ):
+                return self.dcnm_intf_parent_present_in_have_all(parent_ifname)
+
+        return False
+
+    def dcnm_intf_defer_deleted_member_default(
+        self, ifname, sno, fabric, deploy, parent_ifname
+    ):
+
+        key = (str(sno), ifname.lower(), parent_ifname.lower())
+
+        if key in self._deferred_delete_member_default_keys:
+            return
+
+        self._deferred_delete_member_default_keys.add(key)
+        self.deferred_delete_member_defaults.append(
+            {
+                "ifName": ifname,
+                "serialNumber": str(sno),
+                "fabricName": fabric,
+                "deploy": deploy,
+                "parentIfName": parent_ifname,
+            }
+        )
+
+    def dcnm_intf_refresh_deferred_deleted_member_defaults(self):
+
+        if not self.deferred_delete_member_defaults:
+            return
+
+        affected_snos = sorted(
+            {
+                item["serialNumber"].split("~")[0]
+                for item in self.deferred_delete_member_defaults
+            }
+        )
+
+        max_retries = 10
+        retry_sleep = 2
+
+        for retry in range(max_retries):
+            # Refresh only the impacted switches so same-run parent deletes are
+            # reflected before we calculate default replacements for former members.
+            self.have_all = [
+                have
+                for have in self.have_all
+                if have.get("serialNo") not in affected_snos
+            ]
+
+            for sno in affected_snos:
+                stale_cache_keys = [
+                    key for key in self.intf_detail_cache if key[0] == sno
+                ]
+                for key in stale_cache_keys:
+                    self.intf_detail_cache.pop(key, None)
+                self.intf_detail_cached_snos.discard(sno)
+                self.dcnm_intf_get_have_all_with_sno(sno)
+                self.dcnm_intf_bulk_fetch_intf_info(sno)
+
+            parent_still_present = False
+            for item in self.deferred_delete_member_defaults:
+                if self.dcnm_intf_parent_present_in_have_all(item["parentIfName"]):
+                    parent_still_present = True
+                    break
+
+            if not parent_still_present:
+                break
+
+            if retry < (max_retries - 1):
+                time.sleep(retry_sleep)
+
+        for item in self.deferred_delete_member_defaults:
+            intf = {
+                "ifName": item["ifName"],
+                "serialNumber": item["serialNumber"],
+                "interfaceType": "INTERFACE_ETHERNET",
+            }
+
+            match_have = [
+                have
+                for have in self.have_all
+                if (
+                    (intf["ifName"].lower() == have["ifName"].lower())
+                    and (intf["serialNumber"] == have["serialNo"])
+                )
+            ]
+
+            if not match_have:
+                continue
+
+            if str(match_have[0].get("isPhysical")).lower() != "true":
+                continue
+
+            uelem = self.dcnm_intf_get_default_eth_payload(
+                intf["ifName"], intf["serialNumber"], item["fabricName"]
+            )
+            intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
+
+            if intf_payload != []:
+                if (
+                    self.dcnm_compare_default_payload(uelem, intf_payload)
+                    == "DCNM_INTF_MATCH"
+                ):
+                    continue
+
+            self.dcnm_intf_merge_intf_info(uelem, self.diff_replace)
+            self.changed_dict[0]["replaced"].append(copy.deepcopy(uelem))
+
+            if str(item.get("deploy", "true")).lower() == "true":
+                delem = {
+                    "serialNumber": intf["serialNumber"],
+                    "ifName": intf["ifName"],
+                    "fabricName": item["fabricName"],
+                }
+                self.diff_deploy.append(delem)
+                self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
+
+        self.deferred_delete_member_defaults = []
+        self._deferred_delete_member_default_keys = set()
+
+    def dcnm_intf_build_replace_lookups(self):
+        """Pre-build lookup structures for replaced-state comparisons.
+
+        Replaces repeated linear scans of self.have and self.pb_input during
+        dcnm_intf_compare_want_and_have("replaced") with dictionary lookups.
+        """
+
+        self._replace_have_lookup = {}
+        self._replace_pb_input_lookup = {}
+
+        for item in self.have:
+            interfaces = item.get("interfaces") or []
+            if not interfaces:
+                continue
+
+            intf = interfaces[0]
+            ifname = intf.get("ifName")
+            sno = intf.get("serialNumber")
+
+            if ifname and sno:
+                key = (ifname.lower(), str(sno))
+                self._replace_have_lookup.setdefault(key, []).append(item)
+
+        for item in self.pb_input:
+            ifname = item.get("ifname")
+            sno = item.get("sno")
+            fabric = item.get("fabric")
+
+            if ifname and sno and fabric:
+                key = (ifname.lower(), str(sno), fabric)
+                self._replace_pb_input_lookup.setdefault(key, []).append(item)
+
+    def dcnm_intf_get_underlay_policy_source(self, intf):
+
+        underlay_policies = intf.get("underlayPolicies") or []
+
+        for policy in underlay_policies:
+            source = policy.get("source")
+            if source:
+                return source
+
+        return None
+
+    def dcnm_intf_capability_enabled(self, intf, capability):
+
+        return str(intf.get(capability)).strip().lower() == "true"
+
+    def dcnm_intf_skip_non_resolvable_deferred(self, intf):
+
+        self.changed_dict[0]["skipped"].append(
+            {
+                "Name": intf["ifName"],
+                "Alias": intf.get("alias"),
+                "Deletable": intf.get("deletable"),
+                "Underlay Policies": intf.get("underlayPolicies"),
+                "Reason": "Non-deletable interface without resolvable underlay policy source",
+            }
+        )
+
+    def dcnm_intf_skip_physical_default_not_allowed(self, intf):
+
+        self.changed_dict[0]["skipped"].append(
+            {
+                "Name": intf["ifName"],
+                "Alias": intf.get("alias"),
+                "Deletable": intf.get("deletable"),
+                "Edit Allowed": intf.get("editAllowed"),
+                "Reason": (
+                    "Physical interface reset is not allowed because neither "
+                    "deletable nor editAllowed is true"
+                ),
+            }
+        )
+
+    def dcnm_intf_skip_edit_allowed_underlay_dependency(self, intf):
+
+        self.changed_dict[0]["skipped"].append(
+            {
+                "Name": intf["ifName"],
+                "Alias": intf.get("alias"),
+                "Deletable": intf.get("deletable"),
+                "Edit Allowed": intf.get("editAllowed"),
+                "Underlay Policies": intf.get("underlayPolicies"),
+                "Reason": (
+                    "Physical interface reset through editAllowed was skipped "
+                    "because its underlay policy source is not being deleted"
+                ),
+            }
+        )
+
+    def dcnm_intf_is_vpc_peer_link_port_channel(self, intf):
+
+        if intf.get("ifType") != "INTERFACE_PORT_CHANNEL":
+            return False
+
+        alias = intf.get("alias")
+        if alias is not None and "vpc-peer-link" in alias:
+            return True
+
+        underlay_policies = intf.get("underlayPolicies") or []
+        for policy in underlay_policies:
+            if (policy or {}).get("templateName") == "int_vpc_peer_link_po":
+                return True
+
+        return False
 
     def dcnm_intf_process_config(self, cfg):
 
@@ -5076,6 +5998,32 @@ class DcnmIntf:
         del_list = []
         defer_list = []
 
+        # Bulk pre-populate the interface detail cache for every switch
+        # present in have_all.  This replaces N per-interface HTTP GETs
+        # (inside dcnm_intf_get_intf_info) with at most S bulk GETs
+        # (one per unique serial number), dramatically speeding up the
+        # overridden diff computation for large interface counts.
+        prefetched_snos = set()
+        for h in self.have_all:
+            sno = h["serialNo"]
+            if sno not in prefetched_snos:
+                prefetched_snos.add(sno)
+                self.dcnm_intf_bulk_fetch_intf_info(sno)
+
+        # Pre-build O(1) lookup structures to replace linear scans.
+        # want_set:  replaces match_want list comprehension over self.want
+        # can_be_replaced lookups: replaces linear scan of self.pb_input
+        want_set = set()
+        for d in self.want:
+            intf0 = d["interfaces"][0]
+            want_set.add((
+                intf0["ifName"].lower(),
+                str(intf0["serialNumber"]),
+                intf0["fabricName"],
+            ))
+
+        self.dcnm_intf_build_can_be_replaced_lookups()
+
         for have in self.have_all:
 
             delem = {}
@@ -5137,17 +6085,50 @@ class DcnmIntf:
                         )
                         continue
 
-                if str(have["deletable"]).lower() == "false":
-                    # Add this 'have to a deferred list. We will process this list once we have processed all the 'haves'
-                    defer_list.append(have)
-                    self.changed_dict[0]["deferred"].append(
-                        {
-                            "Name": name,
-                            "Deletable": have["deletable"],
-                            "Underlay Policies": have["underlayPolicies"],
-                        }
-                    )
+                is_deleted = self.module.params["state"] == "deleted"
+                deletable = self.dcnm_intf_capability_enabled(
+                    have, "deletable"
+                )
+                edit_allowed = self.dcnm_intf_capability_enabled(
+                    have, "editAllowed"
+                )
+
+                # A bulk deleted request must make the same fail-closed
+                # capability decision as a named deleted request. Missing or
+                # unrecognized controller metadata is not authorization to
+                # reset a physical interface.
+                if is_deleted and not deletable and not edit_allowed:
+                    self.dcnm_intf_skip_physical_default_not_allowed(have)
                     continue
+
+                raw_deletable_is_false = (
+                    str(have.get("deletable")).strip().lower() == "false"
+                )
+                needs_dependency_handling = (
+                    not deletable
+                    if is_deleted
+                    else raw_deletable_is_false
+                )
+
+                if needs_dependency_handling:
+                    source = self.dcnm_intf_get_underlay_policy_source(have)
+
+                    if source is not None:
+                        # Add this 'have to a deferred list. We will process this list once we have processed all the 'haves'
+                        defer_list.append(have)
+                        self.changed_dict[0]["deferred"].append(
+                            {
+                                "Name": name,
+                                "Deletable": have.get("deletable"),
+                                "Underlay Policies": have["underlayPolicies"],
+                                "Source": source,
+                            }
+                        )
+                        continue
+
+                    if not is_deleted:
+                        self.dcnm_intf_skip_non_resolvable_deferred(have)
+                        continue
 
                 uelem = self.dcnm_intf_get_default_eth_payload(
                     name, sno, fabric
@@ -5188,21 +6169,10 @@ class DcnmIntf:
                     # If yes, ignore the interface, because configuration from want will be applied anyway.
                     # This ensures that Ethernet interfaces removed from the playbook config are reset to default,
                     # while those still in the config are left alone to be configured later.
-                    match_want = [
-                        d
-                        for d in self.want
-                        if (
-                            (
-                                name.lower()
-                                == d["interfaces"][0]["ifName"].lower()
-                            )
-                            and (str(sno) == str(d["interfaces"][0]["serialNumber"]))
-                            and (fabric == d["interfaces"][0]["fabricName"])
-                        )
-                    ]
+                    in_want = (name.lower(), str(sno), fabric) in want_set
 
                     # Only default/reset this interface if it's NOT in the playbook config
-                    if not match_want:
+                    if not in_want:
                         # Before defaulting ethernet interfaces, check if they are
                         # member of any port-channel. If so, do not default that
                         rc, intf = self.dcnm_intf_can_be_replaced(have)
@@ -5255,10 +6225,7 @@ class DcnmIntf:
                 ):
                     # Port-channel which are created as part of VPC peer link should not be deleted
                     if have["ifType"] == "INTERFACE_PORT_CHANNEL":
-                        if (
-                            have["alias"] is not None
-                            and "vpc-peer-link" in have["alias"]
-                        ):
+                        if self.dcnm_intf_is_vpc_peer_link_port_channel(have):
                             self.changed_dict[0]["skipped"].append(
                                 {
                                     "Name": name,
@@ -5380,19 +6347,8 @@ class DcnmIntf:
                     # Check if this interface is present in want. If yes, ignore the interface, because all
                     # configuration from want will be added to create anyway
 
-                    match_want = [
-                        d
-                        for d in self.want
-                        if (
-                            (
-                                name.lower()
-                                == d["interfaces"][0]["ifName"].lower()
-                            )
-                            and (sno == d["interfaces"][0]["serialNumber"])
-                            and (fabric == d["interfaces"][0]["fabricName"])
-                        )
-                    ]
-                    if not match_want:
+                    in_want = (name.lower(), str(sno), fabric) in want_set
+                    if not in_want:
 
                         delem = {}
 
@@ -5430,7 +6386,11 @@ class DcnmIntf:
             delem = {}
             sno = intf["serialNo"]
             fabric = intf["fabricName"]
-            name = intf["underlayPolicies"][0]["source"]
+            name = self.dcnm_intf_get_underlay_policy_source(intf)
+
+            if name is None:
+                self.dcnm_intf_skip_non_resolvable_deferred(intf)
+                continue
 
             match = [
                 d
@@ -5467,12 +6427,43 @@ class DcnmIntf:
         self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
+        self.deferred_delete_member_defaults = []
+        self._deferred_delete_member_default_keys = set()
 
         if self.config == []:
             # Now that we have all the interface information we can run override
             # and delete or reset interfaces.
             self.dcnm_intf_get_diff_overridden(self.config)
         elif self.config:
+            # Bulk pre-populate the interface detail cache for every switch
+            # referenced in the config.  This replaces N per-interface HTTP
+            # GETs (inside dcnm_intf_get_intf_info) with at most S bulk GETs
+            # (one per unique serial number), dramatically speeding up the
+            # deleted diff computation for large interface counts.
+            prefetched_snos = set()
+            for cfg in self.config:
+                if cfg.get("name") is None:
+                    continue
+                switches = cfg.get("switch", None)
+                if switches is None:
+                    switches = list(self.ip_sn.keys())
+                for sw in switches:
+                    if sw in self.ip_sn:
+                        sno = self.ip_sn[sw]
+                        if sno not in prefetched_snos:
+                            prefetched_snos.add(sno)
+                            self.dcnm_intf_bulk_fetch_intf_info(sno)
+                    # VPC/AA_FEX interfaces use vpc_ip_sn for lookups.
+                    # Pre-split the combined serial (e.g. "FOX~SAL") and
+                    # prefetch the first part so those lookups hit cache.
+                    name_lower = cfg.get("name", "")[0:3].lower()
+                    if name_lower == "vpc" and sw in self.vpc_ip_sn:
+                        vpc_sno = self.vpc_ip_sn[sw]
+                        vpc_sno_first = vpc_sno.split("~")[0] if "~" in vpc_sno else vpc_sno
+                        if vpc_sno_first not in prefetched_snos:
+                            prefetched_snos.add(vpc_sno_first)
+                            self.dcnm_intf_bulk_fetch_intf_info(vpc_sno_first)
+
             for cfg in self.config:
                 if cfg.get("name", None) is not None and cfg.get("type") == "breakout":
                     self.dcnm_intf_get_have_all(cfg["switch"][0])
@@ -5565,12 +6556,21 @@ class DcnmIntf:
                                 )
                             ):
 
-                                if (
-                                    str(match_have["deletable"]).lower()
-                                    == "false"
-                                ):
+                                deletable = self.dcnm_intf_capability_enabled(
+                                    match_have, "deletable"
+                                )
+                                edit_allowed = self.dcnm_intf_capability_enabled(
+                                    match_have, "editAllowed"
+                                )
+                                if not deletable and not edit_allowed:
+                                    self.dcnm_intf_skip_physical_default_not_allowed(
+                                        match_have
+                                    )
                                     continue
 
+                                using_edit_allowed = (
+                                    not deletable and edit_allowed
+                                )
                                 uelem = self.dcnm_intf_get_default_eth_payload(
                                     intf["ifName"],
                                     intf["serialNumber"],
@@ -5600,6 +6600,34 @@ class DcnmIntf:
                                         match_have
                                     )
                                     if rc is True:
+                                        defer_member_default = (
+                                            self.dcnm_intf_should_defer_deleted_member_default(
+                                                match_have, iface
+                                            )
+                                        )
+                                        source = (
+                                            self.dcnm_intf_get_underlay_policy_source(
+                                                match_have
+                                            )
+                                        )
+                                        if (
+                                            using_edit_allowed
+                                            and source is not None
+                                            and not defer_member_default
+                                        ):
+                                            self.dcnm_intf_skip_edit_allowed_underlay_dependency(
+                                                match_have
+                                            )
+                                            continue
+                                        if defer_member_default:
+                                            self.dcnm_intf_defer_deleted_member_default(
+                                                intf["ifName"],
+                                                intf["serialNumber"],
+                                                self.fabric,
+                                                cfg.get("deploy", "true"),
+                                                iface,
+                                            )
+                                            continue
                                         self.dcnm_intf_merge_intf_info(
                                             uelem, self.diff_replace
                                         )
@@ -5995,14 +7023,17 @@ class DcnmIntf:
         resp = None
 
         path = self.paths["GLOBAL_IF_DEPLOY"]
-        index = -1
+        # Flatten all diff_delete_deploy sublists into a single list and
+        # send one POST instead of up to 9 separate calls (one per
+        # interface type).  The deploy endpoint only needs serialNumber,
+        # ifName, and fabricName — interface type grouping is irrelevant.
+        flat_delete_deploy = []
         for delem in self.diff_delete_deploy:
+            if delem:
+                flat_delete_deploy.extend(delem)
 
-            # index = index + 1
-            if delem == []:
-                continue
-
-            json_payload = json.dumps(delem)
+        if flat_delete_deploy:
+            json_payload = json.dumps(flat_delete_deploy)
 
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
@@ -6027,6 +7058,9 @@ class DcnmIntf:
 
         resp = None
 
+        if self.deferred_delete_member_defaults:
+            self.dcnm_intf_refresh_deferred_deleted_member_defaults()
+
         # Add Breakout creation from self.want_breakout
         path = self.paths["BREAKOUT"]
         for payload in self.diff_create_breakout:
@@ -6042,21 +7076,41 @@ class DcnmIntf:
                 create = True
 
         # Update interfaces
-        path = self.paths["INTERFACE"]
-        for payload in self.diff_replace:
-            json_payload = json.dumps(payload)
+        # For bulk API support, use bulk update API. For other versions, use individual update API.
+        if self.diff_replace:
+            if self.has_bulk_api:
+                # Bulk update API for bulk-capable controllers
+                path = self.paths["UPDATE_INTERFACE_BULK"]
 
-            resp = dcnm_send(self.module, "PUT", path, json_payload)
+                json_payload = json.dumps(self.diff_replace)
+                resp = dcnm_send(self.module, "POST", path, json_payload)
+                self.result["response"].append(resp)
 
-            self.result["response"].append(resp)
-
-            if (resp.get("MESSAGE") != "OK") or (
-                resp.get("RETURN_CODE") != 200
-            ):
-                resp["CHANGED"] = self.changed_dict
-                self.module.fail_json(msg=resp)
+                # Accept both 200 (OK) and 207 (Multi-Status) for bulk operations
+                if (resp.get("MESSAGE") not in ["OK", "Multi-Status"]) or (
+                    resp.get("RETURN_CODE") not in [200, 207]
+                ):
+                    resp["CHANGED"] = self.changed_dict
+                    self.module.fail_json(msg=resp)
+                else:
+                    replace = True
             else:
-                replace = True
+                # Individual update API for versions 11 and 12
+                path = self.paths["INTERFACE"]
+                for payload in self.diff_replace:
+                    json_payload = json.dumps(payload)
+
+                    resp = dcnm_send(self.module, "PUT", path, json_payload)
+
+                    self.result["response"].append(resp)
+
+                    if (resp.get("MESSAGE") != "OK") or (
+                        resp.get("RETURN_CODE") != 200
+                    ):
+                        resp["CHANGED"] = self.changed_dict
+                        self.module.fail_json(msg=resp)
+                    else:
+                        replace = True
 
         resp = None
 
@@ -6123,10 +7177,14 @@ class DcnmIntf:
 
         resp = None
 
-        if self.diff_deploy:
-            # Do a second deploy. Sometimes even if interfaces are created, they are
-            # not being deployed. A second deploy solves the same. Don't worry about
-            # the return values
+        if self.diff_deploy and self.module.params["check_deploy"]:
+            # Safety re-deploy: only when check_deploy is True.
+            # Sometimes NDFC does not deploy all interfaces on the first
+            # attempt.  A second deploy covers those stragglers before
+            # the deployment-status polling loop below verifies In-Sync.
+            # When check_deploy is False (default), the extra round-trip
+            # is skipped because the caller does not require deployment
+            # verification anyway.
 
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
@@ -6307,6 +7365,15 @@ class DcnmIntf:
             index = 0
             if cfg.get("switch", None) is None:
                 continue
+
+            cfg_name = cfg.get("name", "")
+            need_vpc_pair_lookup = cfg.get("type") in ("vpc", "aa_fex")
+            if not need_vpc_pair_lookup and isinstance(cfg_name, str):
+                # Deleted/query-style entries may omit type. Keep supporting
+                # vPC names without paying the VPC lookup cost for every
+                # non-vPC interface in the playbook.
+                need_vpc_pair_lookup = cfg_name.lower().startswith("vpc")
+
             for sw_elem in cfg["switch"][:]:
                 if sw_elem in self.ip_sn or sw_elem in self.hn_sn:
                     addr_info = dcnm_get_ip_addr_info(
@@ -6314,8 +7381,12 @@ class DcnmIntf:
                     )
                     cfg["switch"][index] = addr_info
 
-                    # Check if the VPC serial number information is already present. If not fetch that
-                    if self.vpc_ip_sn.get(addr_info, None) is None:
+                    # Fetch VPC pair serials only for interface types that
+                    # actually need them.
+                    if (
+                        need_vpc_pair_lookup
+                        and self.vpc_ip_sn.get(addr_info, None) is None
+                    ):
                         sno = self.dcnm_intf_get_vpc_serial_number(addr_info)
                         if "~" in sno:
                             # This switch is part of VPC pair. Populate the VPC serial number DB
@@ -6457,14 +7528,15 @@ def main():
         or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_VLAN"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["STRAIGHT_TROUGH_FEX"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["AA_FEX"]]
-        or dcnm_intf.diff_delete_deploy
+        or any(dcnm_intf.diff_delete_deploy)
+        or dcnm_intf.diff_create_breakout
+        or dcnm_intf.diff_delete_breakout
     ):
         dcnm_intf.result["changed"] = True
     else:
         module.exit_json(**dcnm_intf.result)
 
     if module.check_mode:
-        dcnm_intf.result["changed"] = False
         module.exit_json(**dcnm_intf.result)
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()
