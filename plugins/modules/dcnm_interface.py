@@ -5778,6 +5778,10 @@ class DcnmIntf:
 
         return None
 
+    def dcnm_intf_capability_enabled(self, intf, capability):
+
+        return str(intf.get(capability)).strip().lower() == "true"
+
     def dcnm_intf_skip_non_resolvable_deferred(self, intf):
 
         self.changed_dict[0]["skipped"].append(
@@ -5787,6 +5791,37 @@ class DcnmIntf:
                 "Deletable": intf.get("deletable"),
                 "Underlay Policies": intf.get("underlayPolicies"),
                 "Reason": "Non-deletable interface without resolvable underlay policy source",
+            }
+        )
+
+    def dcnm_intf_skip_physical_default_not_allowed(self, intf):
+
+        self.changed_dict[0]["skipped"].append(
+            {
+                "Name": intf["ifName"],
+                "Alias": intf.get("alias"),
+                "Deletable": intf.get("deletable"),
+                "Edit Allowed": intf.get("editAllowed"),
+                "Reason": (
+                    "Physical interface reset is not allowed because neither "
+                    "deletable nor editAllowed is true"
+                ),
+            }
+        )
+
+    def dcnm_intf_skip_edit_allowed_underlay_dependency(self, intf):
+
+        self.changed_dict[0]["skipped"].append(
+            {
+                "Name": intf["ifName"],
+                "Alias": intf.get("alias"),
+                "Deletable": intf.get("deletable"),
+                "Edit Allowed": intf.get("editAllowed"),
+                "Underlay Policies": intf.get("underlayPolicies"),
+                "Reason": (
+                    "Physical interface reset through editAllowed was skipped "
+                    "because its underlay policy source is not being deleted"
+                ),
             }
         )
 
@@ -5955,24 +5990,50 @@ class DcnmIntf:
                         )
                         continue
 
-                if str(have["deletable"]).lower() == "false":
+                is_deleted = self.module.params["state"] == "deleted"
+                deletable = self.dcnm_intf_capability_enabled(
+                    have, "deletable"
+                )
+                edit_allowed = self.dcnm_intf_capability_enabled(
+                    have, "editAllowed"
+                )
+
+                # A bulk deleted request must make the same fail-closed
+                # capability decision as a named deleted request. Missing or
+                # unrecognized controller metadata is not authorization to
+                # reset a physical interface.
+                if is_deleted and not deletable and not edit_allowed:
+                    self.dcnm_intf_skip_physical_default_not_allowed(have)
+                    continue
+
+                raw_deletable_is_false = (
+                    str(have.get("deletable")).strip().lower() == "false"
+                )
+                needs_dependency_handling = (
+                    not deletable
+                    if is_deleted
+                    else raw_deletable_is_false
+                )
+
+                if needs_dependency_handling:
                     source = self.dcnm_intf_get_underlay_policy_source(have)
 
-                    if source is None:
-                        self.dcnm_intf_skip_non_resolvable_deferred(have)
+                    if source is not None:
+                        # Add this 'have to a deferred list. We will process this list once we have processed all the 'haves'
+                        defer_list.append(have)
+                        self.changed_dict[0]["deferred"].append(
+                            {
+                                "Name": name,
+                                "Deletable": have.get("deletable"),
+                                "Underlay Policies": have["underlayPolicies"],
+                                "Source": source,
+                            }
+                        )
                         continue
 
-                    # Add this 'have to a deferred list. We will process this list once we have processed all the 'haves'
-                    defer_list.append(have)
-                    self.changed_dict[0]["deferred"].append(
-                        {
-                            "Name": name,
-                            "Deletable": have["deletable"],
-                            "Underlay Policies": have["underlayPolicies"],
-                            "Source": source,
-                        }
-                    )
-                    continue
+                    if not is_deleted:
+                        self.dcnm_intf_skip_non_resolvable_deferred(have)
+                        continue
 
                 uelem = self.dcnm_intf_get_default_eth_payload(
                     name, sno, fabric
@@ -6400,12 +6461,21 @@ class DcnmIntf:
                                 )
                             ):
 
-                                if (
-                                    str(match_have["deletable"]).lower()
-                                    == "false"
-                                ):
+                                deletable = self.dcnm_intf_capability_enabled(
+                                    match_have, "deletable"
+                                )
+                                edit_allowed = self.dcnm_intf_capability_enabled(
+                                    match_have, "editAllowed"
+                                )
+                                if not deletable and not edit_allowed:
+                                    self.dcnm_intf_skip_physical_default_not_allowed(
+                                        match_have
+                                    )
                                     continue
 
+                                using_edit_allowed = (
+                                    not deletable and edit_allowed
+                                )
                                 uelem = self.dcnm_intf_get_default_eth_payload(
                                     intf["ifName"],
                                     intf["serialNumber"],
@@ -6435,9 +6505,26 @@ class DcnmIntf:
                                         match_have
                                     )
                                     if rc is True:
-                                        if self.dcnm_intf_should_defer_deleted_member_default(
-                                            match_have, iface
+                                        defer_member_default = (
+                                            self.dcnm_intf_should_defer_deleted_member_default(
+                                                match_have, iface
+                                            )
+                                        )
+                                        source = (
+                                            self.dcnm_intf_get_underlay_policy_source(
+                                                match_have
+                                            )
+                                        )
+                                        if (
+                                            using_edit_allowed
+                                            and source is not None
+                                            and not defer_member_default
                                         ):
+                                            self.dcnm_intf_skip_edit_allowed_underlay_dependency(
+                                                match_have
+                                            )
+                                            continue
+                                        if defer_member_default:
                                             self.dcnm_intf_defer_deleted_member_default(
                                                 intf["ifName"],
                                                 intf["serialNumber"],
@@ -7346,14 +7433,15 @@ def main():
         or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_VLAN"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["STRAIGHT_TROUGH_FEX"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["AA_FEX"]]
-        or dcnm_intf.diff_delete_deploy
+        or any(dcnm_intf.diff_delete_deploy)
+        or dcnm_intf.diff_create_breakout
+        or dcnm_intf.diff_delete_breakout
     ):
         dcnm_intf.result["changed"] = True
     else:
         module.exit_json(**dcnm_intf.result)
 
     if module.check_mode:
-        dcnm_intf.result["changed"] = False
         module.exit_json(**dcnm_intf.result)
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()
