@@ -18,7 +18,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 # from units.compat.mock import patch
 
@@ -53,6 +53,37 @@ class TestDcnmIntfModule(TestDcnmModule):
             "RETURN_CODE": 200,
             "DATA": data,
         }
+
+    @staticmethod
+    def storm_control_default_nvpairs():
+        return {
+            "ENABLE_STORM_CONTROL": False,
+            "STORM_CONTROL_ACTION": "no",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT": "",
+            "STORM_CONTROL_BCAST_LEVEL_PPS": "",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT": "",
+            "STORM_CONTROL_MCAST_LEVEL_PPS": "",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT": "",
+            "STORM_CONTROL_UCAST_LEVEL_PPS": "",
+        }
+
+    def assert_leaf_default_storm_control(self, payloads):
+        trunk_defaults = [
+            payload
+            for payload in payloads
+            if payload["policy"] in ("int_trunk_host", "int_trunk_host_11_1")
+        ]
+        self.assertTrue(
+            trunk_defaults,
+            [payload["policy"] for payload in payloads],
+        )
+        expected = self.storm_control_default_nvpairs()
+        for payload in trunk_defaults:
+            nv_pairs = payload["interfaces"][0]["nvPairs"]
+            self.assertEqual(
+                {key: nv_pairs.get(key) for key in expected},
+                expected,
+            )
 
     def test_dcnm_intf_is_vpc_peer_link_port_channel_null_alias_template(self):
 
@@ -137,6 +168,478 @@ class TestDcnmIntfModule(TestDcnmModule):
             True,
         )
 
+    def test_dcnm_intf_storm_control_percent_payload(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        nv_pairs = {}
+        profile = {
+            "enable_storm_control": True,
+            "storm_control_action": "shutdown",
+            "storm_control_broadcast_level_percent": "12",
+            "storm_control_multicast_level_percent": "13.00",
+            "storm_control_unicast_level_percent": "14.5",
+        }
+
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(
+            nv_pairs,
+            {
+                "ENABLE_STORM_CONTROL": True,
+                "STORM_CONTROL_ACTION": "shutdown",
+                "STORM_CONTROL_BCAST_LEVEL_PERCENT": "12",
+                "STORM_CONTROL_BCAST_LEVEL_PPS": "",
+                "STORM_CONTROL_MCAST_LEVEL_PERCENT": "13.00",
+                "STORM_CONTROL_MCAST_LEVEL_PPS": "",
+                "STORM_CONTROL_UCAST_LEVEL_PERCENT": "14.5",
+                "STORM_CONTROL_UCAST_LEVEL_PPS": "",
+            },
+        )
+
+    def test_dcnm_intf_storm_control_pps_payload(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        nv_pairs = {}
+        profile = {
+            "enable_storm_control": True,
+            "storm_control_action": "trap",
+            "storm_control_broadcast_level_pps": 1000,
+            "storm_control_multicast_level_pps": 2000,
+            "storm_control_unicast_level_pps": 3000,
+        }
+
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(nv_pairs["STORM_CONTROL_ACTION"], "trap")
+        self.assertEqual(nv_pairs["STORM_CONTROL_BCAST_LEVEL_PPS"], "1000")
+        self.assertEqual(nv_pairs["STORM_CONTROL_MCAST_LEVEL_PPS"], "2000")
+        self.assertEqual(nv_pairs["STORM_CONTROL_UCAST_LEVEL_PPS"], "3000")
+        self.assertEqual(nv_pairs["STORM_CONTROL_BCAST_LEVEL_PERCENT"], "")
+
+    def test_dcnm_intf_storm_control_disable_clears_dependent_values(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        profile = {
+            "enable_storm_control": False,
+            "storm_control_action": "shutdown",
+            "storm_control_broadcast_level_percent": "12",
+        }
+        nv_pairs = {}
+
+        dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(profile["storm_control_action"], "default")
+        self.assertEqual(nv_pairs["ENABLE_STORM_CONTROL"], False)
+        self.assertEqual(nv_pairs["STORM_CONTROL_ACTION"], "no")
+        for key, value in nv_pairs.items():
+            if key.startswith("STORM_CONTROL_") and key != "STORM_CONTROL_ACTION":
+                self.assertEqual(value, "")
+
+    def test_dcnm_intf_storm_control_all_false_aliases_clear_values(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        false_aliases = (
+            False,
+            0,
+            0.0,
+            "false",
+            "no",
+            "off",
+            "0",
+            "n",
+            "f",
+        )
+
+        for enabled in false_aliases:
+            with self.subTest(enabled=enabled):
+                profile = {
+                    "enable_storm_control": enabled,
+                    "storm_control_action": "trap",
+                    "storm_control_broadcast_level_percent": "12.00",
+                    "storm_control_multicast_level_pps": 2000,
+                }
+
+                dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+
+                self.assertEqual(profile["storm_control_action"], "default")
+                for percent_key, pps_key, _percent_nvpair, _pps_nvpair in (
+                    dcnm_intf.storm_control_level_pairs
+                ):
+                    self.assertEqual(profile[percent_key], "")
+                    self.assertIsNone(profile[pps_key])
+
+    def test_dcnm_intf_storm_control_true_aliases_do_not_disable(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        true_aliases = (
+            True,
+            1,
+            1.0,
+            "true",
+            "yes",
+            "on",
+            "1",
+            "y",
+            "t",
+        )
+
+        for enabled in true_aliases:
+            with self.subTest(enabled=enabled):
+                profile = {"enable_storm_control": enabled}
+
+                dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+
+                self.assertEqual(
+                    profile,
+                    {"enable_storm_control": enabled},
+                )
+
+    def test_dcnm_intf_storm_control_invalid_bool_uses_normal_validation(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        profile = {
+            "enable_storm_control": "not-a-boolean",
+            "storm_control_action": "trap",
+        }
+
+        dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+
+        self.assertEqual(
+            profile,
+            {
+                "enable_storm_control": "not-a-boolean",
+                "storm_control_action": "trap",
+            },
+        )
+
+    def test_dcnm_intf_leaf_default_payload_clears_storm_control(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.pol_types = {
+            12: {
+                "eth_trunk": "int_trunk_host",
+                "eth_routed": "int_routed_host",
+            }
+        }
+        dcnm_intf.sno_to_switch_role = {
+            "LEAF_SERIAL": "leaf",
+            "SPINE_SERIAL": "spine",
+        }
+
+        leaf_payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+            "Ethernet1/50",
+            "LEAF_SERIAL",
+            "test_fabric",
+        )
+        leaf_nv_pairs = leaf_payload["interfaces"][0]["nvPairs"]
+        expected = self.storm_control_default_nvpairs()
+
+        self.assertEqual(
+            {key: leaf_nv_pairs.get(key) for key in expected},
+            expected,
+        )
+
+        routed_payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+            "Ethernet1/50",
+            "SPINE_SERIAL",
+            "test_fabric",
+        )
+        routed_nv_pairs = routed_payload["interfaces"][0]["nvPairs"]
+        for key in expected:
+            self.assertNotIn(key, routed_nv_pairs)
+
+    def test_dcnm_intf_default_compare_detects_storm_only_drift(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.pol_types = {
+            12: {
+                "eth_trunk": "int_trunk_host",
+                "eth_routed": "int_routed_host",
+            }
+        }
+        dcnm_intf.sno_to_switch_role = {"LEAF_SERIAL": "leaf"}
+        default_payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+            "Ethernet1/50",
+            "LEAF_SERIAL",
+            "test_fabric",
+        )
+        have = copy.deepcopy(default_payload)
+        have["interfaces"][0]["nvPairs"].update(
+            {
+                "ENABLE_STORM_CONTROL": True,
+                "STORM_CONTROL_ACTION": "trap",
+                "STORM_CONTROL_BCAST_LEVEL_PPS": "2100",
+            }
+        )
+
+        self.assertEqual(
+            dcnm_intf.dcnm_compare_default_payload(default_payload, have),
+            "DCNM_INTF_NOT_MATCH",
+        )
+
+    def test_dcnm_intf_default_compare_normalizes_omitted_storm_defaults(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.pol_types = {
+            12: {
+                "eth_trunk": "int_trunk_host",
+                "eth_routed": "int_routed_host",
+            }
+        }
+        dcnm_intf.sno_to_switch_role = {"LEAF_SERIAL": "leaf"}
+        default_payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+            "Ethernet1/50",
+            "LEAF_SERIAL",
+            "test_fabric",
+        )
+        have = copy.deepcopy(default_payload)
+        have_nv_pairs = have["interfaces"][0]["nvPairs"]
+        for key in self.storm_control_default_nvpairs():
+            have_nv_pairs.pop(key)
+
+        self.assertEqual(
+            dcnm_intf.dcnm_compare_default_payload(default_payload, have),
+            "DCNM_INTF_MATCH",
+        )
+
+        have_nv_pairs.update(
+            {
+                "ENABLE_STORM_CONTROL": "n",
+                "STORM_CONTROL_ACTION": "default",
+                "STORM_CONTROL_BCAST_LEVEL_PERCENT": None,
+            }
+        )
+        self.assertEqual(
+            dcnm_intf.dcnm_compare_default_payload(default_payload, have),
+            "DCNM_INTF_MATCH",
+        )
+
+    def test_dcnm_intf_merged_percent_transition_clears_all_pps_fields(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        profile = {
+            "ifname": "Ethernet1/15",
+            "sno": "SERIAL1",
+            "fabric": "fabric1",
+            "enable_storm_control": True,
+            "storm_control_broadcast_level_percent": "12.00",
+        }
+
+        dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+        dcnm_intf.pb_input = [profile]
+        dcnm_intf.keymap = {
+            pps_nvpair: pps_key
+            for _percent_key, pps_key, _percent_nvpair, pps_nvpair
+            in dcnm_intf.storm_control_level_pairs
+        }
+
+        for _percent_key, pps_key, _percent_nvpair, pps_nvpair in (
+            dcnm_intf.storm_control_level_pairs
+        ):
+            with self.subTest(pps_key=pps_key):
+                self.assertIn(pps_key, profile)
+                self.assertIsNone(profile[pps_key])
+                result = dcnm_intf.dcnm_intf_compare_elements(
+                    profile["ifname"],
+                    profile["sno"],
+                    profile["fabric"],
+                    profile[pps_key],
+                    1000,
+                    pps_nvpair,
+                    "merged",
+                )
+                self.assertEqual(result, "add")
+
+        self.assertNotIn("storm_control_multicast_level_percent", profile)
+        self.assertNotIn("storm_control_unicast_level_percent", profile)
+
+    def test_dcnm_intf_merged_pps_transition_clears_all_percent_fields(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        profile = {
+            "ifname": "Ethernet1/15",
+            "sno": "SERIAL1",
+            "fabric": "fabric1",
+            "enable_storm_control": True,
+            "storm_control_multicast_level_pps": 2000,
+        }
+
+        dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+        dcnm_intf.pb_input = [profile]
+        dcnm_intf.keymap = {
+            percent_nvpair: percent_key
+            for percent_key, _pps_key, percent_nvpair, _pps_nvpair
+            in dcnm_intf.storm_control_level_pairs
+        }
+
+        for percent_key, _pps_key, percent_nvpair, _pps_nvpair in (
+            dcnm_intf.storm_control_level_pairs
+        ):
+            with self.subTest(percent_key=percent_key):
+                self.assertIn(percent_key, profile)
+                self.assertEqual(profile[percent_key], "")
+                result = dcnm_intf.dcnm_intf_compare_elements(
+                    profile["ifname"],
+                    profile["sno"],
+                    profile["fabric"],
+                    profile[percent_key],
+                    "10.00",
+                    percent_nvpair,
+                    "merged",
+                )
+                self.assertEqual(result, "add")
+
+        self.assertNotIn("storm_control_broadcast_level_pps", profile)
+        self.assertNotIn("storm_control_unicast_level_pps", profile)
+
+    def test_dcnm_intf_storm_control_default_action_uses_controller_no(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        nv_pairs = {}
+        profile = {
+            "enable_storm_control": True,
+            "storm_control_action": "default",
+        }
+
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(nv_pairs["STORM_CONTROL_ACTION"], "no")
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Ethernet1/15",
+            "SERIAL1",
+            "fabric1",
+            "no",
+            "default",
+            "STORM_CONTROL_ACTION",
+            "replaced",
+        )
+        self.assertEqual(result, "dont_add")
+
+    def test_dcnm_intf_storm_control_invalid_action_lists_choices(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.module = Mock()
+        dcnm_intf.intf_info = []
+
+        def fail_json(**kwargs):
+            raise ValueError(kwargs["msg"])
+
+        dcnm_intf.module.fail_json.side_effect = fail_json
+        config = [
+            {
+                "name": "Ethernet1/15",
+                "switch": ["10.122.84.181"],
+                "type": "eth",
+                "profile": {
+                    "storm_control_action": "no",
+                },
+            }
+        ]
+        common_spec = {
+            "name": {"required": True, "type": "str"},
+            "switch": {"required": True, "type": "list"},
+            "type": {"required": True, "type": "str"},
+            "profile": {"required": True, "type": "dict"},
+        }
+
+        with self.assertRaisesRegex(
+            ValueError,
+            r"Valid choices are: shutdown, trap, default",
+        ):
+            dcnm_intf.dcnm_intf_validate_interface_input(
+                config,
+                common_spec,
+                dcnm_intf.dcnm_intf_storm_control_spec(),
+            )
+
+    def test_dcnm_intf_storm_control_percent_and_pps_are_mutually_exclusive(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.module = Mock()
+
+        def fail_json(**kwargs):
+            raise ValueError(kwargs["msg"])
+
+        dcnm_intf.module.fail_json.side_effect = fail_json
+        percent_keys = [
+            "storm_control_broadcast_level_percent",
+            "storm_control_multicast_level_percent",
+            "storm_control_unicast_level_percent",
+        ]
+        pps_keys = [
+            "storm_control_broadcast_level_pps",
+            "storm_control_multicast_level_pps",
+            "storm_control_unicast_level_pps",
+        ]
+
+        for percent_key in percent_keys:
+            for pps_key in pps_keys:
+                with self.subTest(percent_key=percent_key, pps_key=pps_key):
+                    profile = {
+                        "enable_storm_control": True,
+                        "storm_control_action": "shutdown",
+                        percent_key: "12",
+                        pps_key: 1000,
+                    }
+
+                    with self.assertRaisesRegex(
+                        ValueError,
+                        "configure only one rate mode per interface",
+                    ):
+                        dcnm_intf.dcnm_intf_validate_storm_control_profile(
+                            profile, "Ethernet1/15"
+                        )
+
+    def test_dcnm_intf_storm_control_percent_comparison_normalizes_precision(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Ethernet1/15",
+            "SERIAL1",
+            "fabric1",
+            "12",
+            "12.00",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "replaced",
+        )
+
+        self.assertEqual(result, "dont_add")
+
+    def test_dcnm_intf_copy_description_comparison(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.keymap = {"COPY_DESC": "copy_description"}
+        dcnm_intf.pb_input = [
+            {
+                "ifname": "Port-channel511",
+                "sno": "SERIAL1",
+                "fabric": "fabric1",
+            }
+        ]
+
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Port-channel511",
+            "SERIAL1",
+            "fabric1",
+            False,
+            "true",
+            "COPY_DESC",
+            "merged",
+        )
+        self.assertEqual(result, "copy_and_add")
+
+        dcnm_intf.pb_input[0]["copy_description"] = False
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Port-channel511",
+            "SERIAL1",
+            "fabric1",
+            False,
+            "true",
+            "COPY_DESC",
+            "merged",
+        )
+        self.assertEqual(result, "add")
+
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Port-channel511",
+            "SERIAL1",
+            "fabric1",
+            True,
+            "true",
+            "COPY_DESC",
+            "replaced",
+        )
+        self.assertEqual(result, "dont_add")
+
     def _build_intf_skeleton(self, interface_type):
         return {
             "deploy": True,
@@ -194,6 +697,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "enable_qos": False,
             "qos_policy": "",
             "queuing_policy": "",
+            "copy_description": False,
             "enable_cdp": enable_cdp,
         }
         if mode == "trunk":
@@ -3639,7 +4143,16 @@ class TestDcnmIntfModule(TestDcnmModule):
             "LACP_RATE",
             "ENABLE_QOS",
             "QOS_POLICY",
-            "QUEUING_POLICY"
+            "QUEUING_POLICY",
+            "COPY_DESC",
+            "ENABLE_STORM_CONTROL",
+            "STORM_CONTROL_ACTION",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
         ]
 
         for d in result["diff"][0]["replaced"]:
@@ -3932,6 +4445,14 @@ class TestDcnmIntfModule(TestDcnmModule):
             "ENABLE_QOS",
             "QOS_POLICY",
             "QUEUING_POLICY",
+            "ENABLE_STORM_CONTROL",
+            "STORM_CONTROL_ACTION",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
         ]
 
         for d in result["diff"][0]["replaced"]:
@@ -3957,6 +4478,8 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        for switch in self.mock_fab_inv.values():
+            switch["switchRole"] = "leaf"
         self.mock_monitor_true_resp = self.config_data.get(
             "mock_monitor_true_resp"
         )
@@ -3977,6 +4500,9 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["merged"]), 0)
         self.assertEqual(len(result["diff"][0]["replaced"]), 5)
+        self.assert_leaf_default_storm_control(
+            result["diff"][0]["replaced"]
+        )
 
     def test_dcnm_intf_eth_overridden_existing(self):
 
@@ -4916,6 +5442,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             "ENABLE_QOS",
             "QOS_POLICY",
             "QUEUING_POLICY",
+            "COPY_DESC",
+            "ENABLE_STORM_CONTROL",
+            "STORM_CONTROL_ACTION",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
             "CDP_ENABLE",
         ]
 
@@ -6352,6 +6887,8 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        for switch in self.mock_fab_inv.values():
+            switch["switchRole"] = "leaf"
         self.mock_monitor_true_resp = self.config_data.get(
             "mock_monitor_true_resp"
         )
@@ -6383,6 +6920,9 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["replaced"]), 3)
         self.assertEqual(len(result["diff"][0]["overridden"]), 0)
+        self.assert_leaf_default_storm_control(
+            result["diff"][0]["replaced"]
+        )
 
     def test_dcnm_intf_override_eth_intf_types_skip_non_resolvable_deferred(
         self,

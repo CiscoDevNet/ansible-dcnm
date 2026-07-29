@@ -197,8 +197,11 @@ def validate_list_of_dicts(param_list, spec, module=None, check_extra_params=Fal
                 if choice:
                     if item not in choice:
                         invalid_params.append(
-                            "{0} : Invalid choice [ {0} ] provided for param [ {1} ]".format(
-                                item, param
+                            "{0} : Invalid choice [ {0} ] provided for param "
+                            "[ {1} ]. Valid choices are: {2}".format(
+                                item,
+                                param,
+                                ", ".join(str(value) for value in choice),
                             )
                         )
 
