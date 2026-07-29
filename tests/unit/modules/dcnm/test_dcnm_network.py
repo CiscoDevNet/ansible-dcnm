@@ -222,6 +222,9 @@ class TestDcnmNetworkModule(TestDcnmModule):
             "rtBothAuto": False,
             "enableL3OnBorder": False,
             "networkName": "sec-ip-test",
+            "ENABLE_NETFLOW": False,
+            "SVI_NETFLOW_MONITOR": "",
+            "VLAN_NETFLOW_MONITOR": "",
         }
 
     def _build_diff_network(self, inventory_data, ip_sn=None):
@@ -250,6 +253,184 @@ class TestDcnmNetworkModule(TestDcnmModule):
             "networkExtensionTemplate": "Default_Network_Extension_Universal",
             "networkTemplateConfig": json.dumps(template_conf),
         }
+
+    def _build_xconnect_validator(
+        self, version, xconnect, is_l2only=True, fabric_type="standalone"
+    ):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(
+            dcnm_network.DcnmNetwork
+        )
+        dcnm_net.params = {"state": "merged"}
+        dcnm_net.config = [
+            {
+                "net_name": "xconnect-net",
+                "is_l2only": is_l2only,
+                "xconnect": xconnect,
+            }
+        ]
+        dcnm_net.fabric_type = fabric_type
+        dcnm_net.ndfc_version = version
+        dcnm_net.dcnm_version = 12
+        dcnm_net.check_extra_params = True
+        dcnm_net.validated = []
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.module = Mock()
+        dcnm_net.module.fail_json.side_effect = ValueError
+        dcnm_net.get_fabric_multicast_group_address = Mock(
+            return_value=""
+        )
+        return dcnm_net
+
+    def test_dcnm_net_xconnect_validation_matrix(self):
+        valid_cases = [
+            ("12.4.1", True),
+            ("12.4.1.245", False),
+        ]
+        for version, xconnect in valid_cases:
+            with self.subTest(version=version, xconnect=xconnect):
+                dcnm_net = self._build_xconnect_validator(
+                    version, xconnect
+                )
+                dcnm_net.validate_input()
+                self.assertEqual(
+                    dcnm_net.validated[0]["xconnect"], xconnect
+                )
+
+        invalid_cases = [
+            ("12.4.0", True, True, "NDFC >= 12.4.1"),
+            (None, False, True, "version lookup failed"),
+            ("12.4.1", True, False, "requires is_l2only=true"),
+        ]
+        for version, xconnect, is_l2only, message in invalid_cases:
+            with self.subTest(
+                version=version,
+                xconnect=xconnect,
+                is_l2only=is_l2only,
+            ):
+                dcnm_net = self._build_xconnect_validator(
+                    version, xconnect, is_l2only
+                )
+                with self.assertRaises(ValueError):
+                    dcnm_net.validate_input()
+                self.assertIn(
+                    message,
+                    dcnm_net.module.fail_json.call_args.kwargs["msg"],
+                )
+
+    def test_dcnm_net_xconnect_is_rejected_outside_standalone_fabrics(self):
+        dcnm_net = self._build_xconnect_validator(
+            "12.4.1",
+            True,
+            fabric_type="multisite_parent",
+        )
+
+        with self.assertRaises(ValueError):
+            dcnm_net.validate_input()
+
+        self.assertIn(
+            "xconnect",
+            dcnm_net.module.fail_json.call_args.kwargs["msg"],
+        )
+
+    def test_dcnm_net_xconnect_payload_serializes_exact_boolean(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(
+            dcnm_network.DcnmNetwork
+        )
+        dcnm_net.params = {"state": "merged"}
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = "12.4.1.245"
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.is_ms_fabric = False
+        dcnm_net.fabric_type = "standalone"
+
+        for xconnect in (True, False):
+            with self.subTest(xconnect=xconnect):
+                payload = dcnm_net.update_create_params(
+                    {
+                        "net_name": "xconnect-net",
+                        "is_l2only": True,
+                        "xconnect": xconnect,
+                    }
+                )
+                template = json.loads(
+                    payload["networkTemplateConfig"]
+                )
+                self.assertIs(template["xconnect"], xconnect)
+
+    def test_dcnm_net_normalize_preserves_returned_xconnect_without_version(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(
+            dcnm_network.DcnmNetwork
+        )
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = None
+        dcnm_net.fabric_type = "standalone"
+        template = self._build_secondary_ip_network_template()
+        template["xconnect"] = True
+        network = self._build_secondary_ip_update_payload(template)
+
+        normalized = dcnm_net.normalize_have_network(network)
+        normalized_template = json.loads(
+            normalized["networkTemplateConfig"]
+        )
+
+        self.assertIs(normalized_template["xconnect"], True)
+
+    def test_dcnm_net_merged_omission_preserves_returned_xconnect(self):
+        dcnm_net = self._build_secondary_ip_update_network()
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = None
+        have_template = self._build_secondary_ip_network_template()
+        have_template["xconnect"] = True
+        want_template = self._build_secondary_ip_network_template()
+        have = self._build_secondary_ip_update_payload(have_template)
+        want = self._build_secondary_ip_update_payload(want_template)
+
+        dcnm_net.dcnm_update_network_information(want, have, {})
+
+        updated_template = json.loads(want["networkTemplateConfig"])
+        self.assertIs(updated_template["xconnect"], True)
+
+    def test_dcnm_net_formatted_output_preserves_returned_xconnect(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(
+            dcnm_network.DcnmNetwork
+        )
+        template = self._build_secondary_ip_network_template()
+        template["xconnect"] = True
+        dcnm_net.diff_create = [
+            self._build_secondary_ip_update_payload(template)
+        ]
+        dcnm_net.diff_create_quick = []
+        dcnm_net.diff_create_update = []
+        dcnm_net.diff_attach = []
+        dcnm_net.diff_detach = []
+        dcnm_net.diff_deploy = {}
+        dcnm_net.diff_undeploy = {}
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = None
+
+        dcnm_net.format_diff()
+
+        self.assertIs(dcnm_net.diff_input_format[0]["xconnect"], True)
+
+    def test_dcnm_net_xconnect_equal_state_is_idempotent(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(
+            dcnm_network.DcnmNetwork
+        )
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.module = Mock()
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = "12.4.1"
+        template = self._build_secondary_ip_network_template()
+        template["xconnect"] = True
+        want = self._build_secondary_ip_update_payload(template)
+        have = copy.deepcopy(want)
+
+        diff = dcnm_net.diff_for_create(want, have)
+
+        self.assertEqual(diff[0], {})
+        self.assertFalse(diff[-1])
 
     def test_dcnm_net_secondary_gws_template_config(self):
         template_conf = self._build_secondary_ip_network_template(
@@ -389,13 +570,29 @@ class TestDcnmNetworkModule(TestDcnmModule):
             }
         ]
 
-        configs, error_msg = action._split_config(fabrics, "msd-parent", config, "merged", {}, 12)
+        configs, error_msg = action._split_config(
+            fabrics,
+            "msd-parent",
+            config,
+            "merged",
+            {},
+            12,
+            "12.4.1.245",
+        )
 
         self.assertIsNone(error_msg)
         self.assertEqual(configs[0]["config"][0]["secondary_ip_gw1"], "192.166.88.1/24")
         self.assertEqual(configs[0]["config"][0]["secondary_ip_gw2"], "")
+        self.assertEqual(
+            configs[0]["_fabric_details"]["ndfc_version"],
+            "12.4.1.245",
+        )
         child_config = configs[1]["config"][0]
         self.assertEqual(child_config["dhcp_loopback_id"], 204)
+        self.assertEqual(
+            configs[1]["_fabric_details"]["ndfc_version"],
+            "12.4.1.245",
+        )
 
     def test_dcnm_net_delete_switch_config_deploy_serials_are_dynamic(self):
         dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)

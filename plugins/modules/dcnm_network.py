@@ -39,7 +39,7 @@ options:
     description:
     - INTERNAL PARAMETER - DO NOT USE
     - Fabric details dictionary automatically provided by the action plugin
-    - Contains fabric_type, cluster_name, and nd_version information
+    - Contains fabric_type, cluster_name, nd_version, and ndfc_version information
     - This parameter is used internally by the action plugin for MSD/MFD fabric processing
     type: dict
     required: false
@@ -62,6 +62,12 @@ options:
         - Automatically provided by action plugin
         - Module will fail if this is not provided by action plugin
         type: float
+        required: false
+      ndfc_version:
+        description:
+        - Exact normalized NDFC version used for feature validation
+        - Automatically provided by action plugin
+        type: str
         required: false
   state:
     description:
@@ -321,9 +327,13 @@ options:
         required: false
       xconnect:
         description:
-        - Enable XConnect feature. Only available for ND version > 4.1.
+        - Enable XConnect for a Layer-2-only network.
+        - Supported only on standalone fabrics running ND 4.1/NDFC 12.4.1
+          or later.
+        - XConnect network attachments support dot1q ports only.
+        - In C(state=merged), omitting this option preserves the value
+          returned by the controller.
         type: bool
-        default: false
         required: false
       attach:
         description:
@@ -595,6 +605,22 @@ EXAMPLES = """
           - ip_address: 192.168.1.225
             ports: [Ethernet1/11, Ethernet1/12]
         deploy: false
+
+- name: Merge a standalone Layer-2 XConnect network with dot1q attachments
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-fabric
+    state: merged
+    config:
+      - net_name: ansible-xconnect-net
+        is_l2only: true
+        xconnect: true
+        vlan_id: 152
+        attach:
+          - ip_address: 192.168.1.224
+            ports: [Ethernet1/18]
+          - ip_address: 192.168.1.225
+            ports: [Ethernet1/18]
+        deploy: true
 
 # ---------------------------------------------------------------------------
 # STATE: REPLACED - Replace Network Configuration
@@ -1022,11 +1048,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     sanitize_lan_attach_list
 )
 from ..module_utils.common.log_v2 import Log
-from ..module_utils.common.controller_version_v2 import ControllerVersion
-from ..module_utils.common.rest_send_v2 import RestSend
-from ..module_utils.common.response_handler import ResponseHandler
-from ..module_utils.common.sender_dcnm import Sender
-from ..module_utils.common.exceptions import ControllerResponseError
 
 
 class DcnmNetwork:
@@ -1145,7 +1166,9 @@ class DcnmNetwork:
         msg = f"self.dcnm_version: {self.dcnm_version}"
         self.log.debug(msg)
 
-        self.ndfc_version = self._get_ndfc_version()
+        # Reuse the exact version obtained by the action plugin instead of
+        # issuing a second controller request from the module.
+        self.ndfc_version = self.fabric_details.get("ndfc_version")
 
         # Check for bulk API support
         self.has_bulk_api = dcnm_get_bulk_api_support(self.module)
@@ -2667,8 +2690,8 @@ class DcnmNetwork:
             t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
             t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
             t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
-        if self._ndfc_version_gte("12.4.1"):
-            t_conf.update(xconnect=json_to_dict.get("xconnect", False))
+        if "xconnect" in json_to_dict:
+            t_conf.update(xconnect=json_to_dict["xconnect"])
 
         if self.fabric_type not in ["multisite_child", "multicluster_child"]:
             t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
@@ -3973,8 +3996,8 @@ class DcnmNetwork:
                 found_c.update({"netflow_enable": json_to_dict.get("ENABLE_NETFLOW", False)})
                 found_c.update({"intfvlan_nf_monitor": json_to_dict.get("SVI_NETFLOW_MONITOR", "")})
                 found_c.update({"vlan_nf_monitor": json_to_dict.get("VLAN_NETFLOW_MONITOR", "")})
-            if self._ndfc_version_gte("12.4.1"):
-                found_c.update({"xconnect": json_to_dict.get("xconnect", False)})
+            if "xconnect" in json_to_dict:
+                found_c.update({"xconnect": json_to_dict["xconnect"]})
             found_c.update({"attach": []})
 
             del found_c["fabric"]
@@ -5061,8 +5084,8 @@ class DcnmNetwork:
                     t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
                     t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
-                if self._ndfc_version_gte("12.4.1"):
-                    t_conf.update(xconnect=json_to_dict.get("xconnect", False))
+                if "xconnect" in json_to_dict:
+                    t_conf.update(xconnect=json_to_dict["xconnect"])
 
                 if self.fabric_type not in ["multisite_child", "multicluster_child"]:
                     t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
@@ -5261,24 +5284,6 @@ class DcnmNetwork:
                          if attr not in ["net_name", "deploy", "vlan_id", "vrf_name", "is_l2only"]]
 
         return skipped_attrs
-
-    def _get_ndfc_version(self):
-        """Return the full NDFC version string (e.g. '12.4.1.245') using ControllerVersion, or None on failure."""
-        try:
-            sender = Sender()
-            sender.ansible_module = self.module
-            rest_send = RestSend(self.module.params)
-            rest_send.response_handler = ResponseHandler()
-            rest_send.sender = sender
-            controller_version = ControllerVersion()
-            controller_version.rest_send = rest_send
-            controller_version.refresh()
-            raw_version = controller_version.version
-            if raw_version:
-                return re.sub(r'[a-zA-Z]+$', '', raw_version)
-        except (ControllerResponseError, ValueError, AssertionError, Exception):
-            pass
-        return None
 
     def _ndfc_version_gte(self, target):
         """Check if NDFC version >= target. Uses tuple comparison on version segments."""
@@ -5993,9 +5998,14 @@ class DcnmNetwork:
         if self.dcnm_version > 11 and cfg.get("intfvlan_nf_monitor", None) is None:
             json_to_dict_want["SVI_NETFLOW_MONITOR"] = json_to_dict_have["SVI_NETFLOW_MONITOR"]
 
-        # XConnect configuration (NDFC >= 12.4.1 only)
-        if self._ndfc_version_gte("12.4.1") and cfg.get("xconnect", None) is None:
-            json_to_dict_want["xconnect"] = json_to_dict_have.get("xconnect", False)
+        # Preserve controller-returned XConnect intent when it is omitted from
+        # a merged request. Read-side preservation must not depend on a version
+        # lookup succeeding.
+        if (
+            cfg.get("xconnect", None) is None
+            and "xconnect" in json_to_dict_have
+        ):
+            json_to_dict_want["xconnect"] = json_to_dict_have["xconnect"]
             if str(json_to_dict_want["xconnect"]).lower() == "true":
                 json_to_dict_want["xconnect"] = True
             else:
@@ -6076,7 +6086,8 @@ def main():
                     choices=["multicluster_parent", "multicluster_child", "multisite_parent", "multisite_child", "standalone"]
                 ),
                 cluster_name=dict(required=False, type="str", default=""),
-                nd_version=dict(required=False, type="float")
+                nd_version=dict(required=False, type="float"),
+                ndfc_version=dict(required=False, type="str")
             )
         ),
         config=dict(required=False, type="list", elements="dict"),
