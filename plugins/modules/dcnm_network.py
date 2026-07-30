@@ -2588,7 +2588,10 @@ class DcnmNetwork:
             template_conf.update(SVI_NETFLOW_MONITOR=net.get("intfvlan_nf_monitor", ""))
             template_conf.update(VLAN_NETFLOW_MONITOR=net.get("vlan_nf_monitor", ""))
         if self._ndfc_version_gte("12.4.1"):
-            template_conf.update(xconnect=net.get("xconnect", False))
+            xconnect = net.get("xconnect")
+            template_conf.update(
+                xconnect=False if xconnect is None else xconnect
+            )
 
         if template_conf["vlanId"] is None:
             template_conf["vlanId"] = ""
@@ -5443,7 +5446,7 @@ class DcnmNetwork:
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
             )
-            net_spec["xconnect"] = dict(type="bool", default=False)
+            net_spec["xconnect"] = dict(type="bool")
             # Adjust deploy field for query state
             if is_query_state:
                 net_spec["deploy"] = dict(type="bool")

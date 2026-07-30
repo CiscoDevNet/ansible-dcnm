@@ -317,6 +317,18 @@ class TestDcnmNetworkModule(TestDcnmModule):
                     dcnm_net.module.fail_json.call_args.kwargs["msg"],
                 )
 
+    def test_dcnm_net_omitted_xconnect_skips_version_validation(self):
+        for version in (None, "11.1", "12.2.1.321"):
+            with self.subTest(version=version):
+                dcnm_net = self._build_xconnect_validator(
+                    version, None
+                )
+                del dcnm_net.config[0]["xconnect"]
+                dcnm_net.validate_input()
+                self.assertIsNone(
+                    dcnm_net.validated[0]["xconnect"]
+                )
+
     def test_dcnm_net_xconnect_is_rejected_outside_standalone_fabrics(self):
         dcnm_net = self._build_xconnect_validator(
             "12.4.1",
@@ -344,8 +356,12 @@ class TestDcnmNetworkModule(TestDcnmModule):
         dcnm_net.is_ms_fabric = False
         dcnm_net.fabric_type = "standalone"
 
-        for xconnect in (True, False):
-            with self.subTest(xconnect=xconnect):
+        for xconnect, expected in (
+            (True, True),
+            (False, False),
+            (None, False),
+        ):
+            with self.subTest(xconnect=xconnect, expected=expected):
                 payload = dcnm_net.update_create_params(
                     {
                         "net_name": "xconnect-net",
@@ -356,7 +372,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 template = json.loads(
                     payload["networkTemplateConfig"]
                 )
-                self.assertIs(template["xconnect"], xconnect)
+                self.assertIs(template["xconnect"], expected)
 
     def test_dcnm_net_normalize_preserves_returned_xconnect_without_version(self):
         dcnm_net = dcnm_network.DcnmNetwork.__new__(
