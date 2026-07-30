@@ -1895,11 +1895,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     find_dict_in_list_by_key_value,
 )
 from ..module_utils.common.log_v2 import Log
-from ..module_utils.common.controller_version_v2 import ControllerVersion
-from ..module_utils.common.rest_send_v2 import RestSend
-from ..module_utils.common.response_handler import ResponseHandler
-from ..module_utils.common.sender_dcnm import Sender
-from ..module_utils.common.exceptions import ControllerResponseError
 
 
 def json_pretty(msg):
@@ -2020,8 +2015,16 @@ class DcnmIntf:
             }
         ]
 
-        self.dcnm_version = dcnm_version_supported(self.module)
-        self.ndfc_version = self._get_ndfc_version()
+        version_info = dcnm_version_supported(
+            self.module, return_full_version=True
+        )
+        if isinstance(version_info, tuple):
+            self.dcnm_version, self.ndfc_version = version_info
+        else:
+            # Preserve compatibility with tests and external mocks that still
+            # return only the historical major-version integer.
+            self.dcnm_version = version_info
+            self.ndfc_version = None
 
         # Check for bulk API support
         self.has_bulk_api = dcnm_get_bulk_api_support(self.module)
@@ -2232,24 +2235,6 @@ class DcnmIntf:
 
         msg = "ENTERED DcnmIntf: "
         self.log.debug(msg)
-
-    def _get_ndfc_version(self):
-        """Return the full NDFC version string (e.g. '12.4.1.245') using ControllerVersion, or None on failure."""
-        try:
-            sender = Sender()
-            sender.ansible_module = self.module
-            rest_send = RestSend(self.module.params)
-            rest_send.response_handler = ResponseHandler()
-            rest_send.sender = sender
-            controller_version = ControllerVersion()
-            controller_version.rest_send = rest_send
-            controller_version.refresh()
-            raw_version = controller_version.version
-            if raw_version:
-                return re.sub(r'[a-zA-Z]+$', '', raw_version)
-        except (ControllerResponseError, ValueError, AssertionError, Exception):
-            pass
-        return None
 
     def _ndfc_version_gte(self, target):
         """Check if NDFC version >= target. Uses tuple comparison on version segments."""
