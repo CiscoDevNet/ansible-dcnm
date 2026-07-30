@@ -5438,7 +5438,7 @@ class DcnmNetwork:
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
             )
-            net_spec["xconnect"] = dict(type="bool")
+            net_spec["xconnect"] = dict(type="bool", default=False)
             # Adjust deploy field for query state
             if is_query_state:
                 net_spec["deploy"] = dict(type="bool")
