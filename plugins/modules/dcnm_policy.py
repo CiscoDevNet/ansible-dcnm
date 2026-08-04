@@ -745,10 +745,30 @@ class DcnmPolicy:
         if pnv is None:
             return "DCNM_POLICY_MATCH"
 
+        if hnv is None:
+            hnv = {}
+
+        # Keys auto-populated by NDFC — skip during comparison
+        skip_keys = {"POLICY_ID", "SERIAL_NUMBER"}
+
         for k in pnv.keys():
-            pv = str(pnv.get(k, None))
-            hv = str(hnv.get(k, None))
-            if pv != hv:
+            if k in skip_keys and (pnv.get(k) is None or pnv.get(k) == ""):
+                continue
+
+            pv = pnv.get(k)
+            hv = hnv.get(k)
+
+            # Treat None and empty string as equivalent
+            if pv is None or pv == "":
+                pv = ""
+            if hv is None or hv == "":
+                hv = ""
+
+            # Normalize to string for comparison
+            pv = str(pv).strip()
+            hv = str(hv).strip()
+
+            if pv.lower() != hv.lower():
                 return "DCNM_POLICY_DONT_MATCH"
         return "DCNM_POLICY_MATCH"
 
