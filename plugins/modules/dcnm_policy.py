@@ -764,11 +764,15 @@ class DcnmPolicy:
             if hv is None or hv == "":
                 hv = ""
 
-            # Normalize to string for comparison
-            pv = str(pv).strip()
-            hv = str(hv).strip()
+            # Normalize booleans (NDFC may return "true"/"false" vs True/False)
+            if str(pv).strip().lower() in ("true", "false") or str(hv).strip().lower() in ("true", "false"):
+                pv = str(pv).strip().lower()
+                hv = str(hv).strip().lower()
+            else:
+                pv = str(pv).strip()
+                hv = str(hv).strip()
 
-            if pv.lower() != hv.lower():
+            if pv != hv:
                 return "DCNM_POLICY_DONT_MATCH"
         return "DCNM_POLICY_MATCH"
 
