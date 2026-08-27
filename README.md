@@ -12,6 +12,7 @@ This collection is intended for use with the following release versions:
   * `Cisco Nexus Dashboard Fabric Controller (NDFC) Release 12.2.3`
   * `Cisco Nexus Dashboard Release 4.1.1g` - Unified Nexus Dashboard (Legacy APIs)
   * `Cisco Nexus Dashboard Release 4.2.1` - Unified Nexus Dashboard (Legacy APIs)
+  * `Cisco Nexus Dashboard Release 4.3.1` - Unified Nexus Dashboard (Legacy APIs)
 
 <!--start requires_ansible-->
 ## Ansible version compatibility
@@ -78,7 +79,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 3.12.1
+    version: 3.13.0
 ```
 ## Using this collection
 
