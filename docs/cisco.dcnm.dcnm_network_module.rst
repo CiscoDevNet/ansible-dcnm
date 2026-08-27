@@ -49,7 +49,7 @@ Parameters
                 <td>
                         <div>INTERNAL PARAMETER - DO NOT USE</div>
                         <div>Fabric details dictionary automatically provided by the action plugin</div>
-                        <div>Contains fabric_type, cluster_name, and nd_version information</div>
+                        <div>Contains fabric_type, cluster_name, nd_version, and ndfc_version information</div>
                         <div>This parameter is used internally by the action plugin for MSD/MFD fabric processing</div>
                 </td>
             </tr>
@@ -110,6 +110,23 @@ Parameters
                         <div>ND/NDFC version number used for API path selection</div>
                         <div>Automatically provided by action plugin</div>
                         <div>Module will fail if this is not provided by action plugin</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ndfc_version</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Exact normalized NDFC version used for feature validation</div>
+                        <div>Automatically provided by action plugin</div>
                 </td>
             </tr>
 
@@ -1222,7 +1239,53 @@ Parameters
                         <div>This field is required for L3 Networks. VRF name should not be specified or may be specified as &quot;&quot; for L2 networks</div>
                 </td>
             </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>xconnect</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Enable XConnect for a Layer-2-only network.</div>
+                        <div>Supported only on standalone fabrics running ND 4.1/NDFC 12.4.1 or later.</div>
+                        <div>XConnect network attachments support dot1q ports only.</div>
+                        <div>In <code>state=merged</code>, omitting this option preserves the value returned by the controller.</div>
+                </td>
+            </tr>
 
+            <tr>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>deploy_mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>switch</b>&nbsp;&larr;</div></li>
+                                    <li>resource</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Controls the deployment method when deploy is enabled</div>
+                        <div>When set to &#x27;switch&#x27; (default), deployments use switch-level API with serial numbers</div>
+                        <div>When set to &#x27;resource&#x27;, deployments use resource-level API with network names</div>
+                        <div>Multicluster parent network deployments use resource-level API internally</div>
+                        <div>Applies to both create/deploy and delete/undeploy operations</div>
+                </td>
+            </tr>
             <tr>
                 <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
@@ -1355,6 +1418,22 @@ Examples
               - ip_address: 192.168.1.225
                 ports: [Ethernet1/11, Ethernet1/12]
             deploy: false
+
+    - name: Merge a standalone Layer-2 XConnect network with dot1q attachments
+      cisco.dcnm.dcnm_network:
+        fabric: vxlan-fabric
+        state: merged
+        config:
+          - net_name: ansible-xconnect-net
+            is_l2only: true
+            xconnect: true
+            vlan_id: 152
+            attach:
+              - ip_address: 192.168.1.224
+                ports: [Ethernet1/18]
+              - ip_address: 192.168.1.225
+                ports: [Ethernet1/18]
+            deploy: true
 
     # ---------------------------------------------------------------------------
     # STATE: REPLACED - Replace Network Configuration
