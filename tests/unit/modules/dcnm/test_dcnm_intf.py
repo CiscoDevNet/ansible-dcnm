@@ -18,7 +18,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 # from units.compat.mock import patch
 
@@ -53,6 +53,48 @@ class TestDcnmIntfModule(TestDcnmModule):
             "RETURN_CODE": 200,
             "DATA": data,
         }
+
+    def assert_no_mutating_dcnm_calls(self):
+
+        mutating_methods = {"POST", "PUT", "DELETE"}
+        self.assertFalse(
+            any(
+                call.args[1] in mutating_methods
+                for call in self.run_dcnm_send.call_args_list
+                if len(call.args) > 1
+            )
+        )
+
+    @staticmethod
+    def storm_control_default_nvpairs():
+        return {
+            "ENABLE_STORM_CONTROL": False,
+            "STORM_CONTROL_ACTION": "no",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT": "",
+            "STORM_CONTROL_BCAST_LEVEL_PPS": "",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT": "",
+            "STORM_CONTROL_MCAST_LEVEL_PPS": "",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT": "",
+            "STORM_CONTROL_UCAST_LEVEL_PPS": "",
+        }
+
+    def assert_leaf_default_storm_control(self, payloads):
+        trunk_defaults = [
+            payload
+            for payload in payloads
+            if payload["policy"] in ("int_trunk_host", "int_trunk_host_11_1")
+        ]
+        self.assertTrue(
+            trunk_defaults,
+            [payload["policy"] for payload in payloads],
+        )
+        expected = self.storm_control_default_nvpairs()
+        for payload in trunk_defaults:
+            nv_pairs = payload["interfaces"][0]["nvPairs"]
+            self.assertEqual(
+                {key: nv_pairs.get(key) for key in expected},
+                expected,
+            )
 
     def test_dcnm_intf_is_vpc_peer_link_port_channel_null_alias_template(self):
 
@@ -135,6 +177,766 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(
             dcnm_intf.dcnm_intf_is_vpc_peer_link_port_channel(intf),
             True,
+        )
+
+    def test_dcnm_intf_storm_control_percent_payload(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        nv_pairs = {}
+        profile = {
+            "enable_storm_control": True,
+            "storm_control_action": "shutdown",
+            "storm_control_broadcast_level_percent": "12",
+            "storm_control_multicast_level_percent": "13.00",
+            "storm_control_unicast_level_percent": "14.5",
+        }
+
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(
+            nv_pairs,
+            {
+                "ENABLE_STORM_CONTROL": True,
+                "STORM_CONTROL_ACTION": "shutdown",
+                "STORM_CONTROL_BCAST_LEVEL_PERCENT": "12",
+                "STORM_CONTROL_BCAST_LEVEL_PPS": "",
+                "STORM_CONTROL_MCAST_LEVEL_PERCENT": "13.00",
+                "STORM_CONTROL_MCAST_LEVEL_PPS": "",
+                "STORM_CONTROL_UCAST_LEVEL_PERCENT": "14.5",
+                "STORM_CONTROL_UCAST_LEVEL_PPS": "",
+            },
+        )
+
+    def test_dcnm_intf_storm_control_pps_payload(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        nv_pairs = {}
+        profile = {
+            "enable_storm_control": True,
+            "storm_control_action": "trap",
+            "storm_control_broadcast_level_pps": 1000,
+            "storm_control_multicast_level_pps": 2000,
+            "storm_control_unicast_level_pps": 3000,
+        }
+
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(nv_pairs["STORM_CONTROL_ACTION"], "trap")
+        self.assertEqual(nv_pairs["STORM_CONTROL_BCAST_LEVEL_PPS"], "1000")
+        self.assertEqual(nv_pairs["STORM_CONTROL_MCAST_LEVEL_PPS"], "2000")
+        self.assertEqual(nv_pairs["STORM_CONTROL_UCAST_LEVEL_PPS"], "3000")
+        self.assertEqual(nv_pairs["STORM_CONTROL_BCAST_LEVEL_PERCENT"], "")
+
+    def test_dcnm_intf_storm_control_disable_clears_dependent_values(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        profile = {
+            "enable_storm_control": False,
+            "storm_control_action": "shutdown",
+            "storm_control_broadcast_level_percent": "12",
+        }
+        nv_pairs = {}
+
+        dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(profile["storm_control_action"], "default")
+        self.assertEqual(nv_pairs["ENABLE_STORM_CONTROL"], False)
+        self.assertEqual(nv_pairs["STORM_CONTROL_ACTION"], "no")
+        for key, value in nv_pairs.items():
+            if key.startswith("STORM_CONTROL_") and key != "STORM_CONTROL_ACTION":
+                self.assertEqual(value, "")
+
+    def test_dcnm_intf_storm_control_all_false_aliases_clear_values(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        false_aliases = (
+            False,
+            0,
+            0.0,
+            "false",
+            "no",
+            "off",
+            "0",
+            "n",
+            "f",
+        )
+
+        for enabled in false_aliases:
+            with self.subTest(enabled=enabled):
+                profile = {
+                    "enable_storm_control": enabled,
+                    "storm_control_action": "trap",
+                    "storm_control_broadcast_level_percent": "12.00",
+                    "storm_control_multicast_level_pps": 2000,
+                }
+
+                dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+
+                self.assertEqual(profile["storm_control_action"], "default")
+                for percent_key, pps_key, _percent_nvpair, _pps_nvpair in (
+                    dcnm_intf.storm_control_level_pairs
+                ):
+                    self.assertEqual(profile[percent_key], "")
+                    self.assertIsNone(profile[pps_key])
+
+    def test_dcnm_intf_storm_control_true_aliases_do_not_disable(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        true_aliases = (
+            True,
+            1,
+            1.0,
+            "true",
+            "yes",
+            "on",
+            "1",
+            "y",
+            "t",
+        )
+
+        for enabled in true_aliases:
+            with self.subTest(enabled=enabled):
+                profile = {"enable_storm_control": enabled}
+
+                dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+
+                self.assertEqual(
+                    profile,
+                    {"enable_storm_control": enabled},
+                )
+
+    def test_dcnm_intf_storm_control_invalid_bool_uses_normal_validation(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        profile = {
+            "enable_storm_control": "not-a-boolean",
+            "storm_control_action": "trap",
+        }
+
+        dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+
+        self.assertEqual(
+            profile,
+            {
+                "enable_storm_control": "not-a-boolean",
+                "storm_control_action": "trap",
+            },
+        )
+
+    def test_dcnm_intf_leaf_default_payload_clears_storm_control(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.ndfc_version = "12.4.1.245"
+        dcnm_intf.pol_types = {
+            12: {
+                "eth_trunk": "int_trunk_host",
+                "eth_routed": "int_routed_host",
+            }
+        }
+        dcnm_intf.sno_to_switch_role = {
+            "LEAF_SERIAL": "leaf",
+            "SPINE_SERIAL": "spine",
+        }
+
+        leaf_payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+            "Ethernet1/50",
+            "LEAF_SERIAL",
+            "test_fabric",
+        )
+        leaf_nv_pairs = leaf_payload["interfaces"][0]["nvPairs"]
+        expected = self.storm_control_default_nvpairs()
+
+        self.assertEqual(
+            {key: leaf_nv_pairs.get(key) for key in expected},
+            expected,
+        )
+
+        routed_payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+            "Ethernet1/50",
+            "SPINE_SERIAL",
+            "test_fabric",
+        )
+        routed_nv_pairs = routed_payload["interfaces"][0]["nvPairs"]
+        for key in expected:
+            self.assertNotIn(key, routed_nv_pairs)
+
+        self.assertEqual(leaf_nv_pairs["FEC"], "auto")
+        self.assertEqual(routed_nv_pairs["FEC"], "auto")
+
+    def test_dcnm_intf_default_compare_detects_storm_only_drift(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.ndfc_version = "12.4.1.245"
+        dcnm_intf.pol_types = {
+            12: {
+                "eth_trunk": "int_trunk_host",
+                "eth_routed": "int_routed_host",
+            }
+        }
+        dcnm_intf.sno_to_switch_role = {"LEAF_SERIAL": "leaf"}
+        default_payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+            "Ethernet1/50",
+            "LEAF_SERIAL",
+            "test_fabric",
+        )
+        have = copy.deepcopy(default_payload)
+        have["interfaces"][0]["nvPairs"].update(
+            {
+                "ENABLE_STORM_CONTROL": True,
+                "STORM_CONTROL_ACTION": "trap",
+                "STORM_CONTROL_BCAST_LEVEL_PPS": "2100",
+            }
+        )
+
+        self.assertEqual(
+            dcnm_intf.dcnm_compare_default_payload(default_payload, have),
+            "DCNM_INTF_NOT_MATCH",
+        )
+
+    def test_dcnm_intf_default_compare_detects_fec_only_drift(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.ndfc_version = "12.4.1.245"
+        dcnm_intf.pol_types = {
+            12: {
+                "eth_trunk": "int_trunk_host",
+                "eth_routed": "int_routed_host",
+            }
+        }
+        dcnm_intf.sno_to_switch_role = {
+            "LEAF_SERIAL": "leaf",
+            "SPINE_SERIAL": "spine",
+        }
+
+        for serial in ("LEAF_SERIAL", "SPINE_SERIAL"):
+            with self.subTest(serial=serial):
+                default_payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+                    "Ethernet1/50",
+                    serial,
+                    "test_fabric",
+                )
+                have = copy.deepcopy(default_payload)
+                have["interfaces"][0]["nvPairs"]["FEC"] = "rs-fec"
+
+                self.assertEqual(
+                    dcnm_intf.dcnm_compare_default_payload(
+                        default_payload, have
+                    ),
+                    "DCNM_INTF_NOT_MATCH",
+                )
+
+    def test_dcnm_intf_default_compare_treats_omitted_fec_as_auto(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.ndfc_version = "12.4.1.245"
+        dcnm_intf.pol_types = {
+            12: {
+                "eth_trunk": "int_trunk_host",
+                "eth_routed": "int_routed_host",
+            }
+        }
+        dcnm_intf.sno_to_switch_role = {"LEAF_SERIAL": "leaf"}
+        default_payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+            "Ethernet1/50",
+            "LEAF_SERIAL",
+            "test_fabric",
+        )
+        have = copy.deepcopy(default_payload)
+        have["interfaces"][0]["nvPairs"].pop("FEC")
+
+        self.assertEqual(
+            dcnm_intf.dcnm_compare_default_payload(default_payload, have),
+            "DCNM_INTF_MATCH",
+        )
+
+    def test_dcnm_intf_default_compare_normalizes_omitted_storm_defaults(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.pol_types = {
+            12: {
+                "eth_trunk": "int_trunk_host",
+                "eth_routed": "int_routed_host",
+            }
+        }
+        dcnm_intf.sno_to_switch_role = {"LEAF_SERIAL": "leaf"}
+        default_payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+            "Ethernet1/50",
+            "LEAF_SERIAL",
+            "test_fabric",
+        )
+        have = copy.deepcopy(default_payload)
+        have_nv_pairs = have["interfaces"][0]["nvPairs"]
+        for key in self.storm_control_default_nvpairs():
+            have_nv_pairs.pop(key)
+
+        self.assertEqual(
+            dcnm_intf.dcnm_compare_default_payload(default_payload, have),
+            "DCNM_INTF_MATCH",
+        )
+
+        have_nv_pairs.update(
+            {
+                "ENABLE_STORM_CONTROL": "n",
+                "STORM_CONTROL_ACTION": "default",
+                "STORM_CONTROL_BCAST_LEVEL_PERCENT": None,
+            }
+        )
+        self.assertEqual(
+            dcnm_intf.dcnm_compare_default_payload(default_payload, have),
+            "DCNM_INTF_MATCH",
+        )
+
+    def test_dcnm_intf_merged_percent_transition_clears_all_pps_fields(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        profile = {
+            "ifname": "Ethernet1/15",
+            "sno": "SERIAL1",
+            "fabric": "fabric1",
+            "enable_storm_control": True,
+            "storm_control_broadcast_level_percent": "12.00",
+        }
+
+        dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+        dcnm_intf.pb_input = [profile]
+        dcnm_intf.keymap = {
+            pps_nvpair: pps_key
+            for _percent_key, pps_key, _percent_nvpair, pps_nvpair
+            in dcnm_intf.storm_control_level_pairs
+        }
+
+        for _percent_key, pps_key, _percent_nvpair, pps_nvpair in (
+            dcnm_intf.storm_control_level_pairs
+        ):
+            with self.subTest(pps_key=pps_key):
+                self.assertIn(pps_key, profile)
+                self.assertIsNone(profile[pps_key])
+                result = dcnm_intf.dcnm_intf_compare_elements(
+                    profile["ifname"],
+                    profile["sno"],
+                    profile["fabric"],
+                    profile[pps_key],
+                    1000,
+                    pps_nvpair,
+                    "merged",
+                )
+                self.assertEqual(result, "add")
+
+        self.assertNotIn("storm_control_multicast_level_percent", profile)
+        self.assertNotIn("storm_control_unicast_level_percent", profile)
+
+    def test_dcnm_intf_merged_pps_transition_clears_all_percent_fields(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        profile = {
+            "ifname": "Ethernet1/15",
+            "sno": "SERIAL1",
+            "fabric": "fabric1",
+            "enable_storm_control": True,
+            "storm_control_multicast_level_pps": 2000,
+        }
+
+        dcnm_intf.dcnm_intf_expand_storm_control_intent(profile)
+        dcnm_intf.pb_input = [profile]
+        dcnm_intf.keymap = {
+            percent_nvpair: percent_key
+            for percent_key, _pps_key, percent_nvpair, _pps_nvpair
+            in dcnm_intf.storm_control_level_pairs
+        }
+
+        for percent_key, _pps_key, percent_nvpair, _pps_nvpair in (
+            dcnm_intf.storm_control_level_pairs
+        ):
+            with self.subTest(percent_key=percent_key):
+                self.assertIn(percent_key, profile)
+                self.assertEqual(profile[percent_key], "")
+                result = dcnm_intf.dcnm_intf_compare_elements(
+                    profile["ifname"],
+                    profile["sno"],
+                    profile["fabric"],
+                    profile[percent_key],
+                    "10.00",
+                    percent_nvpair,
+                    "merged",
+                )
+                self.assertEqual(result, "add")
+
+        self.assertNotIn("storm_control_broadcast_level_pps", profile)
+        self.assertNotIn("storm_control_unicast_level_pps", profile)
+
+    def test_dcnm_intf_storm_control_default_action_uses_controller_no(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        nv_pairs = {}
+        profile = {
+            "enable_storm_control": True,
+            "storm_control_action": "default",
+        }
+
+        dcnm_intf.dcnm_intf_set_storm_control_nv_pairs(profile, nv_pairs)
+
+        self.assertEqual(nv_pairs["STORM_CONTROL_ACTION"], "no")
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Ethernet1/15",
+            "SERIAL1",
+            "fabric1",
+            "no",
+            "default",
+            "STORM_CONTROL_ACTION",
+            "replaced",
+        )
+        self.assertEqual(result, "dont_add")
+
+    def test_dcnm_intf_storm_control_invalid_action_lists_choices(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.module = Mock()
+        dcnm_intf.intf_info = []
+
+        def fail_json(**kwargs):
+            raise ValueError(kwargs["msg"])
+
+        dcnm_intf.module.fail_json.side_effect = fail_json
+        config = [
+            {
+                "name": "Ethernet1/15",
+                "switch": ["10.122.84.181"],
+                "type": "eth",
+                "profile": {
+                    "storm_control_action": "no",
+                },
+            }
+        ]
+        common_spec = {
+            "name": {"required": True, "type": "str"},
+            "switch": {"required": True, "type": "list"},
+            "type": {"required": True, "type": "str"},
+            "profile": {"required": True, "type": "dict"},
+        }
+
+        with self.assertRaisesRegex(
+            ValueError,
+            r"Valid choices are: shutdown, trap, default",
+        ):
+            dcnm_intf.dcnm_intf_validate_interface_input(
+                config,
+                common_spec,
+                dcnm_intf.dcnm_intf_storm_control_spec(),
+            )
+
+    def test_dcnm_intf_storm_control_percent_and_pps_are_mutually_exclusive(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.module = Mock()
+
+        def fail_json(**kwargs):
+            raise ValueError(kwargs["msg"])
+
+        dcnm_intf.module.fail_json.side_effect = fail_json
+        percent_keys = [
+            "storm_control_broadcast_level_percent",
+            "storm_control_multicast_level_percent",
+            "storm_control_unicast_level_percent",
+        ]
+        pps_keys = [
+            "storm_control_broadcast_level_pps",
+            "storm_control_multicast_level_pps",
+            "storm_control_unicast_level_pps",
+        ]
+
+        for percent_key in percent_keys:
+            for pps_key in pps_keys:
+                with self.subTest(percent_key=percent_key, pps_key=pps_key):
+                    profile = {
+                        "enable_storm_control": True,
+                        "storm_control_action": "shutdown",
+                        percent_key: "12",
+                        pps_key: 1000,
+                    }
+
+                    with self.assertRaisesRegex(
+                        ValueError,
+                        "configure only one rate mode per interface",
+                    ):
+                        dcnm_intf.dcnm_intf_validate_storm_control_profile(
+                            profile, "Ethernet1/15"
+                        )
+
+    def test_dcnm_intf_storm_control_percent_comparison_normalizes_precision(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Ethernet1/15",
+            "SERIAL1",
+            "fabric1",
+            "12",
+            "12.00",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "replaced",
+        )
+
+        self.assertEqual(result, "dont_add")
+
+    def test_dcnm_intf_copy_description_comparison(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.keymap = {"COPY_DESC": "copy_description"}
+        dcnm_intf.pb_input = [
+            {
+                "ifname": "Port-channel511",
+                "sno": "SERIAL1",
+                "fabric": "fabric1",
+            }
+        ]
+
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Port-channel511",
+            "SERIAL1",
+            "fabric1",
+            False,
+            "true",
+            "COPY_DESC",
+            "merged",
+        )
+        self.assertEqual(result, "copy_and_add")
+
+        dcnm_intf.pb_input[0]["copy_description"] = False
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Port-channel511",
+            "SERIAL1",
+            "fabric1",
+            False,
+            "true",
+            "COPY_DESC",
+            "merged",
+        )
+        self.assertEqual(result, "add")
+
+        result = dcnm_intf.dcnm_intf_compare_elements(
+            "Port-channel511",
+            "SERIAL1",
+            "fabric1",
+            True,
+            "true",
+            "COPY_DESC",
+            "replaced",
+        )
+        self.assertEqual(result, "dont_add")
+
+    def _build_intf_skeleton(self, interface_type):
+        return {
+            "deploy": True,
+            "policy": "",
+            "interfaceType": interface_type,
+            "interfaces": [
+                {
+                    "serialNumber": "",
+                    "interfaceType": interface_type,
+                    "ifName": "",
+                    "fabricName": "test_fabric",
+                    "nvPairs": {"SPEED": "Auto"},
+                }
+            ],
+        }
+
+    def _build_eth_dot1q_delem(self, enable_cdp):
+        return {
+            "name": "eth1/4",
+            "type": "eth",
+            "switch": ["10.1.1.1"],
+            "deploy": True,
+            "profile": {
+                "mode": "dot1q",
+                "bpdu_guard": "true",
+                "port_type_fast": True,
+                "mtu": "jumbo",
+                "speed": "Auto",
+                "access_vlan": "10",
+                "cmds": None,
+                "description": "test",
+                "admin_state": True,
+                "enable_cdp": enable_cdp,
+                "duplex": "auto",
+            },
+        }
+
+    def _build_eth_trunk_delem(self, fec):
+        return {
+            "name": "eth1/4",
+            "type": "eth",
+            "switch": ["10.1.1.1"],
+            "deploy": True,
+            "profile": {
+                "mode": "trunk",
+                "bpdu_guard": "true",
+                "port_type_fast": True,
+                "mtu": "jumbo",
+                "speed": "Auto",
+                "allowed_vlans": "all",
+                "native_vlan": "",
+                "orphan_port": False,
+                "cmds": None,
+                "description": "test",
+                "admin_state": True,
+                "enable_cdp": True,
+                "enable_pfc": False,
+                "enable_monitor": False,
+                "duplex": "auto",
+                "enable_qos": False,
+                "qos_policy": "",
+                "queuing_policy": "",
+                "fec": fec,
+            },
+        }
+
+    def _build_vpc_delem(self, mode, enable_cdp):
+        profile = {
+            "mode": mode,
+            "peer1_pcid": 10,
+            "peer2_pcid": 10,
+            "peer1_members": ["eth1/1"],
+            "peer2_members": ["eth1/1"],
+            "pc_mode": "active",
+            "bpdu_guard": "true",
+            "port_type_fast": True,
+            "mtu": "jumbo",
+            "speed": "Auto",
+            "peer1_cmds": None,
+            "peer2_cmds": None,
+            "peer1_description": "",
+            "peer2_description": "",
+            "admin_state": True,
+            "enable_qos": False,
+            "qos_policy": "",
+            "queuing_policy": "",
+            "copy_description": False,
+            "enable_cdp": enable_cdp,
+        }
+        if mode == "trunk":
+            profile.update({
+                "peer1_allowed_vlans": "none",
+                "peer2_allowed_vlans": "none",
+                "peer1_native_vlan": "",
+                "peer2_native_vlan": "",
+                "disable_lacp_suspend_individual": False,
+                "enable_lacp_vpc_convergence": False,
+                "lacp_port_priority": 32768,
+                "lacp_rate": "normal",
+            })
+        else:
+            profile.update({
+                "peer1_access_vlan": "10",
+                "peer2_access_vlan": "10",
+            })
+        return {
+            "name": "vpc10",
+            "type": "vpc",
+            "switch": ["10.1.1.1"],
+            "deploy": True,
+            "profile": profile,
+        }
+
+    def test_dcnm_intf_eth_dot1q_payload_disables_cdp(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        delem = self._build_eth_dot1q_delem(enable_cdp=False)
+        intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+
+        dcnm_intf.dcnm_intf_get_eth_payload(delem, intf, "profile")
+
+        self.assertEqual(intf["interfaces"][0]["ifName"], "Ethernet1/4")
+        self.assertIn("CDP_ENABLE", intf["interfaces"][0]["nvPairs"])
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"], False
+        )
+
+    def test_dcnm_intf_eth_dot1q_payload_enables_cdp(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        delem = self._build_eth_dot1q_delem(enable_cdp=True)
+        intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+
+        dcnm_intf.dcnm_intf_get_eth_payload(delem, intf, "profile")
+
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"], True
+        )
+
+    def test_dcnm_intf_eth_payload_serializes_requested_fec(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.ndfc_version = "12.4.1.245"
+        delem = self._build_eth_trunk_delem("rs-fec")
+        intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+
+        dcnm_intf.dcnm_intf_get_eth_payload(delem, intf, "profile")
+
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["FEC"], "rs-fec"
+        )
+
+    def test_dcnm_intf_fec_version_validation(self):
+        cases = (
+            (None, True, "version could not be determined"),
+            ("12.3.1", True, "requires NDFC >= 12.4.1"),
+            ("12.4.1", False, None),
+            ("12.4.1.245", False, None),
+        )
+
+        for version, should_fail, expected_message in cases:
+            with self.subTest(version=version):
+                dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+                dcnm_intf.ndfc_version = version
+                dcnm_intf.module = Mock()
+                dcnm_intf.module.fail_json.side_effect = RuntimeError(
+                    "fail_json"
+                )
+                dcnm_intf.dcnm_intf_validate_interface_input = Mock()
+                config = [self._build_eth_trunk_delem("rs-fec")]
+
+                if should_fail:
+                    with self.assertRaisesRegex(
+                        RuntimeError, "fail_json"
+                    ):
+                        dcnm_intf.dcnm_intf_validate_ethernet_interface_input(
+                            config
+                        )
+                    self.assertIn(
+                        expected_message,
+                        dcnm_intf.module.fail_json.call_args.kwargs["msg"],
+                    )
+                else:
+                    dcnm_intf.dcnm_intf_validate_ethernet_interface_input(
+                        config
+                    )
+                    dcnm_intf.module.fail_json.assert_not_called()
+
+    def test_dcnm_intf_vpc_trunk_payload_disables_cdp(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.vpc_ip_sn = {}
+        dcnm_intf.ip_sn = {"10.1.1.1": "TESTSN1"}
+        delem = self._build_vpc_delem(mode="trunk", enable_cdp=False)
+        intf = self._build_intf_skeleton("INTERFACE_VPC")
+
+        dcnm_intf.dcnm_intf_get_vpc_payload(delem, intf, "profile")
+
+        self.assertEqual(intf["interfaces"][0]["ifName"], "vPC10")
+        self.assertIn("CDP_ENABLE", intf["interfaces"][0]["nvPairs"])
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"], False
+        )
+
+    def test_dcnm_intf_vpc_trunk_payload_enables_cdp(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.vpc_ip_sn = {}
+        dcnm_intf.ip_sn = {"10.1.1.1": "TESTSN1"}
+        delem = self._build_vpc_delem(mode="trunk", enable_cdp=True)
+        intf = self._build_intf_skeleton("INTERFACE_VPC")
+
+        dcnm_intf.dcnm_intf_get_vpc_payload(delem, intf, "profile")
+
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"], True
+        )
+
+    def test_dcnm_intf_vpc_access_payload_disables_cdp(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.vpc_ip_sn = {}
+        dcnm_intf.ip_sn = {"10.1.1.1": "TESTSN1"}
+        delem = self._build_vpc_delem(mode="access", enable_cdp=False)
+        intf = self._build_intf_skeleton("INTERFACE_VPC")
+
+        dcnm_intf.dcnm_intf_get_vpc_payload(delem, intf, "profile")
+
+        self.assertIn("CDP_ENABLE", intf["interfaces"][0]["nvPairs"])
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"], False
         )
 
     def setUp(self):
@@ -302,6 +1104,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             for intf in playbook_have_all_data["DATA"]:
                 if intf["ifName"] == "Ethernet1/1":
                     intf["deletable"] = "False"
+                    intf["editAllowed"] = True
                     intf["underlayPolicies"] = None
                     break
 
@@ -434,6 +1237,36 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if (
+            "test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_switch_only"
+            in self._testMethodName
+        ):
+
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+            eth_bulk_payload = self.build_bulk_payload(
+                self.have_all_payloads_data.get("eth_1_1_access_payload"),
+                self.have_all_payloads_data.get("eth_1_2_access_payload"),
+                self.have_all_payloads_data.get("eth_3_2_access_payload"),
+            )
+            self.breakout_policies_data = loadPlaybookData(
+                "dcnm_intf_breakout_policies"
+            )
+            empty_breakout_resp = self.breakout_policies_data.get(
+                "empty_breakout_policies"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                playbook_have_all_data,
+                empty_breakout_resp,
+                eth_bulk_payload,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -2092,7 +2925,18 @@ class TestDcnmIntfModule(TestDcnmModule):
             eth_3_2_access_intf = self.have_all_payloads_data.get(
                 "eth_3_2_access_payload"
             )
-            eth_bulk_sal = self.build_bulk_payload(playbook_eth_intf1)
+            if "_fec_" in self._testMethodName:
+                # The bulk endpoint returns every configured interface for the
+                # switch. Include the physical interfaces exercised by the FEC
+                # defaulting test so the cache reflects a real response.
+                eth_bulk_sal = self.build_bulk_payload(
+                    playbook_eth_intf1,
+                    eth_1_1_access_intf,
+                    eth_1_2_access_intf,
+                    eth_3_2_access_intf,
+                )
+            else:
+                eth_bulk_sal = self.build_bulk_payload(playbook_eth_intf1)
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
@@ -2905,7 +3749,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         # setup the side effects
         self.run_dcnm_fabric_details.side_effect = [self.mock_fab_inv]
         self.run_dcnm_ip_sn.side_effect = [[self.mock_ip_sn, []]]
-        self.run_dcnm_version_supported.side_effect = [11]
+        if "_fec_" in self._testMethodName:
+            self.run_dcnm_version_supported.side_effect = [
+                (12, "12.4.1.245")
+            ]
+        else:
+            self.run_dcnm_version_supported.side_effect = [11]
 
         # Load AA_FEX fixtures
         self.load_aa_fex_fixtures()
@@ -3143,10 +3992,11 @@ class TestDcnmIntfModule(TestDcnmModule):
                 config=self.playbook_config,
             )
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=True, failed=False)
 
         self.assertEqual(len(result["diff"][0]["merged"]), 5)
         self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
         for d in result["diff"][0]["merged"]:
             for intf in d["interfaces"]:
                 self.assertEqual(
@@ -3490,7 +4340,16 @@ class TestDcnmIntfModule(TestDcnmModule):
             "LACP_RATE",
             "ENABLE_QOS",
             "QOS_POLICY",
-            "QUEUING_POLICY"
+            "QUEUING_POLICY",
+            "COPY_DESC",
+            "ENABLE_STORM_CONTROL",
+            "STORM_CONTROL_ACTION",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
         ]
 
         for d in result["diff"][0]["replaced"]:
@@ -3783,6 +4642,14 @@ class TestDcnmIntfModule(TestDcnmModule):
             "ENABLE_QOS",
             "QOS_POLICY",
             "QUEUING_POLICY",
+            "ENABLE_STORM_CONTROL",
+            "STORM_CONTROL_ACTION",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
         ]
 
         for d in result["diff"][0]["replaced"]:
@@ -3794,17 +4661,67 @@ class TestDcnmIntfModule(TestDcnmModule):
         # Monitor port will not bedeployed
         self.assertEqual(len(result["diff"][0]["deploy"]), 4)
 
-    def test_dcnm_intf_eth_deleted_existing(self):
+    def prepare_eth_deleted_existing_test(self):
 
-        # load the json from playbooks
         self.config_data = loadPlaybookData("dcnm_intf_eth_configs")
-        self.payloads_data = loadPlaybookData("dcnm_intf_eth_payloads")
-        self.have_all_payloads_data = loadPlaybookData(
-            "dcnm_intf_have_all_payloads"
+        self.payloads_data = copy.deepcopy(
+            loadPlaybookData("dcnm_intf_eth_payloads")
+        )
+        self.have_all_payloads_data = copy.deepcopy(
+            loadPlaybookData("dcnm_intf_have_all_payloads")
         )
 
-        # load required config data
         self.playbook_config = self.config_data.get("eth_deleted_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        for switch in self.mock_fab_inv.values():
+            switch["switchRole"] = "leaf"
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+    def set_eth_deleted_capabilities(self, deletable, edit_allowed=None):
+
+        for intf in self.have_all_payloads_data["eth_payloads"]["DATA"]:
+            intf["deletable"] = deletable
+            if edit_allowed is None:
+                intf.pop("editAllowed", None)
+            else:
+                intf["editAllowed"] = edit_allowed
+
+    def prepare_nd42_deleted_all_eth_test(
+        self,
+        deletable=False,
+        edit_allowed=True,
+        omit_deletable=False,
+        omit_edit_allowed=False,
+    ):
+
+        self.config_data = loadPlaybookData("dcnm_intf_common_configs")
+        self.have_all_payloads_data = copy.deepcopy(
+            loadPlaybookData("dcnm_intf_have_all_payloads")
+        )
+
+        for intf in self.have_all_payloads_data["payloads"]["DATA"]:
+            if (
+                intf["ifType"] == "INTERFACE_ETHERNET"
+                and str(intf["isPhysical"]).lower() == "true"
+            ):
+                if omit_deletable:
+                    intf.pop("deletable", None)
+                else:
+                    intf["deletable"] = deletable
+                if omit_edit_allowed:
+                    intf.pop("editAllowed", None)
+                else:
+                    intf["editAllowed"] = edit_allowed
+
+        self.playbook_config = self.config_data.get("override_eth_only_config")
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
@@ -3815,6 +4732,78 @@ class TestDcnmIntfModule(TestDcnmModule):
             "mock_monitor_false_resp"
         )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+    def set_eth_deleted_payloads_to_role_default(
+        self, policy="int_trunk_host_11_1"
+    ):
+
+        payload_names = [
+            "eth_merged_trunk_payloads",
+            "eth_merged_access_payloads",
+            "eth_merged_routed_payloads",
+            "eth_merged_epl_routed_payloads",
+            "eth_merged_monitor_payloads",
+        ]
+        for payload_name in payload_names:
+            payload = self.payloads_data[payload_name]["DATA"][0]
+            ifname = payload["interfaces"][0]["ifName"]
+            payload["policy"] = policy
+            payload["interfaces"][0]["nvPairs"] = {
+                "interfaceType": "INTERFACE_ETHERNET",
+                "MTU": "jumbo",
+                "SPEED": "Auto",
+                "DESC": "",
+                "CONF": "no shutdown",
+                "ADMIN_STATE": True,
+                "INTF_NAME": ifname,
+                "BPDUGUARD_ENABLED": False,
+                "PORTTYPE_FAST_ENABLED": True,
+                "ALLOWED_VLANS": "none",
+                "NATIVE_VLAN": "",
+                **self.storm_control_default_nvpairs(),
+            }
+
+    def prepare_eth_deleted_fec_only_test(self):
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_payloads_to_role_default(
+            policy="int_trunk_host"
+        )
+        self.payloads_data["eth_merged_trunk_payloads"]["DATA"][0][
+            "interfaces"
+        ][0]["nvPairs"]["FEC"] = "rs-fec"
+
+    def set_eth_overridden_payloads_to_role_default(
+        self, fec_interface=None
+    ):
+        for payload_name in (
+            "eth_1_1_access_payload",
+            "eth_1_2_access_payload",
+            "eth_3_2_access_payload",
+        ):
+            payload = self.have_all_payloads_data[payload_name]["DATA"][0]
+            ifname = payload["interfaces"][0]["ifName"]
+            payload["policy"] = "int_trunk_host"
+            payload["interfaces"][0]["nvPairs"] = {
+                "interfaceType": "INTERFACE_ETHERNET",
+                "MTU": "jumbo",
+                "SPEED": "Auto",
+                "DESC": "",
+                "CONF": "no shutdown",
+                "ADMIN_STATE": True,
+                "INTF_NAME": ifname,
+                "BPDUGUARD_ENABLED": False,
+                "PORTTYPE_FAST_ENABLED": True,
+                "ALLOWED_VLANS": "none",
+                "NATIVE_VLAN": "",
+                "FEC": (
+                    "rs-fec" if ifname == fec_interface else "auto"
+                ),
+                **self.storm_control_default_nvpairs(),
+            }
+
+    def test_dcnm_intf_eth_deleted_existing(self):
+
+        self.prepare_eth_deleted_existing_test()
 
         set_module_args(
             dict(
@@ -3828,6 +4817,257 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["merged"]), 0)
         self.assertEqual(len(result["diff"][0]["replaced"]), 5)
+        self.assert_leaf_default_storm_control(
+            result["diff"][0]["replaced"]
+        )
+
+    def test_dcnm_intf_eth_deleted_existing_nd42_edit_allowed(self):
+
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_capabilities(False, True)
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 5)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+        self.assertTrue(
+            all(
+                payload["policy"] == "int_trunk_host_11_1"
+                for payload in result["diff"][0]["replaced"]
+            )
+        )
+
+    def test_dcnm_intf_eth_deleted_existing_nd42_string_edit_allowed(self):
+
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_capabilities("False", " TRUE ")
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 5)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+
+    def test_dcnm_intf_eth_deleted_existing_nd42_check_mode(self):
+
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_capabilities(False, True)
+
+        set_module_args(
+            dict(
+                state="deleted",
+                _ansible_check_mode=True,
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 5)
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_eth_deleted_existing_nd42_idempotent(self):
+
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_capabilities(False, True)
+        self.set_eth_deleted_payloads_to_role_default()
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+        self.assertFalse(result.get("response"))
+
+    def test_dcnm_intf_eth_deleted_existing_nd42_check_mode_idempotent(self):
+
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_capabilities(False, True)
+        self.set_eth_deleted_payloads_to_role_default()
+
+        set_module_args(
+            dict(
+                state="deleted",
+                _ansible_check_mode=True,
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_eth_deleted_existing_fec_only(self):
+        self.prepare_eth_deleted_fec_only_test()
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(
+            len(result["diff"][0]["replaced"]), 1, result
+        )
+        replacement = result["diff"][0]["replaced"][0]
+        self.assertEqual(
+            replacement["interfaces"][0]["ifName"], "Ethernet1/30"
+        )
+        self.assertEqual(
+            replacement["interfaces"][0]["nvPairs"]["FEC"], "auto"
+        )
+
+    def test_dcnm_intf_eth_deleted_existing_fec_only_check_mode(self):
+        self.prepare_eth_deleted_fec_only_test()
+
+        set_module_args(
+            dict(
+                state="deleted",
+                _ansible_check_mode=True,
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 1)
+        self.assertEqual(
+            result["diff"][0]["replaced"][0]["interfaces"][0]["nvPairs"][
+                "FEC"
+            ],
+            "auto",
+        )
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_eth_deleted_existing_fec_default_idempotent(self):
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_payloads_to_role_default(
+            policy="int_trunk_host"
+        )
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertFalse(result.get("response"))
+
+    def test_dcnm_intf_eth_deleted_existing_nd42_underlay_dependency(self):
+
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_capabilities(False, True)
+        self.have_all_payloads_data["eth_payloads"]["DATA"][0][
+            "underlayPolicies"
+        ] = [{"source": "port-channel300"}]
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        replaced_names = {
+            payload["interfaces"][0]["ifName"]
+            for payload in result["diff"][0]["replaced"]
+        }
+        self.assertNotIn("Ethernet1/30", replaced_names)
+        self.assertEqual(len(replaced_names), 4)
+        self.assertTrue(
+            any(
+                skipped["Name"] == "Ethernet1/30"
+                and "underlay policy source" in skipped["Reason"]
+                for skipped in result["diff"][0]["skipped"]
+            )
+        )
+
+    def test_dcnm_intf_eth_deleted_existing_not_editable(self):
+
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_capabilities(False, False)
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 5)
+
+    def test_dcnm_intf_eth_deleted_existing_missing_edit_allowed(self):
+
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_capabilities(False)
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 5)
+
+    def test_dcnm_intf_eth_deleted_existing_unknown_deletable_not_editable(
+        self,
+    ):
+
+        self.prepare_eth_deleted_existing_test()
+        self.set_eth_deleted_capabilities(None, False)
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 5)
 
     def test_dcnm_intf_eth_overridden_existing(self):
 
@@ -4766,7 +6006,17 @@ class TestDcnmIntfModule(TestDcnmModule):
             "LACP_RATE",
             "ENABLE_QOS",
             "QOS_POLICY",
-            "QUEUING_POLICY"
+            "QUEUING_POLICY",
+            "COPY_DESC",
+            "ENABLE_STORM_CONTROL",
+            "STORM_CONTROL_ACTION",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
+            "CDP_ENABLE",
         ]
 
         for d in result["diff"][0]["replaced"]:
@@ -6049,6 +7299,53 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["overridden"]), 1)
         self.assertEqual(len(result["diff"][0]["merged"]), 0)
 
+    def test_dcnm_intf_eth_overridden_existing_fec_only(self):
+        self.config_data = loadPlaybookData("dcnm_intf_eth_configs")
+        self.payloads_data = copy.deepcopy(
+            loadPlaybookData("dcnm_intf_eth_payloads")
+        )
+        self.have_all_payloads_data = copy.deepcopy(
+            loadPlaybookData("dcnm_intf_have_all_payloads")
+        )
+        self.playbook_config = self.config_data.get(
+            "eth_overridden_config"
+        )
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        for switch in self.mock_fab_inv.values():
+            switch["switchRole"] = "leaf"
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+        self.set_eth_overridden_payloads_to_role_default(
+            fec_interface="Ethernet3/2"
+        )
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(
+            len(result["diff"][0]["replaced"]), 1, result
+        )
+        replacement = result["diff"][0]["replaced"][0]
+        self.assertEqual(
+            replacement["interfaces"][0]["ifName"], "Ethernet3/2"
+        )
+        self.assertEqual(
+            replacement["interfaces"][0]["nvPairs"]["FEC"], "auto"
+        )
+
     def test_dcnm_intf_override_all_but_eth_intf_types_only(self):
 
         # load the json from playbooks
@@ -6202,6 +7499,8 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        for switch in self.mock_fab_inv.values():
+            switch["switchRole"] = "leaf"
         self.mock_monitor_true_resp = self.config_data.get(
             "mock_monitor_true_resp"
         )
@@ -6233,6 +7532,319 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["replaced"]), 3)
         self.assertEqual(len(result["diff"][0]["overridden"]), 0)
+        self.assert_leaf_default_storm_control(
+            result["diff"][0]["replaced"]
+        )
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42(self):
+
+        self.prepare_nd42_deleted_all_eth_test()
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_fec_only(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        for switch in self.mock_fab_inv.values():
+            switch["switchRole"] = "leaf"
+        self.set_eth_overridden_payloads_to_role_default(
+            fec_interface="Ethernet3/2"
+        )
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 1)
+        replacement = result["diff"][0]["replaced"][0]
+        self.assertEqual(
+            replacement["interfaces"][0]["ifName"], "Ethernet3/2"
+        )
+        self.assertEqual(
+            replacement["interfaces"][0]["nvPairs"]["FEC"], "auto"
+        )
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_fail_closed(
+        self,
+    ):
+
+        invalid_capabilities = [
+            ("missing deletable", None, False, True, False),
+            ("null deletable", None, False, False, False),
+            ("blank deletable", "", False, False, False),
+            ("numeric zero deletable", 0, False, False, False),
+            ("unknown deletable", "unknown", False, False, False),
+            ("both false", False, False, False, False),
+            ("both missing", None, None, True, True),
+        ]
+
+        for (
+            description,
+            deletable,
+            edit_allowed,
+            omit_deletable,
+            omit_edit_allowed,
+        ) in invalid_capabilities:
+            with self.subTest(description):
+                self.prepare_nd42_deleted_all_eth_test(
+                    deletable=deletable,
+                    edit_allowed=edit_allowed,
+                    omit_deletable=omit_deletable,
+                    omit_edit_allowed=omit_edit_allowed,
+                )
+
+                set_module_args(
+                    dict(
+                        state="deleted",
+                        fabric="test_fabric",
+                        override_intf_types=["eth"],
+                        deploy=False,
+                        config=[],
+                    )
+                )
+                result = self.execute_module(changed=False, failed=False)
+
+                self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+                self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+                self.assertEqual(len(result["diff"][0]["deploy"]), 0)
+                self.assertEqual(len(result["diff"][0]["skipped"]), 3)
+                self.assertTrue(
+                    all(
+                        skipped["Reason"]
+                        == (
+                            "Physical interface reset is not allowed because "
+                            "neither deletable nor editAllowed is true"
+                        )
+                        for skipped in result["diff"][0]["skipped"]
+                    )
+                )
+                self.assertFalse(result.get("response"))
+                self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_capability_true(
+        self,
+    ):
+
+        valid_capabilities = [
+            ("boolean deletable", True, False, False, False),
+            ("string deletable", " TRUE ", None, False, True),
+            ("boolean edit allowed", False, True, False, False),
+            ("string edit allowed", None, " TRUE ", True, False),
+        ]
+
+        for (
+            description,
+            deletable,
+            edit_allowed,
+            omit_deletable,
+            omit_edit_allowed,
+        ) in valid_capabilities:
+            with self.subTest(description):
+                self.prepare_nd42_deleted_all_eth_test(
+                    deletable=deletable,
+                    edit_allowed=edit_allowed,
+                    omit_deletable=omit_deletable,
+                    omit_edit_allowed=omit_edit_allowed,
+                )
+
+                set_module_args(
+                    dict(
+                        state="deleted",
+                        fabric="test_fabric",
+                        override_intf_types=["eth"],
+                        deploy=False,
+                        config=[],
+                    )
+                )
+                result = self.execute_module(changed=True, failed=False)
+
+                self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+                self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_check_mode(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+
+        set_module_args(
+            dict(
+                state="deleted",
+                _ansible_check_mode=True,
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_switch_only(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[
+                    {
+                        "switch": ["192.168.1.108"],
+                        "deploy": False,
+                    }
+                ],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        replaced_names = {
+            payload["interfaces"][0]["ifName"]
+            for payload in result["diff"][0]["replaced"]
+        }
+        self.assertEqual(
+            replaced_names,
+            {"Ethernet1/1", "Ethernet1/2", "Ethernet3/2"},
+        )
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_switch_only_fail_closed(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test(
+            edit_allowed=False,
+            omit_deletable=True,
+        )
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[
+                    {
+                        "switch": ["192.168.1.108"],
+                        "deploy": False,
+                    }
+                ],
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 3)
+        self.assertTrue(
+            all(
+                skipped["Reason"]
+                == (
+                    "Physical interface reset is not allowed because neither "
+                    "deletable nor editAllowed is true"
+                )
+                for skipped in result["diff"][0]["skipped"]
+            )
+        )
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_switch_only_check_mode(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+
+        set_module_args(
+            dict(
+                state="deleted",
+                _ansible_check_mode=True,
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[
+                    {
+                        "switch": ["192.168.1.108"],
+                        "deploy": False,
+                    }
+                ],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_override_eth_intf_types_only_deleted_nd42_dependency(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        for intf in self.have_all_payloads_data["payloads"]["DATA"]:
+            if intf["ifName"] == "Ethernet1/1":
+                intf.pop("deletable", None)
+                intf["underlayPolicies"] = [
+                    {"source": "port-channel300"}
+                ]
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        replaced_names = {
+            payload["interfaces"][0]["ifName"]
+            for payload in result["diff"][0]["replaced"]
+        }
+        self.assertEqual(
+            replaced_names,
+            {"Ethernet1/2", "Ethernet3/2"},
+        )
+        self.assertTrue(
+            any(
+                deferred["Name"] == "Ethernet1/1"
+                and deferred["Source"] == "port-channel300"
+                for deferred in result["diff"][0]["deferred"]
+            )
+        )
 
     def test_dcnm_intf_override_eth_intf_types_skip_non_resolvable_deferred(
         self,

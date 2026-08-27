@@ -1469,6 +1469,29 @@ Parameters
             <tr>
                 <td colspan="5">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>deploy_mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>switch</b>&nbsp;&larr;</div></li>
+                                    <li>resource</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Controls the deployment method when deploy is enabled</div>
+                        <div>When set to &#x27;switch&#x27; (default), deployments use switch-level API with serial numbers</div>
+                        <div>When set to &#x27;resource&#x27;, deployments use resource-level API with VRF names</div>
+                        <div>This parameter is ignored for multicluster parent fabrics which always use switch-level deployment</div>
+                        <div>Applies to both create/deploy and delete/undeploy operations</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>fabric</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">

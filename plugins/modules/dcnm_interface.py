@@ -234,6 +234,11 @@ options:
               This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'l3'
             type: str
             default: ""
+          copy_description:
+            description:
+            - Copy the port-channel description to its member interfaces.
+            type: bool
+            default: false
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -404,6 +409,11 @@ options:
               This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
             type: str
             default: ""
+          copy_description:
+            description:
+            - Copy each peer port-channel description to that peer's member interfaces.
+            type: bool
+            default: false
       profile_subint:
         description:
         - Though the key shown here is 'profile_subint' the actual key to be used in playbook
@@ -1869,9 +1879,11 @@ import logging
 import re
 import sys
 import time
+from decimal import Decimal, InvalidOperation
 
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.common.validation import check_type_bool
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_get_bulk_api_support,
     dcnm_send,
@@ -1924,6 +1936,27 @@ class DcnmIntf:
             "BREAKOUT": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/breakout",
         },
     }
+
+    storm_control_level_pairs = (
+        (
+            "storm_control_broadcast_level_percent",
+            "storm_control_broadcast_level_pps",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+        ),
+        (
+            "storm_control_multicast_level_percent",
+            "storm_control_multicast_level_pps",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+        ),
+        (
+            "storm_control_unicast_level_percent",
+            "storm_control_unicast_level_pps",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
+        ),
+    )
 
     def __init__(self, module):
         self.class_name = self.__class__.__name__
@@ -1982,7 +2015,16 @@ class DcnmIntf:
             }
         ]
 
-        self.dcnm_version = dcnm_version_supported(self.module)
+        version_info = dcnm_version_supported(
+            self.module, return_full_version=True
+        )
+        if isinstance(version_info, tuple):
+            self.dcnm_version, self.ndfc_version = version_info
+        else:
+            # Preserve compatibility with tests and external mocks that still
+            # return only the historical major-version integer.
+            self.dcnm_version = version_info
+            self.ndfc_version = None
 
         # Check for bulk API support
         self.has_bulk_api = dcnm_get_bulk_api_support(self.module)
@@ -2077,8 +2119,23 @@ class DcnmIntf:
             "ENABLE_QOS": "enable_qos",
             "QOS_POLICY": "qos_policy",
             "QUEUING_POLICY": "queuing_policy",
+            "COPY_DESC": "copy_description",
+            "ENABLE_STORM_CONTROL": "enable_storm_control",
+            "STORM_CONTROL_ACTION": "storm_control_action",
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT": "storm_control_broadcast_level_percent",
+            "STORM_CONTROL_BCAST_LEVEL_PPS": "storm_control_broadcast_level_pps",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT": "storm_control_multicast_level_percent",
+            "STORM_CONTROL_MCAST_LEVEL_PPS": "storm_control_multicast_level_pps",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT": "storm_control_unicast_level_percent",
+            "STORM_CONTROL_UCAST_LEVEL_PPS": "storm_control_unicast_level_pps",
 
         }
+
+        # NDFC 12.4.1+ (ND 4.1.1+) parameters
+        if self._ndfc_version_gte("12.4.1"):
+            self.keymap.update({
+                "FEC": "fec",
+            })
 
         # New Interfaces
         self.pol_types = {
@@ -2178,6 +2235,17 @@ class DcnmIntf:
 
         msg = "ENTERED DcnmIntf: "
         self.log.debug(msg)
+
+    def _ndfc_version_gte(self, target):
+        """Check if NDFC version >= target. Uses tuple comparison on version segments."""
+        if not getattr(self, 'ndfc_version', None):
+            return False
+        try:
+            current = tuple(int(x) for x in self.ndfc_version.split(".")[:3])
+            required = tuple(int(x) for x in target.split(".")[:3])
+            return current >= required
+        except (ValueError, AttributeError):
+            return False
 
     def dcnm_intf_breakout_format(self, if_name):
         # Define the pattern to match '1/x/y' where x and y are integers
@@ -2310,6 +2378,160 @@ class DcnmIntf:
         else:
             return ""
 
+    @staticmethod
+    def dcnm_intf_storm_control_spec():
+        return dict(
+            enable_storm_control=dict(type="bool", default=False),
+            storm_control_action=dict(
+                type="str",
+                default="default",
+                choices=["shutdown", "trap", "default"],
+            ),
+            storm_control_broadcast_level_percent=dict(type="str", default=""),
+            storm_control_broadcast_level_pps=dict(
+                type="int", default=None, range_min=0, range_max=200000000
+            ),
+            storm_control_multicast_level_percent=dict(type="str", default=""),
+            storm_control_multicast_level_pps=dict(
+                type="int", default=None, range_min=0, range_max=200000000
+            ),
+            storm_control_unicast_level_percent=dict(type="str", default=""),
+            storm_control_unicast_level_pps=dict(
+                type="int", default=None, range_min=0, range_max=200000000
+            ),
+        )
+
+    @staticmethod
+    def dcnm_intf_normalize_storm_control_action(action):
+        """Translate the public default action to NDFC's low-level nvPair value."""
+        normalized_action = str(action).lower()
+        return "no" if normalized_action == "default" else normalized_action
+
+    def dcnm_intf_expand_storm_control_intent(self, profile):
+        """Mark dependent storm-control fields as explicitly managed."""
+        storm_keys = {
+            "enable_storm_control",
+            "storm_control_action",
+        }
+        for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+            storm_keys.update((percent_key, pps_key))
+
+        if not storm_keys.intersection(profile):
+            return
+
+        enabled = profile.get("enable_storm_control")
+        explicitly_disabled = False
+        if "enable_storm_control" in profile:
+            try:
+                explicitly_disabled = not check_type_bool(enabled)
+            except TypeError:
+                # Leave invalid values for the normal profile validation path,
+                # which reports the established user-facing error.
+                pass
+        if explicitly_disabled:
+            profile["storm_control_action"] = "default"
+            for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+                profile[percent_key] = ""
+                profile[pps_key] = None
+            return
+
+        percent_mode_requested = any(
+            profile.get(level_pair[0]) not in (None, "")
+            for level_pair in self.storm_control_level_pairs
+        )
+        pps_mode_requested = any(
+            profile.get(level_pair[1]) not in (None, "")
+            for level_pair in self.storm_control_level_pairs
+        )
+
+        # A rate mode applies to the whole interface, not just one traffic
+        # class. Mark every field in the opposite mode as explicitly cleared
+        # so merged state cannot copy stale values from HAVE.
+        if percent_mode_requested and not pps_mode_requested:
+            for level_pair in self.storm_control_level_pairs:
+                profile[level_pair[1]] = None
+        elif pps_mode_requested and not percent_mode_requested:
+            for level_pair in self.storm_control_level_pairs:
+                profile[level_pair[0]] = ""
+
+    def dcnm_intf_validate_storm_control_profile(self, profile, interface_name):
+        enabled = profile["enable_storm_control"]
+        action = profile["storm_control_action"]
+        dependent_values = [action] if action != "default" else []
+        percent_keys = []
+        pps_keys = []
+
+        for percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+            percent_value = profile.get(percent_key, "")
+            pps_value = profile.get(pps_key)
+
+            if percent_value not in (None, ""):
+                percent_keys.append(percent_key)
+                dependent_values.append(percent_value)
+                if not re.fullmatch(r"\d{1,3}(?:\.\d{1,2})?", percent_value):
+                    self.module.fail_json(
+                        msg="Invalid parameters in playbook: while processing interface "
+                        + interface_name
+                        + ", "
+                        + percent_key
+                        + " must be between 0 and 100 with at most two decimal places"
+                    )
+                try:
+                    if Decimal(percent_value) > Decimal("100"):
+                        raise InvalidOperation
+                except InvalidOperation:
+                    self.module.fail_json(
+                        msg="Invalid parameters in playbook: while processing interface "
+                        + interface_name
+                        + ", "
+                        + percent_key
+                        + " must be between 0 and 100 with at most two decimal places"
+                    )
+
+            if pps_value is not None:
+                pps_keys.append(pps_key)
+                dependent_values.append(pps_value)
+
+        if percent_keys and pps_keys:
+            self.module.fail_json(
+                msg="Invalid parameters in playbook: while processing interface "
+                + interface_name
+                + ", percentage and PPS storm-control levels are mutually exclusive; "
+                + "configure only one rate mode per interface. Percentage fields: "
+                + ", ".join(percent_keys)
+                + "; PPS fields: "
+                + ", ".join(pps_keys)
+            )
+
+        if not enabled and dependent_values:
+            self.module.fail_json(
+                msg="Invalid parameters in playbook: while processing interface "
+                + interface_name
+                + ", storm-control action and levels require enable_storm_control: true"
+            )
+
+    def dcnm_intf_set_storm_control_nv_pairs(self, profile, nv_pairs):
+        enabled = profile.get("enable_storm_control", False)
+        nv_pairs["ENABLE_STORM_CONTROL"] = enabled
+        storm_control_action = (
+            profile.get("storm_control_action", "default")
+            if enabled
+            else "default"
+        )
+        nv_pairs["STORM_CONTROL_ACTION"] = (
+            self.dcnm_intf_normalize_storm_control_action(
+                storm_control_action
+            )
+        )
+
+        for percent_key, pps_key, percent_nvpair, pps_nvpair in self.storm_control_level_pairs:
+            percent_value = profile.get(percent_key, "") if enabled else ""
+            pps_value = profile.get(pps_key) if enabled else None
+            nv_pairs[percent_nvpair] = (
+                "" if percent_value in (None, "") else str(percent_value)
+            )
+            nv_pairs[pps_nvpair] = "" if pps_value is None else str(pps_value)
+
     # Flatten the incoming config database and have the required fields updated.
     # This modified config DB will be used while creating payloads. To avoid
     # messing up the incoming config make a copy of it.
@@ -2366,6 +2588,7 @@ class DcnmIntf:
                         c[ck]["policy"] = self.pol_types[self.dcnm_version][
                             pol_ind_str
                         ]
+                        self.dcnm_intf_expand_storm_control_intent(c[ck])
                         self.pb_input.append(c[ck])
 
     def dcnm_intf_validate_interface_input(
@@ -2388,6 +2611,12 @@ class DcnmIntf:
 
         if prof_spec is not None:
 
+            if "enable_storm_control" in prof_spec:
+                for config_item in config:
+                    for _percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
+                        if config_item["profile"].get(pps_key) == "":
+                            config_item["profile"][pps_key] = None
+
             for item in intf_info:
 
                 plist.append(item["profile"])
@@ -2409,6 +2638,11 @@ class DcnmIntf:
                         + ", ".join(invalid_params)
                     )
                     self.module.fail_json(msg=mesg)
+
+                if "enable_storm_control" in prof_spec:
+                    self.dcnm_intf_validate_storm_control_profile(
+                        item["profile"], config[0]["name"]
+                    )
 
     def dcnm_intf_validate_port_channel_input(self, config):
 
@@ -2445,7 +2679,9 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
         )
+        pc_prof_spec_trunk.update(self.dcnm_intf_storm_control_spec())
 
         pc_prof_spec_access = dict(
             mode=dict(required=True, type="str"),
@@ -2471,7 +2707,9 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
         )
+        pc_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
 
         pc_prof_spec_l3 = dict(
             mode=dict(required=True, type="str"),
@@ -2489,6 +2727,7 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
         )
 
         pc_prof_spec_dot1q = dict(
@@ -2503,7 +2742,9 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            copy_description=dict(type="bool", default=False),
         )
+        pc_prof_spec_dot1q.update(self.dcnm_intf_storm_control_spec())
 
         if "trunk" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
@@ -2565,7 +2806,10 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
         )
+        vpc_prof_spec_trunk.update(self.dcnm_intf_storm_control_spec())
 
         vpc_prof_spec_access = dict(
             mode=dict(required=True, type="str"),
@@ -2592,7 +2836,10 @@ class DcnmIntf:
             enable_qos=dict(type="bool", default=False),
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
+            copy_description=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
         )
+        vpc_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
 
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
@@ -2693,6 +2940,11 @@ class DcnmIntf:
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
         )
+        eth_prof_spec_trunk.update(self.dcnm_intf_storm_control_spec())
+
+        eth_prof_spec_trunk.update({
+            "fec": dict(type="str", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+        })
 
         eth_prof_spec_access = dict(
             mode=dict(required=True, type="str"),
@@ -2716,6 +2968,11 @@ class DcnmIntf:
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
         )
+        eth_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
+
+        eth_prof_spec_access.update({
+            "fec": dict(type="str", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+        })
 
         eth_prof_spec_routed_host = dict(
             int_vrf=dict(type="str", default="default"),
@@ -2731,6 +2988,10 @@ class DcnmIntf:
             qos_policy=dict(type="str", default=""),
             queuing_policy=dict(type="str", default=""),
         )
+
+        eth_prof_spec_routed_host.update({
+            "fec": dict(type="str", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+        })
 
         eth_prof_spec_epl_routed_host = dict(
             mode=dict(required=True, type="str"),
@@ -2760,9 +3021,17 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            enable_cdp=dict(type="bool", default=True),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
+        eth_prof_spec_dot1q_tunnel_host.update(
+            self.dcnm_intf_storm_control_spec()
+        )
+
+        eth_prof_spec_dot1q_tunnel_host.update({
+            "fec": dict(type="str", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
+        })
 
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
@@ -2786,6 +3055,19 @@ class DcnmIntf:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_dot1q_tunnel_host
             )
+
+        fec_value = cfg[0]["profile"].get("fec")
+        if fec_value is not None:
+            if self.ndfc_version is None:
+                self.module.fail_json(
+                    msg=f"Interface '{cfg[0]['name']}': fec='{fec_value}' requested but "
+                    "NDFC version could not be determined. Ensure the controller is reachable."
+                )
+            if not self._ndfc_version_gte("12.4.1"):
+                self.module.fail_json(
+                    msg=f"Interface '{cfg[0]['name']}': fec requires NDFC >= 12.4.1 "
+                    f"(current: {self.ndfc_version})."
+                )
 
     def dcnm_intf_validate_vlan_interface_input(self, cfg):
 
@@ -3221,7 +3503,15 @@ class DcnmIntf:
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
+        if delem[profile]["mode"] in ("trunk", "access", "dot1q"):
+            self.dcnm_intf_set_storm_control_nv_pairs(
+                delem[profile], intf["interfaces"][0]["nvPairs"]
+            )
+
         if delem[profile]["mode"] != "monitor":
+            intf["interfaces"][0]["nvPairs"]["COPY_DESC"] = delem[profile][
+                "copy_description"
+            ]
             intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile][
                 "description"
             ]
@@ -3412,6 +3702,10 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
+        intf["interfaces"][0]["nvPairs"]["COPY_DESC"] = delem[profile][
+            "copy_description"
+        ]
+        intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"] = delem[profile]["enable_cdp"]
         if delem[profile].get("disable_lacp_suspend_individual"):
             intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
         else:
@@ -3441,6 +3735,9 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
         else:
             intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+        self.dcnm_intf_set_storm_control_nv_pairs(
+            delem[profile], intf["interfaces"][0]["nvPairs"]
+        )
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
             str(delem[profile].get("speed", ""))
@@ -3616,6 +3913,8 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
             else:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+            if self._ndfc_version_gte("12.4.1"):
+                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
         if delem[profile]["mode"] == "access":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
                 profile
@@ -3653,6 +3952,8 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
             else:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+            if self._ndfc_version_gte("12.4.1"):
+                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
         if delem[profile]["mode"] == "routed":
             intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
                 "int_vrf"
@@ -3686,6 +3987,8 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
             else:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+            if self._ndfc_version_gte("12.4.1"):
+                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         if delem[profile]["mode"] == "epl_routed":
@@ -3742,7 +4045,16 @@ class DcnmIntf:
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
             intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if self._ndfc_version_gte("12.4.1"):
+                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
+
+        if delem[profile]["mode"] in ("trunk", "access", "dot1q"):
+            self.dcnm_intf_set_storm_control_nv_pairs(
+                delem[profile], intf["interfaces"][0]["nvPairs"]
+            )
 
     def dcnm_intf_get_st_fex_payload(self, delem, intf, profile):
 
@@ -4403,6 +4715,10 @@ class DcnmIntf:
             else:
                 t_e2 = e2
 
+        if k == "STORM_CONTROL_ACTION":
+            t_e1 = self.dcnm_intf_normalize_storm_control_action(t_e1)
+            t_e2 = self.dcnm_intf_normalize_storm_control_action(t_e2)
+
         boolean_keys = [
             "ENABLE_ORPHAN_PORT",
             "DISABLE_LACP_SUSPEND",
@@ -4410,14 +4726,21 @@ class DcnmIntf:
             "ENABLE_PFC",
             "ENABLE_MONITOR",
             "CDP_ENABLE",
-            "ENABLE_QOS"
+            "ENABLE_QOS",
+            "COPY_DESC",
+            "ENABLE_STORM_CONTROL",
         ]
         if k in boolean_keys:
             # This is a special case where the value is a boolean and we need to compare it as such
             t_e1 = str(t_e1).lower()
             t_e2 = str(t_e2).lower()
 
-        numeric_keys = ["LACP_PORT_PRIO"]
+        numeric_keys = [
+            "LACP_PORT_PRIO",
+            "STORM_CONTROL_BCAST_LEVEL_PPS",
+            "STORM_CONTROL_MCAST_LEVEL_PPS",
+            "STORM_CONTROL_UCAST_LEVEL_PPS",
+        ]
         if k in numeric_keys:
             # Controller responses may return numeric nvPairs as strings while
             # desired state keeps them as integers. Normalize both sides so
@@ -4426,6 +4749,20 @@ class DcnmIntf:
                 t_e1 = int(t_e1)
                 t_e2 = int(t_e2)
             except (TypeError, ValueError):
+                pass
+
+        decimal_keys = [
+            "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+            "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+        ]
+        if k in decimal_keys:
+            try:
+                if t_e1 not in (None, ""):
+                    t_e1 = Decimal(str(t_e1))
+                if t_e2 not in (None, ""):
+                    t_e2 = Decimal(str(t_e2))
+            except InvalidOperation:
                 pass
 
         if t_e1 != t_e2:
@@ -4738,8 +5075,20 @@ class DcnmIntf:
                                         "SPEED",
                                         "ENABLE_QOS",
                                         "QOS_POLICY",
-                                        "QUEUING_POLICY"
+                                        "QUEUING_POLICY",
+                                        "COPY_DESC",
+                                        "ENABLE_STORM_CONTROL",
+                                        "STORM_CONTROL_ACTION",
+                                        "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+                                        "STORM_CONTROL_BCAST_LEVEL_PPS",
+                                        "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+                                        "STORM_CONTROL_MCAST_LEVEL_PPS",
+                                        "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+                                        "STORM_CONTROL_UCAST_LEVEL_PPS",
                                     ]
+
+                                    if self._ndfc_version_gte("12.4.1"):
+                                        keys_to_check.append("FEC")
 
                                     for key in keys_to_check:
                                         # Some GET payloads omit optional keys altogether. Keep comparing keys that were
@@ -4996,6 +5345,18 @@ class DcnmIntf:
                     return "false"
                 return sval
 
+            if key == "ENABLE_STORM_CONTROL":
+                if sval in ("true", "yes", "on", "1", "y", "t"):
+                    return "true"
+                if sval in ("", "false", "no", "off", "0", "n", "f"):
+                    return "false"
+                return sval
+
+            if key == "STORM_CONTROL_ACTION":
+                if sval in ("", "default", "no"):
+                    return "no"
+                return sval
+
             return sval
 
         if (
@@ -5100,6 +5461,33 @@ class DcnmIntf:
                 )
             ):
                 return "DCNM_INTF_NOT_MATCH"
+
+            # Storm control is supported by the leaf role-default trunk
+            # template. Treat omitted controller defaults as disabled, while
+            # detecting any enabled action or retained threshold as drift.
+            storm_control_keys = (
+                "ENABLE_STORM_CONTROL",
+                "STORM_CONTROL_ACTION",
+                "STORM_CONTROL_BCAST_LEVEL_PERCENT",
+                "STORM_CONTROL_BCAST_LEVEL_PPS",
+                "STORM_CONTROL_MCAST_LEVEL_PERCENT",
+                "STORM_CONTROL_MCAST_LEVEL_PPS",
+                "STORM_CONTROL_UCAST_LEVEL_PERCENT",
+                "STORM_CONTROL_UCAST_LEVEL_PPS",
+            )
+            for key in storm_control_keys:
+                if normalize_default_compare_value(
+                    key, intf_nv.get(key)
+                ) != normalize_default_compare_value(key, have_nv.get(key)):
+                    return "DCNM_INTF_NOT_MATCH"
+
+        if self._ndfc_version_gte("12.4.1"):
+            if (
+                str(intf_nv.get("FEC", "auto")).lower()
+                != str(have_nv.get("FEC", "auto")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+
         return "DCNM_INTF_MATCH"
 
     def dcnm_intf_get_default_eth_payload(self, ifname, sno, fabric):
@@ -5145,6 +5533,12 @@ class DcnmIntf:
             eth_payload["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = "none"
             eth_payload["interfaces"][0]["nvPairs"]["NATIVE_VLAN"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            self.dcnm_intf_set_storm_control_nv_pairs(
+                {}, eth_payload["interfaces"][0]["nvPairs"]
+            )
+
+            if self._ndfc_version_gte("12.4.1"):
+                eth_payload["interfaces"][0]["nvPairs"]["FEC"] = "auto"
 
             eth_payload["interfaces"][0]["ifName"] = ifname
             eth_payload["interfaces"][0]["serialNumber"] = sno
@@ -5163,6 +5557,9 @@ class DcnmIntf:
             eth_payload["interfaces"][0]["nvPairs"]["IP"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["PREFIX"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = ""
+
+            if self._ndfc_version_gte("12.4.1"):
+                eth_payload["interfaces"][0]["nvPairs"]["FEC"] = "auto"
 
             eth_payload["interfaces"][0]["ifName"] = ifname
             eth_payload["interfaces"][0]["serialNumber"] = sno
@@ -5461,6 +5858,10 @@ class DcnmIntf:
 
         return None
 
+    def dcnm_intf_capability_enabled(self, intf, capability):
+
+        return str(intf.get(capability)).strip().lower() == "true"
+
     def dcnm_intf_skip_non_resolvable_deferred(self, intf):
 
         self.changed_dict[0]["skipped"].append(
@@ -5470,6 +5871,37 @@ class DcnmIntf:
                 "Deletable": intf.get("deletable"),
                 "Underlay Policies": intf.get("underlayPolicies"),
                 "Reason": "Non-deletable interface without resolvable underlay policy source",
+            }
+        )
+
+    def dcnm_intf_skip_physical_default_not_allowed(self, intf):
+
+        self.changed_dict[0]["skipped"].append(
+            {
+                "Name": intf["ifName"],
+                "Alias": intf.get("alias"),
+                "Deletable": intf.get("deletable"),
+                "Edit Allowed": intf.get("editAllowed"),
+                "Reason": (
+                    "Physical interface reset is not allowed because neither "
+                    "deletable nor editAllowed is true"
+                ),
+            }
+        )
+
+    def dcnm_intf_skip_edit_allowed_underlay_dependency(self, intf):
+
+        self.changed_dict[0]["skipped"].append(
+            {
+                "Name": intf["ifName"],
+                "Alias": intf.get("alias"),
+                "Deletable": intf.get("deletable"),
+                "Edit Allowed": intf.get("editAllowed"),
+                "Underlay Policies": intf.get("underlayPolicies"),
+                "Reason": (
+                    "Physical interface reset through editAllowed was skipped "
+                    "because its underlay policy source is not being deleted"
+                ),
             }
         )
 
@@ -5638,24 +6070,50 @@ class DcnmIntf:
                         )
                         continue
 
-                if str(have["deletable"]).lower() == "false":
+                is_deleted = self.module.params["state"] == "deleted"
+                deletable = self.dcnm_intf_capability_enabled(
+                    have, "deletable"
+                )
+                edit_allowed = self.dcnm_intf_capability_enabled(
+                    have, "editAllowed"
+                )
+
+                # A bulk deleted request must make the same fail-closed
+                # capability decision as a named deleted request. Missing or
+                # unrecognized controller metadata is not authorization to
+                # reset a physical interface.
+                if is_deleted and not deletable and not edit_allowed:
+                    self.dcnm_intf_skip_physical_default_not_allowed(have)
+                    continue
+
+                raw_deletable_is_false = (
+                    str(have.get("deletable")).strip().lower() == "false"
+                )
+                needs_dependency_handling = (
+                    not deletable
+                    if is_deleted
+                    else raw_deletable_is_false
+                )
+
+                if needs_dependency_handling:
                     source = self.dcnm_intf_get_underlay_policy_source(have)
 
-                    if source is None:
-                        self.dcnm_intf_skip_non_resolvable_deferred(have)
+                    if source is not None:
+                        # Add this 'have to a deferred list. We will process this list once we have processed all the 'haves'
+                        defer_list.append(have)
+                        self.changed_dict[0]["deferred"].append(
+                            {
+                                "Name": name,
+                                "Deletable": have.get("deletable"),
+                                "Underlay Policies": have["underlayPolicies"],
+                                "Source": source,
+                            }
+                        )
                         continue
 
-                    # Add this 'have to a deferred list. We will process this list once we have processed all the 'haves'
-                    defer_list.append(have)
-                    self.changed_dict[0]["deferred"].append(
-                        {
-                            "Name": name,
-                            "Deletable": have["deletable"],
-                            "Underlay Policies": have["underlayPolicies"],
-                            "Source": source,
-                        }
-                    )
-                    continue
+                    if not is_deleted:
+                        self.dcnm_intf_skip_non_resolvable_deferred(have)
+                        continue
 
                 uelem = self.dcnm_intf_get_default_eth_payload(
                     name, sno, fabric
@@ -6083,12 +6541,21 @@ class DcnmIntf:
                                 )
                             ):
 
-                                if (
-                                    str(match_have["deletable"]).lower()
-                                    == "false"
-                                ):
+                                deletable = self.dcnm_intf_capability_enabled(
+                                    match_have, "deletable"
+                                )
+                                edit_allowed = self.dcnm_intf_capability_enabled(
+                                    match_have, "editAllowed"
+                                )
+                                if not deletable and not edit_allowed:
+                                    self.dcnm_intf_skip_physical_default_not_allowed(
+                                        match_have
+                                    )
                                     continue
 
+                                using_edit_allowed = (
+                                    not deletable and edit_allowed
+                                )
                                 uelem = self.dcnm_intf_get_default_eth_payload(
                                     intf["ifName"],
                                     intf["serialNumber"],
@@ -6118,9 +6585,26 @@ class DcnmIntf:
                                         match_have
                                     )
                                     if rc is True:
-                                        if self.dcnm_intf_should_defer_deleted_member_default(
-                                            match_have, iface
+                                        defer_member_default = (
+                                            self.dcnm_intf_should_defer_deleted_member_default(
+                                                match_have, iface
+                                            )
+                                        )
+                                        source = (
+                                            self.dcnm_intf_get_underlay_policy_source(
+                                                match_have
+                                            )
+                                        )
+                                        if (
+                                            using_edit_allowed
+                                            and source is not None
+                                            and not defer_member_default
                                         ):
+                                            self.dcnm_intf_skip_edit_allowed_underlay_dependency(
+                                                match_have
+                                            )
+                                            continue
+                                        if defer_member_default:
                                             self.dcnm_intf_defer_deleted_member_default(
                                                 intf["ifName"],
                                                 intf["serialNumber"],
@@ -7029,14 +7513,15 @@ def main():
         or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_VLAN"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["STRAIGHT_TROUGH_FEX"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["AA_FEX"]]
-        or dcnm_intf.diff_delete_deploy
+        or any(dcnm_intf.diff_delete_deploy)
+        or dcnm_intf.diff_create_breakout
+        or dcnm_intf.diff_delete_breakout
     ):
         dcnm_intf.result["changed"] = True
     else:
         module.exit_json(**dcnm_intf.result)
 
     if module.check_mode:
-        dcnm_intf.result["changed"] = False
         module.exit_json(**dcnm_intf.result)
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()

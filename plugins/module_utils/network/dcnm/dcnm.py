@@ -197,8 +197,11 @@ def validate_list_of_dicts(param_list, spec, module=None, check_extra_params=Fal
                 if choice:
                     if item not in choice:
                         invalid_params.append(
-                            "{0} : Invalid choice [ {0} ] provided for param [ {1} ]".format(
-                                item, param
+                            "{0} : Invalid choice [ {0} ] provided for param "
+                            "[ {1} ]. Valid choices are: {2}".format(
+                                item,
+                                param,
+                                ", ".join(str(value) for value in choice),
                             )
                         )
 
@@ -646,20 +649,23 @@ def dcnm_reset_connection(module):
     return conn.login(conn.get_option("remote_user"), conn.get_option("password"))
 
 
-def dcnm_version_supported(module):
+def dcnm_version_supported(module, return_full_version=False):
     """
-    Query DCNM/NDFC and return the major software version
+    Query DCNM/NDFC and return the software version.
 
     Parameters:
         module: String representing the module
+        return_full_version: Return ``(major_version, full_version)`` when True
 
     Returns:
-        int: Major software version for DCNM/NDFC
+        int or tuple: Major software version, optionally with the full version
     """
 
     method = "GET"
     supported = None
+    full_version = None
     data = None
+    responses = []
 
     paths = [
         "/fm/fmrest/about/version",
@@ -667,32 +673,45 @@ def dcnm_version_supported(module):
     ]
     for path in paths:
         response = dcnm_send(module, method, path)
-        if response["RETURN_CODE"] == 200:
-            data = response.get("DATA")
-            break
+        responses.append({path: response})
+        if not isinstance(response, dict):
+            continue
+        if response.get("RETURN_CODE") != 200:
+            continue
 
-    if data:
+        candidate = response.get("DATA")
+        if not isinstance(candidate, dict) or not candidate.get("version"):
+            continue
+
+        data = candidate
+        break
+
+    if isinstance(data, dict):
         # Parse version information
         # Examples:
         #   11.5(1), 12.0.1a'
         # For these examples 11 or 12 would be returned
-        raw_version = data["version"]
+        raw_version = data.get("version")
 
         if raw_version == "DEVEL":
             raw_version = "11.5(1)"
 
-        regex = r"^(\d+)\.\d+"
-        mo = re.search(regex, raw_version)
-        if mo:
-            supported = int(mo.group(1))
+        if isinstance(raw_version, str):
+            version_parts = re.findall(r"\d+", raw_version)
+            if len(version_parts) >= 2:
+                supported = int(version_parts[0])
+                full_version = ".".join(version_parts)
 
     if supported is None:
         msg = (
             "Unable to determine the DCNM/NDFC Software Version, "
-            + "RESP = "
-            + str(response)
+            + "RESPONSES = "
+            + str(responses)
         )
         module.fail_json(msg=msg)
+
+    if return_full_version:
+        return supported, full_version
 
     return supported
 
@@ -1321,20 +1340,32 @@ def sanitize_lan_attach_list(attach_objects: list) -> list:
 # Action plugin utilities
 
 
-def get_nd_version(action_module, task_vars, tmp):
+def get_nd_version(
+    action_module, task_vars, tmp, return_full_version=False
+):
     """
-    Query NDFC and return the exact software version
+    Query NDFC and return its software version.
 
     Parameters:
-        module: String representing the module
+        action_module: Action plugin instance used to execute dcnm_rest.
+        task_vars: Ansible task variables.
+        tmp: Action plugin temporary directory.
+        return_full_version: Return both the historical major/minor value and
+            the normalized full version when True.
 
     Returns:
-        float: Major software version for NDFC
+        float: Major/minor software version used for API path selection.
+        tuple: (major/minor version, normalized full version) when
+            return_full_version is True.
+        dict: Structured action-plugin failure when the version cannot be
+            retrieved or parsed.
     """
 
     method = "GET"
     supported = None
     data = None
+    full_version = None
+    errors = []
 
     paths = [
         "/fm/fmrest/about/version",
@@ -1350,15 +1381,37 @@ def get_nd_version(action_module, task_vars, tmp):
             task_vars=task_vars,
             tmp=tmp
         )
-        if not response.get("failed"):
-            # Extract response data section
-            resp = response.get("response")
-            if isinstance(resp, dict):
-                return_code = resp.get("RETURN_CODE")
-                if return_code == 200:
-                    data = resp.get("DATA")
-                    break
-    if data:
+        if not isinstance(response, dict):
+            errors.append(f"{path}: invalid response {response!r}")
+            continue
+        if response.get("failed"):
+            errors.append(
+                f"{path}: {response.get('msg', 'request failed')}"
+            )
+            continue
+
+        resp = response.get("response")
+        if not isinstance(resp, dict):
+            errors.append(f"{path}: invalid response payload {resp!r}")
+            continue
+
+        return_code = resp.get("RETURN_CODE")
+        if return_code != 200:
+            detail = resp.get("MESSAGE") or resp.get("DATA") or "request failed"
+            errors.append(f"{path}: HTTP {return_code}: {detail}")
+            continue
+
+        candidate = resp.get("DATA")
+        if not isinstance(candidate, dict) or not candidate.get("version"):
+            errors.append(
+                f"{path}: successful response did not contain DATA.version"
+            )
+            continue
+
+        data = candidate
+        break
+
+    if data is not None:
         # Parse version information
         # Examples:
         #   11.5(1), 12.0.1a, 12.4.1.321
@@ -1368,19 +1421,27 @@ def get_nd_version(action_module, task_vars, tmp):
         if raw_version == "DEVEL":
             raw_version = "11.5(1)"
 
-        # Capture major.minor version (first two digits with dot)
-        regex = r"^(\d+\.\d+)"
-        mo = re.search(regex, raw_version)
-        if mo:
-            supported = float(mo.group(1))
+        version_parts = re.findall(r"\d+", str(raw_version))
+        if len(version_parts) >= 2:
+            supported = float(".".join(version_parts[:2]))
+            full_version = ".".join(version_parts)
+        else:
+            errors.append(
+                f"controller returned malformed version {raw_version!r}"
+            )
 
-        if supported >= 11.0 and supported < 12.0:
+        if supported is not None and 11.0 <= supported < 12.0:
             # For versions 11.x, return only 11.0
             supported = 11.0
 
     if supported is None:
         error_msg = "Failed to retrieve NDFC version from API responses."
+        if errors:
+            error_msg += " " + "; ".join(errors)
         return action_module.error_handler.handle_failure(error_msg)
+
+    if return_full_version:
+        return supported, full_version
 
     return supported
 

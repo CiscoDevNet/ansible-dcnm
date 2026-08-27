@@ -116,6 +116,7 @@ class ActionModule(ActionBase):
         self.logger.info("NDFC Network Action Plugin initialized")
         # Default NDFC version
         self.ndfc_version = 12.2
+        self.ndfc_full_version = None
 
     def run(self, tmp=None, task_vars=None):
         """
@@ -165,8 +166,25 @@ class ActionModule(ActionBase):
             return result
 
         # Get ND version for API path selection (similar to dcnm_vrf)
-        self.ndfc_version = get_nd_version(self, task_vars, tmp)
-        display.vvv(f"ND version: {self.ndfc_version}")
+        version_info = get_nd_version(
+            self, task_vars, tmp, return_full_version=True
+        )
+        if isinstance(version_info, dict) and version_info.get("failed"):
+            return version_info
+
+        if isinstance(version_info, tuple):
+            self.ndfc_version, self.ndfc_full_version = version_info
+        else:
+            # Keep compatibility with tests or external mocks that return only
+            # the historical major/minor value.
+            self.ndfc_version = version_info
+            self.ndfc_full_version = None
+
+        display.vvv(
+            "ND version: {0} (full: {1})".format(
+                self.ndfc_version, self.ndfc_full_version
+            )
+        )
 
         if self.ndfc_version is None:
             result['failed'] = True
@@ -365,7 +383,15 @@ class ActionModule(ActionBase):
         display.vvv("=" * 80)
 
         # Validate fabric hierarchy before processing
-        configs, error_msg = self._split_config(fabrics, fabric_name, config, state, result, self.ndfc_version)
+        configs, error_msg = self._split_config(
+            fabrics,
+            fabric_name,
+            config,
+            state,
+            result,
+            self.ndfc_version,
+            self.ndfc_full_version,
+        )
 
         if configs is None:
             result['failed'] = True
@@ -417,7 +443,16 @@ class ActionModule(ActionBase):
             'cluster_name': fabric_info.get('cluster_name', '')
         }
 
-    def _split_config(self, fabrics, fabric_name, config, state, result, ndfc_version):
+    def _split_config(
+        self,
+        fabrics,
+        fabric_name,
+        config,
+        state,
+        result,
+        ndfc_version,
+        ndfc_full_version=None,
+    ):
         """
         Validate MSD fabric hierarchy and split network configurations for parent/child processing.
 
@@ -459,7 +494,9 @@ class ActionModule(ActionBase):
                     'fabric': fabric_name,
                     '_fabric_details': {
                         'fabric_type': 'multisite_parent'|'multisite_child'|'standalone'|'unknown',
-                        'cluster_name': 'cluster_name' or ''
+                        'cluster_name': 'cluster_name' or '',
+                        'nd_version': 12.4,
+                        'ndfc_version': '12.4.1.321'
                     },
                     'state': state,  # For parent: original state; For child: 'replaced' if parent state is 'overridden', otherwise original state
                     'config': [network_configs...]  # deploy defaults to True, child always inherits from parent
@@ -592,6 +629,7 @@ class ActionModule(ActionBase):
         parent_fabric_details = self._get_fabric_details(fabric_name, fabrics)
         # Add nd_version to fabric_details for module consumption (similar to dcnm_vrf)
         parent_fabric_details['nd_version'] = ndfc_version
+        parent_fabric_details['ndfc_version'] = ndfc_full_version
         parent_fabric_config = {
             'fabric': fabric_name,
             '_fabric_details': parent_fabric_details,
@@ -609,6 +647,7 @@ class ActionModule(ActionBase):
             child_fabric_details = self._get_fabric_details(child_fabric_name, fabrics)
             # Add nd_version to child fabric_details for module consumption (similar to dcnm_vrf)
             child_fabric_details['nd_version'] = ndfc_version
+            child_fabric_details['ndfc_version'] = ndfc_full_version
 
             # Determine child fabric state: if parent state is 'overridden', child state should be 'replaced'
             # Child state should never be 'overridden'

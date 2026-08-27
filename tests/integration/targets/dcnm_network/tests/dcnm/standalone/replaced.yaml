@@ -324,6 +324,149 @@
       - result.changed == false
   tags: replaced
 
+- name: REPLACED - TC5 - DELETED - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: replaced
+
+- name: REPLACED - TC5 - Baseline - Create Network with single-port attach and empty freeform
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net-portswap
+        vrf_name: Tenant-1
+        net_id: 7025
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2325
+        gw_ip_subnet: '192.168.32.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int1 }}"
+        deploy: true
+  register: result
+  tags: replaced
+
+- name: REPLACED - TC5 - ASSERT - Baseline created
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: replaced
+
+- name: REPLACED - TC5 - Swap the port on the existing attach (empty freeform)
+  cisco.dcnm.dcnm_network: &conf5_swap
+    fabric: "{{ test_data_common.fabric }}"
+    state: replaced
+    config:
+      - net_name: ansible-net-portswap
+        vrf_name: Tenant-1
+        net_id: 7025
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2325
+        gw_ip_subnet: '192.168.32.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int2 }}"
+        deploy: true
+  register: result
+  tags: replaced
+
+- name: REPLACED - TC5 - ASSERT - Port swap produced a diff
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+      - result.diff | length > 0
+  tags: replaced
+
+- name: REPLACED - TC5 - Idempotence - Rerun the port swap
+  cisco.dcnm.dcnm_network: *conf5_swap
+  register: result
+  tags: replaced
+
+- name: REPLACED - TC5 - ASSERT - Idempotent rerun changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: replaced
+
+- name: REPLACED - TC6 - DELETED - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: replaced
+
+- name: REPLACED - TC6 - Baseline - Create Network with attach and freeform config
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net-ffclr
+        vrf_name: Tenant-1
+        net_id: 7026
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2326
+        gw_ip_subnet: '192.168.35.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int1 }}"
+            freeform_config: "interface Vlan2326\n  description Old"
+        deploy: true
+  register: result
+  tags: replaced
+
+- name: REPLACED - TC6 - ASSERT - Baseline created
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: replaced
+
+- name: REPLACED - TC6 - Explicit clear of freeform config via empty string
+  cisco.dcnm.dcnm_network: &conf6_clear
+    fabric: "{{ test_data_common.fabric }}"
+    state: replaced
+    config:
+      - net_name: ansible-net-ffclr
+        vrf_name: Tenant-1
+        net_id: 7026
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2326
+        gw_ip_subnet: '192.168.35.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int1 }}"
+            freeform_config: ""
+        deploy: true
+  register: result
+  tags: replaced
+
+- name: REPLACED - TC6 - ASSERT - Freeform clear produced a diff
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+      - result.diff | length > 0
+      - result.diff[0].attach[0].freeform_config == ""
+  tags: replaced
+
+- name: REPLACED - TC6 - Idempotence - Rerun the freeform clear
+  cisco.dcnm.dcnm_network: *conf6_clear
+  register: result
+  tags: replaced
+
+- name: REPLACED - TC6 - ASSERT - Idempotent rerun changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: replaced
+
 ##############################################
 ##                 CLEAN-UP                 ##
 ##############################################

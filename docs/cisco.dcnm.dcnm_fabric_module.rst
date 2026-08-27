@@ -3996,8 +3996,8 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>External</li>
                                     <li>BGP</li>
+                                    <li>External</li>
                                     <li>IPFM</li>
                                     <li>ISN</li>
                                     <li>LAN_CLASSIC</li>

@@ -247,6 +247,151 @@
   tags: overridden
 
 
+- name: OVERRIDDEN - TC3 - DELETED - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: overridden
+
+- name: OVERRIDDEN - TC3 - Baseline - Create Network with single-port attach and empty freeform
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net-ovrswap
+        vrf_name: Tenant-1
+        net_id: 7035
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2335
+        gw_ip_subnet: '192.168.33.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int1 }}"
+        deploy: true
+  register: result
+  tags: overridden
+
+- name: OVERRIDDEN - TC3 - ASSERT - Baseline created
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: overridden
+
+- name: OVERRIDDEN - TC3 - Swap the port on the existing attach (empty freeform)
+  cisco.dcnm.dcnm_network: &conf3_swap
+    fabric: "{{ test_data_common.fabric }}"
+    state: overridden
+    config:
+      - net_name: ansible-net-ovrswap
+        vrf_name: Tenant-1
+        net_id: 7035
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2335
+        gw_ip_subnet: '192.168.33.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int2 }}"
+        deploy: true
+  register: result
+  tags: overridden
+
+- name: OVERRIDDEN - TC3 - ASSERT - Port swap produced a diff
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+      - result.diff | length > 0
+  tags: overridden
+
+- name: OVERRIDDEN - TC3 - Idempotence - Rerun the port swap
+  cisco.dcnm.dcnm_network: *conf3_swap
+  register: result
+  tags: overridden
+
+- name: OVERRIDDEN - TC3 - ASSERT - Idempotent rerun changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: overridden
+
+
+- name: OVERRIDDEN - TC4 - DELETED - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: overridden
+
+- name: OVERRIDDEN - TC4 - Baseline - Create Network with attach and freeform config
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: ansible-net-ovrffclr
+        vrf_name: Tenant-1
+        net_id: 7036
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2336
+        gw_ip_subnet: '192.168.36.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int1 }}"
+            freeform_config: "interface Vlan2336\n  description Old"
+        deploy: true
+  register: result
+  tags: overridden
+
+- name: OVERRIDDEN - TC4 - ASSERT - Baseline created
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+  tags: overridden
+
+- name: OVERRIDDEN - TC4 - Explicit clear of freeform config via empty string
+  cisco.dcnm.dcnm_network: &conf4_clear
+    fabric: "{{ test_data_common.fabric }}"
+    state: overridden
+    config:
+      - net_name: ansible-net-ovrffclr
+        vrf_name: Tenant-1
+        net_id: 7036
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2336
+        gw_ip_subnet: '192.168.36.1/24'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports:
+              - "{{ test_data_common.sw1_int1 }}"
+            freeform_config: ""
+        deploy: true
+  register: result
+  tags: overridden
+
+- name: OVERRIDDEN - TC4 - ASSERT - Freeform clear produced a diff
+  ansible.builtin.assert:
+    that:
+      - result.changed == true
+      - result.diff | length > 0
+      - result.diff[0].attach[0].freeform_config == ""
+  tags: overridden
+
+- name: OVERRIDDEN - TC4 - Idempotence - Rerun the freeform clear
+  cisco.dcnm.dcnm_network: *conf4_clear
+  register: result
+  tags: overridden
+
+- name: OVERRIDDEN - TC4 - ASSERT - Idempotent rerun changed flag is false
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+  tags: overridden
+
+
 ##############################################
 ##                 CLEAN-UP                 ##
 ##############################################
