@@ -1,0 +1,39 @@
+---
+# Seed brownfield-safe VRF baseline objects used by Crescit impact analysis.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+    deploy_changes: false
+    leaf1: 192.168.10.211
+    leaf2: 192.168.10.212
+
+  tasks:
+    - name: Seed application and shared-service VRFs
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - vrf_name: PROD_VRF_App
+            vrf_id: 50030
+            vlan_id: 2300
+            rd: "65000:30"
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            attach:
+              - ip_address: "{{ leaf1 }}"
+              - ip_address: "{{ leaf2 }}"
+
+          - vrf_name: PROD_VRF_Transit
+            vrf_id: 50040
+            vlan_id: 2400
+            rd: "65000:40"
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            attach:
+              - ip_address: "{{ leaf1 }}"
+              - ip_address: "{{ leaf2 }}"
+        deploy: "{{ deploy_changes }}"
