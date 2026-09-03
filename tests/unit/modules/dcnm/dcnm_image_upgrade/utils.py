@@ -24,7 +24,7 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
     ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details_v2 import \
     SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_stage import \
     ImageStage
