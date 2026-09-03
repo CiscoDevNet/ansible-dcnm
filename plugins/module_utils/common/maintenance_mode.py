@@ -23,9 +23,7 @@ import copy
 import inspect
 import logging
 
-from .api.v1.lan_fabric.rest.control.fabrics.fabrics import (
-    EpFabricConfigDeploy, EpMaintenanceModeDeploy, EpMaintenanceModeDisable,
-    EpMaintenanceModeEnable)
+from .api.v1.lan_fabric.rest.control.fabrics.fabrics import EpFabricConfigDeploy, EpMaintenanceModeDeploy, EpMaintenanceModeDisable, EpMaintenanceModeEnable
 from .conversion import ConversionUtils
 from .exceptions import ControllerResponseError
 from .properties import Properties
@@ -417,12 +415,8 @@ class MaintenanceMode:
                 self.results.action = "change_sytem_mode"
                 self.results.check_mode = self.check_mode
                 self.results.state = self.state
-                self.results.response_current = copy.deepcopy(
-                    self.rest_send.response_current
-                )
-                self.results.result_current = copy.deepcopy(
-                    self.rest_send.result_current
-                )
+                self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+                self.results.result_current = copy.deepcopy(self.rest_send.result_current)
                 self.results.register_task_result()
             except (TypeError, ValueError) as error:
                 raise ValueError(error) from error
@@ -588,9 +582,7 @@ class MaintenanceMode:
             self.results.action = action
             self.results.check_mode = self.check_mode
             self.results.state = self.state
-            self.results.response_current = copy.deepcopy(
-                self.rest_send.response_current
-            )
+            self.results.response_current = copy.deepcopy(self.rest_send.response_current)
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
             self.results.register_task_result()
 
