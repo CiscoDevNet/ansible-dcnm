@@ -1,4 +1,7 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+"""
+Unit tests for MaintenanceModeInfo class in tests/unit/module_utils/common/maintenance_mode_info.py
+"""
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,38 +24,34 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
+# pylint: disable=too-many-lines
 
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode_info import \
-    MaintenanceModeInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.tests.unit.mocks.mock_fabric_details_by_name import \
-    MockFabricDetailsByName
-from ansible_collections.cisco.dcnm.tests.unit.mocks.mock_switch_details import \
-    MockSwitchDetails
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode_info import MaintenanceModeInfo
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.tests.unit.mocks.mock_fabric_details_by_name import MockFabricDetailsByName
+from ansible_collections.cisco.dcnm.tests.unit.mocks.mock_switch_details import MockSwitchDetails
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    ResponseGenerator, does_not_raise, maintenance_mode_info_fixture,
-    responses_fabric_details_by_name, responses_switch_details)
+    ResponseGenerator,
+    does_not_raise,
+    maintenance_mode_info_fixture,
+    responses_fabric_details_by_name,
+    responses_switch_details,
+)
 
 FABRIC_NAME = "VXLAN_Fabric"
 CONFIG = ["192.168.1.2"]
@@ -61,71 +60,89 @@ PARAMS = {"state": "query", "check_mode": False}
 
 def test_maintenance_mode_info_00000(maintenance_mode_info) -> None:
     """
-    ### Classes and Methods
-    -   ``MaintenanceModeInfo()``
-            - ``__init__()``
+    # Summary
 
-    ### Summary
-    - Verify the __init__() method.
+    Verify the `__init__()` method.
 
-    ### Setup - Data
-    -   None
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   None
+    - MaintenanceModeInfo.__init__()
 
-    ### Trigger
-    -   ``MaintenanceModeInfo`` is instantiated.
+    ## Test
 
-    ### Expected Result
-    -   Class attributes are initialized to expected values.
-    -   Exception is not raised.
+    - Class attributes are initialized to expected values.
+    - Exception is not raised.
+
+    ## Setup - Data
+
+    - None
+
+    ## Setup - Code
+
+    - None
+
+    ## Trigger
+
+    - `MaintenanceModeInfo` is instantiated.
+
+    ## Expected Result
+
+    - Class attributes are initialized to expected values.
+    - Exception is not raised.
 
     """
     with does_not_raise():
         instance = maintenance_mode_info
-    assert instance._config is None
-    assert instance._info is None
-    assert instance._rest_send is None
-    assert instance._results is None
-
+    assert instance._config == []
+    assert instance._info == {}
+    assert instance._rest_send.class_name == "RestSend"
+    assert instance._results.class_name == "Results"
+    assert instance._valid_modes == ["inconsistent", "maintenance", "normal"]
     assert instance.action == "maintenance_mode_info"
     assert instance.class_name == "MaintenanceModeInfo"
-    assert instance.config is None
-    assert instance.rest_send is None
-    assert instance.results is None
 
-    assert isinstance(instance.conversion, ConversionUtils)
+    assert isinstance(instance._conversion, ConversionUtils)
 
 
 def test_maintenance_mode_info_00100(maintenance_mode_info) -> None:
     """
-    ### Classes and Methods
-    -   ``MaintenanceModeInfo()``
-            - ``verify_refresh_parameters()``
-            - ``refresh()``
+    # Summary
 
-    ### Summary
-    -   Verify MaintenanceModeInfo().refresh() raises ``ValueError`` when
-        ``config`` is not set.
+    Verify `MaintenanceModeInfo().refresh()` raises `ValueError` when
+    `config` is not set.
 
-    ### Setup - Data
-    -   None
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated.
-    -   Other required attributes are set.
+    - MaintenanceModeInfo.verify_refresh_parameters()
+    - MaintenanceModeInfo.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called without having first set ``config``.
+    ## Test
 
-    ### Expected Result
-    -   ``ValueError`` is raised.
-    -   Exception message matches expectations.
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
+    ## Setup - Data
+
+    - None
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated.
+    - Other required attributes are set.
+
+    ## Trigger
+
+    - `refresh()` is called without having first set `config`.
+
+    ## Expected Result
+
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
     """
     with does_not_raise():
         instance = maintenance_mode_info
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=PARAMS)
         instance.results = Results()
 
     match = r"MaintenanceModeInfo\.verify_refresh_parameters: "
@@ -137,28 +154,38 @@ def test_maintenance_mode_info_00100(maintenance_mode_info) -> None:
 
 def test_maintenance_mode_info_00110(maintenance_mode_info) -> None:
     """
-    ### Classes and Methods
-    -   ``MaintenanceModeInfo()``
-            - ``verify_refresh_parameters()``
-            - ``refresh()``
+    # Summary
 
-    ### Summary
-    -   Verify ``refresh()`` raises ``ValueError`` when ``rest_send``
-        is not set.
+    Verify `refresh()` raises `ValueError` when `rest_send` is not set.
 
-    ### Setup - Data
-    -   None
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated.
-    -   Other required attributes are set.
+    - MaintenanceModeInfo.verify_refresh_parameters()
+    - MaintenanceModeInfo.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called without having first set ``rest_send``.
+    ## Test
 
-    ### Expected Result
-    -   ``ValueError`` is raised.
-    -   Exception message matches expectations.
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
+    ## Setup - Data
+
+    - None
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated.
+    - Other required attributes are set.
+
+    ## Trigger
+
+    - `refresh()` is called without having first set `rest_send`.
+
+    ## Expected Result
+
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
     """
     with does_not_raise():
         instance = maintenance_mode_info
@@ -167,42 +194,6 @@ def test_maintenance_mode_info_00110(maintenance_mode_info) -> None:
 
     match = r"MaintenanceModeInfo\.verify_refresh_parameters: "
     match += r"MaintenanceModeInfo\.rest_send must be set before calling\s+"
-    match += r"refresh\."
-    with pytest.raises(ValueError, match=match):
-        instance.refresh()
-
-
-def test_maintenance_mode_info_00120(maintenance_mode_info) -> None:
-    """
-    ### Classes and Methods
-    -   ``MaintenanceModeInfo()``
-            - ``verify_refresh_parameters()``
-            - ``refresh()``
-
-    ### Summary
-    -   Verify ``refresh()`` raises ``ValueError`` when ``results`` is not set.
-
-    ### Setup - Data
-    -   None
-
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated.
-    -   Other required attributes are set.
-
-    ### Trigger
-    -   ``refresh()`` is called without having first set ``results``.
-
-    ### Expected Result
-    -   ``ValueError`` is raised.
-    -   Exception message matches expectations.
-    """
-    with does_not_raise():
-        instance = maintenance_mode_info
-        instance.rest_send = RestSend({})
-        instance.config = CONFIG
-
-    match = r"MaintenanceModeInfo\.verify_refresh_parameters: "
-    match += r"MaintenanceModeInfo\.results must be set before calling\s+"
     match += r"refresh\."
     with pytest.raises(ValueError, match=match):
         instance.refresh()
@@ -264,32 +255,41 @@ def test_maintenance_mode_info_00200(
     mock_message,
 ) -> None:
     """
-    ### Classes and Methods
-    - ``MaintenanceModeInfo()``
-        - ``refresh()``
+    # Summary
 
-    ### Summary
-    -   Verify ``refresh()`` raises ``ValueError`` when:
-            -   ``fabric_details`` properties ``rest_send`` and ``results``
-                raise ``TypeError``.
-            -   ``switch_details`` properties ``rest_send`` and ``results``
-                raise ``TypeError``.
+    Verify `refresh()` raises `ValueError` when:
+    - `fabric_details` properties `rest_send` and `results` raise `TypeError`.
+    - `switch_details` properties `rest_send` and `results` raise `TypeError`.
 
-    ### Setup - Data
-    -    None
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
-    -   ``FabricDetails()`` is mocked to conditionally raise ``TypeError``.
-    -   ``SwitchDetails()`` is mocked to conditionally raise ``TypeError``.
+    - MaintenanceModeInfo.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called.
+    ## Test
 
-    ### Expected Result
-    -   ``ValueError`` is raised.
-    -   Exception message matches expectations.
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
+    ## Setup - Data
+
+    - None
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+    - `FabricDetails()` is mocked to conditionally raise `TypeError`.
+    - `SwitchDetails()` is mocked to conditionally raise `TypeError`.
+
+    ## Trigger
+
+    - `refresh()` is called.
+
+    ## Expected Result
+
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -318,8 +318,8 @@ def test_maintenance_mode_info_00200(
     mock_switch_details.mock_message = mock_message
     mock_switch_details.mock_property = mock_property
 
-    monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
-    monkeypatch.setattr(instance, "switch_details", mock_switch_details)
+    monkeypatch.setattr(instance, "_fabric_details", mock_fabric_details)
+    monkeypatch.setattr(instance, "_switch_details", mock_switch_details)
 
     with does_not_raise():
         instance.config = CONFIG
@@ -351,31 +351,42 @@ def test_maintenance_mode_info_00210(
     mock_message,
 ) -> None:
     """
-    ### Classes and Methods
-    - MaintenanceModeInfo()
-        - refresh()
+    # Summary
 
-    ### Summary
-    -   Verify ``refresh()`` raises ``ValueError`` when
-        ``switch_details.serial_number`` raises ``ValueError``.
+    Verify `refresh()` raises `ValueError` when
+    `switch_details.serial_number` raises `ValueError`.
 
-    ### Setup - Data
-    -   ``responses_SwitchDetails.json``:
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
-    -   ``SwitchDetails()`` is mocked to conditionally raise
-        ``ValueError`` in the ``serial_number.getter`` property.
+    - MaintenanceModeInfo.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called.
+    ## Test
 
-    ### Expected Result
-    -   ``ValueError`` is raised.
-    -   Exception message matches expectations.
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
+    ## Setup - Data
+
+    - `responses_SwitchDetails.json`:
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+    - `SwitchDetails()` is mocked to conditionally raise
+      `ValueError` in the `serial_number.getter` property.
+
+    ## Trigger
+
+    - `refresh()` is called.
+
+    ## Expected Result
+
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -398,7 +409,7 @@ def test_maintenance_mode_info_00210(
     mock_switch_details.mock_message = mock_message
     mock_switch_details.mock_property = mock_property
 
-    monkeypatch.setattr(instance, "switch_details", mock_switch_details)
+    monkeypatch.setattr(instance, "_switch_details", mock_switch_details)
 
     with does_not_raise():
         instance.config = CONFIG
@@ -411,43 +422,54 @@ def test_maintenance_mode_info_00210(
 
 def test_maintenance_mode_info_00300() -> None:
     """
-    ### Classes and Methods
-    - MaintenanceModeInfo()
-        - __init__()
-        - refresh()
+    # Summary
 
-    ### Summary
-    Verify ``refresh()`` raises ``ValueError`` when
-    ``switch_details._get()`` raises ``ValueError``.
+    Verify `refresh()` raises `ValueError` when
+    `switch_details._get()` raises `ValueError`.
 
     This happens when the switch is not found in the response from the controller.
 
-    ### Setup - Data
-    -   ``ipAddress`` is set to something other than 192.168.1.2
-    -   ``responses_SwitchDetails.json``:
-            -   "DATA[0].fabricName: VXLAN_Fabric",
-            -   "DATA[0].freezeMode: null",
-            -   "DATA[0].ipAddress: 192.168.1.1",
-            -   "DATA[0].mode: Normal",
-            -   "DATA[0].serialNumber: FDO211218FV",
-            -   "DATA[0].switchRole: leaf",
-            -   "DATA[0].systemMode: Normal"
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
-    -   ``responses_FabricDetailsByName.json``:
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    - MaintenanceModeInfo.__init__()
+    - MaintenanceModeInfo.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called.
+    ## Test
 
-    ### Expected Result
-    -   ``ValueError`` is raised.
-    -   Exception message matches expectations.
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
+    ## Setup - Data
+
+    - `ipAddress` is set to something other than 192.168.1.2
+    - `responses_SwitchDetails.json`:
+      - "DATA[0].fabricName: VXLAN_Fabric",
+      - "DATA[0].freezeMode: null",
+      - "DATA[0].ipAddress: 192.168.1.1",
+      - "DATA[0].mode: Normal",
+      - "DATA[0].serialNumber: FDO211218FV",
+      - "DATA[0].switchRole: leaf",
+      - "DATA[0].systemMode: Normal"
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+    - `responses_FabricDetailsByName.json`:
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+
+    ## Trigger
+
+    - `refresh()` is called.
+
+    ## Expected Result
+
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -477,45 +499,56 @@ def test_maintenance_mode_info_00300() -> None:
 
 def test_maintenance_mode_info_00310() -> None:
     """
-    ### Classes and Methods
-    - MaintenanceModeInfo()
-        - __init__()
-        - refresh()
+    # Summary
 
-    ### Summary
-    Verify ``refresh()`` raises ``ValueError`` when
-    ``switch_details.serial_number`` is ``None``.
+    Verify `refresh()` raises `ValueError` when
+    `switch_details.serial_number` is `None`.
 
     This happens when the switch exists on the controller but its
     serial_number is null.  This is a negative test case since we
     expect the serial_number to be set.
 
-    ### Setup - Data
-    -   ``ipAddress`` is set to something other than 192.168.1.2
-    -   ``responses_SwitchDetails.json``:
-            -   "DATA[0].fabricName: VXLAN_Fabric",
-            -   "DATA[0].freezeMode: null",
-            -   "DATA[0].ipAddress: 192.168.1.2",
-            -   "DATA[0].mode: Normal",
-            -   "DATA[0].serialNumber: null",
-            -   "DATA[0].switchRole: leaf",
-            -   "DATA[0].systemMode: Normal"
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
-    -   ``responses_FabricDetailsByName.json``:
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    - MaintenanceModeInfo.__init__()
+    - MaintenanceModeInfo.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called.
+    ## Test
 
-    ### Expected Result
-    -   ``ValueError`` is raised.
-    -   Exception message matches expectations.
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
+    ## Setup - Data
+
+    - `ipAddress` is set to something other than 192.168.1.2
+    - `responses_SwitchDetails.json`:
+      - "DATA[0].fabricName: VXLAN_Fabric",
+      - "DATA[0].freezeMode: null",
+      - "DATA[0].ipAddress: 192.168.1.2",
+      - "DATA[0].mode: Normal",
+      - "DATA[0].serialNumber: null",
+      - "DATA[0].switchRole: leaf",
+      - "DATA[0].systemMode: Normal"
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+    - `responses_FabricDetailsByName.json`:
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+
+    ## Trigger
+
+    - `refresh()` is called.
+
+    ## Expected Result
+
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -565,38 +598,49 @@ def test_maintenance_mode_info_00400(
     mock_message,
 ) -> None:
     """
-    ### Classes and Methods
-    - MaintenanceModeInfo()
-        - refresh()
+    # Summary
 
-    ### Summary
-    -   Verify ``refresh()`` raises ``ValueError`` when
-        ``fabric_details.filter`` raises ``ValueError``.
+    Verify `refresh()` raises `ValueError` when
+    `fabric_details.filter` raises `ValueError`.
 
-    ### Setup - Data
-    -   ``responses_SwitchDetails.json``:
-            -   "DATA[0].fabricName: VXLAN_Fabric",
-            -   "DATA[0].freezeMode: null",
-            -   "DATA[0].ipAddress: 192.168.1.2",
-            -   "DATA[0].mode: Normal",
-            -   "DATA[0].serialNumber: FDO211218FV",
-            -   "DATA[0].switchRole: leaf",
-            -   "DATA[0].systemMode: Normal"
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Code Flow - Setup
-    -   ``MaintenanceModeInfo()`` is instantiated.
-    -   Required attributes are set.
-    -   ``FabricDetailsByName().filter`` is mocked to conditionally raise
-        ``ValueError``.
+    - MaintenanceModeInfo.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called.
+    ## Test
 
-    ### Expected Result
-    -   ``ValueError`` is raised.
-    -   Exception message matches expectations.
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
+    ## Setup - Data
+
+    - `responses_SwitchDetails.json`:
+      - "DATA[0].fabricName: VXLAN_Fabric",
+      - "DATA[0].freezeMode: null",
+      - "DATA[0].ipAddress: 192.168.1.2",
+      - "DATA[0].mode: Normal",
+      - "DATA[0].serialNumber: FDO211218FV",
+      - "DATA[0].switchRole: leaf",
+      - "DATA[0].systemMode: Normal"
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated.
+    - Required attributes are set.
+    - `FabricDetailsByName().filter` is mocked to conditionally raise
+      `ValueError`.
+
+    ## Trigger
+
+    - `refresh()` is called.
+
+    ## Expected Result
+
+    - `ValueError` is raised.
+    - Exception message matches expectations.
+
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -619,7 +663,7 @@ def test_maintenance_mode_info_00400(
     mock_fabric_details.mock_message = mock_message
     mock_fabric_details.mock_property = mock_property
 
-    monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
+    monkeypatch.setattr(instance, "_fabric_details", mock_fabric_details)
 
     with does_not_raise():
         instance.config = CONFIG
@@ -632,39 +676,49 @@ def test_maintenance_mode_info_00400(
 
 def test_maintenance_mode_info_00500() -> None:
     """
-    ### Classes and Methods
-    - MaintenanceModeInfo()
-        - refresh()
+    # Summary
 
-    ### Summary
-    -   Verify when ``freezeMode`` == null in the response,
-        ``freezeMode`` is set to False.
+    Verify when `freezeMode` == null in the response,
+    `freezeMode` is set to False.
 
-    ### Setup - Data
-    -   ``responses_SwitchDetails.json``:
-            -   "DATA[0].fabricName: VXLAN_Fabric",
-            -   "DATA[0].freezeMode: null",
-            -   "DATA[0].ipAddress: 192.168.1.2",
-            -   "DATA[0].mode: Normal",
-            -   "DATA[0].serialNumber: FDO211218FV",
-            -   "DATA[0].switchRole: leaf",
-            -   "DATA[0].systemMode: Normal"
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
-    -   ``responses_FabricDetailsByName.json``:
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    - MaintenanceModeInfo.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called.
+    ## Test
 
-    ### Expected Result
-    -   Exception is not raised.
-    -   ``MaintenanceModeInfo().results`` contains expected data.
+    - Exception is not raised.
+    - `MaintenanceModeInfo().results` contains expected data.
+
+    ## Setup - Data
+
+    - `responses_SwitchDetails.json`:
+      - "DATA[0].fabricName: VXLAN_Fabric",
+      - "DATA[0].freezeMode: null",
+      - "DATA[0].ipAddress: 192.168.1.2",
+      - "DATA[0].mode: Normal",
+      - "DATA[0].serialNumber: FDO211218FV",
+      - "DATA[0].switchRole: leaf",
+      - "DATA[0].systemMode: Normal"
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+    - `responses_FabricDetailsByName.json`:
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+
+    ## Trigger
+
+    - `refresh()` is called.
+
+    ## Expected Result
+
+    - Exception is not raised.
+    - `MaintenanceModeInfo().results` contains expected data.
 
     """
     method_name = inspect.stack()[0][3]
@@ -697,40 +751,50 @@ def test_maintenance_mode_info_00500() -> None:
 
 def test_maintenance_mode_info_00510() -> None:
     """
-    ### Classes and Methods
-    - MaintenanceModeInfo()
-        - __init__()
-        - refresh()
+    # Summary
 
-    ### Summary
-    -   Verify happy path with:
-            -   switch_details: freezeMode is True
+    Verify happy path with:
+    - switch_details: freezeMode is True
 
-    ### Setup - Data
-    -   ``responses_SwitchDetails.json``:
-            -   "DATA[0].fabricName: VXLAN_Fabric",
-            -   "DATA[0].freezeMode: true",
-            -   "DATA[0].ipAddress: 192.168.1.2",
-            -   "DATA[0].mode: Normal",
-            -   "DATA[0].serialNumber: FDO211218FV",
-            -   "DATA[0].switchRole: leaf",
-            -   "DATA[0].systemMode: Normal"
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
-    -   ``responses_FabricDetailsByName.json``:
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    - MaintenanceModeInfo.__init__()
+    - MaintenanceModeInfo.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called.
+    ## Test
 
-    ### Expected Result
-    -   Exception is not raised.
-    -   ``MaintenanceModeInfo().results`` contains expected data.
+    - Exception is not raised.
+    - `MaintenanceModeInfo().results` contains expected data.
+
+    ## Setup - Data
+
+    - `responses_SwitchDetails.json`:
+      - "DATA[0].fabricName: VXLAN_Fabric",
+      - "DATA[0].freezeMode: true",
+      - "DATA[0].ipAddress: 192.168.1.2",
+      - "DATA[0].mode: Normal",
+      - "DATA[0].serialNumber: FDO211218FV",
+      - "DATA[0].switchRole: leaf",
+      - "DATA[0].systemMode: Normal"
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+    - `responses_FabricDetailsByName.json`:
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+
+    ## Trigger
+
+    - `refresh()` is called.
+
+    ## Expected Result
+
+    - Exception is not raised.
+    - `MaintenanceModeInfo().results` contains expected data.
 
     """
     method_name = inspect.stack()[0][3]
@@ -763,41 +827,52 @@ def test_maintenance_mode_info_00510() -> None:
 
 def test_maintenance_mode_info_00520() -> None:
     """
-    ### Classes and Methods
-    - MaintenanceModeInfo()
-        - __init__()
-        - refresh()
+    # Summary
 
-    ### Summary
-    -   Verify:
-            -   ``mode`` == "inconsistent" when ``mode`` != ``systemMode``.
+    Verify:
+    - `mode` == "inconsistent" when `mode` != `systemMode`.
 
-    ### Setup - Data
-    -   ``responses_SwitchDetails.json``:
-            -   DATA[0].fabricName: VXLAN_Fabric
-            -   DATA[0].freezeMode: true
-            -   DATA[0].ipAddress: 192.168.1.2
-            -   DATA[0].mode: Normal
-            -   DATA[0].serialNumber: FDO211218FV
-            -   DATA[0].switchRole: leaf
-            -   DATA[0].systemMode: Maintenance
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
-    -   ``responses_FabricDetailsByName.json``:
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    - MaintenanceModeInfo.__init__()
+    - MaintenanceModeInfo.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called.
+    ## Test
 
-    ### Expected Result
-    -   Conditions in Summary are confirmed.
-    -   Exception is not raised.
-    -   ``MaintenanceModeInfo().results`` contains expected data.
+    - Conditions in Summary are confirmed.
+    - Exception is not raised.
+    - `MaintenanceModeInfo().results` contains expected data.
+
+    ## Setup - Data
+
+    - `responses_SwitchDetails.json`:
+      - DATA[0].fabricName: VXLAN_Fabric
+      - DATA[0].freezeMode: true
+      - DATA[0].ipAddress: 192.168.1.2
+      - DATA[0].mode: Normal
+      - DATA[0].serialNumber: FDO211218FV
+      - DATA[0].switchRole: leaf
+      - DATA[0].systemMode: Maintenance
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+    - `responses_FabricDetailsByName.json`:
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+
+    ## Trigger
+
+    - `refresh()` is called.
+
+    ## Expected Result
+
+    - Conditions in Summary are confirmed.
+    - Exception is not raised.
+    - `MaintenanceModeInfo().results` contains expected data.
 
     """
     method_name = inspect.stack()[0][3]
@@ -821,6 +896,8 @@ def test_maintenance_mode_info_00520() -> None:
         instance.refresh()
         instance.filter = CONFIG[0]
     assert instance.mode == "inconsistent"
+    assert instance.results.response is not None
+    assert instance.results.result is not None
     assert instance.results.response[0]["DATA"][0]["mode"] == "Normal"
     assert instance.results.response[0]["DATA"][0]["systemMode"] == "Maintenance"
     assert instance.results.result[0]["success"] is True
@@ -831,45 +908,55 @@ def test_maintenance_mode_info_00520() -> None:
 
 def test_maintenance_mode_info_00600() -> None:
     """
-    ### Classes and Methods
-    -   MaintenanceModeInfo()
-            -   refresh()
-    -   FabricDetailsByName()
-            -   refresh()
+    # Summary
 
-    ### Summary
-    -   Verify:
-            -   ``fabric_read_only`` is set to True when ``IS_READ_ONLY``
-                is true in the controller response (FabricDetailsByName).
+    Verify:
+    - `fabric_read_only` is set to True when `IS_READ_ONLY`
+      is true in the controller response (FabricDetailsByName).
 
-    ### Setup - Data
-    -   ``responses_SwitchDetails.json``:
-            -   DATA[0].fabricName: LAN_Classic
-            -   DATA[0].freezeMode: null
-            -   DATA[0].ipAddress: 192.168.1.2
-            -   DATA[0].mode: Normal
-            -   DATA[0].serialNumber: FDO211218FV
-            -   DATA[0].switchRole: leaf
-            -   DATA[0].systemMode: Normal
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
-    -   ``responses_FabricDetailsByName.json``:
-            -   DATA[0].nvPairs.FABRIC_NAME: LAN_Classic
-            -   DATA[0].nvPairs.IS_READ_ONLY: true
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    - MaintenanceModeInfo.refresh()
+    - FabricDetailsByName.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called.
+    ## Test
 
-    ### Expected Result
-    -   Conditions in Summary are confirmed.
-    -   Exception is not raised.
-    -   ``MaintenanceModeInfo().results`` contains expected data.
+    - Conditions in Summary are confirmed.
+    - Exception is not raised.
+    - `MaintenanceModeInfo().results` contains expected data.
+
+    ## Setup - Data
+
+    - `responses_SwitchDetails.json`:
+      - DATA[0].fabricName: LAN_Classic
+      - DATA[0].freezeMode: null
+      - DATA[0].ipAddress: 192.168.1.2
+      - DATA[0].mode: Normal
+      - DATA[0].serialNumber: FDO211218FV
+      - DATA[0].switchRole: leaf
+      - DATA[0].systemMode: Normal
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+    - `responses_FabricDetailsByName.json`:
+      - DATA[0].nvPairs.FABRIC_NAME: LAN_Classic
+      - DATA[0].nvPairs.IS_READ_ONLY: true
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+
+    ## Trigger
+
+    - `refresh()` is called.
+
+    ## Expected Result
+
+    - Conditions in Summary are confirmed.
+    - Exception is not raised.
+    - `MaintenanceModeInfo().results` contains expected data.
 
     """
     method_name = inspect.stack()[0][3]
@@ -892,6 +979,7 @@ def test_maintenance_mode_info_00600() -> None:
         instance.results = Results()
         instance.refresh()
         instance.filter = CONFIG[0]
+    assert instance.results.result is not None
     assert instance.fabric_read_only is True
     assert instance.results.result[0]["success"] is True
     assert instance.results.result[1]["success"] is True
@@ -901,50 +989,61 @@ def test_maintenance_mode_info_00600() -> None:
 
 def test_maintenance_mode_info_00700() -> None:
     """
-    ### Classes and Methods
-    -   MaintenanceModeInfo()
-            -   refresh()
-    -   SwitchDetails()
-            -   refresh()
-    -   FabricDetailsByName()
-            -   refresh()
+    # Summary
 
-    ### Summary
-    -   Verify:
-            -   ``role`` is set to "na" when ``switchRole`` is null in the
-                controller response.
+    Verify:
+    - `role` is set to "na" when `switchRole` is null in the
+      controller response.
 
-    ### Setup - Data
-    -   ``responses_SwitchDetails.json``:
-            -   DATA[0].fabricName: LAN_Classic
-            -   DATA[0].freezeMode: null
-            -   DATA[0].ipAddress: 192.168.1.2
-            -   DATA[0].mode: Normal
-            -   DATA[0].serialNumber: FDO211218FV
-            -   DATA[0].switchRole: null
-            -   DATA[0].systemMode: Normal
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
-    -   ``responses_FabricDetailsByName.json``:
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    - MaintenanceModeInfo.refresh()
+    - SwitchDetails.refresh()
+    - FabricDetailsByName.refresh()
 
-    ### Trigger
-    -   ``refresh()`` is called.
+    ## Test
 
-    ### Expected Result
-    -   Conditions in Summary are confirmed.
-    -   Exception is not raised.
-    -   ``MaintenanceModeInfo().results`` contains expected data.
+    - Conditions in Summary are confirmed.
+    - Exception is not raised.
+    - `MaintenanceModeInfo().results` contains expected data.
 
-    ### NOTES
-    -   ``SwitchDetails().role`` is an alias of ``SwitchDetails().switch_role``.
-    -   ``MaintenanceModeInfo().role`` is set based on the value of
-        ``SwitchDetails().role``.
+    ## Setup - Data
+
+    - `responses_SwitchDetails.json`:
+      - DATA[0].fabricName: LAN_Classic
+      - DATA[0].freezeMode: null
+      - DATA[0].ipAddress: 192.168.1.2
+      - DATA[0].mode: Normal
+      - DATA[0].serialNumber: FDO211218FV
+      - DATA[0].switchRole: null
+      - DATA[0].systemMode: Normal
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+    - `responses_FabricDetailsByName.json`:
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+
+    ## Trigger
+
+    - `refresh()` is called.
+
+    ## Expected Result
+
+    - Conditions in Summary are confirmed.
+    - Exception is not raised.
+    - `MaintenanceModeInfo().results` contains expected data.
+
+    ## Notes
+
+    - `SwitchDetails().role` is an alias of `SwitchDetails().switch_role`.
+    - `MaintenanceModeInfo().role` is set based on the value of
+      `SwitchDetails().role`.
+
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -967,6 +1066,7 @@ def test_maintenance_mode_info_00700() -> None:
         instance.refresh()
         instance.filter = CONFIG[0]
     assert instance.role == "na"
+    assert instance.results.result is not None
     assert instance.results.result[0]["success"] is True
     assert instance.results.result[1]["success"] is True
     assert instance.results.result[0]["found"] is True
@@ -975,30 +1075,38 @@ def test_maintenance_mode_info_00700() -> None:
 
 def test_maintenance_mode_info_00800() -> None:
     """
-    ### Classes and Methods
-    -   MaintenanceModeInfo()
-            -   refresh()
-    -   SwitchDetails()
-            -   refresh()
-    -   FabricDetailsByName()
-            -   refresh()
+    # Summary
 
-    ### Summary
-    -   Verify:
-            -   _get() raises ``ValueError`` if ``filter`` is not set.
+    Verify:
+    - _get() raises `ValueError` if `filter` is not set.
 
-    ### Setup - Data
+    ## Classes and Methods
+
+    - MaintenanceModeInfo.refresh()
+    - SwitchDetails.refresh()
+    - FabricDetailsByName.refresh()
+
+    ## Test
+
+    - Conditions in Summary are confirmed.
+
+    ## Setup - Data
+
     None
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
+    ## Setup - Code
 
-    ### Trigger
-    -   ``MaintenanceModeInfo().role`` is accessed without setting
-        ``filter``.
+    - `MaintenanceModeInfo()` is instantiated
 
-    ### Expected Result
-    -   Conditions in Summary are confirmed.
+    ## Trigger
+
+    - `MaintenanceModeInfo().role` is accessed without setting
+      `filter`.
+
+    ## Expected Result
+
+    - Conditions in Summary are confirmed.
+
     """
     with does_not_raise():
         instance = MaintenanceModeInfo(PARAMS)
@@ -1012,49 +1120,56 @@ def test_maintenance_mode_info_00800() -> None:
 
 def test_maintenance_mode_info_00810() -> None:
     """
-    ### Classes and Methods
-    -   MaintenanceModeInfo()
-            -   refresh()
-    -   SwitchDetails()
-            -   refresh()
-    -   FabricDetailsByName()
-            -   refresh()
+    # Summary
 
-    ### Summary
-    -   Verify:
-            -   ``_get()`` raises ``ValueError`` if ``filter`` (switch IP)
-                is not found in the controller response when the user accesses
-                a property.
+    Verify:
+    - `_get()` raises `ValueError` if `filter` (switch IP)
+      is not found in the controller response when the user accesses
+      a property.
 
-    ### Setup - Data
-    -   ``CONFIG``: ["192.168.1.2"]
-    -   ``responses_SwitchDetails.json``:
-            -   DATA[0].fabricName: LAN_Classic
-            -   DATA[0].freezeMode: null
-            -   DATA[0].ipAddress: 192.168.1.2
-            -   DATA[0].mode: Normal
-            -   DATA[0].serialNumber: FDO211218FV
-            -   DATA[0].switchRole: null
-            -   DATA[0].systemMode: Normal
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
-    -   ``responses_FabricDetailsByName.json``:
-            -   DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
-    -   ``refresh()`` is called.
-    -   ``filter`` is set to 1.2.3.4
+    - MaintenanceModeInfo.refresh()
+    - SwitchDetails.refresh()
+    - FabricDetailsByName.refresh()
 
+    ## Test
 
-    ### Trigger
-    -   ``serial_number`` is accessed
+    - Conditions in Summary are confirmed.
 
-    ### Expected Result
-    -   Conditions in Summary are confirmed.
+    ## Setup - Data
+
+    - `CONFIG`: ["192.168.1.2"]
+    - `responses_SwitchDetails.json`:
+      - DATA[0].fabricName: LAN_Classic
+      - DATA[0].freezeMode: null
+      - DATA[0].ipAddress: 192.168.1.2
+      - DATA[0].mode: Normal
+      - DATA[0].serialNumber: FDO211218FV
+      - DATA[0].switchRole: null
+      - DATA[0].systemMode: Normal
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+    - `responses_FabricDetailsByName.json`:
+      - DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+    - `refresh()` is called.
+    - `filter` is set to 1.2.3.4
+
+    ## Trigger
+
+    - `serial_number` is accessed
+
+    ## Expected Result
+
+    - Conditions in Summary are confirmed.
+
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -1084,48 +1199,55 @@ def test_maintenance_mode_info_00810() -> None:
 
 def test_maintenance_mode_info_00820() -> None:
     """
-    ### Classes and Methods
-    -   MaintenanceModeInfo()
-            -   refresh()
-    -   SwitchDetails()
-            -   refresh()
-    -   FabricDetailsByName()
-            -   refresh()
+    # Summary
 
-    ### Summary
-    -   Verify:
-            -   ``refresh`` re-raises ``ValueError`` raised by
-                ``SwitchDetails()._get()`` when ``item`` is not found in the
-                controller response. In this, case ``item`` is ``freezeMode``.
+    Verify:
+    - `refresh` re-raises `ValueError` raised by
+      `SwitchDetails()._get()` when `item` is not found in the
+      controller response. In this, case `item` is `freezeMode`.
 
-    ### Setup - Data
-    -   ``CONFIG``: ["192.168.1.2"]
-    -   ``responses_SwitchDetails.json`` is missing the key ``freezeMode``.
-    -   ``responses_SwitchDetails.json``:
-            -   DATA[0].fabricName: LAN_Classic
-            -   DATA[0].ipAddress: 192.168.1.2
-            -   DATA[0].mode: Normal
-            -   DATA[0].serialNumber: FDO211218FV
-            -   DATA[0].switchRole: null
-            -   DATA[0].systemMode: Normal
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
-    -   ``responses_FabricDetailsByName.json``:
-            -   DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric
-            -   DATA[0].nvPairs.IS_READ_ONLY: false
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    - MaintenanceModeInfo.refresh()
+    - SwitchDetails.refresh()
+    - FabricDetailsByName.refresh()
 
+    ## Test
 
-    ### Trigger
-    -   ``refresh()`` is called.
+    - Conditions in Summary are confirmed.
 
-    ### Expected Result
-    -   Conditions in Summary are confirmed.
+    ## Setup - Data
+
+    - `CONFIG`: ["192.168.1.2"]
+    - `responses_SwitchDetails.json` is missing the key `freezeMode`.
+    - `responses_SwitchDetails.json`:
+      - DATA[0].fabricName: LAN_Classic
+      - DATA[0].ipAddress: 192.168.1.2
+      - DATA[0].mode: Normal
+      - DATA[0].serialNumber: FDO211218FV
+      - DATA[0].switchRole: null
+      - DATA[0].systemMode: Normal
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+    - `responses_FabricDetailsByName.json`:
+      - DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric
+      - DATA[0].nvPairs.IS_READ_ONLY: false
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+
+    ## Trigger
+
+    - `refresh()` is called.
+
+    ## Expected Result
+
+    - Conditions in Summary are confirmed.
+
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -1157,26 +1279,36 @@ def test_maintenance_mode_info_00820() -> None:
 
 def test_maintenance_mode_info_00900() -> None:
     """
-    ### Classes and Methods
-    -   ``MaintenanceModeInfo()``
-            -   ``config.setter``
+    # Summary
 
-    ### Summary
-    -   Verify:
-            -   ``config`` raises ``TypeError`` when set to an invalid type.
+    Verify:
+    - `config` raises `TypeError` when set to an invalid type.
 
-    ### Setup - Data
+    ## Classes and Methods
+
+    - MaintenanceModeInfo.config setter
+
+    ## Test
+
+    - Conditions in Summary are confirmed.
+
+    ## Setup - Data
+
     None
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    ## Setup - Code
 
-    ### Trigger
-    -   ``config`` is set to a value that is not a ``list``.
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
 
-    ### Expected Result
-    -   Conditions in Summary are confirmed.
+    ## Trigger
+
+    - `config` is set to a value that is not a `list`.
+
+    ## Expected Result
+
+    - Conditions in Summary are confirmed.
+
     """
     with does_not_raise():
         instance = MaintenanceModeInfo(PARAMS)
@@ -1185,32 +1317,42 @@ def test_maintenance_mode_info_00900() -> None:
     match += r"MaintenanceModeInfo\.config must be a list\.\s+"
     match += r"Got type: str\."
     with pytest.raises(TypeError, match=match):
-        instance.config = "NOT_A_LIST"
+        instance.config = "NOT_A_LIST"  # type: ignore[arg-type]
 
 
 def test_maintenance_mode_info_00910() -> None:
     """
-    ### Classes and Methods
-    -   ``MaintenanceModeInfo()``
-            -   ``config.setter``
+    # Summary
 
-    ### Summary
-    -   Verify:
-            -   ``config`` raises ``TypeError`` when an element in the list is
-                not a ``str``.
+    Verify:
+    - `config` raises `TypeError` when an element in the list is
+      not a `str`.
 
-    ### Setup - Data
+    ## Classes and Methods
+
+    - MaintenanceModeInfo.config setter
+
+    ## Test
+
+    - Conditions in Summary are confirmed.
+
+    ## Setup - Data
+
     None
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    ## Setup - Code
 
-    ### Trigger
-    -   ``config`` is set to a value that is not a ``list``.
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
 
-    ### Expected Result
-    -   Conditions in Summary are confirmed.
+    ## Trigger
+
+    - `config` is set to a value that is not a `list`.
+
+    ## Expected Result
+
+    - Conditions in Summary are confirmed.
+
     """
     with does_not_raise():
         instance = MaintenanceModeInfo(PARAMS)
@@ -1221,32 +1363,42 @@ def test_maintenance_mode_info_00910() -> None:
     match += r"value contains element of type int.\s+"
     match += r"value:.*\."
     with pytest.raises(TypeError, match=match):
-        instance.config = ["192.168.1.1", 10, "192.168.1.2"]
+        instance.config = ["192.168.1.1", 10, "192.168.1.2"]  # type: ignore[list-item]
 
 
 def test_maintenance_mode_info_01000() -> None:
     """
-    ### Classes and Methods
-    -   ``MaintenanceModeInfo()``
-            -   ``info.getter``
+    # Summary
 
-    ### Summary
-    -   Verify:
-            -   ``info`` raises ``ValueError`` when accessed before
-                ``refresh()`` is called.
+    Verify:
+    - `info` raises `ValueError` when accessed before
+      `refresh()` is called.
 
-    ### Setup - Data
+    ## Classes and Methods
+
+    - MaintenanceModeInfo.info getter
+
+    ## Test
+
+    - Conditions in Summary are confirmed.
+
+    ## Setup - Data
+
     None
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    ## Setup - Code
 
-    ### Trigger
-    -   ``info`` is accessed without having first called ``refresh()``.
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
 
-    ### Expected Result
-    -   Conditions in Summary are confirmed.
+    ## Trigger
+
+    - `info` is accessed without having first called `refresh()`.
+
+    ## Expected Result
+
+    - Conditions in Summary are confirmed.
+
     """
     with does_not_raise():
         instance = MaintenanceModeInfo(PARAMS)
@@ -1260,41 +1412,51 @@ def test_maintenance_mode_info_01000() -> None:
 
 def test_maintenance_mode_info_01010() -> None:
     """
-    ### Classes and Methods
-    -   ``MaintenanceModeInfo()``
-            -   ``info.getter``
+    # Summary
 
-    ### Summary
-    -   Verify:
-            -   ``info`` returns expected information in the happy path.
+    Verify:
+    - `info` returns expected information in the happy path.
 
-    ### Setup - Data
-    -   ``CONFIG``: ["192.168.1.2"]
-    -   ``responses_SwitchDetails.json``:
-            -   DATA[0].fabricName: VXLAN_Fabric
-            -   DATA[0].freezeMode: null
-            -   DATA[0].ipAddress: 192.168.1.2
-            -   DATA[0].mode: Normal
-            -   DATA[0].serialNumber: FDO211218FV
-            -   DATA[0].switchRole: leaf
-            -   DATA[0].systemMode: Maintenance
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
-    -   ``responses_FabricDetailsByName.json``:
-            -   DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric
-            -   DATA[0].nvPairs.IS_READ_ONLY: false
-            -   RETURN_CODE: 200
-            -   MESSAGE: OK
+    ## Classes and Methods
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    - MaintenanceModeInfo.info getter
 
-    ### Trigger
-    -   ``info`` is accessed without having first called ``refresh()``.
+    ## Test
 
-    ### Expected Result
-    -   Conditions in Summary are confirmed.
+    - Conditions in Summary are confirmed.
+
+    ## Setup - Data
+
+    - `CONFIG`: ["192.168.1.2"]
+    - `responses_SwitchDetails.json`:
+      - DATA[0].fabricName: VXLAN_Fabric
+      - DATA[0].freezeMode: null
+      - DATA[0].ipAddress: 192.168.1.2
+      - DATA[0].mode: Normal
+      - DATA[0].serialNumber: FDO211218FV
+      - DATA[0].switchRole: leaf
+      - DATA[0].systemMode: Maintenance
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+    - `responses_FabricDetailsByName.json`:
+      - DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric
+      - DATA[0].nvPairs.IS_READ_ONLY: false
+      - RETURN_CODE: 200
+      - MESSAGE: OK
+
+    ## Setup - Code
+
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
+
+    ## Trigger
+
+    - `info` is accessed without having first called `refresh()`.
+
+    ## Expected Result
+
+    - Conditions in Summary are confirmed.
+
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -1327,26 +1489,36 @@ def test_maintenance_mode_info_01010() -> None:
 
 def test_maintenance_mode_info_01020() -> None:
     """
-    ### Classes and Methods
-    -   ``MaintenanceModeInfo()``
-            -   ``info.setter``
+    # Summary
 
-    ### Summary
-    -   Verify:
-            -   ``info`` raises ``TypeError`` when set to an invalid type.
+    Verify:
+    - `info` raises `TypeError` when set to an invalid type.
 
-    ### Setup - Data
+    ## Classes and Methods
+
+    - MaintenanceModeInfo.info setter
+
+    ## Test
+
+    - Conditions in Summary are confirmed.
+
+    ## Setup - Data
+
     None
 
-    ### Setup - Code
-    -   ``MaintenanceModeInfo()`` is instantiated
-    -   Required attributes are set
+    ## Setup - Code
 
-    ### Trigger
-    -   ``info`` is set to a value that is not a ``dict``.
+    - `MaintenanceModeInfo()` is instantiated
+    - Required attributes are set
 
-    ### Expected Result
-    -   Conditions in Summary are confirmed.
+    ## Trigger
+
+    - `info` is set to a value that is not a `dict`.
+
+    ## Expected Result
+
+    - Conditions in Summary are confirmed.
+
     """
     with does_not_raise():
         instance = MaintenanceModeInfo(PARAMS)
@@ -1355,4 +1527,4 @@ def test_maintenance_mode_info_01020() -> None:
     match += r"value must be a dict\.\s+"
     match += r"Got value NOT_A_DICT of type str\."
     with pytest.raises(TypeError, match=match):
-        instance.info = "NOT_A_DICT"
+        instance.info = "NOT_A_DICT"  # type: ignore[assignment]

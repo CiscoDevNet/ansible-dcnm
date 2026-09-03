@@ -1,6 +1,9 @@
 #!/usr/bin/python
+"""
+Ansible module to manage Maintenance Mode Configuration of NX-OS Switches.
+"""
 #
-# Copyright (c) 2020-2024 Cisco and/or its affiliates.
+# Copyright (c) 2020-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +16,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=too-many-lines
 
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, annotations, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 DOCUMENTATION = """
@@ -145,15 +149,16 @@ import copy
 import inspect
 import json
 import logging
+from typing import Any, Literal
 
 from ansible.module_utils.basic import AnsibleModule
+
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.common.maintenance_mode import MaintenanceMode
 from ..module_utils.common.maintenance_mode_info import MaintenanceModeInfo
 from ..module_utils.common.merge_dicts_v2 import MergeDicts
 from ..module_utils.common.params_merge_defaults_v2 import ParamsMergeDefaults
 from ..module_utils.common.params_validate_v2 import ParamsValidate
-from ..module_utils.common.properties import Properties
 from ..module_utils.common.response_handler import ResponseHandler
 from ..module_utils.common.rest_send_v2 import RestSend
 from ..module_utils.common.results import Results
@@ -169,9 +174,16 @@ def json_pretty(msg):
 
 class ParamsSpec:
     """
+    # Summary
+
     Build parameter specifications for the dcnm_maintenance_mode module.
 
-    ### Usage
+    ## Raises
+
+    None
+
+    ## Usage
+
     ```python
     from ansible.module_utils.basic import AnsibleModule
 
@@ -201,39 +213,55 @@ class ParamsSpec:
     ```
     """
 
-    def __init__(self):
-        self.class_name = self.__class__.__name__
+    def __init__(self) -> None:
+        self.class_name: str = self.__class__.__name__
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ParamsSpec()")
 
-        self._params = None
-        self._params_spec: dict = {}
+        self._params: dict[str, Any] = {}
+        self._params_spec: dict[str, Any] = {}
 
-        self.valid_states = ["merged", "query"]
+        self._valid_states: list[str] = ["merged", "query"]
 
-    def commit(self):
+    def commit(self) -> None:
         """
+        # Summary
+
         Build the parameter specification based on the state
 
         ## Raises
-        -   ``ValueError`` if params is not set
+
+        ### ValueError
+
+        - params is not set
+        - params["state"] is not a valid state (merged or query)
         """
-        if self._params is None:
+        if not self._params:
             msg = f"{self.class_name}.commit: "
             msg += "params must be set before calling commit()."
             raise ValueError(msg)
 
-        if self.params["state"] == "merged":
+        if self.params.get("state") == "merged":
             self._build_params_spec_for_merged_state()
-        if self.params["state"] == "query":
+        elif self.params.get("state") == "query":
             self._build_params_spec_for_query_state()
+        else:
+            msg = f"{self.class_name}.commit: "
+            msg += f"Invalid state {self.params.get('state')}."
+            raise ValueError(msg)
 
     def _build_params_spec_for_merged_state(self) -> None:
         """
+        # Summary
+
         Build the parameter specifications for ``merged`` state.
+
+        ## Raises
+
+        None
         """
-        self._params_spec: dict = {}
+        self._params_spec = {}
         self._params_spec["ip_address"] = {}
         self._params_spec["ip_address"]["required"] = True
         self._params_spec["ip_address"]["type"] = "ipv4"
@@ -256,45 +284,58 @@ class ParamsSpec:
 
     def _build_params_spec_for_query_state(self) -> None:
         """
+        # Summary
+
         Build the parameter specifications for ``query`` state.
+
+        ## Raises
+
+        None
         """
-        self._params_spec: dict = {}
+        self._params_spec = {}
         self._params_spec["ip_address"] = {}
         self._params_spec["ip_address"]["required"] = True
         self._params_spec["ip_address"]["type"] = "ipv4"
 
     @property
-    def params_spec(self) -> dict:
+    def params_spec(self) -> dict[str, Any]:
         """
         return the parameter specification
         """
         return self._params_spec
 
     @property
-    def params(self) -> dict:
+    def params(self) -> dict[str, Any]:
         """
-        ### Summary
+        # Summary
+
         Expects value to be a dictionary containing, at mimimum,
         the key "state" with value of either "merged" or "query".
 
-        ### Raises
-        -   setter: raise ``ValueError`` if value is not a dict
-        -   setter: raise ``ValueError`` if value["state"] is missing
-        -   setter: raise ``ValueError`` if value["state"] is not a valid state
+        ## Raises
 
-        ### Details
-        -   Valid params: {"state": "merged"} or {"state": "query"}
-        -   getter: return the params
-        -   setter: set the params
+        ### ValueError
+
+        setter:
+
+        - value is not a dict
+        - value["state"] is missing
+        - value["state"] is not a valid state
+
+        ## Details
+
+        - Valid params: {"state": "merged"} or {"state": "query"}
+        - getter: return the params
+        - setter: set the params
         """
         return self._params
 
     @params.setter
-    def params(self, value: dict) -> None:
+    def params(self, value: dict[str, Any]) -> None:
         """
         -   setter: set the params
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}.setter: "
             msg += "Invalid type. Expected dict but "
@@ -307,10 +348,10 @@ class ParamsSpec:
             msg += "params.state is required but missing."
             raise ValueError(msg)
 
-        if value["state"] not in self.valid_states:
+        if value["state"] not in self._valid_states:
             msg = f"{self.class_name}.{method_name}.setter: "
             msg += f"params.state is invalid: {value['state']}. "
-            msg += f"Expected one of {', '.join(self.valid_states)}."
+            msg += f"Expected one of {', '.join(self._valid_states)}."
             raise ValueError(msg)
 
         self._params = value
@@ -318,90 +359,94 @@ class ParamsSpec:
 
 class Want:
     """
-    ### Summary
+    # Summary
+
     Build self.want, a list of validated playbook configurations.
 
-    ### Raises
-    -   ``ValueError`` in the following cases:
-            -   ``commit()`` is issued before setting mandatory properties
-            -   When passing invalid values to property setters
-    -   ``TypeError`` in the following cases:
-            -   When passing invalid types to property setters
+    ## Raises
 
+    ### ValueError
 
-    ### Details
+    - `commit()` is issued before setting mandatory properties
+    - When passing invalid values to property setters
+
+    ### TypeError
+
+    - When passing invalid types to property setters
+
+    ## Details
+
     1. Merge the playbook global config into each switch config.
     2. Validate the merged configs from step 1 against the param spec.
     3. Populate self.want with the validated configs.
 
-    ### Usage
+    ## Usage
+
     ```python
     try:
         instance = Want()
         instance.config = playbook_config
         instance.params = ansible_module.params
-        instance.params_spec = ParamsSpec()
         instance.items_key = "switches"
-        instance.validator = ParamsValidate()
         instance.commit()
         want = instance.want
     except (TypeError, ValueError) as error:
         handle_error(error)
     ```
-    ### self.want structure
+
+    ## self.want structure
 
     ```json
     [
         {
             "ip_address": "192.168.1.2",
             "mode": "maintenance",
-            "deploy": false
+            "deploy": false,
             "wait_for_mode_change": false
         },
         {
             "ip_address": "192.168.1.3",
             "mode": "normal",
-            "deploy": true
+            "deploy": true,
             "wait_for_mode_change": true
         }
     ]
     ```
     """
 
-    def __init__(self):
-        self.class_name = self.__class__.__name__
+    def __init__(self) -> None:
+        self.class_name: str = self.__class__.__name__
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED Want()")
 
-        self._config = None
-        self._items_key = None
-        self._params = None
-        self._params_spec = None
-        self._validator = None
-        self._want = []
+        self._config: dict[str, Any] = {}
+        self._items_key: str = ""
+        self._params: dict[str, Any] = {}
+        self._params_spec: ParamsSpec = ParamsSpec()
+        self._validator: ParamsValidate = ParamsValidate()
+        self._want: list[dict[str, Any]] = []
 
-        self.merge_dicts = MergeDicts()
-        self.merged_configs = []
-        self.item_configs = []
+        self.merge_dicts: MergeDicts = MergeDicts()
+        self.merged_configs: list[dict[str, Any]] = []
+        self.item_configs: list[dict[str, Any]] = []
 
     def generate_params_spec(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Generate the params_spec used to validate the configs
 
-        ### Raises
-        -   ``ValueError`` if self.params is not set
-        -   ``ValueError`` if self.params_spec is not set
+        ## Raises
+
+        ### ValueError
+
+        - self.params is not set
         """
         # Generate the params_spec used to validate the configs
-        if self.params is None:
+        if not self.params:
             msg = f"{self.class_name}.generate_params_spec(): "
             msg += "params is not set, and is required."
-            raise ValueError(msg)
-        if self.params_spec is None:
-            msg = f"{self.class_name}.generate_params_spec(): "
-            msg += "params_spec is not set, and is required."
             raise ValueError(msg)
 
         try:
@@ -413,34 +458,39 @@ class Want:
 
     def validate_configs(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Validate the merged configs against the param spec
         and populate self.want with the validated configs.
 
-        ### Raises
+        ## Raises
+
         None
 
-        ### Notes
-        -   validator is already verified in commit()s
+        ## Notes
+
+        validator is already verified in commit()
         """
-        self.validator.params_spec = self.params_spec.params_spec
+        self._validator.params_spec = self._params_spec.params_spec
         for config in self.merged_configs:
-            self.validator.parameters = config
-            self.validator.commit()
-            self.want.append(copy.deepcopy(config))
+            self._validator.parameters = config
+            self._validator.commit()
+            self._want.append(copy.deepcopy(config))
 
     def build_merged_configs(self) -> None:
         """
-        ### Summary
+        # Summary
+
         If a parameter is missing from the config, and the parameter
         has a default value, merge the default value for the parameter
         into the config.
 
-        ### Raises
+        ## Raises
+
         None
         """
         self.merged_configs = []
-        merge_defaults = ParamsMergeDefaults()
+        merge_defaults: ParamsMergeDefaults = ParamsMergeDefaults()
         merge_defaults.params_spec = self.params_spec.params_spec
         for config in self.item_configs:
             merge_defaults.parameters = config
@@ -453,33 +503,35 @@ class Want:
 
     def commit(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Build self.want, a list of validated playbook configurations.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   self.config is not set
-                -   self.item_key is not set
-                -   self.params is not set
-                -   self.params_spec is not set
-                -   self.validator is not set
-                -   self.params_spec raises ``ValueError``
-                -   _merge_global_and_switch_configs() raises ``ValueError``
-                -   merge_dicts() raises `TypeError``` or ``ValueError``
-                -   playbook is missing list of items
+        ## Raises
 
-        ### Details
+        ### ValueError
+
+        - self.config is not set
+        - self.item_key is not set
+        - self.params is not set
+        - self.params_spec raises `ValueError`
+        - _merge_global_and_switch_configs() raises `ValueError`
+        - merge_dicts() raises `ValueError`
+        - playbook is missing list of items
+
+        ### TypeError
+
+        - merge_dicts() raises `TypeError`
+
+        ## Details
+
         See class docstring.
 
-        ### self.want structure
+        ## self.want structure
+
         See class docstring.
         """
-        method_name = inspect.stack()[0][3]
-
-        if self.validator is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"self.validator must be set before calling {method_name}."
-            raise ValueError(msg)
+        method_name: str = inspect.stack()[0][3]
 
         try:
             self.generate_params_spec()
@@ -509,47 +561,55 @@ class Want:
 
     def _merge_global_and_item_configs(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Builds self.item_configs from self.config
 
         Merge the global playbook config with each item config and
         populate a list of merged configs (``self.item_configs``).
 
-        ### Raises
-        -   ``ValueError`` if self.config is not set
-        -   ``ValueError`` if self.items_key is not set
-        -   ``ValueError`` if playbook is missing list of items
-        -   ``ValueError`` if merge_dicts raises ``TypeError`` or ``ValueError``
+        ## Raises
 
-        ### Merge rules
-            -   item_config takes precedence over global_config.
-            -   If item_config is missing a parameter, use parameter
-                from global_config.
-            -   If item_config has a parameter, use it.
+        ### ValueError
+
+        - self.config is not set
+        - self._items_key is not set
+        - playbook is missing list of items
+        - merge_dicts raises `ValueError`
+
+        ### TypeError
+
+        - merge_dicts raises `TypeError`
+
+        ## Merge rules
+
+        - item_config takes precedence over global_config.
+        - If item_config is missing a parameter, use parameter
+          from global_config.
+        - If item_config has a parameter, use it.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        if self.config is None:
+        if not self.config:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is not set, and is required."
             raise ValueError(msg)
-        if self.items_key is None:
+        if not self._items_key:
             msg = f"{self.class_name}.{method_name}: "
             msg += "items_key is not set, and is required."
             raise ValueError(msg)
-        if not self.config.get(self.items_key):
+        if not self.config.get(self._items_key):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"playbook is missing list of {self.items_key}."
+            msg += f"playbook is missing list of {self._items_key}."
             raise ValueError(msg)
 
         self.item_configs = []
-        merged_configs = []
-        for item in self.config[self.items_key]:
+        merged_configs: list[dict[str, Any]] = []
+        for item in self.config[self._items_key]:
             # we need to rebuild global_config in this loop
             # because merge_dicts modifies it in place
             global_config = copy.deepcopy(self.config)
-            global_config.pop(self.items_key, None)
-
+            global_config.pop(self._items_key, None)
             msg = f"{self.class_name}.{method_name}: "
             msg += "global_config: "
             msg += f"{json.dumps(global_config, indent=4, sort_keys=True)}"
@@ -580,22 +640,32 @@ class Want:
         self.item_configs = copy.copy(merged_configs)
 
     @property
-    def config(self):
+    def config(self) -> dict[str, Any]:
         """
-        ### Summary
+        # Summary
+
         The playbook configuration to be processed.
 
-        ``config`` is processed by ``_merge_global_and_switch_configs()``
-        to build ``switch_configs``.
+        `config` is processed by `_merge_global_and_switch_configs()`
+        to build `switch_configs`.
 
-        -   getter: return config
-        -   setter: set config
-        -   setter: raise ``ValueError`` if value is not a dict
+        ## Raises
+
+        ### TypeError
+
+        setter:
+
+        - value is not a dict
+
+        ## Details
+
+        - getter: return config
+        - setter: set config
         """
         return self._config
 
     @config.setter
-    def config(self, value) -> None:
+    def config(self, value: dict[str, Any]) -> None:
         if not isinstance(value, dict):
             msg = f"{self.class_name}.config.setter: "
             msg += "expected dict but got "
@@ -606,12 +676,23 @@ class Want:
     @property
     def items_key(self) -> str:
         """
+        # Summary
+
         Expects value to be the key for the list of items in the
         playbook config.
 
-        -   getter: return the items_key
-        -   setter: set the items_key
-        -   setter: raise ``ValueError`` if value is not a string
+        ## Raises
+
+        ### TypeError
+
+        setter:
+
+        - value is not a string
+
+        ## Details
+
+        - getter: return the items_key
+        - setter: set the items_key
         """
         return self._items_key
 
@@ -628,34 +709,44 @@ class Want:
         self._items_key = value
 
     @property
-    def want(self) -> list:
+    def want(self) -> list[dict[str, Any]]:
         """
-        ### Summary
+        # Summary
+
         Return the want list.  See class docstring for structure details.
+
+        ## Raises
+
+        None
         """
         return self._want
 
     @property
-    def params(self) -> dict:
+    def params(self) -> dict[str, Any]:
         """
-        ### Summary
-        The return value of ``AnsibleModule.params`` property
-        (or equivalent dict). This is passed to ``params_spec``
+        # Summary
+
+        The return value of `AnsibleModule.params` property
+        (or equivalent dict). This is passed to `params_spec`
         and used in playbook config validation.
 
-        ### Raises
-        -   setter: raise ``ValueError`` if value is not a ``dict``.
+        ## Raises
 
-        ### getter
-        Return params
+        ### TypeError
 
-        ### setter
-        Set params
+        setter:
+
+        - value is not a `dict`
+
+        ## Details
+
+        - getter: Return params
+        - setter: Set params
         """
         return self._params
 
     @params.setter
-    def params(self, value: dict) -> None:
+    def params(self, value: dict[str, Any]) -> None:
         """
         -   setter: set the params
         """
@@ -667,30 +758,33 @@ class Want:
         self._params = value
 
     @property
-    def params_spec(self):
+    def params_spec(self) -> ParamsSpec:
         """
-        ### Summary
+        # Summary
+
         The parameter specification used to validate the playbook config.
-        Expects value to be an instance of ``ParamsSpec()``.
+        Expects value to be an instance of `ParamsSpec()`.
 
-        ``params_spec`` is passed to ``validator`` to validate the
-        playbook config.
+        `params_spec` is passed to `validator` to validate the playbook config.
 
-        ### Raises
-        -   setter: raise ``TypeError`` if value is not an instance
-            of ParamsSpec()
+        `params_spec` is optional. If not set, a default instance of `ParamsSpec()` is used.
 
-        ### getter
-        Return params_spec
+        ## Raises
 
-        ### setter
-        Set params_spec
+        ### TypeError
+
+        - setter: value is not an instance of ParamsSpec()
+
+        ## Details
+
+        - getter: Return params_spec
+        - setter: Set params_spec
         """
         return self._params_spec
 
     @params_spec.setter
-    def params_spec(self, value) -> None:
-        method_name = inspect.stack()[0][3]
+    def params_spec(self, value: ParamsSpec) -> None:
+        method_name: str = inspect.stack()[0][3]
         _class_have = None
         _class_need = "ParamsSpec"
         msg = f"{self.class_name}.{method_name}: "
@@ -707,26 +801,31 @@ class Want:
         self._params_spec = value
 
     @property
-    def validator(self):
+    def validator(self) -> ParamsValidate:
         """
-        ### Summary
-        ``validator`` is used to validate the playbook config.
-        Expects value to be an instance of ``ParamsValidate()``.
+        # Summary
 
-        ### Raises
-        -   setter: ``TypeError`` if value is not an instance of ``ParamsValidate()``
+        `validator` is used to validate the playbook config.
+        Expects value to be an instance of `ParamsValidate()`.
 
-        ### getter
-        Return validator
+        `validator` is optional. If not set, a default instance of `ParamsValidate()` is used.
 
-        ### setter
-        Set validator
+        ## Raises
+
+        ### TypeError
+
+        - setter: value is not an instance of `ParamsValidate()`
+
+        ## Details
+
+        - getter: Return validator
+        - setter: Set validator
         """
         return self._validator
 
     @validator.setter
-    def validator(self, value) -> None:
-        method_name = inspect.stack()[0][3]
+    def validator(self, value: ParamsValidate) -> None:
+        method_name: str = inspect.stack()[0][3]
         _class_have = None
         _class_need = "ParamsValidate"
         msg = f"{self.class_name}.{method_name}: "
@@ -743,56 +842,68 @@ class Want:
         self._validator = value
 
 
-@Properties.add_rest_send
 class Common:
     """
     Common methods, properties, and resources for all states.
     """
 
-    def __init__(self, params):
+    def __init__(self, params: dict[str, Any]):
         """
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``params`` does not contain ``check_mode``
-                -   ``params`` does not contain ``state``
-                -   ``params`` does not contain ``config``
-        -   ``TypeError`` if:
-                -   ``config`` is not a dict
+        # Summary
+
+        Initialize Common instance
+
+        ## Raises
+
+        ### ValueError
+
+        - `params` does not contain `check_mode`
+        - `params` does not contain `config`
+        - `params` does not contain `state`
+
+        ### TypeError
+
+        - `config` is not a dict
         """
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
 
-        self.params = params
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.params: dict[str, Any] = params
 
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
+
+        self._check_mode: bool | None = self.params.get("check_mode", None)
+        if self._check_mode is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "check_mode is required."
             raise ValueError(msg)
 
-        self.state = self.params.get("state", None)
-        if self.state is None:
+        self.state: str = self.params.get("state", "")
+        if not self.state:
             msg = f"{self.class_name}.{method_name}: "
             msg += "state is required."
             raise ValueError(msg)
 
-        self.config = self.params.get("config", None)
-        if self.config is None:
+        self.config: dict[str, Any] = self.params.get("config", {})
+        if not self.config and self.state != "query":
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is required."
             raise ValueError(msg)
+
         if not isinstance(self.config, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "Expected dict type for self.config. "
             msg += f"Got {type(self.config).__name__}"
             raise TypeError(msg)
 
-        self._rest_send = None
+        self._rest_send: RestSend = RestSend({})
 
-        self.results = Results()
+        self.results: Results = Results()
         self.results.state = self.state
-        self.results.check_mode = self.check_mode
+        self.results.check_mode = self._check_mode
+
+        self.results.state = self.state
+        self.results.check_mode = self._check_mode
 
         self.have = {}
         # populated in self.validate_input()
@@ -802,16 +913,24 @@ class Common:
 
         msg = f"ENTERED Common().{method_name}: "
         msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
+        msg += f"check_mode: {self._check_mode}"
         self.log.debug(msg)
 
     def get_want(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Build self.want, a list of validated playbook configurations.
 
-        ### Raises
-        -   ``ValueError`` if Want() instance raises ``ValueError``
+        ## Raises
+
+        ### ValueError
+
+        - Want() instance raises `ValueError`
+
+        ### TypeError
+
+        - Want() instance raises `TypeError`
         """
         try:
             instance = Want()
@@ -825,22 +944,77 @@ class Common:
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
 
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        # Summary
+
+        Get/set an instance of the RestSend class.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not an instance of RestSend.
+        -   setter: `ValueError` if RestSend.params is not set.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have: str = ""
+        _class_need: Literal["RestSend"] = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set."
+            raise ValueError(msg)
+        self._rest_send = value
+
 
 class Merged(Common):
     """
+    # Summary
+
     Handle merged state
 
-    ### Raises
-    -   ``ValueError`` if Common().__init__() raises ``ValueError``
+    ## Raises
+
+    ### ValueError
+
+    - Common().__init__() raises ``ValueError``
+
+    ### TypeError
+
+    - Common().__init__() raises `TypeError`
     """
 
-    def __init__(self, params):
+    def __init__(self, params: dict[str, Any]) -> None:
         """
-        ### Raises
-        -   ``ValueError`` if Common().__init__() raises ``ValueError``
+        # Summary
+
+        Initialize Merged instance
+
+        ## Raises
+
+        ### ValueError
+
+        - Common().__init__() raises `ValueError`
+
+        ### TypeError
+
+        - Common().__init__() raises `TypeError`
         """
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -849,75 +1023,84 @@ class Merged(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.maintenance_mode = MaintenanceMode(params)
+        self.maintenance_mode: MaintenanceMode = MaintenanceMode(params)
 
         msg = f"ENTERED Merged.{method_name}: "
         msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
+        msg += f"check_mode: {self._check_mode}"
         self.log.debug(msg)
 
-        self.need = []
+        self.have: dict[str, Any] = {}
+        self.need: list[dict[str, Any]] = []
 
-    def get_have(self):
+    def get_have(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Build self.have, a dict containing the current mode of all switches.
 
-        ### Raises
-        -   ``ValueError`` if self.ansible_module is not set
-        -   ``ValueError`` if MaintenanceModeInfo() raises ``ValueError``
+        ## Raises
 
-        ### self.have structure
+        ### ValueError
+
+        - self.ansible_module is not set
+        - MaintenanceModeInfo() raises `ValueError`
+
+        ### TypeError
+
+        - MaintenanceModeInfo() raises `TypeError`
+
+        ## self.have structure
+
         Have is a dict, keyed on switch_ip, where each element is a dict
         with the following structure:
-        -   ``fabric_name``: The name of the switch's hosting fabric.
-        -   ``fabric_freeze_mode``: The current ``freezeMode`` state of the switch's
-            hosting fabric.  If ``freeze_mode`` is True, configuration changes cannot
-            be made to the fabric or the switches within the fabric.
-        -   ``fabric_read_only``: The current ``IS_READ_ONLY`` state of the switch's
-            hosting fabric.  If ``fabric_read_only`` is True, configuration changes cannot
-            be made to the fabric or the switches within the fabric.
-        -   ``mode``: The current maintenance mode of the switch.
-            Possible values include: , ``inconsistent``, ``maintenance``,
-            ``migration``, ``normal``.
-        -   ``role``: The role of the switch in the hosting fabric, e.g.
-            ``spine``, ``leaf``, ``border_gateway``, etc.
-        -   ``serial_number``: The serial number of the switch.
+
+        - `fabric_name`: The name of the switch's hosting fabric.
+        - `fabric_freeze_mode`: The current `freezeMode` state of the switch's
+          hosting fabric.  If `freeze_mode` is True, configuration changes cannot
+          be made to the fabric or the switches within the fabric.
+        - `fabric_read_only`: The current `IS_READ_ONLY` state of the switch's
+          hosting fabric.  If `fabric_read_only` is True, configuration changes cannot
+          be made to the fabric or the switches within the fabric.
+        - `mode`: The current maintenance mode of the switch.
+          Possible values include: , `inconsistent`, `maintenance`,
+          `migration`, `normal`.
+        - `role`: The role of the switch in the hosting fabric, e.g.
+          `spine`, `leaf`, `border_gateway`, etc.
+        - `serial_number`: The serial number of the switch.
 
         ```json
         {
             "192.169.1.2": {
-                fabric_deployment_disabled: true
-                fabric_freeze_mode: true,
-                fabric_name: "MyFabric",
-                fabric_read_only: true
-                mode: "maintenance",
-                role: "spine",
-                serial_number: "FCI1234567"
+                "fabric_deployment_disabled": true,
+                "fabric_freeze_mode": true,
+                "fabric_name": "MyFabric",
+                "fabric_read_only": true,
+                "mode": "maintenance",
+                "role": "spine",
+                "serial_number": "FCI1234567"
             },
             "192.169.1.3": {
-                fabric_deployment_disabled: false
-                fabric_freeze_mode: false,
-                fabric_name: "YourFabric",
-                fabric_read_only: false
-                mode: "normal",
-                role: "leaf",
-                serial_number: "FCH2345678"
+                "fabric_deployment_disabled": false,
+                "fabric_freeze_mode": false,
+                "fabric_name": "YourFabric",
+                "fabric_read_only": false,
+                "mode": "normal",
+                "role": "leaf",
+                "serial_number": "FCH2345678"
             }
         }
         ```
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         try:
             instance = MaintenanceModeInfo(self.params)
             instance.rest_send = self.rest_send
             instance.results = self.results
-            instance.config = [
-                item["ip_address"] for item in self.config.get("switches", {})
-            ]
+            instance.config = [item["ip_address"] for item in self.config.get("switches", {})]
             instance.refresh()
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
@@ -928,16 +1111,21 @@ class Merged(Common):
 
     def fabric_deployment_disabled(self) -> None:
         """
-        ### Summary
-        Handle the following cases:
-        -   switch migration mode is ``migration``
-        -   fabric is in read-only mode (IS_READ_ONLY is True)
-        -   fabric is in freeze mode (Deployment Disable)
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if any of the above cases are true
+        Handle the following cases:
+
+        - switch migration mode is `migration`
+        - fabric is in read-only mode (IS_READ_ONLY is True)
+        - fabric is in freeze mode (Deployment Disable)
+
+        ## Raises
+
+        ### ValueError
+
+        - any of the above cases are true
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         for ip_address, value in self.have.items():
             fabric_name = value.get("fabric_name")
             mode = value.get("mode")
@@ -997,15 +1185,20 @@ class Merged(Common):
                 msg += additional_info
                 raise ValueError(msg)
 
-    def get_need(self):
+    def get_need(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Build self.need for merged state.
 
-        ### Raises
-        -   ``ValueError`` if the switch is not found on the controller.
+        ## Raises
 
-        ### self.need structure
+        ### ValueError
+
+        - the switch is not found on the controller
+
+        ## self.need structure
+
         ```json
         [
             {
@@ -1013,7 +1206,7 @@ class Merged(Common):
                 "fabric_name": "MyFabric",
                 "ip_address": "172.22.150.2",
                 "mode": "maintenance",
-                "serial_number": "FCI1234567"
+                "serial_number": "FCI1234567",
                 "wait_for_mode_change": true
             },
             {
@@ -1021,12 +1214,13 @@ class Merged(Common):
                 "fabric_name": "YourFabric",
                 "ip_address": "172.22.150.3",
                 "mode": "normal",
-                "serial_number": "HMD2345678"
+                "serial_number": "HMD2345678",
                 "wait_for_mode_change": true
             }
         ]
+        ```
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.need = []
         for want in self.want:
             ip_address = want.get("ip_address", None)
@@ -1047,23 +1241,26 @@ class Merged(Common):
                 need.update({"wait_for_mode_change": want.get("wait_for_mode_change")})
                 self.need.append(copy.copy(need))
 
-    def commit(self):
+    def commit(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Commit the merged state request
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``rest_send`` is not set.
-                -   ``get_want()`` raises ``ValueError``
-                -   ``get_have()`` raises ``ValueError``
-                -   ``send_need()`` raises ``ValueError``
+        ## Raises
+
+        ### ValueError
+
+        - `rest_send` is not set
+        - `get_want()` raises `ValueError`
+        - `get_have()` raises `ValueError`
+        - `send_need()` raises `ValueError`
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
 
-        if self.rest_send is None:
+        if not self.rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling commit."
             raise ValueError(msg)
@@ -1098,15 +1295,21 @@ class Merged(Common):
 
     def send_need(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Build and send the payload to modify maintenance mode.
 
-        ### Raises
-        -   ``ValueError`` if MaintenanceMode() raises either
-            ``TypeError`` or ``ValueError``
+        ## Raises
 
+        ### ValueError
+
+        - MaintenanceMode() raises `ValueError`
+
+        ### TypeError
+
+        - MaintenanceMode() raises `TypeError`
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         if len(self.need) == 0:
             msg = f"{self.class_name}.{method_name}: "
@@ -1125,21 +1328,41 @@ class Merged(Common):
 
 class Query(Common):
     """
+    # Summary
+
     Handle query state
 
-    ### Raises
-    -   ``ValueError`` if Common().__init__() raises ``ValueError``
-    -   ``ValueError`` if get_want() raises ``ValueError``
-    -   ``ValueError`` if get_have() raises ``ValueError``
+    ## Raises
+
+    ### ValueError
+
+    - Common().__init__() raises `ValueError`
+    - get_want() raises `ValueError`
+    - get_have() raises `ValueError`
+
+    ### TypeError
+
+    - Common().__init__() raises `TypeError`
     """
 
-    def __init__(self, params):
+    def __init__(self, params: dict[str, Any]) -> None:
         """
-        ### Raises
-        -   ``ValueError`` if Common().__init__() raises ``ValueError``
+        # Summary
+
+        Initialize Query instance
+
+        ## Raises
+
+        ### ValueError
+
+        - Common().__init__() raises `ValueError`
+
+        ### TypeError
+
+        - Common().__init__() raises `TypeError`
         """
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -1148,71 +1371,79 @@ class Query(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.maintenance_mode_info = MaintenanceModeInfo(self.params)
+        self.maintenance_mode_info: MaintenanceModeInfo = MaintenanceModeInfo(self.params)
 
         msg = "ENTERED Query(): "
         msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
+        msg += f"check_mode: {self._check_mode}"
         self.log.debug(msg)
 
-    def get_have(self):
+    def get_have(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Build self.have, a dict containing the current mode of all switches.
 
-        ### Raises
-        -   ``ValueError`` if MaintenanceModeInfo() raises ``ValueError``
+        ## Raises
 
-        ### self.have structure
+        ### ValueError
+
+        - MaintenanceModeInfo() raises `ValueError`
+
+        ### TypeError
+
+        - MaintenanceModeInfo() raises `TypeError`
+
+        ## self.have structure
+
         Have is a dict, keyed on switch_ip, where each element is a dict
         with the following structure:
-        -   ``fabric_name``: The name of the switch's hosting fabric.
-        -   ``fabric_freeze_mode``: The current ``freezeMode`` state of the switch's
-            hosting fabric.  If ``freeze_mode`` is True, configuration changes cannot
-            be made to the fabric or the switches within the fabric.
-        -   ``fabric_read_only``: The current ``IS_READ_ONLY`` state of the switch's
-            hosting fabric.  If ``fabric_read_only`` is True, configuration changes cannot
-            be made to the fabric or the switches within the fabric.
-        -   ``mode``: The current maintenance mode of the switch.
-            Possible values include: , ``inconsistent``, ``maintenance``,
-            ``migration``, ``normal``.
-        -   ``role``: The role of the switch in the hosting fabric, e.g.
-            ``spine``, ``leaf``, ``border_gateway``, etc.
-        -   ``serial_number``: The serial number of the switch.
+
+        - `fabric_name`: The name of the switch's hosting fabric.
+        - `fabric_freeze_mode`: The current `freezeMode` state of the switch's
+          hosting fabric.  If `freeze_mode` is True, configuration changes cannot
+          be made to the fabric or the switches within the fabric.
+        - `fabric_read_only`: The current `IS_READ_ONLY` state of the switch's
+          hosting fabric.  If `fabric_read_only` is True, configuration changes cannot
+          be made to the fabric or the switches within the fabric.
+        - `mode`: The current maintenance mode of the switch.
+          Possible values include: , `inconsistent`, `maintenance`,
+          `migration`, `normal`.
+        - `role`: The role of the switch in the hosting fabric, e.g.
+          `spine`, `leaf`, `border_gateway`, etc.
+        - `serial_number`: The serial number of the switch.
 
         ```json
         {
             "192.169.1.2": {
-                fabric_deployment_disabled: true
-                fabric_freeze_mode: true,
-                fabric_name: "MyFabric",
-                fabric_read_only: true
-                mode: "maintenance",
-                role: "spine",
-                serial_number: "FCI1234567"
+                "fabric_deployment_disabled": true,
+                "fabric_freeze_mode": true,
+                "fabric_name": "MyFabric",
+                "fabric_read_only": true,
+                "mode": "maintenance",
+                "role": "spine",
+                "serial_number": "FCI1234567"
             },
             "192.169.1.3": {
-                fabric_deployment_disabled: false
-                fabric_freeze_mode: false,
-                fabric_name: "YourFabric",
-                fabric_read_only: false
-                mode: "normal",
-                role: "leaf",
-                serial_number: "FCH2345678"
+                "fabric_deployment_disabled": false,
+                "fabric_freeze_mode": false,
+                "fabric_name": "YourFabric",
+                "fabric_read_only": false,
+                "mode": "normal",
+                "role": "leaf",
+                "serial_number": "FCH2345678"
             }
         }
         ```
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         try:
             self.maintenance_mode_info.rest_send = self.rest_send
             self.maintenance_mode_info.results = self.results
-            self.maintenance_mode_info.config = [
-                item["ip_address"] for item in self.config.get("switches", {})
-            ]
+            self.maintenance_mode_info.config = [item["ip_address"] for item in self.config.get("switches", {})]
             self.maintenance_mode_info.refresh()
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
@@ -1223,21 +1454,24 @@ class Query(Common):
 
     def commit(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Query the switches in self.want that exist on the controller
         and update ``self.results`` with the query results.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``rest_send`` is not set.
-                -   ``get_want()`` raises ``ValueError``
-                -   ``get_have()`` raises ``ValueError``
+        ## Raises
+
+        ### ValueError
+
+        - `rest_send` is not set
+        - `get_want()` raises `ValueError`
+        - `get_have()` raises `ValueError`
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
 
-        if self.rest_send is None:
+        if not self.rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling commit."
             raise ValueError(msg)
@@ -1278,7 +1512,7 @@ class Query(Common):
 def main():
     """main entry point for module execution"""
 
-    argument_spec = {}
+    argument_spec: dict[str, Any] = {}
     argument_spec["config"] = {
         "required": True,
         "type": "dict",
@@ -1290,10 +1524,8 @@ def main():
         "type": "str",
     }
 
-    ansible_module = AnsibleModule(
-        argument_spec=argument_spec, supports_check_mode=True
-    )
-    params = copy.deepcopy(ansible_module.params)
+    ansible_module: AnsibleModule = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
+    params: dict[str, Any] = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
 
     # Logging setup
@@ -1303,9 +1535,9 @@ def main():
     except ValueError as error:
         ansible_module.fail_json(str(error))
 
-    sender = Sender()
+    sender: Sender = Sender()
     sender.ansible_module = ansible_module
-    rest_send = RestSend(params)
+    rest_send: RestSend = RestSend(params)
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
 
@@ -1331,15 +1563,22 @@ def main():
         msg = f"Unknown state {params['state']}"
         ansible_module.fail_json(msg)
 
-    task.results.build_final_result()
+    if params["state"] == "merged":
+        task.results.build_final_result()
+        final_result = task.results.final_result
+        failed = task.results.failed
+    else:
+        task.results.build_final_result()
+        final_result = task.results.final_result
+        failed = task.results.failed
 
     # Results().failed is a property that returns a set()
     # of boolean values.  pylint doesn't seem to understand this so we've
     # disabled the unsupported-membership-test warning.
-    if True in task.results.failed:  # pylint: disable=unsupported-membership-test
+    if True in failed:  # pylint: disable=unsupported-membership-test
         msg = "Module failed."
-        ansible_module.fail_json(msg, **task.results.final_result)
-    ansible_module.exit_json(**task.results.final_result)
+        ansible_module.fail_json(msg, **final_result)
+    ansible_module.exit_json(**final_result)
 
 
 if __name__ == "__main__":
