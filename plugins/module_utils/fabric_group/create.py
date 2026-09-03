@@ -44,7 +44,7 @@ class FabricGroupCreate(FabricGroupCommon):
 
     ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.create import FabricGroupCreate
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
     payloads = [
         { "FABRIC_NAME": "fabric1", "BGP_AS": 65000 },
         { "FABRIC_NAME": "fabric2", "BGP_AS": 65001 }
