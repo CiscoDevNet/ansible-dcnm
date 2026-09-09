@@ -2706,7 +2706,14 @@ class DcnmIntf:
 
         plist = []
 
-        intf_info, invalid_params = validate_list_of_dicts(config, common_spec)
+        # Same contract as the profile-spec call below: validate_list_of_dicts reads the
+        # AnsibleModule only inside its `if no_log:` branch, to register the value in
+        # module.no_log_values. No common_spec param declares no_log today, so this is a
+        # no-op here -- it is passed so a future sensitive common-level field cannot raise
+        # "'<param>' is a no_log parameter / Ansible module object must be passed...".
+        intf_info, invalid_params = validate_list_of_dicts(
+            config, common_spec, self.module
+        )
         if invalid_params:
             mesg = "Invalid parameters in playbook: {0}".format(
                 "while processing interface "
