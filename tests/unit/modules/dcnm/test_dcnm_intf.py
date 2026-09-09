@@ -18,6 +18,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
+import json
 from unittest.mock import Mock, patch
 
 # from units.compat.mock import patch
@@ -54,6 +55,119 @@ class TestDcnmIntfModule(TestDcnmModule):
             "DATA": data,
         }
 
+    def normalize_legacy_bulk_fixture_responses(self):
+        """Map legacy positional empty fixtures to authoritative empty GETs.
+
+        Older lifecycle cases supplied arbitrary empty response shapes because
+        non-WP98 policies treated malformed HAVE as absence. The production
+        contract is now fail-closed, so those existing tests must represent the
+        successful-empty response they intended instead of malformed state.
+        """
+        effect = self.run_dcnm_send.side_effect
+        if effect is None or callable(effect):
+            return
+
+        def _next(*args, **kwargs):
+            response = next(effect)
+            method = args[1] if len(args) > 1 else None
+            path = args[2] if len(args) > 2 else ""
+            if (
+                method == "GET"
+                and "interface?serialNumber=FOX1821H035" in path
+                and "ifName=" not in path
+                and "overridden" in self._testMethodName
+            ):
+                groups = []
+                for payload_name in (
+                    "dcnm_intf_vpc_payloads",
+                    "dcnm_intf_aa_fex_payloads",
+                ):
+                    payloads = loadPlaybookData(payload_name)
+                    for payload in payloads.values():
+                        if isinstance(payload, dict):
+                            groups.extend(payload.get("DATA") or [])
+                have_all = loadPlaybookData("dcnm_intf_have_all_payloads")
+                wanted = {
+                    item.get("ifName", "").lower(): item
+                    for item in (have_all.get("payloads", {}).get("DATA") or [])
+                    if self._dcnm_intf_query_serial_for_test(
+                        item.get("serialNo")
+                    ) == "FOX1821H035"
+                }
+                cached_names = {
+                    intf.get("ifName", "").lower()
+                    for group in groups
+                    for intf in (group.get("interfaces") or [])
+                }
+                for name in sorted(set(wanted) - cached_names):
+                    summary = wanted[name]
+                    groups.append({
+                        "policy": "test_authoritative_policy",
+                        "interfaces": [{
+                            "ifName": name,
+                            "serialNumber": summary["serialNo"],
+                            "interfaceType": summary["ifType"],
+                            "nvPairs": {},
+                        }],
+                    })
+                return {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": groups}
+            if self._testMethodName in (
+                "test_dcnm_intf_aa_fex_deleted_existing",
+                "test_dcnm_intf_aa_fex_overridden_existing",
+            ):
+                if (
+                    method == "GET"
+                    and "interface?serialNumber=FOX1821H035" in path
+                    and "ifName=" not in path
+                ):
+                    payload = self.payloads_data.get("aa_fex_merged_payloads_150")
+                    return self.build_bulk_payload(payload)
+                if method == "GET" and "interface?serialNumber=" in path:
+                    return []
+            if (
+                method == "GET"
+                and "/control/policies/switches/" in path
+                and "have_get_failure" not in self._testMethodName
+            ):
+                data = response.get("DATA") if isinstance(response, dict) else None
+                if not isinstance(data, list):
+                    return {
+                        "RETURN_CODE": 200,
+                        "MESSAGE": "OK",
+                        "DATA": [],
+                    }
+            is_bulk = (
+                method == "GET"
+                and "interface?serialNumber=" in path
+                and "ifName=" not in path
+            )
+            if "have_get_failure" in self._testMethodName:
+                return response
+            if not is_bulk:
+                return response
+            if response == []:
+                return self.build_bulk_payload()
+            if isinstance(response, dict) and response.get("RETURN_CODE") == 200:
+                data = response.get("DATA")
+                if isinstance(data, list) and all(
+                    isinstance(group, dict)
+                    and isinstance(group.get("policy"), str)
+                    and group.get("policy")
+                    and isinstance(group.get("interfaces"), list)
+                    and group.get("interfaces")
+                    for group in data
+                ):
+                    return response
+            return []
+
+        self.run_dcnm_send.side_effect = _next
+
+    @staticmethod
+    def _dcnm_intf_query_serial_for_test(serial):
+        if not isinstance(serial, str):
+            return None
+        return serial.split("~", 1)[0]
+
     def assert_no_mutating_dcnm_calls(self):
 
         mutating_methods = {"POST", "PUT", "DELETE"}
@@ -63,6 +177,14 @@ class TestDcnmIntfModule(TestDcnmModule):
                 for call in self.run_dcnm_send.call_args_list
                 if len(call.args) > 1
             )
+        )
+        # dcnm_get_bulk_api_support() sends its own POST through the module_utils
+        # dcnm_send, which the mock above cannot observe. Reaching it at all
+        # means a POST left the module, so assert it was never called.
+        self.assertEqual(
+            self.run_dcnm_bulk_api_support.call_count,
+            0,
+            "dcnm_get_bulk_api_support() was called; it issues a POST to the controller",
         )
 
     @staticmethod
@@ -965,9 +1087,32 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
         self.run_dcnm_send = self.mock_dcnm_send.start()
 
+        # Named-template metadata lookup used by the fabric-loopback OSPF
+        # message-digest capability probe. It has its own mock so it never
+        # consumes entries from run_dcnm_send.side_effect. The default return
+        # value means "metadata unavailable", which is exactly the legacy
+        # behaviour: the unknown nvPair is not sent at all.
+        self.mock_dcnm_template_details = patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface.dcnm_get_template_details"
+        )
+        self.run_dcnm_template_details = self.mock_dcnm_template_details.start()
+        self.run_dcnm_template_details.return_value = None
+
+        # dcnm_get_bulk_api_support() issues a POST to the controller. Mock it so
+        # tests can assert it is NOT reached on read-only and
+        # fail-before-mutation paths; the module-local dcnm_send mock cannot see
+        # that POST, because the helper calls its own module_utils dcnm_send.
+        self.mock_dcnm_bulk_api_support = patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface.dcnm_get_bulk_api_support"
+        )
+        self.run_dcnm_bulk_api_support = self.mock_dcnm_bulk_api_support.start()
+        self.run_dcnm_bulk_api_support.return_value = False
+
     def tearDown(self):
 
         super(TestDcnmIntfModule, self).tearDown()
+        self.mock_dcnm_bulk_api_support.stop()
+        self.mock_dcnm_template_details.stop()
         self.mock_dcnm_send.stop()
         self.mock_dcnm_version_supported.stop()
         self.mock_dcnm_ip_sn.stop()
@@ -1230,8 +1375,8 @@ class TestDcnmIntfModule(TestDcnmModule):
                 empty_breakout_resp,
                 playbook_have_all_data,
                 empty_breakout_resp,
-                eth_bulk_payload,
                 eth_vpc_empty_payload,
+                eth_bulk_payload,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1266,6 +1411,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.mock_monitor_false_resp,
                 playbook_have_all_data,
                 empty_breakout_resp,
+                self.build_bulk_payload(),
                 eth_bulk_payload,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1351,16 +1497,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
+                *([self.playbook_mock_succ_resp] * 20),
                 playbook_deployed_data,
             ]
 
@@ -1402,25 +1539,12 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 self.playbook_mock_vpc_resp,
-                multi_bulk_sal,                      # IF_WITH_SNO bulk prefetch for SAL1819SAN8
                 multi_bulk_fox,                      # IF_WITH_SNO bulk prefetch for FOX1821H035
+                multi_bulk_sal,                      # IF_WITH_SNO bulk prefetch for SAL1819SAN8
                 # Individual GETs eliminated — all cache hits
                 playbook_have_all_data,
                 playbook_have_all_data,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
+                *([self.playbook_mock_succ_resp] * 20),
                 playbook_deployed_data,
             ]
 
@@ -3518,6 +3642,31 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_succ_resp,
             ]
 
+        # Fabric-loopback OSPF message-digest cases. Each test picks the HAVE
+        # payload it needs by setting self.fabric_lo_have before running the
+        # module.
+        if "_lo_ospfmd_" in self._testMethodName:
+
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            if "have_get_failure" in self._testMethodName:
+                # G6A.4 finding 2: every interface GET fails (non-200) after the
+                # initial fabric-mode probe, so the fabric-loopback HAVE cannot be
+                # read authoritatively.
+                fail_resp = {"RETURN_CODE": 500, "MESSAGE": "ERR", "DATA": {}}
+                self.run_dcnm_send.side_effect = (
+                    [self.mock_monitor_false_resp] + [fail_resp] * 30
+                )
+            else:
+                lo_bulk_sal = self.build_bulk_payload(self.fabric_lo_have)
+                self.run_dcnm_send.side_effect = [
+                    self.mock_monitor_false_resp,   # FABRIC_ACCESS_MODE
+                    lo_bulk_sal,                    # IF_WITH_SNO bulk prefetch
+                    playbook_have_all_data,
+                ] + [self.playbook_mock_succ_resp] * 16
+
     # -------------------------- vPC-FIXTURES --------------------------
 
     def load_vpc_fixtures(self):
@@ -3753,6 +3902,11 @@ class TestDcnmIntfModule(TestDcnmModule):
             self.run_dcnm_version_supported.side_effect = [
                 (12, "12.4.1.245")
             ]
+        elif "_lo_ospfmd_" in self._testMethodName:
+            # Fabric loopbacks are only present in the NDFC 12 policy map.
+            self.run_dcnm_version_supported.side_effect = [
+                (12, getattr(self, "_ospfmd_ndfc_version", "12.2.2.238"))
+            ]
         else:
             self.run_dcnm_version_supported.side_effect = [11]
 
@@ -3801,6 +3955,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.load_missing_members_fixtures()
         self.load_query_state_fixtures()
         self.load_intf_misc_fixtures()
+        self.normalize_legacy_bulk_fixture_responses()
 
     # -------------------------- GEN-INTF --------------------------
 
@@ -5824,6 +5979,1224 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.assertEqual(
                     (intf["ifName"].lower() in ovr_if_names), True
                 )
+
+    # ---------- LOOPBACK OSPF MESSAGE-DIGEST AUTHENTICATION ----------
+    #
+    # Every test below drives nvPairs.ENABLE_OSPF_AUTH_MESSAGE_DIGEST on policy
+    # int_fabric_loopback_11_1. Capability comes from named-template metadata
+    # (dcnm_get_template_details), never from an NDFC version threshold, so the
+    # capability mock is set explicitly per test.
+
+    OSPF_MD_NVPAIR = "ENABLE_OSPF_AUTH_MESSAGE_DIGEST"
+
+    def _ospfmd_load_common(self, config_key, have_key):
+        """Load the shared fixtures for a fabric-loopback OSPF-MD test."""
+        self.config_data = loadPlaybookData("dcnm_intf_lo_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_lo_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        self.playbook_config = self.config_data.get(config_key)
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+        self.fabric_lo_have = self.payloads_data.get(have_key)
+
+    def _ospfmd_set_capability(self, parent_key, child_key):
+        """
+        Model controller capability through the NDFC version gate. A "supported"
+        scenario means a controller new enough to ship the nvPair; anything else
+        (unsupported/unavailable/malformed) is modeled as an older controller.
+        """
+        supported = (
+            isinstance(parent_key, str)
+            and "supported" in parent_key
+            and isinstance(child_key, str)
+            and "supported" in child_key
+        )
+        self._ospfmd_ndfc_version = "12.6.0.267" if supported else "12.2.2.238"
+
+    def _ospfmd_nvpairs(self, result, bucket):
+        """Return {ifName: nvPairs} for one diff bucket."""
+        return {
+            intf["ifName"]: intf["nvPairs"]
+            for d in result["diff"][0][bucket]
+            for intf in d["interfaces"]
+        }
+
+    def _ospfmd_sent_nvpairs(self):
+        """
+        Return {INTF_NAME: nvPairs} from the payloads actually sent to the
+        controller (the outbound full parent payload), parsed from the
+        dcnm_send mock. Finding 1 preserves HAVE in the SENT payload, not in the
+        reported feature diff, so this reads the wire body, not result['diff'].
+        """
+        found = {}
+
+        def _walk(node):
+            if isinstance(node, dict):
+                if "nvPairs" in node and isinstance(node["nvPairs"], dict):
+                    key = node["nvPairs"].get("INTF_NAME") or node.get("ifName")
+                    if key:
+                        found[key] = node["nvPairs"]
+                for value in node.values():
+                    _walk(value)
+            elif isinstance(node, list):
+                for item in node:
+                    _walk(item)
+
+        for call in self.run_dcnm_send.call_args_list:
+            args = call.args
+            if len(args) < 4:
+                continue
+            method, payload = args[1], args[3]
+            if method not in ("POST", "PUT"):
+                continue
+            try:
+                body = json.loads(payload) if isinstance(payload, str) else payload
+            except (TypeError, ValueError):
+                continue
+            _walk(body)
+        return found
+
+    # ------------------------------------------------------------------
+    # G6A.1 finding 1: an omitted option must preserve the HAVE value in the
+    # OUTBOUND payload during an update driven by an unrelated field, in every
+    # state, without a spurious feature diff and without a capability lookup.
+    # ------------------------------------------------------------------
+    def _ospfmd_run_unrelated_update(self, state, have_key, bulk=False):
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_desc_change_config", have_key
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        self.run_dcnm_bulk_api_support.return_value = bulk
+        set_module_args(
+            dict(state=state, fabric="test_fabric", config=self.playbook_config)
+        )
+        result = self.execute_module(changed=True, failed=False)
+        return result, self._ospfmd_sent_nvpairs()
+
+    def test_dcnm_intf_lo_ospfmd_merged_unrelated_update_preserves_have_true(self):
+        _r, sent = self._ospfmd_run_unrelated_update(
+            "merged", "lo_fabric_payloads_auth_string_true"
+        )
+        self.assertEqual(sent["Loopback0"][self.OSPF_MD_NVPAIR], "true")
+
+    def test_dcnm_intf_lo_ospfmd_replaced_unrelated_update_preserves_have_true(self):
+        _r, sent = self._ospfmd_run_unrelated_update(
+            "replaced", "lo_fabric_payloads_auth_string_true"
+        )
+        self.assertEqual(sent["Loopback0"][self.OSPF_MD_NVPAIR], "true")
+
+    def test_dcnm_intf_lo_ospfmd_overridden_unrelated_update_preserves_have_true(self):
+        _r, sent = self._ospfmd_run_unrelated_update(
+            "overridden", "lo_fabric_payloads_auth_string_true"
+        )
+        self.assertEqual(sent["Loopback0"][self.OSPF_MD_NVPAIR], "true")
+
+    def test_dcnm_intf_lo_ospfmd_replaced_unrelated_update_preserves_native_true(self):
+        _r, sent = self._ospfmd_run_unrelated_update(
+            "replaced", "lo_fabric_payloads_auth_native_true"
+        )
+        # Native boolean true preserved unnormalized.
+        self.assertIs(sent["Loopback0"][self.OSPF_MD_NVPAIR], True)
+
+    def test_dcnm_intf_lo_ospfmd_replaced_unrelated_update_preserves_false(self):
+        _r, sent = self._ospfmd_run_unrelated_update(
+            "replaced", "lo_fabric_payloads_auth_string_false"
+        )
+        self.assertEqual(sent["Loopback0"][self.OSPF_MD_NVPAIR], "false")
+
+    def test_dcnm_intf_lo_ospfmd_bulk_unrelated_update_preserves_have_true(self):
+        _r, sent = self._ospfmd_run_unrelated_update(
+            "replaced", "lo_fabric_payloads_auth_string_true", bulk=True
+        )
+        self.assertEqual(sent["Loopback0"][self.OSPF_MD_NVPAIR], "true")
+
+    def test_dcnm_intf_lo_ospfmd_replaced_unrelated_update_keeps_absent_absent(self):
+        _r, sent = self._ospfmd_run_unrelated_update(
+            "replaced", "lo_fabric_payloads_auth_absent"
+        )
+        # HAVE omits the key, so the outbound payload must omit it too, not
+        # invent a false.
+        self.assertNotIn(self.OSPF_MD_NVPAIR, sent["Loopback0"])
+
+    def test_dcnm_intf_lo_ospfmd_unrelated_update_no_feature_diff(self):
+        result, sent = self._ospfmd_run_unrelated_update(
+            "replaced", "lo_fabric_payloads_auth_string_true"
+        )
+        # Present in the SENT payload (preservation)...
+        self.assertEqual(sent["Loopback0"][self.OSPF_MD_NVPAIR], "true")
+        # ...but NOT reported as a changed feature key in result['diff'].
+        reported = self._ospfmd_nvpairs(result, "replaced")
+        self.assertNotIn(self.OSPF_MD_NVPAIR, reported.get("Loopback0", {}))
+
+    # ---- G6A.2 finding 6: the complete preservation matrix.
+    # states x HAVE {absent, string/native false, string/native true, unexpected
+    # string, unexpected scalar}, asserting the raw value/type is preserved
+    # exactly in the sent payload, absence stays absence, the key is absent from
+    # the reported diff, and omitted intent triggers zero template GETs. ----
+    def test_dcnm_intf_lo_ospfmd_preservation_matrix(self):
+        # (HAVE fixture key, expected preserved value or _ABSENT sentinel)
+        _ABSENT = object()
+        have_cases = [
+            ("lo_fabric_payloads_auth_absent", _ABSENT),
+            ("lo_fabric_payloads_auth_string_false", "false"),
+            ("lo_fabric_payloads_auth_native_false", False),
+            ("lo_fabric_payloads_auth_string_true", "true"),
+            ("lo_fabric_payloads_auth_native_true", True),
+            ("lo_fabric_payloads_auth_unexpected_str", "yes"),
+            ("lo_fabric_payloads_auth_unexpected_scalar", 7),
+        ]
+        for state in ("merged", "replaced", "overridden"):
+            for have_key, expected in have_cases:
+                with self.subTest(state=state, have=have_key):
+                    result, sent = self._ospfmd_run_unrelated_update(state, have_key)
+                    lo0 = sent["Loopback0"]
+                    if expected is _ABSENT:
+                        # Absence must stay absence -- never invented as false.
+                        self.assertNotIn(self.OSPF_MD_NVPAIR, lo0)
+                    else:
+                        # Raw value AND type preserved, unnormalized.
+                        actual = lo0[self.OSPF_MD_NVPAIR]
+                        self.assertEqual(actual, expected)
+                        self.assertIs(type(actual), type(expected))
+                    # Never in the reported feature diff.
+                    reported = self._ospfmd_nvpairs(result, state)
+                    self.assertNotIn(
+                        self.OSPF_MD_NVPAIR, reported.get("Loopback0", {})
+                    )
+                    # Omitted intent triggers zero template metadata GETs.
+                    self.assertEqual(
+                        self.run_dcnm_template_details.call_count, 0
+                    )
+
+    def test_dcnm_intf_lo_ospfmd_preservation_matrix_bulk_path(self):
+        for have_key, expected in [
+            ("lo_fabric_payloads_auth_string_true", "true"),
+            ("lo_fabric_payloads_auth_native_true", True),
+            ("lo_fabric_payloads_auth_absent", None),
+        ]:
+            with self.subTest(have=have_key, path="bulk"):
+                _r, sent = self._ospfmd_run_unrelated_update(
+                    "replaced", have_key, bulk=True
+                )
+                if have_key.endswith("absent"):
+                    self.assertNotIn(self.OSPF_MD_NVPAIR, sent["Loopback0"])
+                else:
+                    self.assertEqual(
+                        sent["Loopback0"][self.OSPF_MD_NVPAIR], expected
+                    )
+
+    # ---- G6A.3 WS5: complete the omitted-HAVE matrix -----------------------
+    def _ospfmd_run_update_with_have_value(self, raw_value, state="replaced"):
+        """Unrelated (description) update on one omitted-feature loopback, with the
+        HAVE nvPair overridden to an arbitrary raw value/type. Returns
+        (result, sent)."""
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_desc_change_config",
+            "lo_fabric_payloads_auth_native_true",
+        )
+        self.fabric_lo_have = copy.deepcopy(self.fabric_lo_have)
+        self.fabric_lo_have["DATA"][0]["interfaces"][0]["nvPairs"][
+            self.OSPF_MD_NVPAIR
+        ] = raw_value
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        set_module_args(
+            dict(state=state, fabric="test_fabric", config=self.playbook_config)
+        )
+        result = self.execute_module(changed=True, failed=False)
+        return result, self._ospfmd_sent_nvpairs()
+
+    def test_dcnm_intf_lo_ospfmd_preservation_matrix_null_list_dict(self):
+        # null, list and dictionary HAVE values are preserved raw and by type,
+        # never folded into false or dropped, never in the reported feature diff,
+        # and never trigger a capability GET.
+        _MISSING = object()
+        for raw in (None, ["true"], {"nested": True}):
+            for state in ("merged", "replaced", "overridden"):
+                with self.subTest(raw=repr(raw), state=state):
+                    result, sent = self._ospfmd_run_update_with_have_value(raw, state)
+                    actual = sent["Loopback0"].get(self.OSPF_MD_NVPAIR, _MISSING)
+                    self.assertIsNot(actual, _MISSING)
+                    self.assertEqual(actual, raw)
+                    self.assertIs(type(actual), type(raw))
+                    reported = self._ospfmd_nvpairs(result, state)
+                    self.assertNotIn(
+                        self.OSPF_MD_NVPAIR, reported.get("Loopback0", {})
+                    )
+                    self.assertEqual(
+                        self.run_dcnm_template_details.call_count, 0
+                    )
+
+    def test_dcnm_intf_lo_ospfmd_omission_only_idempotent(self):
+        # A config that omits the feature and otherwise matches HAVE is a true
+        # no-op: no change, no mutation, and zero capability GETs.
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_string_true"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        set_module_args(
+            dict(state="replaced", fabric="test_fabric",
+                 config=self.playbook_config)
+        )
+        self.execute_module(changed=False, failed=False)
+        self.assertEqual(self.run_dcnm_template_details.call_count, 0)
+        self.assert_no_mutating_dcnm_calls()
+
+    def _ospfmd_sent_methods(self):
+        return [
+            call.args[1]
+            for call in self.run_dcnm_send.call_args_list
+            if len(call.args) > 1 and call.args[1] in ("POST", "PUT")
+        ]
+
+    def test_dcnm_intf_lo_ospfmd_preservation_individual_path_is_put(self):
+        _r, sent = self._ospfmd_run_unrelated_update(
+            "replaced", "lo_fabric_payloads_auth_string_true"
+        )
+        self.assertEqual(sent["Loopback0"][self.OSPF_MD_NVPAIR], "true")
+        self.assertIn("PUT", self._ospfmd_sent_methods())
+
+    def test_dcnm_intf_lo_ospfmd_preservation_bulk_path_is_post(self):
+        _r, sent = self._ospfmd_run_unrelated_update(
+            "replaced", "lo_fabric_payloads_auth_string_true", bulk=True
+        )
+        self.assertEqual(sent["Loopback0"][self.OSPF_MD_NVPAIR], "true")
+        self.assertIn("POST", self._ospfmd_sent_methods())
+
+    def test_dcnm_intf_lo_ospfmd_two_loopbacks_distinct_have_no_contamination(self):
+        # Two loopbacks omitting the feature, with DISTINCT HAVE values, must each
+        # preserve their own raw value -- no cross-loopback contamination.
+        self._ospfmd_load_common(
+            "lo_fabric_two_loopbacks_config",
+            "lo_fabric_payloads_auth_native_true",
+        )
+        config = copy.deepcopy(
+            self.config_data.get("lo_fabric_two_loopbacks_config")
+        )
+        for item in config:
+            item["profile"].pop("enable_ospf_auth_message_digest", None)
+            item["profile"]["description"] = "changed by test"
+        self.playbook_config = config
+
+        have = copy.deepcopy(self.fabric_lo_have)
+        have["DATA"][0]["interfaces"][0]["nvPairs"][self.OSPF_MD_NVPAIR] = True
+        lo1 = copy.deepcopy(have["DATA"][0])
+        lo1["interfaces"][0]["ifName"] = "Loopback1"
+        lo1["interfaces"][0]["nvPairs"]["INTF_NAME"] = "Loopback1"
+        lo1["interfaces"][0]["nvPairs"]["IP"] = "10.3.0.1"
+        lo1["interfaces"][0]["nvPairs"][self.OSPF_MD_NVPAIR] = False
+        have["DATA"].append(lo1)
+        self.fabric_lo_have = have
+
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        set_module_args(
+            dict(state="replaced", fabric="test_fabric",
+                 config=self.playbook_config)
+        )
+        self.execute_module(changed=True, failed=False)
+        sent = self._ospfmd_sent_nvpairs()
+        self.assertIs(sent["Loopback0"][self.OSPF_MD_NVPAIR], True)
+        self.assertIs(sent["Loopback1"][self.OSPF_MD_NVPAIR], False)
+
+    def test_dcnm_intf_lo_ospfmd_replaced_explicit_true(self):
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_true_config", "lo_fabric_payloads_auth_absent"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        nvpairs = self._ospfmd_nvpairs(result, "replaced")
+        self.assertIn("Loopback0", nvpairs)
+        value = nvpairs["Loopback0"][self.OSPF_MD_NVPAIR]
+        # Native JSON boolean, not the string "true".
+        self.assertIsInstance(value, bool)
+        self.assertIs(value, True)
+
+    def test_dcnm_intf_lo_ospfmd_replaced_explicit_false_clears_true(self):
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_false_config",
+            "lo_fabric_payloads_auth_string_true",
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        nvpairs = self._ospfmd_nvpairs(result, "replaced")
+        value = nvpairs["Loopback0"][self.OSPF_MD_NVPAIR]
+        self.assertIsInstance(value, bool)
+        self.assertIs(value, False)
+
+    def test_dcnm_intf_lo_ospfmd_replaced_omitted_does_not_touch_the_value(self):
+        """
+        A1 contract: an omitted option emits nothing, in every state.
+
+        This departs from the usual Ansible 'replaced' reading, where an
+        unspecified option resets to the template default. It is deliberate. The
+        option is capability-gated, and behavioral contract 1 requires that an
+        omitted option neither changes behavior nor requires the capability. To
+        reset on omission the module would have to classify the capability on
+        every fabric-loopback payload, which would make two template GETs and a
+        tri-state verdict a precondition for playbooks that never use the
+        feature.
+
+        The consequence is real and is reported as an A2 blocker rather than
+        hidden: a true -> false transition expressed by REMOVING the option does
+        not clear an already enabled child. Expressing it as an explicit false
+        does, and that is asserted by
+        test_dcnm_intf_lo_ospfmd_replaced_explicit_false*.
+        """
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_string_true"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(result["diff"][0]["replaced"], [])
+
+    def test_dcnm_intf_lo_ospfmd_replaced_omitted_idempotent_absent_have(self):
+        # HAVE omits the key entirely, which means the template default false.
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_absent"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(result["diff"][0]["replaced"], [])
+        self.assertEqual(result["diff"][0]["deploy"], [])
+
+    def test_dcnm_intf_lo_ospfmd_replaced_omitted_idempotent_string_false_have(
+        self,
+    ):
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_string_false"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(result["diff"][0]["replaced"], [])
+
+    def test_dcnm_intf_lo_ospfmd_replaced_explicit_true_idempotent_string_true_have(
+        self,
+    ):
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_true_config",
+            "lo_fabric_payloads_auth_string_true",
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(result["diff"][0]["replaced"], [])
+
+    def test_dcnm_intf_lo_ospfmd_replaced_explicit_true_idempotent_native_true_have(
+        self,
+    ):
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_true_config",
+            "lo_fabric_payloads_auth_native_true",
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(result["diff"][0]["replaced"], [])
+
+    def test_dcnm_intf_lo_ospfmd_merged_omitted_preserves_have_true(self):
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_string_true"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        # merged with the option omitted must never disable an enabled loopback.
+        self.assertEqual(result["diff"][0]["merged"], [])
+        self.assertEqual(result["diff"][0]["replaced"], [])
+
+    def test_dcnm_intf_lo_ospfmd_merged_explicit_false_clears_true(self):
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_false_config",
+            "lo_fabric_payloads_auth_string_true",
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        nvpairs = self._ospfmd_nvpairs(result, "merged")
+        self.assertIs(nvpairs["Loopback0"][self.OSPF_MD_NVPAIR], False)
+
+    def test_dcnm_intf_lo_ospfmd_omitted_on_unsupported_controller(self):
+        # Parent template exists but does not declare the parameter. Nothing is
+        # requested explicitly, so the run must succeed and simply not carry the
+        # unknown nvPair.
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_absent"
+        )
+        self._ospfmd_set_capability("mock_template_parent_without_param", None)
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        for bucket in ("merged", "replaced"):
+            for d in result["diff"][0][bucket]:
+                for intf in d["interfaces"]:
+                    self.assertNotIn(self.OSPF_MD_NVPAIR, intf["nvPairs"])
+
+    def test_dcnm_intf_lo_ospfmd_explicit_fails_on_ordinary_loopback(self):
+        self._ospfmd_load_common(
+            "lo_ordinary_explicit_true_config", "lo_merged_payloads_1"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertIn("only for loopback interfaces with 'mode: fabric'", result["msg"])
+        self.assertIn("given mode = 'lo'", result["msg"])
+        # A local input error must never trigger a controller template lookup.
+        self.assertEqual(self.run_dcnm_template_details.call_count, 0)
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_explicit_fails_on_mpls_loopback(self):
+        self._ospfmd_load_common(
+            "lo_mpls_explicit_true_config", "lo_merged_payloads_1"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertIn("only for loopback interfaces with 'mode: fabric'", result["msg"])
+        self.assertIn("given mode = 'mpls'", result["msg"])
+        self.assertEqual(self.run_dcnm_template_details.call_count, 0)
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_overridden_omitted_does_not_touch_the_value(self):
+        """
+        A1 contract: an omitted option emits nothing, in every state.
+
+        This departs from the usual Ansible 'overridden' reading, where an
+        unspecified option resets to the template default. It is deliberate. The
+        option is capability-gated, and behavioral contract 1 requires that an
+        omitted option neither changes behavior nor requires the capability. To
+        reset on omission the module would have to classify the capability on
+        every fabric-loopback payload, which would make two template GETs and a
+        tri-state verdict a precondition for playbooks that never use the
+        feature.
+
+        The consequence is real and is reported as an A2 blocker rather than
+        hidden: a true -> false transition expressed by REMOVING the option does
+        not clear an already enabled child. Expressing it as an explicit false
+        does, and that is asserted by
+        test_dcnm_intf_lo_ospfmd_overridden_explicit_false*.
+        """
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_string_true"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        # changed is True for reasons that have nothing to do with this feature:
+        # 'overridden' deletes every interface absent from the config. What
+        # matters here is that no interface UPDATE was produced, so the target
+        # loopback's nvPair was left exactly as the controller had it.
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(result["diff"][0]["overridden"], [])
+        for entry in result["diff"][0]["deleted"]:
+            self.assertNotEqual(entry.get("ifName", "").lower(), "loopback0")
+
+    def test_dcnm_intf_lo_ospfmd_query_issues_no_mutating_call(self):
+        # state 'query' must be genuinely read-only, including the bulk-API
+        # capability probe, which is a POST.
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_string_true"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="query",
+                fabric="test_fabric",
+                config=[
+                    {
+                        "name": "lo0",
+                        "switch": ["192.168.1.108"],
+                    }
+                ],
+            )
+        )
+        self.execute_module(changed=False, failed=False)
+
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_check_mode_issues_no_mutating_call(self):
+        # check mode must compute the change without sending anything.
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_true_config", "lo_fabric_payloads_auth_absent"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+                _ansible_check_mode=True,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        nvpairs = self._ospfmd_nvpairs(result, "replaced")
+        self.assertIs(nvpairs["Loopback0"][self.OSPF_MD_NVPAIR], True)
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_omitted_survives_metadata_exception(self):
+        # A transport or parsing failure inside the template lookup must degrade
+        # to "unavailable". A legacy run that never asks for the option must not
+        # start crashing because the capability probe raised.
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_absent"
+        )
+        self.run_dcnm_template_details.side_effect = KeyError("RETURN_CODE")
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        for bucket in ("merged", "replaced"):
+            for d in result["diff"][0][bucket]:
+                for intf in d["interfaces"]:
+                    self.assertNotIn(self.OSPF_MD_NVPAIR, intf["nvPairs"])
+
+    def test_dcnm_intf_lo_ospfmd_omitted_survives_malformed_parameters(self):
+        # parameters: [{}] must not raise while scanning for the parameter name.
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_absent"
+        )
+        self.run_dcnm_template_details.side_effect = None
+        self.run_dcnm_template_details.return_value = {
+            "name": "int_fabric_loopback_11_1",
+            "parameters": [{}, "not-a-dict", {"name": "INTF_NAME"}],
+        }
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        for bucket in ("merged", "replaced"):
+            for d in result["diff"][0][bucket]:
+                for intf in d["interfaces"]:
+                    self.assertNotIn(self.OSPF_MD_NVPAIR, intf["nvPairs"])
+
+    def test_dcnm_intf_lo_ospfmd_unknown_controller_value_is_not_idempotent(
+        self,
+    ):
+        # An unrecognized controller representation must not fold into false and
+        # be reported as already in sync; the module has to push the intent.
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_false_config", "lo_fabric_payloads_auth_absent"
+        )
+        self.fabric_lo_have = copy.deepcopy(self.fabric_lo_have)
+        self.fabric_lo_have["DATA"][0]["interfaces"][0]["nvPairs"][
+            self.OSPF_MD_NVPAIR
+        ] = "yes"
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        nvpairs = self._ospfmd_nvpairs(result, "replaced")
+        self.assertIs(nvpairs["Loopback0"][self.OSPF_MD_NVPAIR], False)
+
+    def test_dcnm_intf_lo_ospfmd_normalizer_tags_unknown_values(self):
+        normalize = (
+            dcnm_interface.DcnmIntf.dcnm_intf_normalize_ospf_auth_message_digest
+        )
+        self.assertEqual(normalize(None), "false")
+        self.assertEqual(normalize(""), "false")
+        self.assertEqual(normalize(False), "false")
+        self.assertEqual(normalize("False"), "false")
+        self.assertEqual(normalize(True), "true")
+        self.assertEqual(normalize("TRUE"), "true")
+        # Unknown representations stay distinguishable from both booleans, and
+        # report only the value's category so arbitrary content cannot reach a
+        # diff or a log line.
+        for unknown in ("yes", "1", "invalid"):
+            self.assertEqual(normalize(unknown), "unexpected:str")
+        for unknown, category in ((1, "int"), (["true"], "list"), ({"v": 1}, "dict")):
+            self.assertEqual(normalize(unknown), "unexpected:{0}".format(category))
+        for unknown in ("yes", 1, ["true"], {"v": 1}):
+            self.assertNotEqual(normalize(unknown), "false")
+            self.assertNotEqual(normalize(unknown), "true")
+
+    # ---- Durable metadata and lifecycle coverage (Gate A review G3, finding 8) ----
+
+    @staticmethod
+    def _ospfmd_parent(parameters):
+        return {"name": "int_fabric_loopback_11_1", "parameters": parameters}
+
+    @staticmethod
+    def _ospfmd_target(parameter_type="boolean", default="false"):
+        param = {"name": "ENABLE_OSPF_AUTH_MESSAGE_DIGEST",
+                 "parameterType": parameter_type}
+        if default is not None:
+            param["metaProperties"] = {"defaultValue": default}
+        return param
+
+    def _ospfmd_expect_explicit_failure(self, parent, expected_fragment):
+        """Explicit intent plus this metadata must fail closed and mutate nothing."""
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_true_config", "lo_fabric_payloads_auth_absent"
+        )
+        self._ospfmd_set_capability(parent, "mock_template_child_supported")
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=True)
+        self.assertIn("Unsupported controller capability", result["msg"])
+        self.assertIn(expected_fragment, result["msg"])
+        self.assert_no_mutating_dcnm_calls()
+
+    # ---- G6A.1 finding 6: reject a non-native-boolean value locally, before
+    # any template GET and before any mutation. ----
+    def _ospfmd_expect_local_type_failure(self, bad_value):
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_absent"
+        )
+        # Valid capability metadata is wired up, but it must NEVER be queried for
+        # a malformed value: the type check runs first.
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        config = copy.deepcopy(self.config_data.get("lo_fabric_omitted_config"))
+        config[0]["profile"]["enable_ospf_auth_message_digest"] = bad_value
+        set_module_args(
+            dict(state="merged", fabric="test_fabric", config=config)
+        )
+        result = self.execute_module(changed=False, failed=True)
+        self.assertIn("must be a native boolean", result["msg"])
+        # Zero template GETs and zero bulk probe: the failure is purely local.
+        self.assertEqual(self.run_dcnm_template_details.call_count, 0)
+        self.assertEqual(self.run_dcnm_bulk_api_support.call_count, 0)
+        self.assert_no_mutating_dcnm_calls()
+
+    # ---- G6A.2 finding 5: a valid interface must not trigger a capability GET
+    # before a later malformed interface fails (two-pass validation). ----
+    def _ospfmd_expect_multi_local_failure(self, config_key):
+        self._ospfmd_load_common(config_key, "lo_fabric_payloads_auth_absent")
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        set_module_args(
+            dict(state="merged", fabric="test_fabric",
+                 config=self.playbook_config)
+        )
+        result = self.execute_module(changed=False, failed=True)
+        self.assertIn("must be a native boolean", result["msg"])
+        # Two-pass validation: the whole config is validated before any
+        # capability lookup, so zero template GETs and zero bulk probe on either
+        # ordering, and the "no template metadata was queried" message is true.
+        self.assertEqual(self.run_dcnm_template_details.call_count, 0)
+        self.assertEqual(self.run_dcnm_bulk_api_support.call_count, 0)
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_valid_then_invalid_zero_gets(self):
+        self._ospfmd_expect_multi_local_failure(
+            "lo_fabric_valid_then_invalid_config"
+        )
+
+    def test_dcnm_intf_lo_ospfmd_invalid_then_valid_zero_gets(self):
+        self._ospfmd_expect_multi_local_failure(
+            "lo_fabric_invalid_then_valid_config"
+        )
+
+    # ---- G6A.3 WS4: a malformed NON-feature field (ipv4_addr) must also fail
+    # during local validation before the single capability GET, in either
+    # ordering relative to a valid interface that requested the feature. ----
+    def _ospfmd_expect_nonfeature_local_failure(self, bad_first):
+        self._ospfmd_load_common(
+            "lo_fabric_two_loopbacks_config", "lo_fabric_payloads_auth_absent"
+        )
+        # Valid capability metadata is wired up; it must NEVER be queried, because
+        # a malformed local field fails the whole config first.
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        config = copy.deepcopy(
+            self.config_data.get("lo_fabric_two_loopbacks_config")
+        )
+        # Both loopbacks validly request the feature; break one's ipv4_addr.
+        config[0 if bad_first else 1]["profile"]["ipv4_addr"] = "not_an_ip"
+        set_module_args(
+            dict(state="merged", fabric="test_fabric", config=config)
+        )
+        result = self.execute_module(changed=False, failed=True)
+        # WS4: full local validation precedes the capability GET, so zero template
+        # GETs and zero bulk probe regardless of ordering.
+        self.assertEqual(self.run_dcnm_template_details.call_count, 0)
+        self.assertEqual(self.run_dcnm_bulk_api_support.call_count, 0)
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_bad_ipv4_before_valid_feature_zero_gets(self):
+        self._ospfmd_expect_nonfeature_local_failure(bad_first=True)
+
+    def test_dcnm_intf_lo_ospfmd_valid_feature_before_bad_ipv4_zero_gets(self):
+        self._ospfmd_expect_nonfeature_local_failure(bad_first=False)
+
+    # ---- G6A.4 finding 4: the feature is validated GLOBALLY; the field is
+    # rejected on any non-fabric-loopback interface with zero template GETs. ----
+    def _ospfmd_reject_nonloopback(self, config, fragment):
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_config", "lo_fabric_payloads_auth_absent"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        set_module_args(
+            dict(state="merged", fabric="test_fabric", config=config)
+        )
+        result = self.execute_module(changed=False, failed=True)
+        self.assertIn(fragment, result["msg"])
+        self.assertEqual(self.run_dcnm_template_details.call_count, 0)
+        self.assertEqual(self.run_dcnm_bulk_api_support.call_count, 0)
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_field_on_ethernet_rejected_zero_gets(self):
+        # non-loopback interface type carrying the field -> rejected globally,
+        # before any capability GET, even though a loopback is also present.
+        config = [
+            {"name": "lo0", "type": "lo", "switch": ["192.168.1.108"],
+             "deploy": "False",
+             "profile": {"mode": "fabric", "ipv4_addr": "10.2.0.1",
+                         "enable_ospf_auth_message_digest": True}},
+            {"name": "eth1/1", "type": "eth", "switch": ["192.168.1.108"],
+             "deploy": "False",
+             "profile": {"mode": "trunk",
+                         "enable_ospf_auth_message_digest": True}},
+        ]
+        self._ospfmd_reject_nonloopback(config, "only on fabric loopback")
+
+    def test_dcnm_intf_lo_ospfmd_field_on_ethernet_only_rejected_globally(self):
+        # no loopback at all: the loopback-only validator would never run, so the
+        # global validation is what rejects it.
+        config = [
+            {"name": "eth1/1", "type": "eth", "switch": ["192.168.1.108"],
+             "deploy": "False",
+             "profile": {"mode": "trunk",
+                         "enable_ospf_auth_message_digest": False}},
+        ]
+        self._ospfmd_reject_nonloopback(config, "only on fabric loopback")
+
+    def test_dcnm_intf_lo_ospfmd_field_on_ordinary_loopback_rejected(self):
+        # type lo but mode 'lo' (ordinary loopback) -> rejected by the mode check.
+        config = [
+            {"name": "lo9", "type": "lo", "switch": ["192.168.1.108"],
+             "deploy": "False",
+             "profile": {"mode": "lo", "ipv4_addr": "10.9.0.1",
+                         "enable_ospf_auth_message_digest": True}},
+        ]
+        self._ospfmd_reject_nonloopback(config, "mode: fabric")
+
+    def test_dcnm_intf_lo_ospfmd_have_get_failure_fails_closed(self):
+        # G6A.4 finding 2 (end to end): when every fabric-loopback interface GET
+        # fails, the module must FAIL CLOSED, not read unknown state as absence
+        # and POST a create.
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_true_config", "lo_fabric_payloads_auth_absent"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        set_module_args(
+            dict(state="merged", fabric="test_fabric",
+                 config=self.playbook_config)
+        )
+        result = self.execute_module(changed=False, failed=True)
+        self.assertIn("could not be read", result["msg"])
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_explicit_null_fails_locally(self):
+        self._ospfmd_expect_local_type_failure(None)
+
+    def test_dcnm_intf_lo_ospfmd_string_true_fails_locally(self):
+        self._ospfmd_expect_local_type_failure("true")
+
+    def test_dcnm_intf_lo_ospfmd_integer_one_fails_locally(self):
+        self._ospfmd_expect_local_type_failure(1)
+
+    def test_dcnm_intf_lo_ospfmd_list_fails_locally(self):
+        self._ospfmd_expect_local_type_failure(["true"])
+
+    def test_dcnm_intf_lo_ospfmd_dict_fails_locally(self):
+        self._ospfmd_expect_local_type_failure({"v": True})
+
+    # ---- G6A.1 finding 8: the lazy bulk-API probe runs at most once and selects
+    # the update path. ----
+    def _ospfmd_update_methods(self, bulk):
+        """Update an EXISTING fabric loopback (so it takes the replace path) and
+        return the methods used against the interface-update endpoint."""
+        self._ospfmd_load_common(
+            "lo_fabric_omitted_desc_change_config",
+            "lo_fabric_payloads_auth_string_true",
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        self.run_dcnm_bulk_api_support.return_value = bulk
+        set_module_args(
+            dict(state="replaced", fabric="test_fabric",
+                 config=self.playbook_config)
+        )
+        self.execute_module(changed=True, failed=False)
+        return [
+            call.args[1]
+            for call in self.run_dcnm_send.call_args_list
+            if len(call.args) >= 4
+            and "interface" in call.args[2].lower()
+            and call.args[1] in ("POST", "PUT")
+        ]
+
+    def test_dcnm_intf_lo_ospfmd_bulk_probe_runs_once_on_update(self):
+        self._ospfmd_update_methods(True)
+        self.assertEqual(self.run_dcnm_bulk_api_support.call_count, 1)
+
+    def test_dcnm_intf_lo_ospfmd_bulk_true_selects_bulk_post(self):
+        methods = self._ospfmd_update_methods(True)
+        # Bulk update is a POST to the bulk endpoint.
+        self.assertIn("POST", methods)
+        self.assertNotIn("PUT", methods)
+
+    def test_dcnm_intf_lo_ospfmd_bulk_false_selects_individual_put(self):
+        methods = self._ospfmd_update_methods(False)
+        # Individual update is a PUT per interface.
+        self.assertIn("PUT", methods)
+
+    def test_dcnm_intf_lo_ospfmd_explicit_false_on_unsupported_is_noop_when_have_absent(self):
+        # G6A.3 WS3: explicit false on a non-supported controller must NOT fail
+        # closed. The unknown nvPair is never sent; with an absent/false HAVE the
+        # feature is already off, so the run is an idempotent no-op.
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_false_config", "lo_fabric_payloads_auth_absent"
+        )
+        self._ospfmd_set_capability("mock_template_parent_without_param", None)
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+        # the unknown nvPair is never handed to the legacy controller
+        for bucket in ("merged", "replaced"):
+            for d in result["diff"][0][bucket]:
+                for intf in d["interfaces"]:
+                    self.assertNotIn(self.OSPF_MD_NVPAIR, intf["nvPairs"])
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_explicit_false_on_unavailable_is_noop_when_have_absent(self):
+        # Metadata unavailable (unreadable): explicit false still must not fail;
+        # never send the field, and a false/absent HAVE is a compatibility no-op.
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_false_config", "lo_fabric_payloads_auth_absent"
+        )
+        self._ospfmd_set_capability(None, None)
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+        for bucket in ("merged", "replaced"):
+            for d in result["diff"][0][bucket]:
+                for intf in d["interfaces"]:
+                    self.assertNotIn(self.OSPF_MD_NVPAIR, intf["nvPairs"])
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_explicit_false_on_unsupported_have_true_fails(self):
+        # G6A.3 WS3: explicit false to CLEAR the feature, but the controller
+        # cannot manage the nvPair and reports it ON. The module must fail loudly
+        # rather than silently claim success -- it cannot clear the feature
+        # without a parent template that declares the parameter.
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_false_config",
+            "lo_fabric_payloads_auth_native_true",
+        )
+        self._ospfmd_set_capability("mock_template_parent_without_param", None)
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=True)
+        self.assertIn("cannot be cleared", result["msg"])
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_duplicate_have_fails_with_zero_mutation(self):
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_false_config",
+            "lo_fabric_payloads_auth_string_false",
+        )
+        self.fabric_lo_have = copy.deepcopy(self.fabric_lo_have)
+        group = self.fabric_lo_have["DATA"][0]
+        group["policy"] = "int_loopback"
+        duplicate = copy.deepcopy(group["interfaces"][0])
+        duplicate["ifName"] = duplicate["ifName"].lower()
+        duplicate["nvPairs"][self.OSPF_MD_NVPAIR] = "true"
+        group["interfaces"].append(duplicate)
+        self._ospfmd_set_capability("mock_template_parent_without_param", None)
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=True)
+        self.assertTrue(
+            "could not be read" in result["msg"]
+            or "could not be determined" in result["msg"]
+        )
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_check_mode_unsupported_fails_closed(self):
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_true_config", "lo_fabric_payloads_auth_absent"
+        )
+        self._ospfmd_set_capability("mock_template_parent_without_param", None)
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+                _ansible_check_mode=True,
+            )
+        )
+        result = self.execute_module(changed=False, failed=True)
+        self.assertIn("Unsupported controller capability", result["msg"])
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_overridden_explicit_true(self):
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_true_config", "lo_fabric_payloads_auth_absent"
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        nvpairs = self._ospfmd_nvpairs(result, "overridden")
+        self.assertIs(nvpairs["Loopback0"][self.OSPF_MD_NVPAIR], True)
+
+    def test_dcnm_intf_lo_ospfmd_overridden_explicit_false(self):
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_false_config",
+            "lo_fabric_payloads_auth_string_true",
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        nvpairs = self._ospfmd_nvpairs(result, "overridden")
+        self.assertIs(nvpairs["Loopback0"][self.OSPF_MD_NVPAIR], False)
+
+    def test_dcnm_intf_lo_ospfmd_no_diff_run_issues_no_mutating_call(self):
+        # Already in sync: the module must not reach the bulk-API probe, which
+        # is a POST, nor send any mutating verb.
+        self._ospfmd_load_common(
+            "lo_fabric_explicit_true_config",
+            "lo_fabric_payloads_auth_string_true",
+        )
+        self._ospfmd_set_capability(
+            "mock_template_parent_supported", "mock_template_child_supported"
+        )
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+        self.assertEqual(result["diff"][0]["replaced"], [])
+        self.assert_no_mutating_dcnm_calls()
 
     # -------------------------- vPC --------------------------
 

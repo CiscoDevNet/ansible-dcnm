@@ -239,6 +239,20 @@ options:
             - Copy the port-channel description to its member interfaces.
             type: bool
             default: false
+          guard_mode:
+            description:
+            - Spanning-tree guard mode. This option is applicable only when
+              mode is trunk. Explicit-only, no default; when omitted the
+              current controller value is left untouched.
+            type: str
+            choices: ['root', 'none', 'loop', 'no']
+          acl_filter:
+            description:
+            - Name of the ACL filter applied to the port-channel. This option
+              is applicable only when mode is trunk, access or dot1q. Between
+              1 and 64 characters. Explicit-only, no default; when omitted the
+              current controller value is left untouched.
+            type: str
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -684,6 +698,33 @@ options:
             - State of Switchport Monitor for SPAN/ERSPAN
             type: bool
             default: false
+          flowcontrol_receive:
+            description:
+            - State of IEEE 802.3x pause-frame reception. This option is
+              applicable only when mode is trunk or access.
+            type: str
+            choices: ['on', 'off']
+          guard_mode:
+            description:
+            - Spanning-tree guard mode. This option is applicable only when
+              mode is trunk. Explicit-only, no default; when omitted the
+              current controller value is left untouched.
+            type: str
+            choices: ['root', 'none', 'loop', 'no']
+          disable_lldp:
+            description:
+            - Disable LLDP transmit and receive on the interface. This option
+              is applicable only when mode is trunk or access. Explicit-only,
+              no default; when omitted the current controller value is left
+              untouched.
+            type: bool
+          acl_filter:
+            description:
+            - Name of the ACL filter applied to the interface. This option is
+              applicable only when mode is trunk or access. Between 1 and 64
+              characters. Explicit-only, no default; when omitted the current
+              controller value is left untouched.
+            type: str
           enable_qos:
             description:
             - Enable QoS on the interface.
@@ -1884,8 +1925,10 @@ from decimal import Decimal, InvalidOperation
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.validation import check_type_bool
+from ansible.module_utils.connection import ConnectionError as AnsibleConnectionError
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_get_bulk_api_support,
+    dcnm_get_template_details,
     dcnm_send,
     get_fabric_inventory_details,
     dcnm_get_ip_addr_info,
@@ -1895,6 +1938,31 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     find_dict_in_list_by_key_value,
 )
 from ..module_utils.common.log_v2 import Log
+
+#
+OSPF_AUTH_MD_PROFILE_KEY = "enable_ospf_auth_message_digest"
+OSPF_AUTH_MD_NVPAIR = "ENABLE_OSPF_AUTH_MESSAGE_DIGEST"
+OSPF_AUTH_MD_PARENT_TEMPLATE = "int_fabric_loopback_11_1"
+OSPF_AUTH_MD_MIN_NDFC_VERSION = "12.6.0.267"  # assumed (validated_on); confirm real floor
+
+# Thin additive registry-driven engine (Phase 1 Monday slice). Consumes the packaged static
+# binding table only; additive; explicit-only; NDFC executes template effects. The engine owns
+# binding resolution + type validation + supported-version parent-nvPair transport for every
+# registered binding; the OSPF-MD capability/HAVE reconciliation stays a narrow compat hook.
+from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
+    GieBindingError,
+    gie_all_registered_keys,
+    gie_extend_prof_spec,
+    gie_contribute_nvpairs,
+    gie_invalid_parent_key,
+    gie_nvpair_keymap,
+    gie_carry_forward_bindings,
+    gie_have_carry_forward_nvpairs,
+    gie_validate_binding_value,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
+    resolve_binding,
+)
 
 
 def json_pretty(msg):
@@ -1995,6 +2063,13 @@ class DcnmIntf:
         # performance bottleneck when managing many interfaces.
         self.intf_detail_cache = {}
         self.intf_detail_cached_snos = set()
+        self.intf_detail_fetch_failed_snos = set()
+        self.intf_detail_failed_keys = set()
+        self.intf_detail_authoritative_absent_keys = set()
+        self.have_all_cached_snos = set()
+        self.have_all_failed_snos = set()
+        self.have_breakout_cached_snos = set()
+        self.have_breakout_failed_snos = set()
         self._replace_have_lookup = {}
         self._replace_pb_input_lookup = {}
         self.deferred_delete_member_defaults = []
@@ -2026,8 +2101,11 @@ class DcnmIntf:
             self.dcnm_version = version_info
             self.ndfc_version = None
 
-        # Check for bulk API support
-        self.has_bulk_api = dcnm_get_bulk_api_support(self.module)
+        self._has_bulk_api = None
+
+        self._ospf_auth_md_capability = None
+        self._ospf_auth_md_capability_reason = None
+        self._ospf_auth_md_requests = {}
 
         self.inventory_data = {}
         self.manageable = []
@@ -2075,6 +2153,7 @@ class DcnmIntf:
             "IPv6_PREFIX": "ipv6_mask_len",
             "ROUTING_TAG": "route_tag",
             "ROUTE_MAP_TAG": "route_tag",
+            "ENABLE_OSPF_AUTH_MESSAGE_DIGEST": "enable_ospf_auth_message_digest",
             "CONF": "cmds",
             "DESC": "description",
             "VLAN": "vlan",
@@ -2130,6 +2209,10 @@ class DcnmIntf:
             "STORM_CONTROL_UCAST_LEVEL_PPS": "storm_control_unicast_level_pps",
 
         }
+
+        # Extend the legacy comparator's nvPair -> playbook-key lookup from the packaged
+        # registry. This is generic registry plumbing: no feature-specific key is added here.
+        self.keymap.update(gie_nvpair_keymap())
 
         # NDFC 12.4.1+ (ND 4.1.1+) parameters
         if self._ndfc_version_gte("12.4.1"):
@@ -2237,12 +2320,16 @@ class DcnmIntf:
         self.log.debug(msg)
 
     def _ndfc_version_gte(self, target):
-        """Check if NDFC version >= target. Uses tuple comparison on version segments."""
+        """Check if NDFC version >= target. Compares as many version segments as the
+        target specifies: a 3-part target like "12.4.1" stays 3-part, while a
+        4-part target like "12.6.0.267" also enforces the build number. Unknown or
+        malformed versions return False (fail closed)."""
         if not getattr(self, 'ndfc_version', None):
             return False
         try:
-            current = tuple(int(x) for x in self.ndfc_version.split(".")[:3])
-            required = tuple(int(x) for x in target.split(".")[:3])
+            required = tuple(int(x) for x in target.split("."))
+            current = tuple(int(x) for x in self.ndfc_version.split(".")[:len(required)])
+            current = current + (0,) * (len(required) - len(current))
             return current >= required
         except (ValueError, AttributeError):
             return False
@@ -2746,6 +2833,20 @@ class DcnmIntf:
         )
         pc_prof_spec_dot1q.update(self.dcnm_intf_storm_control_spec())
 
+        # Thin engine: extend the port-channel specs with registered generic keys the caller
+        # set EXPLICITLY (no default), so an omitted key stays dropped exactly as before.
+        gie_extend_prof_spec(
+            pc_prof_spec_trunk, "int_port_channel_trunk_host", config[0]["profile"]
+        )
+        gie_extend_prof_spec(
+            pc_prof_spec_access, "int_port_channel_access_host", config[0]["profile"]
+        )
+        gie_extend_prof_spec(
+            pc_prof_spec_dot1q,
+            "int_port_channel_dot1q_tunnel_host",
+            config[0]["profile"],
+        )
+
         if "trunk" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 config, pc_spec, pc_prof_spec_trunk
@@ -2882,6 +2983,417 @@ class DcnmIntf:
 
         self.dcnm_intf_validate_interface_input(cfg, sub_spec, sub_prof_spec)
 
+    @property
+    def has_bulk_api(self):
+        """
+        Whether the controller exposes the v2 bulk-update interface API.
+
+        The underlying probe is a POST. Evaluating it lazily keeps read-only and
+        fail-before-mutation paths -- including check mode -- free of controller
+        writes, and it is still resolved at most once per module execution.
+        """
+        if self._has_bulk_api is None:
+            self._has_bulk_api = dcnm_get_bulk_api_support(self.module)
+        return self._has_bulk_api
+
+    @has_bulk_api.setter
+    def has_bulk_api(self, value):
+        self._has_bulk_api = value
+
+    def dcnm_intf_ospf_auth_message_digest_capability(self):
+        """
+        Return "supported" when the controller is new enough to manage
+        nvPairs.ENABLE_OSPF_AUTH_MESSAGE_DIGEST on fabric loopbacks, otherwise
+        "unsupported". Gated on the NDFC version, like the other version-scoped
+        parameters; the verdict is memoized for the module execution.
+        """
+        if self._ospf_auth_md_capability is not None:
+            return self._ospf_auth_md_capability
+
+        if self._ndfc_version_gte(OSPF_AUTH_MD_MIN_NDFC_VERSION):
+            capability = "supported"
+            reason = "NDFC {0} >= {1}".format(
+                self.ndfc_version, OSPF_AUTH_MD_MIN_NDFC_VERSION
+            )
+        else:
+            capability = "unsupported"
+            reason = "NDFC {0} < required {1}".format(
+                self.ndfc_version, OSPF_AUTH_MD_MIN_NDFC_VERSION
+            )
+
+        self._ospf_auth_md_capability = capability
+        self._ospf_auth_md_capability_reason = reason
+        return capability
+
+    @staticmethod
+    def dcnm_intf_normalize_ospf_auth_message_digest(value):
+        """
+        Normalize a known ``ENABLE_OSPF_AUTH_MESSAGE_DIGEST`` representation to
+        ``"true"`` or ``"false"``.
+
+        The controller may return this key as a native boolean, as the strings
+        ``"true"``/``"false"``, or omit it entirely on interfaces created before
+        the property existed. Absence, an empty value, and both false forms all
+        mean the template default, so they compare equal.
+
+        Anything else is tagged unexpected rather than folded into ``"false"``.
+        Folding would make the module report idempotence while leaving an
+        ambiguous controller value in place; keeping it unequal makes the module
+        push the intended value instead.
+        """
+        if value is None:
+            return "false"
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if isinstance(value, str):
+            text = value.strip().lower()
+            if text == "true":
+                return "true"
+            if text in ("false", ""):
+                return "false"
+        return "unexpected:{0}".format(type(value).__name__)
+
+    def dcnm_intf_ospf_md_have_unavailable(self, name, sno):
+        """
+        Report whether the current state of a fabric-loopback parent could NOT be
+        authoritatively determined.
+
+        An interface's HAVE is authoritative when it was found in the detail cache
+        or when a bulk GET for its serial succeeded (so a miss is a genuine
+        absence). It is UNAVAILABLE only when a bulk or individual GET actually
+        failed (all retries, no RETURN_CODE 200). The feature path fails closed on
+        unavailable state instead of treating it as absence.
+        """
+        return self.dcnm_intf_detail_unavailable(name, sno)
+
+    def dcnm_intf_detail_unavailable(self, name, sno):
+        """Return whether one interface detail lacks authoritative state."""
+        sno = self._dcnm_intf_authority_key(sno)
+        cache_key = (sno, name.lower())
+        query_serial = self._dcnm_intf_query_serial(sno)
+        if (
+            cache_key in self.intf_detail_cache
+            or sno in self.intf_detail_cached_snos
+            or query_serial in self.intf_detail_cached_snos
+            or cache_key in self.intf_detail_authoritative_absent_keys
+        ):
+            return False
+        if cache_key in self.intf_detail_failed_keys:
+            return True
+        if "~" in sno:
+            return any(
+                identity in self.intf_detail_fetch_failed_snos
+                for identity in (sno,) + self._dcnm_intf_serial_parts(sno)
+            )
+        return query_serial in self.intf_detail_fetch_failed_snos
+
+    def dcnm_intf_mark_detail_unavailable(self, serialNumber):
+        """Mark the logical identity and every covered physical serial failed."""
+        parts = self._dcnm_intf_serial_parts(serialNumber) or ()
+        authority = self._dcnm_intf_authority_key(serialNumber)
+        if authority:
+            self.intf_detail_fetch_failed_snos.add(authority)
+        self.intf_detail_fetch_failed_snos.update(parts)
+
+    def dcnm_intf_require_summary_authority(self, sno, endpoint="interface"):
+        """Fail closed when summary state used for mutation was unavailable."""
+        authority = self._dcnm_intf_authority_key(sno)
+        failed, cached = (
+            (self.have_breakout_failed_snos, self.have_breakout_cached_snos)
+            if endpoint == "breakout"
+            else (self.have_all_failed_snos, self.have_all_cached_snos)
+        )
+        if authority not in failed and authority in cached:
+            return
+        self.module.fail_json(
+            msg="Current {0} summary for {1} could not be read authoritatively. "
+            "Refusing dependent create, delete, reset or deploy; no change was "
+            "sent.".format(endpoint, sno)
+        )
+
+    def dcnm_intf_require_detail_authority(self, name, sno):
+        """Fail before mutation when current interface policy state is unknown."""
+        if not self.dcnm_intf_detail_unavailable(name, sno):
+            return
+        self.module.fail_json(
+            msg="Current state of interface {0} on {1} could not be read "
+            "authoritatively. Refusing to create, update, delete, reset or "
+            "deploy over unknown controller state; no change was sent.".format(
+                name, sno
+            )
+        )
+
+    def dcnm_intf_ospf_md_guard_policy_mismatch(self, want, have, name, sno, fabric):
+        """
+        Safeguard an explicit false across a policy change.
+
+        When WANT and HAVE policy names differ, compare schedules an update and
+        continues BEFORE the per-nvPair feature reconciliation. If the intended
+        value is false but it was WITHHELD from the payload (a legacy/unsupported
+        parent, so the nvPair is absent from WANT) and the current state reports
+        the feature enabled or an unexpected value, fail closed: the false cannot
+        be applied across the policy change and true/unknown state must not be
+        left silently enabled. A false that rides the payload (supported parent)
+        needs no safeguard, and a true intent already failed input validation.
+        """
+        if want.get("policy") != OSPF_AUTH_MD_PARENT_TEMPLATE:
+            return
+        want_nv = want["interfaces"][0].get("nvPairs", {})
+        if OSPF_AUTH_MD_NVPAIR in want_nv:
+            return  # the value rides the update payload; nothing to safeguard
+        if self._ospf_auth_md_requests.get((name.lower(), sno, fabric)) is not False:
+            return  # only a withheld explicit false needs this safeguard
+
+        shape_problem = self._dcnm_intf_ospf_md_have_shape_problem(have, name, sno)
+        if shape_problem is not None:
+            self.module.fail_json(
+                msg="'{0}' was requested as false on interface {1}, but its policy "
+                "is changing and the controller cannot manage nvPair '{2}'. The "
+                "current state could not be determined ({3}); the feature cannot be "
+                "cleared over unknown state and no change was sent.".format(
+                    OSPF_AUTH_MD_PROFILE_KEY, name, OSPF_AUTH_MD_NVPAIR, shape_problem
+                )
+            )
+            return
+
+        _absent = object()
+        have_intf = self._dcnm_intf_ospf_md_matching_interfaces(have, name)[0]
+        nvpairs = have_intf.get("nvPairs", {})
+        have_md = nvpairs.get(OSPF_AUTH_MD_NVPAIR, _absent)
+        have_norm = (
+            self.dcnm_intf_normalize_ospf_auth_message_digest(have_md)
+            if have_md is not _absent
+            else "false"
+        )
+        if have_norm != "false":
+            self.module.fail_json(
+                msg="'{0}' was requested as false on interface {1}, but its policy "
+                "is changing and the controller cannot manage nvPair '{2}' while "
+                "its current state is '{3}'. The feature cannot be cleared across "
+                "this policy change; no change was sent.".format(
+                    OSPF_AUTH_MD_PROFILE_KEY, name, OSPF_AUTH_MD_NVPAIR, have_norm
+                )
+            )
+
+    @staticmethod
+    def _dcnm_intf_ospf_md_matching_interfaces(have, name):
+        """Return every normalized HAVE interface record matching ``name``."""
+        if not isinstance(have, dict):
+            return []
+        return [
+            intf
+            for intf in (have.get("interfaces", []) or [])
+            if (
+                isinstance(intf, dict)
+                and isinstance(intf.get("ifName"), str)
+                and intf["ifName"].lower() == name.lower()
+            )
+        ]
+
+    @staticmethod
+    def _dcnm_intf_ospf_md_matching_interface(have, name):
+        """Compatibility wrapper returning one match only when unambiguous."""
+        matches = DcnmIntf._dcnm_intf_ospf_md_matching_interfaces(have, name)
+        return matches[0] if len(matches) == 1 else None
+
+    def _dcnm_intf_ospf_md_have_shape_problem(self, have, name, sno):
+        """Return a short reason string if the HAVE record is not well formed
+        enough to interpret target absence, else None. Never prints values."""
+        if not isinstance(have, dict):
+            return "current state is not a mapping"
+        policy = have.get("policy")
+        if not isinstance(policy, str) or policy.strip() == "":
+            return "current policy is missing or malformed"
+        if not isinstance(have.get("interfaces"), list):
+            return "current interface list is missing or malformed"
+        matches = self._dcnm_intf_ospf_md_matching_interfaces(have, name)
+        if len(matches) != 1:
+            return "current interface identity is missing or ambiguous"
+        have_intf = matches[0]
+        if self._dcnm_intf_normalize_serial(
+            have_intf.get("serialNumber")
+        ) != self._dcnm_intf_normalize_serial(sno):
+            return "current interface serial is missing or does not match"
+        if not isinstance(have_intf.get("nvPairs"), dict):
+            return "current interface nvPairs is missing or malformed"
+        return None
+
+    def dcnm_intf_validate_ospf_auth_message_digest_input(self, cfg):
+        """
+        GLOBAL local validation of ``enable_ospf_auth_message_digest`` across the
+        COMPLETE config: presence, raw type (native boolean only), interface type
+        (loopback only) and mode (``fabric`` only).
+
+        ``fail_json`` when the option is a non-boolean, or is supplied on any
+        interface that is not a fabric loopback (type ``lo`` + mode ``fabric``).
+
+        This runs once for every config item before dispatch by interface type,
+        so the field is rejected on an Ethernet, SVI or any other interface type
+        instead of slipping past the loopback-only validator. The value is the raw
+        playbook input here (validate_list_of_dicts runs later), so null, str, int,
+        list and dict stay visible; isinstance(True/False, bool) is True while
+        isinstance(1, bool) is False, so integers that look boolean fail too.
+        """
+        for cfg_item in self.config:
+            profile = cfg_item.get("profile")
+            if not isinstance(profile, dict):
+                continue
+            if OSPF_AUTH_MD_PROFILE_KEY not in profile:
+                continue
+
+            raw_value = profile.get(OSPF_AUTH_MD_PROFILE_KEY)
+            if not isinstance(raw_value, bool):
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, "
+                    "'{1}' must be a native boolean true or false, given {2}. No "
+                    "template metadata was queried and no change was sent.".format(
+                        cfg_item.get("name"),
+                        OSPF_AUTH_MD_PROFILE_KEY,
+                        "null"
+                        if raw_value is None
+                        else "a {0}".format(type(raw_value).__name__),
+                    )
+                )
+
+            if cfg_item.get("type") != "lo":
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, "
+                    "'{1}' is supported only on fabric loopback interfaces "
+                    "(type 'lo', mode 'fabric'); found on a '{2}' interface. No "
+                    "template metadata was queried and no change was sent.".format(
+                        cfg_item.get("name"),
+                        OSPF_AUTH_MD_PROFILE_KEY,
+                        cfg_item.get("type"),
+                    )
+                )
+
+            if profile.get("mode") != "fabric":
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, "
+                    "'{1}' is supported only for loopback interfaces with 'mode: fabric', "
+                    "given mode = '{2}'. No template metadata was queried and no "
+                    "change was sent.".format(
+                        cfg_item.get("name"),
+                        OSPF_AUTH_MD_PROFILE_KEY,
+                        profile.get("mode"),
+                    )
+                )
+
+    def dcnm_intf_gie_validate_parent_bindings(self):
+        """Fail closed when a config item carries a registry-known GENERIC key that has no
+        valid binding for its resolved desired parent (``pol_types[type_mode]``). This runs
+        globally, before mode-specific defaulting/filtering, so a registered passthrough key
+        such as ``flowcontrol_receive`` on a routed/monitor/dot1q Ethernet (or any parent that
+        does not register it) is rejected instead of being silently dropped by legacy
+        validation. A wholly-unknown legacy field is left untouched (legacy discard). child_pti
+        keys (OSPF-MD) keep their dedicated parent/mode validate above and are not double-
+        guarded here."""
+        pol_map = getattr(self, "pol_types", {}).get(
+            getattr(self, "dcnm_version", None), {}
+        )
+        for cfg_item in self.config:
+            profile = cfg_item.get("profile")
+            if not isinstance(profile, dict):
+                continue
+            parent = pol_map.get(
+                "{0}_{1}".format(cfg_item.get("type"), profile.get("mode"))
+            )
+            bad = gie_invalid_parent_key(parent, list(profile.keys()))
+            if bad is not None:
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, "
+                    "'{1}' is not supported on this interface (type '{2}', mode '{3}'). "
+                    "No template metadata was queried and no change was sent.".format(
+                        cfg_item.get("name"),
+                        bad,
+                        cfg_item.get("type"),
+                        profile.get("mode"),
+                    )
+                )
+
+            # A1.6.1 (B1): enforce the REGISTERED native type/choices on the RAW playbook
+            # value, here, while it is still raw. The nested-profile path runs
+            # validate_list_of_dicts later, and that coerces (check_type_bool("false") ->
+            # False, check_type_str(True) -> "True"), so a check placed after it can only
+            # ever see an already-coerced value. Scope is deliberately narrow: only keys
+            # that resolve to an exact registered binding on THIS parent are inspected, so
+            # unknown and non-registered legacy fields keep their existing behaviour.
+            if parent is None:
+                continue
+            for profile_key in sorted(profile.keys()):
+                if profile_key not in gie_all_registered_keys():
+                    continue
+                if resolve_binding(parent, profile_key) is None:
+                    continue
+                try:
+                    gie_validate_binding_value(
+                        parent, profile_key, profile[profile_key]
+                    )
+                except GieBindingError:
+                    # The engine's message deliberately omits the rejected value; this one
+                    # names the field and the expected type without echoing it either.
+                    binding = resolve_binding(parent, profile_key)
+                    expected = binding["type"]
+                    if binding.get("valid_values"):
+                        expected = "{0} (one of: {1})".format(
+                            expected, ", ".join(binding["valid_values"])
+                        )
+                    elif binding.get("min_length") or binding.get("max_length"):
+                        expected = "{0} (length {1}..{2})".format(
+                            expected,
+                            binding.get("min_length", 0),
+                            binding.get("max_length", "unbounded"),
+                        )
+                    self.module.fail_json(
+                        msg="Invalid parameters in playbook: while processing interface "
+                        "{0}, '{1}' must be a native {2}. No template metadata was "
+                        "queried and no change was sent.".format(
+                            cfg_item.get("name"), profile_key, expected
+                        )
+                    )
+
+    def dcnm_intf_resolve_ospf_auth_message_digest_capability(self):
+        """
+        Resolve the fabric-loopback OSPF message-digest capability ONCE, after the
+        entire config has passed ordinary local validation, and fail closed only
+        for an explicit TRUE on a controller that cannot manage the nvPair.
+
+        * explicit true + unsupported version  -> fail before any mutation
+          (a controller too old cannot enable the feature).
+        * explicit false + unsupported version -> not fatal here; a legacy parent
+          is simply never handed the nvPair, and the false intent is reconciled
+          against current state in compare (an absent or false HAVE is an
+          idempotent no-op, a true/contradictory HAVE fails loudly there).
+        * supported version -> both true and false proceed to payload build.
+
+        An omitted option never reaches this method.
+        """
+        requested_true = False
+        requested_any = False
+        for cfg_item in self.config:
+            profile = cfg_item.get("profile")
+            if not isinstance(profile, dict) or OSPF_AUTH_MD_PROFILE_KEY not in profile:
+                continue
+            requested_any = True
+            if profile.get(OSPF_AUTH_MD_PROFILE_KEY) is True:
+                requested_true = True
+
+        if not requested_any:
+            return
+
+        capability = self.dcnm_intf_ospf_auth_message_digest_capability()
+        if capability != "supported" and requested_true:
+            self.module.fail_json(
+                msg="Unsupported controller capability: '{0}' was requested as true "
+                "but the controller cannot manage nvPair '{1}' ({2}). The task stopped "
+                "during input validation, so no interface payload was built and no "
+                "POST, PUT, or deploy was sent.".format(
+                    OSPF_AUTH_MD_PROFILE_KEY,
+                    OSPF_AUTH_MD_NVPAIR,
+                    self._ospf_auth_md_capability_reason,
+                )
+            )
+
     def dcnm_intf_validate_loopback_interface_input(self, cfg):
 
         lo_spec = dict(
@@ -2903,6 +3415,7 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            enable_ospf_auth_message_digest=dict(type="bool"),
         )
 
         self.dcnm_intf_validate_interface_input(cfg, lo_spec, lo_prof_spec)
@@ -3032,6 +3545,11 @@ class DcnmIntf:
         eth_prof_spec_dot1q_tunnel_host.update({
             "fec": dict(type="str", choices=["auto", "fc-fec", "off", "rs-cons16", "rs-fec", "rs-ieee"]),
         })
+
+        # Thin engine: extend the eth spec with registered generic keys the caller set
+        # EXPLICITLY (no default), so an omitted key stays dropped exactly as before.
+        gie_extend_prof_spec(eth_prof_spec_trunk, "int_trunk_host", cfg[0]["profile"])
+        gie_extend_prof_spec(eth_prof_spec_access, "int_access_host", cfg[0]["profile"])
 
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
@@ -3253,6 +3771,10 @@ class DcnmIntf:
         # Inputs will vary for each type of interface and for each state. Make specific checks
         # for each case.
 
+        if self.module.params["state"] not in ("deleted", "query"):
+            self.dcnm_intf_validate_ospf_auth_message_digest_input(self.config)
+            self.dcnm_intf_gie_validate_parent_bindings()
+
         cfg = []
         for item in self.config:
 
@@ -3301,6 +3823,9 @@ class DcnmIntf:
                 if item["type"] == "breakout":
                     self.dcnm_intf_validate_breakout_interface_input(cfg)
             cfg.remove(citem)
+
+        if self.module.params["state"] not in ("deleted", "query"):
+            self.dcnm_intf_resolve_ospf_auth_message_digest_capability()
 
     def dcnm_intf_get_pc_payload(self, delem, intf, profile):
 
@@ -3529,6 +4054,16 @@ class DcnmIntf:
             ] = self.dcnm_intf_xlate_speed(
                 str(delem[profile].get("speed", ""))
             )
+
+        # Thin engine: contribute registered generic parent nvPairs for this port-channel
+        # parent (explicit-only, passthrough version fail-closed). Same generic path the eth
+        # parents use; no per-feature transport code.
+        gie_add, gie_err = gie_contribute_nvpairs(
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+        )
+        if gie_err:
+            self.module.fail_json(msg=gie_err)
+        intf["interfaces"][0]["nvPairs"].update(gie_add)
 
     def dcnm_intf_get_vpc_payload(self, delem, intf, profile):
 
@@ -3850,6 +4385,29 @@ class DcnmIntf:
                 "route_tag"
             ]
 
+            #
+            #
+            ospf_auth_md = delem[profile].get(OSPF_AUTH_MD_PROFILE_KEY)
+            if ospf_auth_md is not None:
+                requested = check_type_bool(ospf_auth_md)
+                serial = intf["interfaces"][0].get("serialNumber")
+                # Compat hook: record the request so the unsupported-version/HAVE reconciliation
+                # (capability gate + compare) owns the legacy-controller path.
+                self._ospf_auth_md_requests[
+                    (ifname.lower(), serial, self.fabric)
+                ] = requested
+                # Engine owns binding resolution + type + supported-version transport. This
+                # exact OSPF-MD binding is the one compatibility exception that withholds on an
+                # unsupported version (reconciled by the established hook above).
+                gie_md_add, gie_md_err = gie_contribute_nvpairs(
+                    OSPF_AUTH_MD_PARENT_TEMPLATE,
+                    {OSPF_AUTH_MD_PROFILE_KEY: requested},
+                    getattr(self, "ndfc_version", None),
+                )
+                if gie_md_err:
+                    self.module.fail_json(msg=gie_md_err)
+                intf["interfaces"][0]["nvPairs"].update(gie_md_add)
+
         # Properties for mode 'mpls' Loopback Interfaces
         if delem[profile]["mode"] == "mpls":
 
@@ -4030,6 +4588,17 @@ class DcnmIntf:
             ] = self.dcnm_intf_xlate_speed(
                 str(delem[profile].get("speed", ""))
             )
+
+        # Thin engine: contribute registered generic parent nvPairs for this eth parent
+        # (explicit-only, passthrough version fail-closed). OSPF-MD is not registered for an eth
+        # parent; it is engine-transported on the loopback path with its capability compat hook.
+        gie_add, gie_err = gie_contribute_nvpairs(
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+        )
+        if gie_err:
+            self.module.fail_json(msg=gie_err)
+        intf["interfaces"][0]["nvPairs"].update(gie_add)
+
         if delem[profile]["mode"] == "dot1q":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
                 profile
@@ -4433,7 +5002,7 @@ class DcnmIntf:
                             else:
                                 self.want.append(intf_payload)
 
-    def dcnm_intf_bulk_fetch_intf_info(self, serialNumber):
+    def dcnm_intf_bulk_fetch_intf_info(self, serialNumber, refresh=False):
         """Bulk-fetch all interface policy details for a switch and populate the cache.
 
         Instead of making one HTTP GET per interface via IF_WITH_SNO_IFNAME,
@@ -4447,61 +5016,86 @@ class DcnmIntf:
                                 combined serial numbers pass only one side.
         """
 
-        sno = serialNumber.split("~")[0] if "~" in serialNumber else serialNumber
+        expected_identity = self._dcnm_intf_authority_key(serialNumber)
+        query_serial = self._dcnm_intf_query_serial(serialNumber)
 
-        if sno in self.intf_detail_cached_snos:
+        if not refresh and expected_identity in self.intf_detail_cached_snos:
             return
 
-        path = self.paths["IF_WITH_SNO"].format(sno)
+        self.dcnm_intf_invalidate_serial_authority(serialNumber)
 
-        retry_count = 0
-        resp = []
-        while retry_count < 3:
-            retry_count += 1
-            resp = dcnm_send(self.module, "GET", path)
+        path = self.paths["IF_WITH_SNO"].format(query_serial)
 
-            if resp == [] or (isinstance(resp, dict) and resp.get("RETURN_CODE") == 200):
-                break
-            time.sleep(1)
+        resp = self._dcnm_intf_get_with_retries(path)
 
-        if (
-            resp
-            and isinstance(resp, dict)
-            and "DATA" in resp
-            and resp["DATA"]
-            and resp["RETURN_CODE"] == 200
-        ):
-            for item in resp["DATA"]:
-                # The bulk endpoint may group multiple interfaces under the
-                # same policy in a single DATA element.  We must iterate ALL
-                # interfaces in the group — not just [0] — and create a
-                # separate cache entry for each one that looks identical to
-                # what the individual endpoint would return (i.e. a single
-                # interface in the "interfaces" list).
-                for intf in item.get("interfaces", []):
-                    if_name = intf.get("ifName", "")
-                    if if_name:
-                        # Build a per-interface entry that mirrors the
-                        # individual-GET response structure.
-                        single_item = {}
-                        for key in item:
-                            if key != "interfaces":
-                                single_item[key] = item[key]
-                        single_item["interfaces"] = [intf]
-                        cache_key = (sno, if_name.lower())
-                        self.intf_detail_cache[cache_key] = single_item
+        if resp == []:
+            authorities = {expected_identity, query_serial}
+            self.intf_detail_cached_snos.update(authorities)
+            self.intf_detail_fetch_failed_snos.difference_update(authorities)
+            return
 
-        self.intf_detail_cached_snos.add(sno)
+        if not (isinstance(resp, dict) and resp.get("RETURN_CODE") == 200):
+            self.dcnm_intf_mark_detail_unavailable(serialNumber)
+            return
+
+        data = resp.get("DATA")
+        if not isinstance(data, list):
+            self.dcnm_intf_mark_detail_unavailable(serialNumber)
+            return
+
+        entries = {}
+        for item in data:
+            if not isinstance(item, dict):
+                self.dcnm_intf_mark_detail_unavailable(serialNumber)
+                return
+            policy = item.get("policy")
+            if not isinstance(policy, str) or policy.strip() == "":
+                self.dcnm_intf_mark_detail_unavailable(serialNumber)
+                return
+            interfaces = item.get("interfaces")
+            if not isinstance(interfaces, list) or not interfaces:
+                self.dcnm_intf_mark_detail_unavailable(serialNumber)
+                return
+            for intf in interfaces:
+                if not isinstance(intf, dict):
+                    self.dcnm_intf_mark_detail_unavailable(serialNumber)
+                    return
+                if_name = intf.get("ifName")
+                if not isinstance(if_name, str) or if_name.strip() == "":
+                    self.dcnm_intf_mark_detail_unavailable(serialNumber)
+                    return
+                response_identity = self._dcnm_intf_bulk_response_identity(
+                    intf.get("serialNumber"),
+                    intf.get("interfaceType", item.get("interfaceType")),
+                    query_serial,
+                    serialNumber,
+                )
+                if response_identity is None:
+                    self.dcnm_intf_mark_detail_unavailable(serialNumber)
+                    return
+                if not isinstance(intf.get("nvPairs"), dict):
+                    self.dcnm_intf_mark_detail_unavailable(serialNumber)
+                    return
+                cache_key = (response_identity, if_name.lower())
+                if cache_key in entries:
+                    self.dcnm_intf_mark_detail_unavailable(serialNumber)
+                    return
+                single_item = {k: item[k] for k in item if k != "interfaces"}
+                single_item["interfaces"] = [intf]
+                entries[cache_key] = single_item
+
+        authorities = {expected_identity, query_serial}
+        self.intf_detail_cache.update(entries)
+        self.intf_detail_cached_snos.update(authorities)
+        self.intf_detail_fetch_failed_snos.difference_update(authorities)
 
     def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
 
         # For VPC and AA_FEX interfaces the serialNumber will be a combined one. But GET on interface cannot
         # pass this combined serial number. We will have to pass individual ones
 
-        if ifType == "INTERFACE_VPC" or ifType == "AA_FEX":
-            sno = serialNumber.split("~")[0]
-        else:
-            sno = serialNumber
+        sno = self._dcnm_intf_authority_key(serialNumber)
+        query_serial = self._dcnm_intf_query_serial(serialNumber)
 
         # Check the bulk-fetched cache first to avoid a per-interface HTTP GET
         cache_key = (sno, ifName.lower())
@@ -4509,37 +5103,234 @@ class DcnmIntf:
         if cached is not None:
             return cached
 
-        # If we already bulk-fetched all interfaces for this serial number
-        # and this interface was not in the response, it does not exist on
-        # the controller.  Return empty without an additional HTTP call.
         if sno in self.intf_detail_cached_snos:
             return []
 
-        # No bulk fetch done for this serial number — fall back to
-        # individual GET (this path is taken when bulk pre-population
-        # was not triggered, e.g. for states other than overridden).
-        path = self.paths["IF_WITH_SNO_IFNAME"].format(sno, ifName)
-
-        retry_count = 0
-        while retry_count < 3:
-            retry_count += 1
-            resp = dcnm_send(self.module, "GET", path)
-
-            if resp == [] or resp["RETURN_CODE"] == 200:
-                break
-            time.sleep(1)
-
-        if (
-            resp
-            and "DATA" in resp
-            and resp["DATA"]
-            and resp["RETURN_CODE"] == 200
-        ):
-            # Store in cache so subsequent lookups for this interface are free
-            self.intf_detail_cache[cache_key] = resp["DATA"][0]
-            return resp["DATA"][0]
-        else:
+        if cache_key in self.intf_detail_authoritative_absent_keys:
             return []
+
+        self.intf_detail_cache.pop(cache_key, None)
+        self.intf_detail_authoritative_absent_keys.discard(cache_key)
+        self.intf_detail_failed_keys.discard(cache_key)
+        path = self.paths["IF_WITH_SNO_IFNAME"].format(query_serial, ifName)
+        resp = self._dcnm_intf_get_with_retries(path)
+
+        if resp == []:
+            self.intf_detail_authoritative_absent_keys.add(cache_key)
+            self.intf_detail_failed_keys.discard(cache_key)
+            return []
+
+        if isinstance(resp, dict) and resp.get("RETURN_CODE") == 200:
+            data = resp.get("DATA")
+            if isinstance(data, list):
+                if len(data) == 0:
+                    self.intf_detail_authoritative_absent_keys.add(cache_key)
+                    self.intf_detail_failed_keys.discard(cache_key)
+                    return []
+                if len(data) == 1 and self._dcnm_intf_valid_individual_entry(
+                    data[0], ifName, query_serial, serialNumber
+                ):
+                    self.intf_detail_cache[cache_key] = data[0]
+                    self.intf_detail_failed_keys.discard(cache_key)
+                    return data[0]
+
+        self.intf_detail_failed_keys.add(cache_key)
+        return []
+
+    def _dcnm_intf_get_with_retries(self, path):
+        """Bounded GET with a controlled transport-exception path.
+
+        Only the dcnm_send call is wrapped, so a transport/API exception becomes a
+        failed attempt (not a crash), while a programmer error in the parsing
+        logic that follows is NOT masked. Terminates early on a bare [] or a dict
+        bare [] or RETURN_CODE 200 response; otherwise returns the last response
+        after the retry bound. Callers still treat bare [] as unavailable because
+        it lacks the required DATA envelope.
+        """
+        resp = []
+        for _attempt in range(3):
+            try:
+                resp = dcnm_send(self.module, "GET", path)
+            except AnsibleConnectionError:
+                resp = None
+            if resp == [] or (
+                isinstance(resp, dict) and resp.get("RETURN_CODE") == 200
+            ):
+                return resp
+            time.sleep(1)
+        return resp
+
+    def _dcnm_intf_valid_individual_entry(
+        self, entry, ifName, query_serial, expected_serial
+    ):
+        """A usable individual entry: a dict with exactly one interface whose
+        ifName matches the requested interface (wrong identity is unavailable)."""
+        if not isinstance(entry, dict):
+            return False
+        policy = entry.get("policy")
+        if not isinstance(policy, str) or policy.strip() == "":
+            return False
+        interfaces = entry.get("interfaces")
+        if not isinstance(interfaces, list) or len(interfaces) != 1:
+            return False
+        intf = interfaces[0]
+        if not isinstance(intf, dict):
+            return False
+        got = intf.get("ifName")
+        return (
+            isinstance(got, str)
+            and got.strip() != ""
+            and got.lower() == ifName.lower()
+            and self._dcnm_intf_response_identity(
+                intf.get("serialNumber"), query_serial, expected_serial
+            ) is not None
+            and isinstance(intf.get("nvPairs"), dict)
+        )
+
+    @staticmethod
+    def _dcnm_intf_serial_parts(serialNumber):
+        """Return one or two non-empty serial components, else ``None``."""
+        if not isinstance(serialNumber, str) or serialNumber != serialNumber.strip():
+            return None
+        parts = serialNumber.split("~")
+        if len(parts) not in (1, 2) or any(not part for part in parts):
+            return None
+        return tuple(parts)
+
+    @classmethod
+    def _dcnm_intf_query_serial(cls, serialNumber):
+        """Return the single serial accepted by an interface GET endpoint."""
+        parts = cls._dcnm_intf_serial_parts(serialNumber)
+        return parts[0] if parts else None
+
+    @classmethod
+    def _dcnm_intf_authority_key(cls, serialNumber):
+        """Return the complete logical identity used as the cache key."""
+        parts = cls._dcnm_intf_serial_parts(serialNumber)
+        return "~".join(parts) if parts else None
+
+    @classmethod
+    def _dcnm_intf_normalize_serial(cls, serialNumber):
+        """Compatibility alias for callers that need the endpoint query serial."""
+        return cls._dcnm_intf_query_serial(serialNumber)
+
+    def _dcnm_intf_known_pair_identities(self):
+        """Return authoritative, ordered vPC/AA-FEX identities by casefolded key."""
+        known = {}
+        for identity in getattr(self, "vpc_ip_sn", {}).values():
+            parts = self._dcnm_intf_serial_parts(identity)
+            if parts and len(parts) == 2:
+                known["~".join(parts).casefold()] = "~".join(parts)
+        return known
+
+    def _dcnm_intf_summary_authorities(self, serialNumber):
+        """Return identities covered by a switch-summary endpoint query."""
+        parts = self._dcnm_intf_serial_parts(serialNumber)
+        if parts is None:
+            return set()
+        query_key = parts[0].casefold()
+        authorities = set(parts)
+        authorities.add("~".join(parts))
+        for pair in self._dcnm_intf_known_pair_identities().values():
+            pair_parts = self._dcnm_intf_serial_parts(pair)
+            if query_key in {part.casefold() for part in pair_parts}:
+                authorities.add(pair)
+                authorities.update(pair_parts)
+        return authorities
+
+    def _dcnm_intf_response_identity(
+        self, response_serial, query_serial, expected_serial, allow_single=False
+    ):
+        """Validate a response serial and return its complete authority key."""
+        response_parts = self._dcnm_intf_serial_parts(response_serial)
+        expected_parts = self._dcnm_intf_serial_parts(expected_serial)
+        if response_parts is None or expected_parts is None or query_serial is None:
+            return None
+
+        query_key = query_serial.casefold()
+        if len(response_parts) == 1:
+            if response_parts[0].casefold() != query_key:
+                return None
+            if len(expected_parts) == 2:
+                return None
+            return self._dcnm_intf_authority_key(expected_serial)
+
+        response_key = "~".join(response_parts).casefold()
+        expected_key = self._dcnm_intf_authority_key(expected_serial).casefold()
+        known_pairs = self._dcnm_intf_known_pair_identities()
+        if query_key not in {part.casefold() for part in response_parts}:
+            return None
+        if len(expected_parts) == 2:
+            if response_key != expected_key:
+                return None
+            if known_pairs and response_key not in known_pairs:
+                return None
+            return self._dcnm_intf_authority_key(expected_serial)
+        if response_key not in known_pairs:
+            return None
+        return known_pairs[response_key]
+
+    def _dcnm_intf_bulk_response_identity(
+        self, response_serial, interface_type, query_serial, expected_serial
+    ):
+        """Return the authority represented by one mixed bulk record."""
+        if interface_type in ("INTERFACE_VPC", "AA_FEX"):
+            return self._dcnm_intf_response_identity(
+                response_serial, query_serial, expected_serial
+            )
+
+        response_parts = self._dcnm_intf_serial_parts(response_serial)
+        if (
+            response_parts is None
+            or len(response_parts) != 1
+            or response_parts[0].casefold() != query_serial.casefold()
+        ):
+            return None
+        return query_serial
+
+    def dcnm_intf_invalidate_serial_authority(self, serialNumber):
+        """Discard every cached authority/failure marker for one serial."""
+        parts = self._dcnm_intf_serial_parts(serialNumber)
+        if parts is None:
+            return
+        query_key = parts[0].casefold()
+        affected_folded = {
+            query_key,
+            self._dcnm_intf_authority_key(serialNumber).casefold(),
+        }
+        if len(parts) == 2:
+            affected_folded.update(part.casefold() for part in parts)
+        if len(parts) == 2:
+            affected_folded.update(
+                pair
+                for pair in self._dcnm_intf_known_pair_identities()
+                if query_key in pair.split("~")
+            )
+        affected = {
+            key
+            for key in (
+                set(self.intf_detail_cached_snos)
+                | set(self.intf_detail_fetch_failed_snos)
+                | {item[0] for item in self.intf_detail_cache}
+                | {item[0] for item in self.intf_detail_failed_keys}
+                | {item[0] for item in self.intf_detail_authoritative_absent_keys}
+            )
+            if isinstance(key, str) and key.casefold() in affected_folded
+        }
+        affected.add(self._dcnm_intf_authority_key(serialNumber))
+        for mapping in (self.intf_detail_cache,):
+            for key in [key for key in mapping if key[0] in affected]:
+                mapping.pop(key, None)
+        self.intf_detail_cached_snos.difference_update(affected)
+        self.intf_detail_fetch_failed_snos.difference_update(affected)
+        self.intf_detail_failed_keys = {
+            key for key in self.intf_detail_failed_keys if key[0] not in affected
+        }
+        self.intf_detail_authoritative_absent_keys = {
+            key
+            for key in self.intf_detail_authoritative_absent_keys
+            if key[0] not in affected
+        }
 
     def dcnm_intf_get_intf_info_from_dcnm(self, intf):
 
@@ -4548,30 +5339,115 @@ class DcnmIntf:
         )
 
     def dcnm_intf_get_have_all_with_sno(self, sno):
+        authority = self._dcnm_intf_authority_key(sno)
+        query_serial = self._dcnm_intf_query_serial(sno)
+        covered = self._dcnm_intf_summary_authorities(sno)
+        covered_folded = {identity.casefold() for identity in covered}
+        known_serials = {
+            part.casefold()
+            for identity in list(getattr(self, "ip_sn", {}).values())
+            + list(getattr(self, "vpc_ip_sn", {}).values())
+            for part in (self._dcnm_intf_serial_parts(identity) or ())
+        }
+        known_serials.add(query_serial.casefold())
+        self.have_all = [
+            item
+            for item in self.have_all
+            if (
+                self._dcnm_intf_authority_key(item.get("serialNo", ""))
+                or ""
+            ).casefold()
+            not in covered_folded
+        ]
+        self.have_all_cached_snos.difference_update(covered)
+        self.have_all_failed_snos.difference_update(covered)
+        path = self.paths["IF_DETAIL_WITH_SNO"].format(query_serial)
+        resp = self._dcnm_intf_get_with_retries(path)
+        data = resp.get("DATA") if isinstance(resp, dict) else None
 
-        if "~" in sno:
-            sno = sno.split("~")[0]
-        path = self.paths["IF_DETAIL_WITH_SNO"].format(sno)
-        resp = dcnm_send(self.module, "GET", path)
+        if not (
+            isinstance(resp, dict)
+            and resp.get("RETURN_CODE") == 200
+            and isinstance(data, list)
+            and all(
+                isinstance(item, dict)
+                and isinstance(item.get("ifName"), str)
+                and item.get("ifName")
+                and isinstance(item.get("serialNo"), str)
+                and item.get("serialNo")
+                and self._dcnm_intf_serial_parts(item["serialNo"])
+                and {
+                    part.casefold()
+                    for part in self._dcnm_intf_serial_parts(item["serialNo"])
+                }.issubset(known_serials)
+                and isinstance(item.get("fabricName"), str)
+                and item.get("fabricName")
+                and isinstance(item.get("ifType"), str)
+                and item.get("ifType")
+                and "isPhysical" in item
+                and "markDeleted" in item
+                and "alias" in item
+                and "deleteReason" in item
+                and isinstance(item.get("complianceStatus"), str)
+                and item.get("complianceStatus")
+                and "underlayPolicies" in item
+                for item in data
+            )
+        ):
+            self.have_all_failed_snos.update(covered or {authority})
+            return False
 
-        if resp and "DATA" in resp and resp["DATA"]:
-            self.have_all.extend(resp["DATA"])
+        for item in data:
+            item_authority = self._dcnm_intf_authority_key(item["serialNo"])
+            covered.add(item_authority)
+            covered.update(self._dcnm_intf_serial_parts(item["serialNo"]))
+        self.have_all.extend(data)
+        self.have_all_cached_snos.update(covered or {authority})
+        self.have_all_failed_snos.difference_update(covered or {authority})
+        return True
 
     def dcnm_intf_get_have_all_breakout_interfaces(self, sno):
         # This function will get policies for a given serial number and
         # populate the breakout interfaces in self.have_breakout
-        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}".format(sno)
-        resp = dcnm_send(self.module, "GET", path)
+        authority = self._dcnm_intf_authority_key(sno)
+        query_serial = self._dcnm_intf_query_serial(sno)
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}".format(query_serial)
+        resp = self._dcnm_intf_get_with_retries(path)
+        data = resp.get("DATA") if isinstance(resp, dict) else None
+        valid = (
+            isinstance(resp, dict)
+            and resp.get("RETURN_CODE") == 200
+            and isinstance(data, list)
+            and all(
+                isinstance(elem, dict)
+                and isinstance(elem.get("templateName"), str)
+                and (
+                    elem.get("templateName") != "breakout_interface"
+                    or (
+                        isinstance(elem.get("serialNumber"), str)
+                        and elem.get("serialNumber")
+                        and isinstance(elem.get("entityName"), str)
+                        and elem.get("entityName")
+                    )
+                )
+                for elem in data
+            )
+        )
+        if not valid:
+            self.have_breakout_failed_snos.add(authority)
+            self.have_breakout_cached_snos.discard(authority)
+            return False
 
-        breakout = []
-        if resp and "DATA" in resp and resp["DATA"]:
-            for elem in resp["DATA"]:
-                if elem.get('templateName', None) == "breakout_interface":
-                    # Make sure the serial number for this device is a manageable device
-                    # We cannot manage breakout interfaces for pre-provisioned devices
-                    if elem.get('serialNumber') in self.manageable.values():
-                        breakout.append(elem['entityName'])
-            self.have_breakout.append({sno: breakout})
+        breakout = [
+            elem["entityName"]
+            for elem in data
+            if elem["templateName"] == "breakout_interface"
+            and elem["serialNumber"] in self.manageable.values()
+        ]
+        self.have_breakout.append({authority: breakout})
+        self.have_breakout_cached_snos.add(authority)
+        self.have_breakout_failed_snos.discard(authority)
+        return True
 
     def dcnm_intf_get_have_all(self, sw):
 
@@ -4587,9 +5463,10 @@ class DcnmIntf:
         else:
             sno = self.ip_sn[sw]
 
-        self.have_all_list.append(sw)
-        self.dcnm_intf_get_have_all_with_sno(sno)
-        self.dcnm_intf_get_have_all_breakout_interfaces(sno)
+        summary_ok = self.dcnm_intf_get_have_all_with_sno(sno)
+        breakout_ok = self.dcnm_intf_get_have_all_breakout_interfaces(sno)
+        if summary_ok and breakout_ok:
+            self.have_all_list.append(sw)
 
     def dcnm_intf_get_have(self):
 
@@ -4599,18 +5476,19 @@ class DcnmIntf:
         # Bulk-prefetch interface details for all switches referenced in self.want.
         # This populates the cache so that individual dcnm_intf_get_intf_info calls
         # below become O(1) lookups instead of individual HTTP GETs.
-        prefetched_snos = set()
+        prefetch_identities = {}
         for elem in self.want:
             for intf in elem["interfaces"]:
                 sno = intf.get("serialNumber", "")
                 if not sno:
                     continue
-                # For VPC/AA_FEX, use the first part of the ~-separated pair
-                if intf.get("interfaceType") in ("INTERFACE_VPC", "AA_FEX"):
-                    sno = sno.split("~")[0]
-                if sno not in prefetched_snos:
-                    prefetched_snos.add(sno)
-                    self.dcnm_intf_bulk_fetch_intf_info(sno)
+                query_serial = self._dcnm_intf_query_serial(sno)
+                if query_serial not in prefetch_identities or "~" in sno:
+                    prefetch_identities[query_serial] = sno
+        for sno in sorted(
+            prefetch_identities.values(), key=lambda value: "~" not in value
+        ):
+            self.dcnm_intf_bulk_fetch_intf_info(sno, refresh=True)
 
         # We have all the requested interface config in self.want. Interfaces are grouped together based on the
         # policy string and the interface name in a single dict entry.
@@ -4735,6 +5613,11 @@ class DcnmIntf:
             t_e1 = str(t_e1).lower()
             t_e2 = str(t_e2).lower()
 
+        if k == OSPF_AUTH_MD_NVPAIR:
+            #
+            t_e1 = self.dcnm_intf_normalize_ospf_auth_message_digest(t_e1)
+            t_e2 = self.dcnm_intf_normalize_ospf_auth_message_digest(t_e2)
+
         numeric_keys = [
             "LACP_PORT_PRIO",
             "STORM_CONTROL_BCAST_LEVEL_PPS",
@@ -4809,6 +5692,7 @@ class DcnmIntf:
         name = want["interfaces"][0]["ifName"]
         sno = want["interfaces"][0]["serialNumber"]
         fabric = want["interfaces"][0]["fabricName"]
+        self.dcnm_intf_require_summary_authority(sno)
 
         match_have = [
             have
@@ -4830,7 +5714,6 @@ class DcnmIntf:
 
     def dcnm_intf_replace_pc_members(self, want, have):
         """
-        ### Summary
         Search ``self.want`` for any port-channel member interfaces that are also
         found in ``self.have`` and if found will replace the member interfaces in
         self.want with the correct policy and properties that can be managed.
@@ -4888,7 +5771,6 @@ class DcnmIntf:
 
     def dcnm_intf_compare_want_and_have(self, state):
         """
-        ### Summary
         Compare want and have states for each interface
         """
         method_name = inspect.stack()[0][3]
@@ -4943,6 +5825,9 @@ class DcnmIntf:
             for want_breakout in self.want_breakout:
                 want_intf = want_breakout["interfaces"][0]["ifName"]
                 want_serialnumber = want_breakout["interfaces"][0]["serialNumber"]
+                self.dcnm_intf_require_summary_authority(
+                    want_serialnumber, endpoint="breakout"
+                )
                 match_create = False
                 # Search if interface is in have_breakout
                 for elem in self.have_breakout:
@@ -4958,6 +5843,9 @@ class DcnmIntf:
 
         if state == "deleted" or state == "overridden":
             for have_breakout in self.have_breakout:
+                self.dcnm_intf_require_summary_authority(
+                    list(have_breakout.keys())[0], endpoint="breakout"
+                )
                 for interface in list(have_breakout.values())[0]:
                     match_delete_interface = True
                     for want_breakout in self.want_breakout:
@@ -4998,6 +5886,7 @@ class DcnmIntf:
                     )
                 ]
             if not match_have:
+                self.dcnm_intf_require_detail_authority(name, sno)
                 changed_dict = copy.deepcopy(want)
 
                 if (
@@ -5042,6 +5931,9 @@ class DcnmIntf:
                     # rest of the structure. Overwrite with whatever is in want
 
                     if want["policy"] != d["policy"]:
+                        self.dcnm_intf_ospf_md_guard_policy_mismatch(
+                            want, d, name, sno, fabric
+                        )
                         action = "update"
                         continue
 
@@ -5059,6 +5951,144 @@ class DcnmIntf:
                             for ik in if_keys:
                                 if ik == "nvPairs":
                                     nv_keys = list(want[k][0][ik].keys())
+
+                                    # Preserve an authoritative current value for every omitted
+                                    # registry passthrough binding on this SAME parent.  This is
+                                    # transport preservation for replaced/overridden/full-payload
+                                    # updates, not inferred intent: the carried value was not in
+                                    # the original nv_keys and therefore is not reported as a
+                                    # requested diff. Never invent a default when HAVE omits it.
+                                    for binding in gie_carry_forward_bindings(
+                                        want.get("policy")
+                                    ):
+                                        nvpair = binding["parent_nvpair"]
+                                        profile_key = binding["profile_key"]
+                                        if (
+                                            profile_key in pb_keys
+                                            or nvpair in want[k][0][ik]
+                                        ):
+                                            continue
+                                        _gie_absent = object()
+                                        have_value = next(
+                                            (
+                                                intf[ik][nvpair]
+                                                for intf in d[k]
+                                                if isinstance(intf.get(ik), dict)
+                                                and nvpair in intf[ik]
+                                            ),
+                                            _gie_absent,
+                                        )
+                                        if have_value is not _gie_absent:
+                                            try:
+                                                gie_validate_binding_value(
+                                                    want.get("policy"),
+                                                    profile_key,
+                                                    have_value,
+                                                    value_source="have",
+                                                )
+                                            except GieBindingError as exc:
+                                                self.module.fail_json(msg=str(exc))
+                                            want[k][0][ik][nvpair] = have_value
+
+                                    # A1.7 integration: same-parent HAVE carry-forward (drift fix,
+                                    # ported from A1.5). SCOPED to the exact proven parent
+                                    # OSPF_AUTH_MD_PARENT_TEMPLATE (int_fabric_loopback_11_1): only
+                                    # this parent's full HAVE nvPair set was observed and every key
+                                    # classified as writable / read-only-metadata / OSPF-domain, so
+                                    # the exclusion set is demonstrated complete only here. Other
+                                    # parents are NOT carried until registry/template metadata proves
+                                    # their writable/identity/sensitive nvPairs. Within this parent it
+                                    # preserves ALL builder-omitted, non-excluded HAVE nvPairs (not a
+                                    # hardcoded four). MERGED only (matches the existing 'leave
+                                    # undeclared as-is' semantics; replaced/overridden intentionally
+                                    # reset). The block runs on a SAME parent (a policy mismatch
+                                    # already 'continue'd above). Carried value == exact HAVE, entered
+                                    # after nv_keys, so no public diff, never overrides an
+                                    # explicit/builder value already in want, idempotent.
+                                    #
+                                    # ONE AUTHORITATIVE PATH: the registered-binding carry-forward
+                                    # immediately above returns [] for this parent (it has no
+                                    # 'passthrough' binding), so the two never write the same nvPair.
+                                    # The helper additionally skips any key already in want.
+                                    if (
+                                        state == "merged"
+                                        and want.get("policy") == OSPF_AUTH_MD_PARENT_TEMPLATE
+                                    ):
+                                        _gie_have_nv = next(
+                                            (
+                                                intf[ik]
+                                                for intf in d[k]
+                                                if isinstance(intf.get(ik), dict)
+                                            ),
+                                            {},
+                                        )
+                                        for _gie_nvp, _gie_val in gie_have_carry_forward_nvpairs(
+                                            want[k][0][ik], _gie_have_nv
+                                        ).items():
+                                            want[k][0][ik][_gie_nvp] = _gie_val
+
+                                    #
+                                    #
+                                    if (
+                                        want.get("policy") == OSPF_AUTH_MD_PARENT_TEMPLATE
+                                        and OSPF_AUTH_MD_NVPAIR not in want[k][0][ik]
+                                    ):
+                                        _absent = object()
+                                        have_md = next(
+                                            (
+                                                intf[ik][OSPF_AUTH_MD_NVPAIR]
+                                                for intf in d[k]
+                                                if isinstance(intf.get(ik), dict)
+                                                and OSPF_AUTH_MD_NVPAIR in intf[ik]
+                                            ),
+                                            _absent,
+                                        )
+                                        explicit_request = (
+                                            self._ospf_auth_md_requests.get(
+                                                (name.lower(), sno, fabric)
+                                            )
+                                        )
+                                        if explicit_request is None:
+                                            if have_md is not _absent:
+                                                want[k][0][ik][
+                                                    OSPF_AUTH_MD_NVPAIR
+                                                ] = have_md
+                                        else:
+                                            have_norm = (
+                                                self.dcnm_intf_normalize_ospf_auth_message_digest(
+                                                    have_md
+                                                )
+                                                if have_md is not _absent
+                                                else "false"
+                                            )
+                                            if explicit_request is True:
+                                                self.module.fail_json(
+                                                    msg="'{0}' was requested as true on "
+                                                    "interface {1} but the controller "
+                                                    "cannot manage nvPair '{2}'. No "
+                                                    "change was sent.".format(
+                                                        OSPF_AUTH_MD_PROFILE_KEY,
+                                                        name,
+                                                        OSPF_AUTH_MD_NVPAIR,
+                                                    )
+                                                )
+                                            elif have_norm != "false":
+                                                self.module.fail_json(
+                                                    msg="'{0}' was requested as false on "
+                                                    "interface {1} to clear the feature, "
+                                                    "but the controller cannot manage "
+                                                    "nvPair '{2}' and its current state "
+                                                    "is '{3}'. The feature cannot be "
+                                                    "cleared without a parent template "
+                                                    "that declares the parameter; no "
+                                                    "change was sent.".format(
+                                                        OSPF_AUTH_MD_PROFILE_KEY,
+                                                        name,
+                                                        OSPF_AUTH_MD_NVPAIR,
+                                                        have_norm,
+                                                    )
+                                                )
+
                                     # List of keys to check and potentially remove from nv_keys
                                     # Some keys are not present in the first GET and must be removed
                                     keys_to_check = [
@@ -5745,14 +6775,16 @@ class DcnmIntf:
             ]
 
             for sno in affected_snos:
-                stale_cache_keys = [
-                    key for key in self.intf_detail_cache if key[0] == sno
-                ]
-                for key in stale_cache_keys:
-                    self.intf_detail_cache.pop(key, None)
-                self.intf_detail_cached_snos.discard(sno)
+                self.dcnm_intf_invalidate_serial_authority(sno)
                 self.dcnm_intf_get_have_all_with_sno(sno)
                 self.dcnm_intf_bulk_fetch_intf_info(sno)
+                for item in self.deferred_delete_member_defaults:
+                    if self._dcnm_intf_query_serial(
+                        item["serialNumber"]
+                    ) == sno:
+                        self.dcnm_intf_require_detail_authority(
+                            item["ifName"], item["serialNumber"]
+                        )
 
             parent_still_present = False
             for item in self.deferred_delete_member_defaults:
@@ -5792,6 +6824,10 @@ class DcnmIntf:
                 intf["ifName"], intf["serialNumber"], item["fabricName"]
             )
             intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
+
+            self.dcnm_intf_require_detail_authority(
+                intf["ifName"], intf["serialNumber"]
+            )
 
             if intf_payload != []:
                 if (
@@ -5988,12 +7024,16 @@ class DcnmIntf:
         # (inside dcnm_intf_get_intf_info) with at most S bulk GETs
         # (one per unique serial number), dramatically speeding up the
         # overridden diff computation for large interface counts.
-        prefetched_snos = set()
+        prefetch_identities = {}
         for h in self.have_all:
             sno = h["serialNo"]
-            if sno not in prefetched_snos:
-                prefetched_snos.add(sno)
-                self.dcnm_intf_bulk_fetch_intf_info(sno)
+            query_serial = self._dcnm_intf_query_serial(sno)
+            if query_serial not in prefetch_identities or "~" in sno:
+                prefetch_identities[query_serial] = sno
+        for sno in sorted(
+            prefetch_identities.values(), key=lambda value: "~" not in value
+        ):
+            self.dcnm_intf_bulk_fetch_intf_info(sno)
 
         # Pre-build O(1) lookup structures to replace linear scans.
         # want_set:  replaces match_want list comprehension over self.want
@@ -6036,6 +7076,8 @@ class DcnmIntf:
                         not in self.module.params["override_intf_types"]
                     ):
                         continue
+
+            self.dcnm_intf_require_detail_authority(name, sno)
 
             if (have["ifType"] == "INTERFACE_ETHERNET") and (
                 (str(have["isPhysical"]).lower() != "none")
@@ -6125,6 +7167,9 @@ class DcnmIntf:
                 intf = self.dcnm_intf_get_intf_info(
                     have["ifName"], have["serialNo"], have["ifType"]
                 )
+                self.dcnm_intf_require_detail_authority(
+                    have["ifName"], have["serialNo"]
+                )
                 if intf == []:
                     # In case of LANClassic fabrics, a GET on policy details for Ethernet interfaces will return [] since
                     # these interfaces dont have any policies configured by default. In that case there is nothing to be done
@@ -6205,7 +7250,7 @@ class DcnmIntf:
                 # Certain interfaces cannot be deleted, so check before deleting. But if the interface has been marked for delete,
                 # we still go in and check if need to deploy.
                 if (
-                    str(have["deletable"]).lower() == "true"
+                    str(have.get("deletable")).lower() == "true"
                     or str(have["markDeleted"]).lower() == "true"
                 ):
                     # Port-channel which are created as part of VPC peer link should not be deleted
@@ -6425,7 +7470,7 @@ class DcnmIntf:
             # GETs (inside dcnm_intf_get_intf_info) with at most S bulk GETs
             # (one per unique serial number), dramatically speeding up the
             # deleted diff computation for large interface counts.
-            prefetched_snos = set()
+            prefetch_identities = {}
             for cfg in self.config:
                 if cfg.get("name") is None:
                     continue
@@ -6433,21 +7478,24 @@ class DcnmIntf:
                 if switches is None:
                     switches = list(self.ip_sn.keys())
                 for sw in switches:
-                    if sw in self.ip_sn:
-                        sno = self.ip_sn[sw]
-                        if sno not in prefetched_snos:
-                            prefetched_snos.add(sno)
-                            self.dcnm_intf_bulk_fetch_intf_info(sno)
                     # VPC/AA_FEX interfaces use vpc_ip_sn for lookups.
                     # Pre-split the combined serial (e.g. "FOX~SAL") and
                     # prefetch the first part so those lookups hit cache.
                     name_lower = cfg.get("name", "")[0:3].lower()
                     if name_lower == "vpc" and sw in self.vpc_ip_sn:
-                        vpc_sno = self.vpc_ip_sn[sw]
-                        vpc_sno_first = vpc_sno.split("~")[0] if "~" in vpc_sno else vpc_sno
-                        if vpc_sno_first not in prefetched_snos:
-                            prefetched_snos.add(vpc_sno_first)
-                            self.dcnm_intf_bulk_fetch_intf_info(vpc_sno_first)
+                        sno = self.vpc_ip_sn[sw]
+                    elif sw in self.ip_sn:
+                        sno = self.ip_sn[sw]
+                    else:
+                        continue
+                    query_serial = self._dcnm_intf_query_serial(sno)
+                    if query_serial not in prefetch_identities or "~" in sno:
+                        prefetch_identities[query_serial] = sno
+
+            for sno in sorted(
+                prefetch_identities.values(), key=lambda value: "~" not in value
+            ):
+                self.dcnm_intf_bulk_fetch_intf_info(sno, refresh=True)
 
             for cfg in self.config:
                 if cfg.get("name", None) is not None and cfg.get("type") == "breakout":
@@ -6564,6 +7612,9 @@ class DcnmIntf:
                                 intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(
                                     intf
                                 )
+                                self.dcnm_intf_require_detail_authority(
+                                    intf["ifName"], intf["serialNumber"]
+                                )
 
                                 # Before we add the interface to replace list, check if the default payload is same as
                                 # what is already present. If both are same, skip the interface. This is required specifically
@@ -6634,6 +7685,9 @@ class DcnmIntf:
                         else:
                             intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(
                                 intf
+                            )
+                            self.dcnm_intf_require_detail_authority(
+                                intf["ifName"], intf["serialNumber"]
                             )
 
                             if intf_payload != []:
@@ -6885,6 +7939,7 @@ class DcnmIntf:
                 retries += 1
                 name = item["ifName"]
                 sno = item["serialNumber"]
+                self.dcnm_intf_require_summary_authority(sno)
 
                 match_have = [
                     have
@@ -6914,11 +7969,13 @@ class DcnmIntf:
 
                     time.sleep(5)
                     self.have_all = []
-                    self.dcnm_intf_get_have_all_with_sno(sno)
+                    if not self.dcnm_intf_get_have_all_with_sno(sno):
+                        self.dcnm_intf_require_summary_authority(sno)
                 else:
                     # For merge state, the interfaces would have been created just now. Fetch them again before checking
                     self.have_all = []
-                    self.dcnm_intf_get_have_all_with_sno(sno)
+                    if not self.dcnm_intf_get_have_all_with_sno(sno):
+                        self.dcnm_intf_require_summary_authority(sno)
             if (
                 match_have == []
                 or match_have[0]["complianceStatus"] != "In-Sync"
