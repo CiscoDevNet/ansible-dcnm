@@ -2707,8 +2707,12 @@ class DcnmIntf:
             for item in intf_info:
 
                 plist.append(item["profile"])
+                # Pass the AnsibleModule so validate_list_of_dicts can register no_log spec params
+                # (e.g. the OSPF legacy-key 'ospf_auth_key') in module.no_log_values for scrubbing.
+                # Without it, a no_log profile param makes validate_list_of_dicts raise
+                # "'<param>' is a no_log parameter / Ansible module object must be passed...".
                 intf_profile, invalid_params = validate_list_of_dicts(
-                    plist, prof_spec
+                    plist, prof_spec, self.module
                 )
 
                 # Merge the info from the intf_profile into the intf_info to have a single dict to be used for building
