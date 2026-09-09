@@ -280,3 +280,110 @@ def test_validate_list_of_dicts_contract_requires_module_for_no_log():
     assert "no_log parameter" in str(e.value)
     # And the error must not echo the key value.
     assert PLACEHOLDER_KEY not in str(e.value)
+
+
+# ----------------------------------------------- A1.9 golden payload (equivalence) --
+# These snapshots are the migration's safety net. They were CAPTURED from the hardcoded
+# emission that was validated live (T1 apply / T2 idempotency / T3 rotation / T4 teardown),
+# so they describe a payload NDFC is known to accept.
+#
+# When the emission moves to gie_contribute_nvpairs, these tests must keep passing WITHOUT
+# being edited. Editing a golden to make the migration pass would destroy the only evidence
+# that the migration changed nothing observable.
+#
+# Why whole-dict equality and not per-key asserts: the other transport tests above check
+# individual keys, so a migration that silently ADDED or DROPPED an unrelated nvPair would
+# still pass them. These compare the complete dict.
+#
+# Why the explicit type map: in Python `True == 1`, so dict equality alone would not catch a
+# bool degrading to an int, nor `'17'` becoming `17` being masked by a loose comparison.
+
+_GOLDEN_BASE = {
+    "INTF_NAME": "Loopback0",
+    "IP": "10.31.0.5",
+    "SECONDARY_IP": "",
+    "V6IP": "",
+    "ROUTE_MAP_TAG": "",
+    "DESC": "d",
+    "ADMIN_STATE": "true",
+    "CONF": "",
+    "SPEED": "Auto",
+}
+
+
+def _golden(**extra):
+    out = dict(_GOLDEN_BASE)
+    out.update(extra)
+    return out
+
+
+GOLDEN_CASES = [
+    # (label, profile overrides, expected complete nvPairs)
+    (
+        "pair_with_boolean",
+        {"enable_ospf_auth_message_digest": True, "ospf_auth_key_id": 17,
+         "ospf_auth_key": PLACEHOLDER_KEY},
+        _golden(ENABLE_OSPF_AUTH_MESSAGE_DIGEST=True,
+                OSPF_AUTH_KEY_ID="17", OSPF_AUTH_KEY=PLACEHOLDER_KEY),
+    ),
+    (
+        "pair_without_boolean",
+        {"ospf_auth_key_id": 17, "ospf_auth_key": PLACEHOLDER_KEY},
+        _golden(OSPF_AUTH_KEY_ID="17", OSPF_AUTH_KEY=PLACEHOLDER_KEY),
+    ),
+    (
+        # key-id 0 is falsy: the guard must test `is not None`, not truthiness.
+        "key_id_zero",
+        {"ospf_auth_key_id": 0, "ospf_auth_key": PLACEHOLDER_KEY},
+        _golden(OSPF_AUTH_KEY_ID="0", OSPF_AUTH_KEY=PLACEHOLDER_KEY),
+    ),
+    (
+        "key_id_upper_bound",
+        {"ospf_auth_key_id": 255, "ospf_auth_key": PLACEHOLDER_KEY},
+        _golden(OSPF_AUTH_KEY_ID="255", OSPF_AUTH_KEY=PLACEHOLDER_KEY),
+    ),
+    (
+        "no_pair",
+        {},
+        _golden(),
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "label,overrides,expected", GOLDEN_CASES, ids=[c[0] for c in GOLDEN_CASES]
+)
+def test_golden_payload_is_unchanged_by_the_migration(label, overrides, expected):
+    s = _lo_instance()
+    intf = _intf()
+    s.dcnm_intf_get_loopback_payload(_delem(**overrides), intf, "profile")
+    assert intf["interfaces"][0]["nvPairs"] == expected
+
+
+@pytest.mark.parametrize(
+    "label,overrides,expected", GOLDEN_CASES, ids=[c[0] for c in GOLDEN_CASES]
+)
+def test_golden_payload_value_types_are_unchanged(label, overrides, expected):
+    s = _lo_instance()
+    intf = _intf()
+    s.dcnm_intf_get_loopback_payload(_delem(**overrides), intf, "profile")
+    nv = intf["interfaces"][0]["nvPairs"]
+    actual_types = {k: type(v).__name__ for k, v in nv.items()}
+    expected_types = {k: type(v).__name__ for k, v in expected.items()}
+    assert actual_types == expected_types
+
+
+def test_golden_pins_the_key_id_as_a_string_not_a_native_int():
+    """The engine transports NATIVE values (gie_engine: `add[nvpair] = value`), so a naive
+    migration would emit OSPF_AUTH_KEY_ID as int 17 instead of the string "17" that was
+    validated live. The string normalization must therefore stay in the module, next to
+    where check_type_bool() normalizes the boolean.
+    """
+    s = _lo_instance()
+    intf = _intf()
+    s.dcnm_intf_get_loopback_payload(
+        _delem(ospf_auth_key_id=17, ospf_auth_key=PLACEHOLDER_KEY), intf, "profile"
+    )
+    value = intf["interfaces"][0]["nvPairs"][KEY_ID_NV]
+    assert value == "17"
+    assert type(value) is str, "regression: key-id degraded to a native int"
