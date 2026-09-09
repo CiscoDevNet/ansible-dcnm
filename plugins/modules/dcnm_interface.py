@@ -1945,6 +1945,26 @@ OSPF_AUTH_MD_NVPAIR = "ENABLE_OSPF_AUTH_MESSAGE_DIGEST"
 OSPF_AUTH_MD_PARENT_TEMPLATE = "int_fabric_loopback_11_1"
 OSPF_AUTH_MD_MIN_NDFC_VERSION = "12.6.0.267"  # assumed (validated_on); confirm real floor
 
+# OSPF legacy-key mode on the fabric loopback (int_fabric_loopback_11_1). The interface profile
+# carries the pair OSPF_AUTH_KEY_ID + OSPF_AUTH_KEY (parent nvPairs); NDFC's parent DSL creates the
+# ``ospf_interface_auth`` child from those interface values (the module MUST NOT fabricate the child).
+# Same parent + same version floor as OSPF-MD. Keychain (``ospfAuthKeychainName``) is FABRIC-owned
+# (fabricSettings overwrites the interface param in the parent DSL) -> it is NOT a dcnm_interface
+# field and is deliberately excluded here; supporting it belongs to dcnm_fabric.
+OSPF_AUTH_KEY_ID_PROFILE_KEY = "ospf_auth_key_id"
+OSPF_AUTH_KEY_PROFILE_KEY = "ospf_auth_key"
+OSPF_AUTH_KEY_ID_NVPAIR = "OSPF_AUTH_KEY_ID"
+OSPF_AUTH_KEY_NVPAIR = "OSPF_AUTH_KEY"
+OSPF_AUTH_KEYCHAIN_NVPAIR = "ospfAuthKeychainName"  # fabric-owned; excluded from dcnm_interface
+# Profile keys a user might reach for to set the (excluded) keychain; rejected with a clear pointer.
+OSPF_AUTH_KEYCHAIN_PROFILE_KEYS = (
+    "ospf_auth_keychain_name",
+    "ospf_auth_keychain",
+    "ospfAuthKeychainName",
+)
+OSPF_AUTH_KEY_ID_MIN = 0
+OSPF_AUTH_KEY_ID_MAX = 255
+
 # Thin additive registry-driven engine (Phase 1 Monday slice). Consumes the packaged static
 # binding table only; additive; explicit-only; NDFC executes template effects. The engine owns
 # binding resolution + type validation + supported-version parent-nvPair transport for every
@@ -2154,6 +2174,8 @@ class DcnmIntf:
             "ROUTING_TAG": "route_tag",
             "ROUTE_MAP_TAG": "route_tag",
             "ENABLE_OSPF_AUTH_MESSAGE_DIGEST": "enable_ospf_auth_message_digest",
+            "OSPF_AUTH_KEY_ID": "ospf_auth_key_id",
+            "OSPF_AUTH_KEY": "ospf_auth_key",
             "CONF": "cmds",
             "DESC": "description",
             "VLAN": "vlan",
@@ -3283,6 +3305,142 @@ class DcnmIntf:
                     )
                 )
 
+    def dcnm_intf_validate_ospf_auth_key_input(self, cfg):
+        """
+        GLOBAL local validation of the OSPF legacy-key pair
+        (``ospf_auth_key_id`` + ``ospf_auth_key``) across the COMPLETE config,
+        run once per config item before dispatch by interface type (mirrors the
+        message-digest validator). Values here are the raw playbook input.
+
+        Rules (all fail_json, no template metadata queried, no change sent):
+        - **Keychain is excluded** — any keychain-shaped profile key is rejected
+          with a pointer to dcnm_fabric (fabricSettings owns ``ospfAuthKeychainName``;
+          the parent DSL overwrites the interface param, so it is a dead field here).
+        - **Full pair** — ``ospf_auth_key_id`` and ``ospf_auth_key`` must be set
+          together (both or neither); a lone member is rejected.
+        - **Fabric loopback only** — the pair is supported only on type ``lo`` +
+          mode ``fabric`` (same parent as message-digest).
+        - **Types/range** — ``ospf_auth_key_id`` is an integer in
+          [0, 255]; ``ospf_auth_key`` is a non-empty string. The key value is NEVER
+          echoed in an error message.
+        """
+        for cfg_item in self.config:
+            profile = cfg_item.get("profile")
+            if not isinstance(profile, dict):
+                continue
+
+            # Keychain exclusion (surface clearly instead of silently dropping).
+            for kc in OSPF_AUTH_KEYCHAIN_PROFILE_KEYS:
+                if kc in profile:
+                    self.module.fail_json(
+                        msg="Invalid parameters in playbook: while processing interface {0}, "
+                        "'{1}' is not a supported dcnm_interface field. The OSPF authentication "
+                        "keychain is owned by the fabric (fabricSettings 'ospfAuthKeychainName'); "
+                        "the parent template overwrites the interface value, so it has no effect "
+                        "here. Configure the keychain via dcnm_fabric. No template metadata was "
+                        "queried and no change was sent.".format(
+                            cfg_item.get("name"), kc
+                        )
+                    )
+
+            has_id = (
+                OSPF_AUTH_KEY_ID_PROFILE_KEY in profile
+                and profile.get(OSPF_AUTH_KEY_ID_PROFILE_KEY) is not None
+            )
+            has_key = (
+                OSPF_AUTH_KEY_PROFILE_KEY in profile
+                and profile.get(OSPF_AUTH_KEY_PROFILE_KEY) is not None
+            )
+            if not has_id and not has_key:
+                continue
+
+            if has_id != has_key:
+                missing = (
+                    OSPF_AUTH_KEY_PROFILE_KEY if has_id else OSPF_AUTH_KEY_ID_PROFILE_KEY
+                )
+                present = (
+                    OSPF_AUTH_KEY_ID_PROFILE_KEY if has_id else OSPF_AUTH_KEY_PROFILE_KEY
+                )
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, OSPF "
+                    "legacy-key requires both '{1}' and '{2}' to be set together; '{3}' was given "
+                    "without '{4}'. No template metadata was queried and no change was sent.".format(
+                        cfg_item.get("name"),
+                        OSPF_AUTH_KEY_ID_PROFILE_KEY,
+                        OSPF_AUTH_KEY_PROFILE_KEY,
+                        present,
+                        missing,
+                    )
+                )
+
+            if cfg_item.get("type") != "lo":
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, OSPF "
+                    "legacy-key ('{1}'/'{2}') is supported only on fabric loopback interfaces "
+                    "(type 'lo', mode 'fabric'); found on a '{3}' interface. No template metadata "
+                    "was queried and no change was sent.".format(
+                        cfg_item.get("name"),
+                        OSPF_AUTH_KEY_ID_PROFILE_KEY,
+                        OSPF_AUTH_KEY_PROFILE_KEY,
+                        cfg_item.get("type"),
+                    )
+                )
+
+            if profile.get("mode") != "fabric":
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, OSPF "
+                    "legacy-key ('{1}'/'{2}') is supported only for loopback interfaces with "
+                    "'mode: fabric', given mode = '{3}'. No template metadata was queried and no "
+                    "change was sent.".format(
+                        cfg_item.get("name"),
+                        OSPF_AUTH_KEY_ID_PROFILE_KEY,
+                        OSPF_AUTH_KEY_PROFILE_KEY,
+                        profile.get("mode"),
+                    )
+                )
+
+            key_id = profile.get(OSPF_AUTH_KEY_ID_PROFILE_KEY)
+            # bool is a subclass of int; reject it explicitly, then accept a native int
+            # or an integer-valued string.
+            if isinstance(key_id, bool):
+                key_id_int = None
+            elif isinstance(key_id, int):
+                key_id_int = key_id
+            else:
+                try:
+                    key_id_int = int(str(key_id).strip())
+                except (TypeError, ValueError):
+                    key_id_int = None
+            if key_id_int is None or not (
+                OSPF_AUTH_KEY_ID_MIN <= key_id_int <= OSPF_AUTH_KEY_ID_MAX
+            ):
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, "
+                    "'{1}' must be an integer in [{2}, {3}], given {4}. No template metadata was "
+                    "queried and no change was sent.".format(
+                        cfg_item.get("name"),
+                        OSPF_AUTH_KEY_ID_PROFILE_KEY,
+                        OSPF_AUTH_KEY_ID_MIN,
+                        OSPF_AUTH_KEY_ID_MAX,
+                        "null"
+                        if key_id is None
+                        else "a {0}".format(type(key_id).__name__)
+                        if not isinstance(key_id, (int, str))
+                        else repr(key_id),
+                    )
+                )
+
+            key_val = profile.get(OSPF_AUTH_KEY_PROFILE_KEY)
+            # Never echo the key value in an error (secret).
+            if not isinstance(key_val, str) or key_val == "":
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, "
+                    "'{1}' must be a non-empty string. No template metadata was queried and no "
+                    "change was sent.".format(
+                        cfg_item.get("name"), OSPF_AUTH_KEY_PROFILE_KEY
+                    )
+                )
+
     def dcnm_intf_gie_validate_parent_bindings(self):
         """Fail closed when a config item carries a registry-known GENERIC key that has no
         valid binding for its resolved desired parent (``pol_types[type_mode]``). This runs
@@ -3420,6 +3578,8 @@ class DcnmIntf:
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
             enable_ospf_auth_message_digest=dict(type="bool"),
+            ospf_auth_key_id=dict(type="int"),
+            ospf_auth_key=dict(type="str", no_log=True),
         )
 
         self.dcnm_intf_validate_interface_input(cfg, lo_spec, lo_prof_spec)
@@ -3777,6 +3937,7 @@ class DcnmIntf:
 
         if self.module.params["state"] not in ("deleted", "query"):
             self.dcnm_intf_validate_ospf_auth_message_digest_input(self.config)
+            self.dcnm_intf_validate_ospf_auth_key_input(self.config)
             self.dcnm_intf_gie_validate_parent_bindings()
 
         cfg = []
@@ -4411,6 +4572,29 @@ class DcnmIntf:
                 if gie_md_err:
                     self.module.fail_json(msg=gie_md_err)
                 intf["interfaces"][0]["nvPairs"].update(gie_md_add)
+
+            # OSPF legacy-key pair. Full-pair/type/range/keychain-exclusion were enforced globally by
+            # dcnm_intf_validate_ospf_auth_key_input; here both are present-together (or absent). The
+            # module transports the interface nvPairs only -- NDFC's parent DSL builds/removes the
+            # ospf_interface_auth child from them. Same version floor as OSPF-MD; fail closed (no
+            # change) on an unsupported controller rather than sending a field it cannot honor.
+            ospf_key_id = delem[profile].get(OSPF_AUTH_KEY_ID_PROFILE_KEY)
+            ospf_key = delem[profile].get(OSPF_AUTH_KEY_PROFILE_KEY)
+            if ospf_key_id is not None and ospf_key not in (None, ""):
+                if not self._ndfc_version_gte(OSPF_AUTH_MD_MIN_NDFC_VERSION):
+                    self.module.fail_json(
+                        msg="OSPF legacy-key ('{0}'/'{1}') requires NDFC {2} or newer; controller "
+                        "is {3}. No change was sent.".format(
+                            OSPF_AUTH_KEY_ID_PROFILE_KEY,
+                            OSPF_AUTH_KEY_PROFILE_KEY,
+                            OSPF_AUTH_MD_MIN_NDFC_VERSION,
+                            getattr(self, "ndfc_version", None),
+                        )
+                    )
+                intf["interfaces"][0]["nvPairs"][OSPF_AUTH_KEY_ID_NVPAIR] = str(
+                    int(ospf_key_id)
+                )
+                intf["interfaces"][0]["nvPairs"][OSPF_AUTH_KEY_NVPAIR] = str(ospf_key)
 
         # Properties for mode 'mpls' Loopback Interfaces
         if delem[profile]["mode"] == "mpls":
@@ -5627,6 +5811,7 @@ class DcnmIntf:
             "STORM_CONTROL_BCAST_LEVEL_PPS",
             "STORM_CONTROL_MCAST_LEVEL_PPS",
             "STORM_CONTROL_UCAST_LEVEL_PPS",
+            "OSPF_AUTH_KEY_ID",
         ]
         if k in numeric_keys:
             # Controller responses may return numeric nvPairs as strings while

@@ -3,8 +3,10 @@
 These tests read the SHIPPING template source and the module source and assert
 the parent/child selection contract, WITHOUT changing the OSPF architecture. They
 exist to correct the overstatement that the parent Boolean alone guarantees the
-final child/PTI state, and to lock the invariant that this feature adds no
-per-interface key, key-ID or keychain field.
+final child/PTI state, and to lock the Phase-3 invariant: the module manages the
+message-digest Boolean and the legacy-key pair (key-ID + key) as parent nvPairs,
+while the OSPF keychain field stays fabric-owned and is never a writable
+dcnm_interface field.
 
 What is proven here is the STATIC template/module contract only. PTI selection,
 the effective NX-OS CLI, OSPF adjacency and keychain behavior are NOT LIVE TESTED
@@ -114,24 +116,38 @@ def test_keychain_branch_supersedes_standalone_and_legacy(parent_src):
 
 
 # --------------------------------------------------------------------------
-# 5. A1.3 emits no per-interface key, key-ID or keychain field
+# 5. Phase-3 contract: message-digest + legacy-key managed; keychain excluded
 # --------------------------------------------------------------------------
-def test_module_emits_no_per_interface_key_or_keychain_field():
+def test_module_manages_legacy_key_pair_but_not_keychain():
+    """Phase-3 (A1.8-legacy-key) supersedes the A1.3 'no key field' invariant for
+    the legacy-key PAIR only. The module now manages the message-digest Boolean AND
+    the ``ospf_auth_key_id``/``ospf_auth_key`` pair, transported as parent nvPairs
+    on int_fabric_loopback_11_1 (NDFC builds the ospf_interface_auth child). The
+    keychain remains fabric-owned and is NEVER a writable dcnm_interface field."""
     with open(os.path.abspath(MODULE), encoding="utf-8") as fh:
         src = fh.read()
-    # The only OSPF-auth nvPair the interface module manages is the Boolean.
+    # message-digest Boolean still managed
     assert "ENABLE_OSPF_AUTH_MESSAGE_DIGEST" in src
-    # It must not assign key/key-ID/keychain nvPairs from a profile option, and
-    # must not expose them as loopback profile arguments.
+    # legacy-key pair now IS managed: loopback profile args + full-pair validator
+    for required in (
+        "ospf_auth_key_id=dict(type=\"int\")",
+        "ospf_auth_key=dict(type=\"str\", no_log=True)",
+        "def dcnm_intf_validate_ospf_auth_key_input",
+        "OSPF_AUTH_KEY_ID_NVPAIR",
+        "OSPF_AUTH_KEY_NVPAIR",
+    ):
+        assert required in src, (
+            "Phase-3 must manage the legacy-key pair: missing {0}".format(required)
+        )
+    # keychain stays fabric-owned: never exposed as a writable interface field and
+    # never assigned into an outgoing nvPairs payload.
     for forbidden in (
-        'nvPairs"]["OSPF_AUTH_KEY"',
-        'nvPairs"]["OSPF_AUTH_KEY_ID"',
         'nvPairs"]["ospfAuthKeychainName"',
-        "ospf_auth_key=dict",
-        "ospf_auth_key_id=dict",
+        "nvPairs[OSPF_AUTH_KEYCHAIN_NVPAIR]",
         "ospf_auth_keychain=dict",
+        "ospf_auth_keychain_name=dict",
     ):
         assert forbidden not in src, (
-            "A1.3 must not manage a per-interface OSPF key/keychain field: "
+            "dcnm_interface must not manage the fabric-owned OSPF keychain field: "
             "{0}".format(forbidden)
         )
