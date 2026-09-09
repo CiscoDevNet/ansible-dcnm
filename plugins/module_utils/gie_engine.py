@@ -138,12 +138,47 @@ def gie_validator_type(binding_type):
 def gie_validate_binding_value(
     parent_template, profile_key, value, value_source="explicit"
 ):
-    """Validate a native value against one exact packaged binding.
+    """Validate a value against one exact packaged binding.
 
-    This is also used for controller values copied from authoritative HAVE.  HAVE is an
-    authority for current state, not an exemption from the registry contract: malformed
-    native types or enum values fail closed instead of being relayed in a later full-payload
-    update.  The error deliberately omits the rejected value.
+    The registered ``type``, ``valid_values`` and length bounds describe the **input
+    contract**: what an operator may write in a playbook. They are enforced in full for
+    ``value_source="explicit"``.
+
+    They are NOT the **state contract**. A value read back from the controller is whatever
+    NDFC holds, and NDFC's encoding legitimately differs from the input encoding:
+
+      * ``ACL_FILTER`` comes back as ``""`` when no ACL is configured -- a perfectly valid
+        state, but shorter than the registered ``min_length`` of 1;
+      * booleans come back as the strings ``"true"`` / ``"false"``, not as ``bool``.
+
+    Applying the input contract to those values made ``state: overridden`` fail on any host
+    interface that was explicitly declared, because the carry-forward reads them from HAVE.
+    Carrying such a value forward is safe -- it is a round-trip "leave as-is" assertion of
+    what the controller already has, so it cannot introduce a wrong value.
+
+    For ``value_source="have"`` the contract still applies in full, minus exactly TWO
+    exemptions, each one backed by a value NDFC was measured to return on a freshly
+    deployed fabric:
+
+      1. a **boolean** binding also accepts the strings ``"true"`` / ``"false"``. NDFC
+         encodes booleans that way on read-back (``DISABLE_LLDP == "false"``); the action
+         plugin's schema documents the same round-trip.
+      2. a **plain string** binding (one with no ``valid_values``) also accepts ``""``.
+         That is how NDFC encodes "unset" (``ACL_FILTER == ""`` when no ACL is
+         configured), and it is precisely what ``min_length`` was rejecting.
+
+    Everything else is unchanged, deliberately. Enum membership is still enforced, so a
+    value outside ``valid_values`` never reaches a later full-payload update -- and the
+    ``""`` exemption is scoped to non-enum bindings so an empty enum still fails closed.
+    Carrying a measured encoding forward is a round-trip "leave as-is" assertion and cannot
+    introduce a wrong value; relaxing further would be inventing tolerance for encodings
+    that have never been observed.
+
+    Why this matters: applying the input contract to these two encodings made
+    ``state: overridden`` abort on any explicitly declared host interface, which is every
+    real deployment.
+
+    The error deliberately omits the rejected value.
     """
     source_label = (
         "authoritative controller value"
@@ -159,6 +194,14 @@ def gie_validate_binding_value(
         )
     validator_type = gie_validator_type(binding["type"])
     native_type = _VALIDATOR_TO_NATIVE_TYPE[validator_type]
+    if value_source == "have":
+        # (1) NDFC returns booleans as strings.
+        if native_type is bool and value in ("true", "false"):
+            return value
+        # (2) NDFC returns "" for an unset plain string. Scoped to non-enum bindings so an
+        #     empty value for an enum still fails closed.
+        if native_type is str and value == "" and not binding.get("valid_values"):
+            return value
     if not _is_native_type(value, native_type):
         raise GieBindingError(
             "{0} for {1!r} on parent {2!r} has an invalid native type; no change "

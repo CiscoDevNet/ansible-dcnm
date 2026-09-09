@@ -704,6 +704,88 @@ def test_accepting_subclasses_does_not_make_bool_and_int_interchangeable():
     assert gie_validate_binding_value(LOOPBACK, "enable_ospf_auth_message_digest", True) is True
 
 
+# ---- HAVE values: the input contract must not be applied to controller state ----
+#
+# These are the ACTUAL values NDFC returned for Leaf-101 Ethernet1/5 (int_trunk_host) and
+# Ethernet1/4 (int_access_host) on a freshly deployed fabric, captured from
+# GET /rest/interface. They are not invented: the whole point is that the registry's input
+# contract does not describe what the controller stores.
+#
+# Applying the input contract to them made `state: overridden` abort on any explicitly
+# declared host interface, which is every real deployment.
+
+NDFC_TRUNK_HAVE = {
+    "acl_filter": "",           # no ACL configured -- shorter than the registered min_length 1
+    "disable_lldp": "false",    # NDFC encodes booleans as strings
+    "flowcontrol_receive": "off",
+    "guard_mode": "no",
+}
+
+
+@pytest.mark.parametrize("pk,value", sorted(NDFC_TRUNK_HAVE.items()))
+def test_real_controller_values_are_carried_forward_not_rejected(pk, value):
+    assert gie_validate_binding_value(TRUNK, pk, value, value_source="have") == value
+
+
+def test_empty_acl_filter_from_have_is_accepted_on_both_host_parents():
+    """The regression that broke `state: overridden`.
+
+    ACL_FILTER == "" means "no ACL", which is the normal state of a host interface. It is
+    only invalid as *user input*, and carrying it forward asserts "leave as-is".
+    """
+    for parent in (TRUNK, ACCESS):
+        assert gie_validate_binding_value(parent, "acl_filter", "", value_source="have") == ""
+
+
+def test_have_still_fails_closed_on_values_that_cannot_be_relayed():
+    """Relaxing the input contract must not turn HAVE into an anything-goes path.
+
+    nvPairs is a flat scalar map: a dict, a list or None signals a malformed controller
+    response, not an unfamiliar encoding, and must not be relayed into a later payload.
+    """
+    for bad in (None, {"a": 1}, ["a"], object()):
+        with pytest.raises(GieBindingError):
+            gie_validate_binding_value(TRUNK, "acl_filter", bad, value_source="have")
+
+
+def test_have_still_enforces_registered_choices():
+    """The enum guard is deliberately KEPT on the HAVE path.
+
+    NDFC was measured to return real enum members ('off', 'no'), so this check never fires
+    on legitimate data -- and it is the one that catches genuine garbage before it is
+    relayed into a later full-payload update. Only the checks that were measured to fire on
+    legitimate controller state (length bounds, and the native type of booleans) were
+    dropped.
+
+    test_malformed_have_flowcontrol_fails_before_diff covers the same property end to end
+    through the comparator; this pins it at the engine boundary.
+    """
+    for bad in ("bogus", True):
+        with pytest.raises(GieBindingError):
+            gie_validate_binding_value(
+                TRUNK, "flowcontrol_receive", bad, value_source="have"
+            )
+    # ...while the members NDFC actually returns are accepted
+    for good in ("on", "off"):
+        assert gie_validate_binding_value(
+            TRUNK, "flowcontrol_receive", good, value_source="have"
+        ) == good
+
+
+def test_the_input_contract_is_unchanged_for_explicit_values():
+    """The relaxation is scoped to value_source='have' and nothing else."""
+    with pytest.raises(GieBindingError):
+        gie_validate_binding_value(TRUNK, "acl_filter", "")          # min_length 1
+    with pytest.raises(GieBindingError):
+        gie_validate_binding_value(TRUNK, "flowcontrol_receive", "maybe")   # not a choice
+    with pytest.raises(GieBindingError):
+        gie_validate_binding_value(TRUNK, "disable_lldp", "false")   # str where bool is required
+    # and the legitimate inputs still pass
+    assert gie_validate_binding_value(TRUNK, "acl_filter", "MY_ACL") == "MY_ACL"
+    assert gie_validate_binding_value(TRUNK, "flowcontrol_receive", "on") == "on"
+    assert gie_validate_binding_value(TRUNK, "disable_lldp", True) is True
+
+
 def test_subclass_acceptance_does_not_bypass_the_other_registered_checks():
     """Relaxing the type check must not relax length or choices."""
     with pytest.raises(GieBindingError):
