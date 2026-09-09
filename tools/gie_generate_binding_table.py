@@ -23,6 +23,14 @@ Committed bindings (and ONLY these):
     - int_port_channel_trunk_host       :: ACL_FILTER    (string, passthrough)
     - int_port_channel_dot1q_tunnel_host:: ACL_FILTER    (string, passthrough)
 
+  A1.9 slice — OSPF legacy-key pair, from reviewed registry slice 0b_10:
+    - int_fabric_loopback_11_1 :: OSPF_AUTH_KEY_ID  (integer, child_pti)
+    - int_fabric_loopback_11_1 :: OSPF_AUTH_KEY     (string,  child_pti)
+  Ambos alimentan el MISMO hijo (ospf_interface_auth) y por eso comparten mecanismo y
+  effect_rules. La atomicidad del par, el rango [0,255] y la exclusion de keychain NO se
+  registran: permanecen en el validador dedicado del modulo, igual que ocurrio con el
+  validador del booleano en la migracion A1.5.
+
 The curated `profile_key` in the registry is authoritative. It is never derived by
 lower-casing an nvPair name: a row whose profile_key does not match the committed value is
 rejected rather than accepted or rewritten.
@@ -51,6 +59,9 @@ MONDAY = {
     ("int_port_channel_access_host", "ACL_FILTER"): "acl_filter",
     ("int_port_channel_trunk_host", "ACL_FILTER"): "acl_filter",
     ("int_port_channel_dot1q_tunnel_host", "ACL_FILTER"): "acl_filter",
+    # --- A1.9: par de clave OSPF legacy (registry slice 0b_10) ---
+    ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
+    ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY"): "ospf_auth_key",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.
