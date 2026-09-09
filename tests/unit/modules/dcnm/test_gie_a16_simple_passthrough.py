@@ -77,12 +77,13 @@ def _load_generator():
 
 
 # ------------------------------------------------------------------ table integrity
-def test_table_has_twelve_unique_rows():
+def test_table_has_fourteen_unique_rows():
+    # 12 (A1.5 + A1.6) + 2 (A1.9: the OSPF legacy-key pair on int_fabric_loopback_11_1).
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 12
-    assert len(set(keys)) == 12, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 14
+    assert len(set(keys)) == 14, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 12, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 14, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -140,7 +141,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 12
+    assert len(gen.compile_rows(rows)) == 14
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -186,7 +187,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 12
+    assert len(gen.compile_rows(rows)) == 14
 
 
 # ------------------------------------------------------------------ positive transport
@@ -452,13 +453,16 @@ def test_keymap_carries_every_new_nvpair():
     assert km["ACL_FILTER"] == "acl_filter"
     assert km["FLOWCONTROL_RECEIVE"] == "flowcontrol_receive"
     assert km["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"] == "enable_ospf_auth_message_digest"
-    assert len(km) == 5
+    assert km["OSPF_AUTH_KEY_ID"] == "ospf_auth_key_id"
+    assert km["OSPF_AUTH_KEY"] == "ospf_auth_key"
+    assert len(km) == 7
 
 
 def test_all_registered_keys():
     assert gie_all_registered_keys() == {
         "flowcontrol_receive", "enable_ospf_auth_message_digest",
         "guard_mode", "disable_lldp", "acl_filter",
+        "ospf_auth_key_id", "ospf_auth_key",
     }
 
 
@@ -518,7 +522,13 @@ def test_a15_ospf_md_contract_and_compat_exception_are_unchanged():
 
 def test_ospf_md_is_still_not_generically_guarded():
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
-    assert registered_profile_keys(LOOPBACK) == {"enable_ospf_auth_message_digest"}
+    # A1.9 added the legacy-key pair to the same parent. Both are child_pti, so neither is
+    # generically guarded either: dcnm_intf_validate_ospf_auth_key_input keeps ownership of
+    # the parent/mode check and of its exact error message.
+    assert registered_profile_keys(LOOPBACK) == {
+        "enable_ospf_auth_message_digest", "ospf_auth_key_id", "ospf_auth_key"
+    }
+    assert gie_guarded_keys().isdisjoint({"ospf_auth_key_id", "ospf_auth_key"})
 
 
 def test_ospf_md_is_still_absent_from_the_generic_eth_and_pc_specs():

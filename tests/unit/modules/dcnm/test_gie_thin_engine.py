@@ -55,21 +55,28 @@ A16_ROWS = {
     (PC_TRUNK, "ACL_FILTER", "acl_filter"),
     (PC_DOT1Q, "ACL_FILTER", "acl_filter"),
 }
+# The A1.9 slice: the OSPF legacy-key pair, from registry slice 0b_10. Both rows feed the
+# SAME child (ospf_interface_auth), so both are child_pti on the loopback parent.
+A19_ROWS = {
+    (LOOPBACK, "OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
+    (LOOPBACK, "OSPF_AUTH_KEY", "ospf_auth_key"),
+}
 
 
 # ---- binding package (G1 runtime contract) ----
 
 def test_package_provenance_and_size():
-    expected_keys = A15_ROWS | A16_ROWS
+    expected_keys = A15_ROWS | A16_ROWS | A19_ROWS
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 12
+    assert len(BINDING_TABLE) == len(actual_keys) == 14
     assert actual_keys == expected_keys
     # The A1.5 slice must survive verbatim inside the larger table.
     assert A15_ROWS <= actual_keys
     assert len(A16_ROWS) == 9
+    assert len(A19_ROWS) == 2
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -91,7 +98,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 12
+    assert len(rows) == 14
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -117,7 +124,9 @@ def test_registered_keys_per_parent():
     assert registered_profile_keys(ACCESS) == {
         "flowcontrol_receive", "disable_lldp", "acl_filter"
     }
-    assert registered_profile_keys(LOOPBACK) == {"enable_ospf_auth_message_digest"}
+    assert registered_profile_keys(LOOPBACK) == {
+        "enable_ospf_auth_message_digest", "ospf_auth_key_id", "ospf_auth_key"
+    }
     assert registered_profile_keys(PC_TRUNK) == {"guard_mode", "acl_filter"}
     assert registered_profile_keys(PC_ACCESS) == {"acl_filter"}
     assert registered_profile_keys(PC_DOT1Q) == {"acl_filter"}
@@ -326,12 +335,19 @@ def test_all_registered_and_guarded_keys():
     assert gie_all_registered_keys() == {
         "flowcontrol_receive", "enable_ospf_auth_message_digest",
         "guard_mode", "disable_lldp", "acl_filter",
+        "ospf_auth_key_id", "ospf_auth_key",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate
     assert gie_guarded_keys() == {
         "flowcontrol_receive", "guard_mode", "disable_lldp", "acl_filter",
     }
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
+    # A1.9: the legacy-key pair is child_pti, so registering it must NOT hand the engine the
+    # invalid-parent guard. dcnm_intf_validate_ospf_auth_key_input owns that check and its
+    # error message ("supported only on fabric loopback interfaces...") is observable
+    # contract; a generic guard firing first would silently change it.
+    assert "ospf_auth_key_id" not in gie_guarded_keys()
+    assert "ospf_auth_key" not in gie_guarded_keys()
 
 def test_invalid_parent_key_flags_flowcontrol_on_wrong_parent():
     # routed/monitor/dot1q eth parents do not register flowcontrol_receive
@@ -592,6 +608,51 @@ def test_query_keeps_controller_flowcontrol_string_without_normalization(monkeyp
         obj.changed_dict[0]["query"][0]["nvPairs"]["FLOWCONTROL_RECEIVE"],
         str,
     )
+
+
+# ---- A1.9: exact registry contract for the OSPF legacy-key pair ----
+
+def test_a19_legacy_key_pair_registry_fields():
+    """Pin the fields that drive behaviour, not just the row's identity.
+
+    `type` decides the native type the engine enforces and transports; `mechanism` decides
+    whether the key is generically guarded and whether it is carried forward; and
+    `min_ndfc_version` is the version gate. A silent change to any of them alters what the
+    module sends without changing the row count that the other tests watch.
+    """
+    key_id = resolve_binding(LOOPBACK, "ospf_auth_key_id")
+    key = resolve_binding(LOOPBACK, "ospf_auth_key")
+    assert key_id is not None and key is not None
+
+    assert key_id["parent_nvpair"] == "OSPF_AUTH_KEY_ID"
+    assert key_id["type"] == "integer"
+    assert key["parent_nvpair"] == "OSPF_AUTH_KEY"
+    assert key["type"] == "string"
+    assert key["min_length"] == 1
+
+    # Both feed the SAME child (ospf_interface_auth), so both are child_pti. Registering
+    # either as passthrough would hand the engine the invalid-parent guard and the
+    # carry-forward, both of which belong to the dedicated validator.
+    for b in (key_id, key):
+        assert b["mechanism"] == "child_pti"
+        assert b["applicable_interface_type"] == "lo"
+        assert b["applicable_mode"] == "fabric"
+        assert b["min_ndfc_version"] == "12.6.0.267"
+
+    # No numeric-range field is registered: the [0,255] check stays in
+    # dcnm_intf_validate_ospf_auth_key_input, mirroring how the boolean kept its validator.
+    assert "min_value" not in key_id and "max_value" not in key_id
+
+
+def test_a19_pair_is_not_carried_forward():
+    """child_pti bindings must stay out of the passthrough carry-forward set.
+
+    Carry-forward preserves an authoritative HAVE value when the key is omitted. For this
+    pair, omission is how the operator CLEARS the key, so carrying it forward would make
+    removal impossible.
+    """
+    carried = {b["profile_key"] for b in gie_carry_forward_bindings(LOOPBACK)}
+    assert carried.isdisjoint({"ospf_auth_key_id", "ospf_auth_key"})
 
 
 if __name__ == "__main__":
