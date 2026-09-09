@@ -40,6 +40,8 @@ options:
 """
 
 import json
+from http.client import IncompleteRead, RemoteDisconnected
+from urllib.error import HTTPError, URLError
 
 # Any third party modules should be imported as below, if not sanity tests will fail
 try:
@@ -51,6 +53,7 @@ except ImportError:
 
 from ansible.module_utils._text import to_text
 from ansible.module_utils.connection import ConnectionError
+from ansible.errors import AnsibleConnectionFailure
 from ansible.plugins.httpapi import HttpApiBase
 
 # Constants
@@ -246,8 +249,19 @@ class HttpApi(HttpApiBase):
             if isinstance(eargs, dict) and eargs.get("METHOD"):
                 return eargs
 
-            error_msg = "Please verify your login credentials, access permissions and fabric details and try again"
-            raise ConnectionError(str(e) + ". " + error_msg)
+            transport_errors = (
+                AnsibleConnectionFailure,
+                ConnectionError,
+                HTTPError,
+                URLError,
+                IncompleteRead,
+                RemoteDisconnected,
+                TimeoutError,
+            )
+            if isinstance(e, transport_errors):
+                error_msg = "Please verify your login credentials, access permissions and fabric details and try again"
+                raise ConnectionError(str(e) + ". " + error_msg)
+            raise
 
     def send_request(self, method, path, json=None):
         """This method handles all DCNM REST API requests other than login"""
