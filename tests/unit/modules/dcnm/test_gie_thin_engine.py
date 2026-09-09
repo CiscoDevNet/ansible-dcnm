@@ -655,6 +655,65 @@ def test_a19_pair_is_not_carried_forward():
     assert carried.isdisjoint({"ospf_auth_key_id", "ospf_auth_key"})
 
 
+# ---- native-type acceptance: str SUBCLASSES must pass (regression guard) ----
+#
+# Ansible never hands a module a plain `str`. A value that came from a playbook arrives as
+# AnsibleUnicode, a str subclass. The engine originally checked `type(value) is native_type`,
+# which is exact and rejects subclasses, so every string/enum binding was unusable end to end
+# while these unit tests -- passing literal `str` -- kept passing.
+#
+# Every case below is therefore driven with a subclass, not a plain str. A locally defined
+# subclass proves the semantics independently of the Ansible version; the AnsibleUnicode case
+# proves the real one.
+
+
+class _SubStr(str):
+    """Stand-in for AnsibleUnicode: any str subclass must be accepted."""
+
+
+def _ansible_unicode(value):
+    try:
+        from ansible.parsing.yaml.objects import AnsibleUnicode
+    except ImportError:  # pragma: no cover - depends on the installed ansible-core
+        return None
+    return AnsibleUnicode(value)
+
+
+@pytest.mark.parametrize("wrap", [_SubStr, _ansible_unicode], ids=["str_subclass", "AnsibleUnicode"])
+def test_string_and_enum_bindings_accept_str_subclasses(wrap):
+    key = wrap("a667d47acc18ea6b")
+    if key is None:
+        pytest.skip("AnsibleUnicode not importable in this ansible-core")
+    # A1.9 string binding
+    assert gie_validate_binding_value(LOOPBACK, "ospf_auth_key", key) == key
+    # A1.5 enum binding and A1.6 string binding: the same defect made these unusable too.
+    assert gie_validate_binding_value(TRUNK, "flowcontrol_receive", wrap("on")) == "on"
+    assert gie_validate_binding_value(TRUNK, "acl_filter", wrap("MY_ACL")) == "MY_ACL"
+
+
+def test_accepting_subclasses_does_not_make_bool_and_int_interchangeable():
+    """isinstance(True, int) is True in Python, so a naive isinstance relaxation would let a
+    boolean satisfy an integer binding and reach NDFC as 1 (or an int satisfy a boolean).
+    """
+    with pytest.raises(GieBindingError):
+        gie_validate_binding_value(LOOPBACK, "ospf_auth_key_id", True)
+    with pytest.raises(GieBindingError):
+        gie_validate_binding_value(LOOPBACK, "enable_ospf_auth_message_digest", 1)
+    # and the legitimate natives still pass
+    assert gie_validate_binding_value(LOOPBACK, "ospf_auth_key_id", 17) == 17
+    assert gie_validate_binding_value(LOOPBACK, "enable_ospf_auth_message_digest", True) is True
+
+
+def test_subclass_acceptance_does_not_bypass_the_other_registered_checks():
+    """Relaxing the type check must not relax length or choices."""
+    with pytest.raises(GieBindingError):
+        gie_validate_binding_value(LOOPBACK, "ospf_auth_key", _SubStr(""))  # min_length 1
+    with pytest.raises(GieBindingError):
+        gie_validate_binding_value(TRUNK, "flowcontrol_receive", _SubStr("nope"))
+    with pytest.raises(GieBindingError):
+        gie_validate_binding_value(LOOPBACK, "ospf_auth_key", 17)  # int is not a string
+
+
 if __name__ == "__main__":
     import sys
     sys.exit(pytest.main([__file__, "-q"]))
