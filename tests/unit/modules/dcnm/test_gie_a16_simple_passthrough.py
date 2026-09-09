@@ -420,15 +420,41 @@ def test_carry_forward_accepts_only_exact_authoritative_have_values():
     ) == "ACL_OK"
 
 
+def test_have_accepts_the_two_encodings_ndfc_actually_returns():
+    """Two entries moved out of the malformed list below, because the controller
+    contradicted them.
+
+    Captured from GET /rest/interface on a freshly deployed FAB1 -- Leaf-101 Ethernet1/4
+    (int_access_host) and Ethernet1/5 (int_trunk_host):
+
+        ACL_FILTER   == ""        no ACL configured: the normal state of a host interface
+        DISABLE_LLDP == "false"   NDFC encodes booleans as strings on read-back
+
+    Rejecting them made `state: overridden` abort on any explicitly declared host
+    interface, which is every real deployment. They are not malformed -- they are the
+    encodings NDFC uses, and carrying them forward asserts "leave as-is".
+    """
+    assert gie_validate_binding_value(ACCESS, "acl_filter", "", value_source="have") == ""
+    assert gie_validate_binding_value(TRUNK, "acl_filter", "", value_source="have") == ""
+    for value in ("true", "false"):
+        assert gie_validate_binding_value(
+            ACCESS, "disable_lldp", value, value_source="have"
+        ) == value
+
+
 def test_malformed_have_fails_before_diff_or_write():
+    """Everything else stays rejected. The two exemptions above are narrow and measured;
+    nothing here was loosened by inference.
+    """
     bad_have = [
         (TRUNK, "guard_mode", "ROOT"),
         (TRUNK, "guard_mode", True),
+        # An EMPTY enum still fails: the ""-exemption is scoped to plain string bindings,
+        # so an enum that comes back blank is still treated as malformed.
         (TRUNK, "guard_mode", ""),
-        (ACCESS, "disable_lldp", "true"),
+        # A boolean accepts "true"/"false" as strings, but not an int.
         (ACCESS, "disable_lldp", 1),
         (ACCESS, "acl_filter", True),
-        (ACCESS, "acl_filter", ""),
         (ACCESS, "acl_filter", "C" * 65),
     ]
     for parent, pk, value in bad_have:
