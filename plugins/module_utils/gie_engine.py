@@ -86,6 +86,25 @@ class GieBindingError(Exception):
     """Fail-closed engine condition (e.g. an unknown registered binding type)."""
 
 
+def _is_native_type(value, native_type):
+    """Accept the registered native type, INCLUDING its subclasses.
+
+    Ansible does not hand a module plain ``str``: a value that came from a playbook arrives
+    as ``AnsibleUnicode``, a ``str`` subclass. An exact ``type(value) is native_type`` check
+    therefore rejects every string a real playbook can supply, while unit tests that pass a
+    literal ``str`` keep passing -- which is exactly how that defect stayed invisible.
+
+    ``bool`` and ``int`` still must not be interchangeable: ``isinstance(True, int)`` is True
+    in Python, so a plain isinstance check would let a boolean satisfy an integer binding and
+    reach NDFC as ``1``. Each is therefore pinned explicitly.
+    """
+    if native_type is bool:
+        return isinstance(value, bool)
+    if native_type is int:
+        return isinstance(value, int) and not isinstance(value, bool)
+    return isinstance(value, native_type)
+
+
 def gie_version_supported(ndfc_version, min_version):
     """Four-segment >= compare; fail closed (False) for unknown/malformed versions.
 
@@ -140,7 +159,7 @@ def gie_validate_binding_value(
         )
     validator_type = gie_validator_type(binding["type"])
     native_type = _VALIDATOR_TO_NATIVE_TYPE[validator_type]
-    if type(value) is not native_type:
+    if not _is_native_type(value, native_type):
         raise GieBindingError(
             "{0} for {1!r} on parent {2!r} has an invalid native type; no change "
             "was sent".format(source_label, profile_key, parent_template)
