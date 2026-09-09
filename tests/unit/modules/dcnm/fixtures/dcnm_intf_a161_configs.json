@@ -1,0 +1,421 @@
+{
+  "mock_ip_sn": {
+    "10.0.0.1": "SAL1819SAN8"
+  },
+  "mock_fab_inv_data": {
+    "10.0.0.1": {
+      "logicalName": "placeholder-sw-1",
+      "serialNumber": "SAL1819SAN8",
+      "isVpcConfigured": "False",
+      "vpcDomain": 0,
+      "switchRole": "Leaf",
+      "managable": "True"
+    }
+  },
+  "mock_monitor_false_resp": {
+    "MESSAGE": "OK",
+    "RETURN_CODE": 200,
+    "DATA": {
+      "readonly": false
+    }
+  },
+  "mock_succ_resp": {
+    "MESSAGE": "OK",
+    "RETURN_CODE": 200,
+    "DATA": {}
+  },
+  "mock_empty_bulk": {
+    "MESSAGE": "OK",
+    "RETURN_CODE": 200,
+    "DATA": []
+  },
+  "mock_have_all": {
+    "MESSAGE": "OK",
+    "RETURN_CODE": 200,
+    "DATA": []
+  },
+  "eth_trunk_guard_mode_root": [
+    {
+      "name": "Ethernet1/30",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk",
+        "guard_mode": "root"
+      }
+    }
+  ],
+  "eth_trunk_disable_lldp_true": [
+    {
+      "name": "Ethernet1/30",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk",
+        "disable_lldp": true
+      }
+    }
+  ],
+  "eth_trunk_acl_filter_valid": [
+    {
+      "name": "Ethernet1/30",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk",
+        "acl_filter": "ACL_ALPHA"
+      }
+    }
+  ],
+  "eth_access_disable_lldp_false": [
+    {
+      "name": "Ethernet1/31",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "access",
+        "disable_lldp": false
+      }
+    }
+  ],
+  "eth_access_acl_filter_valid": [
+    {
+      "name": "Ethernet1/31",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "access",
+        "acl_filter": "ACL_BETA"
+      }
+    }
+  ],
+  "eth_trunk_omitted": [
+    {
+      "name": "Ethernet1/30",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk"
+      }
+    }
+  ],
+  "eth_access_disable_lldp_string_false": [
+    {
+      "name": "Ethernet1/31",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "access",
+        "disable_lldp": "false"
+      }
+    }
+  ],
+  "eth_access_disable_lldp_int_one": [
+    {
+      "name": "Ethernet1/31",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "access",
+        "disable_lldp": 1
+      }
+    }
+  ],
+  "eth_access_acl_filter_bool": [
+    {
+      "name": "Ethernet1/31",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "access",
+        "acl_filter": true
+      }
+    }
+  ],
+  "eth_access_acl_filter_int": [
+    {
+      "name": "Ethernet1/31",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "access",
+        "acl_filter": 123
+      }
+    }
+  ],
+  "eth_access_acl_filter_empty": [
+    {
+      "name": "Ethernet1/31",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "access",
+        "acl_filter": ""
+      }
+    }
+  ],
+  "eth_access_acl_filter_too_long": [
+    {
+      "name": "Ethernet1/31",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "access",
+        "acl_filter": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      }
+    }
+  ],
+  "eth_trunk_guard_mode_bool": [
+    {
+      "name": "Ethernet1/30",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk",
+        "guard_mode": true
+      }
+    }
+  ],
+  "eth_trunk_guard_mode_bad_choice": [
+    {
+      "name": "Ethernet1/30",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk",
+        "guard_mode": "bogus"
+      }
+    }
+  ],
+  "eth_routed_guard_mode": [
+    {
+      "name": "Ethernet1/32",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "routed",
+        "guard_mode": "root",
+        "ipv4_addr": "10.0.0.2",
+        "ipv4_mask_len": 24
+      }
+    }
+  ],
+  "eth_access_guard_mode": [
+    {
+      "name": "Ethernet1/31",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "access",
+        "guard_mode": "root"
+      }
+    }
+  ],
+  "pc_access_disable_lldp": [
+    {
+      "name": "po300",
+      "type": "pc",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "access",
+        "members": [
+          "Ethernet1/30"
+        ],
+        "disable_lldp": true
+      }
+    }
+  ],
+  "pc_trunk_guard_mode_root": [
+    {
+      "name": "po300",
+      "type": "pc",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk",
+        "members": [
+          "Ethernet1/30"
+        ],
+        "guard_mode": "root"
+      }
+    }
+  ],
+  "pc_trunk_acl_filter_valid": [
+    {
+      "name": "po300",
+      "type": "pc",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk",
+        "members": [
+          "Ethernet1/30"
+        ],
+        "acl_filter": "ACL_GAMMA"
+      }
+    }
+  ],
+  "pc_access_acl_filter_valid": [
+    {
+      "name": "po301",
+      "type": "pc",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "access",
+        "members": [
+          "Ethernet1/31"
+        ],
+        "acl_filter": "ACL_DELTA"
+      }
+    }
+  ],
+  "pc_dot1q_acl_filter_valid": [
+    {
+      "name": "po302",
+      "type": "pc",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "dot1q",
+        "members": [
+          "Ethernet1/32"
+        ],
+        "acl_filter": "ACL_EPS"
+      }
+    }
+  ],
+  "pc_trunk_acl_filter_bool": [
+    {
+      "name": "po300",
+      "type": "pc",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk",
+        "members": [
+          "Ethernet1/30"
+        ],
+        "acl_filter": true
+      }
+    }
+  ],
+  "eth_trunk_unknown_legacy_field": [
+    {
+      "name": "Ethernet1/30",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk",
+        "some_unknown_legacy_field": 12345
+      }
+    }
+  ],
+  "lo_fabric_ospfmd_true": [
+    {
+      "name": "lo100",
+      "type": "lo",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "fabric",
+        "ipv4_addr": "10.1.1.1",
+        "enable_ospf_auth_message_digest": true
+      }
+    }
+  ],
+  "eth_trunk_flowcontrol_on": [
+    {
+      "name": "Ethernet1/30",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk",
+        "flowcontrol_receive": "on"
+      }
+    }
+  ],
+  "eth_trunk_flowcontrol_bool": [
+    {
+      "name": "Ethernet1/30",
+      "type": "eth",
+      "switch": [
+        "10.0.0.1"
+      ],
+      "deploy": false,
+      "profile": {
+        "mode": "trunk",
+        "flowcontrol_receive": true
+      }
+    }
+  ]
+}
