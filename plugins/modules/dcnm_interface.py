@@ -4583,25 +4583,33 @@ class DcnmIntf:
             # OSPF legacy-key pair. Full-pair/type/range/keychain-exclusion were enforced globally by
             # dcnm_intf_validate_ospf_auth_key_input; here both are present-together (or absent). The
             # module transports the interface nvPairs only -- NDFC's parent DSL builds/removes the
-            # ospf_interface_auth child from them. Same version floor as OSPF-MD; fail closed (no
-            # change) on an unsupported controller rather than sending a field it cannot honor.
+            # ospf_interface_auth child from them.
             ospf_key_id = delem[profile].get(OSPF_AUTH_KEY_ID_PROFILE_KEY)
             ospf_key = delem[profile].get(OSPF_AUTH_KEY_PROFILE_KEY)
+            # The guard stays here on purpose. The dedicated validator uses `is not None`, so an
+            # explicitly EMPTY key reaches this point; only this test keeps the pair atomic, and
+            # the engine -- which is fed one key at a time -- cannot enforce that relationship.
             if ospf_key_id is not None and ospf_key not in (None, ""):
-                if not self._ndfc_version_gte(OSPF_AUTH_MD_MIN_NDFC_VERSION):
-                    self.module.fail_json(
-                        msg="OSPF legacy-key ('{0}'/'{1}') requires NDFC {2} or newer; controller "
-                        "is {3}. No change was sent.".format(
-                            OSPF_AUTH_KEY_ID_PROFILE_KEY,
-                            OSPF_AUTH_KEY_PROFILE_KEY,
-                            OSPF_AUTH_MD_MIN_NDFC_VERSION,
-                            getattr(self, "ndfc_version", None),
-                        )
-                    )
-                intf["interfaces"][0]["nvPairs"][OSPF_AUTH_KEY_ID_NVPAIR] = str(
-                    int(ospf_key_id)
+                # Both nvPairs feed the SAME child (ospf_interface_auth), so they are handed to
+                # the engine together. The engine owns binding resolution and the version floor;
+                # an unsupported controller comes back as an error, not a partial payload.
+                gie_key_add, gie_key_err = gie_contribute_nvpairs(
+                    OSPF_AUTH_MD_PARENT_TEMPLATE,
+                    {
+                        OSPF_AUTH_KEY_ID_PROFILE_KEY: int(ospf_key_id),
+                        OSPF_AUTH_KEY_PROFILE_KEY: str(ospf_key),
+                    },
+                    getattr(self, "ndfc_version", None),
                 )
-                intf["interfaces"][0]["nvPairs"][OSPF_AUTH_KEY_NVPAIR] = str(ospf_key)
+                if gie_key_err:
+                    self.module.fail_json(msg=gie_key_err)
+                # NDFC's nvPairs is a flat string map, and the live-validated payload sent both
+                # values as strings. The engine transports NATIVE values by design, so the string
+                # normalization stays here -- the same place check_type_bool() normalizes the
+                # OSPF-MD boolean before its own engine call above.
+                intf["interfaces"][0]["nvPairs"].update(
+                    {k: str(v) for k, v in gie_key_add.items()}
+                )
 
         # Properties for mode 'mpls' Loopback Interfaces
         if delem[profile]["mode"] == "mpls":
