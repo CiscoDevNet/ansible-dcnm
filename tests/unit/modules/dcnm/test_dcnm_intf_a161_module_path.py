@@ -249,16 +249,23 @@ class TestA161PayloadOnModulePath(A161Base):
         result = self.run_config("eth_trunk_guard_mode_root", changed=True)
         self._assert_nvpair(result, "Ethernet1/30", "GUARD_MODE", "root")
 
+    # The playbook value stays strictly native -- a string "false" is still rejected, see
+    # test_disable_lldp_string_false_is_rejected_not_coerced_to_False above. What these two pin is
+    # the OTHER end: what the engine puts on the wire. nvPairs is a string-valued map, and
+    # emitting a native bool there made the field non-idempotent on a live controller.
     def test_eth_trunk_disable_lldp_true_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_trunk_disable_lldp_true", changed=True)
-        value = self._assert_nvpair(result, "Ethernet1/30", "DISABLE_LLDP", True)
-        assert type(value) is bool
+        value = self._assert_nvpair(result, "Ethernet1/30", "DISABLE_LLDP", "true")
+        assert isinstance(value, str)
 
     def test_eth_access_disable_lldp_false_reaches_the_parent_nvpair(self):
-        """An explicit false is authored intent and must be emitted, not skipped."""
+        """An explicit false is authored intent and must be emitted, not skipped.
+
+        'false' is a value here, never an omission, so the payload must carry the key.
+        """
         result = self.run_config("eth_access_disable_lldp_false", changed=True)
-        value = self._assert_nvpair(result, "Ethernet1/31", "DISABLE_LLDP", False)
-        assert type(value) is bool
+        value = self._assert_nvpair(result, "Ethernet1/31", "DISABLE_LLDP", "false")
+        assert isinstance(value, str)
 
     def test_eth_trunk_acl_filter_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_trunk_acl_filter_valid", changed=True)
