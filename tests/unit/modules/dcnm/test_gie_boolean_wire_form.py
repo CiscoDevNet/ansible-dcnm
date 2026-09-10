@@ -43,6 +43,9 @@ from unittest import mock
 
 import pytest
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
+    BINDING_TABLE,
+)
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_contribute_nvpairs,
 )
@@ -55,21 +58,46 @@ VERSION = "12.6.0.267"
 
 _OMITTED = object()
 
+# Derived from the table, NOT hand-listed. A boolean binding registered later is covered by
+# these tests the day it lands, which is the point of a generic engine: the contract belongs to
+# the mechanism, not to any one field. Hand-listing would silently leave the next one untested.
+BOOL_PASSTHROUGH = sorted(
+    (b["parent_template"], b["profile_key"], b["parent_nvpair"])
+    for b in BINDING_TABLE
+    if b["type"] == "boolean" and b["mechanism"] == "passthrough"
+)
+BOOL_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, _ in BOOL_PASSTHROUGH]
+
+
+def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
+    """Guard the guard: an empty parametrize list turns every test below into a no-op.
+
+    Also pins the fields known to be boolean passthrough today, so a binding silently changing
+    type or mechanism shows up here instead of quietly leaving this file with nothing to run.
+    """
+    assert BOOL_PASSTHROUGH, "no boolean passthrough bindings -- the tests below run on nothing"
+    assert {k for _, k, _ in BOOL_PASSTHROUGH} == {
+        "disable_lldp", "disable_qos_stats", "disable_queuing_stats",
+    }
+    assert len(BOOL_PASSTHROUGH) == 6  # three fields x two host eth parents
+
 
 # ------------------------------------------------------- what the engine emits --
 
-@pytest.mark.parametrize("parent", [TRUNK, ACCESS])
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_PASSTHROUGH, ids=BOOL_IDS)
 @pytest.mark.parametrize(
     "value,wire", [(True, "true"), (False, "false")], ids=["true", "false"]
 )
-def test_boolean_passthrough_is_emitted_as_its_wire_form(parent, value, wire):
+def test_boolean_passthrough_is_emitted_as_its_wire_form(
+    parent, profile_key, nvpair, value, wire
+):
     """The exact defect: a native bool in nvPairs never matches the controller's string."""
-    add, err = gie_contribute_nvpairs(parent, {"disable_lldp": value}, VERSION)
+    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION)
     assert err is None
-    assert add["DISABLE_LLDP"] == wire
-    assert isinstance(add["DISABLE_LLDP"], str)
-    # Not the Python repr: NDFC's template DSL tests `disableLldp == "true"`, lowercase.
-    assert add["DISABLE_LLDP"] != str(value)
+    assert add[nvpair] == wire
+    assert isinstance(add[nvpair], str)
+    # Not the Python repr: NDFC's template DSL tests `== "true"`, lowercase.
+    assert add[nvpair] != str(value)
 
 
 @pytest.mark.parametrize("parent", [TRUNK, ACCESS])
@@ -134,20 +162,21 @@ def test_omitted_boolean_still_contributes_nothing():
 # whatever the engine currently produces, so the engine's behaviour is what is under test.
 
 
-def _engine_nvpairs(parent, lldp):
+def _engine_nvpairs(parent, profile_key, value):
     """The nvPairs the module would build for this profile, via the real engine call."""
-    add, err = gie_contribute_nvpairs(parent, {"disable_lldp": lldp}, VERSION)
+    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION)
     assert err is None, err
     return add
 
 
-def _payload(parent, lldp=_OMITTED, description="same", engine_built=False):
+def _payload(parent, profile_key, nvpair, value=_OMITTED, description="same",
+             engine_built=False):
     nvpairs = {"DESC": description}
-    if lldp is not _OMITTED:
+    if value is not _OMITTED:
         if engine_built:
-            nvpairs.update(_engine_nvpairs(parent, lldp))
+            nvpairs.update(_engine_nvpairs(parent, profile_key, value))
         else:
-            nvpairs["DISABLE_LLDP"] = lldp
+            nvpairs[nvpair] = value
     return {
         "deploy": False,
         "policy": parent,
@@ -162,10 +191,10 @@ def _payload(parent, lldp=_OMITTED, description="same", engine_built=False):
     }
 
 
-def _compare_obj(state, parent, want_lldp=_OMITTED, have_lldp=_OMITTED,
+def _compare_obj(state, parent, profile_key, nvpair, want=_OMITTED, have=_OMITTED,
                  want_description="same", have_description="same"):
-    """want_lldp is the PLAYBOOK value (a native bool); the engine turns it into nvPairs.
-    have_lldp is the raw string the controller returns.
+    """`want` is the PLAYBOOK value (a native bool); the engine turns it into nvPairs.
+    `have` is the raw string the controller returns.
     """
     module = mock.Mock()
     module.params = {"fabric": "FAB1", "config": [], "state": state}
@@ -174,10 +203,11 @@ def _compare_obj(state, parent, want_lldp=_OMITTED, have_lldp=_OMITTED,
         dcnm_interface, "dcnm_version_supported", return_value=(12, "12.6.0.267")
     ):
         obj = dcnm_interface.DcnmIntf(module)
-    obj.want = [_payload(parent, want_lldp, want_description, engine_built=True)]
-    have = _payload(parent, have_lldp, have_description)
-    have.pop("deploy")
-    obj.have = [have]
+    obj.want = [_payload(parent, profile_key, nvpair, want, want_description,
+                         engine_built=True)]
+    have_payload = _payload(parent, profile_key, nvpair, have, have_description)
+    have_payload.pop("deploy")
+    obj.have = [have_payload]
     pb = {
         "ifname": "Ethernet1/4",
         "sno": "SN1",
@@ -185,60 +215,67 @@ def _compare_obj(state, parent, want_lldp=_OMITTED, have_lldp=_OMITTED,
         "policy": parent,
         "description": want_description,
     }
-    if want_lldp is not _OMITTED:
-        pb["disable_lldp"] = want_lldp
+    if want is not _OMITTED:
+        pb[profile_key] = want
     obj.pb_input = [pb]
     return obj
 
 
-@pytest.mark.parametrize("parent", [TRUNK, ACCESS])
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_PASSTHROUGH, ids=BOOL_IDS)
 @pytest.mark.parametrize(
     "playbook_value,controller_value",
     [(True, "true"), (False, "false")],
     ids=["true", "false"],
 )
 def test_reapplying_the_same_boolean_is_idempotent(
-    parent, playbook_value, controller_value
+    parent, profile_key, nvpair, playbook_value, controller_value
 ):
     """THE regression test. Reproduces live stage p2 exactly.
 
-    The playbook says disable_lldp: true, the engine builds want, and the controller already
+    The playbook says the field is true, the engine builds want, and the controller already
     holds "true". Before the fix the engine put a native bool in want, "true" != True compared
     unequal, and the module re-pushed on every run -- changed=True forever, with a deploy each
     time and a config-save behind it.
     """
-    obj = _compare_obj("merged", parent, playbook_value, controller_value)
+    obj = _compare_obj("merged", parent, profile_key, nvpair,
+                       playbook_value, controller_value)
     obj.dcnm_intf_compare_want_and_have("merged")
     assert obj.diff_replace == []
     assert obj.changed_dict[0]["merged"] == []
 
 
-@pytest.mark.parametrize("parent", [TRUNK, ACCESS])
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_PASSTHROUGH, ids=BOOL_IDS)
 @pytest.mark.parametrize("state", ["merged", "replaced", "overridden"])
-def test_a_real_boolean_change_is_still_detected(parent, state):
+def test_a_real_boolean_change_is_still_detected(parent, profile_key, nvpair, state):
     """The opposite direction: the fix must not make the field unwritable.
 
     A test that only pins idempotency would also pass if the field were dropped entirely.
     """
-    obj = _compare_obj(state, parent, True, "false")
+    obj = _compare_obj(state, parent, profile_key, nvpair, True, "false")
     obj.dcnm_intf_compare_want_and_have(state)
     assert len(obj.diff_replace) == 1
     sent = obj.diff_replace[0]["interfaces"][0]["nvPairs"]
-    assert sent["DISABLE_LLDP"] == "true"
+    assert sent[nvpair] == "true"
     reported = obj.changed_dict[0][state][0]["interfaces"][0]["nvPairs"]
-    assert reported == {"DISABLE_LLDP": "true"}
+    assert reported == {nvpair: "true"}
 
 
-@pytest.mark.parametrize("parent", [TRUNK, ACCESS])
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_PASSTHROUGH, ids=BOOL_IDS)
 @pytest.mark.parametrize("state", ["replaced", "overridden"])
-def test_omitted_boolean_is_carried_forward_from_have(parent, state):
-    """Omission is not intent: an unrelated edit must not reset the controller's value."""
+def test_omitted_boolean_is_carried_forward_from_have(parent, profile_key, nvpair, state):
+    """Omission is not intent: an unrelated edit must not reset the controller's value.
+
+    This matters more for the QoS-stats pair than for anything registered before it. Both are
+    the " no-stats" suffix of a service-policy line, so a value silently reset to false does not
+    remove a line -- it changes one in place, which is exactly the kind of drift nobody notices
+    until statistics quietly come back.
+    """
     obj = _compare_obj(
-        state, parent, _OMITTED, "true",
+        state, parent, profile_key, nvpair, _OMITTED, "true",
         want_description="new", have_description="old",
     )
     obj.dcnm_intf_compare_want_and_have(state)
     sent = obj.diff_replace[0]["interfaces"][0]["nvPairs"]
-    assert sent["DISABLE_LLDP"] == "true"
+    assert sent[nvpair] == "true"
     reported = obj.changed_dict[0][state][0]["interfaces"][0]["nvPairs"]
     assert reported == {"DESC": "new"}

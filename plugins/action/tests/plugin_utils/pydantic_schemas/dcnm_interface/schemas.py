@@ -369,6 +369,10 @@ class DcnmInterfaceQuerySchema(BaseModel):
             "guard_mode": "GUARD_MODE",
             "disable_lldp": "DISABLE_LLDP",
             "acl_filter": "ACL_FILTER",
+            # QoS statistics slice. Both are the " no-stats" suffix of the service-policy
+            # line their dependency emits, never a CLI line of their own.
+            "disable_qos_stats": "DISABLE_QOS_STATS",
+            "disable_queuing_stats": "DISABLE_QUEUING_STATS",
             "speed": "SPEED",
             "description": "DESC",
             "copy_description": "COPY_DESC",
