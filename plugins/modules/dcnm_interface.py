@@ -8220,6 +8220,70 @@ class DcnmIntf:
                     }
                 )
 
+    @staticmethod
+    def dcnm_intf_collect_batch_errors(resp):
+        """Return the per-item ERROR entries of a Multi-Status response, or [].
+
+        A 207 reports the outcome of EACH item in ``DATA``; the HTTP status only says the
+        batch was processed. Only ``reportItemType == "ERROR"`` is treated as a failure:
+        ``WARNING`` carries benign notices (the deploy call answers "No Commands to execute.
+        In-Sync" that way) and an unrecognised type is deliberately ignored, so this can
+        never turn a currently-working run into a failure on an item shape we have not seen.
+
+        Fail-safe on anything unexpected: a ``DATA`` that is not a list of dicts yields [],
+        because a malformed body is not evidence of a rejected item.
+        """
+        data = resp.get("DATA") if isinstance(resp, dict) else None
+        if not isinstance(data, list):
+            return []
+        return [
+            item
+            for item in data
+            if isinstance(item, dict)
+            and str(item.get("reportItemType", "")).upper() == "ERROR"
+        ]
+
+    @staticmethod
+    def dcnm_intf_format_batch_error(resp, failed_items):
+        """Build the failure message for a partially or wholly rejected batch.
+
+        Naming what SUCCEEDED matters as much as naming what failed. The controller applies
+        a batch item by item, so a mixed response leaves real state behind; failing without
+        saying which items landed would leave the operator worse off than the silent success
+        this replaces -- they would know something broke but not what to reconcile.
+        """
+        def label(item):
+            entity = item.get("entity") or "<unknown entity>"
+            return "  %s: %s" % (entity, item.get("message") or "<no message>")
+
+        data = resp.get("DATA") if isinstance(resp, dict) else []
+        applied = [
+            item.get("entity")
+            for item in (data if isinstance(data, list) else [])
+            if isinstance(item, dict)
+            and str(item.get("reportItemType", "")).upper() == "SUCCESS"
+            and item.get("entity")
+        ]
+
+        lines = [
+            "The controller rejected %d item(s) in the interface batch update. "
+            "The batch answered HTTP %s, but that status only reports that the request "
+            "was processed -- the outcome is per item."
+            % (len(failed_items), resp.get("RETURN_CODE")),
+            "",
+            "Rejected:",
+        ]
+        lines += [label(item) for item in failed_items]
+        if applied:
+            lines += [
+                "",
+                "Applied before the rejection (already changed on the controller):",
+            ]
+            lines += ["  %s" % entity for entity in applied]
+        else:
+            lines += ["", "Nothing in this batch was applied."]
+        return "\n".join(lines)
+
     def dcnm_intf_send_message_to_dcnm(self):
 
         resp = None
@@ -8363,6 +8427,29 @@ class DcnmIntf:
                     resp["CHANGED"] = self.changed_dict
                     self.module.fail_json(msg=resp)
                 else:
+                    # 207 is a BATCH code: the HTTP status only says the request was
+                    # processed, and the per-item outcome lives in DATA. A 207 whose items
+                    # are all ERROR looks identical, at the HTTP layer, to one whose items
+                    # are all SUCCESS -- so judging by RETURN_CODE alone reports
+                    # changed=true for a batch the controller rejected outright.
+                    #
+                    # Observed on a live controller: a parent template that refuses a value
+                    # answers 207 with, per interface,
+                    #   {"reportItemType": "ERROR",
+                    #    "message": "Switch [...]: '<field>' cannot be set to ... ",
+                    #    "entity": "<serial>:<ifName>"}
+                    # and nothing is written. Silently succeeding there is the worst failure
+                    # mode available: the operator believes the change landed.
+                    #
+                    # Only ERROR is fatal. WARNING is used for benign notices (the deploy
+                    # call answers "No Commands to execute. In-Sync" that way) and any other
+                    # value is left alone, so this cannot turn a working run into a failure
+                    # on an item type we have not observed.
+                    failed_items = self.dcnm_intf_collect_batch_errors(resp)
+                    if failed_items:
+                        self.module.fail_json(
+                            msg=self.dcnm_intf_format_batch_error(resp, failed_items)
+                        )
                     replace = True
             else:
                 # Individual update API for versions 11 and 12
