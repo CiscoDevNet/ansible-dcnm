@@ -296,10 +296,23 @@
         label: "{{ item.ifName }}"
 
     ##############################################
-    ##        6. INVALID VALUES FAIL CLOSED     ##
+    ##    6. NEGATIVE CASE - MUST FAIL CLOSED   ##
     ##############################################
+    #
+    # READ THIS BEFORE REACTING TO THE OUTPUT.
+    #
+    # The next task is EXPECTED to fail. Ansible prints it in red as
+    #
+    #     fatal: [...]: FAILED! => {... "must be a native enum (one of: on, off) ..."}
+    #     ...ignoring
+    #
+    # and that red line is the PASS condition, not a problem. `ignore_errors` lets the play
+    # continue so the assertion after it can confirm two things the failure alone does not:
+    # that the module refused, and that nothing was sent to the controller.
+    #
+    # The run as a whole is green only if PLAY RECAP shows `failed=0` with `ignored=1`.
 
-    - name: A value outside the enum must be rejected before anything is sent
+    - name: NEGATIVE - an out-of-enum value must be rejected (a red 'fatal' here is the PASS)
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
         fabric: "{{ test_data_common.fabric }}"
@@ -316,12 +329,18 @@
       register: bad_value
       ignore_errors: true
 
-    - name: ASSERT - rejected, and nothing reached the controller
+    - name: ASSERT - the negative case failed as required, and nothing reached the controller
       ansible.builtin.assert:
         that:
           - bad_value.failed == true
           - bad_value.changed == false
-        fail_msg: "An out-of-enum value must fail closed, with no request issued."
+          - bad_value.response | default([]) | length == 0
+        fail_msg: >-
+          The out-of-enum value did NOT fail closed. Either the module accepted it, or it
+          issued a request before rejecting it. Both are defects: a registered enum must be
+          validated before any controller call.
+        success_msg: >-
+          Rejected before any request was issued. The red 'fatal' above is this test passing.
 
   always:
 
