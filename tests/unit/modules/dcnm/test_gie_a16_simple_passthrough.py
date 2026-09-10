@@ -77,13 +77,13 @@ def _load_generator():
 
 
 # ------------------------------------------------------------------ table integrity
-def test_table_has_fourteen_unique_rows():
-    # 12 (A1.5 + A1.6) + 2 (A1.9: the OSPF legacy-key pair on int_fabric_loopback_11_1).
+def test_table_has_sixteen_unique_rows():
+    # 12 (A1.5 + A1.6) + 2 (A1.9: OSPF legacy-key pair) + 2 (FLOWCONTROL_SEND).
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 14
-    assert len(set(keys)) == 14, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 16
+    assert len(set(keys)) == 16, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 14, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 16, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -141,7 +141,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 14
+    assert len(gen.compile_rows(rows)) == 16
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -187,7 +187,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 14
+    assert len(gen.compile_rows(rows)) == 16
 
 
 # ------------------------------------------------------------------ positive transport
@@ -389,6 +389,7 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(TRUNK)
     } == {
         ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
+        ("FLOWCONTROL_SEND", "flowcontrol_send"),
         ("GUARD_MODE", "guard_mode"),
         ("DISABLE_LLDP", "disable_lldp"),
         ("ACL_FILTER", "acl_filter"),
@@ -397,6 +398,7 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
     } == {
         ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
+        ("FLOWCONTROL_SEND", "flowcontrol_send"),
         ("DISABLE_LLDP", "disable_lldp"),
         ("ACL_FILTER", "acl_filter"),
     }
@@ -478,15 +480,17 @@ def test_keymap_carries_every_new_nvpair():
     assert km["DISABLE_LLDP"] == "disable_lldp"
     assert km["ACL_FILTER"] == "acl_filter"
     assert km["FLOWCONTROL_RECEIVE"] == "flowcontrol_receive"
+    assert km["FLOWCONTROL_SEND"] == "flowcontrol_send"
     assert km["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"] == "enable_ospf_auth_message_digest"
     assert km["OSPF_AUTH_KEY_ID"] == "ospf_auth_key_id"
     assert km["OSPF_AUTH_KEY"] == "ospf_auth_key"
-    assert len(km) == 7
+    assert len(km) == 8
 
 
 def test_all_registered_keys():
     assert gie_all_registered_keys() == {
-        "flowcontrol_receive", "enable_ospf_auth_message_digest",
+        "flowcontrol_receive", "flowcontrol_send",
+        "enable_ospf_auth_message_digest",
         "guard_mode", "disable_lldp", "acl_filter",
         "ospf_auth_key_id", "ospf_auth_key",
     }

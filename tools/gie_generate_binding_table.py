@@ -23,6 +23,12 @@ Committed bindings (and ONLY these):
     - int_port_channel_trunk_host       :: ACL_FILTER    (string, passthrough)
     - int_port_channel_dot1q_tunnel_host:: ACL_FILTER    (string, passthrough)
 
+  FLOWCONTROL slice — companion of the A1.5 receive binding, from registry slice 0b_11:
+    - int_trunk_host  :: FLOWCONTROL_SEND  (enum on/off, passthrough)
+    - int_access_host :: FLOWCONTROL_SEND  (enum on/off, passthrough)
+  Sweeping all 90+ templates confirms ONLY these two parents carry FLOWCONTROL, so together
+  with the A1.5 receive rows these four entries close the field's universe.
+
   A1.9 slice — OSPF legacy-key pair, from reviewed registry slice 0b_10:
     - int_fabric_loopback_11_1 :: OSPF_AUTH_KEY_ID  (integer, child_pti)
     - int_fabric_loopback_11_1 :: OSPF_AUTH_KEY     (string,  child_pti)
@@ -59,6 +65,9 @@ MONDAY = {
     ("int_port_channel_access_host", "ACL_FILTER"): "acl_filter",
     ("int_port_channel_trunk_host", "ACL_FILTER"): "acl_filter",
     ("int_port_channel_dot1q_tunnel_host", "ACL_FILTER"): "acl_filter",
+    # --- FLOWCONTROL_SEND (registry slice 0b_11) ---
+    ("int_trunk_host", "FLOWCONTROL_SEND"): "flowcontrol_send",
+    ("int_access_host", "FLOWCONTROL_SEND"): "flowcontrol_send",
     # --- A1.9: par de clave OSPF legacy (registry slice 0b_10) ---
     ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
     ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY"): "ospf_auth_key",

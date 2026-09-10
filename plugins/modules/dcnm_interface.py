@@ -702,6 +702,16 @@ options:
             description:
             - State of IEEE 802.3x pause-frame reception. This option is
               applicable only when mode is trunk or access.
+            - Explicit-only, no default. When omitted the current controller
+              value is left untouched; set 'off' to remove the CLI.
+            type: str
+            choices: ['on', 'off']
+          flowcontrol_send:
+            description:
+            - State of IEEE 802.3x pause-frame transmission. This option is
+              applicable only when mode is trunk or access.
+            - Explicit-only, no default. When omitted the current controller
+              value is left untouched; set 'off' to remove the CLI.
             type: str
             choices: ['on', 'off']
           guard_mode:

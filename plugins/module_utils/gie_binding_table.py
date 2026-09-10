@@ -1,17 +1,18 @@
 # GENERATED — DO NOT EDIT. Static thin-engine binding table (Phase 1).
 # Source: approved Phase-0B registry. Generator: tools/gie_generate_binding_table.py.
 # Runtime imports this module only; it does not read the evidence dir or templates.
-# provenance_sha256 = 46be0ba67716589408163c7ce786664995e61f6d781572f0e4bc8a7590ead1f6
+# provenance_sha256 = 4c67d8af1e6113f796bbf65197b015d18e771f4816eb1aa429da087970a93199
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "46be0ba67716589408163c7ce786664995e61f6d781572f0e4bc8a7590ead1f6"
+PROVENANCE_SHA256 = "4c67d8af1e6113f796bbf65197b015d18e771f4816eb1aa429da087970a93199"
 
 BINDING_TABLE = (
     {'parent_template': 'int_access_host', 'parent_nvpair': 'ACL_FILTER', 'profile_key': 'acl_filter', 'applicable_interface_type': 'eth', 'applicable_mode': 'access', 'type': 'string', 'mechanism': 'passthrough', 'min_ndfc_version': '12.6.0.267', 'min_length': 1, 'max_length': 64},
     {'parent_template': 'int_access_host', 'parent_nvpair': 'DISABLE_LLDP', 'profile_key': 'disable_lldp', 'applicable_interface_type': 'eth', 'applicable_mode': 'access', 'type': 'boolean', 'default_template': False, 'mechanism': 'passthrough', 'min_ndfc_version': '12.6.0.267'},
     {'parent_template': 'int_access_host', 'parent_nvpair': 'FLOWCONTROL_RECEIVE', 'profile_key': 'flowcontrol_receive', 'applicable_interface_type': 'eth', 'applicable_mode': 'access', 'type': 'enum', 'valid_values': ('on', 'off'), 'default_template': 'off', 'mechanism': 'passthrough', 'min_ndfc_version': '12.6.0.267'},
+    {'parent_template': 'int_access_host', 'parent_nvpair': 'FLOWCONTROL_SEND', 'profile_key': 'flowcontrol_send', 'applicable_interface_type': 'eth', 'applicable_mode': 'access', 'type': 'enum', 'valid_values': ('on', 'off'), 'default_template': 'off', 'mechanism': 'passthrough', 'min_ndfc_version': '12.6.0.267'},
     {'parent_template': 'int_fabric_loopback_11_1', 'parent_nvpair': 'ENABLE_OSPF_AUTH_MESSAGE_DIGEST', 'profile_key': 'enable_ospf_auth_message_digest', 'applicable_interface_type': 'lo', 'applicable_mode': 'fabric', 'type': 'boolean', 'default_template': False, 'mechanism': 'child_pti', 'min_ndfc_version': '12.6.0.267'},
     {'parent_template': 'int_fabric_loopback_11_1', 'parent_nvpair': 'OSPF_AUTH_KEY', 'profile_key': 'ospf_auth_key', 'applicable_interface_type': 'lo', 'applicable_mode': 'fabric', 'type': 'string', 'mechanism': 'child_pti', 'min_ndfc_version': '12.6.0.267', 'min_length': 1},
     {'parent_template': 'int_fabric_loopback_11_1', 'parent_nvpair': 'OSPF_AUTH_KEY_ID', 'profile_key': 'ospf_auth_key_id', 'applicable_interface_type': 'lo', 'applicable_mode': 'fabric', 'type': 'integer', 'mechanism': 'child_pti', 'min_ndfc_version': '12.6.0.267'},
@@ -22,6 +23,7 @@ BINDING_TABLE = (
     {'parent_template': 'int_trunk_host', 'parent_nvpair': 'ACL_FILTER', 'profile_key': 'acl_filter', 'applicable_interface_type': 'eth', 'applicable_mode': 'trunk', 'type': 'string', 'mechanism': 'passthrough', 'min_ndfc_version': '12.6.0.267', 'min_length': 1, 'max_length': 64},
     {'parent_template': 'int_trunk_host', 'parent_nvpair': 'DISABLE_LLDP', 'profile_key': 'disable_lldp', 'applicable_interface_type': 'eth', 'applicable_mode': 'trunk', 'type': 'boolean', 'default_template': False, 'mechanism': 'passthrough', 'min_ndfc_version': '12.6.0.267'},
     {'parent_template': 'int_trunk_host', 'parent_nvpair': 'FLOWCONTROL_RECEIVE', 'profile_key': 'flowcontrol_receive', 'applicable_interface_type': 'eth', 'applicable_mode': 'trunk', 'type': 'enum', 'valid_values': ('on', 'off'), 'default_template': 'off', 'mechanism': 'passthrough', 'min_ndfc_version': '12.6.0.267'},
+    {'parent_template': 'int_trunk_host', 'parent_nvpair': 'FLOWCONTROL_SEND', 'profile_key': 'flowcontrol_send', 'applicable_interface_type': 'eth', 'applicable_mode': 'trunk', 'type': 'enum', 'valid_values': ('on', 'off'), 'default_template': 'off', 'mechanism': 'passthrough', 'min_ndfc_version': '12.6.0.267'},
     {'parent_template': 'int_trunk_host', 'parent_nvpair': 'GUARD_MODE', 'profile_key': 'guard_mode', 'applicable_interface_type': 'eth', 'applicable_mode': 'trunk', 'type': 'enum', 'valid_values': ('root', 'none', 'loop', 'no'), 'default_template': 'no', 'mechanism': 'passthrough', 'min_ndfc_version': '12.6.0.267'},
 )
 
