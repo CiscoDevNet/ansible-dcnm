@@ -59,7 +59,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         """Map legacy positional empty fixtures to authoritative empty GETs.
 
         Older lifecycle cases supplied arbitrary empty response shapes because
-        non-WP98 policies treated malformed HAVE as absence. The production
+        other policies treated malformed HAVE as absence. The production
         contract is now fail-closed, so those existing tests must represent the
         successful-empty response they intended instead of malformed state.
         """
@@ -6785,7 +6785,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             self.assertNotEqual(normalize(unknown), "false")
             self.assertNotEqual(normalize(unknown), "true")
 
-    # ---- Durable metadata and lifecycle coverage (Gate A review G3, finding 8) ----
+    # ---- Durable metadata and lifecycle coverage ----
 
     @staticmethod
     def _ospfmd_parent(parameters):

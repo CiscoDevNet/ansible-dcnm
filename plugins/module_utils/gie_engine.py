@@ -1,4 +1,4 @@
-# Thin additive registry-driven engine (Phase 1 Monday slice). Offline. No live.
+# Additive registry-driven binding engine for dcnm_interface.
 #
 # Consumes ONLY the packaged static binding table (gie_binding_table). It does not read the
 # investigation evidence dir or NDFC template files. It is ADDITIVE: it acts only on
@@ -417,7 +417,7 @@ def gie_have_carry_forward_nvpairs(want_nvpairs, have_nvpairs):
     The caller adds the result to the sent payload only (not to the public diff), keeping the
     user-facing diff and idempotency intact.
 
-    A1.7 note: this is the ONLY carry-forward that runs for ``int_fabric_loopback_11_1``. The
+    Note: this is the ONLY carry-forward that runs for ``int_fabric_loopback_11_1``. The
     registered-binding carry-forward (``gie_carry_forward_bindings``) returns [] for that parent
     because it has no ``passthrough`` binding, so the two paths cannot both write the same nvPair.
     The ``nvpair in want_nvpairs`` skip above is the second, independent guarantee of that.

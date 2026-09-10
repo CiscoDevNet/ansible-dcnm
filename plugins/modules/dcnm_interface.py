@@ -2015,7 +2015,7 @@ OSPF_AUTH_KEYCHAIN_PROFILE_KEYS = (
 OSPF_AUTH_KEY_ID_MIN = 0
 OSPF_AUTH_KEY_ID_MAX = 255
 
-# Thin additive registry-driven engine (Phase 1 Monday slice). Consumes the packaged static
+# Additive registry-driven binding engine. Consumes the packaged static
 # binding table only; additive; explicit-only; NDFC executes template effects. The engine owns
 # binding resolution + type validation + supported-version parent-nvPair transport for every
 # registered binding; the OSPF-MD capability/HAVE reconciliation stays a narrow compat hook.
@@ -3530,7 +3530,7 @@ class DcnmIntf:
                     )
                 )
 
-            # A1.6.1 (B1): enforce the REGISTERED native type/choices on the RAW playbook
+            # Enforce the REGISTERED native type/choices on the RAW playbook
             # value, here, while it is still raw. The nested-profile path runs
             # validate_list_of_dicts later, and that coerces (check_type_bool("false") ->
             # False, check_type_str(True) -> "True"), so a check placed after it can only
@@ -6244,8 +6244,8 @@ class DcnmIntf:
                                                 self.module.fail_json(msg=str(exc))
                                             want[k][0][ik][nvpair] = have_value
 
-                                    # A1.7 integration: same-parent HAVE carry-forward (drift fix,
-                                    # ported from A1.5). SCOPED to the exact proven parent
+                                    # Same-parent HAVE carry-forward (drift fix).
+                                    # SCOPED to the exact proven parent
                                     # OSPF_AUTH_MD_PARENT_TEMPLATE (int_fabric_loopback_11_1): only
                                     # this parent's full HAVE nvPair set was observed and every key
                                     # classified as writable / read-only-metadata / OSPF-domain, so

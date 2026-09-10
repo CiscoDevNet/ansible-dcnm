@@ -364,7 +364,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
             "flowcontrol_receive": "FLOWCONTROL_RECEIVE",
             "flowcontrol_send": "FLOWCONTROL_SEND",
             "spanning_tree_port_type": "SPANNING_TREE_PORT_TYPE",
-            # A1.6 simple passthrough slice. The generic bool->str conversion below
+            # Simple passthrough bindings. The generic bool->str conversion below
             # produces the "true"/"false" strings NDFC echoes back for disable_lldp.
             "guard_mode": "GUARD_MODE",
             "disable_lldp": "DISABLE_LLDP",

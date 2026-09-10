@@ -1,14 +1,13 @@
-"""A1.6 simple-passthrough slice: nine new registered bindings.
+"""Simple passthrough bindings, one case per value type.
 
-Covers, proportional to every value type (enum / boolean / string-with-length):
-positive transport on a supported version, omission, wrong parent, exact native type,
-enum + length constraints, unsupported/unknown/malformed versions, same-parent
+Covers positive transport on a supported version, omission, wrong parent, native type,
+enum and length constraints, unsupported/unknown/malformed versions, same-parent
 carry-forward, malformed HAVE, and the generator/table integrity guards.
 
-Also regresses the A1.5 slice (OSPF-MD + FLOWCONTROL_RECEIVE) to prove it is byte- and
-behaviour-compatible after the table grew from 3 rows to 12.
+Also regresses the OSPF-MD and FLOWCONTROL_RECEIVE bindings to prove they stay byte- and
+behaviour-compatible as the table grows.
 
-Offline. No controller, Nexus or Jenkins.
+Offline: no controller and no device.
 """
 import hashlib
 import importlib.util
@@ -93,8 +92,8 @@ def _load_generator():
 
 # ------------------------------------------------------------------ table integrity
 def test_table_has_twentytwo_unique_rows():
-    # 12 (A1.5 + A1.6) + 2 (OSPF legacy-key) + 2 (FLOWCONTROL_SEND) + 2 (SPANNING_TREE)
-    # + 4 (DISABLE_QOS_STATS / DISABLE_QUEUING_STATS on both host eth parents).
+    # 12 baseline + passthrough, 2 OSPF legacy-key, 2 FLOWCONTROL_SEND, 2 SPANNING_TREE,
+    # 4 QoS statistics.
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     assert len(BINDING_TABLE) == 22
     assert len(set(keys)) == 22, "duplicate (parent, nvpair) row"
@@ -543,7 +542,7 @@ def test_same_value_produces_the_same_payload():
         assert first == second == {nvpair: _wire(value)}
 
 
-# ------------------------------------------------------------------ A1.5 regression
+# ------------------------------------------------------------ baseline regression
 def test_a15_flowcontrol_contract_is_unchanged():
     for parent in (ACCESS, TRUNK):
         b = resolve_binding(parent, "flowcontrol_receive")
@@ -590,7 +589,7 @@ def test_a15_ospf_md_contract_and_compat_exception_are_unchanged():
 
 def test_ospf_md_is_still_not_generically_guarded():
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
-    # A1.9 added the legacy-key pair to the same parent. Both are child_pti, so neither is
+    # The legacy-key pair lives on the same parent. Both are child_pti, so neither is
     # generically guarded either: dcnm_intf_validate_ospf_auth_key_input keeps ownership of
     # the parent/mode check and of its exact error message.
     assert registered_profile_keys(LOOPBACK) == {

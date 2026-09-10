@@ -1,4 +1,4 @@
-"""A1.9: source-contract for no_log plumbing in dcnm_interface.
+"""Source contract for no_log plumbing in dcnm_interface.
 
 ``validate_list_of_dicts()`` reads its ``module`` argument in exactly ONE place --
 inside ``if no_log:`` -- where it registers the value in ``module.no_log_values`` so
