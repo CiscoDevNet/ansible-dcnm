@@ -29,6 +29,13 @@ Committed bindings (and ONLY these):
   Sweeping all 90+ templates confirms ONLY these two parents carry FLOWCONTROL, so together
   with the A1.5 receive rows these four entries close the field's universe.
 
+  SPANNING-TREE slice — from registry slice 0b_12, catalog-confirmed gap:
+    - int_trunk_host  :: SPANNING_TREE_PORT_TYPE  (enum no/network/normal, passthrough)
+    - int_access_host :: SPANNING_TREE_PORT_TYPE  (enum no/network/normal, passthrough)
+  NOT independent: the template rejects a non-"no" value while PORTTYPE_FAST_ENABLED is true,
+  and true is the default on both sides. The relation is deliberately NOT registered -- the
+  precondition lives in a field the registry does not own. See the slice header.
+
   A1.9 slice — OSPF legacy-key pair, from reviewed registry slice 0b_10:
     - int_fabric_loopback_11_1 :: OSPF_AUTH_KEY_ID  (integer, child_pti)
     - int_fabric_loopback_11_1 :: OSPF_AUTH_KEY     (string,  child_pti)
@@ -65,6 +72,9 @@ MONDAY = {
     ("int_port_channel_access_host", "ACL_FILTER"): "acl_filter",
     ("int_port_channel_trunk_host", "ACL_FILTER"): "acl_filter",
     ("int_port_channel_dot1q_tunnel_host", "ACL_FILTER"): "acl_filter",
+    # --- SPANNING_TREE_PORT_TYPE (registry slice 0b_12) ---
+    ("int_trunk_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
+    ("int_access_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
     # --- FLOWCONTROL_SEND (registry slice 0b_11) ---
     ("int_trunk_host", "FLOWCONTROL_SEND"): "flowcontrol_send",
     ("int_access_host", "FLOWCONTROL_SEND"): "flowcontrol_send",

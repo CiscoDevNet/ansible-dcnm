@@ -68,23 +68,32 @@ FC_SEND_ROWS = {
     (TRUNK, "FLOWCONTROL_SEND", "flowcontrol_send"),
     (ACCESS, "FLOWCONTROL_SEND", "flowcontrol_send"),
 }
+# SPANNING_TREE_PORT_TYPE, from registry slice 0b_12. The first registered field that is NOT
+# independent: the template rejects a non-"no" value while PORTTYPE_FAST_ENABLED is true, and
+# true is the default on both sides. That relation is deliberately not registered -- the
+# precondition lives in a field the registry does not own.
+STP_ROWS = {
+    (TRUNK, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+    (ACCESS, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+}
 
 
 # ---- binding package (G1 runtime contract) ----
 
 def test_package_provenance_and_size():
-    expected_keys = A15_ROWS | A16_ROWS | A19_ROWS | FC_SEND_ROWS
+    expected_keys = A15_ROWS | A16_ROWS | A19_ROWS | FC_SEND_ROWS | STP_ROWS
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 16
+    assert len(BINDING_TABLE) == len(actual_keys) == 18
     assert actual_keys == expected_keys
     # The A1.5 slice must survive verbatim inside the larger table.
     assert A15_ROWS <= actual_keys
     assert len(A16_ROWS) == 9
     assert len(A19_ROWS) == 2
     assert len(FC_SEND_ROWS) == 2
+    assert len(STP_ROWS) == 2
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -106,7 +115,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 16
+    assert len(rows) == 18
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -127,11 +136,12 @@ def test_compiler_rejects_profile_key_mismatch():
 
 def test_registered_keys_per_parent():
     assert registered_profile_keys(TRUNK) == {
-        "flowcontrol_receive", "flowcontrol_send",
+        "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "guard_mode", "disable_lldp", "acl_filter"
     }
     assert registered_profile_keys(ACCESS) == {
-        "flowcontrol_receive", "flowcontrol_send", "disable_lldp", "acl_filter"
+        "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
+        "disable_lldp", "acl_filter"
     }
     assert registered_profile_keys(LOOPBACK) == {
         "enable_ospf_auth_message_digest", "ospf_auth_key_id", "ospf_auth_key"
@@ -165,6 +175,7 @@ def test_flowcontrol_public_documentation_is_enum_without_default():
 def test_registry_drives_comparator_keymap_and_carry_forward():
     assert gie_nvpair_keymap()["FLOWCONTROL_RECEIVE"] == "flowcontrol_receive"
     assert gie_nvpair_keymap()["FLOWCONTROL_SEND"] == "flowcontrol_send"
+    assert gie_nvpair_keymap()["SPANNING_TREE_PORT_TYPE"] == "spanning_tree_port_type"
     # FLOWCONTROL_SEND is passthrough, so it DOES join the carry-forward set -- the opposite
     # of the OSPF bindings, which are child_pti and are excluded. That difference is what
     # makes omitting the key preserve the controller's value instead of being a silent no-op.
@@ -173,6 +184,7 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
     } == {
         ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
         ("FLOWCONTROL_SEND", "flowcontrol_send"),
+        ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
         ("GUARD_MODE", "guard_mode"),
         ("DISABLE_LLDP", "disable_lldp"),
         ("ACL_FILTER", "acl_filter"),
@@ -182,6 +194,7 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
     } == {
         ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
         ("FLOWCONTROL_SEND", "flowcontrol_send"),
+        ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
         ("DISABLE_LLDP", "disable_lldp"),
         ("ACL_FILTER", "acl_filter"),
     }
@@ -355,7 +368,7 @@ def test_contribute_preserves_native_types_no_stringification():
 
 def test_all_registered_and_guarded_keys():
     assert gie_all_registered_keys() == {
-        "flowcontrol_receive", "flowcontrol_send",
+        "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "enable_ospf_auth_message_digest",
         "guard_mode", "disable_lldp", "acl_filter",
         "ospf_auth_key_id", "ospf_auth_key",
@@ -364,7 +377,7 @@ def test_all_registered_and_guarded_keys():
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
     # its invalid-parent guard, unlike the OSPF bindings below.
     assert gie_guarded_keys() == {
-        "flowcontrol_receive", "flowcontrol_send",
+        "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "guard_mode", "disable_lldp", "acl_filter",
     }
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
@@ -915,6 +928,108 @@ def test_flowcontrol_send_reaches_the_action_plugin_schema():
     source = path.read_text(encoding="utf-8")
     assert '"flowcontrol_send": "FLOWCONTROL_SEND"' in source
     assert '"flowcontrol_receive": "FLOWCONTROL_RECEIVE"' in source
+
+
+# ---- SPANNING_TREE_PORT_TYPE: the first registered field that is not independent ----
+
+
+@pytest.mark.parametrize("parent,mode", [(TRUNK, "trunk"), (ACCESS, "access")])
+def test_spanning_tree_port_type_binding_shape(parent, mode):
+    b = resolve_binding(parent, "spanning_tree_port_type")
+    assert b is not None, "%s::spanning_tree_port_type missing" % parent
+    assert b["parent_nvpair"] == "SPANNING_TREE_PORT_TYPE"
+    assert b["type"] == "enum"
+    assert tuple(b["valid_values"]) == ("no", "network", "normal")
+    assert b["default_template"] == "no"
+    assert b["mechanism"] == "passthrough"
+    assert b["applicable_interface_type"] == "eth"
+    assert b["applicable_mode"] == mode
+
+
+@pytest.mark.parametrize("parent", [TRUNK, ACCESS])
+def test_spanning_tree_no_stays_a_string_not_a_boolean(parent):
+    """YAML 1.1 turns an unquoted `no` into False. Both the registered choice list and the
+    default must survive as the string 'no', or the enum silently stops matching what the
+    template declares.
+    """
+    b = resolve_binding(parent, "spanning_tree_port_type")
+    assert "no" in b["valid_values"]
+    assert False not in b["valid_values"]
+    assert isinstance(b["default_template"], str)
+    assert gie_validate_binding_value(parent, "spanning_tree_port_type", _SubStr("no")) == "no"
+    with pytest.raises(GieBindingError):
+        gie_validate_binding_value(parent, "spanning_tree_port_type", False)
+
+
+@pytest.mark.parametrize("parent", [TRUNK, ACCESS])
+@pytest.mark.parametrize("value", ["no", "network", "normal"])
+def test_spanning_tree_transports_a_wrapped_playbook_value(parent, value):
+    add, err = gie_contribute_nvpairs(
+        parent, {"spanning_tree_port_type": _SubStr(value)}, "12.6.0.267"
+    )
+    assert err is None
+    assert add == {"SPANNING_TREE_PORT_TYPE": value}
+
+
+@pytest.mark.parametrize("parent", [TRUNK, ACCESS])
+def test_spanning_tree_rejects_values_outside_the_enum(parent):
+    # 'edge' and 'edge trunk' are what the CLI ends up saying, but they are NOT registered
+    # choices -- the template derives them from PORTTYPE_FAST_ENABLED, not from this field.
+    for bad in (_SubStr("edge"), _SubStr("edge trunk"), _SubStr("NETWORK"), _SubStr(""), 1):
+        with pytest.raises(GieBindingError):
+            gie_validate_binding_value(parent, "spanning_tree_port_type", bad)
+
+
+def test_spanning_tree_mutual_exclusion_is_not_expressed_in_the_registry():
+    """Deliberate: the precondition lives in a field the registry does not own.
+
+    The template rejects a non-"no" value while PORTTYPE_FAST_ENABLED is true
+    (int_trunk_host:534, int_access_host:534), and true is the default on both sides. That
+    relation is NOT registered, for two reasons:
+
+      * it would need a new schema field for a single case -- the same `depends_on` that was
+        already rejected as speculative during the OSPF migration;
+      * PORTTYPE_FAST_ENABLED is handled by the module's legacy path and is absent from the
+        registry, so a registry row cannot express a dependency on it.
+
+    The engine therefore transports the value unconditionally and the template is left to
+    reject it. This test pins that choice so nobody "fixes" it into the registry without
+    first measuring how NDFC surfaces the rejection.
+    """
+    for parent in (TRUNK, ACCESS):
+        b = resolve_binding(parent, "spanning_tree_port_type")
+        assert "depends_on" not in b
+        assert "conditional_requirement" not in b
+        assert resolve_binding(parent, "port_type_fast") is None
+        # transported without inspecting any other field
+        add, err = gie_contribute_nvpairs(
+            parent, {"spanning_tree_port_type": _SubStr("network")}, "12.6.0.267"
+        )
+        assert err is None and add == {"SPANNING_TREE_PORT_TYPE": "network"}
+
+
+def test_spanning_tree_public_documentation_warns_about_port_type_fast():
+    documentation = yaml.safe_load(dcnm_interface.DOCUMENTATION)
+    opt = documentation["options"]["config"]["suboptions"]["profile_eth"]["suboptions"][
+        "spanning_tree_port_type"
+    ]
+    assert opt["type"] == "str"
+    assert opt["choices"] == ["no", "network", "normal"]
+    assert "default" not in opt
+    # The interaction is the single most surprising thing about this field: the default path
+    # rejects it. It must be documented, or every first use fails.
+    text = " ".join(opt["description"]).lower()
+    assert "port_type_fast" in text
+
+
+def test_spanning_tree_reaches_the_action_plugin_schema():
+    path = (
+        Path(gie_binding_table.__file__).resolve().parents[2]
+        / "plugins" / "action" / "tests" / "plugin_utils"
+        / "pydantic_schemas" / "dcnm_interface" / "schemas.py"
+    )
+    source = path.read_text(encoding="utf-8")
+    assert '"spanning_tree_port_type": "SPANNING_TREE_PORT_TYPE"' in source
 
 
 if __name__ == "__main__":

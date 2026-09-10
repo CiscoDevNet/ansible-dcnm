@@ -363,6 +363,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
             "enable_ospf_auth_message_digest": "ENABLE_OSPF_AUTH_MESSAGE_DIGEST",
             "flowcontrol_receive": "FLOWCONTROL_RECEIVE",
             "flowcontrol_send": "FLOWCONTROL_SEND",
+            "spanning_tree_port_type": "SPANNING_TREE_PORT_TYPE",
             # A1.6 simple passthrough slice. The generic bool->str conversion below
             # produces the "true"/"false" strings NDFC echoes back for disable_lldp.
             "guard_mode": "GUARD_MODE",

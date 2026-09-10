@@ -616,6 +616,20 @@ options:
               This option is applicable only for interfaces whose 'mode' is 'trunk'.
             type: str
             default: ""
+          spanning_tree_port_type:
+            description:
+            - Spanning-tree port type. This option is applicable only when mode
+              is trunk or access.
+            - Requires 'port_type_fast' to be false. The parent template rejects
+              'network' or 'normal' while port type fast is enabled, and port
+              type fast defaults to true, so both must be sent together.
+            - A value of 'no' does not mean "no configuration". It defers to the
+              port-type-fast behaviour, which emits 'spanning-tree port type
+              edge trunk' when port_type_fast is true.
+            - Explicit-only, no default. When omitted the current controller
+              value is left untouched.
+            type: str
+            choices: ['no', 'network', 'normal']
           speed:
             description:
             - Speed of the interface.
