@@ -1,0 +1,358 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+# IEEE 802.3x flow control on host-facing Ethernet interfaces.
+#
+#   profile.flowcontrol_receive -> nvPairs.FLOWCONTROL_RECEIVE -> 'flowcontrol receive on'
+#   profile.flowcontrol_send    -> nvPairs.FLOWCONTROL_SEND    -> 'flowcontrol send on'
+#
+# Both are `passthrough` registry bindings on int_trunk_host and int_access_host. Sweeping
+# every shipped template confirms these are the ONLY two parents that carry the field, so
+# the four rows close its universe.
+#
+# WHY THIS FILE EXISTS
+#
+# FLOWCONTROL_RECEIVE was registered in the engine long before this file, and it appeared in
+# five unit-test modules -- including one named `test_dcnm_intf_a17_integration.py`, which
+# lives under tests/unit/ and never touches a controller. It had no integration coverage at
+# all, and it did not work end to end: the engine compared `type(value) is str`, while every
+# value Ansible hands a module is wrapped in a str subclass (AnsibleUnicode and
+# AnsibleUnsafeText were both observed). Three engine defects had to be fixed before a real
+# playbook could set this field.
+#
+# So this file is not a formality. It is the coverage whose absence hid those defects, and it
+# exists so FLOWCONTROL_SEND does not inherit the same debt.
+#
+# WHAT IT ASSERTS THAT A UNIT TEST CANNOT
+#
+#   1. the value survives the Ansible -> module boundary wrapped in a str subclass;
+#   2. `off` actually REMOVES the CLI line. The template only ever emits on "on":
+#
+#          int_trunk_host:588   if flowcontrolSend == "on":
+#                                   add_config('flowcontrol send on', ...)
+#
+#      Nothing emits a `no flowcontrol ...`. Removal depends on NDFC's compliance engine
+#      generating it, which is an assumption about the controller, not about this module;
+#   3. omitting the key PRESERVES the controller's value. For a passthrough binding the
+#      carry-forward asserts "leave as-is" -- it is not the same as setting `off`.
+#
+# ORDERING IS THE SAFETY PROPERTY
+#
+#   1. capture both baselines, complete and untouched   (GET only)
+#   2. prove every captured field can be reproduced exactly
+#   3. only then enter the block that mutates
+#   4. `always` restores from the captured baseline on every exit path
+#
+# Nothing before step 3 changes controller state, so an abort earlier leaves the fabric as
+# it was found.
+
+- name: ETH FLOWCONTROL - Test Entry Point - [ndfc_interface]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [ndfc_interface]               +"
+      - "+                  ETH FLOWCONTROL Tests                        +"
+      - "----------------------------------------------------------------"
+
+- name: Remove local log file
+  local_action: command rm -f dcnm_intf_flowcontrol.log
+
+##############################################
+##        1. CAPTURE BASELINES (GET)        ##
+##############################################
+
+- name: Query the trunk and access interfaces before touching anything
+  cisco.dcnm.dcnm_interface:
+    check_deploy: "{{ test_data_common.check_deploy | bool }}"
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+    config:
+      - name: "{{ test_data_common.eth_intf_trunk }}"
+        switch:
+          - "{{ test_data_common.switch1 }}"
+      - name: "{{ test_data_common.eth_intf_access }}"
+        switch:
+          - "{{ test_data_common.switch1 }}"
+  register: baseline
+
+- name: ASSERT - both interfaces are present and queryable
+  ansible.builtin.assert:
+    that:
+      - baseline.response | length == 2
+    fail_msg: >-
+      Expected both a trunk and an access interface on switch1. This test needs one of each,
+      because int_trunk_host and int_access_host are separate registry rows that extend
+      different profile specs.
+
+- name: Record the baseline flow-control values
+  ansible.builtin.set_fact:
+    fc_baseline: >-
+      {{ baseline.response | map(attribute='interfaces') | flatten
+         | items2dict(key_name='ifName', value_name='nvPairs') }}
+
+- name: Show the captured baseline
+  ansible.builtin.debug:
+    msg: >-
+      {{ fc_baseline | dict2items
+         | map(attribute='value') | map('dict2items') | map('selectattr','key','search','FLOWCONTROL')
+         | map('items2dict') | list }}
+
+- block:
+
+    ##############################################
+    ##        2. SET BOTH FIELDS TO 'on'        ##
+    ##############################################
+
+    - name: Turn both flow-control directions on, trunk and access
+      cisco.dcnm.dcnm_interface: &fc_on
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config:
+          - name: "{{ test_data_common.eth_intf_trunk }}"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: trunk
+              flowcontrol_receive: "on"
+              flowcontrol_send: "on"
+          - name: "{{ test_data_common.eth_intf_access }}"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: access
+              flowcontrol_receive: "on"
+              flowcontrol_send: "on"
+      register: result
+
+    - name: ASSERT - the change was applied
+      ansible.builtin.assert:
+        that:
+          - result.changed == true
+          - item.RETURN_CODE in [200, 207]
+        fail_msg: "Setting flow control on must change state and be accepted."
+      loop: "{{ result.response }}"
+
+    - name: Read back what the controller stored
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query
+        config:
+          - name: "{{ test_data_common.eth_intf_trunk }}"
+            switch:
+              - "{{ test_data_common.switch1 }}"
+          - name: "{{ test_data_common.eth_intf_access }}"
+            switch:
+              - "{{ test_data_common.switch1 }}"
+      register: after_on
+
+    - name: ASSERT - both nvPairs are 'on', on both parents
+      ansible.builtin.assert:
+        that:
+          - item.nvPairs.FLOWCONTROL_RECEIVE == "on"
+          - item.nvPairs.FLOWCONTROL_SEND == "on"
+        fail_msg: >-
+          {{ item.ifName }} did not store both directions. A single missing value here means
+          the field did not survive the Ansible -> module boundary.
+      loop: "{{ after_on.response | map(attribute='interfaces') | flatten }}"
+      loop_control:
+        label: "{{ item.ifName }}"
+
+    ##############################################
+    ##            3. IDEMPOTENCE                ##
+    ##############################################
+
+    - name: Re-apply the identical intent
+      cisco.dcnm.dcnm_interface: *fc_on
+      register: repeat
+
+    - name: ASSERT - nothing changed and nothing was sent
+      ansible.builtin.assert:
+        that:
+          - repeat.changed == false
+          - repeat.response | length == 0
+        fail_msg: >-
+          Re-applying the same values must issue NO request at all -- not a write that
+          answers "no change".
+
+    ##############################################
+    ##     4. OMISSION PRESERVES (passthrough)  ##
+    ##############################################
+
+    # Omission is NOT "set off". For a passthrough binding the carry-forward reads the
+    # authoritative value from HAVE and asserts "leave as-is".
+    - name: Apply the same interfaces with BOTH keys omitted
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config:
+          - name: "{{ test_data_common.eth_intf_trunk }}"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: trunk
+          - name: "{{ test_data_common.eth_intf_access }}"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: access
+      register: omitted
+
+    - name: Read back after the omission
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query
+        config:
+          - name: "{{ test_data_common.eth_intf_trunk }}"
+            switch:
+              - "{{ test_data_common.switch1 }}"
+          - name: "{{ test_data_common.eth_intf_access }}"
+            switch:
+              - "{{ test_data_common.switch1 }}"
+      register: after_omit
+
+    - name: ASSERT - the omitted values were PRESERVED, not reset
+      ansible.builtin.assert:
+        that:
+          - item.nvPairs.FLOWCONTROL_RECEIVE == "on"
+          - item.nvPairs.FLOWCONTROL_SEND == "on"
+        fail_msg: >-
+          {{ item.ifName }} lost its flow-control value when the key was omitted. For a
+          passthrough binding the carry-forward must preserve the controller's value.
+      loop: "{{ after_omit.response | map(attribute='interfaces') | flatten }}"
+      loop_control:
+        label: "{{ item.ifName }}"
+
+    ##############################################
+    ##      5. 'off' REMOVES THE CLI LINE       ##
+    ##############################################
+
+    - name: Turn both directions off
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config:
+          - name: "{{ test_data_common.eth_intf_trunk }}"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: trunk
+              flowcontrol_receive: "off"
+              flowcontrol_send: "off"
+          - name: "{{ test_data_common.eth_intf_access }}"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: access
+              flowcontrol_receive: "off"
+              flowcontrol_send: "off"
+      register: result_off
+
+    - name: ASSERT - turning it off is a change
+      ansible.builtin.assert:
+        that:
+          - result_off.changed == true
+          - item.RETURN_CODE in [200, 207]
+      loop: "{{ result_off.response }}"
+
+    - name: Read back after turning it off
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query
+        config:
+          - name: "{{ test_data_common.eth_intf_trunk }}"
+            switch:
+              - "{{ test_data_common.switch1 }}"
+          - name: "{{ test_data_common.eth_intf_access }}"
+            switch:
+              - "{{ test_data_common.switch1 }}"
+      register: after_off
+
+    - name: ASSERT - both nvPairs are back to 'off'
+      ansible.builtin.assert:
+        that:
+          - item.nvPairs.FLOWCONTROL_RECEIVE == "off"
+          - item.nvPairs.FLOWCONTROL_SEND == "off"
+      loop: "{{ after_off.response | map(attribute='interfaces') | flatten }}"
+      loop_control:
+        label: "{{ item.ifName }}"
+
+    ##############################################
+    ##        6. INVALID VALUES FAIL CLOSED     ##
+    ##############################################
+
+    - name: A value outside the enum must be rejected before anything is sent
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config:
+          - name: "{{ test_data_common.eth_intf_trunk }}"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: trunk
+              flowcontrol_send: "enabled"
+      register: bad_value
+      ignore_errors: true
+
+    - name: ASSERT - rejected, and nothing reached the controller
+      ansible.builtin.assert:
+        that:
+          - bad_value.failed == true
+          - bad_value.changed == false
+        fail_msg: "An out-of-enum value must fail closed, with no request issued."
+
+  always:
+
+    ##############################################
+    ##      RESTORE THE CAPTURED BASELINE       ##
+    ##############################################
+
+    # Restores from the values captured in step 1, on every exit path -- including the
+    # assertion failures above.
+    - name: Restore both interfaces to their captured baseline
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config:
+          - name: "{{ test_data_common.eth_intf_trunk }}"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: trunk
+              flowcontrol_receive: "{{ fc_baseline[test_data_common.eth_intf_trunk].FLOWCONTROL_RECEIVE | default('off') }}"
+              flowcontrol_send: "{{ fc_baseline[test_data_common.eth_intf_trunk].FLOWCONTROL_SEND | default('off') }}"
+          - name: "{{ test_data_common.eth_intf_access }}"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: access
+              flowcontrol_receive: "{{ fc_baseline[test_data_common.eth_intf_access].FLOWCONTROL_RECEIVE | default('off') }}"
+              flowcontrol_send: "{{ fc_baseline[test_data_common.eth_intf_access].FLOWCONTROL_SEND | default('off') }}"
+      ignore_errors: true
