@@ -1,18 +1,17 @@
-"""A1.7 integration: ONE authoritative carry-forward path.
+"""One authoritative carry-forward path.
 
-A1.7 merges two independently reviewed carry-forward mechanisms:
+Two carry-forward mechanisms coexist:
 
-  * A1.5  `gie_have_carry_forward_nvpairs` — generic same-parent HAVE preservation, scoped by the
-          CALLER to the exact tuple (int_fabric_loopback_11_1, ENABLE_OSPF_AUTH_MESSAGE_DIGEST)'s
-          parent, merged state only.
-  * A1.6.1 `gie_carry_forward_bindings` — registered passthrough bindings (enum/boolean/string),
-          re-validated against the registry before being carried.
+  * `gie_have_carry_forward_nvpairs` — generic same-parent HAVE preservation, scoped by the
+    CALLER to the int_fabric_loopback_11_1 parent, merged state only.
+  * `gie_carry_forward_bindings` — registered passthrough bindings, re-validated against the
+    registry before being carried.
 
-These tests prove the two coexist without double injection, without losing HAVE values, and
-without any cross-parent carry — driven through the ACTUAL comparator
-`DcnmIntf.dcnm_intf_compare_want_and_have`, the same productive path the A1.5 tests use.
+These tests prove they coexist without double injection, without losing HAVE values, and
+without any cross-parent carry, driven through the real comparator
+`DcnmIntf.dcnm_intf_compare_want_and_have`.
 
-Helpers are imported from the ported A1.5 suite rather than duplicated, so the two files cannot
+Helpers are imported from the sibling suite rather than duplicated, so the two files cannot
 drift apart.
 
 NOT LIVE TESTED IN THIS GENERATION.
@@ -63,12 +62,12 @@ ETH_BUILDER_NV = {
     "BPDUGUARD_ENABLED": "true",
     "MTU": "jumbo",
 }
-# The three registered A1.6 bindings, one per value type, living only in HAVE.
+# Three registered bindings, one per value type, living only in HAVE.
 ETH_HAVE_REGISTERED = {
     "GUARD_MODE": "root",            # enum
     "DISABLE_LLDP": True,            # boolean
     "ACL_FILTER": "ACL_FROM_HAVE",   # string
-    "FLOWCONTROL_RECEIVE": "on",     # enum (frozen A1.5 binding)
+    "FLOWCONTROL_RECEIVE": "on",     # enum (baseline binding)
 }
 ETH_KEYMAP = {
     "INTF_NAME": "name", "DESC": "description", "CONF": "cmds",
@@ -248,9 +247,9 @@ def test_malformed_have_nvpairs_hits_a_PREEXISTING_legacy_limit_not_the_carry_fo
     `intf.get(ik, {}).get(key, None)` while scanning HAVE. When `nvPairs` is None that is
     `None.get(...)` -> AttributeError, and it happens BEFORE either carry-forward runs.
 
-    This is pre-existing behaviour inherited from A1.5/A1.6.1, not something A1.7 introduced,
+    This is pre-existing behaviour, not something the merged carry-forward introduced,
     and hardening the legacy comparator is outside this mandate's authority (it would change
-    behaviour for every unregistered field on every parent). The A1.7 contribution is proven
+    behaviour for every unregistered field on every parent). The contribution proven here is
     fail-closed independently by `test_non_dict_have_carries_nothing`.
 
     The test asserts the CURRENT truth so the limit is visible and a future fix is a

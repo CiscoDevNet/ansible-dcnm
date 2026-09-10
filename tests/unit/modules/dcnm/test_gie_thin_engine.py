@@ -1,9 +1,9 @@
-# Phase 1 thin-engine unit tests (Monday slice: FLOWCONTROL_RECEIVE + OSPF-MD separation).
-# Proves: intent survival (profile key -> parent nvPair), explicit-only emission, omission
-# semantics, native string type, version fail-closed for a registered key, and that the
-# engine transports OSPF-MD on supported versions while its 4-point unsupported-version
-# behavior stays with the A1.4.4 compat hook (covered by test_dcnm_intf_ospfmd_have_fetch +
-# test_dcnm_ospfmd_parent_child_contract).
+# Binding engine unit tests.
+#
+# Covers intent survival (profile key -> parent nvPair), explicit-only emission, omission
+# semantics, value types, and version fail-closed for a registered key. The OSPF-MD
+# unsupported-version path stays with the module's compatibility hook and is covered by
+# test_dcnm_intf_ospfmd_have_fetch and test_dcnm_ospfmd_parent_child_contract.
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -37,14 +37,14 @@ PC_TRUNK = "int_port_channel_trunk_host"
 PC_ACCESS = "int_port_channel_access_host"
 PC_DOT1Q = "int_port_channel_dot1q_tunnel_host"
 
-# The A1.5 slice, frozen. These three rows and their behaviour must not change.
-A15_ROWS = {
+# Baseline rows. These three and their behaviour must not change.
+BASELINE_ROWS = {
     (ACCESS, "FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
     (LOOPBACK, "ENABLE_OSPF_AUTH_MESSAGE_DIGEST", "enable_ospf_auth_message_digest"),
     (TRUNK, "FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
 }
-# The A1.6 simple-passthrough slice: nine new rows from registry slices 0b_7/0b_8/0b_9.
-A16_ROWS = {
+# Simple passthrough rows.
+PASSTHROUGH_ROWS = {
     (TRUNK, "GUARD_MODE", "guard_mode"),
     (PC_TRUNK, "GUARD_MODE", "guard_mode"),
     (ACCESS, "DISABLE_LLDP", "disable_lldp"),
@@ -55,31 +55,28 @@ A16_ROWS = {
     (PC_TRUNK, "ACL_FILTER", "acl_filter"),
     (PC_DOT1Q, "ACL_FILTER", "acl_filter"),
 }
-# The A1.9 slice: the OSPF legacy-key pair, from registry slice 0b_10. Both rows feed the
-# SAME child (ospf_interface_auth), so both are child_pti on the loopback parent.
-A19_ROWS = {
+# The OSPF legacy-key pair. Both rows feed the SAME child (ospf_interface_auth), so both
+# are child_pti on the loopback parent.
+OSPF_KEY_ROWS = {
     (LOOPBACK, "OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
     (LOOPBACK, "OSPF_AUTH_KEY", "ospf_auth_key"),
 }
-# FLOWCONTROL_SEND, from registry slice 0b_11: the companion of the A1.5 receive rows.
-# Sweeping all 90+ templates confirms only these two parents carry FLOWCONTROL, so these
-# two rows plus the A1.5 pair close the field's universe.
+# FLOWCONTROL_SEND, companion of the receive rows. Only these two parents carry FLOWCONTROL,
+# so these two rows plus the receive pair close the field's universe.
 FC_SEND_ROWS = {
     (TRUNK, "FLOWCONTROL_SEND", "flowcontrol_send"),
     (ACCESS, "FLOWCONTROL_SEND", "flowcontrol_send"),
 }
-# SPANNING_TREE_PORT_TYPE, from registry slice 0b_12. The first registered field that is NOT
-# independent: the template rejects a non-"no" value while PORTTYPE_FAST_ENABLED is true, and
-# true is the default on both sides. That relation is deliberately not registered -- the
-# precondition lives in a field the registry does not own.
+# SPANNING_TREE_PORT_TYPE is NOT independent: the template rejects a non-"no" value while
+# PORTTYPE_FAST_ENABLED is true, and true is the default on both sides. That relation is
+# deliberately not registered -- the precondition lives in a field the registry does not own.
 STP_ROWS = {
     (TRUNK, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
     (ACCESS, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
 }
-# QoS statistics, from registry slice 0b_13. These four close the 16 catalog-confirmed gaps for
-# the two host eth parents. Neither field emits a CLI line of its own: each is the " no-stats"
-# suffix of the service-policy line its dependency produces, so with the dependency unmet the
-# value is stored on the controller and is a silent no-op on the device.
+# QoS statistics. Neither field emits a CLI line of its own: each is the " no-stats" suffix of
+# the service-policy line its dependency produces, so with the dependency unmet the value is
+# stored on the controller and is a silent no-op on the device.
 QOS_STATS_ROWS = {
     (TRUNK, "DISABLE_QOS_STATS", "disable_qos_stats"),
     (ACCESS, "DISABLE_QOS_STATS", "disable_qos_stats"),
@@ -88,11 +85,11 @@ QOS_STATS_ROWS = {
 }
 
 
-# ---- binding package (G1 runtime contract) ----
+# ---- binding package runtime contract ----
 
 def test_package_provenance_and_size():
     expected_keys = (
-        A15_ROWS | A16_ROWS | A19_ROWS | FC_SEND_ROWS | STP_ROWS | QOS_STATS_ROWS
+        BASELINE_ROWS | PASSTHROUGH_ROWS | OSPF_KEY_ROWS | FC_SEND_ROWS | STP_ROWS | QOS_STATS_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
@@ -100,10 +97,10 @@ def test_package_provenance_and_size():
     }
     assert len(BINDING_TABLE) == len(actual_keys) == 22
     assert actual_keys == expected_keys
-    # The A1.5 slice must survive verbatim inside the larger table.
-    assert A15_ROWS <= actual_keys
-    assert len(A16_ROWS) == 9
-    assert len(A19_ROWS) == 2
+    # The baseline rows must survive verbatim inside the larger table.
+    assert BASELINE_ROWS <= actual_keys
+    assert len(PASSTHROUGH_ROWS) == 9
+    assert len(OSPF_KEY_ROWS) == 2
     assert len(FC_SEND_ROWS) == 2
     assert len(STP_ROWS) == 2
     assert len(QOS_STATS_ROWS) == 4
@@ -402,7 +399,7 @@ def test_all_registered_and_guarded_keys():
         "disable_qos_stats", "disable_queuing_stats",
     }
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
-    # A1.9: the legacy-key pair is child_pti, so registering it must NOT hand the engine the
+    # The legacy-key pair is child_pti, so registering it must NOT hand the engine the
     # invalid-parent guard. dcnm_intf_validate_ospf_auth_key_input owns that check and its
     # error message ("supported only on fabric loopback interfaces...") is observable
     # contract; a generic guard firing first would silently change it.
@@ -670,7 +667,7 @@ def test_query_keeps_controller_flowcontrol_string_without_normalization(monkeyp
     )
 
 
-# ---- A1.9: exact registry contract for the OSPF legacy-key pair ----
+# ---- exact registry contract for the OSPF legacy-key pair ----
 
 def test_a19_legacy_key_pair_registry_fields():
     """Pin the fields that drive behaviour, not just the row's identity.
@@ -744,9 +741,9 @@ def test_string_and_enum_bindings_accept_str_subclasses(wrap):
     key = wrap("a667d47acc18ea6b")
     if key is None:
         pytest.skip("AnsibleUnicode not importable in this ansible-core")
-    # A1.9 string binding
+    # OSPF key string binding
     assert gie_validate_binding_value(LOOPBACK, "ospf_auth_key", key) == key
-    # A1.5 enum binding and A1.6 string binding: the same defect made these unusable too.
+    # The enum and string bindings: the same defect made these unusable too.
     assert gie_validate_binding_value(TRUNK, "flowcontrol_receive", wrap("on")) == "on"
     assert gie_validate_binding_value(TRUNK, "acl_filter", wrap("MY_ACL")) == "MY_ACL"
 
@@ -856,12 +853,12 @@ def test_subclass_acceptance_does_not_bypass_the_other_registered_checks():
         gie_validate_binding_value(LOOPBACK, "ospf_auth_key", 17)  # int is not a string
 
 
-# ---- FLOWCONTROL_SEND: companion of the A1.5 receive binding ----
+# ---- FLOWCONTROL_SEND: companion of the receive binding ----
 #
 # Driven with str SUBCLASSES, not literals. Every value that reaches a module from a playbook
 # is wrapped in one (AnsibleUnicode or AnsibleUnsafeText were both observed in this codebase),
 # and a test that passes a bare `str` cannot see a defect that only affects the wrapped form.
-# That is exactly how the A1.6 bindings stayed broken end to end while their unit tests were
+# That is exactly how these bindings stayed broken end to end while their unit tests were
 # green.
 
 

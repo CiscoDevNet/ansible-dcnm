@@ -1,4 +1,4 @@
-# Offline tests for the OSPF legacy-key mode on int_fabric_loopback_11_1 (Phase 3, A1.8-legacy-key).
+# Offline tests for the OSPF legacy-key mode on int_fabric_loopback_11_1 .
 #
 # SCOPE: two actual-code paths are driven directly, no AnsibleModule / no live API:
 #   * validation -> DcnmIntf.dcnm_intf_validate_ospf_auth_key_input(self.config)
@@ -226,7 +226,7 @@ def test_transport_version_gate_fails_closed_on_unsupported():
 
 
 # ------------------------------------------- generic input validation (no_log) --
-# Regression guard for the live A1.8 failure: dcnm_intf_validate_input ->
+# Regression guard for a measured live failure: dcnm_intf_validate_input ->
 # dcnm_intf_validate_loopback_interface_input -> dcnm_intf_validate_interface_input ->
 # validate_list_of_dicts(plist, prof_spec) raised
 #   "'ospf_auth_key' is a no_log parameter / Ansible module object must be passed..."
@@ -282,7 +282,7 @@ def test_validate_list_of_dicts_contract_requires_module_for_no_log():
     assert PLACEHOLDER_KEY not in str(e.value)
 
 
-# ----------------------------------------------- A1.9 golden payload (equivalence) --
+# ------------------------------------------------- golden payload (equivalence) --
 # These snapshots are the migration's safety net. They were CAPTURED from the hardcoded
 # emission that was validated live (T1 apply / T2 idempotency / T3 rotation / T4 teardown),
 # so they describe a payload NDFC is known to accept.
