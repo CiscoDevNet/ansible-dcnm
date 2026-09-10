@@ -50,7 +50,22 @@ UNSUPPORTED_VERSIONS = (BELOW, "12.5.9.999", None, "", "not.a.version", "12.x.0.
 
 GUARD_VALUES = ("root", "none", "loop", "no")
 
-# (parent, profile_key, nvpair, a valid explicit value)
+def _wire(value):
+    """The nvPair form the engine emits for a PASSTHROUGH value.
+
+    nvPairs is a string-valued map, so a boolean is transported as "true"/"false"; strings and
+    enums are already in wire form and pass through untouched. Mirrors gie_engine._to_nvpair_wire.
+
+    This slice originally asserted the native bool instead. That contract was reversed after a
+    live measurement: the module compared its own True against the "true" the controller returns,
+    never converged, and re-pushed DISABLE_LLDP on every run. See test_gie_boolean_wire_form.py.
+    """
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return value
+
+
+# (parent, profile_key, nvpair, a valid explicit PLAYBOOK value -- use _wire() for the payload)
 NINE = (
     (TRUNK, "guard_mode", "GUARD_MODE", "root"),
     (PC_TRUNK, "guard_mode", "GUARD_MODE", "loop"),
@@ -192,11 +207,12 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
 
 # ------------------------------------------------------------------ positive transport
 @pytest.mark.parametrize("parent,pk,nvpair,value", NINE)
-def test_supported_version_transports_the_native_value(parent, pk, nvpair, value):
+def test_supported_version_transports_the_wire_value(parent, pk, nvpair, value):
     add, err = gie_contribute_nvpairs(parent, {pk: value}, SUPPORTED)
     assert err is None
-    assert add == {nvpair: value}
-    assert type(add[nvpair]) is type(value)
+    assert add == {nvpair: _wire(value)}
+    # Every passthrough nvPair leaves the engine as a string, whatever the registered type.
+    assert isinstance(add[nvpair], str)
 
 
 def test_every_guard_mode_choice_transports():
@@ -209,10 +225,12 @@ def test_every_guard_mode_choice_transports():
 
 def test_disable_lldp_transports_both_booleans():
     for parent in (ACCESS, TRUNK):
-        for value in (True, False):
+        for value, wire in ((True, "true"), (False, "false")):
             add, err = gie_contribute_nvpairs(parent, {"disable_lldp": value}, SUPPORTED)
-            assert err is None and add == {"DISABLE_LLDP": value}
-            assert type(add["DISABLE_LLDP"]) is bool
+            assert err is None and add == {"DISABLE_LLDP": wire}
+            # Lowercase JSON spelling, which is what the template DSL tests against --
+            # not Python's str(True) == "True".
+            assert add["DISABLE_LLDP"] == wire != str(value)
 
 
 def test_acl_filter_accepts_boundary_lengths():
@@ -232,7 +250,7 @@ def test_multiple_new_keys_on_one_parent_contribute_together():
     assert err is None
     assert add == {
         "GUARD_MODE": "root",
-        "DISABLE_LLDP": True,
+        "DISABLE_LLDP": "true",
         "ACL_FILTER": "ACL_X",
         "FLOWCONTROL_RECEIVE": "on",
     }
@@ -499,13 +517,24 @@ def test_all_registered_keys():
     }
 
 
-def test_idempotent_same_value_produces_the_same_payload():
-    """The comparator sees a stable native value, so a repeat run diffs to nothing new."""
+def test_same_value_produces_the_same_payload():
+    """The engine is deterministic: the same input always yields the same payload.
+
+    This is NOT an idempotency test, and the earlier name and comment here claimed it was:
+    "the comparator sees a stable native value, so a repeat run diffs to nothing new". That was
+    wrong, and it is the reason a real defect survived offline. Comparing the engine against
+    ITSELF is stable no matter what the engine emits -- including a native bool that the
+    comparator could never match against the controller's "true".
+
+    Idempotency is a property of want-vs-HAVE, so it can only be pinned by a test that carries a
+    controller value on the other side. That test lives in test_gie_boolean_wire_form.py
+    (test_reapplying_the_same_boolean_is_idempotent), and it drives the real comparison.
+    """
     for parent, pk, nvpair, value in NINE:
         first, err1 = gie_contribute_nvpairs(parent, {pk: value}, SUPPORTED)
         second, err2 = gie_contribute_nvpairs(parent, {pk: value}, SUPPORTED)
         assert err1 is None and err2 is None
-        assert first == second == {nvpair: value}
+        assert first == second == {nvpair: _wire(value)}
 
 
 # ------------------------------------------------------------------ A1.5 regression

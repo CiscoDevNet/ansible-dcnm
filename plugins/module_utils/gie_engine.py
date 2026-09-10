@@ -316,16 +316,45 @@ def gie_extend_prof_spec(prof_spec, parent_template, profile_input):
     return prof_spec
 
 
+def _to_nvpair_wire(value):
+    """Serialize a value to the form the controller stores in an nvPair.
+
+    nvPairs is a STRING-valued map: NDFC returns every one of them as a string, and the parent
+    template DSL tests them as strings (``if disableLldp == "true"``). Every pre-existing
+    hardcoded emission in the module already does this by hand -- ``str(x).lower()`` for
+    ADMIN_STATE, PORTTYPE_FAST_ENABLED, and the rest.
+
+    Sending a native Python bool instead relies on the controller coercing it on ingest, and it
+    breaks idempotency outright: the module compares its own ``True`` against the ``"true"`` the
+    controller returns, finds a difference, and re-pushes. Measured live -- DISABLE_LLDP never
+    converged, reporting changed=True with a deploy on every single run.
+
+    Booleans use the lowercase JSON spelling, NOT Python's ``str(True)`` == ``"True"``. Strings
+    pass through untouched so a case-sensitive value (an ACL name) survives exactly, str
+    subclasses included.
+    """
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
 def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version):
     """Compute the parent nvPairs the engine contributes for one interface, keyed by the
     registered binding mechanism. Returns (nvpairs_dict, error_message).
 
-    Only EXPLICIT registered keys are contributed; an omitted key contributes nothing. Native
-    values are preserved (no stringification).
+    Only EXPLICIT registered keys are contributed; an omitted key contributes nothing.
 
-    A supported version transports the native parent nvPair for every mechanism. An explicit
-    key on an unsupported/unknown/malformed version fails closed, except for the one exact
-    OSPF-MD compatibility binding, which is withheld for its established HAVE reconciliation.
+    A PASSTHROUGH value is serialized to its nvPair wire form (see ``_to_nvpair_wire``): that
+    mechanism writes straight into the payload, so transport is the whole job and the payload has
+    to speak the controller's types. A CHILD_PTI value is left native -- that mechanism is the
+    OSPF-MD domain, which reconciles through its own dedicated normalizer and whose call site
+    already stringifies explicitly.
+
+    A supported version transports the parent nvPair for every mechanism. An explicit key on an
+    unsupported/unknown/malformed version fails closed, except for the one exact OSPF-MD
+    compatibility binding, which is withheld for its established HAVE reconciliation.
     """
     add = {}
     for pk in sorted(registered_profile_keys(parent_template)):
@@ -344,8 +373,12 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version):
                 "'{0}' requires NDFC {1} or later; controller reports {2}. "
                 "No change was sent.".format(pk, b["min_ndfc_version"], ndfc_version)
             )
-        # Supported version: the engine resolves the binding and transports the native value.
-        add[b["parent_nvpair"]] = profile_dict[pk]
+        # Supported version: the engine resolves the binding and transports the value, in the
+        # nvPair wire form for passthrough and native for child_pti.
+        value = profile_dict[pk]
+        if b.get("mechanism") == GIE_MECH_PASSTHROUGH:
+            value = _to_nvpair_wire(value)
+        add[b["parent_nvpair"]] = value
     return add, None
 
 
