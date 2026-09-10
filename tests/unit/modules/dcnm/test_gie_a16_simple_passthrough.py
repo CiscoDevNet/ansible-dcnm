@@ -92,13 +92,14 @@ def _load_generator():
 
 
 # ------------------------------------------------------------------ table integrity
-def test_table_has_eighteen_unique_rows():
-    # 12 (A1.5 + A1.6) + 2 (OSPF legacy-key) + 2 (FLOWCONTROL_SEND) + 2 (SPANNING_TREE).
+def test_table_has_twentytwo_unique_rows():
+    # 12 (A1.5 + A1.6) + 2 (OSPF legacy-key) + 2 (FLOWCONTROL_SEND) + 2 (SPANNING_TREE)
+    # + 4 (DISABLE_QOS_STATS / DISABLE_QUEUING_STATS on both host eth parents).
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 18
-    assert len(set(keys)) == 18, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 22
+    assert len(set(keys)) == 22, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 18, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 22, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -156,7 +157,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 18
+    assert len(gen.compile_rows(rows)) == 22
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -202,7 +203,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 18
+    assert len(gen.compile_rows(rows)) == 22
 
 
 # ------------------------------------------------------------------ positive transport
@@ -412,6 +413,8 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("GUARD_MODE", "guard_mode"),
         ("DISABLE_LLDP", "disable_lldp"),
         ("ACL_FILTER", "acl_filter"),
+        ("DISABLE_QOS_STATS", "disable_qos_stats"),
+        ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -421,6 +424,8 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
         ("DISABLE_LLDP", "disable_lldp"),
         ("ACL_FILTER", "acl_filter"),
+        ("DISABLE_QOS_STATS", "disable_qos_stats"),
+        ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(PC_TRUNK)
@@ -505,7 +510,7 @@ def test_keymap_carries_every_new_nvpair():
     assert km["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"] == "enable_ospf_auth_message_digest"
     assert km["OSPF_AUTH_KEY_ID"] == "ospf_auth_key_id"
     assert km["OSPF_AUTH_KEY"] == "ospf_auth_key"
-    assert len(km) == 9
+    assert len(km) == 11
 
 
 def test_all_registered_keys():
@@ -513,6 +518,7 @@ def test_all_registered_keys():
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "enable_ospf_auth_message_digest",
         "guard_mode", "disable_lldp", "acl_filter",
+        "disable_qos_stats", "disable_queuing_stats",
         "ospf_auth_key_id", "ospf_auth_key",
     }
 

@@ -769,6 +769,30 @@ options:
               This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'routed'
             type: str
             default: ""
+          disable_qos_stats:
+            description:
+            - Disable statistics for the attached QoS policy. This option is applicable
+              only when mode is trunk or access.
+            - Does NOT produce a configuration line of its own. It appends ' no-stats'
+              to the 'service-policy type qos input' line that 'enable_qos' and
+              'qos_policy' produce. With no QoS policy in effect the value is stored on
+              the controller and changes nothing on the device.
+            - Requires 'enable_qos' to be true AND a QoS policy name to resolve, either
+              from 'qos_policy' or from the fabric AI/ML QoS setting.
+            - Explicit-only, no default. When omitted the current controller value is
+              left untouched.
+            type: bool
+          disable_queuing_stats:
+            description:
+            - Disable statistics for the attached output queuing policy. This option is
+              applicable only when mode is trunk or access.
+            - Does NOT produce a configuration line of its own. It appends ' no-stats'
+              to the 'service-policy type queuing output' line that 'queuing_policy'
+              produces. With 'queuing_policy' empty the value is stored on the controller
+              and changes nothing on the device.
+            - Explicit-only, no default. When omitted the current controller value is
+              left untouched.
+            type: bool
       profile_svi:
         description:
         - Though the key shown here is 'profile_svi' the actual key to be used in playbook

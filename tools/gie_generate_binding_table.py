@@ -36,6 +36,17 @@ Committed bindings (and ONLY these):
   and true is the default on both sides. The relation is deliberately NOT registered -- the
   precondition lives in a field the registry does not own. See the slice header.
 
+  QoS-STATS slice — from registry slice 0b_13, catalog-confirmed gaps. Closes the 16 confirmed
+  catalog gaps for the two host eth parents:
+    - int_trunk_host  :: DISABLE_QOS_STATS      (boolean, passthrough)
+    - int_access_host :: DISABLE_QOS_STATS      (boolean, passthrough)
+    - int_trunk_host  :: DISABLE_QUEUING_STATS  (boolean, passthrough)
+    - int_access_host :: DISABLE_QUEUING_STATS  (boolean, passthrough)
+  Neither emits a CLI line of its own: each is the " no-stats" SUFFIX of the service-policy line
+  its dependency emits (ENABLE_QOS + a resolvable QOS_POLICY, and a non-empty QUEUING_POLICY
+  respectively). With the dependency unmet the value is stored and is a silent no-op, so a test
+  that does not arrange the dependency measures nothing. See the slice header.
+
   A1.9 slice — OSPF legacy-key pair, from reviewed registry slice 0b_10:
     - int_fabric_loopback_11_1 :: OSPF_AUTH_KEY_ID  (integer, child_pti)
     - int_fabric_loopback_11_1 :: OSPF_AUTH_KEY     (string,  child_pti)
@@ -78,6 +89,11 @@ MONDAY = {
     # --- FLOWCONTROL_SEND (registry slice 0b_11) ---
     ("int_trunk_host", "FLOWCONTROL_SEND"): "flowcontrol_send",
     ("int_access_host", "FLOWCONTROL_SEND"): "flowcontrol_send",
+    # --- QoS statistics (registry slice 0b_13) ---
+    ("int_trunk_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
+    ("int_access_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
+    ("int_trunk_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+    ("int_access_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
     # --- A1.9: par de clave OSPF legacy (registry slice 0b_10) ---
     ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
     ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY"): "ospf_auth_key",
