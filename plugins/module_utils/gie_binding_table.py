@@ -1,6 +1,6 @@
-# GENERATED — DO NOT EDIT. Static thin-engine binding table (Phase 1).
-# Source: approved Phase-0B registry. Generator: tools/gie_generate_binding_table.py.
-# Runtime imports this module only; it does not read the evidence dir or templates.
+# GENERATED - DO NOT EDIT. Static interface binding table.
+# Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
+# Runtime imports this module only; it never reads YAML or NDFC templates.
 # provenance_sha256 = 054902208500e7978e34334a3d1b714474e0b96d3e67a5bc46da0034c3e7313d
 
 from __future__ import absolute_import, division, print_function

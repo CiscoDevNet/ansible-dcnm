@@ -1,6 +1,6 @@
-"""A1.6.1 remediation — PRODUCTION-SHAPED tests through the real dcnm_interface path.
+"""Production-shaped tests through the real dcnm_interface path.
 
-Attempt-001 proved helper behaviour only. Every test here enters through the module's
+Every test here enters through the module's
 public entry point (`execute_module` -> `main()` -> `dcnm_intf_validate_input()` ->
 per-type profile validation via `validate_list_of_dicts` -> builder ->
 `gie_contribute_nvpairs` -> WANT -> compare -> payload) with transport and HAVE mocked.
@@ -8,13 +8,13 @@ per-type profile validation via `validate_list_of_dicts` -> builder ->
 Which layer each group exercises:
 
   MODULE NORMALIZATION (raw playbook value -> validate_list_of_dicts coercion)
-      TestA161RawTypeOnModulePath.*                — B1: raw type rejected pre-coercion
+      TestBindingRawTypeOnModulePath.*                — B1: raw type rejected pre-coercion
   WANT / BUILDER / FINAL PAYLOAD
-      TestA161PayloadOnModulePath.*                — value survives into the parent nvPair
+      TestBindingPayloadOnModulePath.*                — value survives into the parent nvPair
   HAVE / DIFF / COMPARE / IDEMPOTENCE
-      TestA161HaveAndCompareOnModulePath.*         — carry-forward, malformed HAVE, no-push
-  A1.5 REGRESSION
-      TestA161FrozenContractRegression.*           — OSPF-MD + FLOWCONTROL_RECEIVE
+      TestBindingHaveAndCompareOnModulePath.*         — carry-forward, malformed HAVE, no-push
+  BASELINE REGRESSION
+      TestBindingFrozenContractRegression.*           — OSPF-MD + FLOWCONTROL_RECEIVE
 
 NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted.
 """
@@ -45,7 +45,7 @@ class A161Base(TestDcnmModule):
 
     def setUp(self):
         super(A161Base, self).setUp()
-        self.config_data = loadPlaybookData("dcnm_intf_a161_configs")
+        self.config_data = loadPlaybookData("dcnm_intf_binding_configs")
 
         self.mock_fabric_details = patch(
             "ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface"
@@ -157,7 +157,7 @@ class A161Base(TestDcnmModule):
 # =====================================================================================
 # B1 — MODULE NORMALIZATION: raw type is enforced BEFORE validate_list_of_dicts coerces
 # =====================================================================================
-class TestA161RawTypeOnModulePath(A161Base):
+class TestBindingRawTypeOnModulePath(A161Base):
     """Every case the architect reproduced, driven through the real module input path."""
 
     def _assert_rejected_without_echo(self, result, field, forbidden):
@@ -217,7 +217,7 @@ class TestA161RawTypeOnModulePath(A161Base):
         self.assert_no_mutating_calls()
 
     def test_flowcontrol_boolean_is_rejected_without_echo(self):
-        """The frozen A1.5 binding gains the same raw-type protection."""
+        """The baseline binding gains the same raw-type protection."""
         result = self.run_config("eth_trunk_flowcontrol_bool", failed=True)
         self._assert_rejected_without_echo(result, "flowcontrol_receive", ["True"])
         self.assert_no_mutating_calls()
@@ -233,7 +233,7 @@ class TestA161RawTypeOnModulePath(A161Base):
 # =====================================================================================
 # WANT / BUILDER / PAYLOAD — a valid explicit value survives into the exact parent nvPair
 # =====================================================================================
-class TestA161PayloadOnModulePath(A161Base):
+class TestBindingPayloadOnModulePath(A161Base):
 
     def _assert_nvpair(self, result, ifname, nvpair, expected):
         merged = self.diff_nvpairs(result)
@@ -314,7 +314,7 @@ class TestA161PayloadOnModulePath(A161Base):
 # =====================================================================================
 # WRONG PARENT / VERSION — stop before diff or write, on the real path
 # =====================================================================================
-class TestA161WrongParentOnModulePath(A161Base):
+class TestBindingWrongParentOnModulePath(A161Base):
 
     def test_guard_mode_on_routed_eth_fails_before_write(self):
         result = self.run_config("eth_routed_guard_mode", failed=True)
@@ -343,7 +343,7 @@ class TestA161WrongParentOnModulePath(A161Base):
         self.assert_no_mutating_calls()
 
 
-class TestA161UnsupportedVersionOnModulePath(A161Base):
+class TestBindingUnsupportedVersionOnModulePath(A161Base):
     ndfc_version = BELOW
 
     def test_guard_mode_on_unsupported_version_fails_before_write(self):
@@ -363,7 +363,7 @@ class TestA161UnsupportedVersionOnModulePath(A161Base):
         self.assert_no_mutating_calls()
 
 
-class TestA161UnknownVersionOnModulePath(A161Base):
+class TestBindingUnknownVersionOnModulePath(A161Base):
     ndfc_version = "not.a.version"
 
     def test_malformed_version_fails_before_write(self):
@@ -373,9 +373,9 @@ class TestA161UnknownVersionOnModulePath(A161Base):
 
 
 # =====================================================================================
-# A1.5 REGRESSION on the real module path
+# BASELINE REGRESSION on the real module path
 # =====================================================================================
-class TestA161FrozenContractRegression(A161Base):
+class TestBindingFrozenContractRegression(A161Base):
 
     def test_flowcontrol_receive_still_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_trunk_flowcontrol_on", changed=True)
@@ -390,7 +390,7 @@ class TestA161FrozenContractRegression(A161Base):
         assert type(nvpairs["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"]) is bool
 
 
-class TestA161OspfMdCompatOnUnsupportedVersion(A161Base):
+class TestBindingOspfMdCompatOnUnsupportedVersion(A161Base):
     """The OSPF-MD compat exception must survive: withhold, never fail."""
 
     ndfc_version = BELOW
