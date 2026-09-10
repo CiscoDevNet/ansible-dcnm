@@ -624,8 +624,10 @@ options:
               'network' or 'normal' while port type fast is enabled, and port
               type fast defaults to true, so both must be sent together.
             - A value of 'no' does not mean "no configuration". It defers to the
-              port-type-fast behaviour, which emits 'spanning-tree port type
-              edge trunk' when port_type_fast is true.
+              port-type-fast behaviour, and the resulting CLI differs per mode:
+              'spanning-tree port type edge trunk' on a trunk interface, and
+              'spanning-tree port type edge' on an access one. Both were observed
+              on a live switch.
             - Explicit-only, no default. When omitted the current controller
               value is left untouched.
             type: str
