@@ -76,17 +76,29 @@ STP_ROWS = {
     (TRUNK, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
     (ACCESS, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
 }
+# QoS statistics, from registry slice 0b_13. These four close the 16 catalog-confirmed gaps for
+# the two host eth parents. Neither field emits a CLI line of its own: each is the " no-stats"
+# suffix of the service-policy line its dependency produces, so with the dependency unmet the
+# value is stored on the controller and is a silent no-op on the device.
+QOS_STATS_ROWS = {
+    (TRUNK, "DISABLE_QOS_STATS", "disable_qos_stats"),
+    (ACCESS, "DISABLE_QOS_STATS", "disable_qos_stats"),
+    (TRUNK, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+    (ACCESS, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+}
 
 
 # ---- binding package (G1 runtime contract) ----
 
 def test_package_provenance_and_size():
-    expected_keys = A15_ROWS | A16_ROWS | A19_ROWS | FC_SEND_ROWS | STP_ROWS
+    expected_keys = (
+        A15_ROWS | A16_ROWS | A19_ROWS | FC_SEND_ROWS | STP_ROWS | QOS_STATS_ROWS
+    )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 18
+    assert len(BINDING_TABLE) == len(actual_keys) == 22
     assert actual_keys == expected_keys
     # The A1.5 slice must survive verbatim inside the larger table.
     assert A15_ROWS <= actual_keys
@@ -94,6 +106,7 @@ def test_package_provenance_and_size():
     assert len(A19_ROWS) == 2
     assert len(FC_SEND_ROWS) == 2
     assert len(STP_ROWS) == 2
+    assert len(QOS_STATS_ROWS) == 4
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -115,7 +128,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 18
+    assert len(rows) == 22
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -137,11 +150,13 @@ def test_compiler_rejects_profile_key_mismatch():
 def test_registered_keys_per_parent():
     assert registered_profile_keys(TRUNK) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
-        "guard_mode", "disable_lldp", "acl_filter"
+        "guard_mode", "disable_lldp", "acl_filter",
+        "disable_qos_stats", "disable_queuing_stats",
     }
     assert registered_profile_keys(ACCESS) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
-        "disable_lldp", "acl_filter"
+        "disable_lldp", "acl_filter",
+        "disable_qos_stats", "disable_queuing_stats"
     }
     assert registered_profile_keys(LOOPBACK) == {
         "enable_ospf_auth_message_digest", "ospf_auth_key_id", "ospf_auth_key"
@@ -188,6 +203,8 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("GUARD_MODE", "guard_mode"),
         ("DISABLE_LLDP", "disable_lldp"),
         ("ACL_FILTER", "acl_filter"),
+        ("DISABLE_QOS_STATS", "disable_qos_stats"),
+        ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -197,6 +214,8 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
         ("DISABLE_LLDP", "disable_lldp"),
         ("ACL_FILTER", "acl_filter"),
+        ("DISABLE_QOS_STATS", "disable_qos_stats"),
+        ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
     }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
@@ -371,6 +390,7 @@ def test_all_registered_and_guarded_keys():
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "enable_ospf_auth_message_digest",
         "guard_mode", "disable_lldp", "acl_filter",
+        "disable_qos_stats", "disable_queuing_stats",
         "ospf_auth_key_id", "ospf_auth_key",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
@@ -379,6 +399,7 @@ def test_all_registered_and_guarded_keys():
     assert gie_guarded_keys() == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "guard_mode", "disable_lldp", "acl_filter",
+        "disable_qos_stats", "disable_queuing_stats",
     }
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
     # A1.9: the legacy-key pair is child_pti, so registering it must NOT hand the engine the
