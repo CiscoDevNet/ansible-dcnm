@@ -738,7 +738,10 @@ def _ansible_unicode(value):
 
 @pytest.mark.parametrize("wrap", [_SubStr, _ansible_unicode], ids=["str_subclass", "AnsibleUnicode"])
 def test_string_and_enum_bindings_accept_str_subclasses(wrap):
-    key = wrap("a667d47acc18ea6b")
+    # Deliberately not shaped like a real key. The assertion is an identity round-trip, so the
+    # content is irrelevant -- but a 16-hex-character literal reads as a credential to a secret
+    # scanner and invites someone to copy it into a playbook.
+    key = wrap("example-ospf-key")
     if key is None:
         pytest.skip("AnsibleUnicode not importable in this ansible-core")
     # OSPF key string binding
