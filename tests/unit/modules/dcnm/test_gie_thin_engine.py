@@ -61,22 +61,30 @@ A19_ROWS = {
     (LOOPBACK, "OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
     (LOOPBACK, "OSPF_AUTH_KEY", "ospf_auth_key"),
 }
+# FLOWCONTROL_SEND, from registry slice 0b_11: the companion of the A1.5 receive rows.
+# Sweeping all 90+ templates confirms only these two parents carry FLOWCONTROL, so these
+# two rows plus the A1.5 pair close the field's universe.
+FC_SEND_ROWS = {
+    (TRUNK, "FLOWCONTROL_SEND", "flowcontrol_send"),
+    (ACCESS, "FLOWCONTROL_SEND", "flowcontrol_send"),
+}
 
 
 # ---- binding package (G1 runtime contract) ----
 
 def test_package_provenance_and_size():
-    expected_keys = A15_ROWS | A16_ROWS | A19_ROWS
+    expected_keys = A15_ROWS | A16_ROWS | A19_ROWS | FC_SEND_ROWS
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 14
+    assert len(BINDING_TABLE) == len(actual_keys) == 16
     assert actual_keys == expected_keys
     # The A1.5 slice must survive verbatim inside the larger table.
     assert A15_ROWS <= actual_keys
     assert len(A16_ROWS) == 9
     assert len(A19_ROWS) == 2
+    assert len(FC_SEND_ROWS) == 2
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -98,7 +106,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 14
+    assert len(rows) == 16
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -119,10 +127,11 @@ def test_compiler_rejects_profile_key_mismatch():
 
 def test_registered_keys_per_parent():
     assert registered_profile_keys(TRUNK) == {
-        "flowcontrol_receive", "guard_mode", "disable_lldp", "acl_filter"
+        "flowcontrol_receive", "flowcontrol_send",
+        "guard_mode", "disable_lldp", "acl_filter"
     }
     assert registered_profile_keys(ACCESS) == {
-        "flowcontrol_receive", "disable_lldp", "acl_filter"
+        "flowcontrol_receive", "flowcontrol_send", "disable_lldp", "acl_filter"
     }
     assert registered_profile_keys(LOOPBACK) == {
         "enable_ospf_auth_message_digest", "ospf_auth_key_id", "ospf_auth_key"
@@ -155,11 +164,24 @@ def test_flowcontrol_public_documentation_is_enum_without_default():
 
 def test_registry_drives_comparator_keymap_and_carry_forward():
     assert gie_nvpair_keymap()["FLOWCONTROL_RECEIVE"] == "flowcontrol_receive"
+    assert gie_nvpair_keymap()["FLOWCONTROL_SEND"] == "flowcontrol_send"
+    # FLOWCONTROL_SEND is passthrough, so it DOES join the carry-forward set -- the opposite
+    # of the OSPF bindings, which are child_pti and are excluded. That difference is what
+    # makes omitting the key preserve the controller's value instead of being a silent no-op.
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(TRUNK)
     } == {
         ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
+        ("FLOWCONTROL_SEND", "flowcontrol_send"),
         ("GUARD_MODE", "guard_mode"),
+        ("DISABLE_LLDP", "disable_lldp"),
+        ("ACL_FILTER", "acl_filter"),
+    }
+    assert {
+        (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
+    } == {
+        ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
+        ("FLOWCONTROL_SEND", "flowcontrol_send"),
         ("DISABLE_LLDP", "disable_lldp"),
         ("ACL_FILTER", "acl_filter"),
     }
@@ -333,13 +355,17 @@ def test_contribute_preserves_native_types_no_stringification():
 
 def test_all_registered_and_guarded_keys():
     assert gie_all_registered_keys() == {
-        "flowcontrol_receive", "enable_ospf_auth_message_digest",
+        "flowcontrol_receive", "flowcontrol_send",
+        "enable_ospf_auth_message_digest",
         "guard_mode", "disable_lldp", "acl_filter",
         "ospf_auth_key_id", "ospf_auth_key",
     }
-    # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate
+    # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
+    # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
+    # its invalid-parent guard, unlike the OSPF bindings below.
     assert gie_guarded_keys() == {
-        "flowcontrol_receive", "guard_mode", "disable_lldp", "acl_filter",
+        "flowcontrol_receive", "flowcontrol_send",
+        "guard_mode", "disable_lldp", "acl_filter",
     }
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
     # A1.9: the legacy-key pair is child_pti, so registering it must NOT hand the engine the
@@ -794,6 +820,101 @@ def test_subclass_acceptance_does_not_bypass_the_other_registered_checks():
         gie_validate_binding_value(TRUNK, "flowcontrol_receive", _SubStr("nope"))
     with pytest.raises(GieBindingError):
         gie_validate_binding_value(LOOPBACK, "ospf_auth_key", 17)  # int is not a string
+
+
+# ---- FLOWCONTROL_SEND: companion of the A1.5 receive binding ----
+#
+# Driven with str SUBCLASSES, not literals. Every value that reaches a module from a playbook
+# is wrapped in one (AnsibleUnicode or AnsibleUnsafeText were both observed in this codebase),
+# and a test that passes a bare `str` cannot see a defect that only affects the wrapped form.
+# That is exactly how the A1.6 bindings stayed broken end to end while their unit tests were
+# green.
+
+
+@pytest.mark.parametrize("parent,mode", [(TRUNK, "trunk"), (ACCESS, "access")])
+def test_flowcontrol_send_binding_shape(parent, mode):
+    b = resolve_binding(parent, "flowcontrol_send")
+    assert b is not None, "%s::flowcontrol_send missing" % parent
+    assert b["parent_nvpair"] == "FLOWCONTROL_SEND"
+    assert b["type"] == "enum"
+    assert tuple(b["valid_values"]) == ("on", "off")
+    assert b["default_template"] == "off"
+    assert isinstance(b["default_template"], str), "YAML 1.1 'off' must stay a string"
+    assert b["applicable_interface_type"] == "eth"
+    assert b["applicable_mode"] == mode
+    assert b["min_ndfc_version"] == "12.6.0.267"
+    # passthrough, like receive: the DSL consumes the value inline and creates no child.
+    assert b["mechanism"] == "passthrough"
+
+
+@pytest.mark.parametrize("parent", [TRUNK, ACCESS])
+@pytest.mark.parametrize("value", ["on", "off"])
+def test_flowcontrol_send_transports_a_wrapped_playbook_value(parent, value):
+    wrapped = _SubStr(value)
+    add, err = gie_contribute_nvpairs(parent, {"flowcontrol_send": wrapped}, "12.6.0.267")
+    assert err is None
+    assert add == {"FLOWCONTROL_SEND": value}
+
+
+@pytest.mark.parametrize("parent", [TRUNK, ACCESS])
+def test_flowcontrol_send_is_explicit_only(parent):
+    """Omission contributes nothing and adds no spec entry.
+
+    Omission is NOT "set off": for a passthrough binding the carry-forward preserves the
+    controller's current value instead. Registering default_template would have turned
+    omission into an assertion of 'off'.
+    """
+    add, err = gie_contribute_nvpairs(parent, {}, "12.6.0.267")
+    assert err is None and "FLOWCONTROL_SEND" not in add
+    spec = {}
+    gie_extend_prof_spec(spec, parent, {})
+    assert "flowcontrol_send" not in spec
+    gie_extend_prof_spec(spec, parent, {"flowcontrol_send": _SubStr("on")})
+    assert spec["flowcontrol_send"] == {"type": "str", "choices": ["on", "off"]}
+
+
+def test_flowcontrol_send_is_rejected_on_a_parent_that_does_not_register_it():
+    """Being passthrough, the engine owns its invalid-parent guard."""
+    assert gie_invalid_parent_key(LOOPBACK, ["flowcontrol_send"]) == "flowcontrol_send"
+    assert gie_invalid_parent_key(PC_TRUNK, ["flowcontrol_send"]) == "flowcontrol_send"
+    # ...and it is accepted on the two parents that do register it
+    for parent in (TRUNK, ACCESS):
+        assert gie_invalid_parent_key(parent, ["flowcontrol_send"]) is None
+
+
+@pytest.mark.parametrize("parent", [TRUNK, ACCESS])
+def test_flowcontrol_send_rejects_values_outside_the_enum(parent):
+    for bad in (_SubStr("ON"), _SubStr("enabled"), _SubStr(""), True, 1):
+        with pytest.raises(GieBindingError):
+            gie_validate_binding_value(parent, "flowcontrol_send", bad)
+
+
+def test_flowcontrol_send_public_documentation_matches_receive():
+    documentation = yaml.safe_load(dcnm_interface.DOCUMENTATION)
+    opts = documentation["options"]["config"]["suboptions"]["profile_eth"]["suboptions"]
+    send, receive = opts["flowcontrol_send"], opts["flowcontrol_receive"]
+    assert send["type"] == receive["type"] == "str"
+    assert send["choices"] == receive["choices"] == ["on", "off"]
+    assert "default" not in send, "explicit-only: a default would change omission semantics"
+
+
+def test_flowcontrol_send_reaches_the_action_plugin_schema():
+    """The action plugin keeps its OWN nvPairs mapping, unrelated to the registry.
+
+    It is a plain dict in schemas.py, so a new profile key that is registered but not added
+    there simply disappears from the pydantic model. Nothing else in the engine would catch
+    that, which is why it is pinned here.
+    """
+    import importlib.util
+
+    path = (
+        Path(gie_binding_table.__file__).resolve().parents[2]
+        / "plugins" / "action" / "tests" / "plugin_utils"
+        / "pydantic_schemas" / "dcnm_interface" / "schemas.py"
+    )
+    source = path.read_text(encoding="utf-8")
+    assert '"flowcontrol_send": "FLOWCONTROL_SEND"' in source
+    assert '"flowcontrol_receive": "FLOWCONTROL_RECEIVE"' in source
 
 
 if __name__ == "__main__":
