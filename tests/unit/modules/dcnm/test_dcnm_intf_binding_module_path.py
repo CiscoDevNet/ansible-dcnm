@@ -328,12 +328,24 @@ class TestBindingWrongParentOnModulePath(A161Base):
         assert "not supported on this interface" in result["msg"]
         self.assert_no_mutating_calls()
 
-    def test_disable_lldp_on_port_channel_fails_before_write(self):
-        """DISABLE_LLDP is child_pti on PC parents and is not registered here."""
-        result = self.run_config("pc_access_disable_lldp", failed=True)
-        assert "disable_lldp" in result["msg"]
-        assert "not supported on this interface" in result["msg"]
-        self.assert_no_mutating_calls()
+    def test_disable_lldp_on_port_channel_is_accepted_and_transported(self):
+        """The port-channel host parents declare DISABLE_LLDP, so they accept it.
+
+        This test previously asserted the opposite. The field was registered only on the
+        ethernet parents, so a playbook setting it on a port-channel got "not supported on this
+        interface" -- a message that was FALSE: the template declares it, the registry did not.
+
+        What the parent does with the value differs from ethernet, and that part is NOT pinned
+        here because a unit test cannot see it: the parent does not emit the CLI, it passes the
+        value to the member policy, which writes 'no lldp transmit' / 'no lldp receive'. Whether
+        it reaches the member is measured on a live controller.
+
+        Pinned here: the value is accepted and reaches the parent nvPair.
+        """
+        result = self.run_config("pc_access_disable_lldp", changed=True)
+        merged = self.diff_nvpairs(result)
+        ifname = next(iter(merged))
+        assert merged[ifname]["DISABLE_LLDP"] == "true"
 
     def test_acl_filter_raw_type_on_pc_also_fails_before_write(self):
         result = self.run_config("pc_trunk_acl_filter_bool", failed=True)

@@ -54,6 +54,29 @@ COMMITTED_BINDINGS = {
     ("int_trunk_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
     ("int_access_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
     ("int_trunk_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+
+    # The same four fields on the port-channel host parents. DISABLE_LLDP differs from the
+    # other three: the parent delegates it to the member policy instead of emitting the CLI
+    # itself, so whether it takes effect is measured rather than assumed. See the slice. Each was originally registered
+    # only on the parents under test at the time; sweeping all 98 templates showed the
+    # port-channel parents declare them too. An unregistered binding does not fail -- the
+    # module answers "not supported on this interface", which is false: the template declares
+    # it, the registry did not.
+    ("int_port_channel_access_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
+    ("int_port_channel_trunk_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
+    ("int_port_channel_dot1q_tunnel_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
+
+    ("int_port_channel_access_host", "DISABLE_LLDP"): "disable_lldp",
+    ("int_port_channel_trunk_host", "DISABLE_LLDP"): "disable_lldp",
+    ("int_port_channel_dot1q_tunnel_host", "DISABLE_LLDP"): "disable_lldp",
+
+    ("int_port_channel_access_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
+    ("int_port_channel_trunk_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
+    ("int_port_channel_dot1q_tunnel_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
+
+    ("int_port_channel_access_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+    ("int_port_channel_trunk_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+    ("int_port_channel_dot1q_tunnel_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.
