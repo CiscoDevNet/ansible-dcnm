@@ -253,6 +253,42 @@ options:
               1 and 64 characters. Explicit-only, no default; when omitted the
               current controller value is left untouched.
             type: str
+          spanning_tree_port_type:
+            description:
+            - Spanning-tree port type. This option is applicable only when mode
+              is trunk, access or dot1q.
+            - Requires 'port_type_fast' to be false. The parent template rejects
+              'network' or 'normal' while port type fast is enabled, and port type
+              fast defaults to true, so both must be sent together.
+            - A value of 'no' does not mean "no configuration". It defers to the
+              port-type-fast behaviour.
+            - Explicit-only, no default. When omitted the current controller value
+              is left untouched.
+            type: str
+            choices: ['no', 'network', 'normal']
+          disable_qos_stats:
+            description:
+            - Disable statistics for the attached QoS policy. This option is
+              applicable only when mode is trunk, access or dot1q.
+            - Does NOT produce a configuration line of its own. It appends
+              ' no-stats' to the 'service-policy type qos input' line that
+              'enable_qos' and 'qos_policy' produce. With no QoS policy in effect
+              the value is stored on the controller and changes nothing on the
+              device.
+            - Explicit-only, no default. When omitted the current controller value
+              is left untouched.
+            type: bool
+          disable_queuing_stats:
+            description:
+            - Disable statistics for the attached output queuing policy. This
+              option is applicable only when mode is trunk, access or dot1q.
+            - Does NOT produce a configuration line of its own. It appends
+              ' no-stats' to the 'service-policy type queuing output' line that
+              'queuing_policy' produces. With 'queuing_policy' empty the value is
+              stored on the controller and changes nothing on the device.
+            - Explicit-only, no default. When omitted the current controller value
+              is left untouched.
+            type: bool
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook

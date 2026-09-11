@@ -95,10 +95,10 @@ def test_table_has_twentytwo_unique_rows():
     # 12 baseline + passthrough, 2 OSPF legacy-key, 2 FLOWCONTROL_SEND, 2 SPANNING_TREE,
     # 4 QoS statistics.
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 22
-    assert len(set(keys)) == 22, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 34
+    assert len(set(keys)) == 34, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 22, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 34, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -156,7 +156,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 22
+    assert len(gen.compile_rows(rows)) == 34
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -202,7 +202,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 22
+    assert len(gen.compile_rows(rows)) == 34
 
 
 # ------------------------------------------------------------------ positive transport
@@ -356,8 +356,10 @@ def test_wrong_parent_is_reported_for_each_new_key():
     cases = [
         ("guard_mode", [ACCESS, PC_ACCESS, PC_DOT1Q, "int_routed_host",
                         "int_vpc_trunk_host", None]),
-        ("disable_lldp", [PC_TRUNK, PC_ACCESS, PC_DOT1Q, "int_routed_host",
-                          "int_vpc_access_host", None]),
+        # The three port-channel host parents were removed from this list: they declare
+        # DISABLE_LLDP and it is now registered on them. int_routed_host and the vPC parents
+        # declare it too but are not registered, so they still reject.
+        ("disable_lldp", ["int_routed_host", "int_vpc_access_host", None]),
         ("acl_filter", ["int_routed_host", "int_vpc_trunk_host", LOOPBACK, None]),
     ]
     for pk, parents in cases:
@@ -426,9 +428,17 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("DISABLE_QOS_STATS", "disable_qos_stats"),
         ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
     }
+    # The port-channel parents carry every field registered for them.
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(PC_TRUNK)
-    } == {("GUARD_MODE", "guard_mode"), ("ACL_FILTER", "acl_filter")}
+    } == {
+        ("GUARD_MODE", "guard_mode"),
+        ("ACL_FILTER", "acl_filter"),
+        ("DISABLE_LLDP", "disable_lldp"),
+        ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+        ("DISABLE_QOS_STATS", "disable_qos_stats"),
+        ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+    }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
 

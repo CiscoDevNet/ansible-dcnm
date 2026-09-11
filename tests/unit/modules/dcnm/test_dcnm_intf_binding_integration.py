@@ -403,12 +403,16 @@ def test_second_run_is_idempotent_on_the_eth_parent():
 # NO TRANSPORT OF UNREGISTERED OR WRONG-PARENT nvPairs
 # =====================================================================================
 def test_registered_carry_forward_skips_a_wrong_parent_binding():
-    """DISABLE_LLDP is child_pti on port-channel parents, so it is not registered there and
-    must not be carried onto one."""
-    assert all(
-        row["profile_key"] != "disable_lldp"
-        for row in gie_carry_forward_bindings(PC_TRUNK)
-    ), "disable_lldp must not be a carry-forward binding on a port-channel parent"
+    """A field registered on one parent must not be carried onto a parent that lacks it.
+
+    FLOWCONTROL is the sharpest case available: a sweep of all 98 templates confirms only the
+    two host ethernet parents declare it, so no port-channel parent may carry it. This
+    previously used DISABLE_LLDP, which turned out to be a poor choice -- the port-channel
+    templates DO declare it, and it is now registered there.
+    """
+    carried = {row["profile_key"] for row in gie_carry_forward_bindings(PC_TRUNK)}
+    assert "flowcontrol_receive" not in carried
+    assert "flowcontrol_send" not in carried
     assert all(
         row["profile_key"] != "guard_mode"
         for row in gie_carry_forward_bindings(PC_DOT1Q)
