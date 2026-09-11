@@ -83,19 +83,42 @@ QOS_STATS_ROWS = {
     (TRUNK, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
     (ACCESS, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
 }
+# The same four fields on the port-channel host parents. Each was originally registered only on
+# the parents under test at the time; the port-channel templates declare them too, and an
+# unregistered binding does not fail -- the module answers "not supported on this interface",
+# which is false.
+#
+# DISABLE_LLDP is included to MEASURE it, not because it is known to work: on these parents the
+# template delegates the value to the member policy instead of emitting the CLI itself. Whether
+# it reaches the member is an empirical question, answered by the lab, not by preference.
+PC_ROWS = {
+    (PC_ACCESS, "DISABLE_LLDP", "disable_lldp"),
+    (PC_TRUNK, "DISABLE_LLDP", "disable_lldp"),
+    (PC_DOT1Q, "DISABLE_LLDP", "disable_lldp"),
+    (PC_ACCESS, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+    (PC_TRUNK, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+    (PC_DOT1Q, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+    (PC_ACCESS, "DISABLE_QOS_STATS", "disable_qos_stats"),
+    (PC_TRUNK, "DISABLE_QOS_STATS", "disable_qos_stats"),
+    (PC_DOT1Q, "DISABLE_QOS_STATS", "disable_qos_stats"),
+    (PC_ACCESS, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+    (PC_TRUNK, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+    (PC_DOT1Q, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+}
 
 
 # ---- binding package runtime contract ----
 
 def test_package_provenance_and_size():
     expected_keys = (
-        BASELINE_ROWS | PASSTHROUGH_ROWS | OSPF_KEY_ROWS | FC_SEND_ROWS | STP_ROWS | QOS_STATS_ROWS
+        BASELINE_ROWS | PASSTHROUGH_ROWS | OSPF_KEY_ROWS | FC_SEND_ROWS | STP_ROWS
+        | QOS_STATS_ROWS | PC_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 22
+    assert len(BINDING_TABLE) == len(actual_keys) == 34
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -104,6 +127,7 @@ def test_package_provenance_and_size():
     assert len(FC_SEND_ROWS) == 2
     assert len(STP_ROWS) == 2
     assert len(QOS_STATS_ROWS) == 4
+    assert len(PC_ROWS) == 12
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -125,7 +149,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 22
+    assert len(rows) == 34
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -158,13 +182,21 @@ def test_registered_keys_per_parent():
     assert registered_profile_keys(LOOPBACK) == {
         "enable_ospf_auth_message_digest", "ospf_auth_key_id", "ospf_auth_key"
     }
-    assert registered_profile_keys(PC_TRUNK) == {"guard_mode", "acl_filter"}
-    assert registered_profile_keys(PC_ACCESS) == {"acl_filter"}
-    assert registered_profile_keys(PC_DOT1Q) == {"acl_filter"}
-    # GUARD_MODE is NOT registered on access parents; DISABLE_LLDP not on any pc parent.
+    assert registered_profile_keys(PC_TRUNK) == {
+        "guard_mode", "acl_filter", "disable_lldp",
+        "spanning_tree_port_type", "disable_qos_stats", "disable_queuing_stats",
+    }
+    assert registered_profile_keys(PC_ACCESS) == {
+        "acl_filter", "disable_lldp",
+        "spanning_tree_port_type", "disable_qos_stats", "disable_queuing_stats",
+    }
+    assert registered_profile_keys(PC_DOT1Q) == {
+        "acl_filter", "disable_lldp",
+        "spanning_tree_port_type", "disable_qos_stats", "disable_queuing_stats",
+    }
+    # GUARD_MODE is NOT registered on access parents.
     assert "guard_mode" not in registered_profile_keys(ACCESS)
     assert "guard_mode" not in registered_profile_keys(PC_ACCESS)
-    assert "disable_lldp" not in registered_profile_keys(PC_TRUNK)
 
 def test_flowcontrol_binding_shape():
     b = resolve_binding(TRUNK, "flowcontrol_receive")

@@ -79,7 +79,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     assert {k for _, k, _ in BOOL_PASSTHROUGH} == {
         "disable_lldp", "disable_qos_stats", "disable_queuing_stats",
     }
-    assert len(BOOL_PASSTHROUGH) == 6  # three fields x two host eth parents
+    # Three boolean fields across the two eth parents and the three port-channel host parents.
+    assert len(BOOL_PASSTHROUGH) == 15
 
 
 # ------------------------------------------------------- what the engine emits --
