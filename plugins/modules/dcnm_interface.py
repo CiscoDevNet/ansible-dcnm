@@ -3061,6 +3061,19 @@ class DcnmIntf:
         )
         vpc_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
 
+        # Registered keys must reach the vPC spec exactly as they reach the ethernet and
+        # port-channel ones. Without this the keys are not in the spec, so
+        # validate_list_of_dicts drops them as unknown legacy fields and the value never
+        # reaches the payload -- a silent no-op, which is the failure mode this whole path
+        # exists to remove. These bindings are shared across the pair, not per-peer: the vPC
+        # nvPairs carry one GUARD_MODE, not PEER1_/PEER2_ variants.
+        gie_extend_prof_spec(
+            vpc_prof_spec_trunk, "int_vpc_trunk_host", cfg[0]["profile"]
+        )
+        gie_extend_prof_spec(
+            vpc_prof_spec_access, "int_vpc_access_host", cfg[0]["profile"]
+        )
+
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 cfg, vpc_spec, vpc_prof_spec_trunk
@@ -4535,6 +4548,22 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
             str(delem[profile].get("speed", ""))
         )
+
+        # Thin engine: contribute registered generic parent nvPairs for this vPC parent
+        # (explicit-only, passthrough version fail-closed). Same generic path the eth and
+        # port-channel parents use; no per-feature transport code.
+        #
+        # The vPC parent emits no CLI of its own -- it hands every value to an intermediate
+        # child and, for DISABLE_LLDP, on to a member. That is the template's business: the
+        # value lands here, in the parent's own nvPairs, exactly as it does for a port-channel.
+        # These bindings are shared across the pair, not per-peer; the nvPairs carry one
+        # GUARD_MODE, not PEER1_/PEER2_ variants.
+        gie_add, gie_err = gie_contribute_nvpairs(
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+        )
+        if gie_err:
+            self.module.fail_json(msg=gie_err)
+        intf["interfaces"][0]["nvPairs"].update(gie_add)
 
     def dcnm_intf_get_sub_intf_payload(self, delem, intf, profile):
 
