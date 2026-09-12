@@ -91,14 +91,21 @@ def _load_generator():
 
 
 # ------------------------------------------------------------------ table integrity
-def test_table_has_twentytwo_unique_rows():
-    # 12 baseline + passthrough, 2 OSPF legacy-key, 2 FLOWCONTROL_SEND, 2 SPANNING_TREE,
-    # 4 QoS statistics.
+def test_table_rows_are_unique_and_the_count_is_pinned():
+    """The count is deliberately hardcoded rather than derived.
+
+    Deriving it from the generator's own allowlist would make the assertion tautological: a
+    regeneration that added or dropped rows would still pass. The number is meant to fail when
+    the table changes, so that the change has to be explained.
+
+    45 = 7 eth access + 8 eth trunk + 5 pc access + 6 pc trunk + 5 pc dot1q
+       + 5 vPC access + 6 vPC trunk + 3 fabric loopback
+    """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 34
-    assert len(set(keys)) == 34, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 45
+    assert len(set(keys)) == 45, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 34, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 45, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -156,7 +163,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 34
+    assert len(gen.compile_rows(rows)) == 45
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -173,17 +180,20 @@ def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
 def test_generator_rejects_an_unexpected_binding_claiming_a_committed_key():
     """A non-committed parent reusing a committed public key must fail, not be skipped.
 
-    int_vpc_trunk_host::GUARD_MODE is child_pti in the ledger. Silently skipping it would
-    make a non-passthrough binding look merely 'not selected'.
+    Silently skipping it would make the binding look merely 'not selected' when in fact it was
+    never reviewed. The fixture used int_vpc_trunk_host::GUARD_MODE until that binding was
+    committed; int_vpc_dot1q_tunnel replaced it because the module cannot reach that parent at
+    all -- pol_types has no "vpc_dot1q" entry -- so it is not a registration candidate and will
+    not quietly become one.
     """
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
     rows.append({
-        "parent_template": "int_vpc_trunk_host",
+        "parent_template": "int_vpc_dot1q_tunnel",
         "parent_nvpair": "GUARD_MODE",
         "profile_key": "guard_mode",
         "type": "enum",
-        "mechanism": "child_pti",
+        "mechanism": "passthrough",
         "min_ndfc_version": SUPPORTED,
     })
     with pytest.raises(ValueError, match="unexpected binding"):
@@ -202,7 +212,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 34
+    assert len(gen.compile_rows(rows)) == 45
 
 
 # ------------------------------------------------------------------ positive transport
@@ -353,14 +363,20 @@ def test_new_keys_are_generically_guarded(pk):
 
 
 def test_wrong_parent_is_reported_for_each_new_key():
+    # A parent belongs here only when the TEMPLATE does not declare the field, or when the
+    # module cannot reach that parent at all. A parent that declares the field and IS reachable
+    # belongs in test_correct_parents_are_accepted instead. Listing one here turns a gap in the
+    # registry into an assertion that the gap is correct -- which is exactly how the
+    # port-channel and vPC parents stayed unregistered for months with the suite green.
     cases = [
+        # int_vpc_access_host really does not declare GUARD_MODE: read from the DSL loaded on
+        # the controller, not assumed from its trunk sibling.
         ("guard_mode", [ACCESS, PC_ACCESS, PC_DOT1Q, "int_routed_host",
-                        "int_vpc_trunk_host", None]),
-        # The three port-channel host parents were removed from this list: they declare
-        # DISABLE_LLDP and it is now registered on them. int_routed_host and the vPC parents
-        # declare it too but are not registered, so they still reject.
-        ("disable_lldp", ["int_routed_host", "int_vpc_access_host", None]),
-        ("acl_filter", ["int_routed_host", "int_vpc_trunk_host", LOOPBACK, None]),
+                        "int_vpc_access_host", None]),
+        # int_routed_host declares DISABLE_LLDP and ACL_FILTER and is reachable, so it is a
+        # real coverage gap rather than a template property. It stays here until registered.
+        ("disable_lldp", ["int_routed_host", None]),
+        ("acl_filter", ["int_routed_host", LOOPBACK, None]),
     ]
     for pk, parents in cases:
         for parent in parents:

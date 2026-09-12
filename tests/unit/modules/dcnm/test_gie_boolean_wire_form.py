@@ -79,8 +79,14 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     assert {k for _, k, _ in BOOL_PASSTHROUGH} == {
         "disable_lldp", "disable_qos_stats", "disable_queuing_stats",
     }
-    # Three boolean fields across the two eth parents and the three port-channel host parents.
-    assert len(BOOL_PASSTHROUGH) == 15
+    # Three boolean fields across the two eth parents, the three port-channel host parents and
+    # the two vPC host parents: 3 x 7 = 21.
+    #
+    # The vPC parents emit no CLI of their own -- they hand the value to a child template. They
+    # are still passthrough and therefore still need the wire form: the value lands in the vPC
+    # parent's own nvPairs first, and nvPairs is a string-valued map. A native bool left there
+    # would reproduce exactly the non-convergence this file exists to prevent.
+    assert len(BOOL_PASSTHROUGH) == 21
 
 
 # ------------------------------------------------------- what the engine emits --
