@@ -198,6 +198,7 @@ def test_compiler_rejects_profile_key_mismatch():
     with pytest.raises(ValueError, match="unexpected profile_key"):
         generator.compile_rows(rows)
 
+
 def test_registered_keys_per_parent():
     assert registered_profile_keys(TRUNK) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
@@ -227,6 +228,7 @@ def test_registered_keys_per_parent():
     # GUARD_MODE is NOT registered on access parents.
     assert "guard_mode" not in registered_profile_keys(ACCESS)
     assert "guard_mode" not in registered_profile_keys(PC_ACCESS)
+
 
 def test_flowcontrol_binding_shape():
     b = resolve_binding(TRUNK, "flowcontrol_receive")
@@ -311,9 +313,11 @@ def test_flowcontrol_explicit_contributes_native_string(val):
     assert add == {"FLOWCONTROL_RECEIVE": val}
     assert isinstance(add["FLOWCONTROL_RECEIVE"], str)
 
+
 def test_flowcontrol_omitted_contributes_nothing():
     add, err = gie_contribute_nvpairs(ACCESS, {"mode": "access", "description": "x"}, "12.6.0.267")
     assert err is None and add == {}
+
 
 def test_flowcontrol_present_on_both_parents():
     for p, m in [(TRUNK, "trunk"), (ACCESS, "access")]:
@@ -328,10 +332,12 @@ def test_flowcontrol_below_or_bad_version_fails_closed(ver):
     add, err = gie_contribute_nvpairs(TRUNK, {"flowcontrol_receive": "on"}, ver)
     assert add is None and err is not None
 
+
 @pytest.mark.parametrize("ver", ["12.6.0.267", "12.6.0.300", "12.7.0.1", "13.0.0.0"])
 def test_flowcontrol_at_or_above_floor_ok(ver):
     add, err = gie_contribute_nvpairs(TRUNK, {"flowcontrol_receive": "off"}, ver)
     assert err is None and add == {"FLOWCONTROL_RECEIVE": "off"}
+
 
 def test_version_supported_matches_semantics():
     assert gie_version_supported("12.6.0.267", "12.6.0.267") is True
@@ -348,6 +354,7 @@ def test_extend_spec_adds_only_present_key_with_choices_no_default():
     assert "flowcontrol_receive" in spec
     assert spec["flowcontrol_receive"]["choices"] == ["on", "off"]
     assert "default" not in spec["flowcontrol_receive"]
+
 
 def test_extend_spec_skips_omitted_key():
     spec = {"mode": {"type": "str"}}
@@ -366,6 +373,7 @@ def test_ospfmd_transported_by_engine_on_supported_version(val):
     assert add == {"ENABLE_OSPF_AUTH_MESSAGE_DIGEST": val}
     assert isinstance(add["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"], bool)
 
+
 @pytest.mark.parametrize("val", [True, False])
 @pytest.mark.parametrize("ver", ["12.6.0.266", None, "", "bogus"])
 def test_ospfmd_withheld_not_failed_on_unsupported_version(val, ver):
@@ -374,10 +382,12 @@ def test_ospfmd_withheld_not_failed_on_unsupported_version(val, ver):
     add, err = gie_contribute_nvpairs(LOOPBACK, {"enable_ospf_auth_message_digest": val}, ver)
     assert err is None and add == {}
 
+
 def test_ospfmd_binding_is_child_pti_boolean():
     b = resolve_binding(LOOPBACK, "enable_ospf_auth_message_digest")
     assert b["mechanism"] == "child_pti"
     assert b["type"] == "boolean"
+
 
 def test_ospfmd_not_in_generic_eth_spec_extension():
     # OSPF-MD (child_pti) is transported via contribute, but is NOT part of the GENERIC eth spec
@@ -385,6 +395,7 @@ def test_ospfmd_not_in_generic_eth_spec_extension():
     spec = {}
     gie_extend_prof_spec(spec, LOOPBACK, {"enable_ospf_auth_message_digest": True})
     assert "enable_ospf_auth_message_digest" not in spec
+
 
 def test_narrow_rule_flowcontrol_uses_passthrough_not_child_pti():
     # FLOWCONTROL uses the version-gate/fail-closed rule, never the child_pti withhold semantics
@@ -424,21 +435,24 @@ def test_validator_type_mapping_known():
     assert gie_validator_type("string") == "str"
     assert gie_validator_type("integer") == "int"
 
+
 @pytest.mark.parametrize("bad", ["nonsense", "", None, "list", "dict"])
 def test_validator_type_unknown_fails_closed(bad):
     with pytest.raises(GieBindingError):
         gie_validator_type(bad)
+
 
 def test_extend_spec_flowcontrol_enum_maps_to_str():
     spec = {}
     gie_extend_prof_spec(spec, TRUNK, {"flowcontrol_receive": "on"})
     assert spec["flowcontrol_receive"]["type"] == "str"
 
+
 def test_contribute_preserves_native_types_no_stringification():
     # enum -> native str; boolean -> native bool (not the "True"/"true" string)
-    a1, _ = gie_contribute_nvpairs(TRUNK, {"flowcontrol_receive": "on"}, "12.6.0.267")
+    a1, err1 = gie_contribute_nvpairs(TRUNK, {"flowcontrol_receive": "on"}, "12.6.0.267")
     assert a1["FLOWCONTROL_RECEIVE"] == "on" and isinstance(a1["FLOWCONTROL_RECEIVE"], str)
-    a2, _ = gie_contribute_nvpairs(LOOPBACK, {"enable_ospf_auth_message_digest": True}, "12.6.0.267")
+    a2, err2 = gie_contribute_nvpairs(LOOPBACK, {"enable_ospf_auth_message_digest": True}, "12.6.0.267")
     assert a2["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"] is True
 
 
@@ -468,14 +482,17 @@ def test_all_registered_and_guarded_keys():
     assert "ospf_auth_key_id" not in gie_guarded_keys()
     assert "ospf_auth_key" not in gie_guarded_keys()
 
+
 def test_invalid_parent_key_flags_flowcontrol_on_wrong_parent():
     # routed/monitor/dot1q eth parents do not register flowcontrol_receive
     for parent in ("int_routed_host", "int_monitor_ethernet", "int_dot1q_tunnel_host", None):
         assert gie_invalid_parent_key(parent, ["mode", "flowcontrol_receive"]) == "flowcontrol_receive"
 
+
 def test_invalid_parent_key_ok_on_valid_parents():
     assert gie_invalid_parent_key(TRUNK, ["mode", "flowcontrol_receive"]) is None
     assert gie_invalid_parent_key(ACCESS, ["mode", "flowcontrol_receive"]) is None
+
 
 def test_invalid_parent_key_ignores_wholly_unknown_field():
     # a field not in the registry is left to the legacy discard path (not reported here)
@@ -552,10 +569,12 @@ def test_module_path_flowcontrol_on_reaches_payload_nvpair():
     m.dcnm_intf_get_eth_payload(_trunk_delem("on"), intf, "profile")
     assert intf["interfaces"][0]["nvPairs"]["FLOWCONTROL_RECEIVE"] == "on"
 
+
 def test_module_path_flowcontrol_off_reaches_payload_nvpair():
     m, intf = _intf_obj("12.6.0.267"), _intf_trunk()
     m.dcnm_intf_get_eth_payload(_trunk_delem("off"), intf, "profile")
     assert intf["interfaces"][0]["nvPairs"]["FLOWCONTROL_RECEIVE"] == "off"
+
 
 def test_module_path_flowcontrol_omitted_absent_from_payload():
     m, intf = _intf_obj("12.6.0.267"), _intf_trunk()

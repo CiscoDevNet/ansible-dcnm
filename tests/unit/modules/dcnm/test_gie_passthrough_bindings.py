@@ -49,6 +49,7 @@ UNSUPPORTED_VERSIONS = (BELOW, "12.5.9.999", None, "", "not.a.version", "12.x.0.
 
 GUARD_VALUES = ("root", "none", "loop", "no")
 
+
 def _wire(value):
     """The nvPair form the engine emits for a PASSTHROUGH value.
 
@@ -116,7 +117,7 @@ def test_provenance_recalculates_from_packaged_rows():
 
 
 def test_nine_new_bindings_are_present_with_reviewed_metadata():
-    for parent, pk, nvpair, _ in NINE:
+    for parent, pk, nvpair, value in NINE:
         b = resolve_binding(parent, pk)
         assert b is not None, f"{parent}::{pk} missing"
         assert b["parent_nvpair"] == nvpair
@@ -230,7 +231,9 @@ def test_every_guard_mode_choice_transports():
         for value in GUARD_VALUES:
             add, err = gie_contribute_nvpairs(parent, {"guard_mode": value}, SUPPORTED)
             assert err is None and add == {"GUARD_MODE": value}
-            assert type(add["GUARD_MODE"]) is str
+            # Exact type, not isinstance: a str subclass such as AnsibleUnicode would pass an
+        # isinstance check while still being the wrong thing on the wire.
+        assert type(add["GUARD_MODE"]) is str  # pylint: disable=unidiomatic-typecheck
 
 
 def test_disable_lldp_transports_both_booleans():
@@ -386,7 +389,7 @@ def test_wrong_parent_is_reported_for_each_new_key():
 
 
 def test_correct_parents_are_accepted():
-    for parent, pk, _, _ in NINE:
+    for parent, pk, nvpair, value in NINE:
         assert gie_invalid_parent_key(parent, [pk]) is None
 
 
@@ -602,7 +605,9 @@ def test_a15_ospf_md_contract_and_compat_exception_are_unchanged():
             LOOPBACK, {"enable_ospf_auth_message_digest": value}, SUPPORTED
         )
         assert err is None and add == {"ENABLE_OSPF_AUTH_MESSAGE_DIGEST": value}
-        assert type(add["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"]) is bool
+        # Exact type: isinstance(True, int) is True in Python, so isinstance could not tell
+        # a preserved native bool from an int.
+        assert type(add["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"]) is bool  # pylint: disable=unidiomatic-typecheck
 
     # The one compatibility exception: withhold, never fail.
     for version in UNSUPPORTED_VERSIONS:

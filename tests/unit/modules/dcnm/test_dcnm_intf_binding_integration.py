@@ -29,7 +29,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_have_carry_forward_nvpairs,
 )
 from .test_dcnm_intf_loopback_carry_forward import (
-    BUILDER_NV,
     FAB,
     HAVE_METADATA,
     HAVE_ONLY_WRITABLE,

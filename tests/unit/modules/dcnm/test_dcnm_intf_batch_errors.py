@@ -190,7 +190,7 @@ def _sender(response):
     obj.class_name = "DcnmIntf"
     obj.log = mock.Mock()
     obj.module = mock.Mock()
-    obj.module.fail_json.side_effect = lambda *a, **kw: (_ for _ in ()).throw(
+    obj.module.fail_json.side_effect = lambda *a, **kw: (item for item in ()).throw(
         _Bail(kw.get("msg"))
     )
     obj.result = {"response": [], "changed": False}

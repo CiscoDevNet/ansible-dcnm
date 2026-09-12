@@ -19,7 +19,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
     BINDING_TABLE,
     registered_profile_keys,
     resolve_binding,
-    PROVENANCE_SHA256,
 )
 
 # nvPair transport mechanisms understood by the engine.
