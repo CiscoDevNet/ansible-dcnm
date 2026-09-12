@@ -7367,7 +7367,14 @@ class DcnmIntf:
                     ):
                         continue
 
-            self.dcnm_intf_require_detail_authority(name, sno)
+            # The authority gate deliberately does NOT run here. ``have_all`` enumerates every
+            # interface on every switch, and the two blocks below act on a subset of it:
+            # INTERFACE_MGMT matches neither, so mgmt0 is never created, deleted, reset or
+            # deployed by an override sweep. Gating the enumeration made an unreadable switch
+            # fail on the first interface walked -- typically mgmt0 -- naming an interface the
+            # sweep was never going to touch, and hiding which one actually lacked state. The
+            # gate now runs at each point that decides a mutation, so it guards exactly what it
+            # is meant to guard and reports the interface really at stake.
 
             if (have["ifType"] == "INTERFACE_ETHERNET") and (
                 (str(have["isPhysical"]).lower() != "none")
@@ -7670,6 +7677,11 @@ class DcnmIntf:
                     in_want = (name.lower(), str(sno), fabric) in want_set
                     if not in_want:
 
+                        # This interface is about to be deleted and possibly deployed. That is
+                        # the mutation this gate exists for, so it runs here rather than over
+                        # the enclosing enumeration.
+                        self.dcnm_intf_require_detail_authority(name, sno)
+
                         delem = {}
 
                         delem["interfaceDbId"] = 0
@@ -7722,6 +7734,11 @@ class DcnmIntf:
                 )
             ]
             if match:
+
+                # Deferred interfaces leave the main loop before its own gate, so this is the
+                # first point at which their state is used for a mutation. Without this the
+                # deferred reset path would run over state the controller never confirmed.
+                self.dcnm_intf_require_detail_authority(intf["ifName"], sno)
 
                 uelem = self.dcnm_intf_get_default_eth_payload(
                     intf["ifName"], sno, fabric
