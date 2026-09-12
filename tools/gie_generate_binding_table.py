@@ -77,6 +77,38 @@ COMMITTED_BINDINGS = {
     ("int_port_channel_access_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
     ("int_port_channel_trunk_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
     ("int_port_channel_dot1q_tunnel_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+
+    # The two vPC host parents, passthrough. These are the only vPC parents a playbook can
+    # reach: the module builds its policy key as <type>_<mode> and pol_types carries just
+    # "vpc_trunk" and "vpc_access". The intermediate _po_11_1 and the _po_member_11_1 levels
+    # are created by the host template itself and are not registered.
+    #
+    # The docstring above names int_vpc_trunk_host::GUARD_MODE as child_pti. That referred to
+    # the TEMPLATE delegating the value to a child, which it does -- but `mechanism` here means
+    # who owns validation, the invalid-parent guard, the generic prof_spec, carry-forward and
+    # wire-form conversion. vPC has no dedicated machinery for any of those, and
+    # int_port_channel_trunk_host::DISABLE_LLDP already sets the precedent: it delegates to a
+    # member template and is registered passthrough. Delegation does not decide the mechanism.
+    #
+    # Measured, not inferred: writing GUARD_MODE=root into the vpc55 parent's nvPairs produced
+    # `spanning-tree guard root` on both peers. See registry_slice_0b_15.yaml.
+    ("int_vpc_trunk_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
+    ("int_vpc_access_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
+
+    ("int_vpc_trunk_host", "DISABLE_LLDP"): "disable_lldp",
+    ("int_vpc_access_host", "DISABLE_LLDP"): "disable_lldp",
+
+    ("int_vpc_trunk_host", "ACL_FILTER"): "acl_filter",
+    ("int_vpc_access_host", "ACL_FILTER"): "acl_filter",
+
+    # trunk only: int_vpc_access_host does not declare GUARD_MODE.
+    ("int_vpc_trunk_host", "GUARD_MODE"): "guard_mode",
+
+    ("int_vpc_trunk_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
+    ("int_vpc_access_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
+
+    ("int_vpc_trunk_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+    ("int_vpc_access_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.
