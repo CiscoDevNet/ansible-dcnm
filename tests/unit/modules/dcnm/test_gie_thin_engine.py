@@ -36,6 +36,8 @@ LOOPBACK = "int_fabric_loopback_11_1"
 PC_TRUNK = "int_port_channel_trunk_host"
 PC_ACCESS = "int_port_channel_access_host"
 PC_DOT1Q = "int_port_channel_dot1q_tunnel_host"
+VPC_TRUNK = "int_vpc_trunk_host"
+VPC_ACCESS = "int_vpc_access_host"
 
 # Baseline rows. These three and their behaviour must not change.
 BASELINE_ROWS = {
@@ -106,19 +108,47 @@ PC_ROWS = {
     (PC_DOT1Q, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
 }
 
+# The two vPC host parents. These are the only vPC parents the module can reach: it builds its
+# policy key as <type>_<mode> and pol_types carries just "vpc_trunk" and "vpc_access".
+#
+# Every one of these delegates -- the vPC parent emits no CLI of its own, it hands the value to
+# an intermediate _po_11_1 child and, for DISABLE_LLDP, down to a _po_member_11_1. They are still
+# `passthrough`, because that word describes who owns validation, the invalid-parent guard, the
+# generic prof_spec, carry-forward and wire-form conversion -- not what the template does next.
+# int_port_channel_trunk_host::DISABLE_LLDP set the precedent: it delegates too and is
+# passthrough.
+#
+# Measured before registering: GUARD_MODE=root written into the vpc55 parent's nvPairs produced
+# `spanning-tree guard root` on both peers of the pair.
+#
+# GUARD_MODE appears on trunk only -- int_vpc_access_host does not declare it.
+VPC_ROWS = {
+    (VPC_TRUNK, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+    (VPC_ACCESS, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+    (VPC_TRUNK, "DISABLE_LLDP", "disable_lldp"),
+    (VPC_ACCESS, "DISABLE_LLDP", "disable_lldp"),
+    (VPC_TRUNK, "ACL_FILTER", "acl_filter"),
+    (VPC_ACCESS, "ACL_FILTER", "acl_filter"),
+    (VPC_TRUNK, "GUARD_MODE", "guard_mode"),
+    (VPC_TRUNK, "DISABLE_QOS_STATS", "disable_qos_stats"),
+    (VPC_ACCESS, "DISABLE_QOS_STATS", "disable_qos_stats"),
+    (VPC_TRUNK, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+    (VPC_ACCESS, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+}
+
 
 # ---- binding package runtime contract ----
 
 def test_package_provenance_and_size():
     expected_keys = (
         BASELINE_ROWS | PASSTHROUGH_ROWS | OSPF_KEY_ROWS | FC_SEND_ROWS | STP_ROWS
-        | QOS_STATS_ROWS | PC_ROWS
+        | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 34
+    assert len(BINDING_TABLE) == len(actual_keys) == 45
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -149,7 +179,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 34
+    assert len(rows) == 45
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
