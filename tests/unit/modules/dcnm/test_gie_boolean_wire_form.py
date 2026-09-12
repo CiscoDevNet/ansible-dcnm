@@ -66,7 +66,7 @@ BOOL_PASSTHROUGH = sorted(
     for b in BINDING_TABLE
     if b["type"] == "boolean" and b["mechanism"] == "passthrough"
 )
-BOOL_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, _ in BOOL_PASSTHROUGH]
+BOOL_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, nvpair in BOOL_PASSTHROUGH]
 
 
 def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
@@ -76,7 +76,7 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     type or mechanism shows up here instead of quietly leaving this file with nothing to run.
     """
     assert BOOL_PASSTHROUGH, "no boolean passthrough bindings -- the tests below run on nothing"
-    assert {k for _, k, _ in BOOL_PASSTHROUGH} == {
+    assert {k for parent, k, nvpair in BOOL_PASSTHROUGH} == {
         "disable_lldp", "disable_qos_stats", "disable_queuing_stats",
     }
     # Three boolean fields across the two eth parents, the three port-channel host parents and

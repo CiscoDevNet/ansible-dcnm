@@ -70,8 +70,7 @@ class A161Base(TestDcnmModule):
         self.run_send = self.mock_send.start()
 
         self.mock_template_details = patch(
-            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface"
-            ".dcnm_get_template_details"
+            "ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm.dcnm_get_template_details"
         )
         self.run_template_details = self.mock_template_details.start()
         self.run_template_details.return_value = None
@@ -270,7 +269,8 @@ class TestBindingPayloadOnModulePath(A161Base):
     def test_eth_trunk_acl_filter_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_trunk_acl_filter_valid", changed=True)
         value = self._assert_nvpair(result, "Ethernet1/30", "ACL_FILTER", "ACL_ALPHA")
-        assert type(value) is str
+        # Exact type: a str subclass would satisfy isinstance and still be wrong.
+        assert type(value) is str  # pylint: disable=unidiomatic-typecheck
 
     def test_eth_access_acl_filter_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_access_acl_filter_valid", changed=True)
@@ -399,7 +399,9 @@ class TestBindingFrozenContractRegression(A161Base):
         merged = self.diff_nvpairs(result)
         nvpairs = merged.get("Loopback100", {})
         assert nvpairs.get("ENABLE_OSPF_AUTH_MESSAGE_DIGEST") is True
-        assert type(nvpairs["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"]) is bool
+        # Exact type: isinstance(True, int) is True, so isinstance cannot catch a bool
+        # degraded to an int.
+        assert type(nvpairs["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"]) is bool  # pylint: disable=unidiomatic-typecheck
 
 
 class TestBindingOspfMdCompatOnUnsupportedVersion(A161Base):
@@ -408,7 +410,6 @@ class TestBindingOspfMdCompatOnUnsupportedVersion(A161Base):
     ndfc_version = BELOW
 
     def test_ospf_md_explicit_false_is_withheld_not_failed(self):
-        config = [dict(self.__class__.__dict__.get("_unused", {}))] if False else None
         set_module_args(
             dict(
                 state="merged",
@@ -426,4 +427,3 @@ class TestBindingOspfMdCompatOnUnsupportedVersion(A161Base):
             assert "ENABLE_OSPF_AUTH_MESSAGE_DIGEST" not in nvpairs, (
                 "the nvPair must be withheld on an unsupported controller"
             )
-        assert config is None  # keeps the linter honest about the unused branch

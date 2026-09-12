@@ -2014,7 +2014,6 @@ from ansible.module_utils.common.validation import check_type_bool
 from ansible.module_utils.connection import ConnectionError as AnsibleConnectionError
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_get_bulk_api_support,
-    dcnm_get_template_details,
     dcnm_send,
     get_fabric_inventory_details,
     dcnm_get_ip_addr_info,

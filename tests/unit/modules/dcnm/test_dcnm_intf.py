@@ -1093,7 +1093,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         # value means "metadata unavailable", which is exactly the legacy
         # behaviour: the unknown nvPair is not sent at all.
         self.mock_dcnm_template_details = patch(
-            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface.dcnm_get_template_details"
+            "ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm.dcnm_get_template_details"
         )
         self.run_dcnm_template_details = self.mock_dcnm_template_details.start()
         self.run_dcnm_template_details.return_value = None
