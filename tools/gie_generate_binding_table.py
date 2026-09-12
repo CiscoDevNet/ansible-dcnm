@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Deterministic generator for the interface binding table.
 
 Compiles the approved bindings from the registry YAML into a static Python artifact under
@@ -19,7 +18,11 @@ Usage: python3 gie_generate_binding_table.py <registry_yaml> [<more_yaml> ...] <
 Deterministic: same input -> byte-identical output (sorted keys, fixed formatting, provenance
 sha256 over the compiled rows).
 """
-import sys, yaml, json, hashlib
+import hashlib
+import json
+import sys
+
+import yaml
 
 COMMITTED_BINDINGS = {
     # Fabric loopback, child_pti. The two key rows feed the same child policy
@@ -173,9 +176,17 @@ def render(rows):
         "",
         "BINDING_TABLE = (",
     ]
+    # One key per line rather than one row per line. A row rendered flat reaches ~350
+    # characters, well past the 160-column sanity limit, and the generated file is the one
+    # place a human cannot fix it by hand -- it says DO NOT EDIT and a regeneration would undo
+    # the fix. Wrapping here keeps the output both compliant and diffable: adding a field to a
+    # binding shows up as one added line instead of a rewritten row.
     for row in rows:
-        items = ", ".join("%r: %r" % (k, row[k]) for k in FIELDS if k in row)
-        lines.append("    {" + items + "},")
+        lines.append("    {")
+        for k in FIELDS:
+            if k in row:
+                lines.append("        %r: %r," % (k, row[k]))
+        lines.append("    },")
     lines += [
         ")",
         "",

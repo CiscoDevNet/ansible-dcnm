@@ -386,4 +386,6 @@ def test_golden_pins_the_key_id_as_a_string_not_a_native_int():
     )
     value = intf["interfaces"][0]["nvPairs"][KEY_ID_NV]
     assert value == "17"
-    assert type(value) is str, "regression: key-id degraded to a native int"
+    # Exact type on purpose -- isinstance(True, int) and str subclasses both defeat the
+    # check this line exists to make.
+    assert type(value) is str, "regression: key-id degraded to a native int"  # pylint: disable=unidiomatic-typecheck

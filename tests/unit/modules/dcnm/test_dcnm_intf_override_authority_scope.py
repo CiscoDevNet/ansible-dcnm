@@ -92,8 +92,8 @@ def _stub(have_all):
     ]
     # The method resets these itself; they exist so the stub is complete before the call.
     s.diff_create = []
-    s.diff_delete = [[] for _ in range(9)]
-    s.diff_delete_deploy = [[] for _ in range(9)]
+    s.diff_delete = [[] for _slot in range(9)]
+    s.diff_delete_deploy = [[] for _slot in range(9)]
     s.diff_deploy = []
     s.diff_replace = []
 
