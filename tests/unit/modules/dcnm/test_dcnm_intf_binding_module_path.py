@@ -191,12 +191,6 @@ class TestBindingRawTypeOnModulePath(A161Base):
         assert "native string" in result["msg"]
         self.assert_no_mutating_calls()
 
-    def test_acl_filter_empty_string_is_rejected_on_length(self):
-        result = self.run_config("eth_access_acl_filter_empty", failed=True)
-        self._assert_rejected_without_echo(result, "acl_filter", [])
-        assert "length 1..64" in result["msg"]
-        self.assert_no_mutating_calls()
-
     def test_acl_filter_over_max_length_is_rejected(self):
         result = self.run_config("eth_access_acl_filter_too_long", failed=True)
         self._assert_rejected_without_echo(result, "acl_filter", ["AAAAAAAAAA"])
@@ -275,6 +269,23 @@ class TestBindingPayloadOnModulePath(A161Base):
     def test_eth_access_acl_filter_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_access_acl_filter_valid", changed=True)
         self._assert_nvpair(result, "Ethernet1/31", "ACL_FILTER", "ACL_BETA")
+
+    def test_eth_access_acl_filter_empty_reaches_the_parent_nvpair(self):
+        """"" is how the field is CLEARED, so it has to travel like any other value.
+
+        A sibling case in the rejection class used to assert the opposite: that the empty
+        string was blocked on min_length and that nothing was sent. That made ACL_FILTER
+        settable and never clearable, and a re-deploy does not clear it either -- NaC does not
+        model the field, so vxlan.yaml walks past the value.
+
+        Measured on NDFC 12.6.0.267: "" is accepted, stored, and the 'ip port access-group'
+        line is withdrawn from the device on deploy. It is also the encoding the controller
+        returns for "no ACL configured". So the module must transport it, not block it.
+        """
+        result = self.run_config("eth_access_acl_filter_empty", changed=True)
+        value = self._assert_nvpair(result, "Ethernet1/31", "ACL_FILTER", "")
+        # Not None, not absent: an absent key would mean "leave as-is", the opposite of clear.
+        assert type(value) is str  # pylint: disable=unidiomatic-typecheck
 
     def test_pc_trunk_guard_mode_reaches_the_parent_nvpair(self):
         result = self.run_config("pc_trunk_guard_mode_root", changed=True)
