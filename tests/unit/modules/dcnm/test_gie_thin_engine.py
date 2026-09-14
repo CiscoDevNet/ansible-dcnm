@@ -914,23 +914,43 @@ def test_have_still_enforces_registered_choices():
 
 
 def test_the_input_contract_is_unchanged_for_explicit_values():
-    """The relaxation is scoped to value_source='have' and nothing else."""
+    """The boolean read-back relaxation is scoped to value_source='have'.
+
+    This used to also assert that ``acl_filter: ""`` was rejected on explicit input. That
+    claim is gone deliberately: the empty string is how a plain-string binding is CLEARED,
+    and rejecting it made such a field settable and never clearable. NDFC accepts ``""``,
+    stores it, and withdraws the CLI line on deploy -- measured, see
+    test_gie_clear_string_binding.py. The check below keeps a length assertion in this case
+    by using the UPPER bound, which has no "unset" reading and is unchanged.
+    """
     with pytest.raises(GieBindingError):
-        gie_validate_binding_value(TRUNK, "acl_filter", "")          # min_length 1
+        gie_validate_binding_value(TRUNK, "acl_filter", "A" * 65)    # max_length 64
     with pytest.raises(GieBindingError):
         gie_validate_binding_value(TRUNK, "flowcontrol_receive", "maybe")   # not a choice
     with pytest.raises(GieBindingError):
         gie_validate_binding_value(TRUNK, "disable_lldp", "false")   # str where bool is required
+    # an enum still fails closed on "": its "off" state is a named choice, never empty
+    with pytest.raises(GieBindingError):
+        gie_validate_binding_value(TRUNK, "flowcontrol_receive", "")
     # and the legitimate inputs still pass
     assert gie_validate_binding_value(TRUNK, "acl_filter", "MY_ACL") == "MY_ACL"
     assert gie_validate_binding_value(TRUNK, "flowcontrol_receive", "on") == "on"
     assert gie_validate_binding_value(TRUNK, "disable_lldp", True) is True
+    # the clear path: "" on a plain string is accepted and means "remove the value"
+    assert gie_validate_binding_value(TRUNK, "acl_filter", "") == ""
 
 
 def test_subclass_acceptance_does_not_bypass_the_other_registered_checks():
-    """Relaxing the type check must not relax length or choices."""
+    """Relaxing the type check must not relax length or choices.
+
+    The length probe used to be ``ospf_auth_key`` with an empty ``_SubStr``. The empty string
+    now legitimately clears a plain-string binding, so it no longer proves anything about
+    length. It is replaced by ``acl_filter`` over its UPPER bound, which still exercises the
+    same thing the case was written for: that a str SUBCLASS -- the form every playbook value
+    actually arrives in -- is still measured against the registered bounds.
+    """
     with pytest.raises(GieBindingError):
-        gie_validate_binding_value(LOOPBACK, "ospf_auth_key", _SubStr(""))  # min_length 1
+        gie_validate_binding_value(TRUNK, "acl_filter", _SubStr("A" * 65))  # max_length 64
     with pytest.raises(GieBindingError):
         gie_validate_binding_value(TRUNK, "flowcontrol_receive", _SubStr("nope"))
     with pytest.raises(GieBindingError):

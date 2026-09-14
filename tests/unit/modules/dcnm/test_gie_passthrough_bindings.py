@@ -330,8 +330,22 @@ def test_string_rejects_non_strings():
 
 
 def test_acl_filter_length_constraints_are_enforced():
-    with pytest.raises(GieBindingError, match="shorter than the registered minimum"):
-        gie_validate_binding_value(ACCESS, "acl_filter", "")
+    """max_length still bites; min_length no longer rejects the EMPTY string.
+
+    This case used to assert both bounds symmetrically, including that ``""`` was rejected
+    for being shorter than the registered minimum of 1. That turned out to be wrong about the
+    controller: NDFC accepts ``ACL_FILTER: ""``, stores it, withdraws the ``ip port
+    access-group`` line on deploy, and returns ``""`` itself for "no ACL configured".
+    Enforcing the lower bound on explicit input made the field settable and never clearable,
+    with no way out -- a re-deploy does not clear it either, because NaC does not model the
+    field and ``vxlan.yaml`` walks past the value.
+
+    The lower bound is now exempted for the empty string specifically, and that exemption has
+    its own suite: ``test_gie_clear_string_binding.py``. A short-but-nonempty value is still
+    subject to every other check, and the upper bound is unchanged -- there is no reading of
+    "too long" that means "unset".
+    """
+    assert gie_validate_binding_value(ACCESS, "acl_filter", "") == ""
     with pytest.raises(GieBindingError, match="longer than the registered maximum"):
         gie_validate_binding_value(ACCESS, "acl_filter", "A" * 65)
 
