@@ -2704,6 +2704,24 @@ class DcnmIntf:
                 + ", storm-control action and levels require enable_storm_control: true"
             )
 
+    def dcnm_intf_set_qos_nv_pairs(self, profile, nv_pairs):
+        """Write the QoS/queuing nvPairs for a port-channel profile.
+
+        This block was duplicated verbatim in the trunk, access and l3 branches of
+        dcnm_intf_get_pc_payload, and missing from the dot1q one -- so a dot1q port-channel
+        could never carry a QoS or queuing policy even though its template declares
+        ENABLE_QOS, QOS_POLICY and QUEUING_POLICY exactly like the other modes.
+
+        Extracted rather than copied a fourth time. The three originals were byte-identical.
+        """
+        if profile.get("enable_qos"):
+            nv_pairs["ENABLE_QOS"] = profile["enable_qos"]
+            nv_pairs["QOS_POLICY"] = profile.get("qos_policy") or ""
+        else:
+            nv_pairs["ENABLE_QOS"] = False
+            nv_pairs["QOS_POLICY"] = ""
+        nv_pairs["QUEUING_POLICY"] = profile.get("queuing_policy") or ""
+
     def dcnm_intf_set_storm_control_nv_pairs(self, profile, nv_pairs):
         enabled = profile.get("enable_storm_control", False)
         nv_pairs["ENABLE_STORM_CONTROL"] = enabled
@@ -2948,6 +2966,13 @@ class DcnmIntf:
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
             copy_description=dict(type="bool", default=False),
+            # Same three keys, same defaults, as pc_prof_spec_trunk and _access. The dot1q
+            # template declares ENABLE_QOS, QOS_POLICY and QUEUING_POLICY like every other
+            # port-channel mode; this spec was the only one that did not accept them, so a
+            # QoS policy could not be attached to a dot1q port-channel from the module at all.
+            enable_qos=dict(type="bool", default=False),
+            qos_policy=dict(type="str", default=""),
+            queuing_policy=dict(type="str", default=""),
         )
         pc_prof_spec_dot1q.update(self.dcnm_intf_storm_control_spec())
 
@@ -4154,19 +4179,11 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
             else:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
-            if delem[profile].get("enable_qos"):
-                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
-                if delem[profile].get("qos_policy"):
-                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
-                else:
-                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
-            else:
-                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
-                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
-            if delem[profile].get("queuing_policy"):
-                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
-            else:
-                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+            self.dcnm_intf_set_qos_nv_pairs(
+
+                delem[profile], intf["interfaces"][0]["nvPairs"]
+
+            )
 
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
@@ -4213,19 +4230,11 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
             else:
                 intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
-            if delem[profile].get("enable_qos"):
-                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
-                if delem[profile].get("qos_policy"):
-                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
-                else:
-                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
-            else:
-                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
-                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
-            if delem[profile].get("queuing_policy"):
-                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
-            else:
-                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+            self.dcnm_intf_set_qos_nv_pairs(
+
+                delem[profile], intf["interfaces"][0]["nvPairs"]
+
+            )
 
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
@@ -4257,19 +4266,13 @@ class DcnmIntf:
                 delem[profile]["mtu"]
             )
 
-            if delem[profile].get("enable_qos"):
-                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = delem[profile]["enable_qos"]
-                if delem[profile].get("qos_policy"):
-                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = delem[profile]["qos_policy"]
-                else:
-                    intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
-            else:
-                intf["interfaces"][0]["nvPairs"]["ENABLE_QOS"] = False
-                intf["interfaces"][0]["nvPairs"]["QOS_POLICY"] = ""
-            if delem[profile].get("queuing_policy"):
-                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = delem[profile]["queuing_policy"]
-            else:
-                intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
+            self.dcnm_intf_set_qos_nv_pairs(
+
+
+                delem[profile], intf["interfaces"][0]["nvPairs"]
+
+
+            )
 
         if delem[profile]["mode"] == "dot1q":
             if delem[profile]["members"] is None:
@@ -4294,6 +4297,9 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+            self.dcnm_intf_set_qos_nv_pairs(
+                delem[profile], intf["interfaces"][0]["nvPairs"]
+            )
 
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
