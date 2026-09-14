@@ -155,27 +155,31 @@ def gie_validate_binding_value(
     Carrying such a value forward is safe -- it is a round-trip "leave as-is" assertion of
     what the controller already has, so it cannot introduce a wrong value.
 
-    For ``value_source="have"`` the contract still applies in full, minus exactly TWO
-    exemptions, each one backed by a value NDFC was measured to return on a freshly
-    deployed fabric:
+    There are exactly TWO exemptions, each backed by a value measured against a live
+    controller, and they differ in scope:
 
-      1. a **boolean** binding also accepts the strings ``"true"`` / ``"false"``. NDFC
-         encodes booleans that way on read-back (``DISABLE_LLDP == "false"``); the action
-         plugin's schema documents the same round-trip.
-      2. a **plain string** binding (one with no ``valid_values``) also accepts ``""``.
-         That is how NDFC encodes "unset" (``ACL_FILTER == ""`` when no ACL is
-         configured), and it is precisely what ``min_length`` was rejecting.
+      1. ``value_source="have"`` only -- a **boolean** binding also accepts the strings
+         ``"true"`` / ``"false"``. NDFC encodes booleans that way on read-back
+         (``DISABLE_LLDP == "false"``); the action plugin's schema documents the same
+         round-trip. An operator still has to write a real bool.
+      2. **either direction** -- a **plain string** binding (one with no ``valid_values``)
+         also accepts ``""``, which is what "unset" means for such a field. Reading, because
+         that is how NDFC encodes it. Writing, because it is the only way to REMOVE the
+         value: ``min_length`` used to reject the empty string before it left the module, so
+         a field was settable and never clearable, and a re-deploy does not clear it either
+         (NaC does not model these fields, so ``vxlan.yaml`` walks past them). The
+         controller was measured to accept ``""`` and to withdraw the CLI line on deploy.
 
     Everything else is unchanged, deliberately. Enum membership is still enforced, so a
     value outside ``valid_values`` never reaches a later full-payload update -- and the
-    ``""`` exemption is scoped to non-enum bindings so an empty enum still fails closed.
-    Carrying a measured encoding forward is a round-trip "leave as-is" assertion and cannot
-    introduce a wrong value; relaxing further would be inventing tolerance for encodings
-    that have never been observed.
+    ``""`` exemption is scoped to non-enum bindings so an empty enum still fails closed: for
+    an enum the "off" state is a named choice (``GUARD_MODE`` ``"no"``), never ``""``.
+    Relaxing further would be inventing tolerance for encodings never observed.
 
-    Why this matters: applying the input contract to these two encodings made
+    Why this matters: applying the input contract to the read-back encodings made
     ``state: overridden`` abort on any explicitly declared host interface, which is every
-    real deployment.
+    real deployment. And applying ``min_length`` to explicit input made ``ACL_FILTER`` a
+    one-way field with no supported way to undo it.
 
     The error deliberately omits the rejected value.
     """
@@ -197,10 +201,28 @@ def gie_validate_binding_value(
         # (1) NDFC returns booleans as strings.
         if native_type is bool and value in ("true", "false"):
             return value
-        # (2) NDFC returns "" for an unset plain string. Scoped to non-enum bindings so an
-        #     empty value for an enum still fails closed.
-        if native_type is str and value == "" and not binding.get("valid_values"):
-            return value
+    # (2) "" on a plain string binding means "unset", from EITHER direction.
+    #
+    # Reading: NDFC returns "" for an unset string (ACL_FILTER == "" with no ACL configured),
+    # and the carry-forward has to be able to round-trip that.
+    #
+    # Writing: "" is also the only way an operator can REMOVE the value. Until this was
+    # allowed, min_length rejected the empty string before it ever left the module, and a
+    # field was one-way: settable, never clearable. A re-deploy does not clear it either --
+    # NaC does not model these fields, so vxlan.yaml walks past them and the value survives.
+    #
+    # Measured, not assumed. POSTing ACL_FILTER:"" for port-channel31 straight to
+    # /interface/modify returned 207 SUCCESS, the controller stored "", and after deploy the
+    # 'ip port access-group' line was gone from the device while the untouched port-channel32
+    # kept its own. The registered min_length of 1 is copied from the template's
+    # metaProperties, but the controller does not enforce it -- and "" is the very encoding it
+    # hands back for that state. See evidence/generic-interface-engine/phase18-acl-empty-probe.
+    #
+    # Scoped to bindings with no valid_values so an empty ENUM still fails closed: for an enum
+    # the "off" value is a named choice (GUARD_MODE "no", SPANNING_TREE_PORT_TYPE "no"), never
+    # the empty string.
+    if native_type is str and value == "" and not binding.get("valid_values"):
+        return value
     if not _is_native_type(value, native_type):
         raise GieBindingError(
             "{0} for {1!r} on parent {2!r} has an invalid native type; no change "
