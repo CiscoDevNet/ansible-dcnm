@@ -36,6 +36,7 @@ LOOPBACK = "int_fabric_loopback_11_1"
 PC_TRUNK = "int_port_channel_trunk_host"
 PC_ACCESS = "int_port_channel_access_host"
 PC_DOT1Q = "int_port_channel_dot1q_tunnel_host"
+ROUTED = "int_routed_host"
 VPC_TRUNK = "int_vpc_trunk_host"
 VPC_ACCESS = "int_vpc_access_host"
 
@@ -49,8 +50,10 @@ BASELINE_ROWS = {
 PASSTHROUGH_ROWS = {
     (TRUNK, "GUARD_MODE", "guard_mode"),
     (PC_TRUNK, "GUARD_MODE", "guard_mode"),
-    (ACCESS, "DISABLE_LLDP", "disable_lldp"),
-    (TRUNK, "DISABLE_LLDP", "disable_lldp"),
+    (ACCESS, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+    (ACCESS, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+    (TRUNK, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+    (TRUNK, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
     (ACCESS, "ACL_FILTER", "acl_filter"),
     (TRUNK, "ACL_FILTER", "acl_filter"),
     (PC_ACCESS, "ACL_FILTER", "acl_filter"),
@@ -94,9 +97,12 @@ QOS_STATS_ROWS = {
 # template delegates the value to the member policy instead of emitting the CLI itself. Whether
 # it reaches the member is an empirical question, answered by the lab, not by preference.
 PC_ROWS = {
-    (PC_ACCESS, "DISABLE_LLDP", "disable_lldp"),
-    (PC_TRUNK, "DISABLE_LLDP", "disable_lldp"),
-    (PC_DOT1Q, "DISABLE_LLDP", "disable_lldp"),
+    (PC_ACCESS, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+    (PC_ACCESS, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+    (PC_TRUNK, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+    (PC_TRUNK, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+    (PC_DOT1Q, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+    (PC_DOT1Q, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
     (PC_ACCESS, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
     (PC_TRUNK, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
     (PC_DOT1Q, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
@@ -125,8 +131,10 @@ PC_ROWS = {
 VPC_ROWS = {
     (VPC_TRUNK, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
     (VPC_ACCESS, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
-    (VPC_TRUNK, "DISABLE_LLDP", "disable_lldp"),
-    (VPC_ACCESS, "DISABLE_LLDP", "disable_lldp"),
+    (VPC_TRUNK, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+    (VPC_TRUNK, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+    (VPC_ACCESS, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+    (VPC_ACCESS, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
     (VPC_TRUNK, "ACL_FILTER", "acl_filter"),
     (VPC_ACCESS, "ACL_FILTER", "acl_filter"),
     (VPC_TRUNK, "GUARD_MODE", "guard_mode"),
@@ -136,28 +144,50 @@ VPC_ROWS = {
     (VPC_ACCESS, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
 }
 
+# int_routed_host -- the first non-switchport parent. Reachable as pol_types "eth_routed".
+#
+# Every one of these ends in a child template; none of them emits CLI from the parent itself:
+# interface_lldp_disable, bfd_no_echo_interface, interface_ip_access_group_in_11_1 and, for the
+# stats pair, interface_qos_service_policy / interface_queuing_service_policy, where the boolean
+# rides as the child's DISABLE_STATS parameter rather than gating its creation. All five were
+# confirmed present on the controller before registering -- a missing child returns success and
+# silently emits nothing.
+#
+# ARP_TIMEOUT is declared by this template too and is deliberately absent: int_subif and
+# int_vlan declare it as well and all three are reachable, so it goes in as one lot across the
+# three parents. The generator enforces that, not a reviewer.
+ROUTED_ROWS = {
+    (ROUTED, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+    (ROUTED, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+    (ROUTED, "DISABLE_BFD_ECHO", "disable_bfd_echo"),
+    (ROUTED, "IPV4_ACL_IN", "ipv4_acl_in"),
+    (ROUTED, "DISABLE_QOS_STATS", "disable_qos_stats"),
+    (ROUTED, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+}
+
 
 # ---- binding package runtime contract ----
 
 def test_package_provenance_and_size():
     expected_keys = (
         BASELINE_ROWS | PASSTHROUGH_ROWS | OSPF_KEY_ROWS | FC_SEND_ROWS | STP_ROWS
-        | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS
+        | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 45
+    assert len(BINDING_TABLE) == len(actual_keys) == 58
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
-    assert len(PASSTHROUGH_ROWS) == 9
+    assert len(PASSTHROUGH_ROWS) == 11
     assert len(OSPF_KEY_ROWS) == 2
     assert len(FC_SEND_ROWS) == 2
     assert len(STP_ROWS) == 2
     assert len(QOS_STATS_ROWS) == 4
-    assert len(PC_ROWS) == 12
+    assert len(PC_ROWS) == 15
+    assert len(ROUTED_ROWS) == 6
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -179,7 +209,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 45
+    assert len(rows) == 58
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -202,27 +232,27 @@ def test_compiler_rejects_profile_key_mismatch():
 def test_registered_keys_per_parent():
     assert registered_profile_keys(TRUNK) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
-        "guard_mode", "disable_lldp", "acl_filter",
+        "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
     }
     assert registered_profile_keys(ACCESS) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
-        "disable_lldp", "acl_filter",
+        "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats"
     }
     assert registered_profile_keys(LOOPBACK) == {
         "enable_ospf_auth_message_digest", "ospf_auth_key_id", "ospf_auth_key"
     }
     assert registered_profile_keys(PC_TRUNK) == {
-        "guard_mode", "acl_filter", "disable_lldp",
+        "guard_mode", "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
         "spanning_tree_port_type", "disable_qos_stats", "disable_queuing_stats",
     }
     assert registered_profile_keys(PC_ACCESS) == {
-        "acl_filter", "disable_lldp",
+        "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
         "spanning_tree_port_type", "disable_qos_stats", "disable_queuing_stats",
     }
     assert registered_profile_keys(PC_DOT1Q) == {
-        "acl_filter", "disable_lldp",
+        "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
         "spanning_tree_port_type", "disable_qos_stats", "disable_queuing_stats",
     }
     # GUARD_MODE is NOT registered on access parents.
@@ -262,7 +292,8 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("FLOWCONTROL_SEND", "flowcontrol_send"),
         ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
         ("GUARD_MODE", "guard_mode"),
-        ("DISABLE_LLDP", "disable_lldp"),
+        ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+        ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
         ("ACL_FILTER", "acl_filter"),
         ("DISABLE_QOS_STATS", "disable_qos_stats"),
         ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
@@ -273,7 +304,8 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
         ("FLOWCONTROL_SEND", "flowcontrol_send"),
         ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
-        ("DISABLE_LLDP", "disable_lldp"),
+        ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+        ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
         ("ACL_FILTER", "acl_filter"),
         ("DISABLE_QOS_STATS", "disable_qos_stats"),
         ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
@@ -462,16 +494,18 @@ def test_all_registered_and_guarded_keys():
     assert gie_all_registered_keys() == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "enable_ospf_auth_message_digest",
-        "guard_mode", "disable_lldp", "acl_filter",
+        "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
         "ospf_auth_key_id", "ospf_auth_key",
+        "disable_bfd_echo", "ipv4_acl_in",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
     # its invalid-parent guard, unlike the OSPF bindings below.
     assert gie_guarded_keys() == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
-        "guard_mode", "disable_lldp", "acl_filter",
+        "disable_bfd_echo", "ipv4_acl_in",
+        "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
     }
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
@@ -857,7 +891,7 @@ def test_accepting_subclasses_does_not_make_bool_and_int_interchangeable():
 
 NDFC_TRUNK_HAVE = {
     "acl_filter": "",           # no ACL configured -- shorter than the registered min_length 1
-    "disable_lldp": "false",    # NDFC encodes booleans as strings
+    "disable_lldp_transmit": "false",    # NDFC encodes booleans as strings
     "flowcontrol_receive": "off",
     "guard_mode": "no",
 }
@@ -928,14 +962,14 @@ def test_the_input_contract_is_unchanged_for_explicit_values():
     with pytest.raises(GieBindingError):
         gie_validate_binding_value(TRUNK, "flowcontrol_receive", "maybe")   # not a choice
     with pytest.raises(GieBindingError):
-        gie_validate_binding_value(TRUNK, "disable_lldp", "false")   # str where bool is required
+        gie_validate_binding_value(TRUNK, "disable_lldp_transmit", "false")   # str where bool is required
     # an enum still fails closed on "": its "off" state is a named choice, never empty
     with pytest.raises(GieBindingError):
         gie_validate_binding_value(TRUNK, "flowcontrol_receive", "")
     # and the legitimate inputs still pass
     assert gie_validate_binding_value(TRUNK, "acl_filter", "MY_ACL") == "MY_ACL"
     assert gie_validate_binding_value(TRUNK, "flowcontrol_receive", "on") == "on"
-    assert gie_validate_binding_value(TRUNK, "disable_lldp", True) is True
+    assert gie_validate_binding_value(TRUNK, "disable_lldp_transmit", True) is True
     # the clear path: "" on a plain string is accepted and means "remove the value"
     assert gie_validate_binding_value(TRUNK, "acl_filter", "") == ""
 

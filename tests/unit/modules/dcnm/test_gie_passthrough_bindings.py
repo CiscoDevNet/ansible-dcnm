@@ -69,8 +69,8 @@ def _wire(value):
 NINE = (
     (TRUNK, "guard_mode", "GUARD_MODE", "root"),
     (PC_TRUNK, "guard_mode", "GUARD_MODE", "loop"),
-    (ACCESS, "disable_lldp", "DISABLE_LLDP", True),
-    (TRUNK, "disable_lldp", "DISABLE_LLDP", False),
+    (ACCESS, "disable_lldp_transmit", "DISABLE_LLDP_TRANSMIT", True),
+    (TRUNK, "disable_lldp_transmit", "DISABLE_LLDP_TRANSMIT", False),
     (ACCESS, "acl_filter", "ACL_FILTER", "ACL_A"),
     (TRUNK, "acl_filter", "ACL_FILTER", "ACL_B"),
     (PC_ACCESS, "acl_filter", "ACL_FILTER", "ACL_C"),
@@ -103,10 +103,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 45
-    assert len(set(keys)) == 45, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 58
+    assert len(set(keys)) == 58, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 45, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 58, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -132,7 +132,7 @@ def test_reviewed_types_and_constraints_match_the_registry():
     assert gm["default_template"] == "no"
     assert isinstance(gm["default_template"], str), "YAML 1.1 'no' must stay a string"
 
-    lldp = resolve_binding(ACCESS, "disable_lldp")
+    lldp = resolve_binding(ACCESS, "disable_lldp_transmit")
     assert lldp["type"] == "boolean"
     assert lldp["default_template"] is False
 
@@ -147,8 +147,8 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
     expected = {
         (TRUNK, "guard_mode"): ("eth", "trunk"),
         (PC_TRUNK, "guard_mode"): ("pc", "trunk"),
-        (ACCESS, "disable_lldp"): ("eth", "access"),
-        (TRUNK, "disable_lldp"): ("eth", "trunk"),
+        (ACCESS, "disable_lldp_transmit"): ("eth", "access"),
+        (TRUNK, "disable_lldp_transmit"): ("eth", "trunk"),
         (ACCESS, "acl_filter"): ("eth", "access"),
         (TRUNK, "acl_filter"): ("eth", "trunk"),
         (PC_ACCESS, "acl_filter"): ("pc", "access"),
@@ -164,7 +164,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 45
+    assert len(gen.compile_rows(rows)) == 58
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -213,7 +213,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 45
+    assert len(gen.compile_rows(rows)) == 58
 
 
 # ------------------------------------------------------------------ positive transport
@@ -239,11 +239,11 @@ def test_every_guard_mode_choice_transports():
 def test_disable_lldp_transports_both_booleans():
     for parent in (ACCESS, TRUNK):
         for value, wire in ((True, "true"), (False, "false")):
-            add, err = gie_contribute_nvpairs(parent, {"disable_lldp": value}, SUPPORTED)
-            assert err is None and add == {"DISABLE_LLDP": wire}
+            add, err = gie_contribute_nvpairs(parent, {"disable_lldp_transmit": value}, SUPPORTED)
+            assert err is None and add == {"DISABLE_LLDP_TRANSMIT": wire}
             # Lowercase JSON spelling, which is what the template DSL tests against --
             # not Python's str(True) == "True".
-            assert add["DISABLE_LLDP"] == wire != str(value)
+            assert add["DISABLE_LLDP_TRANSMIT"] == wire != str(value)
 
 
 def test_acl_filter_accepts_boundary_lengths():
@@ -256,14 +256,14 @@ def test_acl_filter_accepts_boundary_lengths():
 def test_multiple_new_keys_on_one_parent_contribute_together():
     add, err = gie_contribute_nvpairs(
         TRUNK,
-        {"guard_mode": "root", "disable_lldp": True, "acl_filter": "ACL_X",
+        {"guard_mode": "root", "disable_lldp_transmit": True, "acl_filter": "ACL_X",
          "flowcontrol_receive": "on"},
         SUPPORTED,
     )
     assert err is None
     assert add == {
         "GUARD_MODE": "root",
-        "DISABLE_LLDP": "true",
+        "DISABLE_LLDP_TRANSMIT": "true",
         "ACL_FILTER": "ACL_X",
         "FLOWCONTROL_RECEIVE": "on",
     }
@@ -292,14 +292,14 @@ def test_prof_spec_gains_no_default_and_only_for_explicit_keys():
 
     spec = {}
     gie_extend_prof_spec(
-        spec, TRUNK, {"guard_mode": "root", "disable_lldp": True, "acl_filter": "A"}
+        spec, TRUNK, {"guard_mode": "root", "disable_lldp_transmit": True, "acl_filter": "A"}
     )
-    assert set(spec) == {"guard_mode", "disable_lldp", "acl_filter"}
+    assert set(spec) == {"guard_mode", "disable_lldp_transmit", "acl_filter"}
     for entry in spec.values():
         assert "default" not in entry, "a default would author intent on omission"
     assert spec["guard_mode"]["type"] == "str"
     assert spec["guard_mode"]["choices"] == list(GUARD_VALUES)
-    assert spec["disable_lldp"]["type"] == "bool"
+    assert spec["disable_lldp_transmit"]["type"] == "bool"
     assert spec["acl_filter"]["type"] == "str"
     assert "choices" not in spec["acl_filter"]
 
@@ -320,7 +320,7 @@ def test_enum_rejects_non_string_and_unknown_choices():
 def test_boolean_rejects_strings_and_ints():
     for bad in ("true", "false", "yes", 1, 0, None, [], {}):
         with pytest.raises(GieBindingError):
-            gie_validate_binding_value(ACCESS, "disable_lldp", bad)
+            gie_validate_binding_value(ACCESS, "disable_lldp_transmit", bad)
 
 
 def test_string_rejects_non_strings():
@@ -357,7 +357,7 @@ def test_errors_never_echo_the_rejected_value():
     probes = [
         (TRUNK, "guard_mode", "marker-enum-value"),
         (ACCESS, "acl_filter", "marker-acl-name" + "B" * 60),
-        (ACCESS, "disable_lldp", "marker-not-a-bool"),
+        (ACCESS, "disable_lldp_transmit", "marker-not-a-bool"),
     ]
     for parent, pk, bad in probes:
         try:
@@ -374,7 +374,7 @@ def test_invalid_explicit_value_fails_before_any_nvpair_is_produced():
 
 
 # ------------------------------------------------------------------ wrong parent
-@pytest.mark.parametrize("pk", ["guard_mode", "disable_lldp", "acl_filter"])
+@pytest.mark.parametrize("pk", ["guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter"])
 def test_new_keys_are_generically_guarded(pk):
     assert pk in gie_guarded_keys()
 
@@ -390,9 +390,13 @@ def test_wrong_parent_is_reported_for_each_new_key():
         # the controller, not assumed from its trunk sibling.
         ("guard_mode", [ACCESS, PC_ACCESS, PC_DOT1Q, "int_routed_host",
                         "int_vpc_access_host", None]),
-        # int_routed_host declares DISABLE_LLDP and ACL_FILTER and is reachable, so it is a
-        # real coverage gap rather than a template property. It stays here until registered.
-        ("disable_lldp", ["int_routed_host", None]),
+        # disable_lldp is no longer here: int_routed_host declares it and it is now registered
+        # (slice 0b_16), so the guard must ACCEPT it -- asserted in test_gie_routed_bindings.
+        #
+        # acl_filter stays, but the reason was wrong. int_routed_host does NOT declare
+        # ACL_FILTER -- it declares IPV4_ACL_IN, a different nvPair with a different child
+        # (interface_ip_access_group_in_11_1). So this is a template property after all, not a
+        # coverage gap: acl_filter is correctly rejected here and always will be.
         ("acl_filter", ["int_routed_host", LOOPBACK, None]),
     ]
     for pk, parents in cases:
@@ -445,7 +449,8 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("FLOWCONTROL_SEND", "flowcontrol_send"),
         ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
         ("GUARD_MODE", "guard_mode"),
-        ("DISABLE_LLDP", "disable_lldp"),
+        ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+        ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
         ("ACL_FILTER", "acl_filter"),
         ("DISABLE_QOS_STATS", "disable_qos_stats"),
         ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
@@ -456,7 +461,8 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
         ("FLOWCONTROL_SEND", "flowcontrol_send"),
         ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
-        ("DISABLE_LLDP", "disable_lldp"),
+        ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+        ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
         ("ACL_FILTER", "acl_filter"),
         ("DISABLE_QOS_STATS", "disable_qos_stats"),
         ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
@@ -467,7 +473,8 @@ def test_carry_forward_covers_every_new_passthrough_binding():
     } == {
         ("GUARD_MODE", "guard_mode"),
         ("ACL_FILTER", "acl_filter"),
-        ("DISABLE_LLDP", "disable_lldp"),
+        ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
+        ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
         ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
         ("DISABLE_QOS_STATS", "disable_qos_stats"),
         ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
@@ -482,7 +489,7 @@ def test_carry_forward_accepts_only_exact_authoritative_have_values():
         ) == value
     for value in (True, False):
         assert gie_validate_binding_value(
-            ACCESS, "disable_lldp", value, value_source="have"
+            ACCESS, "disable_lldp_transmit", value, value_source="have"
         ) is value
     assert gie_validate_binding_value(
         ACCESS, "acl_filter", "ACL_OK", value_source="have"
@@ -507,7 +514,7 @@ def test_have_accepts_the_two_encodings_ndfc_actually_returns():
     assert gie_validate_binding_value(TRUNK, "acl_filter", "", value_source="have") == ""
     for value in ("true", "false"):
         assert gie_validate_binding_value(
-            ACCESS, "disable_lldp", value, value_source="have"
+            ACCESS, "disable_lldp_transmit", value, value_source="have"
         ) == value
 
 
@@ -522,7 +529,7 @@ def test_malformed_have_fails_before_diff_or_write():
         # so an enum that comes back blank is still treated as malformed.
         (TRUNK, "guard_mode", ""),
         # A boolean accepts "true"/"false" as strings, but not an int.
-        (ACCESS, "disable_lldp", 1),
+        (ACCESS, "disable_lldp_transmit", 1),
         (ACCESS, "acl_filter", True),
         (ACCESS, "acl_filter", "C" * 65),
     ]
@@ -544,7 +551,7 @@ def test_have_rejection_is_labelled_as_a_controller_value():
 def test_keymap_carries_every_new_nvpair():
     km = gie_nvpair_keymap()
     assert km["GUARD_MODE"] == "guard_mode"
-    assert km["DISABLE_LLDP"] == "disable_lldp"
+    assert km["DISABLE_LLDP_TRANSMIT"] == "disable_lldp_transmit"
     assert km["ACL_FILTER"] == "acl_filter"
     assert km["FLOWCONTROL_RECEIVE"] == "flowcontrol_receive"
     assert km["FLOWCONTROL_SEND"] == "flowcontrol_send"
@@ -552,16 +559,17 @@ def test_keymap_carries_every_new_nvpair():
     assert km["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"] == "enable_ospf_auth_message_digest"
     assert km["OSPF_AUTH_KEY_ID"] == "ospf_auth_key_id"
     assert km["OSPF_AUTH_KEY"] == "ospf_auth_key"
-    assert len(km) == 11
+    assert len(km) == 14
 
 
 def test_all_registered_keys():
     assert gie_all_registered_keys() == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "enable_ospf_auth_message_digest",
-        "guard_mode", "disable_lldp", "acl_filter",
+        "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
         "ospf_auth_key_id", "ospf_auth_key",
+        "disable_bfd_echo", "ipv4_acl_in",
     }
 
 
