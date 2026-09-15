@@ -773,12 +773,19 @@ options:
               current controller value is left untouched.
             type: str
             choices: ['root', 'none', 'loop', 'no']
-          disable_lldp:
+          disable_lldp_transmit:
             description:
-            - Disable LLDP transmit and receive on the interface. This option
-              is applicable only when mode is trunk or access. Explicit-only,
-              no default; when omitted the current controller value is left
-              untouched.
+            - Disable LLDP transmit on the interface. Replaces the earlier
+              disable_lldp, which acted on both directions at once; the two
+              directions are now independent. Explicit-only, no default; when
+              omitted the current controller value is left untouched.
+            type: bool
+          disable_lldp_receive:
+            description:
+            - Disable LLDP receive on the interface. See disable_lldp_transmit;
+              setting one without the other emits a single CLI line.
+              Explicit-only, no default; when omitted the current controller
+              value is left untouched.
             type: bool
           acl_filter:
             description:
@@ -3844,6 +3851,9 @@ class DcnmIntf:
         # EXPLICITLY (no default), so an omitted key stays dropped exactly as before.
         gie_extend_prof_spec(eth_prof_spec_trunk, "int_trunk_host", cfg[0]["profile"])
         gie_extend_prof_spec(eth_prof_spec_access, "int_access_host", cfg[0]["profile"])
+        gie_extend_prof_spec(
+            eth_prof_spec_routed_host, "int_routed_host", cfg[0]["profile"]
+        )
 
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(

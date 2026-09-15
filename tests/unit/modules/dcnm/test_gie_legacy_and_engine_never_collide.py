@@ -39,6 +39,9 @@ BUILDERS = {
     "dcnm_intf_get_eth_payload": (
         "int_access_host",
         "int_trunk_host",
+        # int_routed_host rides the same builder: the eth payload path serves every eth mode,
+        # and gie_contribute_nvpairs sits at method level there, not inside a mode branch.
+        "int_routed_host",
     ),
     "dcnm_intf_get_pc_payload": (
         "int_port_channel_access_host",

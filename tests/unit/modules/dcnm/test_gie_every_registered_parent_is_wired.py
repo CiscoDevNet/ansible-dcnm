@@ -95,11 +95,11 @@ def test_the_vpc_specs_actually_gain_the_registered_keys():
     """
     for parent, expected in (
         ("int_vpc_trunk_host",
-         {"guard_mode", "disable_lldp", "acl_filter", "spanning_tree_port_type",
+         {"guard_mode", "disable_lldp_transmit", "acl_filter", "spanning_tree_port_type",
           "disable_qos_stats", "disable_queuing_stats"}),
         # access does not declare GUARD_MODE, so guard_mode must NOT appear here.
         ("int_vpc_access_host",
-         {"disable_lldp", "acl_filter", "spanning_tree_port_type",
+         {"disable_lldp_transmit", "acl_filter", "spanning_tree_port_type",
           "disable_qos_stats", "disable_queuing_stats"}),
     ):
         spec = {"mode": {"required": True, "type": "str"}}

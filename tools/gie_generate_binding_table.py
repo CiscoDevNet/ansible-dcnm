@@ -41,9 +41,7 @@ COMMITTED_BINDINGS = {
     ("int_trunk_host", "GUARD_MODE"): "guard_mode",
     ("int_port_channel_trunk_host", "GUARD_MODE"): "guard_mode",
 
-    ("int_access_host", "DISABLE_LLDP"): "disable_lldp",
-    ("int_trunk_host", "DISABLE_LLDP"): "disable_lldp",
-
+    
     ("int_access_host", "ACL_FILTER"): "acl_filter",
     ("int_trunk_host", "ACL_FILTER"): "acl_filter",
     ("int_port_channel_access_host", "ACL_FILTER"): "acl_filter",
@@ -69,9 +67,6 @@ COMMITTED_BINDINGS = {
     ("int_port_channel_trunk_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
     ("int_port_channel_dot1q_tunnel_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
 
-    ("int_port_channel_access_host", "DISABLE_LLDP"): "disable_lldp",
-    ("int_port_channel_trunk_host", "DISABLE_LLDP"): "disable_lldp",
-    ("int_port_channel_dot1q_tunnel_host", "DISABLE_LLDP"): "disable_lldp",
 
     ("int_port_channel_access_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
     ("int_port_channel_trunk_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
@@ -98,8 +93,6 @@ COMMITTED_BINDINGS = {
     ("int_vpc_trunk_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
     ("int_vpc_access_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
 
-    ("int_vpc_trunk_host", "DISABLE_LLDP"): "disable_lldp",
-    ("int_vpc_access_host", "DISABLE_LLDP"): "disable_lldp",
 
     ("int_vpc_trunk_host", "ACL_FILTER"): "acl_filter",
     ("int_vpc_access_host", "ACL_FILTER"): "acl_filter",
@@ -112,6 +105,54 @@ COMMITTED_BINDINGS = {
 
     ("int_vpc_trunk_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
     ("int_vpc_access_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+
+    # int_routed_host -- the first non-switchport parent after the fabric loopback.
+    #
+    # Four of these six delegate to a child template (interface_lldp_disable,
+    # bfd_no_echo_interface, interface_ip_arp_timeout_11_1,
+    # interface_ip_access_group_in_11_1), all verified present on 12.6.0.267. Per the
+    # precedent recorded above for int_port_channel_trunk_host::DISABLE_LLDP, delegation does
+    # not decide the mechanism: the module writes one parent nvPair, so these stay passthrough.
+    ("int_routed_host", "DISABLE_BFD_ECHO"): "disable_bfd_echo",
+
+    # IsShow="ENABLE_QOS==true" / QUEUING_POLICY!='' -- these only append `no-stats` to the
+    # service-policy line the QoS scaffold emits. Unlike the dot1q port-channel, the scaffold
+    # is native to eth_prof_spec_routed_host, so they are reachable from the data model.
+    ("int_routed_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
+    ("int_routed_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+
+    # ARP_TIMEOUT is deliberately NOT committed yet. int_subif and int_vlan declare it too and
+    # both are reachable (pol_types "sub_int_subint" and "svi_vlan"), so committing it on the
+    # routed parent alone would make the module answer "not supported on this interface" for
+    # the other two -- which is false, and is exactly the failure this table exists to prevent.
+    # It goes in as one lot across the three parents, with its own prof_spec work and its own
+    # live run. The generator enforces this: it rejects a row that claims a committed public
+    # profile_key from an uncommitted parent rather than skipping it silently.
+    ("int_routed_host", "IPV4_ACL_IN"): "ipv4_acl_in",
+    # DISABLE_LLDP se retiro: la entrega del 14sep2026 lo elimina de los ocho parents y lo
+    # parte en dos campos independientes. No es un rename -- el viejo apagaba las dos
+    # direcciones juntas, estos permiten apagar solo una. Ver registry_slice_0b_17.
+    #
+    # Dejar el binding viejo registrado seria peor que no tenerlo: un PTI acepta nvPairs que su
+    # template no declara, asi que DISABLE_LLDP seguiria viajando y viendose bien por API, sin
+    # producir CLI nunca.
+    ("int_access_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
+    ("int_trunk_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
+    ("int_routed_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
+    ("int_port_channel_access_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
+    ("int_port_channel_trunk_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
+    ("int_port_channel_dot1q_tunnel_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
+    ("int_vpc_access_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
+    ("int_vpc_trunk_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
+
+    ("int_access_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
+    ("int_trunk_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
+    ("int_routed_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
+    ("int_port_channel_access_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
+    ("int_port_channel_trunk_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
+    ("int_port_channel_dot1q_tunnel_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
+    ("int_vpc_access_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
+    ("int_vpc_trunk_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.

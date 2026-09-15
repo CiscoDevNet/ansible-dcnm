@@ -169,13 +169,13 @@ class TestBindingRawTypeOnModulePath(A161Base):
 
     def test_disable_lldp_string_false_is_rejected_not_coerced_to_False(self):
         result = self.run_config("eth_access_disable_lldp_string_false", failed=True)
-        self._assert_rejected_without_echo(result, "disable_lldp", ["'false'", '"false"'])
+        self._assert_rejected_without_echo(result, "disable_lldp_transmit", ["'false'", '"false"'])
         assert "native boolean" in result["msg"]
         self.assert_no_mutating_calls()
 
     def test_disable_lldp_int_one_is_rejected_not_coerced_to_True(self):
         result = self.run_config("eth_access_disable_lldp_int_one", failed=True)
-        self._assert_rejected_without_echo(result, "disable_lldp", [])
+        self._assert_rejected_without_echo(result, "disable_lldp_transmit", [])
         assert "native boolean" in result["msg"]
         self.assert_no_mutating_calls()
 
@@ -248,7 +248,7 @@ class TestBindingPayloadOnModulePath(A161Base):
     # emitting a native bool there made the field non-idempotent on a live controller.
     def test_eth_trunk_disable_lldp_true_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_trunk_disable_lldp_true", changed=True)
-        value = self._assert_nvpair(result, "Ethernet1/30", "DISABLE_LLDP", "true")
+        value = self._assert_nvpair(result, "Ethernet1/30", "DISABLE_LLDP_TRANSMIT", "true")
         assert isinstance(value, str)
 
     def test_eth_access_disable_lldp_false_reaches_the_parent_nvpair(self):
@@ -257,7 +257,7 @@ class TestBindingPayloadOnModulePath(A161Base):
         'false' is a value here, never an omission, so the payload must carry the key.
         """
         result = self.run_config("eth_access_disable_lldp_false", changed=True)
-        value = self._assert_nvpair(result, "Ethernet1/31", "DISABLE_LLDP", "false")
+        value = self._assert_nvpair(result, "Ethernet1/31", "DISABLE_LLDP_TRANSMIT", "false")
         assert isinstance(value, str)
 
     def test_eth_trunk_acl_filter_reaches_the_parent_nvpair(self):
@@ -312,13 +312,13 @@ class TestBindingPayloadOnModulePath(A161Base):
         nvpairs = merged["Ethernet1/30"]
         assert nvpairs, "empty nvPairs would make the absence assertions meaningless"
         assert "INTF_NAME" in nvpairs or "ADMIN_STATE" in nvpairs, sorted(nvpairs)
-        for nvpair in ("GUARD_MODE", "DISABLE_LLDP", "ACL_FILTER"):
+        for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "ACL_FILTER"):
             assert nvpair not in nvpairs, (
                 f"omission produced {nvpair}={nvpairs.get(nvpair)!r}"
             )
         # And nothing reached the wire carrying them either.
         for sent in self.sent_nvpairs().values():
-            for nvpair in ("GUARD_MODE", "DISABLE_LLDP", "ACL_FILTER"):
+            for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "ACL_FILTER"):
                 assert nvpair not in sent
 
 
@@ -356,7 +356,7 @@ class TestBindingWrongParentOnModulePath(A161Base):
         result = self.run_config("pc_access_disable_lldp", changed=True)
         merged = self.diff_nvpairs(result)
         ifname = next(iter(merged))
-        assert merged[ifname]["DISABLE_LLDP"] == "true"
+        assert merged[ifname]["DISABLE_LLDP_TRANSMIT"] == "true"
 
     def test_acl_filter_raw_type_on_pc_also_fails_before_write(self):
         result = self.run_config("pc_trunk_acl_filter_bool", failed=True)

@@ -365,9 +365,12 @@ class DcnmInterfaceQuerySchema(BaseModel):
             "flowcontrol_send": "FLOWCONTROL_SEND",
             "spanning_tree_port_type": "SPANNING_TREE_PORT_TYPE",
             # Simple passthrough bindings. The generic bool->str conversion below
-            # produces the "true"/"false" strings NDFC echoes back for disable_lldp.
+            # produces the "true"/"false" strings NDFC echoes back for these.
             "guard_mode": "GUARD_MODE",
-            "disable_lldp": "DISABLE_LLDP",
+            # DISABLE_LLDP was removed by the 14sep2026 template batch and split into two
+            # independent fields, so transmit and receive can be turned off separately.
+            "disable_lldp_transmit": "DISABLE_LLDP_TRANSMIT",
+            "disable_lldp_receive": "DISABLE_LLDP_RECEIVE",
             "acl_filter": "ACL_FILTER",
             # QoS statistics slice. Both are the " no-stats" suffix of the service-policy
             # line their dependency emits, never a CLI line of their own.

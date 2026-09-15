@@ -77,16 +77,21 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     """
     assert BOOL_PASSTHROUGH, "no boolean passthrough bindings -- the tests below run on nothing"
     assert {k for parent, k, nvpair in BOOL_PASSTHROUGH} == {
-        "disable_lldp", "disable_qos_stats", "disable_queuing_stats",
+        "disable_lldp_transmit", "disable_lldp_receive", "disable_qos_stats", "disable_queuing_stats", "disable_bfd_echo",
     }
-    # Three boolean fields across the two eth parents, the three port-channel host parents and
-    # the two vPC host parents: 3 x 7 = 21.
+    # Three boolean fields across the two eth parents, the three port-channel host parents, the
+    # two vPC host parents and now int_routed_host: 3 x 8 = 24, plus disable_bfd_echo, which
+    # only int_routed_host declares: 25.
+    #
+    # int_routed_host emits no CLI of its own for any of them -- every value is handed to a
+    # child template. Same reasoning as the vPC parents below: that does not exempt it from the
+    # wire form, because the value lands in the routed parent's own nvPairs first.
     #
     # The vPC parents emit no CLI of their own -- they hand the value to a child template. They
     # are still passthrough and therefore still need the wire form: the value lands in the vPC
     # parent's own nvPairs first, and nvPairs is a string-valued map. A native bool left there
     # would reproduce exactly the non-convergence this file exists to prevent.
-    assert len(BOOL_PASSTHROUGH) == 21
+    assert len(BOOL_PASSTHROUGH) == 33
 
 
 # ------------------------------------------------------- what the engine emits --
@@ -154,7 +159,7 @@ def test_omitted_boolean_still_contributes_nothing():
     """Serialization must not resurrect the explicit-only contract."""
     add, err = gie_contribute_nvpairs(TRUNK, {"description": "x"}, VERSION)
     assert err is None
-    assert "DISABLE_LLDP" not in add
+    assert "DISABLE_LLDP_TRANSMIT" not in add
 
 
 # ------------------------------------------- what the operator actually observes --
