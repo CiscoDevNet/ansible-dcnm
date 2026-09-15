@@ -58,7 +58,7 @@
       "deploy": false,
       "profile": {
         "mode": "trunk",
-        "disable_lldp": true
+        "disable_lldp_transmit": true
       }
     }
   ],
@@ -86,7 +86,7 @@
       "deploy": false,
       "profile": {
         "mode": "access",
-        "disable_lldp": false
+        "disable_lldp_transmit": false
       }
     }
   ],
@@ -127,7 +127,7 @@
       "deploy": false,
       "profile": {
         "mode": "access",
-        "disable_lldp": "false"
+        "disable_lldp_transmit": "false"
       }
     }
   ],
@@ -141,7 +141,7 @@
       "deploy": false,
       "profile": {
         "mode": "access",
-        "disable_lldp": 1
+        "disable_lldp_transmit": 1
       }
     }
   ],
@@ -272,7 +272,7 @@
         "members": [
           "Ethernet1/30"
         ],
-        "disable_lldp": true
+        "disable_lldp_transmit": true
       }
     }
   ],
