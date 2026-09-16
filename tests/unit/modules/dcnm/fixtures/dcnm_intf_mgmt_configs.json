@@ -1,0 +1,154 @@
+{
+    "mock_fab_inv_data": {
+        "192.168.1.108": {
+            "logicalName": "n9kv-108",
+            "serialNumber": "SAL1819SAN8",
+            "isVpcConfigured": "True",
+            "vpcDomain": 1,
+            "switchRole": "Leaf",
+            "managable": "True"
+        },
+        "192.168.1.109": {
+            "logicalName": "n9kv-109",
+            "serialNumber": "FOX1821H035",
+            "isVpcConfigured": "True",
+            "vpcDomain": 1,
+            "switchRole": "Leaf",
+            "managable": "True"
+        }
+    },
+    "mock_ip_sn": {
+        "192.168.1.109": "FOX1821H035",
+        "192.168.1.108": "SAL1819SAN8"
+    },
+    "mock_vpc_sno": {
+        "192.168.1.108": "FOX1821H035~SAL1819SAN8",
+        "192.168.1.109": "FOX1821H035~SAL1819SAN8"
+    },
+    "mock_monitor_true_resp": {
+        "RETURN_CODE": 200,
+        "DATA": {
+            "readonly": "True"
+        }
+    },
+    "mock_monitor_false_resp": {
+        "RETURN_CODE": 200,
+        "DATA": {
+            "readonly": "False"
+        }
+    },
+    "mock_vpc_resp": {
+        "MESSAGE": "OK",
+        "REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+        "DATA": {
+            "vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+        },
+        "RETURN_CODE": 200,
+        "METHOD": "GET"
+    },
+    "mock_succ_resp": {
+        "DATA": {},
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+        "RETURN_CODE": 200
+    },
+    "mock_deploy_resp": {
+        "DATA": {},
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface/deploy",
+        "RETURN_CODE": 200
+    },
+    "mgmt_merged_config": [
+        {
+            "switch": [
+                "192.168.1.108"
+            ],
+            "profile": {
+                "mode": "mgmt",
+                "admin_state": true,
+                "enable_cdp": true,
+                "description": "out of band management",
+                "cmds": [
+                    "ip address 192.168.1.108/24"
+                ]
+            },
+            "type": "mgmt",
+            "name": "mgmt0",
+            "deploy": "True"
+        }
+    ],
+    "mgmt_replaced_config": [
+        {
+            "switch": [
+                "192.168.1.108"
+            ],
+            "profile": {
+                "mode": "mgmt",
+                "admin_state": false,
+                "enable_cdp": false,
+                "description": "out of band management - replaced",
+                "cmds": [
+                    "ip address 192.168.1.208/24"
+                ]
+            },
+            "type": "mgmt",
+            "name": "mgmt0",
+            "deploy": "True"
+        }
+    ],
+    "mgmt_deleted_config": [
+        {
+            "switch": [
+                "192.168.1.108"
+            ],
+            "name": "mgmt0"
+        }
+    ],
+    "mgmt_query_config": [
+        {
+            "switch": [
+                "192.168.1.108"
+            ],
+            "name": "mgmt0"
+        }
+    ],
+    "mgmt_preserve_config": [
+        {
+            "switch": [
+                "192.168.1.108"
+            ],
+            "profile": {
+                "mode": "mgmt",
+                "admin_state": true,
+                "enable_cdp": true,
+                "description": "updated description",
+                "cmds": [
+                    "ip address 192.168.1.108/24"
+                ]
+            },
+            "type": "mgmt",
+            "name": "mgmt0",
+            "deploy": "False"
+        }
+    ],
+    "mgmt_invalid_mode_config": [
+        {
+            "switch": [
+                "192.168.1.108"
+            ],
+            "profile": {
+                "mode": "routed",
+                "admin_state": true,
+                "description": "invalid mode for a management interface",
+                "cmds": [
+                    "ip address 192.168.1.108/24"
+                ]
+            },
+            "type": "mgmt",
+            "name": "mgmt0",
+            "deploy": "True"
+        }
+    ]
+}

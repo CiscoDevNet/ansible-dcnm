@@ -18,6 +18,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
+import json
 from unittest.mock import Mock, patch
 
 # from units.compat.mock import patch
@@ -3742,6 +3743,136 @@ class TestDcnmIntfModule(TestDcnmModule):
                 playbook_deployed_data,
             ]
 
+    def load_mgmt_fixtures(self):
+
+        if "_mgmt_merged_new" in self._testMethodName:
+
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+            playbook_deployed_data = self.have_all_payloads_data.get(
+                "deployed_payloads"
+            )
+            mgmt_bulk_sal_empty = self.build_bulk_payload()
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                mgmt_bulk_sal_empty,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                playbook_deployed_data,
+            ]
+
+        if "_mgmt_merged_idempotent" in self._testMethodName:
+
+            playbook_mgmt_intf1 = self.payloads_data.get(
+                "mgmt_merged_payloads_1"
+            )
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+            mgmt_bulk_sal = self.build_bulk_payload(playbook_mgmt_intf1)
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                mgmt_bulk_sal,
+                playbook_have_all_data,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_mgmt_replaced_existing" in self._testMethodName:
+
+            playbook_mgmt_intf1 = self.payloads_data.get(
+                "mgmt_merged_payloads_1"
+            )
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+            playbook_deployed_data = self.have_all_payloads_data.get(
+                "deployed_payloads"
+            )
+            mgmt_bulk_sal = self.build_bulk_payload(playbook_mgmt_intf1)
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                mgmt_bulk_sal,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                playbook_deployed_data,
+            ]
+
+        if "_mgmt_deleted_existing" in self._testMethodName:
+
+            playbook_mgmt_intf1 = self.payloads_data.get(
+                "mgmt_merged_payloads_1"
+            )
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+            mgmt_bulk_sal = self.build_bulk_payload(playbook_mgmt_intf1)
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                mgmt_bulk_sal,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if "_mgmt_query" in self._testMethodName:
+
+            playbook_mgmt_query = self.payloads_data.get(
+                "mgmt_query_payloads"
+            )
+
+            # 'query' state performs no inventory or monitoring calls
+            self.run_dcnm_send.side_effect = [
+                playbook_mgmt_query,
+                playbook_mgmt_query,
+            ]
+
+        if "_mgmt_preserve" in self._testMethodName:
+
+            playbook_mgmt_bst = self.payloads_data.get("mgmt_bst_payloads")
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+            mgmt_bulk_sal = self.build_bulk_payload(playbook_mgmt_bst)
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                mgmt_bulk_sal,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
     # -------------------------- END-FIXTURES --------------------------
 
     def load_fixtures(self, response=None, device=""):
@@ -3753,6 +3884,12 @@ class TestDcnmIntfModule(TestDcnmModule):
             self.run_dcnm_version_supported.side_effect = [
                 (12, "12.4.1.245")
             ]
+        elif (
+            "_mgmt_" in self._testMethodName
+            and "unsupported" not in self._testMethodName
+        ):
+            # 'int_mgmt' exists on NDFC/DCNM 12 and above only
+            self.run_dcnm_version_supported.side_effect = [12]
         else:
             self.run_dcnm_version_supported.side_effect = [11]
 
@@ -3801,6 +3938,10 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.load_missing_members_fixtures()
         self.load_query_state_fixtures()
         self.load_intf_misc_fixtures()
+
+        # Management interface side-effects are loaded last so that they take
+        # precedence over the generic '_query' state fixtures
+        self.load_mgmt_fixtures()
 
     # -------------------------- GEN-INTF --------------------------
 
@@ -5824,6 +5965,334 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.assertEqual(
                     (intf["ifName"].lower() in ovr_if_names), True
                 )
+
+    # -------------------------- MGMT --------------------------
+
+    def load_mgmt_playbook_data(self, config_key):
+
+        self.config_data = loadPlaybookData("dcnm_intf_mgmt_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_mgmt_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        self.playbook_config = self.config_data.get(config_key)
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+    def test_dcnm_intf_mgmt_get_if_name(self):
+
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+
+        for name in ["mgmt0", "Mgmt0", "management0", "MGMT0"]:
+            self.assertEqual(
+                dcnm_intf.dcnm_intf_get_if_name(name, "mgmt"),
+                ("Mgmt0", "0"),
+            )
+
+    def test_dcnm_intf_mgmt_payload(self):
+
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.int_types = {"mgmt": "INTERFACE_MGMT"}
+        dcnm_intf.pol_types = {12: {"mgmt_mgmt": "int_mgmt"}}
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.fabric = "test_fabric"
+        dcnm_intf.ip_sn = {"192.168.1.108": "SAL1819SAN8"}
+
+        delem = {
+            "name": "mgmt0",
+            "type": "mgmt",
+            "deploy": True,
+            "profile": {
+                "mode": "mgmt",
+                "admin_state": True,
+                "enable_cdp": True,
+                "description": "out of band management",
+                "cmds": ["ip address 192.168.1.108/24"],
+            },
+        }
+
+        payload = dcnm_intf.dcnm_get_intf_payload(delem, "192.168.1.108")
+
+        self.assertEqual(payload["policy"], "int_mgmt")
+        self.assertEqual(payload["interfaceType"], "INTERFACE_MGMT")
+        self.assertEqual(payload["deploy"], True)
+
+        intf = payload["interfaces"][0]
+        self.assertEqual(intf["ifName"], "Mgmt0")
+        self.assertEqual(intf["interfaceType"], "INTERFACE_MGMT")
+        self.assertEqual(intf["serialNumber"], "SAL1819SAN8")
+        self.assertEqual(intf["fabricName"], "test_fabric")
+
+        self.assertEqual(
+            intf["nvPairs"],
+            {
+                "INTF_NAME": "Mgmt0",
+                "DESC": "out of band management",
+                "CONF": "ip address 192.168.1.108/24",
+                "ADMIN_STATE": "true",
+                "CDP_ENABLE": "true",
+            },
+        )
+
+        # The int_mgmt template defines neither of these
+        self.assertNotIn("SPEED", intf["nvPairs"])
+        self.assertNotIn("skipResourceCheck", payload)
+
+    def test_dcnm_intf_mgmt_payload_no_cmds(self):
+
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.int_types = {"mgmt": "INTERFACE_MGMT"}
+        dcnm_intf.pol_types = {12: {"mgmt_mgmt": "int_mgmt"}}
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.fabric = "test_fabric"
+        dcnm_intf.ip_sn = {"192.168.1.108": "SAL1819SAN8"}
+
+        delem = {
+            "name": "mgmt0",
+            "type": "mgmt",
+            "deploy": True,
+            "profile": {
+                "mode": "mgmt",
+                "admin_state": False,
+                "enable_cdp": False,
+                "description": "",
+                "cmds": None,
+            },
+        }
+
+        payload = dcnm_intf.dcnm_get_intf_payload(delem, "192.168.1.108")
+        nv_pairs = payload["interfaces"][0]["nvPairs"]
+
+        self.assertEqual(nv_pairs["CONF"], "")
+        self.assertEqual(nv_pairs["DESC"], "")
+        self.assertEqual(nv_pairs["ADMIN_STATE"], "false")
+        self.assertEqual(nv_pairs["CDP_ENABLE"], "false")
+
+    def test_dcnm_intf_mgmt_extract_if_name(self):
+
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+
+        for name in ["mgmt0", "Mgmt0", "management0"]:
+            self.assertEqual(
+                dcnm_intf.dcnm_extract_if_name({"name": name}),
+                ("Mgmt0", "INTERFACE_MGMT"),
+            )
+
+    def test_dcnm_intf_mgmt_merged_new(self):
+
+        # Use Version 12 For This Test Case
+        self.run_dcnm_version_supported.side_effect = [12]
+
+        self.load_mgmt_playbook_data("mgmt_merged_config")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+
+        payload = result["diff"][0]["merged"][0]
+        self.assertEqual(payload["policy"], "int_mgmt")
+
+        intf = payload["interfaces"][0]
+        self.assertEqual(intf["ifName"], "Mgmt0")
+        self.assertEqual(intf["interfaceType"], "INTERFACE_MGMT")
+        self.assertEqual(
+            intf["nvPairs"]["CONF"], "ip address 192.168.1.108/24"
+        )
+        self.assertEqual(intf["nvPairs"]["ADMIN_STATE"], "true")
+        self.assertEqual(intf["nvPairs"]["CDP_ENABLE"], "true")
+
+    def test_dcnm_intf_mgmt_merged_idempotent(self):
+
+        # Use Version 12 For This Test Case
+        self.run_dcnm_version_supported.side_effect = [12]
+
+        self.load_mgmt_playbook_data("mgmt_merged_config")
+
+        for cfg in self.playbook_config:
+            cfg["deploy"] = "False"
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["merged"]), 0)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+
+    def test_dcnm_intf_mgmt_replaced_existing(self):
+
+        # Use Version 12 For This Test Case
+        self.run_dcnm_version_supported.side_effect = [12]
+
+        self.load_mgmt_playbook_data("mgmt_replaced_config")
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 1)
+
+        changed_objs = ["CONF", "DESC", "ADMIN_STATE", "CDP_ENABLE"]
+
+        for d in result["diff"][0]["replaced"]:
+            for intf in d["interfaces"]:
+                self.assertEqual(intf["ifName"], "Mgmt0")
+                if_keys = list(intf["nvPairs"].keys())
+                self.assertEqual(
+                    (set(changed_objs).issubset(set(if_keys))), True
+                )
+                self.assertEqual(
+                    intf["nvPairs"]["CONF"], "ip address 192.168.1.208/24"
+                )
+                self.assertEqual(intf["nvPairs"]["ADMIN_STATE"], "false")
+                self.assertEqual(intf["nvPairs"]["CDP_ENABLE"], "false")
+
+    def test_dcnm_intf_mgmt_deleted_existing(self):
+
+        # Use Version 12 For This Test Case
+        self.run_dcnm_version_supported.side_effect = [12]
+
+        self.load_mgmt_playbook_data("mgmt_deleted_config")
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        # Management interfaces are physical and cannot be removed
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["delete_deploy"]), 0)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+
+        self.assertEqual(len(result["diff"][0]["skipped"]), 1)
+        self.assertEqual(result["diff"][0]["skipped"][0]["Name"], "Mgmt0")
+        self.assertEqual(
+            result["diff"][0]["skipped"][0]["Reason"],
+            "Management interfaces cannot be deleted",
+        )
+
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_mgmt_query(self):
+
+        # Use Version 12 For This Test Case
+        self.run_dcnm_version_supported.side_effect = [12]
+
+        self.load_mgmt_playbook_data("mgmt_query_config")
+
+        set_module_args(
+            dict(
+                state="query",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(result["changed"], False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 0)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["query"]), 1)
+        self.assertEqual(
+            result["diff"][0]["query"][0]["policy"], "int_mgmt"
+        )
+
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_mgmt_preserve_unmanaged_nvpairs(self):
+
+        # Use Version 12 For This Test Case
+        self.run_dcnm_version_supported.side_effect = [12]
+
+        self.load_mgmt_playbook_data("mgmt_preserve_config")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        # Locate the payload actually sent to the controller. Unchanged keys
+        # are pruned from the reported diff, so inspect the request body.
+        sent = [
+            call.args[3]
+            for call in self.run_dcnm_send.call_args_list
+            if len(call.args) > 3 and call.args[1] in ("PUT", "POST")
+        ]
+        self.assertTrue(sent, "no create/update request was sent")
+
+        payload = json.loads(sent[0])
+        nv_pairs = payload["interfaces"][0]["nvPairs"]
+
+        # Bootstrap flag and policy metadata must survive the update
+        self.assertEqual(nv_pairs.get("BST"), "true")
+        self.assertEqual(nv_pairs.get("PRIORITY"), "900")
+        self.assertEqual(nv_pairs.get("POLICY_ID"), "POLICY-2020")
+
+        # The controller's existing name casing must be preserved
+        self.assertEqual(nv_pairs.get("INTF_NAME"), "mgmt0")
+        self.assertEqual(payload["interfaces"][0]["ifName"], "mgmt0")
+
+        # The requested change must still be applied
+        self.assertEqual(nv_pairs.get("DESC"), "updated description")
+
+        # The management address must be carried through unchanged
+        self.assertIn("192.168.1.108/24", nv_pairs.get("CONF"))
+
+    def test_dcnm_intf_mgmt_unsupported_on_dcnm_11(self):
+
+        # DCNM 11 has no 'int_mgmt' policy
+        self.run_dcnm_version_supported.side_effect = [11]
+
+        self.load_mgmt_playbook_data("mgmt_merged_config")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=False, failed=True)
+
+        self.assertEqual(result["failed"], True)
+        self.assertIn(
+            "is not supported on this controller version", result["msg"]
+        )
 
     # -------------------------- vPC --------------------------
 
