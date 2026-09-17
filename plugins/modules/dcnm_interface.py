@@ -4853,7 +4853,7 @@ class DcnmIntf:
 
                 for want_int in want:
                     # List of keys in nvPairs to protect
-                    protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF", "PRIMARY_INTF"]
+                    protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF", "PRIMARY_INTF", "FEC"]
                     match_int = find_dict_in_list_by_key_value(search=want_int['interfaces'], key='ifName', value=have_pc_name)
                     if match_int and match_int['serialNumber'] == have_pc_serial:
                         msg = "\nHave Interface Info: "
