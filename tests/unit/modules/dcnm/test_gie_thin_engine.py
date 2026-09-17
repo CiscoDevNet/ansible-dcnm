@@ -165,19 +165,30 @@ ROUTED_ROWS = {
     (ROUTED, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
 }
 
+# The OSPF vertical slice on the same parent. Separate set because it is the first feature
+# registered here that is gated (IsShow="ENABLE_OSPF==true"), and because OSPF_COST is the
+# first integer binding to reach the generic carry-forward -- see
+# test_gie_routed_ospf_have_representation.py.
+ROUTED_OSPF_ROWS = {
+    (ROUTED, "ENABLE_OSPF", "enable_ospf"),
+    (ROUTED, "OSPF_TAG", "ospf_tag"),
+    (ROUTED, "OSPF_AREA_ID", "ospf_area_id"),
+    (ROUTED, "OSPF_COST", "ospf_cost"),
+}
+
 
 # ---- binding package runtime contract ----
 
 def test_package_provenance_and_size():
     expected_keys = (
         BASELINE_ROWS | PASSTHROUGH_ROWS | OSPF_KEY_ROWS | FC_SEND_ROWS | STP_ROWS
-        | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS
+        | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 58
+    assert len(BINDING_TABLE) == len(actual_keys) == 62
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -188,6 +199,7 @@ def test_package_provenance_and_size():
     assert len(QOS_STATS_ROWS) == 4
     assert len(PC_ROWS) == 15
     assert len(ROUTED_ROWS) == 6
+    assert len(ROUTED_OSPF_ROWS) == 4
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -209,7 +221,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 58
+    assert len(rows) == 62
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -219,6 +231,49 @@ def test_compiler_rejects_duplicate_or_missing_binding():
         generator.compile_rows(rows + [dict(rows[0])])
     with pytest.raises(ValueError, match="missing committed bindings"):
         generator.compile_rows(rows[:-1])
+
+
+def test_compiler_renames_the_registry_numeric_bounds():
+    """registry `min`/`max` -> table `min_value`/`max_value`, values intact.
+
+    The other compiler tests feed BINDING_TABLE back in, which already carries the renamed
+    fields, so none of them exercises the alias. This one starts from the REGISTRY shape.
+
+    The rename is not cosmetic: `min` and `max` are prefixes of `min_ndfc_version` and
+    `min_length`, and a substring test for "min" -- the obvious way to go looking for these --
+    matches those instead. That is how 15 declared bounds stayed unenforced.
+    """
+    generator = _load_generator()
+    rows = []
+    for binding in BINDING_TABLE:
+        row = dict(binding)
+        if row["parent_nvpair"] == "OSPF_COST":
+            row.pop("min_value", None)
+            row.pop("max_value", None)
+            row["min"] = 1            # registry spelling
+            row["max"] = 65535
+        rows.append(row)
+    compiled = generator.compile_rows(rows)
+    cost = next(r for r in compiled if r["parent_nvpair"] == "OSPF_COST")
+    assert cost["min_value"] == 1
+    assert cost["max_value"] == 65535
+    assert "min" not in cost and "max" not in cost, "the registry spelling must not leak"
+
+
+def test_compiler_rejects_an_unknown_mechanism():
+    """Fail-open guard.
+
+    gie_engine compares `== GIE_MECH_PASSTHROUGH` at four sites, so an unknown value behaves
+    exactly like child_pti: out of the generic arg spec, out of the invalid-parent guard, left
+    unserialized, out of carry-forward. A typo would ship a binding that is transported but
+    never guarded. It must not compile.
+    """
+    generator = _load_generator()
+    for bad in ("passthru", "inline_passthrough", "", None):
+        rows = [dict(binding) for binding in BINDING_TABLE]
+        rows[0]["mechanism"] = bad
+        with pytest.raises(ValueError, match="declares mechanism"):
+            generator.compile_rows(rows)
 
 
 def test_compiler_rejects_profile_key_mismatch():
@@ -498,6 +553,7 @@ def test_all_registered_and_guarded_keys():
         "disable_qos_stats", "disable_queuing_stats",
         "ospf_auth_key_id", "ospf_auth_key",
         "disable_bfd_echo", "ipv4_acl_in",
+        "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
@@ -507,6 +563,10 @@ def test_all_registered_and_guarded_keys():
         "disable_bfd_echo", "ipv4_acl_in",
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
+        # The routed OSPF slice is passthrough, so the generic guard owns it -- unlike the
+        # fabric-loopback OSPF-MD trio asserted out of this set just below. Delegating to a
+        # child template inside NDFC does not change which side of this line a binding sits on.
+        "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
     }
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
     # The legacy-key pair is child_pti, so registering it must NOT hand the engine the

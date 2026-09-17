@@ -47,6 +47,15 @@ from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 PARENT = "int_routed_host"
 
 # profile_key -> (nvPair, registry type)
+#
+# The first six are passthrough, measured on Leaf-103/104 Ethernet1/5 in the r1..r4 cycle.
+#
+# The four OSPF entries are the vertical slice: the first time child_pti is registered on a
+# ROUTED parent rather than on the fabric loopback. Every OSPF field here is gated
+# IsShow="ENABLE_OSPF==true", so none can be exercised alone -- the gate, the two the
+# template marks IsMandatory, and one value field are the smallest set that produces
+# observable CLI. Their removal_semantics is deliberately unresolved: the template creates a
+# child per field and never deletes one, and reading that is not the same as measuring it.
 EXPECTED = {
     "disable_lldp_transmit": ("DISABLE_LLDP_TRANSMIT", "boolean"),
     "disable_lldp_receive": ("DISABLE_LLDP_RECEIVE", "boolean"),
@@ -54,6 +63,10 @@ EXPECTED = {
     "disable_qos_stats": ("DISABLE_QOS_STATS", "boolean"),
     "disable_queuing_stats": ("DISABLE_QUEUING_STATS", "boolean"),
     "ipv4_acl_in": ("IPV4_ACL_IN", "string"),
+    "enable_ospf": ("ENABLE_OSPF", "boolean"),
+    "ospf_tag": ("OSPF_TAG", "string"),
+    "ospf_area_id": ("OSPF_AREA_ID", "string"),
+    "ospf_cost": ("OSPF_COST", "integer"),
 }
 
 
