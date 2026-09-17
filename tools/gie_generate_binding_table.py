@@ -41,7 +41,7 @@ COMMITTED_BINDINGS = {
     ("int_trunk_host", "GUARD_MODE"): "guard_mode",
     ("int_port_channel_trunk_host", "GUARD_MODE"): "guard_mode",
 
-    
+
     ("int_access_host", "ACL_FILTER"): "acl_filter",
     ("int_trunk_host", "ACL_FILTER"): "acl_filter",
     ("int_port_channel_access_host", "ACL_FILTER"): "acl_filter",

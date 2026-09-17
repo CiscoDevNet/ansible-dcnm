@@ -167,4 +167,4 @@ def test_the_parent_is_registered_exactly_once_per_nvpair():
     rows = [b for b in BINDING_TABLE if b["parent_template"] == PARENT]
     names = [b["parent_nvpair"] for b in rows]
     assert len(names) == len(set(names)), "duplicate nvPair rows for {0}".format(PARENT)
-    assert set(names) == {nv for nv, _ in EXPECTED.values()}
+    assert set(names) == {nvpair for nvpair, _native in EXPECTED.values()}
