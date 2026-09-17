@@ -5615,13 +5615,61 @@ class DcnmIntf:
     def _dcnm_intf_bulk_response_identity(
         self, response_serial, interface_type, query_serial, expected_serial
     ):
-        """Return the authority represented by one mixed bulk record."""
+        """Return the authority represented by one mixed bulk record.
+
+        When the record declares a type, that type decides. When it declares NONE,
+        the shape of the serial decides instead.
+
+        That second case is not hypothetical: the bulk endpoint does not return
+        ``interfaceType`` at all. Measured against NDFC 12.6.0.267, a vPC record
+        carries only ``ifName``, ``nvPairs`` and a combined ``serialNumber``, and
+        its enclosing item carries only ``policy`` and ``interfaces``. Requiring
+        the type therefore sent every vPC record down the single-serial branch,
+        which rejects a combined serial, and one rejection marks the WHOLE switch
+        unreadable. Interfaces still in the playbook never noticed -- they skip the
+        authority gate -- so the damage only surfaced on a delete-everything run,
+        where nothing is in ``want`` and the gate runs over every interface.
+
+        A record that DOES declare a physical type and still carries a combined
+        serial remains malformed and is rejected: a physical port belongs to one
+        switch, never to a pair.
+
+        For a combined record the check that matters is that the serial we queried
+        is one of the two halves: that is what keeps a foreign switch's record out.
+        The pair itself needs no corroboration from ``vpc_ip_sn`` here -- the query
+        named a single serial and the controller answered with the pair that serial
+        belongs to. Requiring corroboration would reintroduce the same failure by
+        another route, because ``vpc_ip_sn`` is only ever populated from switches
+        named in the playbook and is empty on a delete-everything run.
+        """
+        response_parts = self._dcnm_intf_serial_parts(response_serial)
+        is_pair_record = response_parts is not None and len(response_parts) == 2
+
         if interface_type in ("INTERFACE_VPC", "AA_FEX"):
             return self._dcnm_intf_response_identity(
                 response_serial, query_serial, expected_serial
             )
 
-        response_parts = self._dcnm_intf_serial_parts(response_serial)
+        if query_serial is None:
+            return None
+
+        # Shape decides ONLY when the type is absent. A record that declares a physical
+        # type and still carries a combined serial stays malformed and is rejected below:
+        # a physical port belongs to one switch, never to a pair.
+        if is_pair_record and not interface_type:
+            if query_serial.casefold() not in {
+                part.casefold() for part in response_parts
+            }:
+                return None
+            identity = "~".join(response_parts)
+            expected_parts = self._dcnm_intf_serial_parts(expected_serial)
+            if expected_parts is not None and len(expected_parts) == 2:
+                # An explicit pair was asked for; the answer must be that same pair.
+                expected_key = self._dcnm_intf_authority_key(expected_serial)
+                if identity.casefold() != expected_key.casefold():
+                    return None
+            return identity
+
         if (
             response_parts is None
             or len(response_parts) != 1
