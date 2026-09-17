@@ -2069,6 +2069,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_invalid_parent_key,
     gie_nvpair_keymap,
     gie_carry_forward_bindings,
+    gie_describe_value_type,
     gie_have_carry_forward_nvpairs,
     gie_validate_binding_value,
 )
@@ -3412,9 +3413,7 @@ class DcnmIntf:
                     "template metadata was queried and no change was sent.".format(
                         cfg_item.get("name"),
                         OSPF_AUTH_MD_PROFILE_KEY,
-                        "null"
-                        if raw_value is None
-                        else "a {0}".format(type(raw_value).__name__),
+                        gie_describe_value_type(raw_value),
                     )
                 )
 
@@ -3559,11 +3558,14 @@ class DcnmIntf:
                         OSPF_AUTH_KEY_ID_PROFILE_KEY,
                         OSPF_AUTH_KEY_ID_MIN,
                         OSPF_AUTH_KEY_ID_MAX,
-                        "null"
-                        if key_id is None
-                        else "a {0}".format(type(key_id).__name__)
-                        if not isinstance(key_id, (int, str))
-                        else repr(key_id),
+                        # An int/str key ID is echoed on purpose: it is an identifier in
+                        # 0..255, never a secret, and seeing the offending number is the
+                        # whole diagnosis. Every other type falls back to naming the type
+                        # only, through the same helper the rest of the module uses.
+                        repr(key_id)
+                        if isinstance(key_id, (int, str))
+                        and not isinstance(key_id, bool)
+                        else gie_describe_value_type(key_id),
                     )
                 )
 
@@ -3630,7 +3632,11 @@ class DcnmIntf:
                     )
                 except GieBindingError:
                     # The engine's message deliberately omits the rejected value; this one
-                    # names the field and the expected type without echoing it either.
+                    # names the field, the expected type and the type actually RECEIVED,
+                    # without echoing the value either. The received type is what makes the
+                    # message actionable: the common failure is a Jinja template rendering
+                    # an unquoted `| default('')`, which YAML reads as null, and "expected a
+                    # string" alone does not point anywhere near that.
                     binding = resolve_binding(parent, profile_key)
                     expected = binding["type"]
                     if binding.get("valid_values"):
@@ -3645,9 +3651,12 @@ class DcnmIntf:
                         )
                     self.module.fail_json(
                         msg="Invalid parameters in playbook: while processing interface "
-                        "{0}, '{1}' must be a native {2}. No template metadata was "
-                        "queried and no change was sent.".format(
-                            cfg_item.get("name"), profile_key, expected
+                        "{0}, '{1}' must be a native {2}, given {3}. No template "
+                        "metadata was queried and no change was sent.".format(
+                            cfg_item.get("name"),
+                            profile_key,
+                            expected,
+                            gie_describe_value_type(profile[profile_key]),
                         )
                     )
 

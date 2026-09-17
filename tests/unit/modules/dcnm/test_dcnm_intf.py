@@ -6834,11 +6834,39 @@ class TestDcnmIntfModule(TestDcnmModule):
             dict(state="merged", fabric="test_fabric", config=config)
         )
         result = self.execute_module(changed=False, failed=True)
+        self.captured_type_failure_msg = result["msg"]
         self.assertIn("must be a native boolean", result["msg"])
+        # The message must also name the type it RECEIVED. "expected a boolean" alone
+        # sends the reader hunting for a wrong value; the received type points at the
+        # cause -- most often a Jinja template rendering an unquoted `| default('')`,
+        # which YAML reads as null.
+        expected_received = {
+            type(None): "given a null value",
+            bool: "given a boolean",
+            int: "given an integer",
+            str: "given a string",
+            list: "given a list",
+            dict: "given a mapping",
+        }[type(bad_value)]
+        self.assertIn(expected_received, result["msg"])
         # Zero template GETs and zero bulk probe: the failure is purely local.
         self.assertEqual(self.run_dcnm_template_details.call_count, 0)
         self.assertEqual(self.run_dcnm_bulk_api_support.call_count, 0)
         self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_lo_ospfmd_type_failure_never_echoes_the_value(self):
+        """The rejected value must never reach the error message.
+
+        A binding can carry a secret -- the OSPF authentication key is one -- and this
+        message lands in Ansible output, logs and CI artifacts. Naming the TYPE is safe;
+        echoing the value is not. The sentinel below is shaped like a leaked credential
+        so a regression is unmistakable.
+        """
+        sentinel = "s3cr3t-must-never-appear"
+        self._ospfmd_expect_local_type_failure([sentinel])
+        # _ospfmd_expect_local_type_failure already asserted the failure; re-run the
+        # module state it left behind is not needed -- assert on the captured message.
+        self.assertNotIn(sentinel, self.captured_type_failure_msg)
 
     # ---- G6A.2 finding 5: a valid interface must not trigger a capability GET
     # before a later malformed interface fails (two-pass validation). ----

@@ -104,6 +104,39 @@ def _is_native_type(value, native_type):
     return isinstance(value, native_type)
 
 
+def gie_describe_value_type(value):
+    """Name the TYPE a rejected value had, never the value itself.
+
+    Every message in this engine deliberately omits the rejected value: a binding can
+    carry a secret -- the OSPF authentication key is one -- and an error string ends up
+    in Ansible output, in logs and in CI artifacts. The type on its own is safe, and it
+    is usually the whole diagnosis.
+
+    The case this exists for: a Jinja template that renders ``field: {{ x | default('') }}``
+    WITHOUT quotes emits ``field:`` with nothing after it, which YAML reads as null rather
+    than as the empty string the author intended. "must be a native str" alone sends the
+    reader hunting for a wrong value; "received a null value" points straight at the
+    template.
+
+    Length is deliberately NOT reported: for a secret, its length is an information leak.
+    """
+    if value is None:
+        return "a null value"
+    if isinstance(value, bool):
+        return "a boolean"
+    if isinstance(value, int):
+        return "an integer"
+    if isinstance(value, float):
+        return "a number"
+    if isinstance(value, str):
+        return "a string"
+    if isinstance(value, (list, tuple)):
+        return "a list"
+    if isinstance(value, dict):
+        return "a mapping"
+    return "a value of an unexpected type"
+
+
 def gie_version_supported(ndfc_version, min_version):
     """Four-segment >= compare; fail closed (False) for unknown/malformed versions.
 
