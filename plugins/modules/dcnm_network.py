@@ -264,21 +264,26 @@ options:
       secondary_ip_gw1:
         description:
         - IP address with subnet for secondary gateway 1
+        - NDFC versions from the minimum known-compatible 12.2.3.70 use an aggregate list and require gateways in slot order without gaps
+        - Older versions keep the four positional fields; an unknown version with configured gateways fails before any write
         type: str
         required: false
       secondary_ip_gw2:
         description:
         - IP address with subnet for secondary gateway 2
+        - See secondary_ip_gw1 for version compatibility and slot ordering
         type: str
         required: false
       secondary_ip_gw3:
         description:
         - IP address with subnet for secondary gateway 3
+        - See secondary_ip_gw1 for version compatibility and slot ordering
         type: str
         required: false
       secondary_ip_gw4:
         description:
         - IP address with subnet for secondary gateway 4
+        - See secondary_ip_gw1 for version compatibility and slot ordering
         type: str
         required: false
       trm_enable:
@@ -1320,6 +1325,174 @@ class DcnmNetwork:
                 secondary_gws.append({"gatewayIpAddress": secondary_gw})
 
         return json.dumps({"secondaryGWs": secondary_gws}, separators=(",", ":"))
+
+    # Accept normalized major.minor.maintenance versions with an optional build.
+    _NDFC_VERSION_CANONICAL_RE = re.compile(r"[0-9]+(?:\.[0-9]+){2,3}")
+
+    def _parse_ndfc_version_components(self):
+        """Return the NDFC version as numbers, or None if it is invalid."""
+
+        version = getattr(self, "ndfc_version", None)
+        if not isinstance(version, str) or not version:
+            return None
+
+        if self._NDFC_VERSION_CANONICAL_RE.fullmatch(version):
+            return tuple(int(part) for part in version.split("."))
+
+        return None
+
+    def secondary_gws_capability(self):
+        """Return how this NDFC version handles secondaryGWs."""
+
+        components = self._parse_ndfc_version_components()
+        if components is None:
+            return "unknown"
+
+        boundary = (12, 2, 3)
+        current = components[:3]
+        if current < boundary:
+            return "legacy"
+        if current > boundary:
+            return "aggregate"
+
+        # current == boundary: the 12.2.3 build number is required to decide.
+        if len(components) < 4:
+            return "unknown"
+        return "aggregate" if components[3] >= 70 else "legacy"
+
+    def _validate_remote_secondary_gws_representable(self, raw_aggregate, gw_values, template_conf):
+        """Reject controller data that cannot fit in four gateway fields."""
+
+        network_name = template_conf.get("networkName", "")
+
+        if raw_aggregate in (None, ""):
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs is present but null/empty, "
+                "which is not a valid encoding (the valid empty aggregate is the JSON string "
+                "'{\"secondaryGWs\":[]}'); cannot be safely represented."
+            )
+            return
+
+        try:
+            parsed = json.loads(raw_aggregate)
+        except (TypeError, ValueError):
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs is not valid JSON and cannot be safely represented."
+            )
+            return
+
+        entries = parsed.get("secondaryGWs") if isinstance(parsed, dict) else None
+        if not isinstance(entries, list):
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs is malformed (expected a 'secondaryGWs' list)."
+            )
+            return
+
+        unexpected_top_level_keys = sorted(set(parsed.keys()) - {"secondaryGWs"})
+        if unexpected_top_level_keys:
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs has unexpected top-level "
+                f"key(s) {unexpected_top_level_keys}; only 'secondaryGWs' is representable "
+                "and cannot be safely preserved or silently discarded."
+            )
+            return
+
+        if len(entries) > 4:
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs has {len(entries)} entries; "
+                "only four are representable by this module."
+            )
+            return
+
+        remote_ips = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                self.module.fail_json(
+                    msg=f"Network '{network_name}': remote secondaryGWs contains an entry that is not "
+                    "an object and cannot be safely represented."
+                )
+                return
+            unexpected_entry_keys = sorted(set(entry.keys()) - {"gatewayIpAddress"})
+            if unexpected_entry_keys:
+                self.module.fail_json(
+                    msg=f"Network '{network_name}': remote secondaryGWs contains an entry with "
+                    f"unexpected key(s) {unexpected_entry_keys}; only 'gatewayIpAddress' is "
+                    "representable and cannot be safely preserved or silently discarded."
+                )
+                return
+            gateway_ip = entry.get("gatewayIpAddress")
+            if not isinstance(gateway_ip, str) or not gateway_ip:
+                self.module.fail_json(
+                    msg=f"Network '{network_name}': remote secondaryGWs contains an entry with a "
+                    "non-string or empty 'gatewayIpAddress' and cannot be safely represented."
+                )
+                return
+            remote_ips.append(gateway_ip)
+
+        expected_ips = [value for value in gw_values if value]
+        if remote_ips != expected_ips:
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs {remote_ips} contradicts the "
+                f"populated legacy secondaryGW1-4 slots {expected_ips}; refusing to silently "
+                "truncate or reindex brownfield state."
+            )
+            return
+
+    def apply_secondary_gws_compat(self, template_conf, validate_remote=False, defer_prefix_fail_closed=False):
+        """Validate and set secondaryGWs based on the NDFC version."""
+
+        raw_aggregate = template_conf.get("secondaryGWs")
+        gw_values = [template_conf.get(f"secondaryGW{index}") or "" for index in range(1, 5)]
+
+        if validate_remote:
+            self._validate_remote_secondary_gws_representable(raw_aggregate, gw_values, template_conf)
+
+        capability = self.secondary_gws_capability()
+
+        if capability == "legacy":
+            template_conf.pop("secondaryGWs", None)
+            return
+
+        if capability == "unknown":
+            template_conf.pop("secondaryGWs", None)
+            if any(gw_values):
+                network_name = template_conf.get("networkName", "")
+                self.module.fail_json(
+                    msg=f"Network '{network_name}': cannot determine secondaryGWs aggregate support "
+                    f"for NDFC version {self.ndfc_version!r} while secondary_ip_gw1-4 are populated; "
+                    "refusing to guess. Confirm the controller version or omit all four secondary "
+                    "gateways."
+                )
+            return
+
+        # The compact aggregate loses slot positions, so gaps would be reindexed.
+        if not self._is_contiguous_secondary_gw_prefix(gw_values):
+            template_conf.pop("secondaryGWs", None)
+            if defer_prefix_fail_closed:
+                return
+            network_name = template_conf.get("networkName", "")
+            self.module.fail_json(
+                msg=f"Network '{network_name}': secondaryGW1-4 {gw_values} is not a contiguous "
+                "prefix. The compact secondaryGWs aggregate can only safely represent a "
+                "contiguous prefix (GW1, GW1+GW2, GW1+GW2+GW3, or all four); once a slot is "
+                "empty, every higher slot must also be empty. Specify the gateways in "
+                "contiguous slot order or omit the higher slots."
+            )
+            return
+
+        template_conf["secondaryGWs"] = self.get_secondary_gws_template_config(template_conf)
+
+    @staticmethod
+    def _is_contiguous_secondary_gw_prefix(gw_values):
+        """Return whether gateway slots are filled from GW1 without gaps."""
+
+        seen_empty = False
+        for value in gw_values:
+            if not value:
+                seen_empty = True
+            elif seen_empty:
+                return False
+        return True
 
     @staticmethod
     def _torports_comparison_key(torports):
@@ -2641,8 +2814,10 @@ class DcnmNetwork:
             template_conf["secondaryGW3"] = ""
         if template_conf["secondaryGW4"] is None:
             template_conf["secondaryGW4"] = ""
-        if self.fabric_type not in ["multisite_child", "multicluster_child"]:
-            template_conf["secondaryGWs"] = self.get_secondary_gws_template_config(template_conf)
+        # Query/delete never write this template. Merged intent may be partial
+        # until update_want() restores omitted slots, so only its gap check waits.
+        if self.fabric_type not in ["multisite_child", "multicluster_child"] and state not in ("query", "deleted"):
+            self.apply_secondary_gws_compat(template_conf, defer_prefix_fail_closed=(state == "merged"))
         if self.dcnm_version > 11:
             if template_conf["SVI_NETFLOW_MONITOR"] is None:
                 template_conf["SVI_NETFLOW_MONITOR"] = ""
@@ -2697,7 +2872,25 @@ class DcnmNetwork:
             t_conf.update(xconnect=json_to_dict["xconnect"])
 
         if self.fabric_type not in ["multisite_child", "multicluster_child"]:
-            t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
+            secondary_gws_key_present = "secondaryGWs" in json_to_dict
+            if secondary_gws_key_present:
+                t_conf["secondaryGWs"] = json_to_dict.get("secondaryGWs")
+
+            # Read-only and delete-only paths preserve controller state. In
+            # overridden state, validate only networks retained for update.
+            module = getattr(self, "module", None)
+            state = getattr(module, "params", {}).get("state") if module is not None else None
+
+            skip_aggregate_validation = state in ("query", "deleted")
+            if state == "overridden":
+                network_name = net.get("networkName")
+                has_desired_match = any(
+                    want.get("networkName") == network_name for want in getattr(self, "want_create", None) or []
+                )
+                skip_aggregate_validation = not has_desired_match
+
+            if not skip_aggregate_validation:
+                self.apply_secondary_gws_compat(t_conf, validate_remote=secondary_gws_key_present)
 
         if "mcastGroup" not in json_to_dict:
             del t_conf["mcastGroup"]
@@ -5091,7 +5284,7 @@ class DcnmNetwork:
                     t_conf.update(xconnect=json_to_dict["xconnect"])
 
                 if self.fabric_type not in ["multisite_child", "multicluster_child"]:
-                    t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
+                    self.apply_secondary_gws_compat(t_conf)
 
                 # Remove skipped attributes from template config for parent fabrics
                 for key in list(t_conf.keys()):
@@ -5904,7 +6097,7 @@ class DcnmNetwork:
             json_to_dict_want["secondaryGW4"] = json_to_dict_have["secondaryGW4"]
 
         if self.fabric_type not in ["multisite_child", "multicluster_child"]:
-            json_to_dict_want["secondaryGWs"] = self.get_secondary_gws_template_config(json_to_dict_want)
+            self.apply_secondary_gws_compat(json_to_dict_want)
 
         # Route target configuration (common for all fabric types)
         if cfg.get("route_target_both", None) is None:
@@ -6016,6 +6209,24 @@ class DcnmNetwork:
 
         want.update({"networkTemplateConfig": json.dumps(json_to_dict_want)})
 
+    def finalize_secondary_gws_compat(self):
+        """Validate new merged networks after omitted slots are restored."""
+
+        if self.params["state"] != "merged":
+            return
+
+        if self.fabric_type in ["multisite_child", "multicluster_child"]:
+            return
+
+        for net in self.want_create:
+            match_have = [have for have in self.have_create if net["networkName"] == have["networkName"]]
+            if match_have:
+                continue
+
+            template_conf = json.loads(net["networkTemplateConfig"])
+            self.apply_secondary_gws_compat(template_conf)
+            net["networkTemplateConfig"] = json.dumps(template_conf)
+
     def update_want(self):
         """
         Routine to compare want and have and make approriate changes to want. This routine checks the existing
@@ -6125,6 +6336,7 @@ def main():
     # state, objects not included in the playbook must be left as they are and for state 'replaced'
     # they must be purged or defaulted.
     dcnm_net.update_want()
+    dcnm_net.finalize_secondary_gws_compat()
 
     if module.params["state"] == "merged":
         warn_msg = dcnm_net.get_diff_merge()
