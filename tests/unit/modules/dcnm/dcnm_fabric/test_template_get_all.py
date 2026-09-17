@@ -32,17 +32,16 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, responses_template_get_all,
-    template_get_all_fixture)
+    MockAnsibleModule,
+    does_not_raise,
+    responses_template_get_all,
+    template_get_all_fixture,
+)
 
 
 def test_template_get_all_00000(template_get_all) -> None:
@@ -304,10 +303,7 @@ def test_template_get_all_00063(monkeypatch, template_get_all) -> None:
         instance.refresh()
     assert isinstance(instance.templates, dict)
     assert instance.templates.get("Easy_Fabric", {}).get("name") == "Easy_Fabric"
-    assert (
-        instance.templates.get("Easy_Fabric_Classic", {}).get("templateType")
-        == "FABRIC"
-    )
+    assert instance.templates.get("Easy_Fabric_Classic", {}).get("templateType") == "FABRIC"
     assert len(instance.response) == 1
     assert len(instance.result) == 1
     assert instance.result_current.get("success", None) is True
