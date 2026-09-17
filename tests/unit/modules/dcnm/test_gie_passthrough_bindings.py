@@ -103,10 +103,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 58
-    assert len(set(keys)) == 58, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 62
+    assert len(set(keys)) == 62, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 58, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 62, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -164,7 +164,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 58
+    assert len(gen.compile_rows(rows)) == 62
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -213,7 +213,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 58
+    assert len(gen.compile_rows(rows)) == 62
 
 
 # ------------------------------------------------------------------ positive transport
@@ -559,7 +559,13 @@ def test_keymap_carries_every_new_nvpair():
     assert km["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"] == "enable_ospf_auth_message_digest"
     assert km["OSPF_AUTH_KEY_ID"] == "ospf_auth_key_id"
     assert km["OSPF_AUTH_KEY"] == "ospf_auth_key"
-    assert len(km) == 14
+    # The OSPF slice on int_routed_host. No module change was needed for these: the keymap is
+    # derived from the binding table by gie_nvpair_keymap(), so a new row lands here by itself.
+    assert km["ENABLE_OSPF"] == "enable_ospf"
+    assert km["OSPF_TAG"] == "ospf_tag"
+    assert km["OSPF_AREA_ID"] == "ospf_area_id"
+    assert km["OSPF_COST"] == "ospf_cost"
+    assert len(km) == 18
 
 
 def test_all_registered_keys():
@@ -570,6 +576,7 @@ def test_all_registered_keys():
         "disable_qos_stats", "disable_queuing_stats",
         "ospf_auth_key_id", "ospf_auth_key",
         "disable_bfd_echo", "ipv4_acl_in",
+        "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
     }
 
 

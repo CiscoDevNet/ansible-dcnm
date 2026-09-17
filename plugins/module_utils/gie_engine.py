@@ -234,6 +234,41 @@ def gie_validate_binding_value(
         # (1) NDFC returns booleans as strings.
         if native_type is bool and value in ("true", "false"):
             return value
+        # (3) NDFC returns integers as strings too, and "" for an unset one.
+        #
+        # Measured on NDFC 12.6.0.267, Leaf-103: a GET of the endpoint that feeds HAVE
+        # (/lan-fabric/rest/interface?serialNumber=) returns EVERY nvPair as a str. On an
+        # int_routed_host interface that had OSPF touched through the GUI, OSPF_COST comes
+        # back as "". On the 62 interfaces never touched the key is absent entirely, which
+        # the carry-forward already skips.
+        #
+        # Without this, the INPUT contract (a real int) was applied to the controller's own
+        # encoding and the module aborted on an update that never mentioned OSPF -- the same
+        # class of failure the "" exemption below fixed for strings, reappearing on the first
+        # integer binding to reach the generic carry-forward path.
+        #
+        # Deliberately narrow, on three axes:
+        #   * value_source="have" ONLY. An operator still writes a real int; the explicit
+        #     path below is unchanged.
+        #   * the value is returned EXACTLY as the controller sent it. No int() coercion, no
+        #     "" -> 0. The carry-forward is a round-trip "leave as-is" assertion, so inventing
+        #     a number here would write a cost the controller never held.
+        #   * a non-numeric string still fails closed. "abc" is not an encoding NDFC has been
+        #     observed to return, and tolerating it would be inventing a contract.
+        #
+        # ASCII digits ONLY. `str.isdigit()` alone is true for "²" (superscript two),
+        # "١٠٠" (Arabic-Indic) and "１００" (fullwidth) -- none of
+        # which NDFC returns, and all of which would sail through into a payload. `isascii()`
+        # is available on every Python this collection supports (requires_ansible >= 2.15).
+        #
+        # NOT authorized by this: accepting "" as operator INPUT, or treating it as an
+        # instruction to clear a configured cost. What NDFC does on RECEIVING "" here has not
+        # been measured, and the template rejects a lingering cost while OSPF is disabled
+        # ("Enable OSPF on routed interface before configuring OSPF interface options"), so
+        # withdrawal is an open question, not an implication of this exemption.
+        if native_type is int and isinstance(value, str):
+            if value == "" or (value.isascii() and value.isdigit()):
+                return value
     # (2) "" on a plain string binding means "unset", from EITHER direction.
     #
     # Reading: NDFC returns "" for an unset string (ACL_FILTER == "" with no ACL configured),
@@ -284,6 +319,37 @@ def gie_validate_binding_value(
                 "{0} for {1!r} on parent {2!r} is longer than the registered maximum "
                 "length {3}; no change was sent".format(
                     source_label, profile_key, parent_template, max_length
+                )
+            )
+    # Registered numeric bounds (reviewed registry, e.g. OSPF_COST 1..65535).
+    #
+    # INPUT contract only, and the `value_source` test below is load-bearing: the have branch
+    # above returns early only for the STRING encodings NDFC was measured to send, so a native
+    # int read back from the controller would otherwise reach this check and be rejected. That
+    # would make an interface the controller has already accepted unmanageable -- the same
+    # class of failure as applying min_length to a HAVE value, which is what this file's
+    # exemptions exist to prevent. A controller value outside the declared range is carried,
+    # not re-litigated.
+    #
+    # The registry declared min/max on 15 rows and the generator's FIELDS list dropped both, so
+    # nothing enforced them anywhere. Note the field names: `min_value`/`max_value`, NOT `min`
+    # and `max`, because a substring test for "min" also matches `min_ndfc_version` and
+    # `min_length`.
+    if value_source == "explicit" and isinstance(value, int) and not isinstance(value, bool):
+        min_value = binding.get("min_value")
+        max_value = binding.get("max_value")
+        if min_value is not None and value < min_value:
+            raise GieBindingError(
+                "{0} for {1!r} on parent {2!r} is below the registered minimum "
+                "{3}; no change was sent".format(
+                    source_label, profile_key, parent_template, min_value
+                )
+            )
+        if max_value is not None and value > max_value:
+            raise GieBindingError(
+                "{0} for {1!r} on parent {2!r} is above the registered maximum "
+                "{3}; no change was sent".format(
+                    source_label, profile_key, parent_template, max_value
                 )
             )
     return value
