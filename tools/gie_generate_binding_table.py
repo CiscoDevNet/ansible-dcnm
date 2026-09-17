@@ -153,13 +153,34 @@ COMMITTED_BINDINGS = {
     ("int_port_channel_dot1q_tunnel_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
     ("int_vpc_access_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
     ("int_vpc_trunk_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
+
+    # OSPF on the routed host parent, child_pti. FOUR ONLY, on purpose: this is the first
+    # time child_pti is exercised on a routed parent rather than the fabric loopback, and
+    # every OSPF field is gated IsShow="ENABLE_OSPF==true" so none can be tested alone.
+    # The gate plus the two the template marks IsMandatory feed one shared base child;
+    # OSPF_COST is the value field under test, with unambiguous CLI and no secret.
+    # The remaining OSPF fields stay out until this slice is measured on hardware.
+    ("int_routed_host", "ENABLE_OSPF"): "enable_ospf",
+    ("int_routed_host", "OSPF_TAG"): "ospf_tag",
+    ("int_routed_host", "OSPF_AREA_ID"): "ospf_area_id",
+    ("int_routed_host", "OSPF_COST"): "ospf_cost",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.
 # min_length/max_length carry the registry string constraints (ACL_FILTER).
 FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interface_type",
           "applicable_mode", "type", "valid_values", "default_template", "mechanism",
-          "min_ndfc_version", "min_length", "max_length"]
+          "min_ndfc_version", "min_length", "max_length", "min_value", "max_value"]
+
+# The registry spells the numeric bounds `min` and `max`; the runtime table spells them
+# `min_value` and `max_value`. The rename is deliberate: a substring test for "min" -- the
+# obvious way to look for these -- also matches `min_ndfc_version` and `min_length`, which is
+# exactly the confusion that let 15 declared bounds sit unenforced without anyone noticing.
+REGISTRY_FIELD_ALIASES = {"min_value": "min", "max_value": "max"}
+
+# Mechanisms gie_engine can interpret. Anything else is rejected at compile time rather than
+# shipped into the runtime table -- see the fail-open note in compile_rows().
+KNOWN_MECHANISMS = {"passthrough", "child_pti"}
 
 # Public profile keys owned by the committed set; see the module docstring for why a row
 # outside the set that reuses one of them is rejected instead of skipped.
@@ -187,10 +208,30 @@ def compile_rows(slice_rows):
                 "unexpected profile_key for committed binding {0!r}".format(key)
             )
         seen.add(key)
+        # A mechanism the engine does not know is FAIL-OPEN, not inert: gie_engine compares
+        # `== GIE_MECH_PASSTHROUGH` at four sites (generic arg spec, invalid-parent guard,
+        # nvPair wire serialization, carry-forward), so an unknown or missing value silently
+        # behaves exactly like child_pti and drops the binding out of the generic route. A typo
+        # would ship a key that is transported but unguarded and never wire-serialized.
+        #
+        # raise, not assert: `python -O` strips assertions, and this is a correctness gate.
+        #
+        # This only rejects labels the engine cannot interpret. It does NOT catch a VALID
+        # `child_pti` placed on a binding that owns no dedicated implementation -- which is the
+        # error this table actually hit. That needs a test asserting every child_pti binding has
+        # one; see test_gie_routed_bindings.py.
+        mech = r.get("mechanism")
+        if mech not in KNOWN_MECHANISMS:
+            raise ValueError(
+                "binding {0!r} declares mechanism {1!r}; known values are {2}".format(
+                    key, mech, sorted(KNOWN_MECHANISMS)
+                )
+            )
         row = {}
         for f in FIELDS:
-            if f in r:
-                v = r[f]
+            src = REGISTRY_FIELD_ALIASES.get(f, f)
+            if src in r:
+                v = r[src]
                 if isinstance(v, list):
                     v = tuple(v)
                 row[f] = v

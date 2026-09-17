@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = e4b0db05cd870856a1a85b73f9544d17431a7bbce9ab7dc4d5bcfaf10aff32ca
+# provenance_sha256 = 7f4f8f6d118d5e341a70fbc6b30fa5261b456de32643ffa5959561efb6364044
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "e4b0db05cd870856a1a85b73f9544d17431a7bbce9ab7dc4d5bcfaf10aff32ca"
+PROVENANCE_SHA256 = "7f4f8f6d118d5e341a70fbc6b30fa5261b456de32643ffa5959561efb6364044"
 
 BINDING_TABLE = (
     {
@@ -398,6 +398,17 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_routed_host',
+        'parent_nvpair': 'ENABLE_OSPF',
+        'profile_key': 'enable_ospf',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+    },
+    {
+        'parent_template': 'int_routed_host',
         'parent_nvpair': 'IPV4_ACL_IN',
         'profile_key': 'ipv4_acl_in',
         'applicable_interface_type': 'eth',
@@ -407,6 +418,43 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 64,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'OSPF_AREA_ID',
+        'profile_key': 'ospf_area_id',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'string',
+        'default_template': '0.0.0.0',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 15,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'OSPF_COST',
+        'profile_key': 'ospf_cost',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 65535,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'OSPF_TAG',
+        'profile_key': 'ospf_tag',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 20,
     },
     {
         'parent_template': 'int_trunk_host',
