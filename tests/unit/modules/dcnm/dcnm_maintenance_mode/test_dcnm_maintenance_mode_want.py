@@ -30,14 +30,10 @@ import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import (
-    ParamsSpec, Want)
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.test_params_validate_v2 import \
-    ParamsValidate
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import (
-    configs_want, does_not_raise, params)
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import ParamsSpec, Want
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.test_params_validate_v2 import ParamsValidate
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import configs_want, does_not_raise, params
 
 
 def test_dcnm_maintenance_mode_want_00000() -> None:
