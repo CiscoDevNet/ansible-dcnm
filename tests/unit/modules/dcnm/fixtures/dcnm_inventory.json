@@ -584,6 +584,82 @@
     ]
   },
 
+  "mock_inv_discover_multiple_params": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+      {
+        "auth": true,
+        "deviceIndex": "n9k-109(FOX1821H035)",
+        "hopCount": 0,
+        "ipaddr": "192.168.1.109",
+        "known": true,
+        "lastChange": null,
+        "platform": "N9K-C9504",
+        "reachable": true,
+        "selectable": false,
+        "statusReason": "already managed",
+        "sysName": "n9k-109",
+        "valid": true,
+        "version": "9.3(4.76)"
+      },
+      {
+        "auth": true,
+        "deviceIndex": "n9k-110(FGE19030RSA)",
+        "hopCount": 0,
+        "ipaddr": "192.168.1.110",
+        "known": false,
+        "lastChange": null,
+        "platform": "N9K-C9508",
+        "reachable": true,
+        "selectable": true,
+        "statusReason": "manageable",
+        "sysName": "n9k-110",
+        "valid": true,
+        "version": "9.3(3)"
+      }
+    ]
+  },
+
+  "mock_inv_discover_bf_multiple_params": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": [
+      {
+        "auth": true,
+        "deviceIndex": "n9k-110(FGE19030RSA)",
+        "hopCount": 0,
+        "ipaddr": "192.168.1.110",
+        "known": false,
+        "lastChange": null,
+        "platform": "N9K-C9508",
+        "reachable": true,
+        "selectable": true,
+        "statusReason": "manageable",
+        "sysName": "n9k-110",
+        "valid": true,
+        "version": "9.3(3)"
+      },
+      {
+        "auth": true,
+        "deviceIndex": "n9k-107.cisco.com(SAL1812NTBP)",
+        "hopCount": 0,
+        "ipaddr": "192.168.1.107",
+        "known": false,
+        "lastChange": null,
+        "platform": "N9K-C9396PX",
+        "reachable": true,
+        "selectable": true,
+        "statusReason": "manageable",
+        "sysName": "n9k-107",
+        "valid": true,
+        "version": "7.0(3)I7(5)"
+      }
+    ]
+  },
+
   "mock_inv_blank_discover_params": {
     "ERROR": "",
     "RETURN_CODE": 200,

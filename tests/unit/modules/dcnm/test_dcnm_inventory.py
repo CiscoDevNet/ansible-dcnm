@@ -23,6 +23,7 @@ from ansible_collections.cisco.dcnm.plugins.modules import dcnm_inventory
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
 import copy
+import json
 
 __copyright__ = "Copyright (c) 2020 Cisco and/or its affiliates."
 __author__ = "Karthik Babu Harichandra Babu, Praveen Ramoorthy"
@@ -200,6 +201,12 @@ class TestDcnmInvModule(TestDcnmModule):
         )
         self.mock_inv_discover107_params = copy.deepcopy(
             self.test_data.get("mock_inv_discover107_params")
+        )
+        self.mock_inv_discover_multiple_params = copy.deepcopy(
+            self.test_data.get("mock_inv_discover_multiple_params")
+        )
+        self.mock_inv_discover_bf_multiple_params = copy.deepcopy(
+            self.test_data.get("mock_inv_discover_bf_multiple_params")
         )
         self.mock_inv_blank_discover_params = copy.deepcopy(
             self.test_data.get("mock_inv_blank_discover_params")
@@ -401,7 +408,10 @@ class TestDcnmInvModule(TestDcnmModule):
                 self._send_route(
                     "POST",
                     "/inventory/test-reachability",
-                    [self.mock_inv_discover_params, self.mock_inv_discover107_params],
+                    [
+                        self.mock_inv_discover_bf_multiple_params,
+                        self.mock_inv_discover_bf_multiple_params,
+                    ],
                 ),
                 self._send_route(
                     "POST",
@@ -443,7 +453,10 @@ class TestDcnmInvModule(TestDcnmModule):
                 self._send_route(
                     "POST",
                     "/inventory/test-reachability",
-                    [self.mock_inv_discover_params, self.mock_inv_discover107_params],
+                    [
+                        self.mock_inv_discover_bf_multiple_params,
+                        self.mock_inv_discover_bf_multiple_params,
+                    ],
                 ),
                 self._send_route(
                     "POST",
@@ -495,7 +508,7 @@ class TestDcnmInvModule(TestDcnmModule):
                 self._send_route(
                     "POST",
                     "/inventory/test-reachability",
-                    [self.mock_inv_discover_params, self.mock_inv_discover107_params],
+                    self.mock_inv_discover_bf_multiple_params,
                 ),
                 self._send_route(
                     "POST",
@@ -541,7 +554,7 @@ class TestDcnmInvModule(TestDcnmModule):
                 self._send_route(
                     "POST",
                     "/inventory/test-reachability",
-                    [self.mock_inv_discover109_params, self.mock_inv_discover_params],
+                    self.mock_inv_discover_multiple_params,
                 ),
                 self._send_route(
                     "POST",
@@ -1317,6 +1330,49 @@ class TestDcnmInvModule(TestDcnmModule):
             self.assertEqual(resp["RETURN_CODE"], 200)
             self.assertEqual(resp["MESSAGE"], "OK")
 
+    def test_dcnm_inv_test_reachability_batches_seed_ips(self):
+        inventory = dcnm_inventory.DcnmInventory.__new__(dcnm_inventory.DcnmInventory)
+        inventory.params = {"state": "merged"}
+        inventory.fabric = "nac-fabric1"
+        inventory.nd = False
+        inventory.module = object()
+        inventory.result = dict(changed=False, diff=[], response=[])
+        inventory.handle_response = lambda response, op: (False, True)
+
+        base_payload = {
+            "snmpV3AuthProtocol": 0,
+            "username": "username",
+            "password": "password",
+            "maxHops": 0,
+            "cdpSecondTimeout": "5",
+            "role": "leaf",
+            "preserveConfig": False,
+            "discoveryCredForLan": "true",
+        }
+        create_params = []
+        for seed_ip in ["10.23.244.61", "10.23.244.71"]:
+            create_param = copy.deepcopy(base_payload)
+            create_param["seedIP"] = seed_ip
+            create_params.append(create_param)
+
+        self.run_dcnm_send.return_value = {
+            "RETURN_CODE": 200,
+            "MESSAGE": "OK",
+            "DATA": [
+                {"ipaddr": "10.23.244.61", "deviceIndex": "leaf-1(SN61)"},
+                {"ipaddr": "10.23.244.71", "deviceIndex": "leaf-2(SN71)"},
+            ],
+        }
+
+        updated = inventory.batch_update_create_params(create_params)
+        payload = json.loads(self.run_dcnm_send.call_args[0][3])
+
+        self.assertEqual(self.run_dcnm_send.call_count, 1)
+        self.assertIn("/inventory/test-reachability", self.run_dcnm_send.call_args[0][2])
+        self.assertEqual(payload["seedIP"], "10.23.244.61,10.23.244.71")
+        self.assertEqual(updated[0]["switches"][0]["ipaddr"], "10.23.244.61")
+        self.assertEqual(updated[1]["switches"][0]["ipaddr"], "10.23.244.71")
+
     def test_dcnm_inv_merge_multiple_brownfield_switch_fabric(self):
         set_module_args(
             dict(
@@ -1406,6 +1462,40 @@ class TestDcnmInvModule(TestDcnmModule):
         for resp in result["response"]:
             self.assertEqual(resp["RETURN_CODE"], 200)
             self.assertEqual(resp["MESSAGE"], "OK")
+
+    def test_dcnm_inv_delete_switch_batches_serials(self):
+        inventory = dcnm_inventory.DcnmInventory.__new__(dcnm_inventory.DcnmInventory)
+        serials = ["SN{0:03}".format(index) for index in range(51)]
+        inventory.diff_delete = serials
+        inventory.fabric = "nac-fabric1"
+        inventory.nd = False
+        inventory.nd_prefix = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
+        inventory.module = object()
+        inventory.result = dict(changed=False, diff=[], response=[])
+        inventory.handle_response = lambda response, op: (False, True)
+        inventory.failure = lambda response: self.fail(
+            "delete_switch should not fail for OK responses"
+        )
+        self.run_dcnm_send.side_effect = [
+            {"RETURN_CODE": 200, "MESSAGE": "OK"},
+            {"RETURN_CODE": 200, "MESSAGE": "OK"},
+        ]
+
+        inventory.delete_switch()
+
+        first_path = "/rest/control/fabrics/nac-fabric1/switches/{0}".format(
+            ",".join(serials[:50])
+        )
+        second_path = "/rest/control/fabrics/nac-fabric1/switches/{0}".format(
+            ",".join(serials[50:])
+        )
+
+        self.assertEqual(self.run_dcnm_send.call_count, 2)
+        self.assertEqual(self.run_dcnm_send.call_args_list[0][0][1], "DELETE")
+        self.assertEqual(self.run_dcnm_send.call_args_list[0][0][2], first_path)
+        self.assertEqual(self.run_dcnm_send.call_args_list[1][0][1], "DELETE")
+        self.assertEqual(self.run_dcnm_send.call_args_list[1][0][2], second_path)
+        self.assertEqual(len(inventory.result["response"]), 2)
 
     def test_dcnm_inv_delete_all_switch_fabric(self):
         set_module_args(dict(state="deleted", fabric="kharicha-fabric"))
