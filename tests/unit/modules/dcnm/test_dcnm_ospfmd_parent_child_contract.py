@@ -17,9 +17,12 @@ Run:
 """
 
 import os
+import inspect
 import re
 
 import pytest
+
+from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
 # The shipping templates are reference copies kept next to the investigation.
 _TEMPLATE_DIRS = [
@@ -118,36 +121,27 @@ def test_keychain_branch_supersedes_standalone_and_legacy(parent_src):
 # --------------------------------------------------------------------------
 # 5. Phase-3 contract: message-digest + legacy-key managed; keychain excluded
 # --------------------------------------------------------------------------
-def test_module_manages_legacy_key_pair_but_not_keychain():
-    """The legacy-key mode supersedes the earlier 'no key field' invariant for
-    the legacy-key PAIR only. The module now manages the message-digest Boolean AND
-    the ``ospf_auth_key_id``/``ospf_auth_key`` pair, transported as parent nvPairs
-    on int_fabric_loopback_11_1 (NDFC builds the ospf_interface_auth child). The
-    keychain remains fabric-owned and is NEVER a writable dcnm_interface field."""
-    with open(os.path.abspath(MODULE), encoding="utf-8") as fh:
-        src = fh.read()
-    # message-digest Boolean still managed
-    assert "ENABLE_OSPF_AUTH_MESSAGE_DIGEST" in src
-    # legacy-key pair now IS managed: loopback profile args + full-pair validator
-    for required in (
-        "ospf_auth_key_id=dict(type=\"int\")",
-        "ospf_auth_key=dict(type=\"str\", no_log=True)",
-        "def dcnm_intf_validate_ospf_auth_key_input",
-        "OSPF_AUTH_KEY_ID_NVPAIR",
-        "OSPF_AUTH_KEY_NVPAIR",
-    ):
-        assert required in src, (
-            "Phase-3 must manage the legacy-key pair: missing {0}".format(required)
+def test_the_module_manages_none_of_it_and_the_fabric_owns_all_of_it():
+    """INVERTED. It used to assert the module managed the legacy-key pair.
+
+    That was true and is no longer: the capability was withdrawn because the template shows the
+    fabric owning the whole feature. The tests above read that from the shipping source -- the
+    block is gated on the fabric's link-state protocol, the enable flag and the key defaults come
+    from fabricSettings, and a keychain fabric setting deletes the message-digest child outright.
+    A per-loopback override on top of that has no use case.
+
+    So the contract now is the simple one: dcnm_interface declares none of the three as a
+    writable field, and rejects them by name if a playbook still carries them.
+    """
+    src = inspect.getsource(dcnm_interface)
+    for field in ("enable_ospf_auth_message_digest", "ospf_auth_key_id", "ospf_auth_key"):
+        assert "{0}=dict(".format(field) not in src, (
+            "{0} is still a writable field; it was withdrawn".format(field)
         )
-    # keychain stays fabric-owned: never exposed as a writable interface field and
-    # never assigned into an outgoing nvPairs payload.
-    for forbidden in (
-        'nvPairs"]["ospfAuthKeychainName"',
-        "nvPairs[OSPF_AUTH_KEYCHAIN_NVPAIR]",
-        "ospf_auth_keychain=dict",
-        "ospf_auth_keychain_name=dict",
-    ):
-        assert forbidden not in src, (
-            "dcnm_interface must not manage the fabric-owned OSPF keychain field: "
-            "{0}".format(forbidden)
-        )
+    assert "RETIRED_LOOPBACK_OSPF_AUTH_KEYS" in src, (
+        "the withdrawn keys must be rejected by name, not silently ignored"
+    )
+    # The keychain was never writable here and still is not -- that invariant predates the
+    # retirement and survives it unchanged.
+    for keychain in ("ospf_auth_keychain_name", "ospfAuthKeychainName"):
+        assert "{0}=dict(".format(keychain) not in src

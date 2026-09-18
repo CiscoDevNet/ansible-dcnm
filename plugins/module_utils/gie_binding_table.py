@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 6130b767d8266d6708dba8851326859f93e7f0a55149fae060e0557e0080afc8
+# provenance_sha256 = f181a27dee5021176b99afd8e5d4efe569ce935233ca1e533e3ca5f031ce963a
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "6130b767d8266d6708dba8851326859f93e7f0a55149fae060e0557e0080afc8"
+PROVENANCE_SHA256 = "f181a27dee5021176b99afd8e5d4efe569ce935233ca1e533e3ca5f031ce963a"
 
 BINDING_TABLE = (
     {
@@ -97,38 +97,6 @@ BINDING_TABLE = (
         'valid_values': ('no', 'network', 'normal'),
         'default_template': 'no',
         'mechanism': 'passthrough',
-        'min_ndfc_version': '12.6.0.267',
-    },
-    {
-        'parent_template': 'int_fabric_loopback_11_1',
-        'parent_nvpair': 'ENABLE_OSPF_AUTH_MESSAGE_DIGEST',
-        'profile_key': 'enable_ospf_auth_message_digest',
-        'applicable_interface_type': 'lo',
-        'applicable_mode': 'fabric',
-        'type': 'boolean',
-        'default_template': False,
-        'mechanism': 'child_pti',
-        'min_ndfc_version': '12.6.0.267',
-    },
-    {
-        'parent_template': 'int_fabric_loopback_11_1',
-        'parent_nvpair': 'OSPF_AUTH_KEY',
-        'profile_key': 'ospf_auth_key',
-        'applicable_interface_type': 'lo',
-        'applicable_mode': 'fabric',
-        'type': 'string',
-        'mechanism': 'child_pti',
-        'min_ndfc_version': '12.6.0.267',
-        'min_length': 1,
-    },
-    {
-        'parent_template': 'int_fabric_loopback_11_1',
-        'parent_nvpair': 'OSPF_AUTH_KEY_ID',
-        'profile_key': 'ospf_auth_key_id',
-        'applicable_interface_type': 'lo',
-        'applicable_mode': 'fabric',
-        'type': 'integer',
-        'mechanism': 'child_pti',
         'min_ndfc_version': '12.6.0.267',
     },
     {

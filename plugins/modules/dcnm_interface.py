@@ -2032,30 +2032,75 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
 from ..module_utils.common.log_v2 import Log
 
 #
-OSPF_AUTH_MD_PROFILE_KEY = "enable_ospf_auth_message_digest"
-OSPF_AUTH_MD_NVPAIR = "ENABLE_OSPF_AUTH_MESSAGE_DIGEST"
-OSPF_AUTH_MD_PARENT_TEMPLATE = "int_fabric_loopback_11_1"
-OSPF_AUTH_MD_MIN_NDFC_VERSION = "12.6.0.267"  # assumed (validated_on); confirm real floor
+# The parent whose full HAVE nvPair set was observed and classified, so the generic
+# same-parent carry-forward is scoped to it. Named for the parent, not for the OSPF-MD
+# feature that used to be the reason for looking at it.
+LOOPBACK_CARRY_FORWARD_PARENT = "int_fabric_loopback_11_1"
 
-# OSPF legacy-key mode on the fabric loopback (int_fabric_loopback_11_1). The interface profile
-# carries the pair OSPF_AUTH_KEY_ID + OSPF_AUTH_KEY (parent nvPairs); NDFC's parent DSL creates the
-# ``ospf_interface_auth`` child from those interface values (the module MUST NOT fabricate the child).
-# Same parent + same version floor as OSPF-MD. Keychain (``ospfAuthKeychainName``) is FABRIC-owned
-# (fabricSettings overwrites the interface param in the parent DSL) -> it is NOT a dcnm_interface
-# field and is deliberately excluded here; supporting it belongs to dcnm_fabric.
-OSPF_AUTH_KEY_ID_PROFILE_KEY = "ospf_auth_key_id"
-OSPF_AUTH_KEY_PROFILE_KEY = "ospf_auth_key"
-OSPF_AUTH_KEY_ID_NVPAIR = "OSPF_AUTH_KEY_ID"
-OSPF_AUTH_KEY_NVPAIR = "OSPF_AUTH_KEY"
-OSPF_AUTH_KEYCHAIN_NVPAIR = "ospfAuthKeychainName"  # fabric-owned; excluded from dcnm_interface
-# Profile keys a user might reach for to set the (excluded) keychain; rejected with a clear pointer.
+# Profile keys withdrawn with the fabric-loopback OSPF-auth capability.
+#
+# On a fabric loopback, OSPF authentication is UNDERLAY authentication and fabricSettings owns
+# it: the template gates the whole block on the fabric's link-state protocol, reads
+# OSPF_AUTH_ENABLE / OSPF_AUTH_KEY_ID / OSPF_AUTH_KEY from the fabric, and a keychain fabric
+# setting deletes whatever an interface value created. Configuring it per loopback is not part
+# of the product.
+#
+# They are REJECTED rather than dropped from the spec and ignored. Silently accepting intent and
+# discarding it is the worst of the three options: the playbook looks applied, the controller
+# never hears about it, and nothing tells the operator. The message names the fabric setting
+# that does own the feature.
+RETIRED_LOOPBACK_OSPF_AUTH_KEYS = {
+    "enable_ospf_auth_message_digest": "OSPF_AUTH_ENABLE",
+    "ospf_auth_key_id": "OSPF_AUTH_KEY_ID",
+    "ospf_auth_key": "OSPF_AUTH_KEY",
+}
+
+# Profile keys whose VALUE is key material, on ANY interface type.
+#
+# WHY THIS IS NOT PART OF THE REJECTION ABOVE, AND MUST NOT BE
+#
+# Ansible serialises the module's arguments into `invocation.module_args` on EVERY result --
+# successes, failures, and argument-spec errors alike. A value only stays out of that if it was
+# registered in `module.no_log_values` BEFORE the result is formatted. So key material has to be
+# registered on arrival, not at the point some particular check happens to object to it.
+#
+# A first attempt scrubbed inside the loopback rejection loop, which failed in three measured
+# ways, all with the real serialiser: the loop rejects on the FIRST withdrawn key it meets and
+# `ospf_auth_key` is the third, so 'key_id + key' and 'boolean + key' both leaked; and it stops
+# at the first offending interface, so a second interface carrying the key leaked too. Only the
+# case where the key was the sole offender was covered.
+#
+# The lesson generalises past this rejection. `ospf_auth_key` is about to become a LEGITIMATE
+# field on int_routed_host, int_subif and int_vlan -- the withdrawn global validators were
+# removed precisely so it could be. On those parents nothing rejects it, so a rejection-time
+# scrub would protect it exactly where it is refused and not at all where it is accepted, which
+# is backwards. Registration therefore happens once, on arrival, for the whole config, and is
+# indifferent to what any later check decides.
+SECRET_PROFILE_KEYS = frozenset({"ospf_auth_key"})
+
+# Kept as the loopback rejection's own view of which of ITS withdrawn keys carry key material.
+# It no longer drives any scrubbing -- SECRET_PROFILE_KEYS does that, earlier and wider.
+RETIRED_LOOPBACK_OSPF_AUTH_SECRETS = frozenset({"ospf_auth_key"})
+
+# The keychain was never a dcnm_interface field, and it is the reason the other three stopped
+# being one: ``ospfAuthKeychainName`` is written by fabricSettings, which overwrites the interface
+# parameter in the parent DSL. An interface value for it is therefore not merely redundant, it is
+# unreachable -- the fabric wins every time.
+#
+# These spellings are rejected for the same reason the withdrawn keys above are, and NOT for the
+# same reason they once were. The old rejection said "not supported yet"; this one says "the
+# fabric owns it". Without an explicit rejection they fall through to lo_prof_spec, which does not
+# declare them, and are dropped in silence -- a playbook that looks applied and a controller that
+# never heard about it.
+#
+# The message deliberately does not name a fabricSettings field. The interface-side nvPair name is
+# verified; the fabric-side one is not, and pointing an operator at a field that may not exist is
+# worse than telling them which layer to look in.
 OSPF_AUTH_KEYCHAIN_PROFILE_KEYS = (
     "ospf_auth_keychain_name",
     "ospf_auth_keychain",
     "ospfAuthKeychainName",
 )
-OSPF_AUTH_KEY_ID_MIN = 0
-OSPF_AUTH_KEY_ID_MAX = 255
 
 # Additive registry-driven binding engine. Consumes the packaged static
 # binding table only; additive; explicit-only; NDFC executes template effects. The engine owns
@@ -2070,6 +2115,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_nvpair_keymap,
     gie_carry_forward_bindings,
     gie_describe_value_type,
+    gie_fabric_owned_carry_forward,
     gie_have_carry_forward_nvpairs,
     gie_validate_binding_value,
 )
@@ -2147,6 +2193,9 @@ class DcnmIntf:
         self.params = module.params
         self.fabric = module.params["fabric"]
         self.config = copy.deepcopy(module.params.get("config"))
+        # Before anything can fail, before dispatch by type, and regardless of whether any check
+        # will accept or refuse the field. See SECRET_PROFILE_KEYS.
+        self.dcnm_intf_register_secret_values(self.config)
         self.pb_input = []
         self.check_mode = False
         self.intf_info = []
@@ -2218,7 +2267,6 @@ class DcnmIntf:
 
         self._ospf_auth_md_capability = None
         self._ospf_auth_md_capability_reason = None
-        self._ospf_auth_md_requests = {}
 
         self.inventory_data = {}
         self.manageable = []
@@ -3169,59 +3217,6 @@ class DcnmIntf:
     def has_bulk_api(self, value):
         self._has_bulk_api = value
 
-    def dcnm_intf_ospf_auth_message_digest_capability(self):
-        """
-        Return "supported" when the controller is new enough to manage
-        nvPairs.ENABLE_OSPF_AUTH_MESSAGE_DIGEST on fabric loopbacks, otherwise
-        "unsupported". Gated on the NDFC version, like the other version-scoped
-        parameters; the verdict is memoized for the module execution.
-        """
-        if self._ospf_auth_md_capability is not None:
-            return self._ospf_auth_md_capability
-
-        if self._ndfc_version_gte(OSPF_AUTH_MD_MIN_NDFC_VERSION):
-            capability = "supported"
-            reason = "NDFC {0} >= {1}".format(
-                self.ndfc_version, OSPF_AUTH_MD_MIN_NDFC_VERSION
-            )
-        else:
-            capability = "unsupported"
-            reason = "NDFC {0} < required {1}".format(
-                self.ndfc_version, OSPF_AUTH_MD_MIN_NDFC_VERSION
-            )
-
-        self._ospf_auth_md_capability = capability
-        self._ospf_auth_md_capability_reason = reason
-        return capability
-
-    @staticmethod
-    def dcnm_intf_normalize_ospf_auth_message_digest(value):
-        """
-        Normalize a known ``ENABLE_OSPF_AUTH_MESSAGE_DIGEST`` representation to
-        ``"true"`` or ``"false"``.
-
-        The controller may return this key as a native boolean, as the strings
-        ``"true"``/``"false"``, or omit it entirely on interfaces created before
-        the property existed. Absence, an empty value, and both false forms all
-        mean the template default, so they compare equal.
-
-        Anything else is tagged unexpected rather than folded into ``"false"``.
-        Folding would make the module report idempotence while leaving an
-        ambiguous controller value in place; keeping it unequal makes the module
-        push the intended value instead.
-        """
-        if value is None:
-            return "false"
-        if isinstance(value, bool):
-            return "true" if value else "false"
-        if isinstance(value, str):
-            text = value.strip().lower()
-            if text == "true":
-                return "true"
-            if text in ("false", ""):
-                return "false"
-        return "unexpected:{0}".format(type(value).__name__)
-
     def dcnm_intf_ospf_md_have_unavailable(self, name, sno):
         """
         Report whether the current state of a fabric-loopback parent could NOT be
@@ -3291,299 +3286,6 @@ class DcnmIntf:
                 name, sno
             )
         )
-
-    def dcnm_intf_ospf_md_guard_policy_mismatch(self, want, have, name, sno, fabric):
-        """
-        Safeguard an explicit false across a policy change.
-
-        When WANT and HAVE policy names differ, compare schedules an update and
-        continues BEFORE the per-nvPair feature reconciliation. If the intended
-        value is false but it was WITHHELD from the payload (a legacy/unsupported
-        parent, so the nvPair is absent from WANT) and the current state reports
-        the feature enabled or an unexpected value, fail closed: the false cannot
-        be applied across the policy change and true/unknown state must not be
-        left silently enabled. A false that rides the payload (supported parent)
-        needs no safeguard, and a true intent already failed input validation.
-        """
-        if want.get("policy") != OSPF_AUTH_MD_PARENT_TEMPLATE:
-            return
-        want_nv = want["interfaces"][0].get("nvPairs", {})
-        if OSPF_AUTH_MD_NVPAIR in want_nv:
-            return  # the value rides the update payload; nothing to safeguard
-        if self._ospf_auth_md_requests.get((name.lower(), sno, fabric)) is not False:
-            return  # only a withheld explicit false needs this safeguard
-
-        shape_problem = self._dcnm_intf_ospf_md_have_shape_problem(have, name, sno)
-        if shape_problem is not None:
-            self.module.fail_json(
-                msg="'{0}' was requested as false on interface {1}, but its policy "
-                "is changing and the controller cannot manage nvPair '{2}'. The "
-                "current state could not be determined ({3}); the feature cannot be "
-                "cleared over unknown state and no change was sent.".format(
-                    OSPF_AUTH_MD_PROFILE_KEY, name, OSPF_AUTH_MD_NVPAIR, shape_problem
-                )
-            )
-            return
-
-        _absent = object()
-        have_intf = self._dcnm_intf_ospf_md_matching_interfaces(have, name)[0]
-        nvpairs = have_intf.get("nvPairs", {})
-        have_md = nvpairs.get(OSPF_AUTH_MD_NVPAIR, _absent)
-        have_norm = (
-            self.dcnm_intf_normalize_ospf_auth_message_digest(have_md)
-            if have_md is not _absent
-            else "false"
-        )
-        if have_norm != "false":
-            self.module.fail_json(
-                msg="'{0}' was requested as false on interface {1}, but its policy "
-                "is changing and the controller cannot manage nvPair '{2}' while "
-                "its current state is '{3}'. The feature cannot be cleared across "
-                "this policy change; no change was sent.".format(
-                    OSPF_AUTH_MD_PROFILE_KEY, name, OSPF_AUTH_MD_NVPAIR, have_norm
-                )
-            )
-
-    @staticmethod
-    def _dcnm_intf_ospf_md_matching_interfaces(have, name):
-        """Return every normalized HAVE interface record matching ``name``."""
-        if not isinstance(have, dict):
-            return []
-        return [
-            intf
-            for intf in (have.get("interfaces", []) or [])
-            if (
-                isinstance(intf, dict)
-                and isinstance(intf.get("ifName"), str)
-                and intf["ifName"].lower() == name.lower()
-            )
-        ]
-
-    @staticmethod
-    def _dcnm_intf_ospf_md_matching_interface(have, name):
-        """Compatibility wrapper returning one match only when unambiguous."""
-        matches = DcnmIntf._dcnm_intf_ospf_md_matching_interfaces(have, name)
-        return matches[0] if len(matches) == 1 else None
-
-    def _dcnm_intf_ospf_md_have_shape_problem(self, have, name, sno):
-        """Return a short reason string if the HAVE record is not well formed
-        enough to interpret target absence, else None. Never prints values."""
-        if not isinstance(have, dict):
-            return "current state is not a mapping"
-        policy = have.get("policy")
-        if not isinstance(policy, str) or policy.strip() == "":
-            return "current policy is missing or malformed"
-        if not isinstance(have.get("interfaces"), list):
-            return "current interface list is missing or malformed"
-        matches = self._dcnm_intf_ospf_md_matching_interfaces(have, name)
-        if len(matches) != 1:
-            return "current interface identity is missing or ambiguous"
-        have_intf = matches[0]
-        if self._dcnm_intf_normalize_serial(
-            have_intf.get("serialNumber")
-        ) != self._dcnm_intf_normalize_serial(sno):
-            return "current interface serial is missing or does not match"
-        if not isinstance(have_intf.get("nvPairs"), dict):
-            return "current interface nvPairs is missing or malformed"
-        return None
-
-    def dcnm_intf_validate_ospf_auth_message_digest_input(self, cfg):
-        """
-        GLOBAL local validation of ``enable_ospf_auth_message_digest`` across the
-        COMPLETE config: presence, raw type (native boolean only), interface type
-        (loopback only) and mode (``fabric`` only).
-
-        ``fail_json`` when the option is a non-boolean, or is supplied on any
-        interface that is not a fabric loopback (type ``lo`` + mode ``fabric``).
-
-        This runs once for every config item before dispatch by interface type,
-        so the field is rejected on an Ethernet, SVI or any other interface type
-        instead of slipping past the loopback-only validator. The value is the raw
-        playbook input here (validate_list_of_dicts runs later), so null, str, int,
-        list and dict stay visible; isinstance(True/False, bool) is True while
-        isinstance(1, bool) is False, so integers that look boolean fail too.
-        """
-        for cfg_item in self.config:
-            profile = cfg_item.get("profile")
-            if not isinstance(profile, dict):
-                continue
-            if OSPF_AUTH_MD_PROFILE_KEY not in profile:
-                continue
-
-            raw_value = profile.get(OSPF_AUTH_MD_PROFILE_KEY)
-            if not isinstance(raw_value, bool):
-                self.module.fail_json(
-                    msg="Invalid parameters in playbook: while processing interface {0}, "
-                    "'{1}' must be a native boolean true or false, given {2}. No "
-                    "template metadata was queried and no change was sent.".format(
-                        cfg_item.get("name"),
-                        OSPF_AUTH_MD_PROFILE_KEY,
-                        gie_describe_value_type(raw_value),
-                    )
-                )
-
-            if cfg_item.get("type") != "lo":
-                self.module.fail_json(
-                    msg="Invalid parameters in playbook: while processing interface {0}, "
-                    "'{1}' is supported only on fabric loopback interfaces "
-                    "(type 'lo', mode 'fabric'); found on a '{2}' interface. No "
-                    "template metadata was queried and no change was sent.".format(
-                        cfg_item.get("name"),
-                        OSPF_AUTH_MD_PROFILE_KEY,
-                        cfg_item.get("type"),
-                    )
-                )
-
-            if profile.get("mode") != "fabric":
-                self.module.fail_json(
-                    msg="Invalid parameters in playbook: while processing interface {0}, "
-                    "'{1}' is supported only for loopback interfaces with 'mode: fabric', "
-                    "given mode = '{2}'. No template metadata was queried and no "
-                    "change was sent.".format(
-                        cfg_item.get("name"),
-                        OSPF_AUTH_MD_PROFILE_KEY,
-                        profile.get("mode"),
-                    )
-                )
-
-    def dcnm_intf_validate_ospf_auth_key_input(self, cfg):
-        """
-        GLOBAL local validation of the OSPF legacy-key pair
-        (``ospf_auth_key_id`` + ``ospf_auth_key``) across the COMPLETE config,
-        run once per config item before dispatch by interface type (mirrors the
-        message-digest validator). Values here are the raw playbook input.
-
-        Rules (all fail_json, no template metadata queried, no change sent):
-        - **Keychain is excluded** — any keychain-shaped profile key is rejected
-          with a pointer to dcnm_fabric (fabricSettings owns ``ospfAuthKeychainName``;
-          the parent DSL overwrites the interface param, so it is a dead field here).
-        - **Full pair** — ``ospf_auth_key_id`` and ``ospf_auth_key`` must be set
-          together (both or neither); a lone member is rejected.
-        - **Fabric loopback only** — the pair is supported only on type ``lo`` +
-          mode ``fabric`` (same parent as message-digest).
-        - **Types/range** — ``ospf_auth_key_id`` is an integer in
-          [0, 255]; ``ospf_auth_key`` is a non-empty string. The key value is NEVER
-          echoed in an error message.
-        """
-        for cfg_item in self.config:
-            profile = cfg_item.get("profile")
-            if not isinstance(profile, dict):
-                continue
-
-            # Keychain exclusion (surface clearly instead of silently dropping).
-            for kc in OSPF_AUTH_KEYCHAIN_PROFILE_KEYS:
-                if kc in profile:
-                    self.module.fail_json(
-                        msg="Invalid parameters in playbook: while processing interface {0}, "
-                        "'{1}' is not a supported dcnm_interface field. The OSPF authentication "
-                        "keychain is owned by the fabric (fabricSettings 'ospfAuthKeychainName'); "
-                        "the parent template overwrites the interface value, so it has no effect "
-                        "here. Configure the keychain via dcnm_fabric. No template metadata was "
-                        "queried and no change was sent.".format(
-                            cfg_item.get("name"), kc
-                        )
-                    )
-
-            has_id = (
-                OSPF_AUTH_KEY_ID_PROFILE_KEY in profile
-                and profile.get(OSPF_AUTH_KEY_ID_PROFILE_KEY) is not None
-            )
-            has_key = (
-                OSPF_AUTH_KEY_PROFILE_KEY in profile
-                and profile.get(OSPF_AUTH_KEY_PROFILE_KEY) is not None
-            )
-            if not has_id and not has_key:
-                continue
-
-            if has_id != has_key:
-                missing = (
-                    OSPF_AUTH_KEY_PROFILE_KEY if has_id else OSPF_AUTH_KEY_ID_PROFILE_KEY
-                )
-                present = (
-                    OSPF_AUTH_KEY_ID_PROFILE_KEY if has_id else OSPF_AUTH_KEY_PROFILE_KEY
-                )
-                self.module.fail_json(
-                    msg="Invalid parameters in playbook: while processing interface {0}, OSPF "
-                    "legacy-key requires both '{1}' and '{2}' to be set together; '{3}' was given "
-                    "without '{4}'. No template metadata was queried and no change was sent.".format(
-                        cfg_item.get("name"),
-                        OSPF_AUTH_KEY_ID_PROFILE_KEY,
-                        OSPF_AUTH_KEY_PROFILE_KEY,
-                        present,
-                        missing,
-                    )
-                )
-
-            if cfg_item.get("type") != "lo":
-                self.module.fail_json(
-                    msg="Invalid parameters in playbook: while processing interface {0}, OSPF "
-                    "legacy-key ('{1}'/'{2}') is supported only on fabric loopback interfaces "
-                    "(type 'lo', mode 'fabric'); found on a '{3}' interface. No template metadata "
-                    "was queried and no change was sent.".format(
-                        cfg_item.get("name"),
-                        OSPF_AUTH_KEY_ID_PROFILE_KEY,
-                        OSPF_AUTH_KEY_PROFILE_KEY,
-                        cfg_item.get("type"),
-                    )
-                )
-
-            if profile.get("mode") != "fabric":
-                self.module.fail_json(
-                    msg="Invalid parameters in playbook: while processing interface {0}, OSPF "
-                    "legacy-key ('{1}'/'{2}') is supported only for loopback interfaces with "
-                    "'mode: fabric', given mode = '{3}'. No template metadata was queried and no "
-                    "change was sent.".format(
-                        cfg_item.get("name"),
-                        OSPF_AUTH_KEY_ID_PROFILE_KEY,
-                        OSPF_AUTH_KEY_PROFILE_KEY,
-                        profile.get("mode"),
-                    )
-                )
-
-            key_id = profile.get(OSPF_AUTH_KEY_ID_PROFILE_KEY)
-            # bool is a subclass of int; reject it explicitly, then accept a native int
-            # or an integer-valued string.
-            if isinstance(key_id, bool):
-                key_id_int = None
-            elif isinstance(key_id, int):
-                key_id_int = key_id
-            else:
-                try:
-                    key_id_int = int(str(key_id).strip())
-                except (TypeError, ValueError):
-                    key_id_int = None
-            if key_id_int is None or not (
-                OSPF_AUTH_KEY_ID_MIN <= key_id_int <= OSPF_AUTH_KEY_ID_MAX
-            ):
-                self.module.fail_json(
-                    msg="Invalid parameters in playbook: while processing interface {0}, "
-                    "'{1}' must be an integer in [{2}, {3}], given {4}. No template metadata was "
-                    "queried and no change was sent.".format(
-                        cfg_item.get("name"),
-                        OSPF_AUTH_KEY_ID_PROFILE_KEY,
-                        OSPF_AUTH_KEY_ID_MIN,
-                        OSPF_AUTH_KEY_ID_MAX,
-                        # An int/str key ID is echoed on purpose: it is an identifier in
-                        # 0..255, never a secret, and seeing the offending number is the
-                        # whole diagnosis. Every other type falls back to naming the type
-                        # only, through the same helper the rest of the module uses.
-                        repr(key_id)
-                        if isinstance(key_id, (int, str))
-                        and not isinstance(key_id, bool)
-                        else gie_describe_value_type(key_id),
-                    )
-                )
-
-            key_val = profile.get(OSPF_AUTH_KEY_PROFILE_KEY)
-            # Never echo the key value in an error (secret).
-            if not isinstance(key_val, str) or key_val == "":
-                self.module.fail_json(
-                    msg="Invalid parameters in playbook: while processing interface {0}, "
-                    "'{1}' must be a non-empty string. No template metadata was queried and no "
-                    "change was sent.".format(
-                        cfg_item.get("name"), OSPF_AUTH_KEY_PROFILE_KEY
-                    )
-                )
 
     def dcnm_intf_gie_validate_parent_bindings(self):
         """Fail closed when a config item carries a registry-known GENERIC key that has no
@@ -3665,47 +3367,32 @@ class DcnmIntf:
                         )
                     )
 
-    def dcnm_intf_resolve_ospf_auth_message_digest_capability(self):
+    def dcnm_intf_register_secret_values(self, cfg):
+        """Register every secret value in the config so Ansible scrubs it from all output.
+
+        Walks the WHOLE config -- every interface, every secret-bearing profile key -- and does
+        not stop at the first one. Stopping early is what made the previous attempt leak.
+
+        Deliberately total and deliberately silent: it never validates, never rejects and never
+        reports. Its only job is that no key material can be serialised in the clear, whatever
+        happens next. A malformed config is not its problem, so anything that is not shaped like
+        an interface with a profile is skipped rather than complained about -- the real
+        validators run afterwards and give the operator a proper message.
         """
-        Resolve the fabric-loopback OSPF message-digest capability ONCE, after the
-        entire config has passed ordinary local validation, and fail closed only
-        for an explicit TRUE on a controller that cannot manage the nvPair.
-
-        * explicit true + unsupported version  -> fail before any mutation
-          (a controller too old cannot enable the feature).
-        * explicit false + unsupported version -> not fatal here; a legacy parent
-          is simply never handed the nvPair, and the false intent is reconciled
-          against current state in compare (an absent or false HAVE is an
-          idempotent no-op, a true/contradictory HAVE fails loudly there).
-        * supported version -> both true and false proceed to payload build.
-
-        An omitted option never reaches this method.
-        """
-        requested_true = False
-        requested_any = False
-        for cfg_item in self.config:
-            profile = cfg_item.get("profile")
-            if not isinstance(profile, dict) or OSPF_AUTH_MD_PROFILE_KEY not in profile:
-                continue
-            requested_any = True
-            if profile.get(OSPF_AUTH_MD_PROFILE_KEY) is True:
-                requested_true = True
-
-        if not requested_any:
+        if not isinstance(cfg, list):
             return
-
-        capability = self.dcnm_intf_ospf_auth_message_digest_capability()
-        if capability != "supported" and requested_true:
-            self.module.fail_json(
-                msg="Unsupported controller capability: '{0}' was requested as true "
-                "but the controller cannot manage nvPair '{1}' ({2}). The task stopped "
-                "during input validation, so no interface payload was built and no "
-                "POST, PUT, or deploy was sent.".format(
-                    OSPF_AUTH_MD_PROFILE_KEY,
-                    OSPF_AUTH_MD_NVPAIR,
-                    self._ospf_auth_md_capability_reason,
-                )
-            )
+        for cfg_item in cfg:
+            if not isinstance(cfg_item, dict):
+                continue
+            profile = cfg_item.get("profile")
+            if not isinstance(profile, dict):
+                continue
+            for key in SECRET_PROFILE_KEYS:
+                value = profile.get(key)
+                # "" and None carry nothing; registering "" would scrub every empty string in
+                # the output, which hides far more than it protects.
+                if value not in (None, ""):
+                    self.module.no_log_values.add(str(value))
 
     def dcnm_intf_validate_loopback_interface_input(self, cfg):
 
@@ -3728,10 +3415,34 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
-            enable_ospf_auth_message_digest=dict(type="bool"),
-            ospf_auth_key_id=dict(type="int"),
-            ospf_auth_key=dict(type="str", no_log=True),
         )
+
+        # Reject the withdrawn OSPF-auth keys by name, before the spec silently drops them.
+        for cfg_item in cfg:
+            profile = cfg_item.get("profile")
+            if not isinstance(profile, dict):
+                continue
+            for key, fabric_setting in RETIRED_LOOPBACK_OSPF_AUTH_KEYS.items():
+                if key in profile:
+                    # No scrubbing here on purpose. Registration already happened for the whole
+                    # config in __init__, which is the only placement that survives this loop
+                    # rejecting on its first match. See SECRET_PROFILE_KEYS.
+                    self.module.fail_json(
+                        msg="'{0}' is no longer configurable on a fabric loopback. OSPF "
+                        "authentication there is underlay authentication and the fabric owns "
+                        "it: set '{1}' in the fabric settings instead. The interface value was "
+                        "only ever an override of the fabric's, and a keychain fabric setting "
+                        "removed it outright. No change was sent.".format(key, fabric_setting)
+                    )
+            for key in OSPF_AUTH_KEYCHAIN_PROFILE_KEYS:
+                if key in profile:
+                    self.module.fail_json(
+                        msg="'{0}' is not a dcnm_interface field. The OSPF authentication "
+                        "keychain on a fabric loopback is owned by the fabric: fabricSettings "
+                        "writes 'ospfAuthKeychainName' and overwrites any interface value, so "
+                        "setting it here could never take effect. Configure it in the fabric "
+                        "settings. No change was sent.".format(key)
+                    )
 
         self.dcnm_intf_validate_interface_input(cfg, lo_spec, lo_prof_spec)
 
@@ -4094,9 +3805,15 @@ class DcnmIntf:
         # Inputs will vary for each type of interface and for each state. Make specific checks
         # for each case.
 
+        # The two global OSPF-auth validators that used to run here were withdrawn with the
+        # fabric-loopback bindings they served. They rejected ospf_auth_key on any interface
+        # whose type was not "lo", across the WHOLE config and before dispatch by type -- which
+        # made OSPF authentication unregistrable on int_routed_host, int_subif and int_vlan,
+        # where it is a self-contained interface feature the fabric has no part in.
+        #
+        # What remains is the generic parent guard, which is parent-qualified and applies to
+        # every registered binding equally.
         if self.module.params["state"] not in ("deleted", "query"):
-            self.dcnm_intf_validate_ospf_auth_message_digest_input(self.config)
-            self.dcnm_intf_validate_ospf_auth_key_input(self.config)
             self.dcnm_intf_gie_validate_parent_bindings()
 
         cfg = []
@@ -4147,9 +3864,6 @@ class DcnmIntf:
                 if item["type"] == "breakout":
                     self.dcnm_intf_validate_breakout_interface_input(cfg)
             cfg.remove(citem)
-
-        if self.module.params["state"] not in ("deleted", "query"):
-            self.dcnm_intf_resolve_ospf_auth_message_digest_capability()
 
     def dcnm_intf_get_pc_payload(self, delem, intf, profile):
 
@@ -4714,62 +4428,17 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ROUTE_MAP_TAG"] = delem[profile][
                 "route_tag"
             ]
-
+            # The loopback OSPF-auth emission was withdrawn together with its bindings.
             #
+            # On this parent OSPF authentication is UNDERLAY authentication and fabricSettings
+            # owns it: the template gates the block on `linkStateRouting == "ospf"`, reads
+            # OSPF_AUTH_ENABLE / OSPF_AUTH_KEY_ID / OSPF_AUTH_KEY from the fabric, and a
+            # keychain fabric setting deletes whatever an interface value created. The module
+            # therefore sends none of those nvPairs now.
             #
-            ospf_auth_md = delem[profile].get(OSPF_AUTH_MD_PROFILE_KEY)
-            if ospf_auth_md is not None:
-                requested = check_type_bool(ospf_auth_md)
-                serial = intf["interfaces"][0].get("serialNumber")
-                # Compat hook: record the request so the unsupported-version/HAVE reconciliation
-                # (capability gate + compare) owns the legacy-controller path.
-                self._ospf_auth_md_requests[
-                    (ifname.lower(), serial, self.fabric)
-                ] = requested
-                # Engine owns binding resolution + type + supported-version transport. This
-                # exact OSPF-MD binding is the one compatibility exception that withholds on an
-                # unsupported version (reconciled by the established hook above).
-                gie_md_add, gie_md_err = gie_contribute_nvpairs(
-                    OSPF_AUTH_MD_PARENT_TEMPLATE,
-                    {OSPF_AUTH_MD_PROFILE_KEY: requested},
-                    getattr(self, "ndfc_version", None),
-                )
-                if gie_md_err:
-                    self.module.fail_json(msg=gie_md_err)
-                intf["interfaces"][0]["nvPairs"].update(gie_md_add)
-
-            # OSPF legacy-key pair. Full-pair/type/range/keychain-exclusion were enforced globally by
-            # dcnm_intf_validate_ospf_auth_key_input; here both are present-together (or absent). The
-            # module transports the interface nvPairs only -- NDFC's parent DSL builds/removes the
-            # ospf_interface_auth child from them.
-            ospf_key_id = delem[profile].get(OSPF_AUTH_KEY_ID_PROFILE_KEY)
-            ospf_key = delem[profile].get(OSPF_AUTH_KEY_PROFILE_KEY)
-            # The guard stays here on purpose. The dedicated validator uses `is not None`, so an
-            # explicitly EMPTY key reaches this point; only this test keeps the pair atomic, and
-            # the engine -- which is fed one key at a time -- cannot enforce that relationship.
-            if ospf_key_id is not None and ospf_key not in (None, ""):
-                # Both nvPairs feed the SAME child (ospf_interface_auth), so they are handed to
-                # the engine together. The engine owns binding resolution and the version floor;
-                # an unsupported controller comes back as an error, not a partial payload.
-                gie_key_add, gie_key_err = gie_contribute_nvpairs(
-                    OSPF_AUTH_MD_PARENT_TEMPLATE,
-                    {
-                        OSPF_AUTH_KEY_ID_PROFILE_KEY: int(ospf_key_id),
-                        OSPF_AUTH_KEY_PROFILE_KEY: str(ospf_key),
-                    },
-                    getattr(self, "ndfc_version", None),
-                )
-                if gie_key_err:
-                    self.module.fail_json(msg=gie_key_err)
-                # NDFC's nvPairs is a flat string map, and the live-validated payload sent both
-                # values as strings. The engine transports NATIVE values by design, so the string
-                # normalization stays here -- the same place check_type_bool() normalizes the
-                # OSPF-MD boolean before its own engine call above.
-                intf["interfaces"][0]["nvPairs"].update(
-                    {k: str(v) for k, v in gie_key_add.items()}
-                )
-
-        # Properties for mode 'mpls' Loopback Interfaces
+            # Withdrawing support is not deleting configuration: whatever the controller holds
+            # is preserved by the generic HAVE carry-forward, which no longer excludes them.
+            # See gie_have_carry_forward_nvpairs and test_gie_loopback_auth_is_fabric_owned.py.
         if delem[profile]["mode"] == "mpls":
 
             # These properties are read_only properties and are not exposed as
@@ -6032,11 +5701,6 @@ class DcnmIntf:
             t_e1 = str(t_e1).lower()
             t_e2 = str(t_e2).lower()
 
-        if k == OSPF_AUTH_MD_NVPAIR:
-            #
-            t_e1 = self.dcnm_intf_normalize_ospf_auth_message_digest(t_e1)
-            t_e2 = self.dcnm_intf_normalize_ospf_auth_message_digest(t_e2)
-
         numeric_keys = [
             "LACP_PORT_PRIO",
             "STORM_CONTROL_BCAST_LEVEL_PPS",
@@ -6351,9 +6015,9 @@ class DcnmIntf:
                     # rest of the structure. Overwrite with whatever is in want
 
                     if want["policy"] != d["policy"]:
-                        self.dcnm_intf_ospf_md_guard_policy_mismatch(
-                            want, d, name, sno, fabric
-                        )
+                        # The OSPF-MD policy-mismatch guard that ran here went with the bindings
+                        # it protected: it only inspected the message-digest nvPair across a
+                        # parent change, and nothing loopback-specific is left to guard.
                         action = "update"
                         continue
 
@@ -6412,7 +6076,7 @@ class DcnmIntf:
 
                                     # Same-parent HAVE carry-forward (drift fix).
                                     # SCOPED to the exact proven parent
-                                    # OSPF_AUTH_MD_PARENT_TEMPLATE (int_fabric_loopback_11_1): only
+                                    # LOOPBACK_CARRY_FORWARD_PARENT (int_fabric_loopback_11_1): only
                                     # this parent's full HAVE nvPair set was observed and every key
                                     # classified as writable / read-only-metadata / OSPF-domain, so
                                     # the exclusion set is demonstrated complete only here. Other
@@ -6430,9 +6094,30 @@ class DcnmIntf:
                                     # immediately above returns [] for this parent (it has no
                                     # 'passthrough' binding), so the two never write the same nvPair.
                                     # The helper additionally skips any key already in want.
+                                    # The fabric-owned loopback nvPairs are preserved in EVERY
+                                    # state, not just merged. The module withdrew from managing
+                                    # them, so their absence from a payload is not an operator
+                                    # asking for a reset -- it is the module having nothing to
+                                    # say. Narrow on purpose: widening the generic carry-forward
+                                    # below to replaced/overridden would redefine what those
+                                    # states mean for every other nvPair on this parent.
+                                    if want.get("policy") == LOOPBACK_CARRY_FORWARD_PARENT:
+                                        _fo_have = next(
+                                            (
+                                                intf[ik]
+                                                for intf in d[k]
+                                                if isinstance(intf.get(ik), dict)
+                                            ),
+                                            {},
+                                        )
+                                        for _fo_nvp, _fo_val in gie_fabric_owned_carry_forward(
+                                            want[k][0][ik], _fo_have
+                                        ).items():
+                                            want[k][0][ik][_fo_nvp] = _fo_val
+
                                     if (
                                         state == "merged"
-                                        and want.get("policy") == OSPF_AUTH_MD_PARENT_TEMPLATE
+                                        and want.get("policy") == LOOPBACK_CARRY_FORWARD_PARENT
                                     ):
                                         _gie_have_nv = next(
                                             (
@@ -6447,67 +6132,13 @@ class DcnmIntf:
                                         ).items():
                                             want[k][0][ik][_gie_nvp] = _gie_val
 
-                                    #
-                                    #
-                                    if (
-                                        want.get("policy") == OSPF_AUTH_MD_PARENT_TEMPLATE
-                                        and OSPF_AUTH_MD_NVPAIR not in want[k][0][ik]
-                                    ):
-                                        _absent = object()
-                                        have_md = next(
-                                            (
-                                                intf[ik][OSPF_AUTH_MD_NVPAIR]
-                                                for intf in d[k]
-                                                if isinstance(intf.get(ik), dict)
-                                                and OSPF_AUTH_MD_NVPAIR in intf[ik]
-                                            ),
-                                            _absent,
-                                        )
-                                        explicit_request = (
-                                            self._ospf_auth_md_requests.get(
-                                                (name.lower(), sno, fabric)
-                                            )
-                                        )
-                                        if explicit_request is None:
-                                            if have_md is not _absent:
-                                                want[k][0][ik][
-                                                    OSPF_AUTH_MD_NVPAIR
-                                                ] = have_md
-                                        else:
-                                            have_norm = (
-                                                self.dcnm_intf_normalize_ospf_auth_message_digest(
-                                                    have_md
-                                                )
-                                                if have_md is not _absent
-                                                else "false"
-                                            )
-                                            if explicit_request is True:
-                                                self.module.fail_json(
-                                                    msg="'{0}' was requested as true on "
-                                                    "interface {1} but the controller "
-                                                    "cannot manage nvPair '{2}'. No "
-                                                    "change was sent.".format(
-                                                        OSPF_AUTH_MD_PROFILE_KEY,
-                                                        name,
-                                                        OSPF_AUTH_MD_NVPAIR,
-                                                    )
-                                                )
-                                            elif have_norm != "false":
-                                                self.module.fail_json(
-                                                    msg="'{0}' was requested as false on "
-                                                    "interface {1} to clear the feature, "
-                                                    "but the controller cannot manage "
-                                                    "nvPair '{2}' and its current state "
-                                                    "is '{3}'. The feature cannot be "
-                                                    "cleared without a parent template "
-                                                    "that declares the parameter; no "
-                                                    "change was sent.".format(
-                                                        OSPF_AUTH_MD_PROFILE_KEY,
-                                                        name,
-                                                        OSPF_AUTH_MD_NVPAIR,
-                                                        have_norm,
-                                                    )
-                                                )
+                                    # The OSPF-MD "safeguard an explicit false" block that ran
+                                    # here was withdrawn with its binding. It existed so that a
+                                    # controller unable to manage the nvPair could not silently
+                                    # ignore an operator turning the feature off. With the
+                                    # capability gate and the binding gone there is no explicit
+                                    # request to safeguard: the module never sends the nvPair,
+                                    # and the carry-forward above keeps whatever the fabric set.
 
                                     # List of keys to check and potentially remove from nv_keys
                                     # Some keys are not present in the first GET and must be removed
