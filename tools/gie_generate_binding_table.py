@@ -173,6 +173,11 @@ COMMITTED_BINDINGS = {
     # The remaining OSPF fields stay out until this slice is measured on hardware.
     ("int_routed_host", "ENABLE_OSPF"): "enable_ospf",
     ("int_routed_host", "OSPF_TAG"): "ospf_tag",
+    ("int_routed_host", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
+    ("int_routed_host", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
+    ("int_routed_host", "OSPF_AUTH_KEY"): "ospf_auth_key",
+    ("int_routed_host", "OSPF_AUTHENTICATION_KEY_TYPE"): "ospf_authentication_key_type",
+    ("int_routed_host", "OSPF_AUTHENTICATION_KEY"): "ospf_authentication_key",
     ("int_routed_host", "OSPF_AREA_ID"): "ospf_area_id",
     ("int_routed_host", "OSPF_COST"): "ospf_cost",
 
@@ -225,6 +230,11 @@ COMMITTED_BINDINGS = {
     ("int_subif", "OSPF_RETRANSMIT_INTERVAL"): "ospf_retransmit_interval",
     ("int_subif", "OSPF_SHUTDOWN"): "ospf_shutdown",
     ("int_subif", "OSPF_TAG"): "ospf_tag",
+    ("int_subif", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
+    ("int_subif", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
+    ("int_subif", "OSPF_AUTH_KEY"): "ospf_auth_key",
+    ("int_subif", "OSPF_AUTHENTICATION_KEY_TYPE"): "ospf_authentication_key_type",
+    ("int_subif", "OSPF_AUTHENTICATION_KEY"): "ospf_authentication_key",
     ("int_subif", "OSPF_TRANSMIT_DELAY"): "ospf_transmit_delay",
     ("int_vlan", "ENABLE_OSPF"): "enable_ospf",
     ("int_vlan", "OSPF_AREA_ID"): "ospf_area_id",
@@ -239,6 +249,11 @@ COMMITTED_BINDINGS = {
     ("int_vlan", "OSPF_RETRANSMIT_INTERVAL"): "ospf_retransmit_interval",
     ("int_vlan", "OSPF_SHUTDOWN"): "ospf_shutdown",
     ("int_vlan", "OSPF_TAG"): "ospf_tag",
+    ("int_vlan", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
+    ("int_vlan", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
+    ("int_vlan", "OSPF_AUTH_KEY"): "ospf_auth_key",
+    ("int_vlan", "OSPF_AUTHENTICATION_KEY_TYPE"): "ospf_authentication_key_type",
+    ("int_vlan", "OSPF_AUTHENTICATION_KEY"): "ospf_authentication_key",
     ("int_vlan", "OSPF_TRANSMIT_DELAY"): "ospf_transmit_delay",
 }
 
@@ -246,7 +261,8 @@ COMMITTED_BINDINGS = {
 # min_length/max_length carry the registry string constraints (ACL_FILTER).
 FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interface_type",
           "applicable_mode", "type", "valid_values", "default_template", "mechanism",
-          "min_ndfc_version", "min_length", "max_length", "min_value", "max_value"]
+          "min_ndfc_version", "min_length", "max_length", "min_value", "max_value",
+          "no_log"]
 
 # The registry spells the numeric bounds `min` and `max`; the runtime table spells them
 # `min_value` and `max_value`. The rename is deliberate: a substring test for "min" -- the

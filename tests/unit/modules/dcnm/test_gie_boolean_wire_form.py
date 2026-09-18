@@ -79,12 +79,22 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     assert {k for parent, k, nvpair in BOOL_PASSTHROUGH} == {
         "disable_lldp_transmit", "disable_lldp_receive", "disable_qos_stats", "disable_queuing_stats", "disable_bfd_echo",
         "enable_ospf", "ospf_mtu_ignore", "ospf_shutdown",
-        "enable_ospf", "ospf_bfd", "ospf_passive_interface"
+        "enable_ospf", "ospf_bfd", "ospf_passive_interface",
+        "enable_ospf_auth",
     }
-    # Three boolean fields across the two eth parents, the three port-channel host parents, the
-    # two vPC host parents and now int_routed_host: 3 x 8 = 24, plus disable_bfd_echo, which
-    # only int_routed_host declares: 25. Plus enable_ospf, ospf_mtu_ignore and
-    # ospf_shutdown, all int_routed_host only: 28.
+    # 47 = the per-parent counts below, which are what the table actually holds:
+    #
+    #     int_access_host                     4      int_routed_host    9
+    #     int_trunk_host                      4      int_subif          6
+    #     int_port_channel_access_host        4      int_vlan           4
+    #     int_port_channel_trunk_host         4
+    #     int_port_channel_dot1q_tunnel_host  4      int_vpc_access_host  4
+    #                                                int_vpc_trunk_host   4
+    #
+    # This used to be a derivation -- "3 x 8 = 24, plus disable_bfd_echo, plus enable_ospf..."
+    # -- and the derivation had silently drifted to 28 while the assertion said 44. Nobody
+    # noticed, because only the number is executed and only the prose was wrong. A breakdown
+    # that can be checked against the table beats a chain of arithmetic that cannot.
     #
     # int_routed_host emits no CLI of its own for any of them -- every value is handed to a
     # child template. Same reasoning as the vPC parents below: that does not exempt it from the
@@ -94,7 +104,7 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # are still passthrough and therefore still need the wire form: the value lands in the vPC
     # parent's own nvPairs first, and nvPairs is a string-valued map. A native bool left there
     # would reproduce exactly the non-convergence this file exists to prevent.
-    assert len(BOOL_PASSTHROUGH) == 44
+    assert len(BOOL_PASSTHROUGH) == 47
 
 
 # ------------------------------------------------------- what the engine emits --

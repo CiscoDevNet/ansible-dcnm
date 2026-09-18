@@ -57,6 +57,13 @@ PARENT = "int_routed_host"
 # observable CLI. Their removal_semantics is deliberately unresolved: the template creates a
 # child per field and never deletes one, and reading that is not the same as measuring it.
 EXPECTED = {
+    # The authentication lot. Registered on this parent and on int_subif / int_vlan with
+    # identical shape -- the only OSPF family where the three templates agree.
+    "enable_ospf_auth": ("ENABLE_OSPF_AUTH", "boolean"),
+    "ospf_auth_key_id": ("OSPF_AUTH_KEY_ID", "integer"),
+    "ospf_auth_key": ("OSPF_AUTH_KEY", "string"),
+    "ospf_authentication_key_type": ("OSPF_AUTHENTICATION_KEY_TYPE", "enum"),
+    "ospf_authentication_key": ("OSPF_AUTHENTICATION_KEY", "string"),
     "disable_lldp_transmit": ("DISABLE_LLDP_TRANSMIT", "boolean"),
     "disable_lldp_receive": ("DISABLE_LLDP_RECEIVE", "boolean"),
     "disable_bfd_echo": ("DISABLE_BFD_ECHO", "boolean"),

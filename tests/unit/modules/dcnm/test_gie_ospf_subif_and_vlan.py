@@ -125,7 +125,8 @@ def test_the_binding_is_on_the_generic_route(parent, key):
         key, parent)
 
 
-@pytest.mark.parametrize("parent,count", [(SUBIF, 14), (VLAN, 14)])
+# 14 OSPF fields of their own + the 5 shared authentication ones.
+@pytest.mark.parametrize("parent,count", [(SUBIF, 19), (VLAN, 19)])
 def test_the_parent_registers_exactly_its_own_fields(parent, count):
     rows = [b for b in BINDING_TABLE if b["parent_template"] == parent]
     assert len(rows) == count
@@ -308,13 +309,54 @@ def test_an_omitted_field_emits_nothing(
 
 
 # =====================================================================================
-# AUTHENTICATION IS EXCLUDED ON ALL THREE PARENTS
+# AUTHENTICATION IS REGISTERED ON ALL THREE PARENTS, IDENTICALLY
 # =====================================================================================
-@pytest.mark.parametrize("parent", ["int_routed_host", SUBIF, VLAN])
-@pytest.mark.parametrize("key", [
-    "enable_ospf_auth", "ospf_auth_key", "ospf_authentication_key",
-    "ospf_auth_key_id", "ospf_authentication_key_type",
-])
-def test_the_authentication_fields_are_not_registered_on_any_ospf_parent(parent, key):
-    """One lot across all three, so the mechanism decision is made once, not three times."""
-    assert resolve_binding(parent, key) is None
+#
+# Inverted from "excluded on all three". The lot landed, and it landed as one slice for three
+# parents -- the only OSPF slice that is not per parent.
+#
+# That shape is itself the claim being tested here. Everywhere else the three templates diverge
+# (passive is an enum on routed and vlan, a boolean on subif; retransmit does not exist on
+# routed), which is why slices are never copied between parents. Authentication is the one
+# family where all five fields are byte-identical across the three, so the assertions below
+# compare the parents against EACH OTHER rather than against a hardcoded list: if a future
+# template changes one parent alone, that divergence is what fails.
+AUTH_KEYS = ["enable_ospf_auth", "ospf_auth_key", "ospf_authentication_key",
+             "ospf_auth_key_id", "ospf_authentication_key_type"]
+OSPF_PARENTS = ["int_routed_host", SUBIF, VLAN]
+
+
+@pytest.mark.parametrize("parent", OSPF_PARENTS)
+@pytest.mark.parametrize("key", AUTH_KEYS)
+def test_the_authentication_fields_are_registered_on_every_ospf_parent(parent, key):
+    b = resolve_binding(parent, key)
+    assert b is not None, "{0} is not registered on {1}".format(key, parent)
+    assert b["mechanism"] == "passthrough"
+
+
+@pytest.mark.parametrize("key", AUTH_KEYS)
+def test_an_authentication_field_is_modelled_identically_on_all_three(key):
+    """The comparison is parent against parent, not parent against a literal.
+
+    A hardcoded expectation would still pass if all three drifted together; this fails the
+    moment one of them stops matching its siblings, which is the only way this family can break
+    the assumption that let it share a single slice.
+    """
+    shape = []
+    for parent in OSPF_PARENTS:
+        b = resolve_binding(parent, key)
+        shape.append((b["parent_nvpair"], b["type"], b.get("valid_values"),
+                      b.get("default_template"), b.get("min_value"), b.get("max_value"),
+                      bool(b.get("no_log"))))
+    assert len(set(shape)) == 1, (
+        "{0} is no longer identical across the three OSPF parents: {1}. The single shared "
+        "slice is only valid while they agree -- split it.".format(key, shape)
+    )
+
+
+@pytest.mark.parametrize("parent", OSPF_PARENTS)
+def test_exactly_the_two_key_bearing_fields_are_no_log(parent):
+    """Not "at least": marking anything else would corrupt output via string-match scrubbing."""
+    marked = {b["profile_key"] for b in BINDING_TABLE
+              if b["parent_template"] == parent and b.get("no_log")}
+    assert marked == {"ospf_auth_key", "ospf_authentication_key"}
