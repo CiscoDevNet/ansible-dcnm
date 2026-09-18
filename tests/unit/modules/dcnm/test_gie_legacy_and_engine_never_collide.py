@@ -52,6 +52,19 @@ BUILDERS = {
         "int_vpc_trunk_host",
         "int_vpc_access_host",
     ),
+    # The two parents wired for the OSPF work. Neither had an engine hook before; both got the
+    # same two calls as the eth path -- gie_extend_prof_spec in the validator and
+    # gie_contribute_nvpairs in the builder.
+    #
+    # On the SVI builder the contribution sits at METHOD level, deliberately outside the mode
+    # branch that precedes it: the registered keys belong to the parent, not to one SVI mode.
+    # Inside the branch they would be emitted for some modes and silently dropped for others.
+    "dcnm_intf_get_sub_intf_payload": (
+        "int_subif",
+    ),
+    "dcnm_intf_get_svi_payload": (
+        "int_vlan",
+    ),
     "dcnm_intf_get_loopback_payload": (
         "int_fabric_loopback_11_1",
     ),

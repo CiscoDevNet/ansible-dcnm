@@ -103,10 +103,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 62
-    assert len(set(keys)) == 62, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 99
+    assert len(set(keys)) == 99, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 62, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 99, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -164,7 +164,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 62
+    assert len(gen.compile_rows(rows)) == 99
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -213,7 +213,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 62
+    assert len(gen.compile_rows(rows)) == 99
 
 
 # ------------------------------------------------------------------ positive transport
@@ -565,7 +565,7 @@ def test_keymap_carries_every_new_nvpair():
     assert km["OSPF_TAG"] == "ospf_tag"
     assert km["OSPF_AREA_ID"] == "ospf_area_id"
     assert km["OSPF_COST"] == "ospf_cost"
-    assert len(km) == 18
+    assert len(km) == 30
 
 
 def test_all_registered_keys():
@@ -577,6 +577,8 @@ def test_all_registered_keys():
         "ospf_auth_key_id", "ospf_auth_key",
         "disable_bfd_echo", "ipv4_acl_in",
         "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
+        "ospf_mtu_ignore", "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay", "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
+        "enable_ospf", "ospf_area_id", "ospf_bfd", "ospf_bfd_mode", "ospf_cost", "ospf_dead_interval", "ospf_hello_interval", "ospf_mtu_ignore", "ospf_network_type", "ospf_passive_interface", "ospf_passive_mode", "ospf_priority", "ospf_retransmit_interval", "ospf_shutdown", "ospf_tag", "ospf_transmit_delay"
     }
 
 

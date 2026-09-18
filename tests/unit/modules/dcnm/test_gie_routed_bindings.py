@@ -67,6 +67,15 @@ EXPECTED = {
     "ospf_tag": ("OSPF_TAG", "string"),
     "ospf_area_id": ("OSPF_AREA_ID", "string"),
     "ospf_cost": ("OSPF_COST", "integer"),
+    "ospf_mtu_ignore": ("OSPF_MTU_IGNORE", "boolean"),
+    "ospf_shutdown": ("OSPF_SHUTDOWN", "boolean"),
+    "ospf_hello_interval": ("OSPF_HELLO_INTERVAL", "integer"),
+    "ospf_dead_interval": ("OSPF_DEAD_INTERVAL", "integer"),
+    "ospf_transmit_delay": ("OSPF_TRANSMIT_DELAY", "integer"),
+    "ospf_priority": ("OSPF_PRIORITY", "integer"),
+    "ospf_passive_mode": ("OSPF_PASSIVE_MODE", "enum"),
+    "ospf_network_type": ("OSPF_NETWORK_TYPE", "enum"),
+    "ospf_bfd_mode": ("OSPF_BFD_MODE", "enum"),
 }
 
 
