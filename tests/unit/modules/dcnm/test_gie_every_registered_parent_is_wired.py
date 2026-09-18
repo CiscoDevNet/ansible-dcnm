@@ -39,6 +39,8 @@ PARENTS = sorted({b["parent_template"] for b in BINDING_TABLE})
 # The loopback parent is reached through the OSPF-MD call sites rather than a generic spec
 # extension; its keys have their own dedicated validate. It is excluded here deliberately, not
 # forgotten -- see the child_pti notes in the engine.
+# The loopback parent registers no bindings at all since the OSPF-auth retirement, so it is
+# exempt from the spec plumbing for the stronger reason: there is nothing to plumb.
 SPEC_EXEMPT = {"int_fabric_loopback_11_1"}
 
 
@@ -60,6 +62,10 @@ def test_every_registered_parent_has_its_spec_extended(parent, source):
     )
 
 
+# dcnm_intf_get_loopback_payload is deliberately absent from the list below. WITHDRAWN: the
+# fabric loopback registers no bindings since OSPF authentication there was returned to
+# fabricSettings, so requiring it to call the engine would assert plumbing for an empty set.
+# test_gie_thin_engine.test_the_loopback_parent_registers_nothing pins the other half.
 def test_every_payload_builder_that_can_carry_bindings_calls_the_engine(source):
     """A builder whose parent has rows must hand the profile to the engine.
 
@@ -67,14 +73,18 @@ def test_every_payload_builder_that_can_carry_bindings_calls_the_engine(source):
     parents (the three port-channel modes share one), so the meaningful invariant is that no
     builder is left out.
     """
+    # loopback dropped from the pattern with the OSPF-auth retirement: its parent registers no
+    # bindings, so requiring it to call the engine would assert plumbing for an empty set.
+    # sub_int and svi joined when int_subif and int_vlan were wired for OSPF.
     builders = re.findall(
-        r"def (dcnm_intf_get_(?:pc|vpc|eth|loopback)_payload)\b", source
+        r"def (dcnm_intf_get_(?:pc|vpc|eth|sub_intf|svi)_payload)\b", source
     )
     assert set(builders) == {
         "dcnm_intf_get_pc_payload",
         "dcnm_intf_get_vpc_payload",
         "dcnm_intf_get_eth_payload",
-        "dcnm_intf_get_loopback_payload",
+        "dcnm_intf_get_sub_intf_payload",
+        "dcnm_intf_get_svi_payload",
     }, "a payload builder was renamed or added; this test needs updating deliberately"
 
     for name in builders:

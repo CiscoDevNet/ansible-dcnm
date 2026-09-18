@@ -1,8 +1,12 @@
-"""G6A.4.1 WS2 & WS3: authoritative HAVE response contract and policy-mismatch
-HAVE shape. Bulk and individual GET handling must never turn malformed or failed
-state into absence, authority is tracked per (serial, interface) key, and the
-policy-mismatch guard fails closed on a malformed HAVE. Direct method tests
-patching module-level dcnm_send.
+"""The authoritative HAVE response contract: bulk and individual GET handling.
+
+Malformed or failed controller state must never be turned into absence, and authority is
+tracked per (serial, interface) key. Direct method tests patching module-level dcnm_send.
+
+Renamed from test_dcnm_intf_ospfmd_have_fetch.py. The old name was misleading even before the
+OSPF-MD retirement: of its tests only the policy-mismatch guard cases were OSPF-specific, and
+the rest -- the ones here -- are the shared HAVE machinery every parent depends on. Those guard
+cases went with the loopback OSPF-auth bindings they protected; these did not, and must not.
 """
 import contextlib
 import copy
@@ -46,16 +50,13 @@ def _stub():
     s.manageable = {"switch": "SN1"}
     s.fabric = "fab"
     s.vpc_ip_sn = {}
-    s._ospf_auth_md_requests = {}
     s._replace_have_lookup = {}
     s._replace_pb_input_lookup = {}
     s.module = mock.Mock()
-    s.dcnm_intf_normalize_ospf_auth_message_digest = (
-        DcnmIntf.dcnm_intf_normalize_ospf_auth_message_digest
-    )
+    # The OSPF-MD helpers this used to wire went with the retired loopback auth capability.
+    # Nothing in the HAVE-fetch contract below depended on them: they were only reachable from
+    # the policy-mismatch guard, whose tests were removed with it.
     s._dcnm_intf_valid_individual_entry = DcnmIntf._dcnm_intf_valid_individual_entry
-    s._dcnm_intf_ospf_md_matching_interface = DcnmIntf._dcnm_intf_ospf_md_matching_interface
-    s._dcnm_intf_ospf_md_matching_interfaces = DcnmIntf._dcnm_intf_ospf_md_matching_interfaces
     s._dcnm_intf_normalize_serial = DcnmIntf._dcnm_intf_normalize_serial
     s._dcnm_intf_serial_parts = DcnmIntf._dcnm_intf_serial_parts
     s._dcnm_intf_query_serial = DcnmIntf._dcnm_intf_query_serial
@@ -661,83 +662,6 @@ def _assert_zero_mutating_calls(sender):
         len(call.args) > 1 and call.args[1] in {"POST", "PUT", "DELETE"}
         for call in sender.call_args_list
     )
-
-
-def test_guard_wellformed_true_fails_closed():
-    s = _stub()
-    s._ospf_auth_md_requests[("loopback0", "SN1", "fab")] = False
-    assert _run_guard(s, _want({"IP": "1"}), _have("int_loopback", {NVPAIR: "true"})) is True
-    assert "cannot be cleared across" in s.module.fail_json.call_args.kwargs["msg"]
-
-
-def test_guard_wellformed_false_is_noop():
-    s = _stub()
-    s._ospf_auth_md_requests[("loopback0", "SN1", "fab")] = False
-    assert _run_guard(s, _want({"IP": "1"}), _have("int_loopback", {NVPAIR: "false"})) is False
-
-
-def test_guard_wellformed_absent_is_noop():
-    s = _stub()
-    s._ospf_auth_md_requests[("loopback0", "SN1", "fab")] = False
-    assert _run_guard(s, _want({"IP": "1"}), _have("int_loopback", {"IP": "1"})) is False
-
-
-@pytest.mark.parametrize("have", [
-    "not-a-dict",
-    {"interfaces": [{"ifName": "Loopback0", "nvPairs": {}}]},          # no policy
-    {"policy": "int_loopback"},                                         # no interfaces
-    {"policy": "int_loopback", "interfaces": "x"},                      # interfaces not list
-    {"policy": "int_loopback", "interfaces": [{"ifName": "LoopbackX", "nvPairs": {}}]},  # wrong identity
-    {"policy": "int_loopback", "interfaces": [{"ifName": "Loopback0", "nvPairs": "x"}]},  # malformed nvPairs
-    {"policy": "int_loopback", "interfaces": [{"nvPairs": {}}]},        # missing ifName
-    _have("int_loopback", {}, serial="WRONG"),
-])
-def test_guard_malformed_have_fails_closed(have):
-    s = _stub()
-    s._ospf_auth_md_requests[("loopback0", "SN1", "fab")] = False
-    with mock.patch.object(dcnm_interface, "dcnm_send") as sender:
-        assert _run_guard(s, _want({"IP": "1"}), have) is True
-    assert "could not be determined" in s.module.fail_json.call_args.kwargs["msg"]
-    _assert_zero_mutating_calls(sender)
-
-
-def test_guard_noop_when_value_rides_payload():
-    s = _stub()
-    s._ospf_auth_md_requests[("loopback0", "SN1", "fab")] = False
-    assert _run_guard(s, _want({"IP": "1", NVPAIR: False}),
-                      _have("int_loopback", {NVPAIR: "true"})) is False
-
-
-def test_guard_noop_when_option_omitted():
-    s = _stub()
-    assert _run_guard(s, _want({"IP": "1"}), _have("int_loopback", {NVPAIR: "true"})) is False
-
-
-@pytest.mark.parametrize("values", [
-    [{NVPAIR: "false"}, {NVPAIR: "true"}],
-    [{NVPAIR: "true"}, {NVPAIR: "false"}],
-    [{NVPAIR: "false"}, {NVPAIR: "false"}],
-])
-def test_guard_duplicate_matching_interfaces_fail_closed(values):
-    s = _stub()
-    s._ospf_auth_md_requests[("loopback0", "SN1", "fab")] = False
-    have = {"policy": "int_loopback", "interfaces": [
-        {"ifName": "Loopback0", "serialNumber": "SN1", "nvPairs": values[0]},
-        {"ifName": "loopback0", "serialNumber": "SN1", "nvPairs": values[1]},
-    ]}
-    with mock.patch.object(dcnm_interface, "dcnm_send") as sender:
-        assert _run_guard(s, _want({"IP": "1"}), have) is True
-    _assert_zero_mutating_calls(sender)
-
-
-def test_guard_one_match_plus_unrelated_interface_is_valid():
-    s = _stub()
-    s._ospf_auth_md_requests[("loopback0", "SN1", "fab")] = False
-    have = _have("int_loopback", {NVPAIR: "false"})
-    have["interfaces"].append(
-        {"ifName": "Loopback9", "serialNumber": "SN1", "nvPairs": {NVPAIR: "true"}}
-    )
-    assert _run_guard(s, _want({"IP": "1"}), have) is False
 
 
 def test_invalidate_serial_authority_removes_only_target_serial():

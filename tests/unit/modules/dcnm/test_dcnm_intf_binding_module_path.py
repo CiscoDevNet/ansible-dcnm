@@ -14,7 +14,9 @@ Which layer each group exercises:
   HAVE / DIFF / COMPARE / IDEMPOTENCE
       TestBindingHaveAndCompareOnModulePath.*         — carry-forward, malformed HAVE, no-push
   BASELINE REGRESSION
-      TestBindingFrozenContractRegression.*           — OSPF-MD + FLOWCONTROL_RECEIVE
+      TestBindingFrozenContractRegression.*           — FLOWCONTROL_RECEIVE + exact wire type
+  VERSION GATE
+      TestBindingBelowMinimumVersionFailsClosed.*     — below minimum: fail, never withhold
 
 NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted.
 """
@@ -249,7 +251,9 @@ class TestBindingPayloadOnModulePath(A161Base):
     def test_eth_trunk_disable_lldp_true_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_trunk_disable_lldp_true", changed=True)
         value = self._assert_nvpair(result, "Ethernet1/30", "DISABLE_LLDP_TRANSMIT", "true")
-        assert isinstance(value, str)
+        # Exact type, like the ACL cases below: AnsibleUnsafeText satisfies isinstance and is
+        # what an unconverted controller value looks like.
+        assert type(value) is str  # pylint: disable=unidiomatic-typecheck
 
     def test_eth_access_disable_lldp_false_reaches_the_parent_nvpair(self):
         """An explicit false is authored intent and must be emitted, not skipped.
@@ -258,7 +262,7 @@ class TestBindingPayloadOnModulePath(A161Base):
         """
         result = self.run_config("eth_access_disable_lldp_false", changed=True)
         value = self._assert_nvpair(result, "Ethernet1/31", "DISABLE_LLDP_TRANSMIT", "false")
-        assert isinstance(value, str)
+        assert type(value) is str  # pylint: disable=unidiomatic-typecheck
 
     def test_eth_trunk_acl_filter_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_trunk_acl_filter_valid", changed=True)
@@ -405,36 +409,71 @@ class TestBindingFrozenContractRegression(A161Base):
         merged = self.diff_nvpairs(result)
         assert merged["Ethernet1/30"]["FLOWCONTROL_RECEIVE"] == "on"
 
-    def test_ospf_md_still_reaches_the_parent_nvpair(self):
-        result = self.run_config("lo_fabric_ospfmd_true", changed=True)
-        merged = self.diff_nvpairs(result)
-        nvpairs = merged.get("Loopback100", {})
-        assert nvpairs.get("ENABLE_OSPF_AUTH_MESSAGE_DIGEST") is True
-        # Exact type: isinstance(True, int) is True, so isinstance cannot catch a bool
-        # degraded to an int.
-        assert type(nvpairs["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"]) is bool  # pylint: disable=unidiomatic-typecheck
+    # The loopback OSPF-MD regression that used to sit here was retired with its binding. It
+    # carried one guarantee the FLOWCONTROL case above does not: EXACT type on the wire. That
+    # binding was the only CHILD_PTI one, so it was also the only value reaching the parent
+    # nvPair natively, and it asserted `type(...) is bool`.
+    #
+    # No live CHILD_PTI binding exists to re-host that on. Its dual is live, and is what all
+    # ninety-six bindings depend on, so the guarantee is re-homed as that: a boolean travels as
+    # the controller's STRING form. Between the two, both directions of the type hazard stay
+    # covered -- the old test caught a bool degraded to an int, this one catches a bool that
+    # never became a string at all.
+
+    def test_a_boolean_reaches_the_parent_nvpair_as_an_exact_string(self):
+        """isinstance is not enough here, and the difference is not academic.
+
+        NDFC hands every nvPair back as AnsibleUnsafeText, which IS a str subclass. So an
+        isinstance check passes just as happily for a value that came back from the controller
+        unconverted as for one the engine serialized -- and only the second is correct. type()
+        is what separates them.
+        """
+        result = self.run_config("eth_trunk_disable_lldp_true", changed=True)
+        value = self.diff_nvpairs(result)["Ethernet1/30"]["DISABLE_LLDP_TRANSMIT"]
+        assert value == "true"
+        assert type(value) is str  # pylint: disable=unidiomatic-typecheck
+        # And explicitly not the Python object: True would be left for the transport to
+        # serialize, which is how "True" -- a spelling NDFC rejects -- reaches the controller.
+        assert value is not True
 
 
-class TestBindingOspfMdCompatOnUnsupportedVersion(A161Base):
-    """The OSPF-MD compat exception must survive: withhold, never fail."""
+class TestBindingBelowMinimumVersionFailsClosed(A161Base):
+    """Below the minimum version every binding fails closed. No exception is left.
+
+    One used to exist: the loopback OSPF-auth binding was WITHHELD rather than failed, because
+    the module's capability gate reconciled the key afterwards. Binding and gate were retired
+    together, and GIE_VERSION_WITHHOLD_BINDINGS is empty.
+
+    Withholding is the dangerous half of that pair: it drops a key the operator explicitly wrote
+    and still reports success. This class exists so re-introducing one cannot pass unnoticed. It
+    asserts both halves -- that the set is empty, and that on the real module path a real
+    binding fails instead of being silently dropped.
+    """
 
     ndfc_version = BELOW
 
-    def test_ospf_md_explicit_false_is_withheld_not_failed(self):
+    def test_the_withhold_set_is_empty(self):
+        from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
+            GIE_VERSION_WITHHOLD_BINDINGS,
+        )
+
+        assert GIE_VERSION_WITHHOLD_BINDINGS == frozenset(), (
+            "a binding was added to the withhold set. That is not a config change: it means an "
+            "explicitly authored key is dropped while the run reports success. Whatever layer "
+            "reconciles that key must be named and tested first."
+        )
+
+    def test_an_explicit_key_fails_rather_than_being_dropped(self):
         set_module_args(
             dict(
                 state="merged",
                 fabric="test_fabric",
-                config=[{
-                    "name": "lo100", "type": "lo", "switch": ["10.0.0.1"],
-                    "deploy": False,
-                    "profile": {"mode": "fabric", "ipv4_addr": "10.1.1.1",
-                                "enable_ospf_auth_message_digest": False},
-                }],
+                config=self.config_data.get("eth_trunk_disable_lldp_true"),
             )
         )
-        result = self.execute_module(changed=True, failed=False)
-        for nvpairs in self.diff_nvpairs(result).values():
-            assert "ENABLE_OSPF_AUTH_MESSAGE_DIGEST" not in nvpairs, (
-                "the nvPair must be withheld on an unsupported controller"
-            )
+        result = self.execute_module(changed=False, failed=True)
+        assert SUPPORTED in result["msg"] and BELOW in result["msg"], (
+            "the failure must name both the required and the reported version; with only one "
+            "the operator cannot tell whether to upgrade or to fix the playbook"
+        )
+        assert "No change was sent." in result["msg"]

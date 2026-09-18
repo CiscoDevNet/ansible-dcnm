@@ -19,6 +19,9 @@ from unittest import mock
 
 import pytest
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
+    gie_have_carry_forward_nvpairs,
+)
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
 DcnmIntf = dcnm_interface.DcnmIntf
@@ -195,37 +198,6 @@ def test_public_diff_only_contains_the_boolean():
 
 
 # 3. true again (HAVE already true) -> idempotent, no update
-def test_true_again_is_idempotent():
-    s = _instance()
-    s.want = [_want(_want_md(True))]
-    s.have = _have(_full_have("true"))
-    s.pb_input = [_pb(enable_ospf_auth_message_digest=True)]
-    _run(s)
-    assert s.diff_replace == [], "no update expected when OSPF-MD already matches"
-    assert s.changed_dict[0]["merged"] == []
-
-
-# 4. false preserves the four nvPairs; false-again is idempotent
-def test_false_preserves_then_idempotent():
-    s = _instance()
-    s.want = [_want(_want_md(False))]
-    s.have = _have(_full_have("true"))
-    s.pb_input = [_pb(enable_ospf_auth_message_digest=False)]
-    _run(s)
-    payload = _payload_nv(s)
-    assert payload is not None
-    for k, v in HAVE_ONLY_WRITABLE.items():
-        assert payload.get(k) == v
-    # false again (HAVE already false) -> idempotent
-    s2 = _instance()
-    s2.want = [_want(_want_md(False))]
-    s2.have = _have(_full_have("false"))
-    s2.pb_input = [_pb(enable_ospf_auth_message_digest=False)]
-    _run(s2)
-    assert s2.diff_replace == []
-
-
-# 5. an explicit user field always wins over HAVE (never overridden by carry-forward)
 def test_explicit_user_field_wins_over_have():
     s = _instance()
     # user declares route_tag=999 -> builder emits ROUTE_MAP_TAG=999 into want; HAVE has "100"
@@ -253,23 +225,6 @@ def test_metadata_identity_never_carried():
 
 
 # 7. the OSPF-MD sensitive domain is NEVER carried by the generic carry-forward
-def test_ospf_domain_never_carried():
-    s = _instance()
-    # HAVE carries key material; the generic carry-forward must not echo it back
-    have_nv = _full_have("false")
-    have_nv["OSPF_AUTH_KEY"] = "somecipher"
-    have_nv["OSPF_AUTH_KEY_ID"] = "3"
-    have_nv["ospfAuthKeychainName"] = "KC1"
-    s.want = [_want(_want_md(True))]
-    s.have = _have(have_nv)
-    s.pb_input = [_pb(enable_ospf_auth_message_digest=True)]
-    _run(s)
-    payload = _payload_nv(s)
-    for k in ("OSPF_AUTH_KEY", "OSPF_AUTH_KEY_ID", "ospfAuthKeychainName"):
-        assert k not in payload, "OSPF domain {0} must not be carried by the generic path".format(k)
-
-
-# 8a. a parent/policy change gets NO carry-forward (mismatch path continues before the block)
 def test_parent_change_no_carry_forward():
     s = _instance()
     s.want = [_want(_want_md(True), policy="int_loopback")]      # desired parent differs
@@ -297,24 +252,6 @@ def test_absent_have_is_add_not_carry_forward():
 
 # 8c. the carry-forward helper is fail-safe for missing/empty HAVE and honors the exclusions,
 #     so a malformed/empty HAVE never invents values and never transports metadata / OSPF domain.
-def test_carry_forward_helper_fail_safe_and_exclusions():
-    from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
-        gie_have_carry_forward_nvpairs,
-    )
-    assert gie_have_carry_forward_nvpairs({"IP": "x"}, None) == {}
-    assert gie_have_carry_forward_nvpairs({"IP": "x"}, {}) == {}
-    # want-present keys are never overridden; metadata + OSPF domain are never carried;
-    # only the builder-omitted writable nvPair is carried.
-    have = {"IP": "keep", "PRIORITY": "301", "POLICY_ID": "p", "FABRIC_NAME": "f",
-            "OSPF_AUTH_KEY": "k", "ENABLE_OSPF_AUTH_MESSAGE_DIGEST": "true"}
-    assert gie_have_carry_forward_nvpairs({"IP": "x"}, have) == {"PRIORITY": "301"}
-    # fail-closed for any non-dict HAVE (not only None/{}): list, str, int -> {}
-    for bad in ([], ["x"], "notadict", 123, ("t",)):
-        assert gie_have_carry_forward_nvpairs({}, bad) == {}, "non-dict HAVE must yield {{}}"
-
-
-# BLOCKER-1 scope: the carry-forward is restricted by the caller to the exact proven parent.
-# 9. another parent with a builder-omitted HAVE-only nvPair gets NO carry-forward
 def test_other_parent_no_carry_forward():
     s = _instance()
     want_nv = dict(BUILDER_NV)
@@ -351,3 +288,25 @@ def test_same_nvpair_name_other_parent_no_carry_forward():
 if __name__ == "__main__":
     import sys
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+def test_the_fabric_owned_domain_is_now_carried_not_excluded():
+    """INVERTED contract, replacing test_ospf_domain_never_carried.
+
+    While the module managed those nvPairs through a dedicated path, excluding them from the
+    generic carry-forward was correct: two writers would have fought over the same keys. The
+    capability was withdrawn -- OSPF authentication on a fabric loopback is underlay
+    authentication that fabricSettings owns -- so nothing manages them now, and excluding them
+    would mean an unrelated update blanks the fabric's own configuration.
+
+    The full behavioural contract, including replaced and overridden through the real
+    comparator, is in test_gie_loopback_auth_is_fabric_owned.py. This pins the inversion at the
+    point the old assertion lived, so the change of contract is visible where the old one was.
+    """
+    have = dict(HAVE_ONLY_WRITABLE, **HAVE_OSPF_DOMAIN)
+    carried = gie_have_carry_forward_nvpairs({"INTF_NAME": "loopback0"}, have)
+    for nvpair, value in HAVE_OSPF_DOMAIN.items():
+        assert carried.get(nvpair) == value, (
+            "{0} must now be carried: the module no longer manages it, so omitting it from a "
+            "payload is not a request to clear it".format(nvpair)
+        )

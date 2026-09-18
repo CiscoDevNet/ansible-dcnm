@@ -25,12 +25,23 @@ import sys
 import yaml
 
 COMMITTED_BINDINGS = {
-    # Fabric loopback, child_pti. The two key rows feed the same child policy
-    # (ospf_interface_auth), so they share mechanism and effect rules.
-    ("int_fabric_loopback_11_1", "ENABLE_OSPF_AUTH_MESSAGE_DIGEST"):
-        "enable_ospf_auth_message_digest",
-    ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
-    ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY"): "ospf_auth_key",
+    # WITHDRAWN: the three fabric-loopback OSPF-auth bindings.
+    #
+    # OSPF authentication on a fabric loopback is UNDERLAY authentication and the fabric owns
+    # it. The template gates the whole block on `linkStateRouting == "ospf"` and reads
+    # OSPF_AUTH_ENABLE, OSPF_AUTH_KEY_ID and OSPF_AUTH_KEY from fabricSettings, treating any
+    # interface value as a mere override -- which a keychain fabric setting then deletes.
+    # Configuring it per loopback is not part of the product.
+    #
+    # They were the only child_pti bindings in this table, and the two global validators that
+    # served them (dcnm_intf_validate_ospf_auth_key_input and ..._message_digest_input) rejected
+    # ospf_auth_key on ANY interface whose type was not "lo" -- which blocked registering
+    # legitimate OSPF auth on int_routed_host, int_subif and int_vlan, where it is a
+    # self-contained interface feature with no fabric involvement.
+    #
+    # Withdrawing them is not the same as deleting configuration: see
+    # test_gie_loopback_auth_is_fabric_owned.py, which pins that an unrelated loopback update
+    # still preserves everything the fabric manages.
 
     # Host ethernet and port-channel parents, passthrough.
     ("int_access_host", "FLOWCONTROL_RECEIVE"): "flowcontrol_receive",

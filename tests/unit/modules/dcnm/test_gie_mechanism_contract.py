@@ -70,20 +70,19 @@ from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
 # The ONLY bindings that own a hand-written validation path, and what each is answerable for.
 # Independent of the table: this is the contract the table is checked against.
-DEDICATED_ROUTE = {
-    ("int_fabric_loopback_11_1", "ENABLE_OSPF_AUTH_MESSAGE_DIGEST"): {
-        "validator": "dcnm_intf_validate_ospf_auth_message_digest_input",
-        "guard_message": "only on fabric loopback interfaces",
-    },
-    ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY"): {
-        "validator": "dcnm_intf_validate_ospf_auth_key_input",
-        "guard_message": "only on fabric loopback interfaces",
-    },
-    ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY_ID"): {
-        "validator": "dcnm_intf_validate_ospf_auth_key_input",
-        "guard_message": "only on fabric loopback interfaces",
-    },
-}
+# EMPTY, and that is an assertion rather than an absence.
+#
+# It held the three fabric-loopback OSPF-auth bindings, the only child_pti in the table. They
+# were withdrawn because OSPF authentication on a loopback is underlay authentication that
+# fabricSettings owns, and the two global validators serving them rejected ospf_auth_key on any
+# interface whose type was not "lo" -- which blocked registering it on the overlay parents where
+# it is a legitimate, self-contained interface feature.
+#
+# With it empty, every binding is passthrough. The tests below are written so that emptiness
+# cannot make them vacuous: a parametrized case over an empty mapping would silently collect
+# nothing, so the contract is asserted directly instead, and the mutation controls still prove
+# the checks react.
+DEDICATED_ROUTE = {}
 
 # A valid explicit value per registry type, for the positive control.
 SAMPLE_VALUE = {
@@ -162,50 +161,51 @@ def test_every_binding_sits_on_the_route_its_contract_declares():
     assert _generic_route_violations(BINDING_TABLE) == []
 
 
-def test_every_dedicated_binding_is_declared_and_no_others_exist():
-    """Exhaustive both ways: a new child_pti fails here instead of being skipped."""
-    in_table = {_key(b) for b in BINDING_TABLE if b.get("mechanism") == "child_pti"}
-    assert in_table == set(DEDICATED_ROUTE), (
-        "child_pti bindings in the table do not match the declared contract; a new one must be "
-        "added to DEDICATED_ROUTE with the validator that owns it, or reclassified"
-    )
+def test_no_binding_claims_a_dedicated_route():
+    """The contract after the retirement: every binding is on the generic route.
 
-
-@pytest.mark.parametrize("key,contract", sorted(DEDICATED_ROUTE.items()))
-def test_the_declared_validator_exists_and_owns_the_guard(key, contract):
-    """The claim "it owns a dedicated path" has to be checkable, not asserted by label.
-
-    LOAD-BEARING, and worth knowing why. Mislabelling a binding is caught by the contract
-    mismatch above. But the tempting repair is to "fix the test" by adding the mislabelled
-    binding to DEDICATED_ROUTE -- and that DOES silence the placement checks, because once the
-    table genuinely says child_pti the binding genuinely is off the generic route, which is what
-    the dedicated branch expects. Verified: with the contract edited,
-    ``_generic_route_violations`` returns empty.
-
-    This test is the only thing left standing there, so it has to be hard to satisfy falsely.
-    Naming a validator that merely EXISTS is not enough -- it must be a function that mentions
-    the profile_key it claims to guard, which rules out pointing at some other binding's
-    validator to make the suite green.
+    Not a placeholder. If a child_pti binding reappears, this fails and whoever added it has to
+    declare it in DEDICATED_ROUTE with the validator that actually guards it -- which is the
+    step that was missing when four OSPF bindings were mislabelled child_pti with no
+    implementation behind them.
     """
-    validator = getattr(dcnm_interface.DcnmIntf, contract["validator"], None)
-    assert validator is not None, (
-        "{0} claims {1!r} validates it; that method does not exist".format(
-            key, contract["validator"]
+    in_table = sorted(_key(b) for b in BINDING_TABLE if b.get("mechanism") == "child_pti")
+    assert in_table == [], (
+        "these declare a dedicated route but DEDICATED_ROUTE is empty, so nothing verifies one "
+        "exists: {0}".format(in_table)
+    )
+    assert DEDICATED_ROUTE == {}, "DEDICATED_ROUTE grew; add the behavioural cases back"
+
+
+def test_the_retired_validators_are_gone_and_not_merely_unused():
+    """The 198 lines that blocked overlay OSPF auth must be absent, not orphaned.
+
+    An unused validator still on the class is a trap: the next person wiring auth would find it,
+    assume it is the supported path, and reintroduce the loopback-only type check.
+    """
+    for name in ("dcnm_intf_validate_ospf_auth_key_input",
+                 "dcnm_intf_validate_ospf_auth_message_digest_input"):
+        assert not hasattr(dcnm_interface.DcnmIntf, name), (
+            "{0} is still on the class".format(name)
         )
-    )
-    src = inspect.getsource(validator)
-    assert contract["guard_message"] in src, (
-        "{0}: {1} does not carry its declared guard message".format(key, contract["validator"])
-    )
-    profile_key = next(b["profile_key"] for b in BINDING_TABLE if _key(b) == key)
-    assert profile_key in src, (
-        "{0}: {1} never mentions {2!r}; a dedicated route must be owned by a validator that "
-        "actually handles this key, not by one borrowed from another binding".format(
-            key, contract["validator"], profile_key
-        )
-    )
-    # And the generic engine must NOT be double-guarding it.
-    assert profile_key not in gie_guarded_keys()
+
+
+def test_no_method_lost_its_decorator_in_the_retirement():
+    """Caught in review, not here: two @staticmethod decorators were removed by a cut whose
+    boundary ended one line early, leaving methods that worked when called on the class and
+    raised TypeError when called on an instance.
+    """
+    import ast
+    src = inspect.getsource(dcnm_interface)
+    cls = next(n for n in ast.walk(ast.parse(src))
+               if isinstance(n, ast.ClassDef) and n.name == "DcnmIntf")
+    broken = [
+        f.name for f in cls.body
+        if isinstance(f, ast.FunctionDef) and f.args.args and f.args.args[0].arg != "self"
+        and not any(getattr(d, "id", "") in ("staticmethod", "classmethod")
+                    for d in f.decorator_list)
+    ]
+    assert broken == [], "methods without self and without a decorator: {0}".format(broken)
 
 
 # =====================================================================================
@@ -349,11 +349,19 @@ def test_reclassifying_any_generic_binding_breaks_the_contract(key, patched_tabl
     )
 
 
-def test_dropping_a_dedicated_binding_to_generic_breaks_the_contract(patched_table):
-    """The other direction: a dedicated binding pushed onto the generic route is also wrong."""
-    key = ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY_ID")
-    table = patched_table(_with_mechanism(key, "passthrough"))
-    assert any(str(key) in v for v in _generic_route_violations(table))
+def test_a_binding_claiming_child_pti_breaks_the_contract(patched_table):
+    """The direction that still has a subject.
+
+    Previously this degraded a dedicated binding to generic. With none left, the meaningful
+    mutation is the opposite and it is the one that actually happened once: a binding claiming
+    child_pti with nothing implementing it. It must not compile silently into the table.
+    """
+    key = ("int_routed_host", "OSPF_COST")
+    table = patched_table(_with_mechanism(key, "child_pti"))
+    violations = _generic_route_violations(table)
+    assert any(str(key) in v for v in violations), (
+        "a binding claiming a dedicated route it does not own produced no violation"
+    )
 
 
 # =====================================================================================
@@ -393,51 +401,13 @@ def _lo_item(profile_extra, itype="lo", mode="fabric"):
     return {"name": "lo0", "type": itype, "switch": ["10.1.1.1"], "profile": profile}
 
 
-DEDICATED_VALID_INPUT = {
-    ("int_fabric_loopback_11_1", "ENABLE_OSPF_AUTH_MESSAGE_DIGEST"): (
-        "dcnm_intf_validate_ospf_auth_message_digest_input",
-        {"enable_ospf_auth_message_digest": True},
-    ),
-    ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY"): (
-        "dcnm_intf_validate_ospf_auth_key_input",
-        {"ospf_auth_key_id": 1, "ospf_auth_key": "SECRET"},
-    ),
-    ("int_fabric_loopback_11_1", "OSPF_AUTH_KEY_ID"): (
-        "dcnm_intf_validate_ospf_auth_key_input",
-        {"ospf_auth_key_id": 1, "ospf_auth_key": "SECRET"},
-    ),
-}
-
-
-def test_every_dedicated_binding_has_a_runnable_rejection_case():
-    """No dedicated route may sit here untested; a new one fails instead of being skipped."""
-    assert set(DEDICATED_VALID_INPUT) == set(DEDICATED_ROUTE)
-
-
-@pytest.mark.parametrize("key", sorted(DEDICATED_ROUTE))
-def test_the_dedicated_validator_accepts_the_valid_case(key):
-    """Control: valid input on the CORRECT parent must pass.
-
-    Without this, the rejection test below would also pass against a validator that rejects
-    everything unconditionally.
-    """
-    validator_name, profile_extra = DEDICATED_VALID_INPUT[key]
-    obj = _config_obj([_lo_item(profile_extra)])
-    getattr(obj, validator_name)(obj.config[0])
-    assert not obj.module.fail_json.called, "a valid loopback config was rejected"
-
-
-@pytest.mark.parametrize("key", sorted(DEDICATED_ROUTE))
-def test_the_dedicated_validator_rejects_a_wrong_parent(key):
-    """Valid in every respect EXCEPT the parent -- so only the parent can explain a rejection."""
-    validator_name, profile_extra = DEDICATED_VALID_INPUT[key]
-    obj = _config_obj([_lo_item(profile_extra, itype="eth", mode="routed")])
-    with pytest.raises(_ValidatorRejected):
-        getattr(obj, validator_name)(obj.config[0])
-    message = obj.module.fail_json.call_args[1]["msg"]
-    assert DEDICATED_ROUTE[key]["guard_message"] in message, (
-        "{0} was rejected, but not by its declared parent guard: {1}".format(key, message)
-    )
+# The runnable rejection cases for dedicated routes lived here. With DEDICATED_ROUTE empty they
+# had no subjects, and pytest reported "got empty parameter set" -- a SKIP, which is the vacuous
+# pass this file exists to prevent. Removed rather than left to collect nothing.
+#
+# What replaces them is not a weaker check: test_no_binding_claims_a_dedicated_route fails the
+# moment a child_pti binding reappears, and whoever adds it has to bring both the declaration and
+# the behavioural case back together.
 
 
 # =====================================================================================

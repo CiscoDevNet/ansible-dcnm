@@ -213,27 +213,6 @@ def test_readonly_metadata_is_never_carried():
     assert carried == {"PRIORITY": "301"}
 
 
-def test_ospf_md_domain_is_never_carried_by_the_generic_path():
-    have = dict(HAVE_OSPF_DOMAIN)
-    have[MD] = "true"
-    have["PRIORITY"] = "301"
-    carried = gie_have_carry_forward_nvpairs({}, have)
-    for key in GIE_OSPF_MD_DOMAIN_NVPAIRS:
-        assert key not in carried, f"{key} is owned by the dedicated OSPF-MD path"
-    assert carried == {"PRIORITY": "301"}
-
-
-def test_key_material_is_never_carried():
-    """Explicit: no key material may be echoed into a payload by this path."""
-    have = {"OSPF_AUTH_KEY": "<redacted-in-test>", "OSPF_AUTH_KEY_ID": "7",
-            "ospfAuthKeychainName": "kc", "PRIORITY": "301"}
-    carried = gie_have_carry_forward_nvpairs({}, have)
-    assert set(carried) == {"PRIORITY"}
-
-
-# =====================================================================================
-# MALFORMED HAVE — fail closed, carry nothing
-# =====================================================================================
 @pytest.mark.parametrize("bad_have", [None, [], "", "nvpairs", 0, 1, 3.14, set(), object()])
 def test_non_dict_have_carries_nothing(bad_have):
     assert gie_have_carry_forward_nvpairs({"IP": "1.1.1.1"}, bad_have) == {}

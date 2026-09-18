@@ -43,7 +43,6 @@ VPC_ACCESS = "int_vpc_access_host"
 # Baseline rows. These three and their behaviour must not change.
 BASELINE_ROWS = {
     (ACCESS, "FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
-    (LOOPBACK, "ENABLE_OSPF_AUTH_MESSAGE_DIGEST", "enable_ospf_auth_message_digest"),
     (TRUNK, "FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
 }
 # Simple passthrough rows.
@@ -62,10 +61,6 @@ PASSTHROUGH_ROWS = {
 }
 # The OSPF legacy-key pair. Both rows feed the SAME child (ospf_interface_auth), so both
 # are child_pti on the loopback parent.
-OSPF_KEY_ROWS = {
-    (LOOPBACK, "OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
-    (LOOPBACK, "OSPF_AUTH_KEY", "ospf_auth_key"),
-}
 # FLOWCONTROL_SEND, companion of the receive rows. Only these two parents carry FLOWCONTROL,
 # so these two rows plus the receive pair close the field's universe.
 FC_SEND_ROWS = {
@@ -228,7 +223,7 @@ VLAN_OSPF_ROWS = {
 
 def test_package_provenance_and_size():
     expected_keys = (
-        BASELINE_ROWS | PASSTHROUGH_ROWS | OSPF_KEY_ROWS | FC_SEND_ROWS | STP_ROWS
+        BASELINE_ROWS | PASSTHROUGH_ROWS | FC_SEND_ROWS | STP_ROWS
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS
     )
@@ -236,12 +231,11 @@ def test_package_provenance_and_size():
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 99
+    assert len(BINDING_TABLE) == len(actual_keys) == 96
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
     assert len(PASSTHROUGH_ROWS) == 11
-    assert len(OSPF_KEY_ROWS) == 2
     assert len(FC_SEND_ROWS) == 2
     assert len(STP_ROWS) == 2
     assert len(QOS_STATS_ROWS) == 4
@@ -271,7 +265,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 99
+    assert len(rows) == 96
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -334,6 +328,16 @@ def test_compiler_rejects_profile_key_mismatch():
         generator.compile_rows(rows)
 
 
+def test_the_loopback_parent_registers_nothing():
+    """The fabric loopback has no registered bindings since the OSPF-auth retirement.
+
+    Its three were the only ones, and they were withdrawn because OSPF authentication there is
+    underlay authentication that fabricSettings owns. An empty set is the assertion, not an
+    oversight: a binding reappearing on this parent should fail here.
+    """
+    assert registered_profile_keys(LOOPBACK) == set()
+
+
 def test_registered_keys_per_parent():
     assert registered_profile_keys(TRUNK) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
@@ -344,9 +348,6 @@ def test_registered_keys_per_parent():
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats"
-    }
-    assert registered_profile_keys(LOOPBACK) == {
-        "enable_ospf_auth_message_digest", "ospf_auth_key_id", "ospf_auth_key"
     }
     assert registered_profile_keys(PC_TRUNK) == {
         "guard_mode", "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -502,28 +503,12 @@ def test_extend_spec_skips_omitted_key():
 # ---- B1: engine OWNS OSPF-MD binding resolution + supported-version transport (child_pti) ----
 
 @pytest.mark.parametrize("val", [True, False])
-def test_ospfmd_transported_by_engine_on_supported_version(val):
-    # B1: the engine resolves the loopback binding and transports the NATIVE boolean nvPair on
-    # a supported version. (Would fail if OSPF were excluded from engine resolution/transport.)
-    add, err = gie_contribute_nvpairs(LOOPBACK, {"enable_ospf_auth_message_digest": val}, "12.6.0.267")
-    assert err is None
-    assert add == {"ENABLE_OSPF_AUTH_MESSAGE_DIGEST": val}
-    assert isinstance(add["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"], bool)
-
-
-@pytest.mark.parametrize("val", [True, False])
 @pytest.mark.parametrize("ver", ["12.6.0.266", None, "", "bogus"])
 def test_ospfmd_withheld_not_failed_on_unsupported_version(val, ver):
     # child_pti: on an unsupported/unknown/malformed version the engine WITHHOLDS (no error),
     # so the module's capability gate + HAVE reconcile (compat hook) owns that path.
     add, err = gie_contribute_nvpairs(LOOPBACK, {"enable_ospf_auth_message_digest": val}, ver)
     assert err is None and add == {}
-
-
-def test_ospfmd_binding_is_child_pti_boolean():
-    b = resolve_binding(LOOPBACK, "enable_ospf_auth_message_digest")
-    assert b["mechanism"] == "child_pti"
-    assert b["type"] == "boolean"
 
 
 def test_ospfmd_not_in_generic_eth_spec_extension():
@@ -534,10 +519,18 @@ def test_ospfmd_not_in_generic_eth_spec_extension():
     assert "enable_ospf_auth_message_digest" not in spec
 
 
-def test_narrow_rule_flowcontrol_uses_passthrough_not_child_pti():
-    # FLOWCONTROL uses the version-gate/fail-closed rule, never the child_pti withhold semantics
+def test_every_binding_uses_the_version_gate_with_no_exceptions():
+    """Renamed from ...uses_passthrough_not_child_pti.
+
+    It used to contrast FLOWCONTROL against the one child_pti binding, which had a withhold
+    carve-out on an unsupported version. That binding is retired, so there is nothing left to
+    contrast against -- and the assertion worth keeping is the stronger one: NO binding has a
+    carve-out now, so an explicit value on an unsupported version fails closed, always.
+    """
     assert resolve_binding(TRUNK, "flowcontrol_receive")["mechanism"] == "passthrough"
-    assert resolve_binding(LOOPBACK, "enable_ospf_auth_message_digest")["mechanism"] == "child_pti"
+    assert all(b["mechanism"] == "passthrough" for b in BINDING_TABLE), (
+        "a non-passthrough binding reappeared; the version-gate rule is no longer universal"
+    )
 
 
 def test_non_ospf_child_pti_does_not_inherit_ospf_withhold(monkeypatch):
@@ -589,8 +582,11 @@ def test_contribute_preserves_native_types_no_stringification():
     # enum -> native str; boolean -> native bool (not the "True"/"true" string)
     a1, err1 = gie_contribute_nvpairs(TRUNK, {"flowcontrol_receive": "on"}, "12.6.0.267")
     assert a1["FLOWCONTROL_RECEIVE"] == "on" and isinstance(a1["FLOWCONTROL_RECEIVE"], str)
-    a2, err2 = gie_contribute_nvpairs(LOOPBACK, {"enable_ospf_auth_message_digest": True}, "12.6.0.267")
-    assert a2["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"] is True
+    # The native-value case used to be the loopback child_pti binding, the only mechanism that
+    # left a value unserialized. With child_pti retired every binding is passthrough, so the
+    # wire form is now universal -- which is the property worth asserting.
+    a2, err2 = gie_contribute_nvpairs(ROUTED, {"enable_ospf": True}, "12.6.0.267")
+    assert a2["ENABLE_OSPF"] == "true" and isinstance(a2["ENABLE_OSPF"], str)
 
 
 # ---- B2: registry-known key on an invalid desired parent -> fail closed (engine helper) ----
@@ -598,10 +594,8 @@ def test_contribute_preserves_native_types_no_stringification():
 def test_all_registered_and_guarded_keys():
     assert gie_all_registered_keys() == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
-        "enable_ospf_auth_message_digest",
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
-        "ospf_auth_key_id", "ospf_auth_key",
         "disable_bfd_echo", "ipv4_acl_in",
         "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
         "ospf_mtu_ignore", "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay", "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
@@ -898,38 +892,6 @@ def test_query_keeps_controller_flowcontrol_string_without_normalization(monkeyp
 
 # ---- exact registry contract for the OSPF legacy-key pair ----
 
-def test_a19_legacy_key_pair_registry_fields():
-    """Pin the fields that drive behaviour, not just the row's identity.
-
-    `type` decides the native type the engine enforces and transports; `mechanism` decides
-    whether the key is generically guarded and whether it is carried forward; and
-    `min_ndfc_version` is the version gate. A silent change to any of them alters what the
-    module sends without changing the row count that the other tests watch.
-    """
-    key_id = resolve_binding(LOOPBACK, "ospf_auth_key_id")
-    key = resolve_binding(LOOPBACK, "ospf_auth_key")
-    assert key_id is not None and key is not None
-
-    assert key_id["parent_nvpair"] == "OSPF_AUTH_KEY_ID"
-    assert key_id["type"] == "integer"
-    assert key["parent_nvpair"] == "OSPF_AUTH_KEY"
-    assert key["type"] == "string"
-    assert key["min_length"] == 1
-
-    # Both feed the SAME child (ospf_interface_auth), so both are child_pti. Registering
-    # either as passthrough would hand the engine the invalid-parent guard and the
-    # carry-forward, both of which belong to the dedicated validator.
-    for b in (key_id, key):
-        assert b["mechanism"] == "child_pti"
-        assert b["applicable_interface_type"] == "lo"
-        assert b["applicable_mode"] == "fabric"
-        assert b["min_ndfc_version"] == "12.6.0.267"
-
-    # No numeric-range field is registered: the [0,255] check stays in
-    # dcnm_intf_validate_ospf_auth_key_input, mirroring how the boolean kept its validator.
-    assert "min_value" not in key_id and "max_value" not in key_id
-
-
 def test_a19_pair_is_not_carried_forward():
     """child_pti bindings must stay out of the passthrough carry-forward set.
 
@@ -974,7 +936,9 @@ def test_string_and_enum_bindings_accept_str_subclasses(wrap):
     if key is None:
         pytest.skip("AnsibleUnicode not importable in this ansible-core")
     # OSPF key string binding
-    assert gie_validate_binding_value(LOOPBACK, "ospf_auth_key", key) == key
+    # Was the retired loopback ospf_auth_key. Any plain-string binding proves the same thing:
+    # the check is that a str SUBCLASS is accepted, not which field carries it.
+    assert gie_validate_binding_value(ROUTED, "ospf_tag", wrap("WP98")) == "WP98"
     # The enum and string bindings: the same defect made these unusable too.
     assert gie_validate_binding_value(TRUNK, "flowcontrol_receive", wrap("on")) == "on"
     assert gie_validate_binding_value(TRUNK, "acl_filter", wrap("MY_ACL")) == "MY_ACL"
@@ -985,12 +949,12 @@ def test_accepting_subclasses_does_not_make_bool_and_int_interchangeable():
     boolean satisfy an integer binding and reach NDFC as 1 (or an int satisfy a boolean).
     """
     with pytest.raises(GieBindingError):
-        gie_validate_binding_value(LOOPBACK, "ospf_auth_key_id", True)
+        gie_validate_binding_value(ROUTED, "ospf_cost", True)
     with pytest.raises(GieBindingError):
-        gie_validate_binding_value(LOOPBACK, "enable_ospf_auth_message_digest", 1)
+        gie_validate_binding_value(ROUTED, "enable_ospf", 1)
     # and the legitimate natives still pass
-    assert gie_validate_binding_value(LOOPBACK, "ospf_auth_key_id", 17) == 17
-    assert gie_validate_binding_value(LOOPBACK, "enable_ospf_auth_message_digest", True) is True
+    assert gie_validate_binding_value(ROUTED, "ospf_cost", 17) == 17
+    assert gie_validate_binding_value(ROUTED, "enable_ospf", True) is True
 
 
 # ---- HAVE values: the input contract must not be applied to controller state ----
