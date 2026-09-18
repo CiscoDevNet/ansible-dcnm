@@ -3145,6 +3145,11 @@ class DcnmIntf:
             admin_state=dict(type="bool", default=True),
         )
 
+        # Thin engine: extend the subinterface spec with registered generic keys the caller set
+        # EXPLICITLY (no default), so an omitted key stays dropped exactly as before. Same
+        # plumbing as the eth and port-channel parents; no feature-specific key is added here.
+        gie_extend_prof_spec(sub_prof_spec, "int_subif", cfg[0]["profile"])
+
         self.dcnm_intf_validate_interface_input(cfg, sub_spec, sub_prof_spec)
 
     @property
@@ -3976,6 +3981,11 @@ class DcnmIntf:
         if cfg[0]["profile"].get("enable_netflow", False) is True:
             svi_prof_spec["netflow_monitor"] = dict(required=True, type="str")
 
+        # Thin engine: extend the SVI spec with registered generic keys the caller set
+        # EXPLICITLY (no default), so an omitted key stays dropped exactly as before. Same
+        # plumbing as the eth, port-channel and subinterface parents.
+        gie_extend_prof_spec(svi_prof_spec, "int_vlan", cfg[0]["profile"])
+
         self.dcnm_intf_validate_interface_input(cfg, svi_spec, svi_prof_spec)
 
     def dcnm_intf_validate_aa_fex_interface_input(self, cfg):
@@ -4641,6 +4651,15 @@ class DcnmIntf:
             str(delem[profile].get("speed", ""))
         )
 
+        # Thin engine: contribute registered generic parent nvPairs for this subinterface
+        # parent (explicit-only, version fail-closed), mirroring the eth path exactly.
+        gie_add, gie_err = gie_contribute_nvpairs(
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+        )
+        if gie_err:
+            self.module.fail_json(msg=gie_err)
+        intf["interfaces"][0]["nvPairs"].update(gie_add)
+
     def dcnm_intf_get_loopback_payload(self, delem, intf, profile):
 
         # Properties common for all loopback interface modes
@@ -5193,6 +5212,16 @@ class DcnmIntf:
             ] = self.dcnm_intf_xlate_speed(
                 str(delem[profile].get("speed", ""))
             )
+
+        # Thin engine: contribute registered generic parent nvPairs for this SVI parent
+        # (explicit-only, version fail-closed). Deliberately OUTSIDE the mode branch above:
+        # the registered keys apply to the parent, not to one SVI mode.
+        gie_add, gie_err = gie_contribute_nvpairs(
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+        )
+        if gie_err:
+            self.module.fail_json(msg=gie_err)
+        intf["interfaces"][0]["nvPairs"].update(gie_add)
 
     # New Interfaces
     def dcnm_get_intf_payload(self, delem, sw):

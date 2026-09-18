@@ -164,6 +164,71 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "OSPF_TAG"): "ospf_tag",
     ("int_routed_host", "OSPF_AREA_ID"): "ospf_area_id",
     ("int_routed_host", "OSPF_COST"): "ospf_cost",
+
+    # Lot 2: the nine non-authentication OSPF fields on the same parent. All gated by
+    # ENABLE_OSPF, all IsMandatory=false, each with its own child template -- so they are
+    # independent value fields behind one gate, not a composite.
+    #
+    # The three enums default to "no_change", NDFC's sentinel for "leave the device alone".
+    # That is the controller's semantics; the engine validates enum membership and transports
+    # the string, exactly as it already does for GUARD_MODE ("no") and SPANNING_TREE_PORT_TYPE.
+    #
+    # The five authentication fields are deliberately NOT here: they carry or gate secrets, and
+    # three already exist as child_pti on int_fabric_loopback_11_1. Registering the same nvPair
+    # on a second parent is a per-(parent, nvpair) mechanism decision, not a copy.
+    ("int_routed_host", "OSPF_MTU_IGNORE"): "ospf_mtu_ignore",
+    ("int_routed_host", "OSPF_SHUTDOWN"): "ospf_shutdown",
+    ("int_routed_host", "OSPF_HELLO_INTERVAL"): "ospf_hello_interval",
+    ("int_routed_host", "OSPF_DEAD_INTERVAL"): "ospf_dead_interval",
+    ("int_routed_host", "OSPF_TRANSMIT_DELAY"): "ospf_transmit_delay",
+    ("int_routed_host", "OSPF_PRIORITY"): "ospf_priority",
+    ("int_routed_host", "OSPF_PASSIVE_MODE"): "ospf_passive_mode",
+    ("int_routed_host", "OSPF_NETWORK_TYPE"): "ospf_network_type",
+    ("int_routed_host", "OSPF_BFD_MODE"): "ospf_bfd_mode",
+
+    # int_subif and int_vlan -- the first bindings ever registered for these two parents. Both
+    # needed the engine hooked into their validator and builder first; neither had it.
+    #
+    # Extracted per parent, never copied: the three OSPF parents model the same concepts with
+    # different nvPairs and even different TYPES.
+    #
+    #     concept      int_routed_host       int_subif                 int_vlan
+    #     passive      OSPF_PASSIVE_MODE     OSPF_PASSIVE_INTERFACE    OSPF_PASSIVE_MODE
+    #                  enum                  boolean                   enum
+    #     bfd          OSPF_BFD_MODE         OSPF_BFD                  OSPF_BFD_MODE
+    #                  enum                  boolean                   enum
+    #     retransmit   absent                OSPF_RETRANSMIT_INTERVAL  OSPF_RETRANSMIT_INTERVAL
+    #
+    # This is why the table is keyed by (parent_template, parent_nvpair). A slice copied from
+    # the routed parent would have registered nvPairs that do not exist on the other two.
+    ("int_subif", "ENABLE_OSPF"): "enable_ospf",
+    ("int_subif", "OSPF_AREA_ID"): "ospf_area_id",
+    ("int_subif", "OSPF_BFD"): "ospf_bfd",
+    ("int_subif", "OSPF_COST"): "ospf_cost",
+    ("int_subif", "OSPF_DEAD_INTERVAL"): "ospf_dead_interval",
+    ("int_subif", "OSPF_HELLO_INTERVAL"): "ospf_hello_interval",
+    ("int_subif", "OSPF_MTU_IGNORE"): "ospf_mtu_ignore",
+    ("int_subif", "OSPF_NETWORK_TYPE"): "ospf_network_type",
+    ("int_subif", "OSPF_PASSIVE_INTERFACE"): "ospf_passive_interface",
+    ("int_subif", "OSPF_PRIORITY"): "ospf_priority",
+    ("int_subif", "OSPF_RETRANSMIT_INTERVAL"): "ospf_retransmit_interval",
+    ("int_subif", "OSPF_SHUTDOWN"): "ospf_shutdown",
+    ("int_subif", "OSPF_TAG"): "ospf_tag",
+    ("int_subif", "OSPF_TRANSMIT_DELAY"): "ospf_transmit_delay",
+    ("int_vlan", "ENABLE_OSPF"): "enable_ospf",
+    ("int_vlan", "OSPF_AREA_ID"): "ospf_area_id",
+    ("int_vlan", "OSPF_BFD_MODE"): "ospf_bfd_mode",
+    ("int_vlan", "OSPF_COST"): "ospf_cost",
+    ("int_vlan", "OSPF_DEAD_INTERVAL"): "ospf_dead_interval",
+    ("int_vlan", "OSPF_HELLO_INTERVAL"): "ospf_hello_interval",
+    ("int_vlan", "OSPF_MTU_IGNORE"): "ospf_mtu_ignore",
+    ("int_vlan", "OSPF_NETWORK_TYPE"): "ospf_network_type",
+    ("int_vlan", "OSPF_PASSIVE_MODE"): "ospf_passive_mode",
+    ("int_vlan", "OSPF_PRIORITY"): "ospf_priority",
+    ("int_vlan", "OSPF_RETRANSMIT_INTERVAL"): "ospf_retransmit_interval",
+    ("int_vlan", "OSPF_SHUTDOWN"): "ospf_shutdown",
+    ("int_vlan", "OSPF_TAG"): "ospf_tag",
+    ("int_vlan", "OSPF_TRANSMIT_DELAY"): "ospf_transmit_delay",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.

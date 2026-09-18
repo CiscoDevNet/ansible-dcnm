@@ -192,16 +192,50 @@ def _run(s, state="merged"):
 # =====================================================================================
 # SCOPE — why only this binding is affected
 # =====================================================================================
-def test_ospf_cost_is_the_only_integer_binding_on_a_generic_carry_forward_parent():
-    """Pin the blast radius, so a future integer binding has to face this deliberately."""
-    integers = [b for b in BINDING_TABLE if b["type"] == "integer"]
-    assert len(integers) == 2, "a new integer binding landed; re-review this whole file"
-    exposed = [
-        b for b in integers
-        if any(cf["parent_nvpair"] == b["parent_nvpair"]
-               for cf in gie_carry_forward_bindings(b["parent_template"]))
-    ]
-    assert [b["parent_nvpair"] for b in exposed] == ["OSPF_COST"]
+def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
+    """Pin the blast radius of the HAVE-representation exemption.
+
+    When this file was written OSPF_COST was the only integer binding that could reach the
+    generic carry-forward. Lot 2 added four more on the same parent, and registering int_subif
+    and int_vlan added ten more across two new parents -- so the entry is now keyed by parent
+    as well, because the same nvPair name on a different parent is a different binding.
+
+    What has NOT changed is why it matters: every name below is validated against the string
+    NDFC returns, not against a native int. A new integer arriving here silently would inherit
+    that exemption without anyone deciding it should.
+    """
+    exposed = sorted(
+        (b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE
+        if b["type"] == "integer"
+        and any(cf["parent_nvpair"] == b["parent_nvpair"]
+                for cf in gie_carry_forward_bindings(b["parent_template"]))
+    )
+    assert exposed == [
+        ("int_routed_host", "OSPF_COST"),
+        ("int_routed_host", "OSPF_DEAD_INTERVAL"),
+        ("int_routed_host", "OSPF_HELLO_INTERVAL"),
+        ("int_routed_host", "OSPF_PRIORITY"),
+        ("int_routed_host", "OSPF_TRANSMIT_DELAY"),
+        ("int_subif", "OSPF_COST"),
+        ("int_subif", "OSPF_DEAD_INTERVAL"),
+        ("int_subif", "OSPF_HELLO_INTERVAL"),
+        ("int_subif", "OSPF_PRIORITY"),
+        ("int_subif", "OSPF_RETRANSMIT_INTERVAL"),
+        ("int_subif", "OSPF_TRANSMIT_DELAY"),
+        ("int_vlan", "OSPF_COST"),
+        ("int_vlan", "OSPF_DEAD_INTERVAL"),
+        ("int_vlan", "OSPF_HELLO_INTERVAL"),
+        ("int_vlan", "OSPF_PRIORITY"),
+        ("int_vlan", "OSPF_RETRANSMIT_INTERVAL"),
+        ("int_vlan", "OSPF_TRANSMIT_DELAY"),
+    ], "an integer binding reached the generic carry-forward without being reviewed here"
+
+    # The loopback OSPF-MD key id stays out: its parent registers no passthrough binding, so it
+    # never reaches this path and keeps its dedicated validator's [0,255] check.
+    assert not any(
+        cf["parent_nvpair"] == "OSPF_AUTH_KEY_ID"
+        for cf in gie_carry_forward_bindings("int_fabric_loopback_11_1")
+    )
 
 
 def test_the_slice_is_registered_on_the_generic_path():
