@@ -108,6 +108,13 @@ def _stub():
         lambda sno, endpoint="interface":
         DcnmIntf.dcnm_intf_require_summary_authority(s, sno, endpoint)
     )
+    # dcnm_intf_get_have registers the controller's secret nvPairs as it assembles HAVE, so the
+    # real method is bound here rather than stubbed: a stub would let this harness keep passing
+    # while the module stopped protecting key material, which is the failure this file would be
+    # the last place to notice.
+    s.dcnm_intf_register_controller_secrets = (
+        lambda payload: DcnmIntf.dcnm_intf_register_controller_secrets(s, payload)
+    )
     return s
 
 

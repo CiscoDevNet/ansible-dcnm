@@ -203,6 +203,12 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
     What has NOT changed is why it matters: every name below is validated against the string
     NDFC returns, not against a native int. A new integer arriving here silently would inherit
     that exemption without anyone deciding it should.
+
+    OSPF_AUTH_KEY_ID is the newest and the decision was made deliberately: it takes the same
+    exemption, for the same reason. It is an ordinary integer that the controller hands back as
+    "1", and the fact that it sits beside key material changes nothing about its own
+    representation -- an id is not a secret and is not marked no_log, precisely so that Ansible
+    does not go scrubbing the digit "1" out of unrelated output.
     """
     exposed = sorted(
         (b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE
@@ -211,17 +217,20 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
                 for cf in gie_carry_forward_bindings(b["parent_template"]))
     )
     assert exposed == [
+        ("int_routed_host", "OSPF_AUTH_KEY_ID"),
         ("int_routed_host", "OSPF_COST"),
         ("int_routed_host", "OSPF_DEAD_INTERVAL"),
         ("int_routed_host", "OSPF_HELLO_INTERVAL"),
         ("int_routed_host", "OSPF_PRIORITY"),
         ("int_routed_host", "OSPF_TRANSMIT_DELAY"),
+        ("int_subif", "OSPF_AUTH_KEY_ID"),
         ("int_subif", "OSPF_COST"),
         ("int_subif", "OSPF_DEAD_INTERVAL"),
         ("int_subif", "OSPF_HELLO_INTERVAL"),
         ("int_subif", "OSPF_PRIORITY"),
         ("int_subif", "OSPF_RETRANSMIT_INTERVAL"),
         ("int_subif", "OSPF_TRANSMIT_DELAY"),
+        ("int_vlan", "OSPF_AUTH_KEY_ID"),
         ("int_vlan", "OSPF_COST"),
         ("int_vlan", "OSPF_DEAD_INTERVAL"),
         ("int_vlan", "OSPF_HELLO_INTERVAL"),

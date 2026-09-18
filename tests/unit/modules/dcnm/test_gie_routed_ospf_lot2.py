@@ -245,19 +245,43 @@ def test_an_omitted_field_emits_nothing():
 
 
 # =====================================================================================
-# THE AUTHENTICATION FAMILY IS DELIBERATELY ABSENT
+# THE AUTHENTICATION FAMILY, NOW REGISTERED
 # =====================================================================================
-@pytest.mark.parametrize("key", [
-    "enable_ospf_auth", "ospf_auth_key", "ospf_authentication_key",
-    "ospf_auth_key_id", "ospf_authentication_key_type",
-])
-def test_the_authentication_fields_are_not_registered_on_this_parent_yet(key):
-    """Pin the exclusion so it reads as a decision, not an oversight.
+#
+# This block used to assert the opposite: that the five were deliberately ABSENT, pending their
+# own lot. That lot landed. The assertion is inverted rather than deleted, because "absent" and
+# "present" are both decisions and the file should say which one is in force.
+#
+# Their arrival also settled the question the old comment left open. Three of them once existed
+# as child_pti on int_fabric_loopback_11_1; that capability was withdrawn, so there is no
+# second mechanism to reconcile with -- all five are passthrough, like every other binding.
+AUTH_FIELDS = {
+    "enable_ospf_auth": ("ENABLE_OSPF_AUTH", "boolean", False),
+    "ospf_auth_key_id": ("OSPF_AUTH_KEY_ID", "integer", False),
+    "ospf_auth_key": ("OSPF_AUTH_KEY", "string", True),
+    "ospf_authentication_key_type": ("OSPF_AUTHENTICATION_KEY_TYPE", "enum", False),
+    "ospf_authentication_key": ("OSPF_AUTHENTICATION_KEY", "string", True),
+}
 
-    Three of these already exist as ``child_pti`` on ``int_fabric_loopback_11_1`` with a
-    dedicated validator. Registering the same nvPair on a second parent is a per-(parent,
-    nvpair) mechanism decision -- ACL_FILTER is the precedent for the same key differing by
-    parent -- and the key value must never be printed or logged. Their own lot, with their own
-    live run.
+
+@pytest.mark.parametrize("key", sorted(AUTH_FIELDS))
+def test_the_authentication_fields_are_registered_on_this_parent(key):
+    nvpair, typ, _ = AUTH_FIELDS[key]
+    b = resolve_binding(PARENT, key)
+    assert b is not None, "{0} is no longer registered on {1}".format(key, PARENT)
+    assert b["parent_nvpair"] == nvpair
+    assert b["type"] == typ
+    assert b["mechanism"] == "passthrough"
+
+
+@pytest.mark.parametrize("key", sorted(AUTH_FIELDS))
+def test_only_the_two_key_bearing_fields_are_marked_no_log(key):
+    """The id and the encryption-type selector must stay visible, and that is not a detail.
+
+    Ansible scrubs by STRING MATCH. Marking ospf_auth_key_id would make it replace the bare
+    digits of that id -- "1", "7" -- everywhere they appear in every result, corrupting
+    unrelated output while protecting nothing, since an id is not a secret. The same goes for
+    the "3" of the encryption type.
     """
-    assert resolve_binding(PARENT, key) is None
+    _, _, is_secret = AUTH_FIELDS[key]
+    assert bool(resolve_binding(PARENT, key).get("no_log")) is is_secret

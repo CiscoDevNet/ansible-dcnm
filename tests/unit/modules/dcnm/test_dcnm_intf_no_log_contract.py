@@ -148,6 +148,9 @@ from ansible.module_utils import basic                            # noqa: E402
 from ansible.module_utils.common.text.converters import to_bytes  # noqa: E402
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface  # noqa: E402
+from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (  # noqa: E402
+    gie_contribute_nvpairs, gie_extend_prof_spec,
+)
 
 SECRET = "S3CR3T-WP98-NEVER-PRINT-ME"
 
@@ -291,3 +294,231 @@ def test_registration_happens_in_init_not_in_a_validator():
     assert init.index("self.config = ") < init.index("dcnm_intf_register_secret_values"), (
         "registration must come after self.config is populated"
     )
+
+
+# ==========================================================================================
+# THE AUTHENTICATION LOT: both secrets, on every parent, in and out
+# ==========================================================================================
+#
+# Everything above was written while ospf_auth_key was a WITHDRAWN field that only ever got
+# rejected. It is now a registered binding on int_routed_host, int_subif and int_vlan, and it
+# has a sibling: ospf_authentication_key. Two secrets, three parents, and -- unlike before --
+# paths where the value is ACCEPTED and travels.
+#
+# That widens what has to be true. A rejected key must not be printed; so must an accepted one,
+# one echoed back by the controller, and one that only ever appears in a diff.
+
+AUTH_SECRET = "3DES-ENCRYPTED-WP98-AUTH"
+AUTH_SECRET_2 = "SECOND-WP98-AUTHENTICATION-KEY"
+OSPF_PARENT_CONFIG = {
+    "int_routed_host": ("eth1/5", "eth", {"mode": "routed", "ipv4_addr": "10.3.0.1"}),
+    "int_subif": ("eth1/5.100", "sub_int", {"mode": "subint", "vlan": 100,
+                                            "ipv4_addr": "10.3.1.1", "ipv4_mask_len": 30}),
+    "int_vlan": ("vlan100", "svi", {"mode": "vlan", "ipv4_addr": "10.3.2.1",
+                                    "ipv4_mask_len": 30}),
+}
+
+
+def _interface_with(parent, **profile_extra):
+    name, itype, base = OSPF_PARENT_CONFIG[parent]
+    profile = dict(base)
+    profile.update(profile_extra)
+    return {"name": name, "type": itype, "switch": ["10.1.1.1"], "profile": profile}
+
+
+@pytest.mark.parametrize("parent", sorted(OSPF_PARENT_CONFIG))
+@pytest.mark.parametrize("secret_key", ["ospf_auth_key", "ospf_authentication_key"])
+def test_neither_secret_is_emitted_on_any_ospf_parent(parent, secret_key):
+    """Both keys, all three parents. Six combinations, none of which may print the value."""
+    cfg = [_interface_with(parent, enable_ospf=True, enable_ospf_auth=True,
+                           **{secret_key: AUTH_SECRET})]
+    assert AUTH_SECRET not in _emitted_output(cfg)
+
+
+@pytest.mark.parametrize("parent", sorted(OSPF_PARENT_CONFIG))
+def test_both_secrets_at_once_are_both_scrubbed(parent):
+    """Registration must not stop at the first secret it finds.
+
+    This is the same failure shape that made the earlier fix wrong -- a loop that stopped early
+    -- transposed from "which key is rejected first" to "which key is registered first".
+    """
+    cfg = [_interface_with(parent, enable_ospf=True, enable_ospf_auth=True,
+                           ospf_auth_key=AUTH_SECRET,
+                           ospf_authentication_key=AUTH_SECRET_2)]
+    out = _emitted_output(cfg)
+    assert AUTH_SECRET not in out
+    assert AUTH_SECRET_2 not in out
+
+
+def test_secrets_on_different_interfaces_are_all_scrubbed():
+    """One config, three parents, a different secret on each."""
+    cfg = [_interface_with("int_routed_host", ospf_auth_key=AUTH_SECRET),
+           _interface_with("int_subif", ospf_authentication_key=AUTH_SECRET_2),
+           _interface_with("int_vlan", ospf_auth_key="THIRD-WP98-KEY")]
+    out = _emitted_output(cfg)
+    for value in (AUTH_SECRET, AUTH_SECRET_2, "THIRD-WP98-KEY"):
+        assert value not in out
+
+
+@pytest.mark.parametrize("order", ["secret_first", "secret_last"])
+def test_field_order_within_a_profile_does_not_matter(order):
+    """Registration walks the profile; it must not depend on where the key sits in it.
+
+    Dict order is preserved in Python, and a playbook's field order is the author's, not ours.
+    """
+    fields = [("enable_ospf", True), ("enable_ospf_auth", True),
+              ("ospf_auth_key_id", 7), ("ospf_authentication_key_type", "3")]
+    secret = ("ospf_auth_key", AUTH_SECRET)
+    ordered = [secret] + fields if order == "secret_first" else fields + [secret]
+    cfg = [_interface_with("int_routed_host", **dict(ordered))]
+    assert AUTH_SECRET not in _emitted_output(cfg)
+
+
+def test_the_id_and_the_type_selector_stay_visible():
+    """Not everything near a secret is one, and over-scrubbing is its own defect.
+
+    Ansible replaces registered values by STRING MATCH anywhere they appear. Registering the id
+    would blank the digits "7" and "3" across the whole result -- inside unrelated addresses,
+    VLAN ids, counters -- while protecting nothing. The operator needs to see what key id was
+    sent in order to correlate it with the device.
+    """
+    cfg = [_interface_with("int_routed_host", enable_ospf=True, enable_ospf_auth=True,
+                           ospf_auth_key_id=7, ospf_authentication_key_type="3",
+                           ospf_auth_key=AUTH_SECRET)]
+    out = _emitted_output(cfg)
+    assert AUTH_SECRET not in out
+    args = json.loads(out)["invocation"]["module_args"]["config"][0]["profile"]
+    assert args["ospf_auth_key_id"] == 7, "the key id must remain readable"
+    assert args["ospf_authentication_key_type"] == "3", "so must the encryption type"
+
+
+def test_input_registration_covers_input_only_and_says_so():
+    """The two registrations have different jobs and must not be confused for one another.
+
+    dcnm_intf_register_secret_values reads the CONFIG. It cannot know about a value the
+    controller holds, and it is not supposed to -- that is what
+    dcnm_intf_register_controller_secrets is for, asserted further down.
+
+    This is pinned because the boundary is easy to blur: someone reading "registration happens
+    on arrival, over the whole config" could reasonably assume it covered everything, and a
+    query result would go out in the clear.
+    """
+    basic._ANSIBLE_ARGS = to_bytes(json.dumps({"ANSIBLE_MODULE_ARGS": {
+        "state": "merged", "fabric": "test_fabric", "config": []}}))
+    module = basic.AnsibleModule(argument_spec=dict(
+        state=dict(type="str"), fabric=dict(type="str"),
+        config=dict(type="list", elements="dict")))
+    intf = object.__new__(dcnm_interface.DcnmIntf)
+    intf.module = module
+    intf.dcnm_intf_register_secret_values([])
+    assert "VALUE-ONLY-NDFC-KNOWS" not in module.no_log_values
+
+
+def test_registering_a_secret_does_not_change_what_is_sent():
+    """Scrubbing is an OUTPUT concern. The payload must be byte-identical either way.
+
+    A protection that altered the value on the wire would be worse than no protection: the
+    device would get a key nobody typed, and it would fail to authenticate for reasons the
+    operator could not see.
+    """
+    profile = {"mode": "routed", "ipv4_addr": "10.3.0.1", "enable_ospf": True,
+               "enable_ospf_auth": True, "ospf_auth_key": AUTH_SECRET}
+    nvpairs = gie_contribute_nvpairs("int_routed_host", profile, "12.6.0.267")[0]
+    assert nvpairs["OSPF_AUTH_KEY"] == AUTH_SECRET, (
+        "the nvPair must carry the real key: the controller cannot use a scrubbed one"
+    )
+    assert type(nvpairs["OSPF_AUTH_KEY"]) is str  # pylint: disable=unidiomatic-typecheck
+
+
+def test_the_generated_spec_entry_declares_no_log_for_a_secret_and_not_for_its_neighbours():
+    """The second mechanism: what Ansible itself is told about the field.
+
+    This covers the accepted path; the early registration covers every other. Both are needed,
+    and this asserts they agree on WHICH fields are secret.
+    """
+    profile = {"ospf_auth_key": AUTH_SECRET, "ospf_authentication_key": AUTH_SECRET_2,
+               "ospf_auth_key_id": 7, "ospf_authentication_key_type": "3",
+               "enable_ospf_auth": True}
+    spec = gie_extend_prof_spec({}, "int_routed_host", profile)
+    assert spec["ospf_auth_key"].get("no_log") is True
+    assert spec["ospf_authentication_key"].get("no_log") is True
+    for visible in ("ospf_auth_key_id", "ospf_authentication_key_type", "enable_ospf_auth"):
+        assert "no_log" not in spec[visible], (
+            "{0} was marked no_log; string-match scrubbing would blank its value "
+            "everywhere".format(visible)
+        )
+
+
+# ==========================================================================================
+# SECRETS THE CONTROLLER PRODUCES, WHICH WERE NEVER IN THE INPUT
+# ==========================================================================================
+#
+# Registering only what the operator wrote leaves every controller-side path in the clear: a
+# query result, the HAVE a diff is computed from, an error quoting the payload NDFC rejected.
+# None of those pass through the playbook.
+
+NDFC_KEY = "KEY-ONLY-THE-CONTROLLER-KNOWS"
+
+
+def _module_with_empty_config():
+    basic._ANSIBLE_ARGS = to_bytes(json.dumps({"ANSIBLE_MODULE_ARGS": {
+        "state": "query", "fabric": "test_fabric", "config": []}}))
+    module = basic.AnsibleModule(argument_spec=dict(
+        state=dict(type="str"), fabric=dict(type="str"),
+        config=dict(type="list", elements="dict")))
+    intf = object.__new__(dcnm_interface.DcnmIntf)
+    intf.module = module
+    return intf, module
+
+
+@pytest.mark.parametrize("nvpair", sorted(dcnm_interface.SECRET_NVPAIRS))
+def test_a_secret_nvpair_from_the_controller_is_registered(nvpair):
+    intf, module = _module_with_empty_config()
+    intf.dcnm_intf_register_controller_secrets(
+        [{"policy": "int_routed_host",
+          "interfaces": [{"ifName": "Ethernet1/5", "nvPairs": {nvpair: NDFC_KEY}}]}])
+    assert NDFC_KEY in module.no_log_values
+
+
+def test_it_walks_rather_than_following_one_known_path():
+    """Responses nest differently per endpoint; a hardcoded path protects only one of them."""
+    intf, module = _module_with_empty_config()
+    intf.dcnm_intf_register_controller_secrets(
+        {"DATA": {"groups": [{"odd": {"interfaces": [
+            {"nvPairs": {"OSPF_AUTH_KEY": NDFC_KEY}}]}}]}})
+    assert NDFC_KEY in module.no_log_values
+
+
+def test_a_visible_nvpair_from_the_controller_is_not_registered():
+    """The id comes back too, and registering it would blank that digit everywhere."""
+    intf, module = _module_with_empty_config()
+    intf.dcnm_intf_register_controller_secrets(
+        [{"interfaces": [{"nvPairs": {"OSPF_AUTH_KEY_ID": "7", "OSPF_AUTH_KEY": NDFC_KEY}}]}])
+    assert NDFC_KEY in module.no_log_values
+    assert "7" not in module.no_log_values, (
+        "the key id was registered; Ansible would replace every '7' in the result"
+    )
+
+
+@pytest.mark.parametrize("shape", [
+    None, [], {}, {"nvPairs": None}, {"nvPairs": "text"}, [{"nvPairs": {}}],
+    {"interfaces": None}, "a string", 7,
+])
+def test_walking_a_malformed_response_never_raises(shape):
+    """It runs on whatever the controller returned, including on an error path."""
+    intf, _ = _module_with_empty_config()
+    intf.dcnm_intf_register_controller_secrets(shape)
+
+
+def test_both_call_sites_are_wired():
+    """HAVE and query are separate paths and query never builds a HAVE.
+
+    Pinned as source, because a runtime test for query needs a controller. If a third path that
+    surfaces controller nvPairs appears, it needs its own call and its own line here.
+    """
+    src = _module_source()
+    assert src.count("self.dcnm_intf_register_controller_secrets(") == 2, (
+        "expected exactly two call sites: HAVE assembly and the query result"
+    )
+    assert "self.dcnm_intf_register_controller_secrets(intf_payload)" in src
+    assert "self.dcnm_intf_register_controller_secrets(self.diff_query)" in src
