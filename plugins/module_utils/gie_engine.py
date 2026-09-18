@@ -473,12 +473,37 @@ def _generic_keys(parent_template):
     return keys
 
 
+def gie_no_log_profile_keys():
+    """Every profile key the registry marks `no_log`, across ALL parents.
+
+    Deliberately NOT parent-qualified and NOT version-qualified. The caller uses this to decide
+    which values to keep out of the module's output, and that decision has to be made before
+    anything is known to be valid: a key on the wrong parent, on an unsupported controller, or
+    on a field that is about to be refused outright is still key material, and a refusal is
+    still a result with `invocation.module_args` attached to it.
+
+    Erring wide costs nothing here. The set holds profile KEY NAMES, so the worst case is
+    scrubbing a value the operator put under a name that happens to be secret somewhere else --
+    which is the right answer anyway.
+    """
+    return frozenset(
+        b["profile_key"] for b in BINDING_TABLE if b.get("no_log"))
+
+
 def gie_extend_prof_spec(prof_spec, parent_template, profile_input):
     """Add a validation spec entry for each registered generic key the caller set EXPLICITLY.
 
     The validator type comes from the binding metadata (fail closed on unknown). No default is
     added, so an omitted key stays omitted (dropped by validate_list_of_dicts, exactly as
     before the engine). Returns the same (mutated) prof_spec.
+
+    A `no_log` binding also gets `no_log=True` here. That is the SECOND of two mechanisms, not
+    the only one, and it is worth being clear about why both exist: this spec is built only for
+    keys the caller set, on a resolved parent, and only once validation is reached. A key
+    refused earlier -- wrong parent, unsupported version, withdrawn field -- never arrives, and
+    its value would still be serialised into the result. The module therefore registers these
+    values on arrival as well. This entry covers the path where the field is ACCEPTED, and lets
+    Ansible's own machinery do the work where it can.
     """
     if prof_spec is None:
         return prof_spec
@@ -488,6 +513,8 @@ def gie_extend_prof_spec(prof_spec, parent_template, profile_input):
             entry = {"type": gie_validator_type(b["type"])}
             if b.get("valid_values"):
                 entry["choices"] = list(b["valid_values"])
+            if b.get("no_log"):
+                entry["no_log"] = True
             prof_spec[pk] = entry
     return prof_spec
 

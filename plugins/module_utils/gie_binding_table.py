@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = f181a27dee5021176b99afd8e5d4efe569ce935233ca1e533e3ca5f031ce963a
+# provenance_sha256 = 24c28e1fd0905d225a10057968c136d40c38a79df5e40f0e641e4b291200438b
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "f181a27dee5021176b99afd8e5d4efe569ce935233ca1e533e3ca5f031ce963a"
+PROVENANCE_SHA256 = "24c28e1fd0905d225a10057968c136d40c38a79df5e40f0e641e4b291200438b"
 
 BINDING_TABLE = (
     {
@@ -20,6 +20,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 64,
+        'no_log': False,
     },
     {
         'parent_template': 'int_access_host',
@@ -31,6 +32,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_access_host',
@@ -42,6 +44,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_access_host',
@@ -52,6 +55,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_access_host',
@@ -62,6 +66,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_access_host',
@@ -74,6 +79,7 @@ BINDING_TABLE = (
         'default_template': 'off',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_access_host',
@@ -86,6 +92,7 @@ BINDING_TABLE = (
         'default_template': 'off',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_access_host',
@@ -98,6 +105,7 @@ BINDING_TABLE = (
         'default_template': 'no',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_access_host',
@@ -110,6 +118,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 64,
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_access_host',
@@ -121,6 +130,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_access_host',
@@ -132,6 +142,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_access_host',
@@ -142,6 +153,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_access_host',
@@ -152,6 +164,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_access_host',
@@ -164,6 +177,7 @@ BINDING_TABLE = (
         'default_template': 'no',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_dot1q_tunnel_host',
@@ -176,6 +190,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 64,
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_dot1q_tunnel_host',
@@ -187,6 +202,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_dot1q_tunnel_host',
@@ -198,6 +214,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_dot1q_tunnel_host',
@@ -208,6 +225,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_dot1q_tunnel_host',
@@ -218,6 +236,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_dot1q_tunnel_host',
@@ -230,6 +249,7 @@ BINDING_TABLE = (
         'default_template': 'no',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_trunk_host',
@@ -242,6 +262,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 64,
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_trunk_host',
@@ -253,6 +274,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_trunk_host',
@@ -264,6 +286,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_trunk_host',
@@ -274,6 +297,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_trunk_host',
@@ -284,6 +308,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_trunk_host',
@@ -296,6 +321,7 @@ BINDING_TABLE = (
         'default_template': 'no',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_trunk_host',
@@ -308,6 +334,7 @@ BINDING_TABLE = (
         'default_template': 'no',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -319,6 +346,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -330,6 +358,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -341,6 +370,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -352,6 +382,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -363,6 +394,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -374,6 +406,19 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'ENABLE_OSPF_AUTH',
+        'profile_key': 'enable_ospf_auth',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -386,6 +431,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 64,
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -399,6 +445,56 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 15,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'OSPF_AUTHENTICATION_KEY',
+        'profile_key': 'ospf_authentication_key',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': True,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'OSPF_AUTHENTICATION_KEY_TYPE',
+        'profile_key': 'ospf_authentication_key_type',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'enum',
+        'valid_values': ('0', '3', '7'),
+        'default_template': '3',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'OSPF_AUTH_KEY',
+        'profile_key': 'ospf_auth_key',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': True,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'OSPF_AUTH_KEY_ID',
+        'profile_key': 'ospf_auth_key_id',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'default_template': 1,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 0,
+        'max_value': 255,
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -411,6 +507,7 @@ BINDING_TABLE = (
         'default_template': 'no_change',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -423,6 +520,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 65535,
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -435,6 +533,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 65535,
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -447,6 +546,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 65535,
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -458,6 +558,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -470,6 +571,7 @@ BINDING_TABLE = (
         'default_template': 'no_change',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -482,6 +584,7 @@ BINDING_TABLE = (
         'default_template': 'no_change',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -494,6 +597,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 0,
         'max_value': 255,
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -505,6 +609,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -517,6 +622,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 20,
+        'no_log': False,
     },
     {
         'parent_template': 'int_routed_host',
@@ -529,6 +635,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 450,
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -540,6 +647,19 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'ENABLE_OSPF_AUTH',
+        'profile_key': 'enable_ospf_auth',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -553,6 +673,56 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 15,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'OSPF_AUTHENTICATION_KEY',
+        'profile_key': 'ospf_authentication_key',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': True,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'OSPF_AUTHENTICATION_KEY_TYPE',
+        'profile_key': 'ospf_authentication_key_type',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'enum',
+        'valid_values': ('0', '3', '7'),
+        'default_template': '3',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'OSPF_AUTH_KEY',
+        'profile_key': 'ospf_auth_key',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': True,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'OSPF_AUTH_KEY_ID',
+        'profile_key': 'ospf_auth_key_id',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'integer',
+        'default_template': 1,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 0,
+        'max_value': 255,
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -564,6 +734,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -576,6 +747,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 65535,
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -588,6 +760,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 65535,
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -600,6 +773,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 65535,
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -611,6 +785,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -623,6 +798,7 @@ BINDING_TABLE = (
         'default_template': 'no_change',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -634,6 +810,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -646,6 +823,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 0,
         'max_value': 255,
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -658,6 +836,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 65535,
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -669,6 +848,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -681,6 +861,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 20,
+        'no_log': False,
     },
     {
         'parent_template': 'int_subif',
@@ -693,6 +874,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 450,
+        'no_log': False,
     },
     {
         'parent_template': 'int_trunk_host',
@@ -705,6 +887,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 64,
+        'no_log': False,
     },
     {
         'parent_template': 'int_trunk_host',
@@ -716,6 +899,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_trunk_host',
@@ -727,6 +911,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_trunk_host',
@@ -737,6 +922,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_trunk_host',
@@ -747,6 +933,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_trunk_host',
@@ -759,6 +946,7 @@ BINDING_TABLE = (
         'default_template': 'off',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_trunk_host',
@@ -771,6 +959,7 @@ BINDING_TABLE = (
         'default_template': 'off',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_trunk_host',
@@ -783,6 +972,7 @@ BINDING_TABLE = (
         'default_template': 'no',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_trunk_host',
@@ -795,6 +985,7 @@ BINDING_TABLE = (
         'default_template': 'no',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -806,6 +997,19 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'ENABLE_OSPF_AUTH',
+        'profile_key': 'enable_ospf_auth',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -819,6 +1023,56 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 15,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'OSPF_AUTHENTICATION_KEY',
+        'profile_key': 'ospf_authentication_key',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': True,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'OSPF_AUTHENTICATION_KEY_TYPE',
+        'profile_key': 'ospf_authentication_key_type',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'enum',
+        'valid_values': ('0', '3', '7'),
+        'default_template': '3',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'OSPF_AUTH_KEY',
+        'profile_key': 'ospf_auth_key',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': True,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'OSPF_AUTH_KEY_ID',
+        'profile_key': 'ospf_auth_key_id',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'integer',
+        'default_template': 1,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 0,
+        'max_value': 255,
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -831,6 +1085,7 @@ BINDING_TABLE = (
         'default_template': 'no_change',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -843,6 +1098,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 65535,
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -855,6 +1111,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 65535,
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -867,6 +1124,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 65535,
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -878,6 +1136,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -890,6 +1149,7 @@ BINDING_TABLE = (
         'default_template': 'no_change',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -902,6 +1162,7 @@ BINDING_TABLE = (
         'default_template': 'no_change',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -914,6 +1175,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 0,
         'max_value': 255,
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -926,6 +1188,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 65535,
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -937,6 +1200,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -949,6 +1213,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 20,
+        'no_log': False,
     },
     {
         'parent_template': 'int_vlan',
@@ -961,6 +1226,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 450,
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_access_host',
@@ -973,6 +1239,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 64,
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_access_host',
@@ -984,6 +1251,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_access_host',
@@ -995,6 +1263,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_access_host',
@@ -1005,6 +1274,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_access_host',
@@ -1015,6 +1285,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_access_host',
@@ -1026,6 +1297,7 @@ BINDING_TABLE = (
         'valid_values': ('no', 'network', 'normal'),
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_trunk_host',
@@ -1038,6 +1310,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 64,
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_trunk_host',
@@ -1049,6 +1322,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_trunk_host',
@@ -1060,6 +1334,7 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_trunk_host',
@@ -1070,6 +1345,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_trunk_host',
@@ -1080,6 +1356,7 @@ BINDING_TABLE = (
         'type': 'boolean',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_trunk_host',
@@ -1091,6 +1368,7 @@ BINDING_TABLE = (
         'valid_values': ('root', 'none', 'loop', 'no'),
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_vpc_trunk_host',
@@ -1102,6 +1380,7 @@ BINDING_TABLE = (
         'valid_values': ('no', 'network', 'normal'),
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
 )
 

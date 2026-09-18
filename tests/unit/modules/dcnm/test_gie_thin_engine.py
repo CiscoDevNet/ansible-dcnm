@@ -219,19 +219,35 @@ VLAN_OSPF_ROWS = {
 }
 
 
+# The authentication lot is one set for three parents, not three sets, because the slice that
+# registers it is one slice for three parents. The other OSPF families each get their own set
+# above, mirroring their own per-parent slices -- this one is shaped like what it describes.
+AUTH_OSPF_ROWS = {
+    (parent, nvpair, key)
+    for parent in ("int_routed_host", "int_subif", "int_vlan")
+    for nvpair, key in (
+        ("ENABLE_OSPF_AUTH", "enable_ospf_auth"),
+        ("OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
+        ("OSPF_AUTH_KEY", "ospf_auth_key"),
+        ("OSPF_AUTHENTICATION_KEY_TYPE", "ospf_authentication_key_type"),
+        ("OSPF_AUTHENTICATION_KEY", "ospf_authentication_key"),
+    )
+}
+
+
 # ---- binding package runtime contract ----
 
 def test_package_provenance_and_size():
     expected_keys = (
         BASELINE_ROWS | PASSTHROUGH_ROWS | FC_SEND_ROWS | STP_ROWS
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
-        | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS
+        | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 96
+    assert len(BINDING_TABLE) == len(actual_keys) == 111
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -244,6 +260,7 @@ def test_package_provenance_and_size():
     assert len(ROUTED_OSPF_ROWS) == 13
     assert len(SUBIF_OSPF_ROWS) == 14
     assert len(VLAN_OSPF_ROWS) == 14
+    assert len(AUTH_OSPF_ROWS) == 15   # five fields x three parents
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -265,7 +282,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 96
+    assert len(rows) == 111
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -599,7 +616,12 @@ def test_all_registered_and_guarded_keys():
         "disable_bfd_echo", "ipv4_acl_in",
         "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
         "ospf_mtu_ignore", "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay", "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
-        "enable_ospf", "ospf_area_id", "ospf_bfd", "ospf_bfd_mode", "ospf_cost", "ospf_dead_interval", "ospf_hello_interval", "ospf_mtu_ignore", "ospf_network_type", "ospf_passive_interface", "ospf_passive_mode", "ospf_priority", "ospf_retransmit_interval", "ospf_shutdown", "ospf_tag", "ospf_transmit_delay"
+        "enable_ospf", "ospf_area_id", "ospf_bfd", "ospf_bfd_mode", "ospf_cost", "ospf_dead_interval", "ospf_hello_interval", "ospf_mtu_ignore", "ospf_network_type", "ospf_passive_interface", "ospf_passive_mode", "ospf_priority", "ospf_retransmit_interval", "ospf_shutdown", "ospf_tag", "ospf_transmit_delay",
+        # The authentication lot, on all three OSPF parents. Passthrough like the rest, so
+        # the generic guard owns it too: a key on the wrong parent is refused by the engine,
+        # not by a validator written for this family.
+        "enable_ospf_auth", "ospf_auth_key_id", "ospf_auth_key",
+        "ospf_authentication_key_type", "ospf_authentication_key",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
@@ -614,15 +636,29 @@ def test_all_registered_and_guarded_keys():
         # child template inside NDFC does not change which side of this line a binding sits on.
         "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
         "ospf_mtu_ignore", "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay", "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
-        "enable_ospf", "ospf_area_id", "ospf_bfd", "ospf_bfd_mode", "ospf_cost", "ospf_dead_interval", "ospf_hello_interval", "ospf_mtu_ignore", "ospf_network_type", "ospf_passive_interface", "ospf_passive_mode", "ospf_priority", "ospf_retransmit_interval", "ospf_shutdown", "ospf_tag", "ospf_transmit_delay"
+        "enable_ospf", "ospf_area_id", "ospf_bfd", "ospf_bfd_mode", "ospf_cost", "ospf_dead_interval", "ospf_hello_interval", "ospf_mtu_ignore", "ospf_network_type", "ospf_passive_interface", "ospf_passive_mode", "ospf_priority", "ospf_retransmit_interval", "ospf_shutdown", "ospf_tag", "ospf_transmit_delay",
+        # The authentication lot, on all three OSPF parents. Passthrough like the rest, so
+        # the generic guard owns it too: a key on the wrong parent is refused by the engine,
+        # not by a validator written for this family.
+        "enable_ospf_auth", "ospf_auth_key_id", "ospf_auth_key",
+        "ospf_authentication_key_type", "ospf_authentication_key",
     }
+    # The withdrawn fabric-loopback key. It is registered nowhere, so it is guarded nowhere --
+    # the module rejects it by name instead, which is a different mechanism with a different
+    # message.
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
-    # The legacy-key pair is child_pti, so registering it must NOT hand the engine the
-    # invalid-parent guard. dcnm_intf_validate_ospf_auth_key_input owns that check and its
-    # error message ("supported only on fabric loopback interfaces...") is observable
-    # contract; a generic guard firing first would silently change it.
-    assert "ospf_auth_key_id" not in gie_guarded_keys()
-    assert "ospf_auth_key" not in gie_guarded_keys()
+
+    # INVERTED. These two used to assert the opposite, and the reason they did is gone.
+    #
+    # They were child_pti on int_fabric_loopback_11_1, and dcnm_intf_validate_ospf_auth_key_input
+    # owned their invalid-parent check; letting the generic guard fire first would have silently
+    # replaced that validator's message ("supported only on fabric loopback interfaces...").
+    # Both the capability and the validator were withdrawn. Nothing owns the check now except
+    # the generic guard -- so they MUST be in this set, or ospf_auth_key on a parent that does
+    # not declare it would be accepted and quietly dropped.
+    assert "ospf_auth_key_id" in gie_guarded_keys()
+    assert "ospf_auth_key" in gie_guarded_keys()
+    assert "ospf_authentication_key" in gie_guarded_keys()
 
 
 def test_invalid_parent_key_flags_flowcontrol_on_wrong_parent():

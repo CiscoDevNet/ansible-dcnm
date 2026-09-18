@@ -2076,11 +2076,16 @@ RETIRED_LOOPBACK_OSPF_AUTH_KEYS = {
 # scrub would protect it exactly where it is refused and not at all where it is accepted, which
 # is backwards. Registration therefore happens once, on arrival, for the whole config, and is
 # indifferent to what any later check decides.
-SECRET_PROFILE_KEYS = frozenset({"ospf_auth_key"})
-
-# Kept as the loopback rejection's own view of which of ITS withdrawn keys carry key material.
-# It no longer drives any scrubbing -- SECRET_PROFILE_KEYS does that, earlier and wider.
+# DERIVED FROM THE REGISTRY, not written here. A binding marked `no_log` is protected by that
+# fact alone; nobody has to remember to add its name to a second list, and there is no way to
+# register a secret binding and leave it unprotected.
+#
+# Union, not intersection, with the withdrawn keys. gie_no_log_profile_keys() only knows about
+# keys that are still registered somewhere, and `ospf_auth_key` happens to be -- but the
+# withdrawn set must contribute independently of that coincidence. A key this module refuses is
+# still key material, and a refusal is still a result with invocation.module_args attached.
 RETIRED_LOOPBACK_OSPF_AUTH_SECRETS = frozenset({"ospf_auth_key"})
+
 
 # The keychain was never a dcnm_interface field, and it is the reason the other three stopped
 # being one: ``ospfAuthKeychainName`` is written by fabricSettings, which overwrites the interface
@@ -2117,10 +2122,27 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_describe_value_type,
     gie_fabric_owned_carry_forward,
     gie_have_carry_forward_nvpairs,
+    gie_no_log_profile_keys,
     gie_validate_binding_value,
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
     resolve_binding,
+)
+SECRET_PROFILE_KEYS = gie_no_log_profile_keys() | RETIRED_LOOPBACK_OSPF_AUTH_SECRETS
+
+# The same secrets, spelled the way the CONTROLLER spells them.
+#
+# A key can reach the output without ever having been typed: NDFC returns it in a query, in the
+# HAVE that a diff is computed from, and in an error that quotes the payload it rejected. None
+# of those go through the playbook, so registering only what the operator wrote leaves every one
+# of them in the clear.
+#
+# Derived, like its profile-key sibling: gie_nvpair_keymap() already translates nvPair -> profile
+# key for every registered binding, so a secret binding lands here by being secret, not by being
+# remembered.
+SECRET_NVPAIRS = frozenset(
+    nvpair for nvpair, profile_key in gie_nvpair_keymap().items()
+    if profile_key in SECRET_PROFILE_KEYS
 )
 
 
@@ -3393,6 +3415,33 @@ class DcnmIntf:
                 # the output, which hides far more than it protects.
                 if value not in (None, ""):
                     self.module.no_log_values.add(str(value))
+
+    def dcnm_intf_register_controller_secrets(self, payload):
+        """Register secret values the CONTROLLER produced, wherever they sit in a response.
+
+        Walks the structure rather than a known path on purpose. Secrets surface from NDFC in
+        several shapes -- the HAVE list, a query result, the body echoed back in an error -- and
+        each of those has its own nesting. A walk protects all of them, including ones added
+        later, where a hardcoded path would protect exactly the one it was written against.
+
+        Like its input-side counterpart this never validates and never raises: its only job is
+        that a key cannot be serialised in the clear.
+        """
+        def walk(node):
+            if isinstance(node, dict):
+                nvpairs = node.get("nvPairs")
+                if isinstance(nvpairs, dict):
+                    for nvpair in SECRET_NVPAIRS:
+                        value = nvpairs.get(nvpair)
+                        if value not in (None, ""):
+                            self.module.no_log_values.add(str(value))
+                for value in node.values():
+                    walk(value)
+            elif isinstance(node, list):
+                for value in node:
+                    walk(value)
+
+        walk(payload)
 
     def dcnm_intf_validate_loopback_interface_input(self, cfg):
 
@@ -5590,6 +5639,8 @@ class DcnmIntf:
                 # Fetch the information from DCNM w.r.t to the interafce that we have in self.want
                 intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
                 if intf_payload:
+                    # Before it can reach a diff, a report or an error quoting it.
+                    self.dcnm_intf_register_controller_secrets(intf_payload)
                     self.have.append(intf_payload)
 
     def dcnm_intf_translate_elements(self, ie1, ie2):
@@ -7877,6 +7928,9 @@ class DcnmIntf:
             if "DATA" in resp and resp["DATA"]:
                 self.diff_query.extend(resp["DATA"])
         self.changed_dict[0]["query"].extend(self.diff_query)
+        # query never builds a HAVE, so this is its only chance: the controller's nvPairs
+        # go straight into the task result.
+        self.dcnm_intf_register_controller_secrets(self.diff_query)
         self.result["response"].extend(self.diff_query)
 
     def dcnm_parse_response(self, resp):
