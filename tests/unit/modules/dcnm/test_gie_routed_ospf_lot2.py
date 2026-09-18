@@ -56,18 +56,18 @@ NDFC_VERSION = "12.6.0.267"
 # profile_key -> (nvPair, type, declared default, declared range)
 # Read from the installed template, sha b9b50077cf49f8cb -- not from the Excel or the ledger.
 LOT2 = {
-    "ospf_mtu_ignore":     ("OSPF_MTU_IGNORE",     "boolean", False, None),
-    "ospf_shutdown":       ("OSPF_SHUTDOWN",       "boolean", False, None),
+    "ospf_mtu_ignore": ("OSPF_MTU_IGNORE", "boolean", False, None),
+    "ospf_shutdown": ("OSPF_SHUTDOWN", "boolean", False, None),
     "ospf_hello_interval": ("OSPF_HELLO_INTERVAL", "integer", None, (1, 65535)),
-    "ospf_dead_interval":  ("OSPF_DEAD_INTERVAL",  "integer", None, (1, 65535)),
+    "ospf_dead_interval": ("OSPF_DEAD_INTERVAL", "integer", None, (1, 65535)),
     "ospf_transmit_delay": ("OSPF_TRANSMIT_DELAY", "integer", None, (1, 450)),
-    "ospf_priority":       ("OSPF_PRIORITY",       "integer", None, (0, 255)),
-    "ospf_passive_mode":   ("OSPF_PASSIVE_MODE",   "enum", "no_change",
-                            ("no_change", "passive", "no_passive")),
-    "ospf_network_type":   ("OSPF_NETWORK_TYPE",   "enum", "no_change",
-                            ("no_change", "broadcast", "point_to_point")),
-    "ospf_bfd_mode":       ("OSPF_BFD_MODE",       "enum", "no_change",
-                            ("no_change", "enable", "disable")),
+    "ospf_priority": ("OSPF_PRIORITY", "integer", None, (0, 255)),
+    "ospf_passive_mode": ("OSPF_PASSIVE_MODE", "enum", "no_change",
+                          ("no_change", "passive", "no_passive")),
+    "ospf_network_type": ("OSPF_NETWORK_TYPE", "enum", "no_change",
+                          ("no_change", "broadcast", "point_to_point")),
+    "ospf_bfd_mode": ("OSPF_BFD_MODE", "enum", "no_change",
+                      ("no_change", "enable", "disable")),
 }
 
 # A valid value per key, for the end-to-end pass. Deliberately not the default: a stage that

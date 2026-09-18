@@ -103,10 +103,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 99
-    assert len(set(keys)) == 99, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 96
+    assert len(set(keys)) == 96, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 99, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 96, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -164,7 +164,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 99
+    assert len(gen.compile_rows(rows)) == 96
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -213,7 +213,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 99
+    assert len(gen.compile_rows(rows)) == 96
 
 
 # ------------------------------------------------------------------ positive transport
@@ -556,25 +556,20 @@ def test_keymap_carries_every_new_nvpair():
     assert km["FLOWCONTROL_RECEIVE"] == "flowcontrol_receive"
     assert km["FLOWCONTROL_SEND"] == "flowcontrol_send"
     assert km["SPANNING_TREE_PORT_TYPE"] == "spanning_tree_port_type"
-    assert km["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"] == "enable_ospf_auth_message_digest"
-    assert km["OSPF_AUTH_KEY_ID"] == "ospf_auth_key_id"
-    assert km["OSPF_AUTH_KEY"] == "ospf_auth_key"
     # The OSPF slice on int_routed_host. No module change was needed for these: the keymap is
     # derived from the binding table by gie_nvpair_keymap(), so a new row lands here by itself.
     assert km["ENABLE_OSPF"] == "enable_ospf"
     assert km["OSPF_TAG"] == "ospf_tag"
     assert km["OSPF_AREA_ID"] == "ospf_area_id"
     assert km["OSPF_COST"] == "ospf_cost"
-    assert len(km) == 30
+    assert len(km) == 27
 
 
 def test_all_registered_keys():
     assert gie_all_registered_keys() == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
-        "enable_ospf_auth_message_digest",
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
-        "ospf_auth_key_id", "ospf_auth_key",
         "disable_bfd_echo", "ipv4_acl_in",
         "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
         "ospf_mtu_ignore", "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay", "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
@@ -621,43 +616,6 @@ def test_a15_flowcontrol_contract_is_unchanged():
             parent, {"flowcontrol_receive": "on"}, BELOW
         )
         assert add is None and err, "FLOWCONTROL must still fail closed"
-
-
-def test_a15_ospf_md_contract_and_compat_exception_are_unchanged():
-    b = resolve_binding(LOOPBACK, "enable_ospf_auth_message_digest")
-    assert b["parent_nvpair"] == "ENABLE_OSPF_AUTH_MESSAGE_DIGEST"
-    assert b["type"] == "boolean"
-    assert b["default_template"] is False
-    assert b["mechanism"] == "child_pti"
-    assert b["min_ndfc_version"] == SUPPORTED
-
-    for value in (True, False):
-        add, err = gie_contribute_nvpairs(
-            LOOPBACK, {"enable_ospf_auth_message_digest": value}, SUPPORTED
-        )
-        assert err is None and add == {"ENABLE_OSPF_AUTH_MESSAGE_DIGEST": value}
-        # Exact type: isinstance(True, int) is True in Python, so isinstance could not tell
-        # a preserved native bool from an int.
-        assert type(add["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"]) is bool  # pylint: disable=unidiomatic-typecheck
-
-    # The one compatibility exception: withhold, never fail.
-    for version in UNSUPPORTED_VERSIONS:
-        add, err = gie_contribute_nvpairs(
-            LOOPBACK, {"enable_ospf_auth_message_digest": True}, version
-        )
-        assert err is None, f"OSPF-MD@{version!r} must withhold, not fail"
-        assert add == {}
-
-
-def test_ospf_md_is_still_not_generically_guarded():
-    assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
-    # The legacy-key pair lives on the same parent. Both are child_pti, so neither is
-    # generically guarded either: dcnm_intf_validate_ospf_auth_key_input keeps ownership of
-    # the parent/mode check and of its exact error message.
-    assert registered_profile_keys(LOOPBACK) == {
-        "enable_ospf_auth_message_digest", "ospf_auth_key_id", "ospf_auth_key"
-    }
-    assert gie_guarded_keys().isdisjoint({"ospf_auth_key_id", "ospf_auth_key"})
 
 
 def test_ospf_md_is_still_absent_from_the_generic_eth_and_pc_specs():

@@ -8,9 +8,9 @@
 #
 # The engine OWNS, for every registered binding: explicit-presence, binding resolution, type
 # validation (validator type from binding metadata) and supported-version parent-nvPair
-# transport. An explicit value on an unsupported/unknown/malformed version fails closed by
-# default. The one exact OSPF-MD binding is the sole exception: its proven module-level
-# capability/HAVE reconciliation owns that path, so the engine withholds the nvPair there.
+# transport. An explicit value on an unsupported/unknown/malformed version fails closed --
+# with no exceptions, since the one binding that had a compatibility carve-out (loopback
+# OSPF-MD) was withdrawn along with its dedicated path.
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -25,15 +25,18 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 GIE_MECH_PASSTHROUGH = "passthrough"
 GIE_MECH_CHILD_PTI = "child_pti"
 
-# The ONE exact binding whose unsupported-version handling is delegated to the module's proven
-# capability gate + HAVE reconciliation (withhold, do NOT fail). This is a narrow, per-binding
-# compatibility identifier: it must NOT be generalized to `mechanism == child_pti`. Any other
-# binding — including a future ordinary child_pti binding — follows the default policy and
-# fails closed on an unsupported/unknown/malformed version.
-GIE_OSPF_MD_COMPAT_BINDING = (
-    "int_fabric_loopback_11_1",
-    "ENABLE_OSPF_AUTH_MESSAGE_DIGEST",
-)
+# (parent_template, parent_nvpair) pairs WITHHELD rather than failed when the controller is
+# below their minimum version. Withholding drops a key the operator explicitly set, so it is
+# only ever correct when some other layer reconciles that key -- and nothing does any more. The
+# single member was the loopback OSPF-auth binding, whose reconciliation lived in the module's
+# capability gate; the two were retired together.
+#
+# THE EMPTINESS IS THE ASSERTION: every binding now follows the default policy, which is to fail
+# closed. A future compat case lands here by adding its tuple, and the branch below needs no
+# edit. It is deliberately a set and not the single sentinel tuple it replaces: an empty set
+# cannot match by construction, whereas a sentinel is unreachable only for as long as no binding
+# happens to equal it -- and the price of that coincidence is a silently dropped key.
+GIE_VERSION_WITHHOLD_BINDINGS = frozenset()
 
 # --- Generic same-parent HAVE carry-forward (drift fix) --------------------------------------
 # CONFIRMED MECHANISM (this reproduction; NOT asserted as a universal rule for every template): on a
@@ -57,13 +60,66 @@ GIE_READONLY_METADATA_NVPAIRS = frozenset({
     "MARK_DELETED",
     "INTF_NAME",
 })
-#   (2) the OSPF-MD feature domain (incl. key material), owned by the module's dedicated OSPF-MD path:
-GIE_OSPF_MD_DOMAIN_NVPAIRS = frozenset({
+#   (2) a feature domain owned by a dedicated module path. There is none today -- see below.
+# OSPF authentication on a fabric loopback is UNDERLAY authentication, and the fabric owns it:
+# the template gates the whole block on `linkStateRouting == "ospf"` and reads OSPF_AUTH_ENABLE,
+# OSPF_AUTH_KEY_ID and OSPF_AUTH_KEY from fabricSettings, using any interface value only as an
+# override -- which a keychain fabric setting then deletes outright. That per-loopback override
+# is not part of the product, so its bindings and dedicated validators were withdrawn.
+#
+# This set is now EMPTY, and that is the point. It used to exclude the four fabric-owned nvPairs
+# from the generic HAVE carry-forward, which was right while a dedicated path managed them and
+# destructive the moment it did not: they would have become orphans, preserved by nobody, and an
+# operator renaming a loopback under `replaced` would have switched off underlay authentication
+# across the fabric.
+#
+# Empty means the generic carry-forward treats them like any other builder-omitted nvPair and
+# keeps exactly what the controller holds. The fabric owns the values; the interface no longer
+# touches them. See test_gie_loopback_auth_is_fabric_owned.py.
+#
+# Kept as a name rather than deleted: gie_have_carry_forward_nvpairs documents two exclusion
+# sets, and a future feature-owned domain would go here.
+GIE_OSPF_MD_DOMAIN_NVPAIRS = frozenset()
+
+
+# nvPairs on the fabric loopback that the FABRIC owns and this module no longer manages.
+#
+# Distinct from the carry-forward above in scope and in reason. That one preserves everything a
+# sparse merged payload omitted, because `merged` means "leave undeclared as-is". These four are
+# preserved in `replaced` and `overridden` TOO, where omission normally means reset -- not to
+# redefine those states, but because the module stopped sending them at all, so their absence
+# from a payload is not operator intent. It is the module having nothing to say.
+#
+# Deliberately narrow. Widening the full carry-forward to replaced/overridden would change what
+# those states mean for every nvPair on the parent; this changes it for the four the module
+# withdrew from.
+GIE_FABRIC_OWNED_LOOPBACK_NVPAIRS = frozenset({
     "ENABLE_OSPF_AUTH_MESSAGE_DIGEST",
     "OSPF_AUTH_KEY",
     "OSPF_AUTH_KEY_ID",
     "ospfAuthKeychainName",
 })
+
+
+def gie_fabric_owned_carry_forward(want_nvpairs, have_nvpairs):
+    """Preserve only the fabric-owned loopback nvPairs the module stopped managing.
+
+    Returns {nvpair: have_value} for those of GIE_FABRIC_OWNED_LOOPBACK_NVPAIRS that are present
+    in HAVE and absent from the payload. Same round-trip guarantee as the generic helper: the
+    carried value is exactly what NDFC returned, never a default, so it cannot introduce a value
+    the controller did not already hold.
+
+    A key already in want is never touched -- there is no path that sets these today, but the
+    check is the same second guarantee the generic helper makes, and it costs one comparison.
+    """
+    if not isinstance(have_nvpairs, dict):
+        return {}
+    return {
+        nvpair: value
+        for nvpair, value in have_nvpairs.items()
+        if nvpair in GIE_FABRIC_OWNED_LOOPBACK_NVPAIRS and nvpair not in want_nvpairs
+    }
+
 
 # Registered binding "type" -> validate_list_of_dicts validator type. Native values are
 # preserved (no stringification); an unknown type fails closed.
@@ -468,13 +524,14 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version):
 
     A PASSTHROUGH value is serialized to its nvPair wire form (see ``_to_nvpair_wire``): that
     mechanism writes straight into the payload, so transport is the whole job and the payload has
-    to speak the controller's types. A CHILD_PTI value is left native -- that mechanism is the
-    OSPF-MD domain, which reconciles through its own dedicated normalizer and whose call site
-    already stringifies explicitly.
+    to speak the controller's types. A CHILD_PTI value is left native, because that mechanism's
+    call site owns the conversion and already stringifies explicitly. No binding uses CHILD_PTI
+    today -- the branch is kept because the mechanism is still a declarable route, not because
+    anything currently takes it.
 
     A supported version transports the parent nvPair for every mechanism. An explicit key on an
-    unsupported/unknown/malformed version fails closed, except for the one exact OSPF-MD
-    compatibility binding, which is withheld for its established HAVE reconciliation.
+    unsupported, unknown or malformed version fails closed, unless the binding is listed in
+    GIE_VERSION_WITHHOLD_BINDINGS -- which is empty.
     """
     add = {}
     for pk in sorted(registered_profile_keys(parent_template)):
@@ -484,11 +541,11 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version):
         gie_validate_binding_value(parent_template, pk, profile_dict[pk])
         supported = gie_version_supported(ndfc_version, b["min_ndfc_version"])
         if not supported:
-            if (parent_template, b["parent_nvpair"]) == GIE_OSPF_MD_COMPAT_BINDING:
-                # Narrow, per-binding exception: withhold and let the OSPF-MD capability/HAVE
-                # compat hook reconcile. NOT applied to any other binding.
+            if (parent_template, b["parent_nvpair"]) in GIE_VERSION_WITHHOLD_BINDINGS:
+                # Withhold, and leave the key to whichever layer reconciles it. The set is empty,
+                # so nothing takes this path; see its definition for what earning a place costs.
                 continue
-            # Default policy (incl. any ordinary passthrough/child_pti binding): fail closed.
+            # Default policy, which today is every binding: fail closed.
             return None, (
                 "'{0}' requires NDFC {1} or later; controller reports {2}. "
                 "No change was sent.".format(pk, b["min_ndfc_version"], ndfc_version)

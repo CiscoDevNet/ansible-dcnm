@@ -144,20 +144,6 @@ def test_acl_filter_case_is_preserved_exactly():
     assert add["ACL_FILTER"] == "MiXeD-Case_ACL"
 
 
-def test_child_pti_bindings_stay_native():
-    """Scope guard: the OSPF-MD domain is NOT part of this change.
-
-    It reconciles through its own normalizer and its call site stringifies explicitly. If this
-    starts failing, the serialization leaked past passthrough and the golden OSPF payload
-    snapshots are the next thing to check.
-    """
-    add, err = gie_contribute_nvpairs(
-        LOOPBACK, {"enable_ospf_auth_message_digest": True}, VERSION
-    )
-    assert err is None
-    assert add["ENABLE_OSPF_AUTH_MESSAGE_DIGEST"] is True
-
-
 def test_omitted_boolean_still_contributes_nothing():
     """Serialization must not resurrect the explicit-only contract."""
     add, err = gie_contribute_nvpairs(TRUNK, {"description": "x"}, VERSION)
