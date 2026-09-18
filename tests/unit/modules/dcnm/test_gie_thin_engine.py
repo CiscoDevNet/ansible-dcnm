@@ -174,6 +174,53 @@ ROUTED_OSPF_ROWS = {
     (ROUTED, "OSPF_TAG", "ospf_tag"),
     (ROUTED, "OSPF_AREA_ID", "ospf_area_id"),
     (ROUTED, "OSPF_COST", "ospf_cost"),
+    (ROUTED, "OSPF_MTU_IGNORE", "ospf_mtu_ignore"),
+    (ROUTED, "OSPF_SHUTDOWN", "ospf_shutdown"),
+    (ROUTED, "OSPF_HELLO_INTERVAL", "ospf_hello_interval"),
+    (ROUTED, "OSPF_DEAD_INTERVAL", "ospf_dead_interval"),
+    (ROUTED, "OSPF_TRANSMIT_DELAY", "ospf_transmit_delay"),
+    (ROUTED, "OSPF_PRIORITY", "ospf_priority"),
+    (ROUTED, "OSPF_PASSIVE_MODE", "ospf_passive_mode"),
+    (ROUTED, "OSPF_NETWORK_TYPE", "ospf_network_type"),
+    (ROUTED, "OSPF_BFD_MODE", "ospf_bfd_mode"),
+}
+
+
+# The two parents registered for the OSPF work. Listed separately from ROUTED_OSPF_ROWS because
+# they are NOT the same set: int_subif models passive and bfd as booleans where the other two use
+# enums, and both carry OSPF_RETRANSMIT_INTERVAL, which int_routed_host does not declare at all.
+SUBIF_OSPF_ROWS = {
+    ("int_subif", "ENABLE_OSPF", "enable_ospf"),
+    ("int_subif", "OSPF_AREA_ID", "ospf_area_id"),
+    ("int_subif", "OSPF_BFD", "ospf_bfd"),
+    ("int_subif", "OSPF_COST", "ospf_cost"),
+    ("int_subif", "OSPF_DEAD_INTERVAL", "ospf_dead_interval"),
+    ("int_subif", "OSPF_HELLO_INTERVAL", "ospf_hello_interval"),
+    ("int_subif", "OSPF_MTU_IGNORE", "ospf_mtu_ignore"),
+    ("int_subif", "OSPF_NETWORK_TYPE", "ospf_network_type"),
+    ("int_subif", "OSPF_PASSIVE_INTERFACE", "ospf_passive_interface"),
+    ("int_subif", "OSPF_PRIORITY", "ospf_priority"),
+    ("int_subif", "OSPF_RETRANSMIT_INTERVAL", "ospf_retransmit_interval"),
+    ("int_subif", "OSPF_SHUTDOWN", "ospf_shutdown"),
+    ("int_subif", "OSPF_TAG", "ospf_tag"),
+    ("int_subif", "OSPF_TRANSMIT_DELAY", "ospf_transmit_delay"),
+}
+
+VLAN_OSPF_ROWS = {
+    ("int_vlan", "ENABLE_OSPF", "enable_ospf"),
+    ("int_vlan", "OSPF_AREA_ID", "ospf_area_id"),
+    ("int_vlan", "OSPF_BFD_MODE", "ospf_bfd_mode"),
+    ("int_vlan", "OSPF_COST", "ospf_cost"),
+    ("int_vlan", "OSPF_DEAD_INTERVAL", "ospf_dead_interval"),
+    ("int_vlan", "OSPF_HELLO_INTERVAL", "ospf_hello_interval"),
+    ("int_vlan", "OSPF_MTU_IGNORE", "ospf_mtu_ignore"),
+    ("int_vlan", "OSPF_NETWORK_TYPE", "ospf_network_type"),
+    ("int_vlan", "OSPF_PASSIVE_MODE", "ospf_passive_mode"),
+    ("int_vlan", "OSPF_PRIORITY", "ospf_priority"),
+    ("int_vlan", "OSPF_RETRANSMIT_INTERVAL", "ospf_retransmit_interval"),
+    ("int_vlan", "OSPF_SHUTDOWN", "ospf_shutdown"),
+    ("int_vlan", "OSPF_TAG", "ospf_tag"),
+    ("int_vlan", "OSPF_TRANSMIT_DELAY", "ospf_transmit_delay"),
 }
 
 
@@ -183,12 +230,13 @@ def test_package_provenance_and_size():
     expected_keys = (
         BASELINE_ROWS | PASSTHROUGH_ROWS | OSPF_KEY_ROWS | FC_SEND_ROWS | STP_ROWS
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
+        | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 62
+    assert len(BINDING_TABLE) == len(actual_keys) == 99
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -199,7 +247,9 @@ def test_package_provenance_and_size():
     assert len(QOS_STATS_ROWS) == 4
     assert len(PC_ROWS) == 15
     assert len(ROUTED_ROWS) == 6
-    assert len(ROUTED_OSPF_ROWS) == 4
+    assert len(ROUTED_OSPF_ROWS) == 13
+    assert len(SUBIF_OSPF_ROWS) == 14
+    assert len(VLAN_OSPF_ROWS) == 14
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -221,7 +271,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 62
+    assert len(rows) == 99
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -554,6 +604,8 @@ def test_all_registered_and_guarded_keys():
         "ospf_auth_key_id", "ospf_auth_key",
         "disable_bfd_echo", "ipv4_acl_in",
         "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
+        "ospf_mtu_ignore", "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay", "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
+        "enable_ospf", "ospf_area_id", "ospf_bfd", "ospf_bfd_mode", "ospf_cost", "ospf_dead_interval", "ospf_hello_interval", "ospf_mtu_ignore", "ospf_network_type", "ospf_passive_interface", "ospf_passive_mode", "ospf_priority", "ospf_retransmit_interval", "ospf_shutdown", "ospf_tag", "ospf_transmit_delay"
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
@@ -567,6 +619,8 @@ def test_all_registered_and_guarded_keys():
         # fabric-loopback OSPF-MD trio asserted out of this set just below. Delegating to a
         # child template inside NDFC does not change which side of this line a binding sits on.
         "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
+        "ospf_mtu_ignore", "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay", "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
+        "enable_ospf", "ospf_area_id", "ospf_bfd", "ospf_bfd_mode", "ospf_cost", "ospf_dead_interval", "ospf_hello_interval", "ospf_mtu_ignore", "ospf_network_type", "ospf_passive_interface", "ospf_passive_mode", "ospf_priority", "ospf_retransmit_interval", "ospf_shutdown", "ospf_tag", "ospf_transmit_delay"
     }
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
     # The legacy-key pair is child_pti, so registering it must NOT hand the engine the
