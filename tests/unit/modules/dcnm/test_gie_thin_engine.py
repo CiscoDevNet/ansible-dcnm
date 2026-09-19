@@ -290,6 +290,21 @@ LOOPBACK_OSPF_ROWS = {
     )
 }
 
+# BFD, committed 2026-09-19 from slices 0b_4 and 0b_5 with their mechanism corrected to
+# passthrough, plus the one new row of 0b_24. int_routed_host declares DISABLE_BFD_ECHO and no
+# interval field; int_loopback has no interface BFD at all.
+BFD_ROWS = {
+    (parent, nvpair, key)
+    for parent in ("int_subif", "int_vlan")
+    for nvpair, key in (
+        ("ENABLE_BFD_INTERVAL", "enable_bfd_interval"),
+        ("BFD_TX_INTERVAL", "bfd_tx_interval"),
+        ("BFD_MIN_RX_INTERVAL", "bfd_min_rx_interval"),
+        ("BFD_MULTIPLIER", "bfd_multiplier"),
+    )
+} | {("int_vlan", "DISABLE_BFD_ECHO", "disable_bfd_echo")}
+
+
 
 
 
@@ -300,13 +315,13 @@ def test_package_provenance_and_size():
         BASELINE_ROWS | PASSTHROUGH_ROWS | FC_SEND_ROWS | STP_ROWS
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
-        | LOOPBACK_OSPF_ROWS
+        | LOOPBACK_OSPF_ROWS | BFD_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 169
+    assert len(BINDING_TABLE) == len(actual_keys) == 178
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -341,7 +356,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 169
+    assert len(rows) == 178
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -695,6 +710,10 @@ def test_all_registered_and_guarded_keys():
         # this table already carries on other parents, which is the point of keying bindings by
         # (parent, nvpair) rather than by name.
         "ospf_advertise_subnet",
+        # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
+        # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
+        # already here, from int_routed_host.
+        "enable_bfd_interval", "bfd_tx_interval", "bfd_min_rx_interval", "bfd_multiplier",
 }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
@@ -729,6 +748,10 @@ def test_all_registered_and_guarded_keys():
         # this table already carries on other parents, which is the point of keying bindings by
         # (parent, nvpair) rather than by name.
         "ospf_advertise_subnet",
+        # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
+        # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
+        # already here, from int_routed_host.
+        "enable_bfd_interval", "bfd_tx_interval", "bfd_min_rx_interval", "bfd_multiplier",
 }
     # The withdrawn fabric-loopback key. It is registered nowhere, so it is guarded nowhere --
     # the module rejects it by name instead, which is a different mechanism with a different

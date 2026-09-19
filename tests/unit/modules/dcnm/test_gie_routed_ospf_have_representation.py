@@ -217,12 +217,6 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
                 for cf in gie_carry_forward_bindings(b["parent_template"]))
     )
     assert exposed == [
-        # int_loopback, slice 0b_23. Seven integers, every one of them reviewed and taking the
-        # same exemption for the same measured reason: the controller hands these back as
-        # strings ("110", not 110), so they are validated against the string NDFC returns.
-        # OSPF_AUTH_KEY_ID is here too, on the same footing as on the other three parents -- an
-        # id is an ordinary integer that happens to sit beside key material, and it stays
-        # unmarked so Ansible does not go scrubbing a bare digit out of unrelated output.
         ("int_loopback", "OSPF_AUTH_KEY_ID"),
         ("int_loopback", "OSPF_COST"),
         ("int_loopback", "OSPF_DEAD_INTERVAL"),
@@ -236,6 +230,14 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_routed_host", "OSPF_HELLO_INTERVAL"),
         ("int_routed_host", "OSPF_PRIORITY"),
         ("int_routed_host", "OSPF_TRANSMIT_DELAY"),
+        # The six BFD intervals, committed 2026-09-19. Reviewed individually, not generated
+        # into this list: each was read off the installed template (tx and min_rx 50-999,
+        # multiplier 1-50) and takes the same exemption for the same measured reason -- NDFC
+        # hands them back as strings. They are also the first bindings here with a narrow
+        # maximum, which is what exposed the flat sample value in test_gie_mechanism_contract.
+        ("int_subif", "BFD_MIN_RX_INTERVAL"),
+        ("int_subif", "BFD_MULTIPLIER"),
+        ("int_subif", "BFD_TX_INTERVAL"),
         ("int_subif", "OSPF_AUTH_KEY_ID"),
         ("int_subif", "OSPF_COST"),
         ("int_subif", "OSPF_DEAD_INTERVAL"),
@@ -243,6 +245,9 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_subif", "OSPF_PRIORITY"),
         ("int_subif", "OSPF_RETRANSMIT_INTERVAL"),
         ("int_subif", "OSPF_TRANSMIT_DELAY"),
+        ("int_vlan", "BFD_MIN_RX_INTERVAL"),
+        ("int_vlan", "BFD_MULTIPLIER"),
+        ("int_vlan", "BFD_TX_INTERVAL"),
         ("int_vlan", "OSPF_AUTH_KEY_ID"),
         ("int_vlan", "OSPF_COST"),
         ("int_vlan", "OSPF_DEAD_INTERVAL"),

@@ -106,6 +106,19 @@ def _sample_for(binding):
         max_length = binding.get("max_length")
         value = "SAMPLE"
         return value[:max_length] if max_length else value
+    if binding["type"] == "integer":
+        # Clamp to the registered bounds, the way the string branch above already clamps to
+        # max_length. Without this the flat sample of 100 is REJECTED by any binding whose
+        # maximum is lower -- bfd_multiplier caps at 50 -- and the positive control fails for
+        # being out of range rather than for anything the test is about. The first bounded
+        # integer to arrive found the gap; it was always there.
+        value = SAMPLE_VALUE["integer"]
+        low, high = binding.get("min_value"), binding.get("max_value")
+        if high is not None:
+            value = min(value, high)
+        if low is not None:
+            value = max(value, low)
+        return value
     return SAMPLE_VALUE[binding["type"]]
 
 
