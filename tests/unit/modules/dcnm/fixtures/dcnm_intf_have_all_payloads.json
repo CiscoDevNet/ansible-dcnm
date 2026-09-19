@@ -736,7 +736,7 @@
       },
       {
         "ifName": "vPC300",
-        "serialNo": "SAL1821T9EF~FOX1821H035",
+        "serialNo": "FOX1821H035~SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_VPC",
         "isPhysical": "True",
@@ -1153,7 +1153,7 @@
       {
         "ifName": "vPC300",
         "mode": "access",
-        "serialNo": "SAL1821T9EF~FOX1821H035",
+        "serialNo": "FOX1821H035~SAL1819SAN8",
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_VPC",
         "isPhysical": "True",
