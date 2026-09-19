@@ -103,10 +103,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 111
-    assert len(set(keys)) == 111, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 150
+    assert len(set(keys)) == 150, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 111, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 150, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -164,7 +164,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 111
+    assert len(gen.compile_rows(rows)) == 150
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -213,7 +213,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 111
+    assert len(gen.compile_rows(rows)) == 150
 
 
 # ------------------------------------------------------------------ positive transport
@@ -570,7 +570,13 @@ def test_keymap_carries_every_new_nvpair():
     assert km["OSPF_TAG"] == "ospf_tag"
     assert km["OSPF_AREA_ID"] == "ospf_area_id"
     assert km["OSPF_COST"] == "ospf_cost"
-    assert len(km) == 32
+    # EIGRP, slice 0b_22: thirteen distinct nvPairs, each shared by the three overlay parents,
+    # so the keymap grows by thirteen and not by thirty-nine.
+    assert km["EIGRP_PROCESS_TAG"] == "eigrp_process_tag"
+    assert km["ENABLE_EIGRP_ROUTING"] == "enable_eigrp_routing"
+    assert km["EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION"] == "eigrp_ipv4_distribute_list_direction"
+    assert km["DISABLE_EIGRP_BFD"] == "disable_eigrp_bfd"
+    assert len(km) == 45
 
 
 def test_all_registered_keys():
@@ -585,7 +591,17 @@ def test_all_registered_keys():
         # The authentication lot, shared by int_routed_host, int_subif and int_vlan.
         "enable_ospf_auth", "ospf_auth_key_id", "ospf_auth_key",
         "ospf_authentication_key_type", "ospf_authentication_key",
-    }
+            # EIGRP, slice 0b_22. Thirteen fields, identical on int_routed_host, int_subif and
+        # int_vlan -- measured against the bodies the controller runs, not the batch on disk.
+        # EIGRP_PROCESS_TAG gates the other twelve, and the TEMPLATE refuses the tagless
+        # case itself ("EIGRP process tag is required when EIGRP interface options are
+        # enabled", int_routed_host:897). The engine transports and does not duplicate it.
+        "eigrp_process_tag", "enable_eigrp_routing", "enable_eigrp_ipv6_routing",
+        "eigrp_ipv4_passive", "eigrp_no_ipv4_passive", "eigrp_no_ipv6_passive",
+        "enable_eigrp_shutdown", "enable_eigrp_bfd", "disable_eigrp_bfd",
+        "eigrp_ipv4_distribute_list_prefix_list", "eigrp_ipv4_distribute_list_direction",
+        "eigrp_ipv6_distribute_list_prefix_list", "eigrp_ipv6_distribute_list_direction",
+}
 
 
 def test_same_value_produces_the_same_payload():

@@ -126,9 +126,16 @@ def test_the_binding_is_on_the_generic_route(parent, key):
 
 
 # 14 OSPF fields of their own + the 5 shared authentication ones.
+#
+# Scoped to OSPF on purpose. These parents now also carry the thirteen EIGRP rows of slice
+# 0b_22, so an unfiltered row count would stop meaning what the number above says it means --
+# and a count that has drifted away from its own comment is worse than no count. The EIGRP
+# inventory is pinned by test_gie_eigrp_bindings.py, and the table total by
+# test_gie_passthrough_bindings.py.
 @pytest.mark.parametrize("parent,count", [(SUBIF, 19), (VLAN, 19)])
 def test_the_parent_registers_exactly_its_own_fields(parent, count):
-    rows = [b for b in BINDING_TABLE if b["parent_template"] == parent]
+    rows = [b for b in BINDING_TABLE
+            if b["parent_template"] == parent and "OSPF" in b["parent_nvpair"]]
     assert len(rows) == count
     names = [b["parent_nvpair"] for b in rows]
     assert len(names) == len(set(names)), "duplicate nvPair rows for {0}".format(parent)
