@@ -234,6 +234,31 @@ AUTH_OSPF_ROWS = {
     )
 }
 
+# EIGRP, slice 0b_22. The same comprehension shape as AUTH_OSPF_ROWS, and for the same reason:
+# all thirteen fields are identical on the three overlay parents -- type, default, bounds and
+# valid values -- which was measured against the controller's own bodies rather than assumed.
+# The OSPF scalars needed one set per parent because those templates genuinely diverge.
+EIGRP_ROWS = {
+    (parent, nvpair, key)
+    for parent in ("int_routed_host", "int_subif", "int_vlan")
+    for nvpair, key in (
+        ("EIGRP_PROCESS_TAG", "eigrp_process_tag"),
+        ("ENABLE_EIGRP_ROUTING", "enable_eigrp_routing"),
+        ("ENABLE_EIGRP_IPV6_ROUTING", "enable_eigrp_ipv6_routing"),
+        ("EIGRP_IPV4_PASSIVE", "eigrp_ipv4_passive"),
+        ("EIGRP_NO_IPV4_PASSIVE", "eigrp_no_ipv4_passive"),
+        ("EIGRP_NO_IPV6_PASSIVE", "eigrp_no_ipv6_passive"),
+        ("ENABLE_EIGRP_SHUTDOWN", "enable_eigrp_shutdown"),
+        ("ENABLE_EIGRP_BFD", "enable_eigrp_bfd"),
+        ("DISABLE_EIGRP_BFD", "disable_eigrp_bfd"),
+        ("EIGRP_IPV4_DISTRIBUTE_LIST_PREFIX_LIST", "eigrp_ipv4_distribute_list_prefix_list"),
+        ("EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION", "eigrp_ipv4_distribute_list_direction"),
+        ("EIGRP_IPV6_DISTRIBUTE_LIST_PREFIX_LIST", "eigrp_ipv6_distribute_list_prefix_list"),
+        ("EIGRP_IPV6_DISTRIBUTE_LIST_DIRECTION", "eigrp_ipv6_distribute_list_direction"),
+    )
+}
+
+
 
 # ---- binding package runtime contract ----
 
@@ -241,13 +266,13 @@ def test_package_provenance_and_size():
     expected_keys = (
         BASELINE_ROWS | PASSTHROUGH_ROWS | FC_SEND_ROWS | STP_ROWS
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
-        | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS
+        | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 111
+    assert len(BINDING_TABLE) == len(actual_keys) == 150
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -282,7 +307,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 111
+    assert len(rows) == 150
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -622,7 +647,17 @@ def test_all_registered_and_guarded_keys():
         # not by a validator written for this family.
         "enable_ospf_auth", "ospf_auth_key_id", "ospf_auth_key",
         "ospf_authentication_key_type", "ospf_authentication_key",
-    }
+            # EIGRP, slice 0b_22. Thirteen fields, identical on int_routed_host, int_subif and
+        # int_vlan -- measured against the bodies the controller runs, not the batch on disk.
+        # EIGRP_PROCESS_TAG gates the other twelve, and the TEMPLATE refuses the tagless
+        # case itself ("EIGRP process tag is required when EIGRP interface options are
+        # enabled", int_routed_host:897). The engine transports and does not duplicate it.
+        "eigrp_process_tag", "enable_eigrp_routing", "enable_eigrp_ipv6_routing",
+        "eigrp_ipv4_passive", "eigrp_no_ipv4_passive", "eigrp_no_ipv6_passive",
+        "enable_eigrp_shutdown", "enable_eigrp_bfd", "disable_eigrp_bfd",
+        "eigrp_ipv4_distribute_list_prefix_list", "eigrp_ipv4_distribute_list_direction",
+        "eigrp_ipv6_distribute_list_prefix_list", "eigrp_ipv6_distribute_list_direction",
+}
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
     # its invalid-parent guard, unlike the OSPF bindings below.
@@ -642,6 +677,16 @@ def test_all_registered_and_guarded_keys():
         # not by a validator written for this family.
         "enable_ospf_auth", "ospf_auth_key_id", "ospf_auth_key",
         "ospf_authentication_key_type", "ospf_authentication_key",
+        # EIGRP, slice 0b_22. Passthrough like the OSPF rows, so the generic guard owns the
+        # wrong-parent case for all thirteen. Nothing here enforces the EIGRP_PROCESS_TAG gate:
+        # NDFC already rejects an EIGRP option with no effective tag, and a module-side rule
+        # demanding the tag in every profile would break a valid partial update whose tag comes
+        # from HAVE.
+        "eigrp_process_tag", "enable_eigrp_routing", "enable_eigrp_ipv6_routing",
+        "eigrp_ipv4_passive", "eigrp_no_ipv4_passive", "eigrp_no_ipv6_passive",
+        "enable_eigrp_shutdown", "enable_eigrp_bfd", "disable_eigrp_bfd",
+        "eigrp_ipv4_distribute_list_prefix_list", "eigrp_ipv4_distribute_list_direction",
+        "eigrp_ipv6_distribute_list_prefix_list", "eigrp_ipv6_distribute_list_direction",
     }
     # The withdrawn fabric-loopback key. It is registered nowhere, so it is guarded nowhere --
     # the module rejects it by name instead, which is a different mechanism with a different
