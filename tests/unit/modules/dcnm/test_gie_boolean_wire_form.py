@@ -81,15 +81,27 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         "enable_ospf", "ospf_mtu_ignore", "ospf_shutdown",
         "enable_ospf", "ospf_bfd", "ospf_passive_interface",
         "enable_ospf_auth",
+        # EIGRP, slice 0b_22 -- eight distinct keys, each on all three overlay parents.
+        "enable_eigrp_routing", "enable_eigrp_ipv6_routing", "enable_eigrp_shutdown",
+        "enable_eigrp_bfd", "disable_eigrp_bfd",
+        "eigrp_ipv4_passive", "eigrp_no_ipv4_passive", "eigrp_no_ipv6_passive",
+        # There is no eigrp_ipv6_passive: IPv4 declares both the passive and the no-passive
+        # field, IPv6 only the no-passive one. The children match -- an ipv6-passive child
+        # does not exist either. The asymmetry is the template's.
     }
-    # 47 = the per-parent counts below, which are what the table actually holds:
+    # 71 = the per-parent counts below, which are what the table actually holds. Measured
+    # against BINDING_TABLE when slice 0b_22 landed, not carried forward by arithmetic:
     #
-    #     int_access_host                     4      int_routed_host    9
-    #     int_trunk_host                      4      int_subif          6
-    #     int_port_channel_access_host        4      int_vlan           4
+    #     int_access_host                     4      int_routed_host    17
+    #     int_trunk_host                      4      int_subif          14
+    #     int_port_channel_access_host        4      int_vlan           12
     #     int_port_channel_trunk_host         4
     #     int_port_channel_dot1q_tunnel_host  4      int_vpc_access_host  4
     #                                                int_vpc_trunk_host   4
+    #
+    # The three overlay parents grew by 8 each: the eleven EIGRP booleans are eight distinct
+    # keys plus the three that repeat per parent. int_routed_host 9 -> 17, int_subif 6 -> 14,
+    # int_vlan 4 -> 12.
     #
     # This used to be a derivation -- "3 x 8 = 24, plus disable_bfd_echo, plus enable_ospf..."
     # -- and the derivation had silently drifted to 28 while the assertion said 44. Nobody
@@ -104,7 +116,7 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # are still passthrough and therefore still need the wire form: the value lands in the vPC
     # parent's own nvPairs first, and nvPairs is a string-valued map. A native bool left there
     # would reproduce exactly the non-convergence this file exists to prevent.
-    assert len(BOOL_PASSTHROUGH) == 47
+    assert len(BOOL_PASSTHROUGH) == 71
 
 
 # ------------------------------------------------------- what the engine emits --

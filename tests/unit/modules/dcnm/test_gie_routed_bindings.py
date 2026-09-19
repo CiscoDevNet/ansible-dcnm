@@ -196,4 +196,9 @@ def test_the_parent_is_registered_exactly_once_per_nvpair():
     rows = [b for b in BINDING_TABLE if b["parent_template"] == PARENT]
     names = [b["parent_nvpair"] for b in rows]
     assert len(names) == len(set(names)), "duplicate nvPair rows for {0}".format(PARENT)
-    assert set(names) == {nvpair for nvpair, _native in EXPECTED.values()}
+    # EXPECTED covers this parent's pre-EIGRP inventory. Subtracting the EIGRP rows keeps the
+    # equality strict -- anything else new still fails here -- while pointing at the file that
+    # owns them. Widening it to a subset check would have retired the guard instead of scoping it.
+    eigrp = {b["parent_nvpair"] for b in BINDING_TABLE if "EIGRP" in b["parent_nvpair"]}
+    assert set(names) - eigrp == {nvpair for nvpair, _native in EXPECTED.values()}
+    assert len(eigrp & set(names)) == 13, "int_routed_host should carry 13 EIGRP rows"
