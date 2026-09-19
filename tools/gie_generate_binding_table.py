@@ -318,6 +318,16 @@ COMMITTED_BINDINGS = {
     ("int_loopback", "OSPF_AUTH_KEY"): "ospf_auth_key",
     ("int_loopback", "OSPF_AUTHENTICATION_KEY_TYPE"): "ospf_authentication_key_type",
     ("int_loopback", "OSPF_AUTHENTICATION_KEY"): "ospf_authentication_key",
+    # --- BFD on int_subif and int_vlan (slice 0b_24) ---
+    ("int_subif", "ENABLE_BFD_INTERVAL"): "enable_bfd_interval",
+    ("int_subif", "BFD_TX_INTERVAL"): "bfd_tx_interval",
+    ("int_subif", "BFD_MIN_RX_INTERVAL"): "bfd_min_rx_interval",
+    ("int_subif", "BFD_MULTIPLIER"): "bfd_multiplier",
+    ("int_vlan", "ENABLE_BFD_INTERVAL"): "enable_bfd_interval",
+    ("int_vlan", "BFD_TX_INTERVAL"): "bfd_tx_interval",
+    ("int_vlan", "BFD_MIN_RX_INTERVAL"): "bfd_min_rx_interval",
+    ("int_vlan", "BFD_MULTIPLIER"): "bfd_multiplier",
+    ("int_vlan", "DISABLE_BFD_ECHO"): "disable_bfd_echo",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.

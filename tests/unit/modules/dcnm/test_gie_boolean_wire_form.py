@@ -89,11 +89,14 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         # ospf_advertise_subnet, exists on no other parent -- advertising a loopback's subnet is
         # a loopback concept.
         "ospf_advertise_subnet",
+        # BFD: enable_bfd_interval is the gate. disable_bfd_echo gains a second parent
+        # (int_vlan) for a key int_routed_host already carried, so int_vlan goes 12 -> 13.
+        "enable_bfd_interval",
         # There is no eigrp_ipv6_passive: IPv4 declares both the passive and the no-passive
         # field, IPv6 only the no-passive one. The children match -- an ipv6-passive child
         # does not exist either. The asymmetry is the template's.
     }
-    # 77 = the per-parent counts below, which are what the table actually holds. Measured
+    # 80 = the per-parent counts below, which are what the table actually holds. Measured
     # against BINDING_TABLE when slice 0b_22 landed, not carried forward by arithmetic:
     #
     #     int_access_host                     4      int_routed_host    17
@@ -121,7 +124,7 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # are still passthrough and therefore still need the wire form: the value lands in the vPC
     # parent's own nvPairs first, and nvPairs is a string-valued map. A native bool left there
     # would reproduce exactly the non-convergence this file exists to prevent.
-    assert len(BOOL_PASSTHROUGH) == 77
+    assert len(BOOL_PASSTHROUGH) == 80
 
 
 # ------------------------------------------------------- what the engine emits --
