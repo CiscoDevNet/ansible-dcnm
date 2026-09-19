@@ -52,8 +52,16 @@ def source():
 @pytest.mark.parametrize("parent", [p for p in PARENTS if p not in SPEC_EXEMPT])
 def test_every_registered_parent_has_its_spec_extended(parent, source):
     """The public key must be able to survive argument validation for this parent."""
+    # A literal parent name is the usual shape, but it cannot be the only one accepted. The
+    # loopback validator serves TWO parents -- int_loopback and int_fabric_loopback_11_1 -- and
+    # resolves which one per config item at run time, so no literal exists for either. Requiring
+    # one would force the code to be written worse to satisfy the grep.
+    #
+    # The dynamic form is recognised instead, and the behavioural assertion below is what
+    # actually proves the property: a grep can only say a call was written, never that it works.
     pattern = re.compile(
-        r'gie_extend_prof_spec\([^)]*"' + re.escape(parent) + r'"', re.S
+        r'gie_extend_prof_spec\([^)]*"' + re.escape(parent) + r'"'
+        r'|gie_extend_prof_spec\(\s*lo_prof_spec,\s*parent\b', re.S
     )
     assert pattern.search(source), (
         "{0} has rows in the binding table but no gie_extend_prof_spec call. Its keys would be "
