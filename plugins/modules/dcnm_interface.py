@@ -3466,12 +3466,66 @@ class DcnmIntf:
             admin_state=dict(type="bool", default=True),
         )
 
+        # This validator serves BOTH loopback parents: mode 'lo' resolves to int_loopback and
+        # mode 'fabric' to int_fabric_loopback_11_1. Everything below has to say which one it
+        # means, because the two do not share an owner for authentication.
+        pol_map = getattr(self, "pol_types", {}).get(
+            getattr(self, "dcnm_version", None), {}
+        )
+
+        def _parent_of(cfg_item):
+            profile = cfg_item.get("profile")
+            if not isinstance(profile, dict):
+                return None
+            return pol_map.get(
+                "{0}_{1}".format(cfg_item.get("type"), profile.get("mode"))
+            )
+
+        # Thin engine: extend the loopback spec with registered generic keys the caller set
+        # EXPLICITLY, per item, because one call can mix the two parents and they register
+        # different fields -- int_loopback declares OSPF_ADVERTISE_SUBNET and a boolean OSPF_BFD
+        # that the fabric parent does not have at all. Extending from cfg[0] alone, the way the
+        # single-parent paths do, would under-serve every item after the first.
+        for cfg_item in cfg:
+            parent = _parent_of(cfg_item)
+            if parent:
+                gie_extend_prof_spec(lo_prof_spec, parent, cfg_item["profile"])
+
         # Reject the withdrawn OSPF-auth keys by name, before the spec silently drops them.
+        #
+        # SCOPED TO THE FABRIC PARENT, and that scoping is the point. The retirement was a
+        # decision about OWNERSHIP, not about the word "loopback": on int_fabric_loopback_11_1
+        # the authentication is underlay authentication that fabricSettings owns. int_loopback is
+        # a different template for a different object -- a user loopback is not part of the
+        # underlay, its own template takes authentication from the interface fields, and no
+        # interface in a fabric need ever use it. Unscoped, this loop refused a supported field
+        # with a message naming a fabric that has no claim on it.
         for cfg_item in cfg:
             profile = cfg_item.get("profile")
             if not isinstance(profile, dict):
                 continue
+            parent = _parent_of(cfg_item)
             for key, fabric_setting in RETIRED_LOOPBACK_OSPF_AUTH_KEYS.items():
+                # The exemption is granted by the REGISTRY, not by the parent's name: a key is
+                # let through only when this parent actually has a binding that will carry it.
+                #
+                # Tying it to `parent != int_fabric_loopback_11_1` was tried and is unsafe on its
+                # own. Until int_loopback has its bindings, exempting it means the key reaches
+                # lo_prof_spec, which does not declare it, and validate_list_of_dicts DROPS an
+                # undeclared profile key. The operator writes a key, the run succeeds, the
+                # controller never hears it. That is the failure this rejection exists to
+                # prevent, reintroduced by the fix meant to narrow it.
+                #
+                # Fails closed by construction: an unresolved parent has no bindings, so
+                # resolve_binding returns None and the key is refused -- the old behaviour,
+                # which is the safe one.
+                if (
+                    key in profile
+                    and parent is not None
+                    and parent != LOOPBACK_CARRY_FORWARD_PARENT
+                    and resolve_binding(parent, key) is not None
+                ):
+                    continue
                 if key in profile:
                     # No scrubbing here on purpose. Registration already happened for the whole
                     # config in __init__, which is the only placement that survives this loop
@@ -3483,14 +3537,33 @@ class DcnmIntf:
                         "only ever an override of the fabric's, and a keychain fabric setting "
                         "removed it outright. No change was sent.".format(key, fabric_setting)
                     )
+        # The keychain rejection stays on BOTH parents, deliberately unscoped, because each
+        # refuses it for its own reason and neither can carry it:
+        #
+        #   int_fabric_loopback_11_1  declares ospfAuthKeychainName, but its DSL overwrites the
+        #                             interface value with fabricSettings' -- the interface field
+        #                             is dead, which is what retired it.
+        #   int_loopback              does not declare a keychain field at all.
+        #
+        # Scoping this loop to the fabric parent alongside the one above was tried and reverted:
+        # on a user loopback the key would reach lo_prof_spec, which does not declare it either,
+        # and validate_list_of_dicts DROPS an undeclared profile key rather than refusing it. The
+        # run would report success, the controller would never hear the key, and nothing would
+        # tell the operator -- the exact failure this rejection was restored to prevent.
+        for cfg_item in cfg:
+            profile = cfg_item.get("profile")
+            if not isinstance(profile, dict):
+                continue
             for key in OSPF_AUTH_KEYCHAIN_PROFILE_KEYS:
                 if key in profile:
                     self.module.fail_json(
-                        msg="'{0}' is not a dcnm_interface field. The OSPF authentication "
-                        "keychain on a fabric loopback is owned by the fabric: fabricSettings "
-                        "writes 'ospfAuthKeychainName' and overwrites any interface value, so "
-                        "setting it here could never take effect. Configure it in the fabric "
-                        "settings. No change was sent.".format(key)
+                        msg="'{0}' is not a dcnm_interface field. On a fabric loopback the OSPF "
+                        "authentication keychain is owned by the fabric: fabricSettings writes "
+                        "'ospfAuthKeychainName' and overwrites any interface value, so setting "
+                        "it here could never take effect -- configure it in the fabric settings. "
+                        "On a plain loopback the template declares no keychain field at all. "
+                        "Either way the value would be discarded, so it is refused instead. "
+                        "No change was sent.".format(key)
                     )
 
         self.dcnm_intf_validate_interface_input(cfg, lo_spec, lo_prof_spec)
@@ -4500,6 +4573,23 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"][
                 "DCI_ROUTING_TAG"
             ] = "PLACE_HOLDER"
+
+        # Thin engine: contribute registered generic parent nvPairs for whichever loopback parent
+        # this is (explicit-only, version fail-closed), mirroring the eth and subif paths exactly.
+        #
+        # Parent-qualified for free: intf["policy"] is already resolved to int_loopback or
+        # int_fabric_loopback_11_1, and the engine keys every binding by (parent, nvpair). A field
+        # registered on one is not contributed to the other -- which matters here more than
+        # anywhere else, since the two templates sit behind one builder and genuinely differ.
+        #
+        # Placed at the very end so it runs for BOTH modes: the mode-specific blocks above return
+        # nothing and simply fall through to here.
+        gie_add, gie_err = gie_contribute_nvpairs(
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+        )
+        if gie_err:
+            self.module.fail_json(msg=gie_err)
+        intf["interfaces"][0]["nvPairs"].update(gie_add)
 
     def dcnm_intf_get_eth_payload(self, delem, intf, profile):
 
