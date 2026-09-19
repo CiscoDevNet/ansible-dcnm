@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 8e8a5edcb6e612cd2a7f5bf26679f11283b784e83893912e9dc876330f865cc0
+# provenance_sha256 = cfbd411e92c8f7db44b8e738a8325ff0bd36713e2d663561b94bbea8fe1c116f
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "8e8a5edcb6e612cd2a7f5bf26679f11283b784e83893912e9dc876330f865cc0"
+PROVENANCE_SHA256 = "cfbd411e92c8f7db44b8e738a8325ff0bd36713e2d663561b94bbea8fe1c116f"
 
 BINDING_TABLE = (
     {
@@ -1034,6 +1034,45 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_subif',
+        'parent_nvpair': 'BFD_MIN_RX_INTERVAL',
+        'profile_key': 'bfd_min_rx_interval',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 50,
+        'max_value': 999,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'BFD_MULTIPLIER',
+        'profile_key': 'bfd_multiplier',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 50,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'BFD_TX_INTERVAL',
+        'profile_key': 'bfd_tx_interval',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 50,
+        'max_value': 999,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
         'parent_nvpair': 'DISABLE_EIGRP_BFD',
         'profile_key': 'disable_eigrp_bfd',
         'applicable_interface_type': 'sub_int',
@@ -1140,6 +1179,18 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'max_length': 20,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'ENABLE_BFD_INTERVAL',
+        'profile_key': 'enable_bfd_interval',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
         'no_log': False,
     },
     {
@@ -1542,6 +1593,57 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_vlan',
+        'parent_nvpair': 'BFD_MIN_RX_INTERVAL',
+        'profile_key': 'bfd_min_rx_interval',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 50,
+        'max_value': 999,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'BFD_MULTIPLIER',
+        'profile_key': 'bfd_multiplier',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 50,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'BFD_TX_INTERVAL',
+        'profile_key': 'bfd_tx_interval',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 50,
+        'max_value': 999,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'DISABLE_BFD_ECHO',
+        'profile_key': 'disable_bfd_echo',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
         'parent_nvpair': 'DISABLE_EIGRP_BFD',
         'profile_key': 'disable_eigrp_bfd',
         'applicable_interface_type': 'svi',
@@ -1648,6 +1750,18 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'max_length': 20,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'ENABLE_BFD_INTERVAL',
+        'profile_key': 'enable_bfd_interval',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
         'no_log': False,
     },
     {
