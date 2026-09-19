@@ -65,8 +65,15 @@ BUILDERS = {
     "dcnm_intf_get_svi_payload": (
         "int_vlan",
     ),
+    # ONE builder, BOTH loopback parents. gie_contribute_nvpairs sits at the END of the method,
+    # after the mode branches, so it runs for mode 'lo' and mode 'fabric' alike and keys off
+    # intf["policy"] -- already resolved to whichever parent this item is.
+    #
+    # int_loopback was added here as a second key at first, which a dict silently resolves in
+    # favour of the last one: the entry looked present and was discarded. Same key, one tuple.
     "dcnm_intf_get_loopback_payload": (
         "int_fabric_loopback_11_1",
+        "int_loopback",
     ),
 }
 

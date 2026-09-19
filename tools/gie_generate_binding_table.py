@@ -298,6 +298,26 @@ COMMITTED_BINDINGS = {
     ("int_vlan", "EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION"): "eigrp_ipv4_distribute_list_direction",
     ("int_vlan", "EIGRP_IPV6_DISTRIBUTE_LIST_PREFIX_LIST"): "eigrp_ipv6_distribute_list_prefix_list",
     ("int_vlan", "EIGRP_IPV6_DISTRIBUTE_LIST_DIRECTION"): "eigrp_ipv6_distribute_list_direction",
+    # --- OSPF on int_loopback (slice 0b_23) ---
+    ("int_loopback", "ENABLE_OSPF"): "enable_ospf",
+    ("int_loopback", "OSPF_TAG"): "ospf_tag",
+    ("int_loopback", "OSPF_AREA_ID"): "ospf_area_id",
+    ("int_loopback", "OSPF_ADVERTISE_SUBNET"): "ospf_advertise_subnet",
+    ("int_loopback", "OSPF_COST"): "ospf_cost",
+    ("int_loopback", "OSPF_HELLO_INTERVAL"): "ospf_hello_interval",
+    ("int_loopback", "OSPF_DEAD_INTERVAL"): "ospf_dead_interval",
+    ("int_loopback", "OSPF_RETRANSMIT_INTERVAL"): "ospf_retransmit_interval",
+    ("int_loopback", "OSPF_TRANSMIT_DELAY"): "ospf_transmit_delay",
+    ("int_loopback", "OSPF_PRIORITY"): "ospf_priority",
+    ("int_loopback", "OSPF_MTU_IGNORE"): "ospf_mtu_ignore",
+    ("int_loopback", "OSPF_SHUTDOWN"): "ospf_shutdown",
+    ("int_loopback", "OSPF_NETWORK_TYPE"): "ospf_network_type",
+    ("int_loopback", "OSPF_BFD"): "ospf_bfd",
+    ("int_loopback", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
+    ("int_loopback", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
+    ("int_loopback", "OSPF_AUTH_KEY"): "ospf_auth_key",
+    ("int_loopback", "OSPF_AUTHENTICATION_KEY_TYPE"): "ospf_authentication_key_type",
+    ("int_loopback", "OSPF_AUTHENTICATION_KEY"): "ospf_authentication_key",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.
