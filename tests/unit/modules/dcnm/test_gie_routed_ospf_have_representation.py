@@ -217,6 +217,19 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
                 for cf in gie_carry_forward_bindings(b["parent_template"]))
     )
     assert exposed == [
+        # int_loopback, slice 0b_23. Seven integers, every one of them reviewed and taking the
+        # same exemption for the same measured reason: the controller hands these back as
+        # strings ("110", not 110), so they are validated against the string NDFC returns.
+        # OSPF_AUTH_KEY_ID is here too, on the same footing as on the other three parents -- an
+        # id is an ordinary integer that happens to sit beside key material, and it stays
+        # unmarked so Ansible does not go scrubbing a bare digit out of unrelated output.
+        ("int_loopback", "OSPF_AUTH_KEY_ID"),
+        ("int_loopback", "OSPF_COST"),
+        ("int_loopback", "OSPF_DEAD_INTERVAL"),
+        ("int_loopback", "OSPF_HELLO_INTERVAL"),
+        ("int_loopback", "OSPF_PRIORITY"),
+        ("int_loopback", "OSPF_RETRANSMIT_INTERVAL"),
+        ("int_loopback", "OSPF_TRANSMIT_DELAY"),
         ("int_routed_host", "OSPF_AUTH_KEY_ID"),
         ("int_routed_host", "OSPF_COST"),
         ("int_routed_host", "OSPF_DEAD_INTERVAL"),

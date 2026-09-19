@@ -481,3 +481,98 @@ def test_a_keychain_spelling_is_refused_not_silently_dropped(key):
     )
     msg = obj.module.fail_json.call_args.kwargs["msg"]
     assert key in msg and "fabric" in msg.lower()
+
+
+# =====================================================================================
+# THE TWO HALVES OF THE ARCHITECT'S Q1 RULING (2026-09-19)
+#
+# The retirement was a decision about OWNERSHIP, not about the word "loopback". On
+# int_fabric_loopback_11_1 the authentication is underlay authentication that fabricSettings
+# owns. int_loopback is a different template for a different object -- a user loopback is not
+# part of the underlay, and its own template takes authentication from the interface fields.
+#
+# Both halves are asserted here because only one of them is intuitive. "Still refused on the
+# fabric parent" is what anyone would check; "now accepted on the user loopback" is the half a
+# regression would silently take away, and nothing else in the suite would notice.
+# =====================================================================================
+
+def _validate_with_resolved_parents(mode, profile_extra):
+    """Run the loopback validator with pol_types populated, so the parent actually resolves.
+
+    _reject_loopback above deliberately leaves them unset, which exercises the fail-closed
+    path. These tests need the opposite: a resolved parent, which is the only condition under
+    which the exemption can fire at all.
+    """
+    obj = object.__new__(dcnm_interface.DcnmIntf)
+    obj.class_name = "DcnmIntf"
+    obj.module = mock.Mock()
+    obj.module.no_log_values = set()
+    obj.dcnm_version = 12
+    obj.pol_types = {12: {"lo_lo": "int_loopback",
+                          "lo_fabric": "int_fabric_loopback_11_1"}}
+
+    class _Fail(Exception):
+        pass
+
+    obj.module.fail_json.side_effect = _Fail
+    profile = {"mode": mode, "ipv4_addr": "10.2.0.1", "ipv4_mask_len": 32}
+    profile.update(profile_extra)
+    cfg = [{"name": "lo0", "type": "lo", "switch": ["10.1.1.1"], "profile": profile}]
+    rejected = False
+    try:
+        obj.dcnm_intf_validate_loopback_interface_input(cfg)
+    except _Fail:
+        rejected = True
+    except Exception:
+        # Validation past the rejection may fail for unrelated reasons (the spec wants fields
+        # this minimal profile does not carry). That is not a rejection, and conflating the two
+        # is how a test like this ends up asserting nothing.
+        pass
+    calls = obj.module.fail_json.call_args
+    return rejected, (calls[1] if calls else {})
+
+
+@pytest.mark.parametrize("key", ["ospf_auth_key_id", "ospf_auth_key",
+                                 "enable_ospf_auth_message_digest"])
+def test_the_fabric_parent_still_refuses_every_withdrawn_key(key):
+    """Half one: nothing here reopens G6."""
+    rejected, kwargs = _validate_with_resolved_parents("fabric", {key: "1"})
+    assert rejected, (
+        "{0} was accepted on a FABRIC loopback. The retirement stands there: authentication is "
+        "underlay authentication and fabricSettings owns it.".format(key)
+    )
+    assert "fabric" in str(kwargs.get("msg", "")).lower()
+
+
+@pytest.mark.parametrize("key,value", [("ospf_auth_key_id", 98),
+                                       ("ospf_auth_key", "SYNTHETIC-NOT-A-REAL-KEY"),
+                                       ("enable_ospf_auth", True)])
+def test_the_user_loopback_now_accepts_its_own_authentication(key, value):
+    """Half two: the ruling, made real.
+
+    These keys are registered on int_loopback by slice 0b_23, so the exemption fires and the
+    validator lets them through. Before that slice the same call was refused -- and it was
+    refused CORRECTLY, because a key with no binding reaches a spec that does not declare it
+    and validate_list_of_dicts drops it silently. The exemption is granted by the registry for
+    exactly that reason, so the two can never be out of step.
+    """
+    rejected, kwargs = _validate_with_resolved_parents("lo", {key: value})
+    assert not rejected, (
+        "{0} was refused on a USER loopback. It is registered on int_loopback, so refusing it "
+        "contradicts the binding table: {1}".format(key, kwargs.get("msg", ""))
+    )
+
+
+def test_the_keychain_is_refused_on_both_parents():
+    """Neither parent can carry it, so neither accepts it.
+
+    int_fabric_loopback_11_1 declares ospfAuthKeychainName but overwrites it from
+    fabricSettings; int_loopback declares no keychain field at all. Scoping this rejection to
+    the fabric parent alongside the other one was tried and reverted: on a user loopback the key
+    would have been dropped in silence, which is the failure the rejection exists to prevent.
+    """
+    for mode in ("fabric", "lo"):
+        rejected, kwargs = _validate_with_resolved_parents(
+            mode, {"ospf_auth_keychain_name": "LLAVERO"}
+        )
+        assert rejected, "the keychain was accepted on mode '{0}'".format(mode)

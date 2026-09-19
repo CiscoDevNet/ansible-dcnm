@@ -85,11 +85,15 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         "enable_eigrp_routing", "enable_eigrp_ipv6_routing", "enable_eigrp_shutdown",
         "enable_eigrp_bfd", "disable_eigrp_bfd",
         "eigrp_ipv4_passive", "eigrp_no_ipv4_passive", "eigrp_no_ipv6_passive",
+        # int_loopback, slice 0b_23. Five of its six booleans are names already here; the sixth,
+        # ospf_advertise_subnet, exists on no other parent -- advertising a loopback's subnet is
+        # a loopback concept.
+        "ospf_advertise_subnet",
         # There is no eigrp_ipv6_passive: IPv4 declares both the passive and the no-passive
         # field, IPv6 only the no-passive one. The children match -- an ipv6-passive child
         # does not exist either. The asymmetry is the template's.
     }
-    # 71 = the per-parent counts below, which are what the table actually holds. Measured
+    # 77 = the per-parent counts below, which are what the table actually holds. Measured
     # against BINDING_TABLE when slice 0b_22 landed, not carried forward by arithmetic:
     #
     #     int_access_host                     4      int_routed_host    17
@@ -98,6 +102,7 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     #     int_port_channel_trunk_host         4
     #     int_port_channel_dot1q_tunnel_host  4      int_vpc_access_host  4
     #                                                int_vpc_trunk_host   4
+    #                                                int_loopback         6
     #
     # The three overlay parents grew by 8 each: the eleven EIGRP booleans are eight distinct
     # keys plus the three that repeat per parent. int_routed_host 9 -> 17, int_subif 6 -> 14,
@@ -116,7 +121,7 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # are still passthrough and therefore still need the wire form: the value lands in the vPC
     # parent's own nvPairs first, and nvPairs is a string-valued map. A native bool left there
     # would reproduce exactly the non-convergence this file exists to prevent.
-    assert len(BOOL_PASSTHROUGH) == 71
+    assert len(BOOL_PASSTHROUGH) == 77
 
 
 # ------------------------------------------------------- what the engine emits --

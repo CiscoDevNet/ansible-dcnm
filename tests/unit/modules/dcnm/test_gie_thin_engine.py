@@ -258,6 +258,39 @@ EIGRP_ROWS = {
     )
 }
 
+# int_loopback, slice 0b_23 -- the USER loopback (mode 'lo'), not int_fabric_loopback_11_1.
+# Its own set, not a comprehension shared with another parent, because this template diverges
+# from all three overlay parents: OSPF_ADVERTISE_SUBNET exists nowhere else, OSPF_BFD is a
+# boolean here as on int_subif while routed and vlan use the enum OSPF_BFD_MODE, and
+# OSPF_PASSIVE_MODE is absent entirely.
+LOOPBACK_OSPF_ROWS = {
+    ("int_loopback", nvpair, key)
+    for nvpair, key in (
+        ("ENABLE_OSPF", "enable_ospf"),
+        ("OSPF_TAG", "ospf_tag"),
+        ("OSPF_AREA_ID", "ospf_area_id"),
+        ("OSPF_ADVERTISE_SUBNET", "ospf_advertise_subnet"),
+        ("OSPF_COST", "ospf_cost"),
+        ("OSPF_HELLO_INTERVAL", "ospf_hello_interval"),
+        ("OSPF_DEAD_INTERVAL", "ospf_dead_interval"),
+        ("OSPF_RETRANSMIT_INTERVAL", "ospf_retransmit_interval"),
+        ("OSPF_TRANSMIT_DELAY", "ospf_transmit_delay"),
+        ("OSPF_PRIORITY", "ospf_priority"),
+        ("OSPF_MTU_IGNORE", "ospf_mtu_ignore"),
+        ("OSPF_SHUTDOWN", "ospf_shutdown"),
+        ("OSPF_NETWORK_TYPE", "ospf_network_type"),
+        ("OSPF_BFD", "ospf_bfd"),
+        # The five the architect ruled in scope here while they stay retired on the fabric
+        # parent: the retirement was about ownership, and a user loopback is not underlay.
+        ("ENABLE_OSPF_AUTH", "enable_ospf_auth"),
+        ("OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
+        ("OSPF_AUTH_KEY", "ospf_auth_key"),
+        ("OSPF_AUTHENTICATION_KEY_TYPE", "ospf_authentication_key_type"),
+        ("OSPF_AUTHENTICATION_KEY", "ospf_authentication_key"),
+    )
+}
+
+
 
 
 # ---- binding package runtime contract ----
@@ -267,12 +300,13 @@ def test_package_provenance_and_size():
         BASELINE_ROWS | PASSTHROUGH_ROWS | FC_SEND_ROWS | STP_ROWS
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
+        | LOOPBACK_OSPF_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 150
+    assert len(BINDING_TABLE) == len(actual_keys) == 169
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -307,7 +341,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 150
+    assert len(rows) == 169
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -657,6 +691,10 @@ def test_all_registered_and_guarded_keys():
         "enable_eigrp_shutdown", "enable_eigrp_bfd", "disable_eigrp_bfd",
         "eigrp_ipv4_distribute_list_prefix_list", "eigrp_ipv4_distribute_list_direction",
         "eigrp_ipv6_distribute_list_prefix_list", "eigrp_ipv6_distribute_list_direction",
+        # int_loopback, slice 0b_23. Only ONE public key is new -- the other eighteen are names
+        # this table already carries on other parents, which is the point of keying bindings by
+        # (parent, nvpair) rather than by name.
+        "ospf_advertise_subnet",
 }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
@@ -687,7 +725,11 @@ def test_all_registered_and_guarded_keys():
         "enable_eigrp_shutdown", "enable_eigrp_bfd", "disable_eigrp_bfd",
         "eigrp_ipv4_distribute_list_prefix_list", "eigrp_ipv4_distribute_list_direction",
         "eigrp_ipv6_distribute_list_prefix_list", "eigrp_ipv6_distribute_list_direction",
-    }
+            # int_loopback, slice 0b_23. Only ONE public key is new -- the other eighteen are names
+        # this table already carries on other parents, which is the point of keying bindings by
+        # (parent, nvpair) rather than by name.
+        "ospf_advertise_subnet",
+}
     # The withdrawn fabric-loopback key. It is registered nowhere, so it is guarded nowhere --
     # the module rejects it by name instead, which is a different mechanism with a different
     # message.
