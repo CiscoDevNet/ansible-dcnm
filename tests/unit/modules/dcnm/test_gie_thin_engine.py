@@ -327,6 +327,20 @@ LOOPBACK_EIGRP_ROWS = {
 
 
 
+# HSRP on int_vlan, slice 0b_26. Three, and only on this parent: it is the only one of the four
+# that declares HSRP at all. Listed explicitly because these three are the first rows that sit on
+# top of MODULE-NATIVE fields -- enable_hsrp, hsrp_vip, hsrp_group, preempt and hsrp_priority are
+# already in the native SVI arg spec, so the engine's contribution is exactly this set and no
+# more. A fourth entry here would mean the engine had taken over a field the module already owns.
+HSRP_ROWS = {
+    ("int_vlan", nvpair, key)
+    for nvpair, key in (
+        ("HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER", "hsrp_priority_forwarding_threshold_lower"),
+        ("HSRP_PRIORITY_FORWARDING_THRESHOLD_UPPER", "hsrp_priority_forwarding_threshold_upper"),
+        ("HSRP_PREEMPT_DELAY_MINIMUM", "hsrp_preempt_delay_minimum"),
+    )
+}
+
 # ---- binding package runtime contract ----
 
 def test_package_provenance_and_size():
@@ -334,13 +348,13 @@ def test_package_provenance_and_size():
         BASELINE_ROWS | PASSTHROUGH_ROWS | FC_SEND_ROWS | STP_ROWS
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
-        | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS
+        | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 186
+    assert len(BINDING_TABLE) == len(actual_keys) == 189
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -358,6 +372,9 @@ def test_package_provenance_and_size():
     # int_loopback declares only these eight. A thirteen here would mean five bindings NDFC
     # discards in silence while the module reports success.
     assert len(LOOPBACK_EIGRP_ROWS) == 8
+    # THREE, and the number is the assertion: the engine adds only what the native arg
+    # spec lacks. A four here would mean it had absorbed a module-owned field.
+    assert len(HSRP_ROWS) == 3
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -379,7 +396,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 186
+    assert len(rows) == 189
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -732,6 +749,14 @@ def test_all_registered_and_guarded_keys():
         # int_loopback, slice 0b_23. Only ONE public key is new -- the other eighteen are names
         # this table already carries on other parents, which is the point of keying bindings by
         # (parent, nvpair) rather than by name.
+        # HSRP on int_vlan, slice 0b_26. Three new public keys, and the only lot whose fields
+        # sit on top of MODULE-NATIVE ones: enable_hsrp, hsrp_vip, hsrp_group, preempt and
+        # hsrp_priority are already in the native SVI arg spec, so the engine adds only these.
+        # The template enforces the whole dependency chain, including `lower cannot exceed
+        # upper` -- a relationship between two fields that the registry cannot express.
+        "hsrp_priority_forwarding_threshold_lower",
+        "hsrp_priority_forwarding_threshold_upper",
+        "hsrp_preempt_delay_minimum",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -770,6 +795,14 @@ def test_all_registered_and_guarded_keys():
             # int_loopback, slice 0b_23. Only ONE public key is new -- the other eighteen are names
         # this table already carries on other parents, which is the point of keying bindings by
         # (parent, nvpair) rather than by name.
+        # HSRP on int_vlan, slice 0b_26. Three new public keys, and the only lot whose fields
+        # sit on top of MODULE-NATIVE ones: enable_hsrp, hsrp_vip, hsrp_group, preempt and
+        # hsrp_priority are already in the native SVI arg spec, so the engine adds only these.
+        # The template enforces the whole dependency chain, including `lower cannot exceed
+        # upper` -- a relationship between two fields that the registry cannot express.
+        "hsrp_priority_forwarding_threshold_lower",
+        "hsrp_priority_forwarding_threshold_upper",
+        "hsrp_preempt_delay_minimum",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was

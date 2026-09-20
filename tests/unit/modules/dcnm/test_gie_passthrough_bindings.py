@@ -103,10 +103,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 186
-    assert len(set(keys)) == 186, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 189
+    assert len(set(keys)) == 189, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 186, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 189, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -164,7 +164,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 186
+    assert len(gen.compile_rows(rows)) == 189
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -213,7 +213,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 186
+    assert len(gen.compile_rows(rows)) == 189
 
 
 # ------------------------------------------------------------------ positive transport
@@ -579,7 +579,9 @@ def test_keymap_carries_every_new_nvpair():
     assert km["OSPF_ADVERTISE_SUBNET"] == "ospf_advertise_subnet"
     assert km["ENABLE_BFD_INTERVAL"] == "enable_bfd_interval"
     assert km["BFD_TX_INTERVAL"] == "bfd_tx_interval"
-    assert len(km) == 50
+    assert km["HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER"] == "hsrp_priority_forwarding_threshold_lower"
+    assert km["HSRP_PREEMPT_DELAY_MINIMUM"] == "hsrp_preempt_delay_minimum"
+    assert len(km) == 53
 
 
 def test_all_registered_keys():
@@ -607,6 +609,14 @@ def test_all_registered_keys():
         # int_loopback, slice 0b_23. Only ONE public key is new -- the other eighteen are names
         # this table already carries on other parents, which is the point of keying bindings by
         # (parent, nvpair) rather than by name.
+        # HSRP on int_vlan, slice 0b_26. Three new public keys, and the only lot whose fields
+        # sit on top of MODULE-NATIVE ones: enable_hsrp, hsrp_vip, hsrp_group, preempt and
+        # hsrp_priority are already in the native SVI arg spec, so the engine adds only these.
+        # The template enforces the whole dependency chain, including `lower cannot exceed
+        # upper` -- a relationship between two fields that the registry cannot express.
+        "hsrp_priority_forwarding_threshold_lower",
+        "hsrp_priority_forwarding_threshold_upper",
+        "hsrp_preempt_delay_minimum",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
