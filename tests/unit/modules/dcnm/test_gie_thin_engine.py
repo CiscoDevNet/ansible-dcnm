@@ -399,6 +399,16 @@ PIM_ROWS = (
 )
 
 
+# IPv6 link-local, slice 0b_32. TRES: los overlay, sin int_loopback. La clave es la forma del
+# PADRE -- `IPv6_LINK_LOCAL`, v minuscula -- y ese detalle ES la asercion: el hijo declara
+# IPV6_LINK_LOCAL en mayusculas y el padre traduce al llamarlo, asi que emitir la forma del hijo
+# haria que NDFC guardara una clave que nadie lee y la linea no llegara al equipo.
+LINK_LOCAL_ROWS = {
+    (parent, "IPv6_LINK_LOCAL", "ipv6_link_local")
+    for parent in ("int_routed_host", "int_subif", "int_vlan")
+}
+
+
 # ---- binding package runtime contract ----
 def test_package_provenance_and_size():
     expected_keys = (
@@ -406,13 +416,13 @@ def test_package_provenance_and_size():
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
-        | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS
+        | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 218
+    assert len(BINDING_TABLE) == len(actual_keys) == 221
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -440,6 +450,7 @@ def test_package_provenance_and_size():
     assert len(ARP_ROWS) == 3
     # 8 = 4 sparse + 3 dr_priority + 1 bfd_instance. El desglose importa mas que el total.
     assert len(PIM_ROWS) == 8
+    assert len(LINK_LOCAL_ROWS) == 3
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -483,7 +494,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 218
+    assert len(rows) == 221
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -878,6 +889,10 @@ def test_all_registered_and_guarded_keys():
         # sparse en los cuatro padres, dr_priority en tres (una loopback no elige DR) y
         # bfd_instance solo en int_routed_host. Ver phase42.
         "enable_pim_sparse", "pim_dr_priority", "enable_pim_bfd_instance",
+        # IPv6 link-local, slice 0b_32. UNA clave publica en los TRES padres overlay
+        # (int_loopback no lo declara). La clave del nvPair es `IPv6_LINK_LOCAL` con v
+        # minuscula -- la forma del PADRE; el hijo la espera en mayusculas y el padre traduce.
+        "ipv6_link_local",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -954,6 +969,10 @@ def test_all_registered_and_guarded_keys():
         # sparse en los cuatro padres, dr_priority en tres (una loopback no elige DR) y
         # bfd_instance solo en int_routed_host. Ver phase42.
         "enable_pim_sparse", "pim_dr_priority", "enable_pim_bfd_instance",
+        # IPv6 link-local, slice 0b_32. UNA clave publica en los TRES padres overlay
+        # (int_loopback no lo declara). La clave del nvPair es `IPv6_LINK_LOCAL` con v
+        # minuscula -- la forma del PADRE; el hijo la espera en mayusculas y el padre traduce.
+        "ipv6_link_local",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -1077,7 +1096,7 @@ def test_a_zero_minimum_is_printed_as_a_bound_not_as_unbounded():
 def test_a_bound_declared_alone_still_reaches_the_range_branch(monkeypatch):
     """The reason the branch tests ``is not None`` rather than truthiness.
 
-    Measured: 0 of the 218 rows declare only one of the two bounds, so today a plain
+    Measured: 0 of the 221 rows declare only one of the two bounds, so today a plain
     ``min_value or max_value`` would reach this branch anyway -- every row with a 0 minimum
     also has a maximum that makes the `or` true. The guard is for the FIRST row that declares a
     minimum of 0 and no maximum, where truthiness would drop the range from the message and
