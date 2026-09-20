@@ -82,6 +82,9 @@ EXPECTED = {
     # PIM, slice 0b_31. Este es el unico padre que declara los TRES. pim_dr_priority es `long`
     # en el template y se registra `integer`: _TYPE_TO_VALIDATOR no conoce `long` y valida
     # identico. Y el valor 1 no emite linea -- ver la trampa en el slice.
+    # IPv6 link-local, slice 0b_32. `ipV6Address` en el template, registrado `string` con
+    # max_length 45 -- mismo tratamiento que HSRP_VIPv6, que tambien es ipV6Address.
+    "ipv6_link_local": ("IPv6_LINK_LOCAL", "string"),
     "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "boolean"),
     "pim_dr_priority": ("PIM_DR_PRIORITY", "integer"),
     "enable_pim_bfd_instance": ("ENABLE_PIM_BFD_INSTANCE", "boolean"),

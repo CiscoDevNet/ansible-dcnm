@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 2e4d13aa679d9aeb3772441460127e291f1a77e4ab614b14c862f0eeb068c121
+# provenance_sha256 = b34a65f7dca1cbfd5fd2a8fe18571111f434dbe0786fa50814dd5c398fc3db12
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "2e4d13aa679d9aeb3772441460127e291f1a77e4ab614b14c862f0eeb068c121"
+PROVENANCE_SHA256 = "b34a65f7dca1cbfd5fd2a8fe18571111f434dbe0786fa50814dd5c398fc3db12"
 
 BINDING_TABLE = (
     {
@@ -1098,6 +1098,18 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_routed_host',
+        'parent_nvpair': 'IPv6_LINK_LOCAL',
+        'profile_key': 'ipv6_link_local',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'max_length': 45,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
         'parent_nvpair': 'OSPF_AREA_ID',
         'profile_key': 'ospf_area_id',
         'applicable_interface_type': 'eth',
@@ -1604,6 +1616,18 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'IPv6_LINK_LOCAL',
+        'profile_key': 'ipv6_link_local',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'max_length': 45,
         'no_log': False,
     },
     {
@@ -2312,6 +2336,18 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'IPv6_LINK_LOCAL',
+        'profile_key': 'ipv6_link_local',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'max_length': 45,
         'no_log': False,
     },
     {
