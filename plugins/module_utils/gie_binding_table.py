@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = cfbd411e92c8f7db44b8e738a8325ff0bd36713e2d663561b94bbea8fe1c116f
+# provenance_sha256 = 06f2416df6506b5b97852af2b30a8bfd065e26a96dd40434eafd7c98e14b5274
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "cfbd411e92c8f7db44b8e738a8325ff0bd36713e2d663561b94bbea8fe1c116f"
+PROVENANCE_SHA256 = "06f2416df6506b5b97852af2b30a8bfd065e26a96dd40434eafd7c98e14b5274"
 
 BINDING_TABLE = (
     {
@@ -103,6 +103,102 @@ BINDING_TABLE = (
         'type': 'enum',
         'valid_values': ('no', 'network', 'normal'),
         'default_template': 'no',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'DISABLE_EIGRP_BFD',
+        'profile_key': 'disable_eigrp_bfd',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'EIGRP_IPV4_PASSIVE',
+        'profile_key': 'eigrp_ipv4_passive',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'EIGRP_NO_IPV4_PASSIVE',
+        'profile_key': 'eigrp_no_ipv4_passive',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'EIGRP_NO_IPV6_PASSIVE',
+        'profile_key': 'eigrp_no_ipv6_passive',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'EIGRP_PROCESS_TAG',
+        'profile_key': 'eigrp_process_tag',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'max_length': 20,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'ENABLE_EIGRP_BFD',
+        'profile_key': 'enable_eigrp_bfd',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'ENABLE_EIGRP_ROUTING',
+        'profile_key': 'enable_eigrp_routing',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'ENABLE_EIGRP_SHUTDOWN',
+        'profile_key': 'enable_eigrp_shutdown',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'boolean',
+        'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
