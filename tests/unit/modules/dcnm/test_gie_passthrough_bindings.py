@@ -159,10 +159,32 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
         assert (b["applicable_interface_type"], b["applicable_mode"]) == (itype, mode)
 
 
+# compile_rows() valida FILAS DE SLICE, y BINDING_TABLE es su SALIDA. Tres campos del esquema
+# -- presence_model, emit_when, parent_resolution -- son documentales y FIELDS no los propaga a
+# la tabla, asi que una fila de la tabla no es una entrada valida para el compilador.
+#
+# Reutilizarla como entrada funcionaba por accidente mientras el generador no validaba esquema.
+# Ahora lo valida (el gate se movio ahi porque los dos checkers aparte llevaban cuatro lotes
+# muertos sin que nadie lo notara), asi que los casos que ejercitan el compilador reponen esos
+# tres campos. Reponerlos aqui es lo correcto y no un parche: lo que se quiere ejercitar son las
+# reglas de compilacion -- allowlist, duplicados, profile_key -- no el gate de esquema, que
+# tiene sus propios casos.
+#
+# La alternativa seria meter los tres campos en FIELDS, y eso moveria el binding table y
+# engordaria un artefacto de runtime con datos que nadie lee.
+def _as_slice_rows(rows):
+    """Las filas de la tabla, con los campos de esquema que un slice declara y la tabla no."""
+    return [
+        dict(r, presence_model="two_axis", emit_when="explicit_only",
+             parent_resolution="desired_parent")
+        for r in rows
+    ]
+
+
 # ------------------------------------------------------------------ generator guards
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
-    rows = [dict(b) for b in BINDING_TABLE]
+    rows = _as_slice_rows(BINDING_TABLE)
     assert len(gen.compile_rows(rows)) == 210
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
@@ -177,6 +199,77 @@ def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
         gen.compile_rows(wrong)
 
 
+def test_generator_enforces_the_registry_schema_per_row():
+    """The per-row schema gate, which used to live in a standalone checker that went stale.
+
+    There were TWO validator scripts under evidence/generic-interface-engine/, and both had been
+    dead for four lots without anyone noticing: one still expected a flat list of rows when every
+    slice had become a mapping with a `bindings:` key, the other required a `sensitive` field
+    that only one surviving slice declares. Neither failed loudly, because nothing ran them --
+    and a validator you have to remember to invoke is one that goes stale.
+
+    So the gate moved into compile_rows(), which runs on every regeneration. This case exists so
+    it cannot quietly stop enforcing: every rule is asserted by sabotage, and the error has to
+    NAME the offending row, because "schema error" on a 210-row table is not actionable.
+
+    Not re-asserted here -- compile_rows owns them above, with their own cases: the allowlist,
+    duplicates, profile_key mismatch, unknown mechanism, complete-set.
+    """
+    gen = _load_generator()
+    rows = _as_slice_rows(BINDING_TABLE)
+    assert len(gen.compile_rows(rows)) == 210
+
+    nvpair = rows[0]["parent_nvpair"]
+
+    # Every required field, dropped one at a time, must abort the compile. FOUR of them abort
+    # at an EARLIER guard with a different message, and that is by design rather than a gap:
+    #
+    #   parent_template, parent_nvpair   the allowlist guard needs them to form the key at all
+    #   profile_key                      it is what that guard compares against the allowlist
+    #   mechanism                        the fail-open mechanism gate above rejects a missing one
+    #
+    # Asserting one single message for all eleven would have meant weakening the assertion to
+    # "it raised something", which is how a check stops checking.
+    EARLIER_GUARDS = {
+        "parent_template": ("unexpected binding", "unexpected profile_key"),
+        "parent_nvpair": ("unexpected binding", "unexpected profile_key"),
+        "profile_key": ("unexpected binding", "unexpected profile_key"),
+        "mechanism": ("declares mechanism",),
+    }
+
+    for field in gen.SCHEMA_REQUIRED_FIELDS:
+        missing = [dict(r) for r in rows]
+        del missing[0][field]
+        with pytest.raises(ValueError) as exc:
+            gen.compile_rows(missing)
+        if field in EARLIER_GUARDS:
+            assert any(f in str(exc.value) for f in EARLIER_GUARDS[field]), (
+                "{0} must still be refused, by its earlier guard: {1}".format(
+                    field, exc.value
+                )
+            )
+        else:
+            assert "missing required registry field" in str(exc.value)
+            assert field in str(exc.value)
+            assert nvpair in str(exc.value), "the error must name the offending row"
+
+    for field, bad, fragment in (
+        ("presence_model", "one_axis", "declares presence_model"),
+        ("emit_when", "always", "declares emit_when"),
+        ("type", "float", "declares type"),
+    ):
+        broken = [dict(r) for r in rows]
+        broken[0][field] = bad
+        with pytest.raises(ValueError, match=fragment) as exc:
+            gen.compile_rows(broken)
+        assert nvpair in str(exc.value), "the error must name the offending row"
+
+    # `sensitive` is NOT required: requiring it is what killed the 454-line checker, and it
+    # survives in exactly one slice. A table with none of it must still compile -- asserted
+    # above, and this pins the premise.
+    assert not any("sensitive" in r for r in rows)
+
+
 def test_generator_rejects_an_unexpected_binding_claiming_a_committed_key():
     """A non-committed parent reusing a committed public key must fail, not be skipped.
 
@@ -187,7 +280,7 @@ def test_generator_rejects_an_unexpected_binding_claiming_a_committed_key():
     not quietly become one.
     """
     gen = _load_generator()
-    rows = [dict(b) for b in BINDING_TABLE]
+    rows = _as_slice_rows(BINDING_TABLE)
     rows.append({
         "parent_template": "int_vpc_dot1q_tunnel",
         "parent_nvpair": "GUARD_MODE",
@@ -211,7 +304,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
     behaviour rather than about which fields happen to be pending.
     """
     gen = _load_generator()
-    rows = [dict(b) for b in BINDING_TABLE]
+    rows = _as_slice_rows(BINDING_TABLE)
     rows.append({
         "parent_template": "int_routed_host",
         "parent_nvpair": "WP98_SYNTHETIC_NOT_A_REAL_NVPAIR",

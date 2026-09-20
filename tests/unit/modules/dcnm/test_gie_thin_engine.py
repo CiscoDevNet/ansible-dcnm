@@ -431,6 +431,28 @@ def test_package_provenance_and_size():
     assert PROVENANCE_SHA256 == expected_provenance
 
 
+# compile_rows() valida FILAS DE SLICE, y BINDING_TABLE es su SALIDA. Tres campos del esquema
+# -- presence_model, emit_when, parent_resolution -- son documentales y FIELDS no los propaga a
+# la tabla, asi que una fila de la tabla no es una entrada valida para el compilador.
+#
+# Reutilizarla como entrada funcionaba por accidente mientras el generador no validaba esquema.
+# Ahora lo valida (el gate se movio ahi porque los dos checkers aparte llevaban cuatro lotes
+# muertos sin que nadie lo notara), asi que los casos que ejercitan el compilador reponen esos
+# tres campos. Reponerlos aqui es lo correcto y no un parche: lo que se quiere ejercitar son las
+# reglas de compilacion -- allowlist, duplicados, profile_key -- no el gate de esquema, que
+# tiene sus propios casos.
+#
+# La alternativa seria meter los tres campos en FIELDS, y eso moveria el binding table y
+# engordaria un artefacto de runtime con datos que nadie lee.
+def _as_slice_rows(rows):
+    """Las filas de la tabla, con los campos de esquema que un slice declara y la tabla no."""
+    return [
+        dict(r, presence_model="two_axis", emit_when="explicit_only",
+             parent_resolution="desired_parent")
+        for r in rows
+    ]
+
+
 def _load_generator():
     path = (
         Path(gie_binding_table.__file__).resolve().parents[2]
@@ -445,13 +467,13 @@ def _load_generator():
 
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
-    rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
+    rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
     assert len(rows) == 210
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
     generator = _load_generator()
-    rows = [dict(binding) for binding in BINDING_TABLE]
+    rows = _as_slice_rows(BINDING_TABLE)
     with pytest.raises(ValueError, match="duplicate committed binding"):
         generator.compile_rows(rows + [dict(rows[0])])
     with pytest.raises(ValueError, match="missing committed bindings"):
@@ -470,7 +492,7 @@ def test_compiler_renames_the_registry_numeric_bounds():
     """
     generator = _load_generator()
     rows = []
-    for binding in BINDING_TABLE:
+    for binding in _as_slice_rows(BINDING_TABLE):
         row = dict(binding)
         if row["parent_nvpair"] == "OSPF_COST":
             row.pop("min_value", None)
@@ -495,7 +517,7 @@ def test_compiler_rejects_an_unknown_mechanism():
     """
     generator = _load_generator()
     for bad in ("passthru", "inline_passthrough", "", None):
-        rows = [dict(binding) for binding in BINDING_TABLE]
+        rows = _as_slice_rows(BINDING_TABLE)
         rows[0]["mechanism"] = bad
         with pytest.raises(ValueError, match="declares mechanism"):
             generator.compile_rows(rows)
@@ -503,7 +525,7 @@ def test_compiler_rejects_an_unknown_mechanism():
 
 def test_compiler_rejects_profile_key_mismatch():
     generator = _load_generator()
-    rows = [dict(binding) for binding in BINDING_TABLE]
+    rows = _as_slice_rows(BINDING_TABLE)
     rows[0]["profile_key"] = "wrong_key"
     with pytest.raises(ValueError, match="unexpected profile_key"):
         generator.compile_rows(rows)
