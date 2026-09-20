@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 632b8172a97b39ad6a49b5cd98543fe91439b13b4b1eb0da85b4a63923188d09
+# provenance_sha256 = 19344493970f80ef22f4b644d4cee0dd18f3afb1d66090b6c5f0c2f4a78c6d3b
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "632b8172a97b39ad6a49b5cd98543fe91439b13b4b1eb0da85b4a63923188d09"
+PROVENANCE_SHA256 = "19344493970f80ef22f4b644d4cee0dd18f3afb1d66090b6c5f0c2f4a78c6d3b"
 
 BINDING_TABLE = (
     {
@@ -695,6 +695,28 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_routed_host',
+        'parent_nvpair': 'DISABLE_IPV4_REDIRECTS',
+        'profile_key': 'disable_ipv4_redirects',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'DISABLE_IPV6_REDIRECTS',
+        'profile_key': 'disable_ipv6_redirects',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
         'parent_nvpair': 'DISABLE_LLDP_RECEIVE',
         'profile_key': 'disable_lldp_receive',
         'applicable_interface_type': 'eth',
@@ -922,6 +944,18 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
         'max_length': 64,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'IPV6_ND_SUPPRESS_RA',
+        'profile_key': 'ipv6_nd_suppress_ra',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
         'no_log': False,
     },
     {
@@ -1181,6 +1215,28 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_subif',
+        'parent_nvpair': 'DISABLE_IPV4_REDIRECTS',
+        'profile_key': 'disable_ipv4_redirects',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'boolean',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'DISABLE_IPV6_REDIRECTS',
+        'profile_key': 'disable_ipv6_redirects',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'boolean',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
         'parent_nvpair': 'EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION',
         'profile_key': 'eigrp_ipv4_distribute_list_direction',
         'applicable_interface_type': 'sub_int',
@@ -1353,6 +1409,18 @@ BINDING_TABLE = (
         'parent_template': 'int_subif',
         'parent_nvpair': 'ENABLE_OSPF_AUTH',
         'profile_key': 'enable_ospf_auth',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'IPV6_ND_SUPPRESS_RA',
+        'profile_key': 'ipv6_nd_suppress_ra',
         'applicable_interface_type': 'sub_int',
         'applicable_mode': 'subint',
         'type': 'boolean',
@@ -1752,6 +1820,28 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_vlan',
+        'parent_nvpair': 'DISABLE_IPV4_REDIRECTS',
+        'profile_key': 'disable_ipv4_redirects',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'boolean',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'DISABLE_IPV6_REDIRECTS',
+        'profile_key': 'disable_ipv6_redirects',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'boolean',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
         'parent_nvpair': 'EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION',
         'profile_key': 'eigrp_ipv4_distribute_list_direction',
         'applicable_interface_type': 'svi',
@@ -1994,6 +2084,18 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'max_length': 45,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'IPV6_ND_SUPPRESS_RA',
+        'profile_key': 'ipv6_nd_suppress_ra',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
         'no_log': False,
     },
     {

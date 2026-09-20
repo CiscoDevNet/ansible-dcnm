@@ -405,6 +405,32 @@ COMMITTED_BINDINGS = {
     # use IPv6_PREFIX, so the native path needs that mapping.
     ("int_vlan", "HSRP_VIPv6"): "hsrp_vipv6",
     ("int_vlan", "HSRP_GROUPv6"): "hsrp_groupv6",
+    # --- split redirects + ND suppress-RA (slice 0b_28) ---
+    #
+    # Tres campos x tres padres. int_loopback no declara ninguno.
+    #
+    # DISABLE_IP_REDIRECTS queda FUERA a proposito: es nativo (disable_ip_redirects, 6 usos en
+    # el modulo), y registrarlo repetiria el fallo de ipv6_addr -- gie_guarded_keys() es un set
+    # de profile_key SIN padre, asi que reclamaria el nombre globalmente. La regla barata que
+    # ese fallo dejo: grepear el nombre publico en dcnm_interface.py antes de registrar. Los
+    # tres de abajo dan 0.
+    #
+    # El nativo GATEA a los dos split via IsShow="DISABLE_IP_REDIRECTS!=true" y se combina con
+    # ellos por OR, y su default NO es uniforme: false en routed y subif, true en int_vlan --
+    # el mismo default que causo el blocker del SVI. En ese padre los split estan ocultos salvo
+    # que la ronda mande disable_ip_redirects: false.
+    #
+    # A diferencia de BFD y HSRP, cada campo tiene su PROPIA linea: el hijo
+    # routed_interface_redirects_disable es condicional por dentro, uno por cada valor.
+    ("int_routed_host", "DISABLE_IPV4_REDIRECTS"): "disable_ipv4_redirects",
+    ("int_routed_host", "DISABLE_IPV6_REDIRECTS"): "disable_ipv6_redirects",
+    ("int_routed_host", "IPV6_ND_SUPPRESS_RA"): "ipv6_nd_suppress_ra",
+    ("int_subif", "DISABLE_IPV4_REDIRECTS"): "disable_ipv4_redirects",
+    ("int_subif", "DISABLE_IPV6_REDIRECTS"): "disable_ipv6_redirects",
+    ("int_subif", "IPV6_ND_SUPPRESS_RA"): "ipv6_nd_suppress_ra",
+    ("int_vlan", "DISABLE_IPV4_REDIRECTS"): "disable_ipv4_redirects",
+    ("int_vlan", "DISABLE_IPV6_REDIRECTS"): "disable_ipv6_redirects",
+    ("int_vlan", "IPV6_ND_SUPPRESS_RA"): "ipv6_nd_suppress_ra",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.

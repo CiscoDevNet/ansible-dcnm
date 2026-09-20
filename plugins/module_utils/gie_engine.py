@@ -287,8 +287,29 @@ def gie_validate_binding_value(
     validator_type = gie_validator_type(binding["type"])
     native_type = _VALIDATOR_TO_NATIVE_TYPE[validator_type]
     if value_source == "have":
-        # (1) NDFC returns booleans as strings.
-        if native_type is bool and value in ("true", "false"):
+        # (1) NDFC returns booleans as strings, and "" for one that was never set.
+        #
+        # The "true"/"false" half is the original exemption. The "" half was measured on
+        # NDFC 12.6.0.267, Leaf-104, on 2026-09-20: a GET of the endpoint that feeds HAVE
+        # returns DISABLE_IPV4_REDIRECTS == "" on an int_routed_host interface, while
+        # IPV6_ND_SUPPRESS_RA on the SAME interface comes back "false". The difference is in
+        # the template: the first declares no defaultValue, the second declares
+        # defaultValue=false. So "" is how NDFC encodes a boolean the template never
+        # defaulted -- not an anomaly of one interface.
+        #
+        # Without this, registering such a field aborts EVERY operation on that parent that
+        # reads HAVE, including ones that never mention it: the module answers
+        # "authoritative controller value ... has an invalid native type; no change was
+        # sent". That is exactly the failure the integer "" exemption below was added for,
+        # reappearing on the first boolean binding whose template declares no default.
+        #
+        # Same three axes of narrowness as (3):
+        #   * value_source="have" ONLY -- an operator still writes a real bool.
+        #   * the value is returned EXACTLY as received. No "" -> False coercion: the
+        #     carry-forward is a "leave as-is" round-trip, and inventing False here would
+        #     write a state the controller never held.
+        #   * any other string still fails closed.
+        if native_type is bool and value in ("true", "false", ""):
             return value
         # (3) NDFC returns integers as strings too, and "" for an unset one.
         #
