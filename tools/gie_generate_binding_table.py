@@ -362,6 +362,49 @@ COMMITTED_BINDINGS = {
     ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER"): "hsrp_priority_forwarding_threshold_lower",
     ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_UPPER"): "hsrp_priority_forwarding_threshold_upper",
     ("int_vlan", "HSRP_PREEMPT_DELAY_MINIMUM"): "hsrp_preempt_delay_minimum",
+    # --- HSRP IPv6 on int_vlan (slice 0b_27) ---
+    #
+    # Four rows for what was asked as one. HSRP_GROUPv6 cannot produce a line on its own: the
+    # DSL's whole IPv6 block sits behind `if ipv6_vip:` (HSRP_VIPv6), and before that a bare
+    # `except` clears ipv6_vip when PREFIXv6 is missing -- so without the prefix the block is
+    # skipped SILENTLY. The chain is IPv6 + PREFIXv6 + HSRP_VIPv6, and only then does
+    # HSRP_GROUPv6 have anything to change.
+    #
+    # IPv6 and PREFIXv6 are interface addressing, not HSRP, and they are here rather than in
+    # svi_prof_spec because int_vlan names its prefix PREFIXv6 while int_subif and
+    # int_routed_host name theirs IPv6_PREFIX. The native builder writes IPv6_PREFIX; making it
+    # branch per parent is exactly what resolving by (parent, nvpair) avoids.
+    #
+    # The two address fields are ipV6Address in the template and go in as `string` -- the FIRST
+    # two rows of the table that correspond to an address field. The module stops validating the
+    # format; NDFC still does, with its own rules (`host address part cannot be all 0s`). That is
+    # delegation, not fail-open -- but it is a precedent, and it does NOT resolve
+    # DHCP_RELAY_SRC_INTF (type `interface`) or HSRP_SECONDARY_VIPS (struct list of 16).
+    #
+    # No collision: dcnm_intf_get_svi_payload writes ENABLE_HSRP, HSRP_GROUP, HSRP_PRIORITY,
+    # HSRP_VERSION and HSRP_VIP by hand, none of these four.
+    # IPv6 / PREFIXv6 WITHDRAWN from this slice -- measured defect, not a preference.
+    #
+    # Registering ("int_vlan", "IPv6") -> "ipv6_addr" made the engine's guard claim that public
+    # key GLOBALLY, and it then rejected ipv6_addr on int_subif, where the NATIVE arg spec
+    # supports it:
+    #
+    #     'ipv6_addr' is not supported on this interface (type 'sub_int', mode 'subint').
+    #     No template metadata was queried and no change was sent.
+    #
+    # Two of test_dcnm_intf.py's subinterface tests caught it. A profile_key the native spec
+    # already serves on OTHER parents cannot be registered for one parent: the guard is not
+    # per-parent for the rejection path even though the binding is.
+    #
+    # test_gie_legacy_and_engine_never_collide did NOT catch this -- it checks whether the
+    # REGISTERED parent's builder writes the nvPair by hand, and the SVI builder does not write
+    # IPv6. The blind spot is the other parents' builders. Recorded in phase37.
+    #
+    # SVI IPv6 addressing belongs in svi_prof_spec, where it already lives for int_subif and
+    # int_loopback -- with the caveat that int_vlan names its prefix PREFIXv6 while the others
+    # use IPv6_PREFIX, so the native path needs that mapping.
+    ("int_vlan", "HSRP_VIPv6"): "hsrp_vipv6",
+    ("int_vlan", "HSRP_GROUPv6"): "hsrp_groupv6",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.

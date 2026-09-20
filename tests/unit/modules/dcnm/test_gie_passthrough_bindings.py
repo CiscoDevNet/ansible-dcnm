@@ -103,10 +103,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 189
-    assert len(set(keys)) == 189, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 191
+    assert len(set(keys)) == 191, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 189, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 191, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -164,7 +164,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 189
+    assert len(gen.compile_rows(rows)) == 191
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -213,7 +213,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 189
+    assert len(gen.compile_rows(rows)) == 191
 
 
 # ------------------------------------------------------------------ positive transport
@@ -581,7 +581,9 @@ def test_keymap_carries_every_new_nvpair():
     assert km["BFD_TX_INTERVAL"] == "bfd_tx_interval"
     assert km["HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER"] == "hsrp_priority_forwarding_threshold_lower"
     assert km["HSRP_PREEMPT_DELAY_MINIMUM"] == "hsrp_preempt_delay_minimum"
-    assert len(km) == 53
+    assert km["HSRP_VIPv6"] == "hsrp_vipv6"
+    assert km["HSRP_GROUPv6"] == "hsrp_groupv6"
+    assert len(km) == 55
 
 
 def test_all_registered_keys():
@@ -617,6 +619,12 @@ def test_all_registered_keys():
         "hsrp_priority_forwarding_threshold_lower",
         "hsrp_priority_forwarding_threshold_upper",
         "hsrp_preempt_delay_minimum",
+        # HSRP IPv6, slice 0b_27. Dos: HSRP_VIPv6 es la PRIMERA fila de la tabla que corresponde
+        # a un campo de direccion de la plantilla (ipV6Address -> string, NDFC valida el formato).
+        # IPv6/PREFIXv6 se retiraron: registrar ipv6_addr hizo que el guard lo rechazara en
+        # int_subif, donde el spec nativo si lo soporta. Ver el slice y phase37.
+        "hsrp_vipv6",
+        "hsrp_groupv6",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
