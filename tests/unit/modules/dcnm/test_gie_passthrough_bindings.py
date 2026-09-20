@@ -103,10 +103,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 191
-    assert len(set(keys)) == 191, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 200
+    assert len(set(keys)) == 200, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 191, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 200, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -164,7 +164,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 191
+    assert len(gen.compile_rows(rows)) == 200
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -213,7 +213,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 191
+    assert len(gen.compile_rows(rows)) == 200
 
 
 # ------------------------------------------------------------------ positive transport
@@ -583,7 +583,9 @@ def test_keymap_carries_every_new_nvpair():
     assert km["HSRP_PREEMPT_DELAY_MINIMUM"] == "hsrp_preempt_delay_minimum"
     assert km["HSRP_VIPv6"] == "hsrp_vipv6"
     assert km["HSRP_GROUPv6"] == "hsrp_groupv6"
-    assert len(km) == 55
+    assert km["DISABLE_IPV4_REDIRECTS"] == "disable_ipv4_redirects"
+    assert km["IPV6_ND_SUPPRESS_RA"] == "ipv6_nd_suppress_ra"
+    assert len(km) == 58
 
 
 def test_all_registered_keys():
@@ -625,6 +627,12 @@ def test_all_registered_keys():
         # int_subif, donde el spec nativo si lo soporta. Ver el slice y phase37.
         "hsrp_vipv6",
         "hsrp_groupv6",
+        # Redirects partidos + ND suppress-RA, slice 0b_28. Tres claves publicas, cada una en
+        # los TRES padres overlay. DISABLE_IP_REDIRECTS queda fuera: es nativo y registrarlo
+        # repetiria el fallo de ipv6_addr, porque gie_guarded_keys() no filtra por padre.
+        "disable_ipv4_redirects",
+        "disable_ipv6_redirects",
+        "ipv6_nd_suppress_ra",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
