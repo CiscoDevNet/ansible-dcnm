@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = f37433324c673039bc1fd51087ae966c91a5d8a3b48edb0ab3687da94a82b820
+# provenance_sha256 = 94afc05228742153d4350a4689b5d9b96574f2fa62ce25dfe02f2bd6e9864d1e
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "f37433324c673039bc1fd51087ae966c91a5d8a3b48edb0ab3687da94a82b820"
+PROVENANCE_SHA256 = "94afc05228742153d4350a4689b5d9b96574f2fa62ce25dfe02f2bd6e9864d1e"
 
 BINDING_TABLE = (
     {
@@ -671,6 +671,19 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_routed_host',
+        'parent_nvpair': 'ARP_TIMEOUT',
+        'profile_key': 'arp_timeout',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 60,
+        'max_value': 28800,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
         'parent_nvpair': 'DAMPENING_HALF_LIFE',
         'profile_key': 'dampening_half_life',
         'applicable_interface_type': 'eth',
@@ -1249,6 +1262,19 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 450,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'ARP_TIMEOUT',
+        'profile_key': 'arp_timeout',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 60,
+        'max_value': 28800,
         'no_log': False,
     },
     {
@@ -1842,6 +1868,19 @@ BINDING_TABLE = (
         'default_template': 'no',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'ARP_TIMEOUT',
+        'profile_key': 'arp_timeout',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 60,
+        'max_value': 28800,
         'no_log': False,
     },
     {

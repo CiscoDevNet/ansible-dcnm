@@ -227,6 +227,11 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         # Los cinco integers de dampening (slice 0b_6). Misma exencion y misma razon: NDFC
         # los devuelve como string. No se pueden medir en el equipo -- el CLI no existe en
         # C9300v -- pero SI llegan al carry-forward, que es de lo que trata esta lista.
+        # ARP_TIMEOUT, slice 0b_3, en los TRES padres. Integer SIN defaultValue, asi que NDFC
+        # devuelve "" cuando nunca se puso -- exactamente la forma que cubre esta exencion, y la
+        # razon por la que registrarlo no necesito tocar el engine. La lista va ordenada por
+        # (padre, nvpair), asi que cada uno cae en la seccion de su padre.
+        ("int_routed_host", "ARP_TIMEOUT"),
         ("int_routed_host", "DAMPENING_HALF_LIFE"),
         ("int_routed_host", "DAMPENING_MAX_SUPPRESS"),
         ("int_routed_host", "DAMPENING_RESTART_PENALTY"),
@@ -243,6 +248,7 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         # multiplier 1-50) and takes the same exemption for the same measured reason -- NDFC
         # hands them back as strings. They are also the first bindings here with a narrow
         # maximum, which is what exposed the flat sample value in test_gie_mechanism_contract.
+        ("int_subif", "ARP_TIMEOUT"),
         ("int_subif", "BFD_MIN_RX_INTERVAL"),
         ("int_subif", "BFD_MULTIPLIER"),
         ("int_subif", "BFD_TX_INTERVAL"),
@@ -253,6 +259,7 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_subif", "OSPF_PRIORITY"),
         ("int_subif", "OSPF_RETRANSMIT_INTERVAL"),
         ("int_subif", "OSPF_TRANSMIT_DELAY"),
+        ("int_vlan", "ARP_TIMEOUT"),
         ("int_vlan", "BFD_MIN_RX_INTERVAL"),
         ("int_vlan", "BFD_MULTIPLIER"),
         ("int_vlan", "BFD_TX_INTERVAL"),
