@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,6 +29,8 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from typing import Any, Generator
+
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
@@ -37,7 +39,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender
@@ -95,11 +97,11 @@ def test_image_install_options_00010(image_install_options) -> None:
     assert instance.epld is False
     assert instance.issu is True
     assert instance.package_install is False
-    assert instance.policy_name is None
-    assert instance.response_data is None
-    assert instance.rest_send is None
-    assert instance.results is None
-    assert instance.serial_number is None
+    assert instance.policy_name == ""
+    assert instance.response_data == {}
+    assert instance.rest_send.class_name == "RestSend"
+    assert instance.results.class_name == "Results"
+    assert instance.serial_number == ""
 
 
 def test_image_install_options_00100(image_install_options) -> None:
@@ -115,9 +117,9 @@ def test_image_install_options_00100(image_install_options) -> None:
     -   Error message matches expectation.
     """
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage()._populate_controller_version
-        yield None
+        yield {}
 
     gen_responses = ResponseGenerator(responses())
 
@@ -157,7 +159,7 @@ def test_image_install_options_00110(image_install_options) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_install_options(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -183,10 +185,10 @@ def test_image_install_options_00110(image_install_options) -> None:
     assert instance.rest_send.result_current.get("success") is True
 
     assert instance.device_name == "cvd-1314-leaf"
-    assert instance.err_message is None
-    assert instance.epld_modules is None
+    assert instance.err_message == ""
+    assert instance.epld_modules == {}
     assert instance.install_option == "disruptive"
-    assert instance.install_packages is None
+    assert instance.install_packages == {}
     assert instance.ip_address == "172.22.150.105"
     assert instance.os_type == "64bit"
     assert instance.platform == "N9K/N3K"
@@ -217,7 +219,7 @@ def test_image_install_options_00120(image_install_options) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_install_options(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -269,7 +271,7 @@ def test_image_install_options_00130(image_install_options) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_install_options(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -302,10 +304,10 @@ def test_image_install_options_00130(image_install_options) -> None:
     assert instance.rest_send.result_current.get("success") is True
 
     assert instance.device_name == "leaf1"
-    assert instance.err_message is None
-    assert instance.epld_modules is None
+    assert instance.err_message == ""
+    assert instance.epld_modules == {}
     assert instance.install_option == "NA"
-    assert instance.install_packages is None
+    assert instance.install_packages == {}
     assert instance.ip_address == "172.22.150.102"
     assert instance.os_type == "64bit"
     assert instance.platform == "N9K/N3K"
@@ -345,7 +347,7 @@ def test_image_install_options_00140(image_install_options) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_install_options(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -379,11 +381,11 @@ def test_image_install_options_00140(image_install_options) -> None:
     assert instance.rest_send.result_current.get("success") is True
 
     assert instance.device_name == "leaf1"
-    assert instance.err_message is None
+    assert instance.err_message == ""
     assert isinstance(instance.epld_modules, dict)
     assert len(instance.epld_modules.get("moduleList")) == 2
     assert instance.install_option == "NA"
-    assert instance.install_packages is None
+    assert instance.install_packages == {}
     assert instance.ip_address == "172.22.150.102"
     assert instance.os_type == "64bit"
     assert instance.platform == "N9K/N3K"
@@ -423,7 +425,7 @@ def test_image_install_options_00150(image_install_options) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_install_options(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -456,26 +458,26 @@ def test_image_install_options_00150(image_install_options) -> None:
     assert isinstance(instance.rest_send.result, list)
     assert instance.rest_send.result_current.get("success") is True
 
-    assert instance.device_name is None
-    assert instance.err_message is None
+    assert instance.device_name == ""
+    assert instance.err_message == ""
     assert isinstance(instance.epld_modules, dict)
     assert len(instance.epld_modules.get("moduleList")) == 2
-    assert instance.install_option is None
-    assert instance.install_packages is None
-    assert instance.ip_address is None
-    assert instance.os_type is None
-    assert instance.platform is None
-    assert instance.pre_issu_link is None
+    assert instance.install_option == ""
+    assert instance.install_packages == {}
+    assert instance.ip_address == ""
+    assert instance.os_type == ""
+    assert instance.platform == ""
+    assert instance.pre_issu_link == ""
     assert isinstance(instance.raw_data, dict)
     assert isinstance(instance.raw_response, dict)
     assert "compatibilityStatusList" in instance.raw_data
-    assert instance.rep_status is None
+    assert instance.rep_status == ""
     assert instance.serial_number == "FDO21120U5D"
-    assert instance.status is None
-    assert instance.timestamp is None
-    assert instance.version is None
-    assert instance.version_check is None
-    assert instance.comp_disp is None
+    assert instance.status == ""
+    assert instance.timestamp == ""
+    assert instance.version == ""
+    assert instance.version_check == ""
+    assert instance.comp_disp == ""
 
 
 def test_image_install_options_00160(monkeypatch, image_install_options) -> None:
@@ -504,7 +506,7 @@ def test_image_install_options_00160(monkeypatch, image_install_options) -> None
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_install_options(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -567,8 +569,8 @@ def test_image_install_options_00170(image_install_options) -> None:
     never sends a request to the controller in this case.
     """
 
-    def responses():
-        yield None
+    def responses() -> Generator[dict[str, str], Any, Any]:
+        yield {}
 
     gen_responses = ResponseGenerator(responses())
 
@@ -621,8 +623,8 @@ def test_image_install_options_00180(image_install_options) -> None:
     -   Error message matches expectation.
     """
 
-    def responses():
-        yield None
+    def responses() -> Generator[dict[str, str], Any, Any]:
+        yield {}
 
     gen_responses = ResponseGenerator(responses())
 

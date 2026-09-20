@@ -32,24 +32,17 @@ __author__ = "Allen Robel"
 
 
 import inspect
+from typing import Any, Generator
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 
-from .utils import (MockAnsibleModule, does_not_raise, image_stage_fixture,
-                    params, responses_ep_image_stage, responses_ep_issu,
-                    responses_ep_version)
+from .utils import MockAnsibleModule, does_not_raise, image_stage_fixture, params, responses_ep_image_stage, responses_ep_issu, responses_ep_version
 
 
 def test_image_stage_00000(image_stage) -> None:
@@ -65,15 +58,15 @@ def test_image_stage_00000(image_stage) -> None:
         instance = image_stage
     assert instance.class_name == "ImageStage"
     assert instance.action == "image_stage"
-    assert instance.controller_version is None
+    assert instance._controller_version == ""
     assert instance.diff == {}
-    assert instance.payload is None
+    assert instance.payload == {}
     assert instance.saved_response_current == {}
     assert instance.saved_result_current == {}
     assert isinstance(instance.serial_numbers_done, set)
     assert isinstance(instance.serial_numbers_todo, set)
 
-    assert instance.controller_version_instance.class_name == "ControllerVersion"
+    assert instance._controller_version_instance.class_name == "ControllerVersion"
     assert instance.ep_image_stage.class_name == "EpImageStage"
     assert instance.issu_detail.class_name == "SwitchIssuDetailsBySerialNumber"
     assert instance.wait_for_controller_done.class_name == "WaitForControllerDone"
@@ -86,9 +79,9 @@ def test_image_stage_00000(image_stage) -> None:
     # properties
     assert instance.check_interval == 10
     assert instance.check_timeout == 1800
-    assert instance.rest_send is None
-    assert instance.results is None
-    assert instance.serial_numbers is None
+    assert instance._rest_send.class_name == "RestSend"
+    assert instance._results.class_name == "Results"
+    assert instance.serial_numbers == []
 
 
 @pytest.mark.parametrize(
@@ -119,7 +112,7 @@ def test_image_stage_00100(image_stage, key, expected) -> None:
     correctly-spelled "serialNumbers" key/value (12.1.3b).
     """
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage()._populate_controller_version
         yield responses_ep_version(key)
 
@@ -136,9 +129,9 @@ def test_image_stage_00100(image_stage, key, expected) -> None:
         instance = image_stage
         instance.results = Results()
         instance.rest_send = rest_send
-        instance.controller_version_instance.rest_send = rest_send
+        instance._controller_version_instance.rest_send = rest_send
         instance._populate_controller_version()
-    assert instance.controller_version == expected
+    assert instance._controller_version == expected
 
 
 def test_image_stage_00200(image_stage) -> None:
@@ -169,7 +162,7 @@ def test_image_stage_00200(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().prune_serial_numbers
         yield responses_ep_issu(key)
 
@@ -232,7 +225,7 @@ def test_image_stage_00300(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().validate_serial_numbers
         yield responses_ep_issu(key)
 
@@ -295,7 +288,7 @@ def test_image_stage_00400(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage()._wait_for_image_stage_to_complete
         yield responses_ep_issu(key)
 
@@ -358,7 +351,7 @@ def test_image_stage_00410(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage()._wait_for_image_stage_to_complete
         yield responses_ep_issu(key)
 
@@ -425,7 +418,7 @@ def test_image_stage_00420(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage()._wait_for_image_stage_to_complete
         yield responses_ep_issu(key)
 
@@ -500,7 +493,7 @@ def test_image_stage_00500(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().wait_for_controller
         yield responses_ep_issu(key)
 
@@ -565,7 +558,7 @@ def test_image_stage_00510(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().wait_for_controller
         yield responses_ep_issu(key)
 
@@ -719,76 +712,6 @@ def test_image_stage_00800(image_stage, arg, value, context) -> None:
         assert instance.serial_numbers == value
 
 
-MATCH_00900 = r"ImageStage\.validate_commit_parameters:\s+"
-MATCH_00900 += r"serial_numbers must be set before calling commit\(\)\."
-
-
-@pytest.mark.parametrize(
-    "serial_numbers_is_set, expected",
-    [
-        (True, does_not_raise()),
-        (False, pytest.raises(ValueError, match=MATCH_00900)),
-    ],
-)
-def test_image_stage_00900(image_stage, serial_numbers_is_set, expected) -> None:
-    """
-    ### Classes and Methods
-    -   ``ImageStage``
-            `   ``commit``
-
-    ### Summary
-    Verify that ``commit`` raises ``ValueError`` appropriately based on value of
-    ``serial_numbers``.
-
-    ### Setup
-    - responses_ep_issu() returns 200 responses.
-    - responses_ep_version() returns a 200 response.
-    - responses_ep_image_stage() returns a 200 response.
-
-    ### Test
-    -   ``ValueError`` is raised when serial_numbers is not set.
-    -   ``ValueError`` is not raised when serial_numbers is set.
-    """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
-    def responses():
-        # ImageStage().prune_serial_numbers
-        yield responses_ep_issu(key)
-        # ImageStage().validate_serial_numbers
-        yield responses_ep_issu(key)
-        # ImageStage()._populate_controller_version
-        yield responses_ep_version(key)
-        # RestSend.commit_normal_mode
-        yield responses_ep_image_stage(key)
-
-    gen_responses = ResponseGenerator(responses())
-
-    sender = Sender()
-    sender.ansible_module = MockAnsibleModule()
-    sender.gen = gen_responses
-    rest_send = RestSend(params)
-    rest_send.unit_test = True
-    rest_send.send_interval = 1
-    rest_send.timeout = 1
-    rest_send.response_handler = ResponseHandler()
-    rest_send.sender = sender
-
-    with does_not_raise():
-        instance = image_stage
-        instance.results = Results()
-        instance.rest_send = rest_send
-        instance.check_timeout = 1
-        instance.check_interval = 1
-        instance.issu_detail.rest_send = rest_send
-        instance.issu_detail.results = Results()
-
-    if serial_numbers_is_set:
-        instance.serial_numbers = ["FDO21120U5D"]
-    with expected:
-        instance.commit()
-
-
 @pytest.mark.parametrize(
     "key, controller_version, expected_serial_number_key",
     [
@@ -823,7 +746,7 @@ def test_image_stage_00910(
     based on ``controller_version``.
     """
 
-    def responses():
+    def responses() -> Generator[dict[str, Any], None, None]:
         # ImageStage().prune_serial_numbers
         yield responses_ep_issu(key)
         # ImageStage().validate_serial_numbers
@@ -882,11 +805,8 @@ def test_image_stage_00920(image_stage) -> None:
     When len(serial_numbers) == 0, commit() will set result and
     response properties, and return without doing anything else.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
-    def responses():
-        yield None
+    def responses() -> Generator[dict[str, Any], None, None]:
+        yield {}
 
     gen_responses = ResponseGenerator(responses())
 
@@ -953,7 +873,7 @@ def test_image_stage_00930(image_stage) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().prune_serial_numbers
         yield responses_ep_issu(key)
         # ImageStage().validate_serial_numbers
@@ -1018,7 +938,7 @@ def test_image_stage_00940(image_stage) -> None:
     key_a = f"{method_name}a"
     key_b = f"{method_name}b"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageStage().prune_serial_numbers()
         yield responses_ep_issu(key_a)
         # ImageStage().validate_serial_numbers()

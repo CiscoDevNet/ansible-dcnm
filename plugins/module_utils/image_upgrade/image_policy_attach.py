@@ -26,14 +26,12 @@ import logging
 from ..common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
     EpPolicyAttach
 from ..common.image_policies import ImagePolicies
-from ..common.properties import Properties
-from ..common.results import Results
+from ..common.rest_send_v2 import RestSend
+from ..common.results_v2 import Results
 from .switch_issu_details import SwitchIssuDetailsBySerialNumber
 from .wait_for_controller_done import WaitForControllerDone
 
 
-@Properties.add_rest_send
-@Properties.add_results
 class ImagePolicyAttach:
     """
     ### Summary
@@ -95,8 +93,8 @@ class ImagePolicyAttach:
 
         self._check_interval = 10  # seconds
         self._check_timeout = 1800  # seconds
-        self._rest_send = None
-        self._results = None
+        self._rest_send: RestSend = RestSend({})
+        self._results: Results = Results()
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = f"ENTERED {self.class_name}().{method_name}"
@@ -448,3 +446,73 @@ class ImagePolicyAttach:
         if value < 0:
             raise ValueError(msg)
         self._check_timeout = value
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        ### Summary
+        An instance of the RestSend class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of RestSend.
+
+        ### getter
+        Return an instance of the RestSend class.
+
+        ### setter
+        Set an instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            raise ValueError(f"{self.class_name}.{method_name}: RestSend.params must be set.")
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        ### Summary
+        An instance of the Results class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of Results.
+
+        ### getter
+        Return an instance of the Results class.
+
+        ### setter
+        Set an instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._results = value
