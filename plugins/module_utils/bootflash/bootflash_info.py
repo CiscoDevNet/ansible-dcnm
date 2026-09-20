@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Retrieve and filter bootflash contents.
+"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type  # pylint: disable=invalid-name
@@ -40,12 +43,15 @@ class BootflashInfo:
 
     ## Raises
 
-    -   ``ValueError`` if:
-            -   params is not set.
-            -   switches is not set.
-    -   ``TypeError`` if:
-            -   switches is not a list.
-            -   switches contains anything other than strings.
+    ### ValueError
+
+    - params is not set.
+    - switches is not set.
+
+    ### TypeError
+
+    - switches is not a list.
+    - switches contains anything other than strings.
 
     ## Usage
 
@@ -265,10 +271,11 @@ class BootflashInfo:
 
         ## Raises
 
-        -   `ValueError` if:
-                -   self.rest_send.params is not set.
-                -   self.switches is not set.
-                -   switches is not set.
+        ### ValueError
+
+        -   self.rest_send.params is not set.
+        -   self.switches is not set.
+        -   switches is not set.
         """
         method_name: str = inspect.stack()[0][3]
 
@@ -293,8 +300,9 @@ class BootflashInfo:
 
         ## Raises
 
-        -   `ValueError` if:
-                -   switches is not set.
+        ### ValueError
+
+        - switches is not set.
 
         """
         self.validate_refresh_parameters()
@@ -318,8 +326,9 @@ class BootflashInfo:
 
         ## Raises
 
-        -   `ValueError` if:
-                -   serial_number cannot be found for a switch.
+        ### ValueError
+
+        - serial_number cannot be found for a switch.
         """
         method_name: str = inspect.stack()[0][3]
         self.info_dict = {}
@@ -355,13 +364,13 @@ class BootflashInfo:
         """
         # Summary
 
-        Verify that mandatory prerequisites are met before calling
-        `build_matches()`.
+        Verify that mandatory prerequisites are met before calling `build_matches()`.
 
         ## Raises
 
-        -   `ValueError` if:
-                -   info_dict is empty i.e. `refresh` has not been called.
+        ### ValueError
+
+        - info_dict is empty i.e. `refresh` has not been called.
         """
         method_name: str = inspect.stack()[0][3]
 
@@ -373,10 +382,10 @@ class BootflashInfo:
 
     def match_filter_filepath(self, target: dict[str, str]) -> bool:
         """
-        ## Summary
+        # Summary
 
-        -   Return True if the target's `filepath` matches `filter_filepath`.
-        -   Return False otherwise.
+        - Return True if the target's `filepath` matches `filter_filepath`.
+        - Return False otherwise.
 
         ## Raises
 
@@ -384,7 +393,7 @@ class BootflashInfo:
         """
         if not self.filter_filepath:
             return False
-        filepath: str = target.get("filepath") or ""
+        filepath: str = target.get("filepath", "")
         posix: PurePosixPath = PurePosixPath(filepath)
         if not posix.match(self.filter_filepath):
             return False
@@ -394,8 +403,8 @@ class BootflashInfo:
         """
         # Summary
 
-        -   Return True if the target's `bootflash_type` matches `filter_supervisor`.
-        -   Return False otherwise.
+        - Return True if the target's `bootflash_type` matches `filter_supervisor`.
+        - Return False otherwise.
 
         ## Raises
 
@@ -403,7 +412,7 @@ class BootflashInfo:
         """
         if not self.filter_supervisor:
             return False
-        if target.get("supervisor", None) != self.filter_supervisor:
+        if target.get("supervisor", "") != self.filter_supervisor:
             return False
         return True
 
@@ -411,8 +420,8 @@ class BootflashInfo:
         """
         # Summary
 
-        -   Return True if the target's `ip_address` matches `filter_switch`.
-        -   Return False otherwise.
+        - Return True if the target's `ip_address` matches `filter_switch`.
+        - Return False otherwise.
 
         ## Raises
 
@@ -420,7 +429,7 @@ class BootflashInfo:
         """
         if not self.filter_switch:
             return False
-        if target.get("ip_address", None) != self.filter_switch:
+        if target.get("ip_address", "") != self.filter_switch:
             return False
         return True
 
@@ -463,8 +472,8 @@ class BootflashInfo:
 
         diff: dict[str, list[dict[str, str]]] = {}
         for match in self._matches:
-            ip_address = match.get("ip_address", None)
-            if ip_address is None:
+            ip_address = match.get("ip_address", "")
+            if not ip_address:
                 continue
             if ip_address not in diff:
                 diff[ip_address] = []
@@ -478,8 +487,7 @@ class BootflashInfo:
 
         Return the current `filter_filepath`.
 
-        `filter_filepath` is a file path used to filter the results
-        of the query.  It can include file globbing.
+        `filter_filepath` is a file path used to filter the results of the query.  It can include file globbing.
 
         ## Raises
 
@@ -487,10 +495,10 @@ class BootflashInfo:
 
         ## Examples
 
-        -   All txt files in the bootflash directory
-            -   instance.filter_filepath = "bootflash:/*.txt"
-        -   All txt files on all flash devices
-            -   instance.filter_filepath = "*:/*.txt"
+        - All txt files in the bootflash directory
+          - instance.filter_filepath = "bootflash:/*.txt"
+        - All txt files on all flash devices
+          - instance.filter_filepath = "*:/*.txt"
         """
         return self._filter_filepath
 
@@ -513,9 +521,9 @@ class BootflashInfo:
 
         ## Raises
 
-        -   `ValueError` if:
-            -   value is not one of the valid_supervisor values
-                "active" or "standby".
+        ### ValueError
+
+        - `value` is not one of the valid_supervisor values "active" or "standby".
 
         ## Example
 
@@ -604,26 +612,18 @@ class BootflashInfo:
         """
         # Summary
 
-        An instance of the RestSend class.
+        Get/set an instance of the RestSend class.
 
         ## Raises
 
-        -   setter: `TypeError` if the value is not an instance of RestSend.
-        -   getter: `ValueError` if RestSend.params is not set.
+        ### TypeError
 
-        ## getter
+        -   setter: if the value is not an instance of RestSend.
 
-        Return an instance of the RestSend class.
+        ### ValueError
 
-        ## setter
-
-        Set an instance of the RestSend class.
+        -   getter: if RestSend.params is not set.
         """
-        method_name: str = inspect.stack()[0][3]
-        if not self._rest_send.params:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "RestSend.params must be set before accessing."
-            raise ValueError(msg)
         return self._rest_send
 
     @rest_send.setter
@@ -641,6 +641,10 @@ class BootflashInfo:
             raise TypeError(msg) from error
         if _class_have != _class_need:
             raise TypeError(msg)
+        if not value.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set."
+            raise ValueError(msg)
         self._rest_send = value
 
     @property
@@ -648,19 +652,14 @@ class BootflashInfo:
         """
         # Summary
 
-        An instance of the Results class.
+        Get/set an instance of the Results class.
 
         ## Raises
 
-        -   setter: `TypeError` if the value is not an instance of Results.
+        ### TypeError
 
-        ## getter
+        -   setter: if the value is not an instance of Results.
 
-        Return an instance of the Results class.
-
-        ## setter
-
-        Set an instance of the Results class.
         """
         return self._results
 
@@ -690,7 +689,9 @@ class BootflashInfo:
 
         ## Raises
 
-        -   `TypeError` if `switch_details` is not an instance of `SwitchDetails()`.
+        ### TypeError
+
+        - `switch_details` is not an instance of `SwitchDetails()`.
         """
         return self._switch_details
 
@@ -720,13 +721,14 @@ class BootflashInfo:
 
         ## Raises
 
-        - getter: None
-        - setter:
-          - `TypeError` if:
-            - switches is not a list.
-            - switches contains anything other than strings.
-          - `ValueError` if:
-            - switches list is empty.
+        ### TypeError
+
+        - setter: switches is not a list.
+        - setter: switches contains anything other than strings.
+
+        ### ValueError
+
+        - setter: switches list is empty.
 
         ## Example
 
