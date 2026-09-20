@@ -53,7 +53,7 @@ class FabricGroupDetails:
 
     ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
 
     params = {"check_mode": False, "state": "merged"}
@@ -83,7 +83,7 @@ class FabricGroupDetails:
 
     ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
 
     params = {"check_mode": False, "state": "merged"}
