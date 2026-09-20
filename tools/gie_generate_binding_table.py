@@ -460,6 +460,27 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "DAMPENING_MAX_SUPPRESS"): "dampening_max_suppress",
     ("int_routed_host", "DAMPENING_RESTART"): "dampening_restart",
     ("int_routed_host", "DAMPENING_RESTART_PENALTY"): "dampening_restart_penalty",
+    # --- ARP_TIMEOUT on the three overlay parents (slice 0b_30) ---
+    #
+    # El caso mas simple del registro: UN campo, un hijo, una linea de CLI
+    # (`interface_ip_arp_timeout_11_1` -> `ip arp timeout $$ARP_TIMEOUT$$`), sin gate booleano,
+    # sin dependencias entre campos y sin IsShow. int_loopback no lo declara.
+    #
+    # `integer ARP_TIMEOUT { min=60; max=28800; }`, identico en los tres, SIN defaultValue.
+    # Esa ausencia es la forma que hizo abortar el lote de redirects, y aqui no necesita cambio
+    # en el engine: la exencion (3) de gie_validate_binding_value ya acepta "" para un integer
+    # leido de HAVE, por el mismo camino que OSPF_COST. Verificado leyendo el codigo ANTES.
+    #
+    # El equipo lo soporta -- la sonda de la fase 33 mando `ip arp timeout 300` y la linea
+    # aterrizo -- a diferencia de dampening, justo arriba, cuyo CLI no existe en esta plataforma.
+    #
+    # ABIERTO: ninguno de los tres cuerpos llama deleteChildTemplate para este hijo, y el gate
+    # de emision es `if arpTimeout != ""`. O sea que un "" no pide retirar el hijo ya
+    # instanciado. Es el mecanismo del residuo que la ronda de EIGRP dejo en una fisica, y por
+    # eso las tres filas van con removal_semantics: unresolved hasta medirlo en vivo.
+    ("int_routed_host", "ARP_TIMEOUT"): "arp_timeout",
+    ("int_subif", "ARP_TIMEOUT"): "arp_timeout",
+    ("int_vlan", "ARP_TIMEOUT"): "arp_timeout",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.

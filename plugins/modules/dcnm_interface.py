@@ -3376,6 +3376,17 @@ class DcnmIntf:
                     # message actionable: the common failure is a Jinja template rendering
                     # an unquoted `| default('')`, which YAML reads as null, and "expected a
                     # string" alone does not point anywhere near that.
+                    #
+                    # The engine raises this for ANY reason it refuses a value -- native type,
+                    # enum membership, string length, numeric range -- so each of those has to
+                    # be named here or the message describes the wrong problem. The numeric
+                    # range was missing, and the result contradicted itself: arp_timeout=30 on
+                    # a 60..28800 binding answered "'arp_timeout' must be a native integer,
+                    # given an integer", which is nonsense AND silent about the 60 that would
+                    # tell the operator what to fix. Measured on a live fabric 2026-09-20; 45
+                    # rows across 20 public keys declare a range, so this was never specific
+                    # to one field. No earlier round caught it because their negative stages
+                    # exercised TEMPLATE dependency rules, never the registry's own bounds.
                     binding = resolve_binding(parent, profile_key)
                     expected = binding["type"]
                     if binding.get("valid_values"):
@@ -3387,6 +3398,22 @@ class DcnmIntf:
                             expected,
                             binding.get("min_length", 0),
                             binding.get("max_length", "unbounded"),
+                        )
+                    elif (
+                        binding.get("min_value") is not None
+                        or binding.get("max_value") is not None
+                    ):
+                        # `is not None`, not truthiness, because min_value 0 is a real bound
+                        # (hsrp_groupv6, hsrp_preempt_delay_minimum, ospf_priority,
+                        # ospf_auth_key_id). This is DEFENSIVE, not a live fix: all four also
+                        # declare a max_value, so plain `or` would reach this branch anyway
+                        # today -- measured, 0 rows declare only one of the two bounds. It
+                        # matters for the first row that declares a minimum of 0 and no
+                        # maximum, where `or` would drop the range from the message entirely.
+                        expected = "{0} (range {1}..{2})".format(
+                            expected,
+                            binding.get("min_value", "unbounded"),
+                            binding.get("max_value", "unbounded"),
                         )
                     self.module.fail_json(
                         msg="Invalid parameters in playbook: while processing interface "

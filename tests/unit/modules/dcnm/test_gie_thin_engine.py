@@ -376,6 +376,16 @@ DAMPENING_ROWS = {
 }
 
 
+# ARP_TIMEOUT, slice 0b_3. TRES, uno por padre overlay -- int_loopback no lo declara. El caso
+# mas simple de la tabla: un campo, un hijo (interface_ip_arp_timeout_11_1 -> `ip arp timeout`),
+# una linea, sin gate booleano y sin dependencias entre campos. El numero es la asercion: un
+# cuarto querria decir que entro int_loopback, que no declara ARP_TIMEOUT.
+ARP_ROWS = {
+    (parent, "ARP_TIMEOUT", "arp_timeout")
+    for parent in ("int_routed_host", "int_subif", "int_vlan")
+}
+
+
 # ---- binding package runtime contract ----
 def test_package_provenance_and_size():
     expected_keys = (
@@ -383,13 +393,13 @@ def test_package_provenance_and_size():
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
-        | REDIRECTS_ROWS | DAMPENING_ROWS
+        | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 207
+    assert len(BINDING_TABLE) == len(actual_keys) == 210
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -414,6 +424,7 @@ def test_package_provenance_and_size():
     # decir que int_loopback entro, y ese padre no declara ninguno de los tres.
     assert len(REDIRECTS_ROWS) == 9
     assert len(DAMPENING_ROWS) == 7
+    assert len(ARP_ROWS) == 3
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -435,7 +446,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 207
+    assert len(rows) == 210
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -822,6 +833,10 @@ def test_all_registered_and_guarded_keys():
         # nunca en el equipo. Ver phase39.
         "enable_dampening", "dampening_half_life", "dampening_reuse", "dampening_suppress",
         "dampening_max_suppress", "dampening_restart", "dampening_restart_penalty",
+        # ARP_TIMEOUT, slice 0b_3, registrado por fin (2026-09-20). UNA clave publica en los
+        # tres padres overlay; int_loopback no lo declara. El caso mas simple del registro:
+        # un campo, un hijo, una linea de CLI, sin gate ni dependencias. Ver phase41.
+        "arp_timeout",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -890,6 +905,10 @@ def test_all_registered_and_guarded_keys():
         # nunca en el equipo. Ver phase39.
         "enable_dampening", "dampening_half_life", "dampening_reuse", "dampening_suppress",
         "dampening_max_suppress", "dampening_restart", "dampening_restart_penalty",
+        # ARP_TIMEOUT, slice 0b_3, registrado por fin (2026-09-20). UNA clave publica en los
+        # tres padres overlay; int_loopback no lo declara. El caso mas simple del registro:
+        # un campo, un hijo, una linea de CLI, sin gate ni dependencias. Ver phase41.
+        "arp_timeout",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -965,6 +984,93 @@ def test_module_parent_guard_preserves_unknown_legacy_discard_behavior():
     obj = _parent_guard_obj({"mode": "routed", "unknown_legacy_key": "x"})
     obj.dcnm_intf_gie_validate_parent_bindings()
     obj.module.fail_json.assert_not_called()
+
+
+# ---- the rejection message has to name the reason the engine actually refused ----
+#
+# This guard catches GieBindingError, which the engine raises for FOUR different reasons, and
+# then builds its own message. Each reason needs its own branch: without one the message falls
+# back to describing the native type, and says something both wrong and useless.
+#
+# Measured on a live fabric 2026-09-20. `arp_timeout: 30` against a 60..28800 binding answered:
+#
+#     'arp_timeout' must be a native integer, given an integer
+#
+# -- a sentence that contradicts itself and never mentions the 60 the operator has to fix. 45
+# rows across 20 public keys declare a range, so it was never about arp_timeout; no earlier
+# round hit it because every negative stage so far exercised TEMPLATE dependency rules rather
+# than the registry's own bounds.
+
+def _guard_msg(profile):
+    obj = _parent_guard_obj(profile)
+    with pytest.raises(RuntimeError, match="fail_json"):
+        obj.dcnm_intf_gie_validate_parent_bindings()
+    return obj.module.fail_json.call_args.kwargs["msg"]
+
+
+@pytest.mark.parametrize("value", [30, 59, 0, 28801, 100000])
+def test_an_out_of_range_integer_message_names_the_range(value):
+    msg = _guard_msg({"mode": "routed", "arp_timeout": value})
+    assert "arp_timeout" in msg
+    assert "range 60..28800" in msg, (
+        "the message must name the bound the operator has to satisfy; got: {0}".format(msg)
+    )
+    # The self-contradicting form this test exists to prevent.
+    assert "must be a native integer, given an integer" not in msg
+
+
+def test_a_zero_minimum_is_printed_as_a_bound_not_as_unbounded():
+    """A minimum of 0 is a real bound and must appear as 0.
+
+    Four registered keys have one: hsrp_groupv6, hsrp_preempt_delay_minimum, ospf_priority and
+    ospf_auth_key_id. ospf_priority is on the routed parent this fixture reaches, 0..255.
+    """
+    msg = _guard_msg({"mode": "routed", "ospf_priority": 256})
+    assert "range 0..255" in msg, msg
+
+
+def test_a_bound_declared_alone_still_reaches_the_range_branch(monkeypatch):
+    """The reason the branch tests ``is not None`` rather than truthiness.
+
+    Measured: 0 of the 210 rows declare only one of the two bounds, so today a plain
+    ``min_value or max_value`` would reach this branch anyway -- every row with a 0 minimum
+    also has a maximum that makes the `or` true. The guard is for the FIRST row that declares a
+    minimum of 0 and no maximum, where truthiness would drop the range from the message and
+    send the operator back to "must be a native integer, given an integer".
+
+    Asserted on a synthetic binding, because asserting it on the real table is impossible while
+    no such row exists -- and writing a test that cannot fail would be worse than no test. A
+    sabotage run confirms it: replacing ``is not None`` with ``or`` fails this case and only
+    this case.
+    """
+    from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as mod
+
+    real = mod.resolve_binding
+
+    def solo_min(parent, key):
+        b = real(parent, key)
+        if b is not None and key == "arp_timeout":
+            b = dict(b, min_value=0)
+            b.pop("max_value", None)
+        return b
+
+    monkeypatch.setattr(mod, "resolve_binding", solo_min)
+    msg = _guard_msg({"mode": "routed", "arp_timeout": -1})
+    assert "range 0..unbounded" in msg, msg
+    assert "must be a native integer, given an integer" not in msg
+
+
+def test_every_reason_the_engine_refuses_a_value_is_named_in_the_message():
+    """One case per branch, so a fifth reason added later fails here instead of silently
+    falling back to the native-type wording."""
+    # native type: a string where the binding wants a boolean
+    assert "boolean" in _guard_msg({"mode": "routed", "disable_lldp_transmit": "yes"})
+    # enum membership
+    assert "one of:" in _guard_msg({"mode": "trunk", "guard_mode": "not_a_choice"})
+    # string length: acl_filter is 1..64
+    assert "length 1..64" in _guard_msg({"mode": "trunk", "acl_filter": "x" * 65})
+    # numeric range
+    assert "range 60..28800" in _guard_msg({"mode": "routed", "arp_timeout": 30})
 
 
 # ---- module path: intent survives profile -> validated field -> parent nvPair -> payload ----

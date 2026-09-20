@@ -102,10 +102,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 207
-    assert len(set(keys)) == 207, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 210
+    assert len(set(keys)) == 210, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 207, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 210, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -163,7 +163,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 207
+    assert len(gen.compile_rows(rows)) == 210
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -201,18 +201,26 @@ def test_generator_rejects_an_unexpected_binding_claiming_a_committed_key():
 
 
 def test_generator_still_ignores_unrelated_uncommitted_rows():
-    """A row with no committed public key is simply not selected (legacy behaviour)."""
+    """A row with no committed public key is simply not selected (legacy behaviour).
+
+    The fixture is a deliberately SYNTHETIC nvPair. It used to be int_routed_host::ARP_TIMEOUT,
+    which broke the day that lot was committed -- the row stopped being uncommitted and the
+    generator raised "duplicate committed binding" instead. Any real unregistered nvPair is the
+    same time bomb, because the whole point of the backlog is that they eventually get
+    registered. A name no template will ever declare keeps the assertion about the generator's
+    behaviour rather than about which fields happen to be pending.
+    """
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
     rows.append({
         "parent_template": "int_routed_host",
-        "parent_nvpair": "ARP_TIMEOUT",
-        "profile_key": "arp_timeout",
+        "parent_nvpair": "WP98_SYNTHETIC_NOT_A_REAL_NVPAIR",
+        "profile_key": "wp98_synthetic_not_a_real_key",
         "type": "integer",
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 207
+    assert len(gen.compile_rows(rows)) == 210
 
 
 # ------------------------------------------------------------------ positive transport
@@ -586,7 +594,10 @@ def test_keymap_carries_every_new_nvpair():
     assert km["IPV6_ND_SUPPRESS_RA"] == "ipv6_nd_suppress_ra"
     assert km["ENABLE_DAMPENING"] == "enable_dampening"
     assert km["DAMPENING_RESTART_PENALTY"] == "dampening_restart_penalty"
-    assert len(km) == 65
+    assert km["ARP_TIMEOUT"] == "arp_timeout"
+    # 66 = 65 + ARP_TIMEOUT. Una sola clave nueva para tres filas: el mismo nombre publico en
+    # los tres padres, que es el punto de llavear por (parent, nvpair) y no por nombre.
+    assert len(km) == 66
 
 
 def test_all_registered_keys():
@@ -646,6 +657,10 @@ def test_all_registered_keys():
         # nunca en el equipo. Ver phase39.
         "enable_dampening", "dampening_half_life", "dampening_reuse", "dampening_suppress",
         "dampening_max_suppress", "dampening_restart", "dampening_restart_penalty",
+        # ARP_TIMEOUT, slice 0b_3, registrado por fin (2026-09-20). UNA clave publica en los
+        # tres padres overlay; int_loopback no lo declara. El caso mas simple del registro:
+        # un campo, un hijo, una linea de CLI, sin gate ni dependencias. Ver phase41.
+        "arp_timeout",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was

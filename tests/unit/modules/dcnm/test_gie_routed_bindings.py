@@ -17,12 +17,13 @@ binding owning a dedicated compat/validation path -- the OSPF-MD case) and these
 the two are not confused, because reading "the template delegates to a child" as "therefore
 child_pti" is the obvious wrong turn here.
 
-ARP_TIMEOUT is declared by this template too and is deliberately NOT here: int_subif and
-int_vlan declare it as well and all three are reachable (pol_types "sub_int_subint",
-"svi_vlan", "eth_routed"), so committing it on the routed parent alone would make the module
-answer "not supported" for the other two. It goes in as one lot across the three. The generator
-caught that, not a review -- it rejects a row claiming a committed public profile_key from an
-uncommitted parent.
+ARP_TIMEOUT used to be excluded here on purpose, because int_subif and int_vlan declare it as
+well and all three are reachable (pol_types "sub_int_subint", "svi_vlan", "eth_routed"), so
+committing it on the routed parent alone would have made the module answer "not supported" for
+the other two. It went in on 2026-09-20 as one lot across the three, which is the condition the
+exclusion was protecting. The generator is what enforced it, not a review -- it rejects a row
+claiming a committed public profile_key from an uncommitted parent, and it is also what caught
+that slice 0b_3 already held these three rows unregistered.
 
 What these cases cannot prove: that the child templates exist on the controller. They were
 verified present on 12.6.0.267 out of band. A missing child would transport the nvPair, return
@@ -74,6 +75,10 @@ EXPECTED = {
     "disable_ipv4_redirects": ("DISABLE_IPV4_REDIRECTS", "boolean"),
     "disable_ipv6_redirects": ("DISABLE_IPV6_REDIRECTS", "boolean"),
     "ipv6_nd_suppress_ra": ("IPV6_ND_SUPPRESS_RA", "boolean"),
+    # ARP_TIMEOUT, slice 0b_3. El unico campo de la tabla cuyo rango en la DECLARACION cambio
+    # despues de escribirse la fila: la batch del 14sep le puso min=60/max=28800 a un
+    # `integer ARP_TIMEOUT;` que no tenia ninguno.
+    "arp_timeout": ("ARP_TIMEOUT", "integer"),
     # Dampening, slice 0b_6. Solo este padre lo declara; su CLI no existe en C9300v.
     "enable_dampening": ("ENABLE_DAMPENING", "boolean"),
     "dampening_half_life": ("DAMPENING_HALF_LIFE", "integer"),
@@ -136,24 +141,42 @@ def test_every_routed_key_is_covered_by_the_generic_parent_guard():
     assert set(EXPECTED).issubset(gie_guarded_keys())
 
 
-def test_arp_timeout_stays_out_until_all_three_parents_go_in_together():
-    """Pin the exclusion so it is a decision, not an oversight someone "fixes".
+def test_arp_timeout_landed_on_all_three_parents_as_one_lot():
+    """INVERTED. This used to pin the EXCLUSION; the lot landed, so now it pins the condition.
 
-    int_routed_host declares ARP_TIMEOUT, so registering it here looks obviously right. It is
-    not: int_subif and int_vlan declare it too and all three are reachable from a playbook.
-    Committing one parent would make the module report "not supported on this interface" for
-    the other two -- a false answer, which is the exact defect this table exists to prevent.
+    The condition it guarded was "all three parents or none": int_subif and int_vlan declare
+    ARP_TIMEOUT too and all three are reachable from a playbook, so committing one alone would
+    make the module answer "not supported on this interface" for the other two -- a false
+    answer, which is the defect this table exists to prevent. Still asserted, from the other
+    side: all three must resolve.
 
-    When the lot does land, two measured facts must survive: the bound lives in the template
-    BODY (`if int(arpTimeout) <= 0` rejects with "ARP timeout must be a positive integer"), not
-    in the `integer ARP_TIMEOUT;` declaration -- so the engine will not catch a 0, the
-    controller will; and it must carry no default_template, because the template declares none.
+    Its second claim is now WRONG, and the reason is worth keeping. It said the bound lives in
+    the template BODY and not in the declaration, "so the engine will not catch a 0, the
+    controller will". That was true of the body it was written against:
+
+        before the 14sep batch   integer ARP_TIMEOUT;
+        current body             integer ARP_TIMEOUT { min = 60; max = 28800; }
+
+    The declaration gained the bound and nothing announced it. So the engine DOES catch an
+    out-of-range value now, and the registry carries 60..28800 -- the declaration's numbers,
+    which the child template repeats -- rather than the body's laxer `<= 0`. A 30 is refused
+    here before anything is sent, which makes the body's rule unreachable from the module.
+
+    The third claim survives untouched: no default_template, because the template declares none.
     """
-    assert resolve_binding(PARENT, "arp_timeout") is None
-    for other in ("int_subif", "int_vlan"):
-        assert resolve_binding(other, "arp_timeout") is None, (
-            "{0} got arp_timeout on its own; the three parents go in as one lot".format(other)
+    for parent in (PARENT, "int_subif", "int_vlan"):
+        b = resolve_binding(parent, "arp_timeout")
+        assert b is not None, (
+            "{0} lost arp_timeout; the three parents go in as one lot".format(parent)
         )
+        assert b["parent_nvpair"] == "ARP_TIMEOUT"
+        assert b["type"] == "integer"
+        assert b["mechanism"] == "passthrough"
+        # The declaration's bound, not the body's `<= 0`. Spelled min_value/max_value in the
+        # runtime table: the registry says min/max and the generator renames them, so that a
+        # substring search for "min" does not also hit min_ndfc_version and min_length.
+        assert (b["min_value"], b["max_value"]) == (60, 28800)
+        assert "default_template" not in b, "the template declares no ARP_TIMEOUT default"
 
 
 def test_ipv4_acl_in_carries_the_template_length_constraints():
