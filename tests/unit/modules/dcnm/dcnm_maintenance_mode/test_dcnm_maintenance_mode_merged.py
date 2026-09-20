@@ -30,22 +30,22 @@ import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import \
-    Merged
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import Merged
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import (
-    MockAnsibleModule, configs_merged, does_not_raise, params,
-    responses_ep_all_switches, responses_ep_fabrics,
+    MockAnsibleModule,
+    configs_merged,
+    does_not_raise,
+    params,
+    responses_ep_all_switches,
+    responses_ep_fabrics,
     responses_ep_maintenance_mode_deploy,
     responses_ep_maintenance_mode_disable,
-    responses_ep_maintenance_mode_enable)
+    responses_ep_maintenance_mode_enable,
+)
 
 
 def test_dcnm_maintenance_mode_merged_00000() -> None:
@@ -606,9 +606,7 @@ def test_dcnm_maintenance_mode_merged_00150() -> None:
         instance.rest_send = rest_send
         instance.config = params_test.get("config")
     match = r"Merged\.fabric_deployment_disabled:\s+"
-    match += (
-        r"The hosting fabric is in 'Deployment Disable' state for the switch with\s+"
-    )
+    match += r"The hosting fabric is in 'Deployment Disable' state for the switch with\s+"
     match += r"ip_address 192\.168\.1\.2,\s+"
     match += r"serial_number FD2222222GA\.\s+"
     match += r"Review the 'Deployment Enable / Deployment Disable' setting on the controller at:\s+"
@@ -902,9 +900,7 @@ def test_dcnm_maintenance_mode_merged_00700(monkeypatch) -> None:
     match += r"Error detail:\s+"
     match += r"MockMaintenanceModeInfo\.refresh: Mocked ValueError\."
     with pytest.raises(ValueError, match=match):
-        monkeypatch.setattr(
-            instance, "maintenance_mode", MockMaintenanceMode(params_test)
-        )
+        monkeypatch.setattr(instance, "maintenance_mode", MockMaintenanceMode(params_test))
         instance.commit()
 
     assert len(instance.results.diff) == 2
