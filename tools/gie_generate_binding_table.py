@@ -348,6 +348,20 @@ COMMITTED_BINDINGS = {
     ("int_loopback", "ENABLE_EIGRP_SHUTDOWN"): "enable_eigrp_shutdown",
     ("int_loopback", "ENABLE_EIGRP_BFD"): "enable_eigrp_bfd",
     ("int_loopback", "DISABLE_EIGRP_BFD"): "disable_eigrp_bfd",
+    # --- HSRP on int_vlan (slice 0b_26) ---
+    #
+    # The first three rows that sit on top of MODULE-NATIVE fields. enable_hsrp, hsrp_vip,
+    # hsrp_group, preempt and hsrp_priority are already in the native SVI arg spec; the engine
+    # contributes only these three, which it does not carry. So they cannot be exercised alone --
+    # a round has to build a working HSRP group with the native fields first.
+    #
+    # int_vlan is the only parent of the four that declares HSRP. The template enforces the whole
+    # dependency chain itself (six rules around :782-:830), including `lower cannot be greater
+    # than upper` -- a relationship BETWEEN two fields that no per-field min/max can express and
+    # the registry cannot declare. Not duplicated here; NDFC fails loudly on it.
+    ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER"): "hsrp_priority_forwarding_threshold_lower",
+    ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_UPPER"): "hsrp_priority_forwarding_threshold_upper",
+    ("int_vlan", "HSRP_PREEMPT_DELAY_MINIMUM"): "hsrp_preempt_delay_minimum",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.
