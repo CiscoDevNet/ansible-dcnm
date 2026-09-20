@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 06f2416df6506b5b97852af2b30a8bfd065e26a96dd40434eafd7c98e14b5274
+# provenance_sha256 = bc4c3a3efc8e1b3c6e9812ec71722aba380c54e7e18c5480d4d4d7995b16f983
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "06f2416df6506b5b97852af2b30a8bfd065e26a96dd40434eafd7c98e14b5274"
+PROVENANCE_SHA256 = "bc4c3a3efc8e1b3c6e9812ec71722aba380c54e7e18c5480d4d4d7995b16f983"
 
 BINDING_TABLE = (
     {
@@ -1930,6 +1930,45 @@ BINDING_TABLE = (
         'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'HSRP_PREEMPT_DELAY_MINIMUM',
+        'profile_key': 'hsrp_preempt_delay_minimum',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 0,
+        'max_value': 3600,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER',
+        'profile_key': 'hsrp_priority_forwarding_threshold_lower',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 0,
+        'max_value': 255,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'HSRP_PRIORITY_FORWARDING_THRESHOLD_UPPER',
+        'profile_key': 'hsrp_priority_forwarding_threshold_upper',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 0,
+        'max_value': 255,
         'no_log': False,
     },
     {

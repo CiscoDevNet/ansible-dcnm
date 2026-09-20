@@ -248,6 +248,18 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_vlan", "BFD_MIN_RX_INTERVAL"),
         ("int_vlan", "BFD_MULTIPLIER"),
         ("int_vlan", "BFD_TX_INTERVAL"),
+        # The three HSRP integers of slice 0b_26 take the same exemption, and the decision is
+        # recorded here rather than absorbed by a passing test. NDFC hands all three back as
+        # strings, exactly like OSPF_COST, so validating against the returned string is the same
+        # choice for the same reason.
+        #
+        # What they do NOT inherit: the template's rule that the lower threshold cannot exceed
+        # the upper one is a relationship BETWEEN two of these integers. Neither this exemption
+        # nor the registry's per-field min/max can express it; NDFC enforces it and fails loudly.
+        # This list is about representation, not about that constraint.
+        ("int_vlan", "HSRP_PREEMPT_DELAY_MINIMUM"),
+        ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER"),
+        ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_UPPER"),
         ("int_vlan", "OSPF_AUTH_KEY_ID"),
         ("int_vlan", "OSPF_COST"),
         ("int_vlan", "OSPF_DEAD_INTERVAL"),
