@@ -513,6 +513,29 @@ COMMITTED_BINDINGS = {
     ("int_subif", "PIM_DR_PRIORITY"): "pim_dr_priority",
     ("int_vlan", "PIM_DR_PRIORITY"): "pim_dr_priority",
     ("int_routed_host", "ENABLE_PIM_BFD_INSTANCE"): "enable_pim_bfd_instance",
+    # --- IPv6 link-local on the three overlay parents (slice 0b_32) ---
+    #
+    # TRES: int_loopback no lo declara. Hijo instalado,
+    # interface_ipv6_link_local_address_11_1 -> `ipv6 link-local $$IPV6_LINK_LOCAL$$`.
+    #
+    # LA CLAVE ES `IPv6_LINK_LOCAL`, CON v MINUSCULA. El padre la declara asi y traduce el mismo
+    # al llamar al hijo, que la espera en mayusculas:
+    #     ipv6LinkLocal = normalize(IPv6_LINK_LOCAL)   ->   {"IPV6_LINK_LOCAL": ipv6LinkLocal}
+    # El modulo escribe en los nvPairs del PADRE, asi que va la forma del padre. Copiar la del
+    # hijo -- que es la que se ve al leer el CLI -- haria que NDFC guardara una clave que nadie
+    # lee: exito reportado, linea ausente. Misma forma que PREFIXv6 frente a IPv6_PREFIX.
+    #
+    # El template lo declara `ipV6Address` y se registra `string` con max_length 45, igual que
+    # HSRP_VIPv6, que es `ipV6Address` tambien. _TYPE_TO_VALIDATOR no conoce ese tipo y
+    # registrarlo dejaria el binding inalcanzable por fail-closed -- lo mismo que habria pasado
+    # con `long` en PIM_DR_PRIORITY.
+    #
+    # NO se registran ipv6_addr ni ipv6_mask_len, la otra mitad de esta familia: son NATIVOS del
+    # arg spec de SVI (24 y 13 usos) y registrarlos romperia int_subif e int_routed_host por el
+    # guard global, que es exactamente lo que paso con ipv6_addr el 20sep.
+    ("int_routed_host", "IPv6_LINK_LOCAL"): "ipv6_link_local",
+    ("int_subif", "IPv6_LINK_LOCAL"): "ipv6_link_local",
+    ("int_vlan", "IPv6_LINK_LOCAL"): "ipv6_link_local",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.

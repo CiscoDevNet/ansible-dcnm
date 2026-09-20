@@ -102,10 +102,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 218
-    assert len(set(keys)) == 218, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 221
+    assert len(set(keys)) == 221, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 218, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 221, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -185,7 +185,7 @@ def _as_slice_rows(rows):
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 218
+    assert len(gen.compile_rows(rows)) == 221
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -210,14 +210,14 @@ def test_generator_enforces_the_registry_schema_per_row():
 
     So the gate moved into compile_rows(), which runs on every regeneration. This case exists so
     it cannot quietly stop enforcing: every rule is asserted by sabotage, and the error has to
-    NAME the offending row, because "schema error" on a 218-row table is not actionable.
+    NAME the offending row, because "schema error" on a 221-row table is not actionable.
 
     Not re-asserted here -- compile_rows owns them above, with their own cases: the allowlist,
     duplicates, profile_key mismatch, unknown mechanism, complete-set.
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 218
+    assert len(gen.compile_rows(rows)) == 221
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -313,7 +313,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 218
+    assert len(gen.compile_rows(rows)) == 221
 
 
 # ------------------------------------------------------------------ positive transport
@@ -691,10 +691,16 @@ def test_keymap_carries_every_new_nvpair():
     assert km["ENABLE_PIM_SPARSE"] == "enable_pim_sparse"
     assert km["PIM_DR_PRIORITY"] == "pim_dr_priority"
     assert km["ENABLE_PIM_BFD_INSTANCE"] == "enable_pim_bfd_instance"
+    # La forma del PADRE, con v minuscula. El hijo la espera en mayusculas y el padre traduce;
+    # esta asercion es lo que impide que alguien "corrija" la capitalizacion y rompa el binding
+    # en silencio.
+    assert km["IPv6_LINK_LOCAL"] == "ipv6_link_local"
+    assert "IPV6_LINK_LOCAL" not in km, "esa es la forma del HIJO, no la del padre"
     # 66 = 65 + ARP_TIMEOUT. Una sola clave nueva para tres filas: el mismo nombre publico en
     # los tres padres, que es el punto de llavear por (parent, nvpair) y no por nombre.
     # 69 = 66 + las TRES de PIM, que entre ellas cubren ocho filas.
-    assert len(km) == 69
+    # 70 = 69 + IPv6_LINK_LOCAL, una clave para las tres filas overlay.
+    assert len(km) == 70
 
 
 def test_all_registered_keys():
@@ -762,6 +768,10 @@ def test_all_registered_keys():
         # sparse en los cuatro padres, dr_priority en tres (una loopback no elige DR) y
         # bfd_instance solo en int_routed_host. Ver phase42.
         "enable_pim_sparse", "pim_dr_priority", "enable_pim_bfd_instance",
+        # IPv6 link-local, slice 0b_32. UNA clave publica en los TRES padres overlay
+        # (int_loopback no lo declara). La clave del nvPair es `IPv6_LINK_LOCAL` con v
+        # minuscula -- la forma del PADRE; el hijo la espera en mayusculas y el padre traduce.
+        "ipv6_link_local",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
