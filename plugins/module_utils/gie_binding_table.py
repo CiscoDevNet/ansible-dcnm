@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 19344493970f80ef22f4b644d4cee0dd18f3afb1d66090b6c5f0c2f4a78c6d3b
+# provenance_sha256 = f37433324c673039bc1fd51087ae966c91a5d8a3b48edb0ab3687da94a82b820
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "19344493970f80ef22f4b644d4cee0dd18f3afb1d66090b6c5f0c2f4a78c6d3b"
+PROVENANCE_SHA256 = "f37433324c673039bc1fd51087ae966c91a5d8a3b48edb0ab3687da94a82b820"
 
 BINDING_TABLE = (
     {
@@ -671,6 +671,83 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_routed_host',
+        'parent_nvpair': 'DAMPENING_HALF_LIFE',
+        'profile_key': 'dampening_half_life',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 30,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'DAMPENING_MAX_SUPPRESS',
+        'profile_key': 'dampening_max_suppress',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 255,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'DAMPENING_RESTART',
+        'profile_key': 'dampening_restart',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'DAMPENING_RESTART_PENALTY',
+        'profile_key': 'dampening_restart_penalty',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 20000,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'DAMPENING_REUSE',
+        'profile_key': 'dampening_reuse',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 20000,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'DAMPENING_SUPPRESS',
+        'profile_key': 'dampening_suppress',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 20000,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
         'parent_nvpair': 'DISABLE_BFD_ECHO',
         'profile_key': 'disable_bfd_echo',
         'applicable_interface_type': 'eth',
@@ -859,6 +936,18 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'max_length': 20,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'ENABLE_DAMPENING',
+        'profile_key': 'enable_dampening',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
         'no_log': False,
     },
     {
