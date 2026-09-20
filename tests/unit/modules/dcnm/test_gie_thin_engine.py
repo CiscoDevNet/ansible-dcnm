@@ -386,6 +386,19 @@ ARP_ROWS = {
 }
 
 
+# PIM, slice 0b_31. OCHO, y el REPARTO es la asercion, no el total: sparse en los cuatro padres,
+# dr_priority en TRES -- int_loopback no lo declara porque una loopback no elige DR -- y
+# bfd_instance en UNO, el unico padre que lo declara. Un noveno querria decir que se registro
+# dr_priority en la loopback o bfd_instance en un padre que no lo tiene.
+PIM_ROWS = (
+    {(p, "ENABLE_PIM_SPARSE", "enable_pim_sparse")
+     for p in ("int_loopback", "int_routed_host", "int_subif", "int_vlan")}
+    | {(p, "PIM_DR_PRIORITY", "pim_dr_priority")
+       for p in ("int_routed_host", "int_subif", "int_vlan")}
+    | {("int_routed_host", "ENABLE_PIM_BFD_INSTANCE", "enable_pim_bfd_instance")}
+)
+
+
 # ---- binding package runtime contract ----
 def test_package_provenance_and_size():
     expected_keys = (
@@ -393,13 +406,13 @@ def test_package_provenance_and_size():
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
-        | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS
+        | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 210
+    assert len(BINDING_TABLE) == len(actual_keys) == 218
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -425,6 +438,8 @@ def test_package_provenance_and_size():
     assert len(REDIRECTS_ROWS) == 9
     assert len(DAMPENING_ROWS) == 7
     assert len(ARP_ROWS) == 3
+    # 8 = 4 sparse + 3 dr_priority + 1 bfd_instance. El desglose importa mas que el total.
+    assert len(PIM_ROWS) == 8
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -468,7 +483,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 210
+    assert len(rows) == 218
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -859,6 +874,10 @@ def test_all_registered_and_guarded_keys():
         # tres padres overlay; int_loopback no lo declara. El caso mas simple del registro:
         # un campo, un hijo, una linea de CLI, sin gate ni dependencias. Ver phase41.
         "arp_timeout",
+        # PIM, slice 0b_31. TRES claves publicas para OCHO filas, repartidas desigualmente:
+        # sparse en los cuatro padres, dr_priority en tres (una loopback no elige DR) y
+        # bfd_instance solo en int_routed_host. Ver phase42.
+        "enable_pim_sparse", "pim_dr_priority", "enable_pim_bfd_instance",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -931,6 +950,10 @@ def test_all_registered_and_guarded_keys():
         # tres padres overlay; int_loopback no lo declara. El caso mas simple del registro:
         # un campo, un hijo, una linea de CLI, sin gate ni dependencias. Ver phase41.
         "arp_timeout",
+        # PIM, slice 0b_31. TRES claves publicas para OCHO filas, repartidas desigualmente:
+        # sparse en los cuatro padres, dr_priority en tres (una loopback no elige DR) y
+        # bfd_instance solo en int_routed_host. Ver phase42.
+        "enable_pim_sparse", "pim_dr_priority", "enable_pim_bfd_instance",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -1054,7 +1077,7 @@ def test_a_zero_minimum_is_printed_as_a_bound_not_as_unbounded():
 def test_a_bound_declared_alone_still_reaches_the_range_branch(monkeypatch):
     """The reason the branch tests ``is not None`` rather than truthiness.
 
-    Measured: 0 of the 210 rows declare only one of the two bounds, so today a plain
+    Measured: 0 of the 218 rows declare only one of the two bounds, so today a plain
     ``min_value or max_value`` would reach this branch anyway -- every row with a 0 minimum
     also has a maximum that makes the `or` true. The guard is for the FIRST row that declares a
     minimum of 0 and no maximum, where truthiness would drop the range from the message and
