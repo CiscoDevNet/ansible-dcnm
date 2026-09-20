@@ -338,6 +338,10 @@ HSRP_ROWS = {
         ("HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER", "hsrp_priority_forwarding_threshold_lower"),
         ("HSRP_PRIORITY_FORWARDING_THRESHOLD_UPPER", "hsrp_priority_forwarding_threshold_upper"),
         ("HSRP_PREEMPT_DELAY_MINIMUM", "hsrp_preempt_delay_minimum"),
+        # slice 0b_27. Registrados y probados OFFLINE: su ciclo en vivo espera que la SVI pueda
+        # llevar direccionamiento IPv6, que es un cambio en el arg spec nativo, no aqui.
+        ("HSRP_VIPv6", "hsrp_vipv6"),
+        ("HSRP_GROUPv6", "hsrp_groupv6"),
     )
 }
 
@@ -354,7 +358,7 @@ def test_package_provenance_and_size():
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 189
+    assert len(BINDING_TABLE) == len(actual_keys) == 191
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -374,7 +378,7 @@ def test_package_provenance_and_size():
     assert len(LOOPBACK_EIGRP_ROWS) == 8
     # THREE, and the number is the assertion: the engine adds only what the native arg
     # spec lacks. A four here would mean it had absorbed a module-owned field.
-    assert len(HSRP_ROWS) == 3
+    assert len(HSRP_ROWS) == 5
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -396,7 +400,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 189
+    assert len(rows) == 191
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -757,6 +761,12 @@ def test_all_registered_and_guarded_keys():
         "hsrp_priority_forwarding_threshold_lower",
         "hsrp_priority_forwarding_threshold_upper",
         "hsrp_preempt_delay_minimum",
+        # HSRP IPv6, slice 0b_27. Dos: HSRP_VIPv6 es la PRIMERA fila de la tabla que corresponde
+        # a un campo de direccion de la plantilla (ipV6Address -> string, NDFC valida el formato).
+        # IPv6/PREFIXv6 se retiraron: registrar ipv6_addr hizo que el guard lo rechazara en
+        # int_subif, donde el spec nativo si lo soporta. Ver el slice y phase37.
+        "hsrp_vipv6",
+        "hsrp_groupv6",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -803,6 +813,12 @@ def test_all_registered_and_guarded_keys():
         "hsrp_priority_forwarding_threshold_lower",
         "hsrp_priority_forwarding_threshold_upper",
         "hsrp_preempt_delay_minimum",
+        # HSRP IPv6, slice 0b_27. Dos: HSRP_VIPv6 es la PRIMERA fila de la tabla que corresponde
+        # a un campo de direccion de la plantilla (ipV6Address -> string, NDFC valida el formato).
+        # IPv6/PREFIXv6 se retiraron: registrar ipv6_addr hizo que el guard lo rechazara en
+        # int_subif, donde el spec nativo si lo soporta. Ver el slice y phase37.
+        "hsrp_vipv6",
+        "hsrp_groupv6",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was

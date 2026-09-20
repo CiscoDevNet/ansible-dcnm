@@ -257,6 +257,7 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         # the upper one is a relationship BETWEEN two of these integers. Neither this exemption
         # nor the registry's per-field min/max can express it; NDFC enforces it and fails loudly.
         # This list is about representation, not about that constraint.
+        ("int_vlan", "HSRP_GROUPv6"),
         ("int_vlan", "HSRP_PREEMPT_DELAY_MINIMUM"),
         ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER"),
         ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_UPPER"),
