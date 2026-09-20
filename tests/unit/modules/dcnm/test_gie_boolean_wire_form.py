@@ -48,6 +48,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_contribute_nvpairs,
+    gie_validate_binding_value,
 )
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
@@ -81,6 +82,10 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         "enable_ospf", "ospf_mtu_ignore", "ospf_shutdown",
         "enable_ospf", "ospf_bfd", "ospf_passive_interface",
         "enable_ospf_auth",
+        # Redirects partidos + ND suppress-RA, slice 0b_28. Los tres en los tres padres overlay.
+        # El cuarto del grupo, disable_ip_redirects, es NATIVO y no aparece aqui -- si apareciera
+        # significaria que el registry le quito el nombre al arg spec.
+        "disable_ipv4_redirects", "disable_ipv6_redirects", "ipv6_nd_suppress_ra",
         # EIGRP, slice 0b_22 -- eight distinct keys, each on all three overlay parents.
         "enable_eigrp_routing", "enable_eigrp_ipv6_routing", "enable_eigrp_shutdown",
         "enable_eigrp_bfd", "disable_eigrp_bfd",
@@ -124,9 +129,10 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # are still passthrough and therefore still need the wire form: the value lands in the vPC
     # parent's own nvPairs first, and nvPairs is a string-valued map. A native bool left there
     # would reproduce exactly the non-convergence this file exists to prevent.
-    # 87 = 80 + the SEVEN booleans of slice 0b_25. The eighth row of that slice,
-    # EIGRP_PROCESS_TAG, is a string and does not belong to this set.
-    assert len(BOOL_PASSTHROUGH) == 87
+    # 96 = 87 + the NINE of slice 0b_28, all boolean: three fields on each of the three
+    # overlay parents. Slice 0b_27 added none here -- hsrp_groupv6 is an integer and
+    # hsrp_vipv6 a string.
+    assert len(BOOL_PASSTHROUGH) == 96
 
 
 # ------------------------------------------------------- what the engine emits --
@@ -312,3 +318,39 @@ def test_omitted_boolean_is_carried_forward_from_have(parent, profile_key, nvpai
     assert sent[nvpair] == "true"
     reported = obj.changed_dict[0][state][0]["interfaces"][0]["nvPairs"]
     assert reported == {"DESC": "new"}
+
+
+# ---- HAVE encoding: "" for a boolean the template never defaulted --------------------
+#
+# Measured on NDFC 12.6.0.267 / Leaf-104 on 2026-09-20, GET of the endpoint that feeds HAVE
+# on an int_routed_host interface:
+#
+#     DISABLE_IPV4_REDIRECTS  ""        template declares no defaultValue
+#     IPV6_ND_SUPPRESS_RA     "false"   template declares defaultValue=false
+#
+# Both are boolean bindings on the same parent and the same interface, so the difference is
+# the template's default, not the interface. Before the exemption, registering the first one
+# made every operation on that parent abort while reading HAVE -- including operations that
+# never mentioned redirects.
+def test_have_accepts_empty_string_for_a_boolean_and_returns_it_verbatim():
+    out = gie_validate_binding_value(
+        "int_routed_host", "disable_ipv4_redirects", "", value_source="have"
+    )
+    assert out == "", "the carry-forward must round-trip the controller's own encoding"
+
+
+def test_have_still_rejects_any_other_string_for_a_boolean():
+    """The exemption is three values wide, not 'any string'."""
+    for bogus in ("yes", "0", "False", "null"):
+        with pytest.raises(Exception):
+            gie_validate_binding_value(
+                "int_routed_host", "disable_ipv4_redirects", bogus, value_source="have"
+            )
+
+
+def test_an_empty_string_is_not_accepted_as_operator_input_for_a_boolean():
+    """HAVE-only. An operator writing "" is not saying anything the module can act on."""
+    with pytest.raises(Exception):
+        gie_validate_binding_value(
+            "int_routed_host", "disable_ipv4_redirects", "", value_source="explicit"
+        )

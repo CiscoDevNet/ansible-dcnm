@@ -345,6 +345,21 @@ HSRP_ROWS = {
     )
 }
 
+# Split redirects + ND suppress-RA, slice 0b_28. Nine: three fields on each overlay parent,
+# and int_loopback declares none of them. The fourth field of the group,
+# DISABLE_IP_REDIRECTS, is NOT here on purpose -- it is native to the module, and registering
+# it would make gie_guarded_keys() (a set of profile_key with no parent) claim the name
+# globally, which is exactly how ipv6_addr broke int_subif.
+REDIRECTS_ROWS = {
+    (parent, nvpair, key)
+    for parent in ("int_routed_host", "int_subif", "int_vlan")
+    for nvpair, key in (
+        ("DISABLE_IPV4_REDIRECTS", "disable_ipv4_redirects"),
+        ("DISABLE_IPV6_REDIRECTS", "disable_ipv6_redirects"),
+        ("IPV6_ND_SUPPRESS_RA", "ipv6_nd_suppress_ra"),
+    )
+}
+
 # ---- binding package runtime contract ----
 
 def test_package_provenance_and_size():
@@ -353,12 +368,13 @@ def test_package_provenance_and_size():
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
+        | REDIRECTS_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 191
+    assert len(BINDING_TABLE) == len(actual_keys) == 200
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -379,6 +395,9 @@ def test_package_provenance_and_size():
     # THREE, and the number is the assertion: the engine adds only what the native arg
     # spec lacks. A four here would mean it had absorbed a module-owned field.
     assert len(HSRP_ROWS) == 5
+    # NUEVE, y el numero es la asercion: tres campos x tres padres. Un doce querria
+    # decir que int_loopback entro, y ese padre no declara ninguno de los tres.
+    assert len(REDIRECTS_ROWS) == 9
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -400,7 +419,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 191
+    assert len(rows) == 200
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -767,6 +786,12 @@ def test_all_registered_and_guarded_keys():
         # int_subif, donde el spec nativo si lo soporta. Ver el slice y phase37.
         "hsrp_vipv6",
         "hsrp_groupv6",
+        # Redirects partidos + ND suppress-RA, slice 0b_28. Tres claves publicas, cada una en
+        # los TRES padres overlay. DISABLE_IP_REDIRECTS queda fuera: es nativo y registrarlo
+        # repetiria el fallo de ipv6_addr, porque gie_guarded_keys() no filtra por padre.
+        "disable_ipv4_redirects",
+        "disable_ipv6_redirects",
+        "ipv6_nd_suppress_ra",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -819,6 +844,12 @@ def test_all_registered_and_guarded_keys():
         # int_subif, donde el spec nativo si lo soporta. Ver el slice y phase37.
         "hsrp_vipv6",
         "hsrp_groupv6",
+        # Redirects partidos + ND suppress-RA, slice 0b_28. Tres claves publicas, cada una en
+        # los TRES padres overlay. DISABLE_IP_REDIRECTS queda fuera: es nativo y registrarlo
+        # repetiria el fallo de ipv6_addr, porque gie_guarded_keys() no filtra por padre.
+        "disable_ipv4_redirects",
+        "disable_ipv6_redirects",
+        "ipv6_nd_suppress_ra",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was

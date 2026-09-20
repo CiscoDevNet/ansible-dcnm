@@ -70,6 +70,10 @@ EXPECTED = {
     "disable_qos_stats": ("DISABLE_QOS_STATS", "boolean"),
     "disable_queuing_stats": ("DISABLE_QUEUING_STATS", "boolean"),
     "ipv4_acl_in": ("IPV4_ACL_IN", "string"),
+    # slice 0b_28. El cuarto del grupo, DISABLE_IP_REDIRECTS, es nativo y no se registra.
+    "disable_ipv4_redirects": ("DISABLE_IPV4_REDIRECTS", "boolean"),
+    "disable_ipv6_redirects": ("DISABLE_IPV6_REDIRECTS", "boolean"),
+    "ipv6_nd_suppress_ra": ("IPV6_ND_SUPPRESS_RA", "boolean"),
     "enable_ospf": ("ENABLE_OSPF", "boolean"),
     "ospf_tag": ("OSPF_TAG", "string"),
     "ospf_area_id": ("OSPF_AREA_ID", "string"),
