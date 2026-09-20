@@ -124,7 +124,9 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # are still passthrough and therefore still need the wire form: the value lands in the vPC
     # parent's own nvPairs first, and nvPairs is a string-valued map. A native bool left there
     # would reproduce exactly the non-convergence this file exists to prevent.
-    assert len(BOOL_PASSTHROUGH) == 80
+    # 87 = 80 + the SEVEN booleans of slice 0b_25. The eighth row of that slice,
+    # EIGRP_PROCESS_TAG, is a string and does not belong to this set.
+    assert len(BOOL_PASSTHROUGH) == 87
 
 
 # ------------------------------------------------------- what the engine emits --

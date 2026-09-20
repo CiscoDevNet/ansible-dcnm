@@ -328,6 +328,26 @@ COMMITTED_BINDINGS = {
     ("int_vlan", "BFD_MIN_RX_INTERVAL"): "bfd_min_rx_interval",
     ("int_vlan", "BFD_MULTIPLIER"): "bfd_multiplier",
     ("int_vlan", "DISABLE_BFD_ECHO"): "disable_bfd_echo",
+    # --- EIGRP on int_loopback (slice 0b_25) ---
+    #
+    # EIGHT, not the family's thirteen. The INSTALLED parent -- int_loopback.template@27cd9ce7e671b5f3,
+    # measured against the controller -- does not declare ENABLE_EIGRP_IPV6_ROUTING nor any of the
+    # four distribute-list fields. Registering a field the parent does not declare is the
+    # silent-drop failure this table exists to prevent: NDFC discards the unknown nvPair, the
+    # module reports success, and the device gets nothing. Slice 0b_22's uniformity across the
+    # three overlay parents is not evidence about this one.
+    #
+    # Every one of the seven CLI commands these eight produce was measured as ACCEPTED on FAB4
+    # (nxos64-cs.10.6.2.F.bin) through NDFC before this entry was added, including the two that
+    # needed `feature bfd` and the two `no ...` forms. See phase34-fab4-eigrp-soporte.
+    ("int_loopback", "EIGRP_PROCESS_TAG"): "eigrp_process_tag",
+    ("int_loopback", "ENABLE_EIGRP_ROUTING"): "enable_eigrp_routing",
+    ("int_loopback", "EIGRP_IPV4_PASSIVE"): "eigrp_ipv4_passive",
+    ("int_loopback", "EIGRP_NO_IPV4_PASSIVE"): "eigrp_no_ipv4_passive",
+    ("int_loopback", "EIGRP_NO_IPV6_PASSIVE"): "eigrp_no_ipv6_passive",
+    ("int_loopback", "ENABLE_EIGRP_SHUTDOWN"): "enable_eigrp_shutdown",
+    ("int_loopback", "ENABLE_EIGRP_BFD"): "enable_eigrp_bfd",
+    ("int_loopback", "DISABLE_EIGRP_BFD"): "disable_eigrp_bfd",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.

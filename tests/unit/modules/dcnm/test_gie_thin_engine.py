@@ -304,6 +304,25 @@ BFD_ROWS = {
     )
 } | {("int_vlan", "DISABLE_BFD_ECHO", "disable_bfd_echo")}
 
+# EIGHT of the family's thirteen, on int_loopback alone (slice 0b_25). Listed explicitly rather
+# than reusing EIGRP_ROWS' comprehension with a fourth parent, because the sets are NOT the same:
+# the installed int_loopback declares no ENABLE_EIGRP_IPV6_ROUTING and none of the four
+# distribute-list fields. Sharing the comprehension would assert a uniformity the controller does
+# not have, and would have pinned five bindings NDFC discards in silence.
+LOOPBACK_EIGRP_ROWS = {
+    ("int_loopback", nvpair, key)
+    for nvpair, key in (
+        ("EIGRP_PROCESS_TAG", "eigrp_process_tag"),
+        ("ENABLE_EIGRP_ROUTING", "enable_eigrp_routing"),
+        ("EIGRP_IPV4_PASSIVE", "eigrp_ipv4_passive"),
+        ("EIGRP_NO_IPV4_PASSIVE", "eigrp_no_ipv4_passive"),
+        ("EIGRP_NO_IPV6_PASSIVE", "eigrp_no_ipv6_passive"),
+        ("ENABLE_EIGRP_SHUTDOWN", "enable_eigrp_shutdown"),
+        ("ENABLE_EIGRP_BFD", "enable_eigrp_bfd"),
+        ("DISABLE_EIGRP_BFD", "disable_eigrp_bfd"),
+    )
+}
+
 
 
 
@@ -315,13 +334,13 @@ def test_package_provenance_and_size():
         BASELINE_ROWS | PASSTHROUGH_ROWS | FC_SEND_ROWS | STP_ROWS
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
-        | LOOPBACK_OSPF_ROWS | BFD_ROWS
+        | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 178
+    assert len(BINDING_TABLE) == len(actual_keys) == 186
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -335,6 +354,10 @@ def test_package_provenance_and_size():
     assert len(SUBIF_OSPF_ROWS) == 14
     assert len(VLAN_OSPF_ROWS) == 14
     assert len(AUTH_OSPF_ROWS) == 15   # five fields x three parents
+    # EIGHT, and the assertion is the point: the family has thirteen and the installed
+    # int_loopback declares only these eight. A thirteen here would mean five bindings NDFC
+    # discards in silence while the module reports success.
+    assert len(LOOPBACK_EIGRP_ROWS) == 8
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -356,7 +379,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 178
+    assert len(rows) == 186
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
