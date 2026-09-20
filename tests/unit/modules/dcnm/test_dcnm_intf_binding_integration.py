@@ -23,7 +23,6 @@ __metaclass__ = type
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
-    GIE_OSPF_MD_DOMAIN_NVPAIRS,
     GIE_READONLY_METADATA_NVPAIRS,
     gie_carry_forward_bindings,
     gie_have_carry_forward_nvpairs,
@@ -32,8 +31,6 @@ from .test_dcnm_intf_loopback_carry_forward import (
     FAB,
     HAVE_METADATA,
     HAVE_ONLY_WRITABLE,
-    HAVE_OSPF_DOMAIN,
-    MD,
     PARENT,
     SNO,
     _full_have,
@@ -204,7 +201,12 @@ def test_no_cross_parent_carry_from_eth_to_loopback():
 
 
 # =====================================================================================
-# EXCLUSIONS — metadata and the OSPF-MD domain are never carried
+# EXCLUSIONS — read-only metadata is never carried
+#
+# This heading used to say "and the OSPF-MD domain". That half went with the capability: the
+# fabric-loopback OSPF-MD binding was the last child_pti, and when it was retired its exclusion
+# test went too. GIE_OSPF_MD_DOMAIN_NVPAIRS was still imported here with nothing reading it,
+# which is what pylint caught. Nothing to reinstate -- there is no such domain to exclude now.
 # =====================================================================================
 def test_readonly_metadata_is_never_carried():
     carried = gie_have_carry_forward_nvpairs({}, dict(HAVE_METADATA, PRIORITY="301"))

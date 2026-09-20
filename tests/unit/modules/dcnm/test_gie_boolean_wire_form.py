@@ -79,8 +79,10 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     assert BOOL_PASSTHROUGH, "no boolean passthrough bindings -- the tests below run on nothing"
     assert {k for parent, k, nvpair in BOOL_PASSTHROUGH} == {
         "disable_lldp_transmit", "disable_lldp_receive", "disable_qos_stats", "disable_queuing_stats", "disable_bfd_echo",
+        # The boolean OSPF names, once. enable_ospf reaches this set from both lots; listing it
+        # twice made the literal look like it pinned more than it does.
         "enable_ospf", "ospf_mtu_ignore", "ospf_shutdown",
-        "enable_ospf", "ospf_bfd", "ospf_passive_interface",
+        "ospf_bfd", "ospf_passive_interface",
         "enable_ospf_auth",
         # Redirects partidos + ND suppress-RA, slice 0b_28. Los tres en los tres padres overlay.
         # El cuarto del grupo, disable_ip_redirects, es NATIVO y no aparece aqui -- si apareciera

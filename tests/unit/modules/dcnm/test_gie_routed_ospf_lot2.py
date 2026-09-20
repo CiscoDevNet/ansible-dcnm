@@ -266,7 +266,7 @@ AUTH_FIELDS = {
 
 @pytest.mark.parametrize("key", sorted(AUTH_FIELDS))
 def test_the_authentication_fields_are_registered_on_this_parent(key):
-    nvpair, typ, _ = AUTH_FIELDS[key]
+    nvpair, typ, unused_is_secret = AUTH_FIELDS[key]
     b = resolve_binding(PARENT, key)
     assert b is not None, "{0} is no longer registered on {1}".format(key, PARENT)
     assert b["parent_nvpair"] == nvpair
@@ -283,5 +283,5 @@ def test_only_the_two_key_bearing_fields_are_marked_no_log(key):
     unrelated output while protecting nothing, since an id is not a secret. The same goes for
     the "3" of the encryption type.
     """
-    _, _, is_secret = AUTH_FIELDS[key]
+    unused_nvpair, unused_typ, is_secret = AUTH_FIELDS[key]
     assert bool(resolve_binding(PARENT, key).get("no_log")) is is_secret

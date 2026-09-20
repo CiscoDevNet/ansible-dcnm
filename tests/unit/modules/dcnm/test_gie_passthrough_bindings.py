@@ -20,7 +20,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_tabl
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
     BINDING_TABLE,
     PROVENANCE_SHA256,
-    registered_profile_keys,
     resolve_binding,
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
@@ -596,13 +595,19 @@ def test_all_registered_keys():
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
         "disable_bfd_echo", "ipv4_acl_in",
-        "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
-        "ospf_mtu_ignore", "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay", "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
-        "enable_ospf", "ospf_area_id", "ospf_bfd", "ospf_bfd_mode", "ospf_cost", "ospf_dead_interval", "ospf_hello_interval", "ospf_mtu_ignore", "ospf_network_type", "ospf_passive_interface", "ospf_passive_mode", "ospf_priority", "ospf_retransmit_interval", "ospf_shutdown", "ospf_tag", "ospf_transmit_delay",
+        # OSPF, slices 0b_18/0b_19/0b_20. SIXTEEN distinct names across the three overlay
+        # parents plus int_loopback, written as one list: the lots share most of their names,
+        # so a literal that repeats them per lot asserts less than it appears to. The sharing
+        # is the design -- bindings are keyed by (parent, nvpair), not by name.
+        "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost", "ospf_mtu_ignore",
+        "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay",
+        "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
+        # These three only ever came from the second lot (int_subif / int_vlan).
+        "ospf_bfd", "ospf_passive_interface", "ospf_retransmit_interval",
         # The authentication lot, shared by int_routed_host, int_subif and int_vlan.
         "enable_ospf_auth", "ospf_auth_key_id", "ospf_auth_key",
         "ospf_authentication_key_type", "ospf_authentication_key",
-            # EIGRP, slice 0b_22. Thirteen fields, identical on int_routed_host, int_subif and
+        # EIGRP, slice 0b_22. Thirteen fields, identical on int_routed_host, int_subif and
         # int_vlan -- measured against the bodies the controller runs, not the batch on disk.
         # EIGRP_PROCESS_TAG gates the other twelve, and the TEMPLATE refuses the tagless
         # case itself ("EIGRP process tag is required when EIGRP interface options are
@@ -646,7 +651,7 @@ def test_all_registered_keys():
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
         # already here, from int_routed_host.
         "enable_bfd_interval", "bfd_tx_interval", "bfd_min_rx_interval", "bfd_multiplier",
-}
+    }
 
 
 def test_same_value_produces_the_same_payload():
