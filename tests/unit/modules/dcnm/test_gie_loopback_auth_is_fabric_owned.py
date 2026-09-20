@@ -336,8 +336,8 @@ def test_the_rejection_does_not_scrub_and_is_not_supposed_to():
 
 def test_the_key_value_appears_nowhere_in_what_the_module_returns():
     """Check the whole result, not just msg. The leak was never in the message."""
-    kwargs, _ = _reject_loopback({"mode": "fabric", "ipv4_addr": "10.2.0.1",
-                                  "ospf_auth_key": SYNTHETIC_KEY})
+    kwargs, unused_no_log_values = _reject_loopback(
+        {"mode": "fabric", "ipv4_addr": "10.2.0.1", "ospf_auth_key": SYNTHETIC_KEY})
     assert SYNTHETIC_KEY not in str(kwargs), (
         "the rejected key value reached the module result: {0}".format(kwargs)
     )
@@ -429,8 +429,8 @@ def test_the_rejection_message_never_echoes_the_value():
     result is a serialiser question, and mocking the module makes that unmeasurable here -- so
     it is asserted in test_dcnm_intf_no_log_contract.py instead, against real output.
     """
-    kwargs, _ = _reject_loopback({"mode": "fabric", "ipv4_addr": "10.2.0.1",
-                                  "ospf_auth_key": SYNTHETIC_KEY})
+    kwargs, unused_no_log_values = _reject_loopback(
+        {"mode": "fabric", "ipv4_addr": "10.2.0.1", "ospf_auth_key": SYNTHETIC_KEY})
     assert SYNTHETIC_KEY not in kwargs.get("msg", "")
     assert "ospf_auth_key" in kwargs.get("msg", ""), "the message must still name the field"
 
@@ -443,7 +443,7 @@ def test_every_withdrawn_key_is_refused_not_just_the_secret(key):
     half-apply and the operator would have no way to tell which half.
     """
     value = SYNTHETIC_KEY if key == "ospf_auth_key" else (127 if "key_id" in key else True)
-    kwargs, _ = _reject_loopback({"mode": "fabric", "ipv4_addr": "10.2.0.1", key: value})
+    kwargs, unused_no_log_values = _reject_loopback({"mode": "fabric", "ipv4_addr": "10.2.0.1", key: value})
     assert key in kwargs.get("msg", ""), "{0} was accepted silently".format(key)
 
 

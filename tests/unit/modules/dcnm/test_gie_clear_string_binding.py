@@ -46,7 +46,7 @@ STRING_BINDINGS = [
     ("int_port_channel_dot1q_tunnel_host", "acl_filter"),
     ("int_vpc_access_host", "acl_filter"),
     ("int_vpc_trunk_host", "acl_filter"),
-    ]
+]
 
 
 @pytest.mark.parametrize("parent,key", STRING_BINDINGS)

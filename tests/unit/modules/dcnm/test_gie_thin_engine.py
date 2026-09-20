@@ -324,9 +324,6 @@ LOOPBACK_EIGRP_ROWS = {
 }
 
 
-
-
-
 # HSRP on int_vlan, slice 0b_26. Three, and only on this parent: it is the only one of the four
 # that declares HSRP at all. Listed explicitly because these three are the first rows that sit on
 # top of MODULE-NATIVE fields -- enable_hsrp, hsrp_vip, hsrp_group, preempt and hsrp_priority are
@@ -378,8 +375,8 @@ DAMPENING_ROWS = {
     )
 }
 
-# ---- binding package runtime contract ----
 
+# ---- binding package runtime contract ----
 def test_package_provenance_and_size():
     expected_keys = (
         BASELINE_ROWS | PASSTHROUGH_ROWS | FC_SEND_ROWS | STP_ROWS
@@ -770,15 +767,23 @@ def test_all_registered_and_guarded_keys():
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
         "disable_bfd_echo", "ipv4_acl_in",
-        "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
-        "ospf_mtu_ignore", "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay", "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
-        "enable_ospf", "ospf_area_id", "ospf_bfd", "ospf_bfd_mode", "ospf_cost", "ospf_dead_interval", "ospf_hello_interval", "ospf_mtu_ignore", "ospf_network_type", "ospf_passive_interface", "ospf_passive_mode", "ospf_priority", "ospf_retransmit_interval", "ospf_shutdown", "ospf_tag", "ospf_transmit_delay",
+        # OSPF, slices 0b_18/0b_19/0b_20. SIXTEEN distinct names across the three overlay
+        # parents plus int_loopback. Written as one list on purpose: the earlier version listed
+        # each lot separately, and because the lots SHARE names the set silently collapsed them
+        # -- thirteen redundant entries that made the literal look bigger than what it asserts.
+        # That sharing is the design (bindings are keyed by (parent, nvpair), not by name), so
+        # the place to see it is the table, not this set.
+        "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost", "ospf_mtu_ignore",
+        "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay",
+        "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
+        # These three only ever came from the second lot (int_subif / int_vlan).
+        "ospf_bfd", "ospf_passive_interface", "ospf_retransmit_interval",
         # The authentication lot, on all three OSPF parents. Passthrough like the rest, so
         # the generic guard owns it too: a key on the wrong parent is refused by the engine,
         # not by a validator written for this family.
         "enable_ospf_auth", "ospf_auth_key_id", "ospf_auth_key",
         "ospf_authentication_key_type", "ospf_authentication_key",
-            # EIGRP, slice 0b_22. Thirteen fields, identical on int_routed_host, int_subif and
+        # EIGRP, slice 0b_22. Thirteen fields, identical on int_routed_host, int_subif and
         # int_vlan -- measured against the bodies the controller runs, not the batch on disk.
         # EIGRP_PROCESS_TAG gates the other twelve, and the TEMPLATE refuses the tagless
         # case itself ("EIGRP process tag is required when EIGRP interface options are
@@ -822,7 +827,7 @@ def test_all_registered_and_guarded_keys():
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
         # already here, from int_routed_host.
         "enable_bfd_interval", "bfd_tx_interval", "bfd_min_rx_interval", "bfd_multiplier",
-}
+    }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
     # its invalid-parent guard, unlike the OSPF bindings below.
@@ -834,9 +839,13 @@ def test_all_registered_and_guarded_keys():
         # The routed OSPF slice is passthrough, so the generic guard owns it -- unlike the
         # fabric-loopback OSPF-MD trio asserted out of this set just below. Delegating to a
         # child template inside NDFC does not change which side of this line a binding sits on.
-        "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost",
-        "ospf_mtu_ignore", "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay", "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
-        "enable_ospf", "ospf_area_id", "ospf_bfd", "ospf_bfd_mode", "ospf_cost", "ospf_dead_interval", "ospf_hello_interval", "ospf_mtu_ignore", "ospf_network_type", "ospf_passive_interface", "ospf_passive_mode", "ospf_priority", "ospf_retransmit_interval", "ospf_shutdown", "ospf_tag", "ospf_transmit_delay",
+        # Same sixteen as the set above, and for the same reason written once: the two lots
+        # share most of their names and a set literal that repeats them asserts less than it
+        # appears to.
+        "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost", "ospf_mtu_ignore",
+        "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay",
+        "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
+        "ospf_bfd", "ospf_passive_interface", "ospf_retransmit_interval",
         # The authentication lot, on all three OSPF parents. Passthrough like the rest, so
         # the generic guard owns it too: a key on the wrong parent is refused by the engine,
         # not by a validator written for this family.
@@ -852,7 +861,7 @@ def test_all_registered_and_guarded_keys():
         "enable_eigrp_shutdown", "enable_eigrp_bfd", "disable_eigrp_bfd",
         "eigrp_ipv4_distribute_list_prefix_list", "eigrp_ipv4_distribute_list_direction",
         "eigrp_ipv6_distribute_list_prefix_list", "eigrp_ipv6_distribute_list_direction",
-            # int_loopback, slice 0b_23. Only ONE public key is new -- the other eighteen are names
+        # int_loopback, slice 0b_23. Only ONE public key is new -- the other eighteen are names
         # this table already carries on other parents, which is the point of keying bindings by
         # (parent, nvpair) rather than by name.
         # HSRP on int_vlan, slice 0b_26. Three new public keys, and the only lot whose fields
@@ -886,7 +895,7 @@ def test_all_registered_and_guarded_keys():
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
         # already here, from int_routed_host.
         "enable_bfd_interval", "bfd_tx_interval", "bfd_min_rx_interval", "bfd_multiplier",
-}
+    }
     # The withdrawn fabric-loopback key. It is registered nowhere, so it is guarded nowhere --
     # the module rejects it by name instead, which is a different mechanism with a different
     # message.

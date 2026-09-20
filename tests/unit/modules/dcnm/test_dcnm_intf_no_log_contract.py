@@ -506,7 +506,7 @@ def test_a_visible_nvpair_from_the_controller_is_not_registered():
 ])
 def test_walking_a_malformed_response_never_raises(shape):
     """It runs on whatever the controller returned, including on an error path."""
-    intf, _ = _module_with_empty_config()
+    intf, unused_module = _module_with_empty_config()
     intf.dcnm_intf_register_controller_secrets(shape)
 
 
