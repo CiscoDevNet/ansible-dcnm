@@ -360,6 +360,24 @@ REDIRECTS_ROWS = {
     )
 }
 
+# Dampening, slice 0b_6 con su mecanismo corregido a passthrough. SIETE, y solo en
+# int_routed_host: es el unico de los cuatro padres que declara la familia. Su CLI no existe en
+# el NX-OS de C9300v -- medido por NDFC en las dos imagenes del lab -- asi que estas filas estan
+# validadas en el CONTROLADOR y nunca en el equipo. El numero es la asercion: un octavo querria
+# decir que se registro algo que el padre no declara.
+DAMPENING_ROWS = {
+    ("int_routed_host", nvpair, key)
+    for nvpair, key in (
+        ("ENABLE_DAMPENING", "enable_dampening"),
+        ("DAMPENING_HALF_LIFE", "dampening_half_life"),
+        ("DAMPENING_REUSE", "dampening_reuse"),
+        ("DAMPENING_SUPPRESS", "dampening_suppress"),
+        ("DAMPENING_MAX_SUPPRESS", "dampening_max_suppress"),
+        ("DAMPENING_RESTART", "dampening_restart"),
+        ("DAMPENING_RESTART_PENALTY", "dampening_restart_penalty"),
+    )
+}
+
 # ---- binding package runtime contract ----
 
 def test_package_provenance_and_size():
@@ -368,13 +386,13 @@ def test_package_provenance_and_size():
         | QOS_STATS_ROWS | PC_ROWS | VPC_ROWS | ROUTED_ROWS | ROUTED_OSPF_ROWS
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
-        | REDIRECTS_ROWS
+        | REDIRECTS_ROWS | DAMPENING_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 200
+    assert len(BINDING_TABLE) == len(actual_keys) == 207
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -398,6 +416,7 @@ def test_package_provenance_and_size():
     # NUEVE, y el numero es la asercion: tres campos x tres padres. Un doce querria
     # decir que int_loopback entro, y ese padre no declara ninguno de los tres.
     assert len(REDIRECTS_ROWS) == 9
+    assert len(DAMPENING_ROWS) == 7
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -419,7 +438,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows([dict(binding) for binding in BINDING_TABLE])
-    assert len(rows) == 200
+    assert len(rows) == 207
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -792,6 +811,12 @@ def test_all_registered_and_guarded_keys():
         "disable_ipv4_redirects",
         "disable_ipv6_redirects",
         "ipv6_nd_suppress_ra",
+        # Dampening, slice 0b_6 con su mecanismo corregido child_pti -> passthrough. Siete
+        # claves, SOLO en int_routed_host. Su CLI no existe en el NX-OS de C9300v -- medido en
+        # las dos imagenes del lab -- asi que estan registradas y validadas en el CONTROLADOR,
+        # nunca en el equipo. Ver phase39.
+        "enable_dampening", "dampening_half_life", "dampening_reuse", "dampening_suppress",
+        "dampening_max_suppress", "dampening_restart", "dampening_restart_penalty",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -850,6 +875,12 @@ def test_all_registered_and_guarded_keys():
         "disable_ipv4_redirects",
         "disable_ipv6_redirects",
         "ipv6_nd_suppress_ra",
+        # Dampening, slice 0b_6 con su mecanismo corregido child_pti -> passthrough. Siete
+        # claves, SOLO en int_routed_host. Su CLI no existe en el NX-OS de C9300v -- medido en
+        # las dos imagenes del lab -- asi que estan registradas y validadas en el CONTROLADOR,
+        # nunca en el equipo. Ver phase39.
+        "enable_dampening", "dampening_half_life", "dampening_reuse", "dampening_suppress",
+        "dampening_max_suppress", "dampening_restart", "dampening_restart_penalty",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was

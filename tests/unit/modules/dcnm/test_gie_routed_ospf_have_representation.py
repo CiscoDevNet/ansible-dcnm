@@ -224,6 +224,14 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_loopback", "OSPF_PRIORITY"),
         ("int_loopback", "OSPF_RETRANSMIT_INTERVAL"),
         ("int_loopback", "OSPF_TRANSMIT_DELAY"),
+        # Los cinco integers de dampening (slice 0b_6). Misma exencion y misma razon: NDFC
+        # los devuelve como string. No se pueden medir en el equipo -- el CLI no existe en
+        # C9300v -- pero SI llegan al carry-forward, que es de lo que trata esta lista.
+        ("int_routed_host", "DAMPENING_HALF_LIFE"),
+        ("int_routed_host", "DAMPENING_MAX_SUPPRESS"),
+        ("int_routed_host", "DAMPENING_RESTART_PENALTY"),
+        ("int_routed_host", "DAMPENING_REUSE"),
+        ("int_routed_host", "DAMPENING_SUPPRESS"),
         ("int_routed_host", "OSPF_AUTH_KEY_ID"),
         ("int_routed_host", "OSPF_COST"),
         ("int_routed_host", "OSPF_DEAD_INTERVAL"),
