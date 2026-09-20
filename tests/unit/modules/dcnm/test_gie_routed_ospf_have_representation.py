@@ -243,6 +243,7 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_routed_host", "OSPF_HELLO_INTERVAL"),
         ("int_routed_host", "OSPF_PRIORITY"),
         ("int_routed_host", "OSPF_TRANSMIT_DELAY"),
+        ("int_routed_host", "PIM_DR_PRIORITY"),
         # The six BFD intervals, committed 2026-09-19. Reviewed individually, not generated
         # into this list: each was read off the installed template (tx and min_rx 50-999,
         # multiplier 1-50) and takes the same exemption for the same measured reason -- NDFC
@@ -259,6 +260,7 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_subif", "OSPF_PRIORITY"),
         ("int_subif", "OSPF_RETRANSMIT_INTERVAL"),
         ("int_subif", "OSPF_TRANSMIT_DELAY"),
+        ("int_subif", "PIM_DR_PRIORITY"),
         ("int_vlan", "ARP_TIMEOUT"),
         ("int_vlan", "BFD_MIN_RX_INTERVAL"),
         ("int_vlan", "BFD_MULTIPLIER"),
@@ -283,6 +285,7 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_vlan", "OSPF_PRIORITY"),
         ("int_vlan", "OSPF_RETRANSMIT_INTERVAL"),
         ("int_vlan", "OSPF_TRANSMIT_DELAY"),
+        ("int_vlan", "PIM_DR_PRIORITY"),
     ], "an integer binding reached the generic carry-forward without being reviewed here"
 
     # The loopback OSPF-MD key id stays out: its parent registers no passthrough binding, so it

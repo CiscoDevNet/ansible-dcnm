@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 94afc05228742153d4350a4689b5d9b96574f2fa62ce25dfe02f2bd6e9864d1e
+# provenance_sha256 = 2e4d13aa679d9aeb3772441460127e291f1a77e4ab614b14c862f0eeb068c121
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "94afc05228742153d4350a4689b5d9b96574f2fa62ce25dfe02f2bd6e9864d1e"
+PROVENANCE_SHA256 = "2e4d13aa679d9aeb3772441460127e291f1a77e4ab614b14c862f0eeb068c121"
 
 BINDING_TABLE = (
     {
@@ -219,6 +219,18 @@ BINDING_TABLE = (
         'parent_template': 'int_loopback',
         'parent_nvpair': 'ENABLE_OSPF_AUTH',
         'profile_key': 'enable_ospf_auth',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'ENABLE_PIM_SPARSE',
+        'profile_key': 'enable_pim_sparse',
         'applicable_interface_type': 'lo',
         'applicable_mode': 'lo',
         'type': 'boolean',
@@ -1037,6 +1049,30 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_routed_host',
+        'parent_nvpair': 'ENABLE_PIM_BFD_INSTANCE',
+        'profile_key': 'enable_pim_bfd_instance',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'ENABLE_PIM_SPARSE',
+        'profile_key': 'enable_pim_sparse',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
         'parent_nvpair': 'IPV4_ACL_IN',
         'profile_key': 'ipv4_acl_in',
         'applicable_interface_type': 'eth',
@@ -1262,6 +1298,20 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 450,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'PIM_DR_PRIORITY',
+        'profile_key': 'pim_dr_priority',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'default_template': 1,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 4294967295,
         'no_log': False,
     },
     {
@@ -1534,6 +1584,18 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_subif',
+        'parent_nvpair': 'ENABLE_PIM_SPARSE',
+        'profile_key': 'enable_pim_sparse',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
         'parent_nvpair': 'IPV6_ND_SUPPRESS_RA',
         'profile_key': 'ipv6_nd_suppress_ra',
         'applicable_interface_type': 'sub_int',
@@ -1757,6 +1819,20 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 450,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'PIM_DR_PRIORITY',
+        'profile_key': 'pim_dr_priority',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'integer',
+        'default_template': 1,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 4294967295,
         'no_log': False,
     },
     {
@@ -2152,6 +2228,18 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_vlan',
+        'parent_nvpair': 'ENABLE_PIM_SPARSE',
+        'profile_key': 'enable_pim_sparse',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
         'parent_nvpair': 'HSRP_GROUPv6',
         'profile_key': 'hsrp_groupv6',
         'applicable_interface_type': 'svi',
@@ -2441,6 +2529,20 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 450,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'PIM_DR_PRIORITY',
+        'profile_key': 'pim_dr_priority',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'integer',
+        'default_template': 1,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 4294967295,
         'no_log': False,
     },
     {

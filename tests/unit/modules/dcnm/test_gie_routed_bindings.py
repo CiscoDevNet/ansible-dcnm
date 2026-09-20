@@ -79,6 +79,12 @@ EXPECTED = {
     # despues de escribirse la fila: la batch del 14sep le puso min=60/max=28800 a un
     # `integer ARP_TIMEOUT;` que no tenia ninguno.
     "arp_timeout": ("ARP_TIMEOUT", "integer"),
+    # PIM, slice 0b_31. Este es el unico padre que declara los TRES. pim_dr_priority es `long`
+    # en el template y se registra `integer`: _TYPE_TO_VALIDATOR no conoce `long` y valida
+    # identico. Y el valor 1 no emite linea -- ver la trampa en el slice.
+    "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "boolean"),
+    "pim_dr_priority": ("PIM_DR_PRIORITY", "integer"),
+    "enable_pim_bfd_instance": ("ENABLE_PIM_BFD_INSTANCE", "boolean"),
     # Dampening, slice 0b_6. Solo este padre lo declara; su CLI no existe en C9300v.
     "enable_dampening": ("ENABLE_DAMPENING", "boolean"),
     "dampening_half_life": ("DAMPENING_HALF_LIFE", "integer"),

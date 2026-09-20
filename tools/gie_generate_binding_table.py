@@ -481,6 +481,38 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "ARP_TIMEOUT"): "arp_timeout",
     ("int_subif", "ARP_TIMEOUT"): "arp_timeout",
     ("int_vlan", "ARP_TIMEOUT"): "arp_timeout",
+    # --- PIM, across all four parents (slice 0b_31) ---
+    #
+    # OCHO, repartidas desigualmente, y el reparto es la asercion:
+    #     ENABLE_PIM_SPARSE        4   los cuatro padres
+    #     PIM_DR_PRIORITY          3   sin int_loopback: una loopback no elige DR
+    #     ENABLE_PIM_BFD_INSTANCE  1   solo int_routed_host lo declara
+    #
+    # Una linea de CLI por campo (pim_interface, interface_pim_dr_priority,
+    # pim_bfd_instance_interface), los tres hijos instalados y su contenido leido. Sin fusion, a
+    # diferencia de BFD, HSRP y dampening.
+    #
+    # LOS TRES SON INDEPENDIENTES: cero IsShow, cero addErrorReport que los relacione, tres `if`
+    # sueltos. Asi que este lote NO tiene negativas de template -- las suyas atacan las cotas del
+    # registry, como ARP_TIMEOUT. Y sparse-mode NO es precondicion de dr-priority en el DSL, asi
+    # que el template deja emitir dr-priority solo; lo que conteste NX-OS es una pregunta abierta
+    # que la ronda mide.
+    #
+    # LA TRAMPA, que el slice explica entera: `if pimDrPriority != "" and pimDrPriority != "1"`.
+    # El valor 1 NO emite linea, y `min = 1` hace que el minimo de la cota sea justo el valor
+    # mudo. Probar la cota inferior y no ver linea es el comportamiento correcto, no un defecto.
+    #
+    # PIM_DR_PRIORITY es `long` en el template y se registra `integer`: _TYPE_TO_VALIDATOR no
+    # conoce `long` y valida identico -- el int de Python no tiene limite y 4294967295 cabe de
+    # sobra. Primer campo del registro cuyo tipo declarado no existe en ese mapa.
+    ("int_loopback", "ENABLE_PIM_SPARSE"): "enable_pim_sparse",
+    ("int_routed_host", "ENABLE_PIM_SPARSE"): "enable_pim_sparse",
+    ("int_subif", "ENABLE_PIM_SPARSE"): "enable_pim_sparse",
+    ("int_vlan", "ENABLE_PIM_SPARSE"): "enable_pim_sparse",
+    ("int_routed_host", "PIM_DR_PRIORITY"): "pim_dr_priority",
+    ("int_subif", "PIM_DR_PRIORITY"): "pim_dr_priority",
+    ("int_vlan", "PIM_DR_PRIORITY"): "pim_dr_priority",
+    ("int_routed_host", "ENABLE_PIM_BFD_INSTANCE"): "enable_pim_bfd_instance",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.
