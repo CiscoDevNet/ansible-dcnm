@@ -505,6 +505,75 @@ KNOWN_MECHANISMS = {"passthrough", "child_pti"}
 COMMITTED_PROFILE_KEYS = set(COMMITTED_BINDINGS.values())
 
 
+# Per-row registry schema, enforced HERE rather than by a separate checker script.
+#
+# WHY HERE. There were two standalone validators under
+# evidence/generic-interface-engine/ -- registry-schema/registry_schema_check.py (42 lines) and
+# registry/registry_schema_check.py (454 lines) -- and BOTH had been dead for four lots without
+# anyone noticing, for different reasons: the first still expected a flat list and every slice is
+# now a mapping with a `bindings:` key, the second required a `sensitive` field that only one
+# surviving slice declares. Nothing broke loudly because nothing ran them. A validator you have
+# to remember to invoke is a validator that goes stale; this function runs on every regeneration,
+# which is the only moment the rows are read at all.
+#
+# SCOPE. Exactly what the dead checkers enforced per row, no more -- recovering a lost net, not
+# widening it. Deliberately NOT re-implemented here because compile_rows already does it above:
+# the COMMITTED_BINDINGS allowlist, duplicate keys, profile_key mismatch, unknown mechanism, and
+# the complete-set check. Deliberately NOT required: `sensitive` (gone from every slice but
+# 0b_21) and `evidence_ref` (0b_15's eleven rows have never carried one; adding it is a separate
+# decision about data, not about this gate).
+SCHEMA_REQUIRED_FIELDS = (
+    "parent_template",
+    "parent_nvpair",
+    "profile_key",
+    "applicable_interface_type",
+    "applicable_mode",
+    "type",
+    "presence_model",
+    "emit_when",
+    "mechanism",
+    "min_ndfc_version",
+    # One value in the whole registry: 212 occurrences, all `desired_parent`. The 454-line
+    # checker asserted the literal, and a negative test rejected `type_builder`.
+    "parent_resolution",
+)
+
+SCHEMA_TYPES = frozenset({"boolean", "integer", "string", "enum"})
+
+
+def _check_registry_schema(r, key):
+    """Reject a row the registry schema does not describe, naming the row and the reason.
+
+    raise, not assert: `python -O` strips assertions, and the comment on the mechanism gate
+    above records that as the explicit reason for the convention in this file.
+    """
+    missing = [f for f in SCHEMA_REQUIRED_FIELDS if f not in r]
+    if missing:
+        raise ValueError(
+            "binding {0!r} is missing required registry field(s) {1}".format(
+                key, sorted(missing)
+            )
+        )
+    if r["presence_model"] != "two_axis":
+        raise ValueError(
+            "binding {0!r} declares presence_model {1!r}; the registry models every "
+            "binding as 'two_axis'".format(key, r["presence_model"])
+        )
+    if r["emit_when"] != "explicit_only":
+        raise ValueError(
+            "binding {0!r} declares emit_when {1!r}; the registry emits every binding "
+            "'explicit_only', which is what makes omission preserve".format(
+                key, r["emit_when"]
+            )
+        )
+    if r["type"] not in SCHEMA_TYPES:
+        raise ValueError(
+            "binding {0!r} declares type {1!r}; known values are {2}".format(
+                key, r["type"], sorted(SCHEMA_TYPES)
+            )
+        )
+
+
 def compile_rows(slice_rows):
     out = []
     seen = set()
@@ -545,6 +614,7 @@ def compile_rows(slice_rows):
                     key, mech, sorted(KNOWN_MECHANISMS)
                 )
             )
+        _check_registry_schema(r, key)
         row = {}
         for f in FIELDS:
             src = REGISTRY_FIELD_ALIASES.get(f, f)
