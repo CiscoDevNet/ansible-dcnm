@@ -103,10 +103,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 200
-    assert len(set(keys)) == 200, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 207
+    assert len(set(keys)) == 207, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 200, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 207, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -164,7 +164,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = [dict(b) for b in BINDING_TABLE]
-    assert len(gen.compile_rows(rows)) == 200
+    assert len(gen.compile_rows(rows)) == 207
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -213,7 +213,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 200
+    assert len(gen.compile_rows(rows)) == 207
 
 
 # ------------------------------------------------------------------ positive transport
@@ -585,7 +585,9 @@ def test_keymap_carries_every_new_nvpair():
     assert km["HSRP_GROUPv6"] == "hsrp_groupv6"
     assert km["DISABLE_IPV4_REDIRECTS"] == "disable_ipv4_redirects"
     assert km["IPV6_ND_SUPPRESS_RA"] == "ipv6_nd_suppress_ra"
-    assert len(km) == 58
+    assert km["ENABLE_DAMPENING"] == "enable_dampening"
+    assert km["DAMPENING_RESTART_PENALTY"] == "dampening_restart_penalty"
+    assert len(km) == 65
 
 
 def test_all_registered_keys():
@@ -633,6 +635,12 @@ def test_all_registered_keys():
         "disable_ipv4_redirects",
         "disable_ipv6_redirects",
         "ipv6_nd_suppress_ra",
+        # Dampening, slice 0b_6 con su mecanismo corregido child_pti -> passthrough. Siete
+        # claves, SOLO en int_routed_host. Su CLI no existe en el NX-OS de C9300v -- medido en
+        # las dos imagenes del lab -- asi que estan registradas y validadas en el CONTROLADOR,
+        # nunca en el equipo. Ver phase39.
+        "enable_dampening", "dampening_half_life", "dampening_reuse", "dampening_suppress",
+        "dampening_max_suppress", "dampening_restart", "dampening_restart_penalty",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was

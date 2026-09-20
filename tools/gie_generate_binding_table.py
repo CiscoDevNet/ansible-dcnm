@@ -431,6 +431,35 @@ COMMITTED_BINDINGS = {
     ("int_vlan", "DISABLE_IPV4_REDIRECTS"): "disable_ipv4_redirects",
     ("int_vlan", "DISABLE_IPV6_REDIRECTS"): "disable_ipv6_redirects",
     ("int_vlan", "IPV6_ND_SUPPRESS_RA"): "ipv6_nd_suppress_ra",
+    # --- Dampening on int_routed_host (slice 0b_6) ---
+    #
+    # Siete, y SOLO en este padre: int_subif, int_vlan e int_loopback declaran 0 de 7.
+    #
+    # Las filas NO son nuevas: llevaban escritas en 0b_6 desde hace tiempo con
+    # `mechanism: child_pti` y nunca llegaron a la tabla, porque no estaban en esta lista -- el
+    # generador salta en silencio una fila que no este aqui. Corregidas a passthrough en el slice
+    # existente; un primer intento creo un 0b_29 duplicado y el generador lo rechazo con
+    # "duplicate committed binding". Misma historia que las ocho de BFD.
+    #
+    # LA UNICA FAMILIA QUE NO LLEGA AL EQUIPO. `dampening` no existe en el NX-OS de C9300v:
+    # sondeado por NDFC en FAB1 (lite 10.5.5) y en FAB4 (completa 10.6.2), las dos rechazan con
+    # "CLI command is invalid". La fase 33 lo habia atribuido a la imagen lite; FAB4 corre la
+    # completa -- la que si soporta EIGRP -- y tambien lo rechaza, asi que la causa no es "lite".
+    #
+    # Se registran igual porque la capa de CONTROLADOR si es validable: el POST evalua el template
+    # antes del deploy, asi que las cuatro reglas de dependencia se ejercitan y el read-back se
+    # lee. La capa de dispositivo queda fuera de alcance por hardware, no por falta de ronda.
+    #
+    # Cadena de cuatro niveles, la mas profunda del registro, y cuatro reglas del template --
+    # una de ellas liga TRES campos registrados entre si ("reuse, suppress and max suppress must
+    # be configured together"), algo que ningun lote anterior tenia. Ninguna se duplica aqui.
+    ("int_routed_host", "ENABLE_DAMPENING"): "enable_dampening",
+    ("int_routed_host", "DAMPENING_HALF_LIFE"): "dampening_half_life",
+    ("int_routed_host", "DAMPENING_REUSE"): "dampening_reuse",
+    ("int_routed_host", "DAMPENING_SUPPRESS"): "dampening_suppress",
+    ("int_routed_host", "DAMPENING_MAX_SUPPRESS"): "dampening_max_suppress",
+    ("int_routed_host", "DAMPENING_RESTART"): "dampening_restart",
+    ("int_routed_host", "DAMPENING_RESTART_PENALTY"): "dampening_restart_penalty",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.

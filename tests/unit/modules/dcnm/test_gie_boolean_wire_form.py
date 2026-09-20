@@ -86,6 +86,9 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         # El cuarto del grupo, disable_ip_redirects, es NATIVO y no aparece aqui -- si apareciera
         # significaria que el registry le quito el nombre al arg spec.
         "disable_ipv4_redirects", "disable_ipv6_redirects", "ipv6_nd_suppress_ra",
+        # Dampening, slice 0b_6: solo DOS de sus siete son boolean. Los otros cinco son
+        # integer y viven en la lista de representacion HAVE, no aqui.
+        "enable_dampening", "dampening_restart",
         # EIGRP, slice 0b_22 -- eight distinct keys, each on all three overlay parents.
         "enable_eigrp_routing", "enable_eigrp_ipv6_routing", "enable_eigrp_shutdown",
         "enable_eigrp_bfd", "disable_eigrp_bfd",
@@ -132,7 +135,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 96 = 87 + the NINE of slice 0b_28, all boolean: three fields on each of the three
     # overlay parents. Slice 0b_27 added none here -- hsrp_groupv6 is an integer and
     # hsrp_vipv6 a string.
-    assert len(BOOL_PASSTHROUGH) == 96
+    # 98 = 96 + los DOS boolean de dampening. Sus otros cinco campos son integer.
+    assert len(BOOL_PASSTHROUGH) == 98
 
 
 # ------------------------------------------------------- what the engine emits --
