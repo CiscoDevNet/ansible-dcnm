@@ -47,7 +47,7 @@ class FabricGroupQuery:
 
     ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.query import FabricGroupQuery
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
 
     params = {"state": "query", "check_mode": False}
