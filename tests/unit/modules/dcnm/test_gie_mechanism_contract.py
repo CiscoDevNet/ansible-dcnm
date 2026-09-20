@@ -63,7 +63,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_carry_forward_bindings,
     gie_contribute_nvpairs,
-    gie_guarded_keys,
     gie_invalid_parent_key,
 )
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
