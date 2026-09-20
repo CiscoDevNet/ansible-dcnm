@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = bc4c3a3efc8e1b3c6e9812ec71722aba380c54e7e18c5480d4d4d7995b16f983
+# provenance_sha256 = 632b8172a97b39ad6a49b5cd98543fe91439b13b4b1eb0da85b4a63923188d09
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "bc4c3a3efc8e1b3c6e9812ec71722aba380c54e7e18c5480d4d4d7995b16f983"
+PROVENANCE_SHA256 = "632b8172a97b39ad6a49b5cd98543fe91439b13b4b1eb0da85b4a63923188d09"
 
 BINDING_TABLE = (
     {
@@ -1934,6 +1934,19 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_vlan',
+        'parent_nvpair': 'HSRP_GROUPv6',
+        'profile_key': 'hsrp_groupv6',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 0,
+        'max_value': 4095,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
         'parent_nvpair': 'HSRP_PREEMPT_DELAY_MINIMUM',
         'profile_key': 'hsrp_preempt_delay_minimum',
         'applicable_interface_type': 'svi',
@@ -1969,6 +1982,18 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 0,
         'max_value': 255,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'HSRP_VIPv6',
+        'profile_key': 'hsrp_vipv6',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'max_length': 45,
         'no_log': False,
     },
     {
