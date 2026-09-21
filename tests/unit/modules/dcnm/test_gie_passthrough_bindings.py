@@ -102,10 +102,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 221
-    assert len(set(keys)) == 221, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 225
+    assert len(set(keys)) == 225, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 221, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 225, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -185,7 +185,7 @@ def _as_slice_rows(rows):
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 221
+    assert len(gen.compile_rows(rows)) == 225
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -210,14 +210,14 @@ def test_generator_enforces_the_registry_schema_per_row():
 
     So the gate moved into compile_rows(), which runs on every regeneration. This case exists so
     it cannot quietly stop enforcing: every rule is asserted by sabotage, and the error has to
-    NAME the offending row, because "schema error" on a 221-row table is not actionable.
+    NAME the offending row, because "schema error" on a 225-row table is not actionable.
 
     Not re-asserted here -- compile_rows owns them above, with their own cases: the allowlist,
     duplicates, profile_key mismatch, unknown mechanism, complete-set.
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 221
+    assert len(gen.compile_rows(rows)) == 225
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -313,7 +313,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 221
+    assert len(gen.compile_rows(rows)) == 225
 
 
 # ------------------------------------------------------------------ positive transport
@@ -696,11 +696,16 @@ def test_keymap_carries_every_new_nvpair():
     # en silencio.
     assert km["IPv6_LINK_LOCAL"] == "ipv6_link_local"
     assert "IPV6_LINK_LOCAL" not in km, "esa es la forma del HIJO, no la del padre"
+    # MACSEC: la forma del PADRE lleva el prefijo MACSEC_; el hijo lo omite y el padre traduce.
+    assert km["MACSEC_KEY_CHAIN_NAME"] == "macsec_key_chain_name"
+    assert km["MACSEC_FALLBACK_KEY_CHAIN_NAME"] == "macsec_fallback_key_chain_name"
+    assert "KEY_CHAIN_NAME" not in km, "esa es la forma del HIJO, sin el prefijo MACSEC_"
     # 66 = 65 + ARP_TIMEOUT. Una sola clave nueva para tres filas: el mismo nombre publico en
     # los tres padres, que es el punto de llavear por (parent, nvpair) y no por nombre.
     # 69 = 66 + las TRES de PIM, que entre ellas cubren ocho filas.
     # 70 = 69 + IPv6_LINK_LOCAL, una clave para las tres filas overlay.
-    assert len(km) == 70
+    # 74 = 70 + las CUATRO de MACSEC, todas en int_routed_host.
+    assert len(km) == 74
 
 
 def test_all_registered_keys():
@@ -772,6 +777,11 @@ def test_all_registered_keys():
         # (int_loopback no lo declara). La clave del nvPair es `IPv6_LINK_LOCAL` con v
         # minuscula -- la forma del PADRE; el hijo la espera en mayusculas y el padre traduce.
         "ipv6_link_local",
+        # MACSEC, slice 0b_33. CUATRO claves publicas, todas en int_routed_host -- el unico
+        # padre que las declara. Son NOMBRES (punteros a keychain y policy), no secretos, de
+        # ahi no_log false. Ver phase44.
+        "enable_macsec_interface_policy", "macsec_key_chain_name", "macsec_policy_name",
+        "macsec_fallback_key_chain_name",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
