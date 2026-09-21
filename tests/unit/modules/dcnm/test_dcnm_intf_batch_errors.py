@@ -110,12 +110,12 @@ def test_error_matching_is_case_insensitive():
 @pytest.mark.parametrize(
     "resp",
     [
-        {"RETURN_CODE": 207},                                   # sin DATA
+        {"RETURN_CODE": 207},                                   # missing DATA
         {"RETURN_CODE": 207, "DATA": None},
         {"RETURN_CODE": 207, "DATA": {"message": "not a list"}},  # objeto, no lote
         {"RETURN_CODE": 207, "DATA": ["texto", None, 5]},        # elementos malformados
         {},                                                      # respuesta vacia
-        None,                                                    # ni siquiera un dict
+        None,                                                    # not even a dict
     ],
     ids=["no_data", "null_data", "dict_data", "junk_items", "empty", "not_a_dict"],
 )
@@ -150,8 +150,8 @@ def test_a_partial_batch_says_what_was_already_applied():
         "DATA": [_ok("SN~Ethernet1/5"), _err("SN~Ethernet1/4", REJECTION)],
     }
     text = render(resp, collect(resp))
-    assert "SN~Ethernet1/4" in text          # el rechazado
-    assert "SN~Ethernet1/5" in text          # el aplicado
+    assert "SN~Ethernet1/4" in text          # rejected item
+    assert "SN~Ethernet1/5" in text          # applied item
     assert "Applied before the rejection" in text
 
 

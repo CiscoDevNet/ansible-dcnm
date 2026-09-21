@@ -71,22 +71,22 @@ EXPECTED = {
     "disable_qos_stats": ("DISABLE_QOS_STATS", "boolean"),
     "disable_queuing_stats": ("DISABLE_QUEUING_STATS", "boolean"),
     "ipv4_acl_in": ("IPV4_ACL_IN", "string"),
-    # slice 0b_28. El cuarto del grupo, DISABLE_IP_REDIRECTS, es nativo y no se registra.
+    # Slice 0b_28. The fourth field, DISABLE_IP_REDIRECTS, is native and is not registered.
     "disable_ipv4_redirects": ("DISABLE_IPV4_REDIRECTS", "boolean"),
     "disable_ipv6_redirects": ("DISABLE_IPV6_REDIRECTS", "boolean"),
     "ipv6_nd_suppress_ra": ("IPV6_ND_SUPPRESS_RA", "boolean"),
-    # ARP_TIMEOUT, slice 0b_3. El unico campo de la tabla cuyo rango en la DECLARACION cambio
-    # despues de escribirse la fila: la batch del 14sep le puso min=60/max=28800 a un
-    # `integer ARP_TIMEOUT;` que no tenia ninguno.
+    # ARP_TIMEOUT, slice 0b_3. Its declared range changed after the row was written:
+    # the September 14 template batch added min=60/max=28800 to
+    # `integer ARP_TIMEOUT;`, which previously had no bounds.
     "arp_timeout": ("ARP_TIMEOUT", "integer"),
-    # PIM, slice 0b_31. Este es el unico padre que declara los TRES. pim_dr_priority es `long`
-    # en el template y se registra `integer`: _TYPE_TO_VALIDATOR no conoce `long` y valida
-    # identico. Y el valor 1 no emite linea -- ver la trampa en el slice.
-    # IPv6 link-local, slice 0b_32. `ipV6Address` en el template, registrado `string` con
-    # max_length 45 -- mismo tratamiento que HSRP_VIPv6, que tambien es ipV6Address.
+    # PIM, slice 0b_31. Only this parent declares all three fields. The template's `long`
+    # pim_dr_priority is registered as `integer`: _TYPE_TO_VALIDATOR has no `long` type,
+    # and integer validation is equivalent. A value of 1 emits no CLI line; see the slice.
+    # IPv6 link-local, slice 0b_32. The template's `ipV6Address` is registered as `string`
+    # with max_length 45, matching HSRP_VIPv6, which also uses ipV6Address.
     "ipv6_link_local": ("IPv6_LINK_LOCAL", "string"),
-    # MACSEC, slice 0b_33. Los tres strings cuelgan del boolean por IsShow. Son NOMBRES, no
-    # secretos: punteros a una keychain y una policy que viven en el switch.
+    # MACSEC, slice 0b_33. IsShow gates the three strings on the boolean. They are names,
+    # not secrets: references to keychains and a policy on the switch.
     "enable_macsec_interface_policy": ("ENABLE_MACSEC_INTERFACE_POLICY", "boolean"),
     "macsec_key_chain_name": ("MACSEC_KEY_CHAIN_NAME", "string"),
     "macsec_policy_name": ("MACSEC_POLICY_NAME", "string"),
@@ -94,7 +94,7 @@ EXPECTED = {
     "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "boolean"),
     "pim_dr_priority": ("PIM_DR_PRIORITY", "integer"),
     "enable_pim_bfd_instance": ("ENABLE_PIM_BFD_INSTANCE", "boolean"),
-    # Dampening, slice 0b_6. Solo este padre lo declara; su CLI no existe en C9300v.
+    # Dampening, slice 0b_6. Only this parent declares it; C9300v does not support its CLI.
     "enable_dampening": ("ENABLE_DAMPENING", "boolean"),
     "dampening_half_life": ("DAMPENING_HALF_LIFE", "integer"),
     "dampening_reuse": ("DAMPENING_REUSE", "integer"),
