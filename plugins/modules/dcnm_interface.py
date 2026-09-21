@@ -950,6 +950,22 @@ options:
             - VRF to reach DHCP server. This parameter is required if "dhcp_server_addr3" is included.
             type: str
             default: ""
+          dhcp_server_addr4:
+            description:
+            - DHCP relay server address.
+            type: str
+            default: ""
+          vrf_dhcp4:
+            description:
+            - VRF to reach DHCP server. This parameter is required if "dhcp_server_addr4" is included.
+            type: str
+            default: ""
+          dhcp_relay_src_intf:
+            description:
+            - Source interface for DHCP relay. Valid interfaces are Ethernet, port-channel or loopback.
+            - Independent of the DHCP server addresses; it can be set on its own.
+            type: str
+            default: ""
           adv_subnet_in_underlay:
             description:
             - Flag to enable/disable advertisements of subnets into underlay.
@@ -1657,6 +1673,9 @@ EXAMPLES = """
           vrf_dhcp2: blue                           # optional, VRF to reach DHCP server. default is ""
           dhcp_server_addr3: 192.200.1.3            # optional, DHCP relay server address, default is ""
           vrf_dhcp3: blue                           # optional, VRF to reach DHCP server. default is ""
+          dhcp_server_addr4: 192.200.1.4            # optional, DHCP relay server address, default is ""
+          vrf_dhcp4: blue                           # optional, VRF to reach DHCP server. default is ""
+          dhcp_relay_src_intf: loopback0            # optional, source interface for DHCP relay, default is ""
           adv_subnet_in_underlay: true              # optional, flag to enable/disable advertisements of subnets into underlay, default is "false"
           enable_netflow: false                     # optional, flag to enable netflow, default is "false"
           netflow_monitor: svi1001                  # optional, name of netflow monitor, default is ""
@@ -1697,6 +1716,9 @@ EXAMPLES = """
           vrf_dhcp2: green                                # optional, VRF to reach DHCP server. default is ""
           dhcp_server_addr3: 193.200.1.3                  # optional, DHCP relay server address, default is ""
           vrf_dhcp3: green                                # optional, VRF to reach DHCP server. default is ""
+          dhcp_server_addr4: 193.200.1.4                  # optional, DHCP relay server address, default is ""
+          vrf_dhcp4: green                                # optional, VRF to reach DHCP server. default is ""
+          dhcp_relay_src_intf: loopback0                  # optional, source interface for DHCP relay, default is ""
           adv_subnet_in_underlay: false                   # optional, flag to enable/disable advertisements of subnets into underlay, default is "false"
           enable_netflow: false                           # optional, flag to enable netflow, default is "false"
           netflow_monitor: svi1002                        # optional, name of netflow monitor, default is ""
@@ -2317,9 +2339,12 @@ class DcnmIntf:
             "dhcpServerAddr1": "dhcp_server_addr1",
             "dhcpServerAddr2": "dhcp_server_addr2",
             "dhcpServerAddr3": "dhcp_server_addr3",
+            "dhcpServerAddr4": "dhcp_server_addr4",
             "vrfDhcp1": "vrf_dhcp1",
             "vrfDhcp2": "vrf_dhcp2",
             "vrfDhcp3": "vrf_dhcp3",
+            "vrfDhcp4": "vrf_dhcp4",
+            "DHCP_RELAY_SRC_INTF": "dhcp_relay_src_intf",
             "advSubnetInUnderlay": "adv_subnet_in_unbderlay",
             "ENABLE_NETFLOW": "enable_netflow",
             "NETFLOW_MONITOR": "netflow_monitor",
@@ -3804,6 +3829,18 @@ class DcnmIntf:
             dhcp_server_addr1=dict(type="ipv4", default=""),
             dhcp_server_addr2=dict(type="ipv4", default=""),
             dhcp_server_addr3=dict(type="ipv4", default=""),
+            # type="ipv4" like the other three, DELIBERATELY and not by oversight. The template
+            # declares all FOUR as `ipAddress` with DisplayName "IPv4 or IPv6 DHCP server N", so
+            # the module restricts to IPv4 something the controller accepts in both families --
+            # and the body carries a whole branch unreachable from here
+            # (`if ":" not in dhcpServerAddrN` -> child vlan_interface_ipv6_dhcp_relay). The
+            # limitation applies to all four equally, so lifting it is its own change: mixing it
+            # into "add the fourth server" grows the diff for no reason.
+            dhcp_server_addr4=dict(type="ipv4", default=""),
+            # DHCP_RELAY_SRC_INTF hangs off no server: it is independent and stands alone. The
+            # template declares it as type `interface` and normalizes it through
+            # Helper.getInterfaceName2, so it travels as a str here and NDFC canonicalizes it.
+            dhcp_relay_src_intf=dict(type="str", default=""),
             adv_subnet_in_underlay=dict(type="bool", default=False),
             enable_hsrp=dict(type="bool", default=False),
             enable_netflow=dict(type="bool", default=False),
@@ -3823,6 +3860,14 @@ class DcnmIntf:
             svi_prof_spec["vrf_dhcp3"] = dict(required=True, type="str")
         else:
             svi_prof_spec["vrf_dhcp3"] = dict(type="str", default="")
+
+        # Same pattern as the three above, mirroring the template's IsShow:
+        #     @(IsMandatory=false, IsShow="dhcpServerAddr4!=null", ...) string vrfDhcp4;
+        # The VRF only means anything when there is a server to reach.
+        if cfg[0]["profile"].get("dhcp_server_addr4", "") != "":
+            svi_prof_spec["vrf_dhcp4"] = dict(required=True, type="str")
+        else:
+            svi_prof_spec["vrf_dhcp4"] = dict(type="str", default="")
 
         if cfg[0]["profile"].get("ipv4_addr", False) is not False:
             svi_prof_spec["ipv4_mask_len"] = dict(
@@ -5059,6 +5104,43 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["vrfDhcp3"] = str(
                 delem[profile]["vrf_dhcp3"]
             )
+            # Servers 1 to 3 above are written unconditionally; server 4 and the relay source
+            # interface are NOT, and the asymmetry is deliberate and measured.
+            #
+            # Writing them always was implemented first and then measured, rather than assumed
+            # either way. Against this lab's controller it would have converged: the HAVE of an
+            # SVI created without any DHCP field DOES carry dhcpServerAddr4, vrfDhcp4 and
+            # DHCP_RELAY_SRC_INTF, all three as "" (not null) -- 91 nvPairs covering 27 of the
+            # 29 parameters int_vlan@0efb09af7f837b30 declares. NDFC fills them from the
+            # template even though the module never sent them.
+            #
+            # But a controller whose GET omits the key is a real case -- an older int_vlan
+            # predating the fourth server -- and there the unconditional write does not merely
+            # diverge, it CRASHES: nv_keys comes from the payload, the comparison reads HAVE
+            # with .get() (None), and then copy_and_add reads it directly,
+            #     want[k][0][ik][nk] = d[k][0][ik][nk]        (:6439)
+            # -> KeyError: 'dhcpServerAddr4'. Measured, not predicted:
+            # test_dcnm_intf_svi_merged_idempotent raises exactly that, because its HAVE
+            # fixture carries 26 nvPairs with servers 1-3 and no fourth.
+            #
+            # The guard costs nothing on a controller that does return the keys and keeps the
+            # module working on one that does not. An SVI with no DHCP relay produces exactly
+            # the payload it produced before this change.
+            if str(delem[profile].get("dhcp_server_addr4", "")) != "":
+                intf["interfaces"][0]["nvPairs"]["dhcpServerAddr4"] = str(
+                    delem[profile]["dhcp_server_addr4"]
+                )
+                # vrfDhcp4 hangs off the server, mirroring the template's
+                # IsShow="dhcpServerAddr4!=null". Empty means "the interface VRF".
+                intf["interfaces"][0]["nvPairs"]["vrfDhcp4"] = str(
+                    delem[profile]["vrf_dhcp4"]
+                )
+            # Independent of every server: the relay source interface has no IsShow and gets
+            # its own guard.
+            if str(delem[profile].get("dhcp_relay_src_intf", "")) != "":
+                intf["interfaces"][0]["nvPairs"]["DHCP_RELAY_SRC_INTF"] = str(
+                    delem[profile]["dhcp_relay_src_intf"]
+                )
             intf["interfaces"][0]["nvPairs"]["advSubnetInUnderlay"] = str(
                 delem[profile]["adv_subnet_in_underlay"]
             ).lower()

@@ -1843,6 +1843,26 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_succ_resp,
             ]
 
+        # Both DHCP-relay tests create an SVI that does not exist yet, so they need the same
+        # empty-HAVE sequence as _svi_merged_new. Without a branch here the mock has no
+        # side_effect at all and the module refuses to act -- "could not be read
+        # authoritatively" -- which looks like a product failure and is a missing fixture.
+        if "_svi_dhcp4_" in self._testMethodName:
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+            svi_bulk_empty = self.build_bulk_payload()
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                svi_bulk_empty,
+                playbook_have_all_data,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
         if "_svi_merged_idempotent" in self._testMethodName:
             playbook_svi_intf1 = self.payloads_data.get("svi_merged_payloads")
             playbook_have_all_data = self.have_all_payloads_data.get(
@@ -7063,6 +7083,107 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
         result = self.execute_module(changed=False, failed=False)
         self.assertEqual(len(result["diff"][0]["merged"]), 0)
+
+    def test_dcnm_intf_svi_dhcp4_relay_emitted(self):
+        """The fourth DHCP server, its VRF and the relay source interface reach the payload.
+
+        Without this, nothing offline proves the three nvPairs travel at all: the guard test
+        below only proves they stay OUT when unset, which an empty implementation also
+        satisfies. Both directions are needed.
+        """
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_svi_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_svi_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("svi_dhcp4_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+
+        for d in result["diff"][0]["merged"]:
+            for intf in d["interfaces"]:
+                nv_pairs = intf["nvPairs"]
+                self.assertEqual(nv_pairs["dhcpServerAddr4"], "192.200.1.4")
+                self.assertEqual(nv_pairs["vrfDhcp4"], "blue")
+                self.assertEqual(nv_pairs["DHCP_RELAY_SRC_INTF"], "loopback0")
+                # The first three keep travelling unchanged next to the fourth.
+                self.assertEqual(nv_pairs["dhcpServerAddr3"], "192.200.1.3")
+
+    def test_dcnm_intf_svi_dhcp4_absent_when_unset(self):
+        """An SVI without the fourth server must not carry its nvPairs at all.
+
+        This is the guard, and it is not a style preference. nv_keys is built from the payload,
+        so a key present here but missing from HAVE is compared with .get() (None) and then read
+        DIRECTLY by copy_and_add -- `want[k][0][ik][nk] = d[k][0][ik][nk]` -- which raises
+        KeyError on a controller whose int_vlan predates the fourth server. Measured: writing
+        the three unconditionally makes test_dcnm_intf_svi_merged_idempotent raise exactly
+        `KeyError: 'dhcpServerAddr4'`.
+
+        Note this lab's NDFC does return all three as "" in HAVE, so the live rounds would NOT
+        have caught a regression here. That is why the assertion lives offline.
+        """
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_svi_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_svi_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data -- the long-standing SVI config, which sets servers 1 to 3
+        # and never mentions the fourth or the relay source interface.
+        self.playbook_config = self.config_data.get("svi_merged_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+
+        for d in result["diff"][0]["merged"]:
+            for intf in d["interfaces"]:
+                nv_pairs = intf["nvPairs"]
+                self.assertNotIn("dhcpServerAddr4", nv_pairs)
+                self.assertNotIn("vrfDhcp4", nv_pairs)
+                self.assertNotIn("DHCP_RELAY_SRC_INTF", nv_pairs)
+                # The payload is otherwise exactly what it was before the change.
+                self.assertEqual(nv_pairs["dhcpServerAddr1"], "192.200.1.1")
 
     def test_dcnm_intf_svi_deleted_existing(self):
 
