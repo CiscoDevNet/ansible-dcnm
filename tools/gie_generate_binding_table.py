@@ -536,6 +536,34 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "IPv6_LINK_LOCAL"): "ipv6_link_local",
     ("int_subif", "IPv6_LINK_LOCAL"): "ipv6_link_local",
     ("int_vlan", "IPv6_LINK_LOCAL"): "ipv6_link_local",
+    # --- MACSEC on int_routed_host (slice 0b_33) ---
+    #
+    # CUATRO, y solo en este padre: es el unico que las declara. Los tres strings cuelgan del
+    # boolean por IsShow, la forma de HSRP, y dos de ellos son ademas IsMandatory cuando el
+    # habilitador esta en true -- lo que da la regla del template gratis para la negativa:
+    # "MACsec keychain and policy are required when MACsec interface policy is enabled."
+    #
+    # LOS CUATRO SON NOMBRES, NO SECRETOS: punteros a una keychain y una policy que viven en el
+    # switch. De ahi `no_log: false` -- marcarlos haria que Ansible scrubbeara el nombre de la
+    # keychain por coincidencia de cadena en toda la salida, sin proteger nada. El material de
+    # clave vive en la keychain, que este modulo no crea.
+    #
+    # Los nombres del padre y del hijo NO coinciden (MACSEC_KEY_CHAIN_NAME -> KEY_CHAIN_NAME,
+    # etc.); el padre traduce. Estas filas llevan la forma del PADRE, igual que IPv6_LINK_LOCAL.
+    #
+    # El hijo macsec_fallback_interface tiene DOS ramas segun haya fallback o no, asi que una
+    # sola corrida en vivo solo ejercita una.
+    #
+    # MEDIDO EN VIVO (FAB4, L1-F4, nxos64-cs.10.6.2.F): `feature macsec` ya estaba encendida, el
+    # CLI EXISTE y la linea aterriza, y la policy `system-default-macsec-policy` ya existe.
+    #
+    # ASIMETRIA: NX-OS valida la POLICY -- un nombre inexistente da 500 con "Failed to find
+    # policy" -- y NO valida la KEYCHAIN, que se acepta y se aplica dejando una referencia
+    # colgante sin que nada avise. Ver phase44.
+    ("int_routed_host", "ENABLE_MACSEC_INTERFACE_POLICY"): "enable_macsec_interface_policy",
+    ("int_routed_host", "MACSEC_KEY_CHAIN_NAME"): "macsec_key_chain_name",
+    ("int_routed_host", "MACSEC_POLICY_NAME"): "macsec_policy_name",
+    ("int_routed_host", "MACSEC_FALLBACK_KEY_CHAIN_NAME"): "macsec_fallback_key_chain_name",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.
