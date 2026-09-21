@@ -94,6 +94,9 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         # PIM, slice 0b_31: DOS de sus tres claves son boolean. pim_dr_priority es integer y
         # vive en la lista de representacion HAVE, no aqui.
         "enable_pim_sparse", "enable_pim_bfd_instance",
+        # MACSEC, slice 0b_33: solo el habilitador es boolean. Los otros tres son NOMBRES
+        # (string) y no aparecen aqui.
+        "enable_macsec_interface_policy",
         # EIGRP, slice 0b_22 -- eight distinct keys, each on all three overlay parents.
         "enable_eigrp_routing", "enable_eigrp_ipv6_routing", "enable_eigrp_shutdown",
         "enable_eigrp_bfd", "disable_eigrp_bfd",
@@ -143,7 +146,9 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 98 = 96 + los DOS boolean de dampening. Sus otros cinco campos son integer.
     # 103 = 98 + los CINCO boolean de PIM: enable_pim_sparse en los cuatro padres y
     # enable_pim_bfd_instance en int_routed_host. pim_dr_priority es integer y no cuenta aqui.
-    assert len(BOOL_PASSTHROUGH) == 103
+    # 104 = 103 + enable_macsec_interface_policy, el UNICO boolean de MACSEC: sus otros tres
+    # campos son nombres (string).
+    assert len(BOOL_PASSTHROUGH) == 104
 
 
 # ------------------------------------------------------- what the engine emits --

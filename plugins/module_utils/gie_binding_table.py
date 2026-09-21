@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = b34a65f7dca1cbfd5fd2a8fe18571111f434dbe0786fa50814dd5c398fc3db12
+# provenance_sha256 = c62abf928dfcf0895262dc9010643ed0c86ff08cb37e0121467de13cc9d42f87
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "b34a65f7dca1cbfd5fd2a8fe18571111f434dbe0786fa50814dd5c398fc3db12"
+PROVENANCE_SHA256 = "c62abf928dfcf0895262dc9010643ed0c86ff08cb37e0121467de13cc9d42f87"
 
 BINDING_TABLE = (
     {
@@ -1025,6 +1025,18 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_routed_host',
+        'parent_nvpair': 'ENABLE_MACSEC_INTERFACE_POLICY',
+        'profile_key': 'enable_macsec_interface_policy',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
         'parent_nvpair': 'ENABLE_OSPF',
         'profile_key': 'enable_ospf',
         'applicable_interface_type': 'eth',
@@ -1106,6 +1118,45 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'max_length': 45,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'MACSEC_FALLBACK_KEY_CHAIN_NAME',
+        'profile_key': 'macsec_fallback_key_chain_name',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 64,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'MACSEC_KEY_CHAIN_NAME',
+        'profile_key': 'macsec_key_chain_name',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 64,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'MACSEC_POLICY_NAME',
+        'profile_key': 'macsec_policy_name',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 64,
         'no_log': False,
     },
     {

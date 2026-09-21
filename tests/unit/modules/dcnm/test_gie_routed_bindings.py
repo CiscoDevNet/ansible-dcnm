@@ -85,6 +85,12 @@ EXPECTED = {
     # IPv6 link-local, slice 0b_32. `ipV6Address` en el template, registrado `string` con
     # max_length 45 -- mismo tratamiento que HSRP_VIPv6, que tambien es ipV6Address.
     "ipv6_link_local": ("IPv6_LINK_LOCAL", "string"),
+    # MACSEC, slice 0b_33. Los tres strings cuelgan del boolean por IsShow. Son NOMBRES, no
+    # secretos: punteros a una keychain y una policy que viven en el switch.
+    "enable_macsec_interface_policy": ("ENABLE_MACSEC_INTERFACE_POLICY", "boolean"),
+    "macsec_key_chain_name": ("MACSEC_KEY_CHAIN_NAME", "string"),
+    "macsec_policy_name": ("MACSEC_POLICY_NAME", "string"),
+    "macsec_fallback_key_chain_name": ("MACSEC_FALLBACK_KEY_CHAIN_NAME", "string"),
     "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "boolean"),
     "pim_dr_priority": ("PIM_DR_PRIORITY", "integer"),
     "enable_pim_bfd_instance": ("ENABLE_PIM_BFD_INSTANCE", "boolean"),

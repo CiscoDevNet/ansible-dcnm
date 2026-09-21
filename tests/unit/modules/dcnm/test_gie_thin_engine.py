@@ -409,6 +409,19 @@ LINK_LOCAL_ROWS = {
 }
 
 
+# MACSEC, slice 0b_33. CUATRO, todas en int_routed_host: es el unico padre que las declara. El
+# numero es la asercion -- una quinta querria decir que se registro en un padre que no las tiene.
+MACSEC_ROWS = {
+    ("int_routed_host", nvpair, key)
+    for nvpair, key in (
+        ("ENABLE_MACSEC_INTERFACE_POLICY", "enable_macsec_interface_policy"),
+        ("MACSEC_KEY_CHAIN_NAME", "macsec_key_chain_name"),
+        ("MACSEC_POLICY_NAME", "macsec_policy_name"),
+        ("MACSEC_FALLBACK_KEY_CHAIN_NAME", "macsec_fallback_key_chain_name"),
+    )
+}
+
+
 # ---- binding package runtime contract ----
 def test_package_provenance_and_size():
     expected_keys = (
@@ -417,12 +430,13 @@ def test_package_provenance_and_size():
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
+        | MACSEC_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 221
+    assert len(BINDING_TABLE) == len(actual_keys) == 225
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -451,6 +465,7 @@ def test_package_provenance_and_size():
     # 8 = 4 sparse + 3 dr_priority + 1 bfd_instance. El desglose importa mas que el total.
     assert len(PIM_ROWS) == 8
     assert len(LINK_LOCAL_ROWS) == 3
+    assert len(MACSEC_ROWS) == 4
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -494,7 +509,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 221
+    assert len(rows) == 225
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -893,6 +908,11 @@ def test_all_registered_and_guarded_keys():
         # (int_loopback no lo declara). La clave del nvPair es `IPv6_LINK_LOCAL` con v
         # minuscula -- la forma del PADRE; el hijo la espera en mayusculas y el padre traduce.
         "ipv6_link_local",
+        # MACSEC, slice 0b_33. CUATRO claves publicas, todas en int_routed_host -- el unico
+        # padre que las declara. Son NOMBRES (punteros a keychain y policy), no secretos, de
+        # ahi no_log false. Ver phase44.
+        "enable_macsec_interface_policy", "macsec_key_chain_name", "macsec_policy_name",
+        "macsec_fallback_key_chain_name",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -973,6 +993,11 @@ def test_all_registered_and_guarded_keys():
         # (int_loopback no lo declara). La clave del nvPair es `IPv6_LINK_LOCAL` con v
         # minuscula -- la forma del PADRE; el hijo la espera en mayusculas y el padre traduce.
         "ipv6_link_local",
+        # MACSEC, slice 0b_33. CUATRO claves publicas, todas en int_routed_host -- el unico
+        # padre que las declara. Son NOMBRES (punteros a keychain y policy), no secretos, de
+        # ahi no_log false. Ver phase44.
+        "enable_macsec_interface_policy", "macsec_key_chain_name", "macsec_policy_name",
+        "macsec_fallback_key_chain_name",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -1096,7 +1121,7 @@ def test_a_zero_minimum_is_printed_as_a_bound_not_as_unbounded():
 def test_a_bound_declared_alone_still_reaches_the_range_branch(monkeypatch):
     """The reason the branch tests ``is not None`` rather than truthiness.
 
-    Measured: 0 of the 221 rows declare only one of the two bounds, so today a plain
+    Measured: 0 of the 225 rows declare only one of the two bounds, so today a plain
     ``min_value or max_value`` would reach this branch anyway -- every row with a 0 minimum
     also has a maximum that makes the `or` true. The guard is for the FIRST row that declares a
     minimum of 0 and no maximum, where truthiness would drop the range from the message and
