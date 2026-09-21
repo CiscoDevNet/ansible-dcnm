@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = c62abf928dfcf0895262dc9010643ed0c86ff08cb37e0121467de13cc9d42f87
+# provenance_sha256 = 4151cd21632dafa00d62bc460da04022e98aa5f8fab81a05ea2e2a133c0177e7
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "c62abf928dfcf0895262dc9010643ed0c86ff08cb37e0121467de13cc9d42f87"
+PROVENANCE_SHA256 = "4151cd21632dafa00d62bc460da04022e98aa5f8fab81a05ea2e2a133c0177e7"
 
 BINDING_TABLE = (
     {
@@ -651,6 +651,18 @@ BINDING_TABLE = (
         'applicable_interface_type': 'pc',
         'applicable_mode': 'trunk',
         'type': 'boolean',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_port_channel_trunk_host',
+        'parent_nvpair': 'ENABLE_VPC_PEER_LINK',
+        'profile_key': 'enable_vpc_peer_link',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'trunk',
+        'type': 'boolean',
+        'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -2379,6 +2391,19 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_vlan',
+        'parent_nvpair': 'IPV4_ACL_IN',
+        'profile_key': 'ipv4_acl_in',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 64,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
         'parent_nvpair': 'IPV6_ND_SUPPRESS_RA',
         'profile_key': 'ipv6_nd_suppress_ra',
         'applicable_interface_type': 'svi',
@@ -2630,6 +2655,19 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 4294967295,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vlan',
+        'parent_nvpair': 'PRIVATE_VLAN_MAPPING',
+        'profile_key': 'private_vlan_mapping',
+        'applicable_interface_type': 'svi',
+        'applicable_mode': 'vlan',
+        'type': 'string',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 64,
         'no_log': False,
     },
     {
