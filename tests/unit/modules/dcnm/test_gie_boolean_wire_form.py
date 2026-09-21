@@ -97,6 +97,9 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         # MACSEC, slice 0b_33: solo el habilitador es boolean. Los otros tres son NOMBRES
         # (string) y no aparecen aqui.
         "enable_macsec_interface_policy",
+        # Tanda 2, slice 0b_34: el unico boolean de los tres. ipv4_acl_in y
+        # private_vlan_mapping son string.
+        "enable_vpc_peer_link",
         # EIGRP, slice 0b_22 -- eight distinct keys, each on all three overlay parents.
         "enable_eigrp_routing", "enable_eigrp_ipv6_routing", "enable_eigrp_shutdown",
         "enable_eigrp_bfd", "disable_eigrp_bfd",
@@ -148,7 +151,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # enable_pim_bfd_instance en int_routed_host. pim_dr_priority es integer y no cuenta aqui.
     # 104 = 103 + enable_macsec_interface_policy, el UNICO boolean de MACSEC: sus otros tres
     # campos son nombres (string).
-    assert len(BOOL_PASSTHROUGH) == 104
+    # 105 = 104 + enable_vpc_peer_link, el unico boolean de la tanda 2.
+    assert len(BOOL_PASSTHROUGH) == 105
 
 
 # ------------------------------------------------------- what the engine emits --

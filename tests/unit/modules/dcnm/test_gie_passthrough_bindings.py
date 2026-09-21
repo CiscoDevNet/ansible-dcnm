@@ -102,10 +102,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 225
-    assert len(set(keys)) == 225, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 228
+    assert len(set(keys)) == 228, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 225, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 228, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -185,7 +185,7 @@ def _as_slice_rows(rows):
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 225
+    assert len(gen.compile_rows(rows)) == 228
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -210,14 +210,14 @@ def test_generator_enforces_the_registry_schema_per_row():
 
     So the gate moved into compile_rows(), which runs on every regeneration. This case exists so
     it cannot quietly stop enforcing: every rule is asserted by sabotage, and the error has to
-    NAME the offending row, because "schema error" on a 225-row table is not actionable.
+    NAME the offending row, because "schema error" on a 228-row table is not actionable.
 
     Not re-asserted here -- compile_rows owns them above, with their own cases: the allowlist,
     duplicates, profile_key mismatch, unknown mechanism, complete-set.
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 225
+    assert len(gen.compile_rows(rows)) == 228
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -313,7 +313,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 225
+    assert len(gen.compile_rows(rows)) == 228
 
 
 # ------------------------------------------------------------------ positive transport
@@ -571,6 +571,9 @@ def test_carry_forward_covers_every_new_passthrough_binding():
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(PC_TRUNK)
     } == {
+        # Tanda 2, slice 0b_34. Solo este padre de los tres de port-channel declara el
+        # peer-link. Su capa de dispositivo no es alcanzable en este lab -- ver el slice.
+        ("ENABLE_VPC_PEER_LINK", "enable_vpc_peer_link"),
         ("GUARD_MODE", "guard_mode"),
         ("ACL_FILTER", "acl_filter"),
         ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
@@ -705,7 +708,11 @@ def test_keymap_carries_every_new_nvpair():
     # 69 = 66 + las TRES de PIM, que entre ellas cubren ocho filas.
     # 70 = 69 + IPv6_LINK_LOCAL, una clave para las tres filas overlay.
     # 74 = 70 + las CUATRO de MACSEC, todas en int_routed_host.
-    assert len(km) == 74
+    # 76 = 74 + DOS de la tanda 2: private_vlan_mapping y enable_vpc_peer_link. IPV4_ACL_IN ya
+    # estaba en el keymap desde int_routed_host -- tres filas, dos claves nuevas.
+    assert km["PRIVATE_VLAN_MAPPING"] == "private_vlan_mapping"
+    assert km["ENABLE_VPC_PEER_LINK"] == "enable_vpc_peer_link"
+    assert len(km) == 76
 
 
 def test_all_registered_keys():
@@ -782,6 +789,10 @@ def test_all_registered_keys():
         # ahi no_log false. Ver phase44.
         "enable_macsec_interface_policy", "macsec_key_chain_name", "macsec_policy_name",
         "macsec_fallback_key_chain_name",
+        # Tanda 2, slice 0b_34. TRES campos sin relacion entre si en DOS padres. ipv4_acl_in
+        # ya estaba en la lista desde int_routed_host -- aqui lo reutiliza int_vlan, que es el
+        # punto de llavear por (parent, nvpair). Los otros dos son claves nuevas.
+        "private_vlan_mapping", "enable_vpc_peer_link",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
