@@ -589,11 +589,39 @@ COMMITTED_BINDINGS = {
     #
     # Dos reglas duras del cuerpo (:450, :457) que son negativas gratis.
     #
-    # CORREGIDO: este comentario decia que la capa de dispositivo no era alcanzable, apoyandose
-    # en medidas de Leaf-103 -- que NO es par vPC. El par real es Leaf-105/106 y esta SANO
-    # (domain 105, adjacency ok, consistency success, peer-link Po500 con las DOS lineas que
-    # este binding produce). El estado correcto es `Registered, untested`: trabajo pendiente, no
-    # limite de hardware como dampening.
+    # VALIDADO EN VIVO sobre el par real Leaf-105/106 (domain 105), con un Po510 desechable en
+    # Eth1/7-1/8. Un comentario anterior decia que la capa de dispositivo no era alcanzable,
+    # apoyandose en medidas de Leaf-103 -- que NO es par vPC. El par real si lo es, y lo que se
+    # midio alli le cambia el tamano al hallazgo:
+    #
+    #   NX-OS RECHAZA un segundo peer-link en el dominio, y NDFC no lo comprueba:
+    #       ERROR: Operation failed: [vPC Peer-link has already been configured on po500]
+    #   nombrado por switch, con el deploy devolviendo 500. La coherencia la valida el EQUIPO y
+    #   no el controlador -- complemento exacto de la serie keychain/ACL/link-local, donde NDFC
+    #   acepto objetos inexistentes o fuera de rango.
+    #
+    #   EL CORTE ES PARCIAL, y por eso el binding si quedo medido: la linea de :654
+    #   (`spanning-tree port type network`) ATERRIZA y la de :686 (`vpc peer-link`) no. El
+    #   rechazo ocurre en el comando #12, asi que todo lo anterior queda aplicado.
+    #
+    #   EL DESCARTE SILENCIOSO ES DOBLE, no simple, y esta medido con CONTROL:
+    #       peer-link apagado  ->  `spanning-tree port type normal` + `... bpduguard enable`
+    #       peer-link en true  ->  ninguna de las dos, y `... port type network` en su lugar
+    #   El control importa: sin el, "lo pedido no sale" tambien se explicaria por un campo que no
+    #   hace nada. BPDUFILTER_ENABLED (:660) corre la misma suerte, por codigo.
+    #
+    #   Y NO ES DETECTABLE DESDE NINGUNA CAPA. NDFC GUARDA lo que el operador pidio
+    #   (SPANNING_TREE_PORT_TYPE: "normal") y su propio pendingConfig emite `network`: en un par
+    #   sin peer-link previo, controlador y equipo coincidirian y la interfaz saldria In-Sync con
+    #   el valor pedido guardado y nunca aplicado. Medido con forceShowRun=true.
+    #
+    #   Idempotencia: `replaced: []` al reenviar -- converge en la capa de INTENCION; lo que no
+    #   cierra es el deploy de un estado que el equipo rechaza. Omitir la clave preserva el
+    #   "true" guardado. El vPC quedo identico al estado previo, linea por linea en los dos
+    #   peers, e In-Sync con pendingConfig vacio.
+    #
+    #   Lo unico que el lab NO puede medir es un `vpc peer-link` ACEPTADO: el dominio ya tiene el
+    #   suyo y hay un solo par. Es limite de topologia, no hueco del binding.
     ("int_port_channel_trunk_host", "ENABLE_VPC_PEER_LINK"): "enable_vpc_peer_link",
 }
 
