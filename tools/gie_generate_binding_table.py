@@ -140,13 +140,13 @@ COMMITTED_BINDINGS = {
     # live run. The generator enforces this: it rejects a row that claims a committed public
     # profile_key from an uncommitted parent rather than skipping it silently.
     ("int_routed_host", "IPV4_ACL_IN"): "ipv4_acl_in",
-    # DISABLE_LLDP se retiro: la entrega del 14sep2026 lo elimina de los ocho parents y lo
-    # parte en dos campos independientes. No es un rename -- el viejo apagaba las dos
-    # direcciones juntas, estos permiten apagar solo una. Ver registry_slice_0b_17.
+    # DISABLE_LLDP was retired: the 2026-09-14 release removes it from all eight parents
+    # and splits it into two independent fields. This is not a rename: the old field disabled
+    # both directions together; these can disable either direction. See registry_slice_0b_17.
     #
-    # Dejar el binding viejo registrado seria peor que no tenerlo: un PTI acepta nvPairs que su
-    # template no declara, asi que DISABLE_LLDP seguiria viajando y viendose bien por API, sin
-    # producir CLI nunca.
+    # Keeping the old binding would be worse than removing it: a PTI accepts nvPairs its
+    # template does not declare. DISABLE_LLDP would still travel through the API and appear
+    # valid, but would never produce CLI.
     ("int_access_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
     ("int_trunk_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
     ("int_routed_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
@@ -339,7 +339,7 @@ COMMITTED_BINDINGS = {
     #
     # Every one of the seven CLI commands these eight produce was measured as ACCEPTED on FAB4
     # (nxos64-cs.10.6.2.F.bin) through NDFC before this entry was added, including the two that
-    # needed `feature bfd` and the two `no ...` forms. See phase34-fab4-eigrp-soporte.
+    # needed `feature bfd` and the two `no ...` forms. See the phase34 FAB4 EIGRP evidence.
     ("int_loopback", "EIGRP_PROCESS_TAG"): "eigrp_process_tag",
     ("int_loopback", "ENABLE_EIGRP_ROUTING"): "enable_eigrp_routing",
     ("int_loopback", "EIGRP_IPV4_PASSIVE"): "eigrp_ipv4_passive",
@@ -407,21 +407,20 @@ COMMITTED_BINDINGS = {
     ("int_vlan", "HSRP_GROUPv6"): "hsrp_groupv6",
     # --- split redirects + ND suppress-RA (slice 0b_28) ---
     #
-    # Tres campos x tres padres. int_loopback no declara ninguno.
+    # Three fields on three parents. int_loopback declares none of them.
     #
-    # DISABLE_IP_REDIRECTS queda FUERA a proposito: es nativo (disable_ip_redirects, 6 usos en
-    # el modulo), y registrarlo repetiria el fallo de ipv6_addr -- gie_guarded_keys() es un set
-    # de profile_key SIN padre, asi que reclamaria el nombre globalmente. La regla barata que
-    # ese fallo dejo: grepear el nombre publico en dcnm_interface.py antes de registrar. Los
-    # tres de abajo dan 0.
+    # DISABLE_IP_REDIRECTS is excluded deliberately: it is native (disable_ip_redirects has six
+    # uses in the module). Registering it would repeat the ipv6_addr failure: gie_guarded_keys()
+    # contains profile keys without parents, so it would claim the name globally. Check public
+    # names in dcnm_interface.py before registering them. The three below have no native uses.
     #
-    # El nativo GATEA a los dos split via IsShow="DISABLE_IP_REDIRECTS!=true" y se combina con
-    # ellos por OR, y su default NO es uniforme: false en routed y subif, true en int_vlan --
-    # el mismo default que causo el blocker del SVI. En ese padre los split estan ocultos salvo
-    # que la ronda mande disable_ip_redirects: false.
+    # The native field gates both split fields through IsShow="DISABLE_IP_REDIRECTS!=true"
+    # and combines with them using OR. Its default differs: false on routed/subif, true on
+    # int_vlan. That default caused the SVI blocker: on that parent, the split fields remain
+    # hidden unless the run sends disable_ip_redirects: false.
     #
-    # A diferencia de BFD y HSRP, cada campo tiene su PROPIA linea: el hijo
-    # routed_interface_redirects_disable es condicional por dentro, uno por cada valor.
+    # Unlike BFD and HSRP, each field has its own CLI line. The
+    # routed_interface_redirects_disable child tests each value independently.
     ("int_routed_host", "DISABLE_IPV4_REDIRECTS"): "disable_ipv4_redirects",
     ("int_routed_host", "DISABLE_IPV6_REDIRECTS"): "disable_ipv6_redirects",
     ("int_routed_host", "IPV6_ND_SUPPRESS_RA"): "ipv6_nd_suppress_ra",
@@ -433,26 +432,26 @@ COMMITTED_BINDINGS = {
     ("int_vlan", "IPV6_ND_SUPPRESS_RA"): "ipv6_nd_suppress_ra",
     # --- Dampening on int_routed_host (slice 0b_6) ---
     #
-    # Siete, y SOLO en este padre: int_subif, int_vlan e int_loopback declaran 0 de 7.
+    # Seven, on this parent only: int_subif, int_vlan and int_loopback declare none.
     #
-    # Las filas NO son nuevas: llevaban escritas en 0b_6 desde hace tiempo con
-    # `mechanism: child_pti` y nunca llegaron a la tabla, porque no estaban en esta lista -- el
-    # generador salta en silencio una fila que no este aqui. Corregidas a passthrough en el slice
-    # existente; un primer intento creo un 0b_29 duplicado y el generador lo rechazo con
-    # "duplicate committed binding". Misma historia que las ocho de BFD.
+    # These rows already existed in 0b_6 with `mechanism: child_pti`, but never reached the
+    # table because they were absent from this allowlist; the generator silently skips
+    # unselected rows. Their mechanism was corrected to passthrough in the existing slice.
+    # An initial duplicate 0b_29 slice failed with "duplicate committed binding", as with
+    # the eight BFD rows.
     #
-    # LA UNICA FAMILIA QUE NO LLEGA AL EQUIPO. `dampening` no existe en el NX-OS de C9300v:
-    # sondeado por NDFC en FAB1 (lite 10.5.5) y en FAB4 (completa 10.6.2), las dos rechazan con
-    # "CLI command is invalid". La fase 33 lo habia atribuido a la imagen lite; FAB4 corre la
-    # completa -- la que si soporta EIGRP -- y tambien lo rechaza, asi que la causa no es "lite".
+    # This family cannot be validated on the device: C9300v NX-OS lacks `dampening`.
+    # NDFC probes on FAB1 (lite 10.5.5) and FAB4 (full 10.6.2) both returned
+    # "CLI command is invalid". Phase33 attributed this to the lite image, but the full
+    # FAB4 image also rejects it despite supporting EIGRP. The limitation is not "lite".
     #
-    # Se registran igual porque la capa de CONTROLADOR si es validable: el POST evalua el template
-    # antes del deploy, asi que las cuatro reglas de dependencia se ejercitan y el read-back se
-    # lee. La capa de dispositivo queda fuera de alcance por hardware, no por falta de ronda.
+    # Controller validation remains possible: POST evaluates the template before deployment,
+    # exercising all four dependency rules and allowing read-back. Device validation is
+    # excluded because of the platform limitation, not because the run was omitted.
     #
-    # Cadena de cuatro niveles, la mas profunda del registro, y cuatro reglas del template --
-    # una de ellas liga TRES campos registrados entre si ("reuse, suppress and max suppress must
-    # be configured together"), algo que ningun lote anterior tenia. Ninguna se duplica aqui.
+    # This is the registry's deepest chain, with four levels and four template rules.
+    # One rule links three registered fields ("reuse, suppress and max suppress must
+    # be configured together"), unlike earlier batches. None of those rules is duplicated here.
     ("int_routed_host", "ENABLE_DAMPENING"): "enable_dampening",
     ("int_routed_host", "DAMPENING_HALF_LIFE"): "dampening_half_life",
     ("int_routed_host", "DAMPENING_REUSE"): "dampening_reuse",
@@ -462,49 +461,48 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "DAMPENING_RESTART_PENALTY"): "dampening_restart_penalty",
     # --- ARP_TIMEOUT on the three overlay parents (slice 0b_30) ---
     #
-    # El caso mas simple del registro: UN campo, un hijo, una linea de CLI
-    # (`interface_ip_arp_timeout_11_1` -> `ip arp timeout $$ARP_TIMEOUT$$`), sin gate booleano,
-    # sin dependencias entre campos y sin IsShow. int_loopback no lo declara.
+    # The simplest registry case: one field, one child, one CLI line
+    # (`interface_ip_arp_timeout_11_1` -> `ip arp timeout $$ARP_TIMEOUT$$`), without a boolean
+    # gate, cross-field dependencies or IsShow. int_loopback does not declare it.
     #
-    # `integer ARP_TIMEOUT { min=60; max=28800; }`, identico en los tres, SIN defaultValue.
-    # Esa ausencia es la forma que hizo abortar el lote de redirects, y aqui no necesita cambio
-    # en el engine: la exencion (3) de gie_validate_binding_value ya acepta "" para un integer
-    # leido de HAVE, por el mismo camino que OSPF_COST. Verificado leyendo el codigo ANTES.
+    # `integer ARP_TIMEOUT { min=60; max=28800; }` is identical on all three, with no defaultValue.
+    # The missing default caused the redirects batch to abort, but needs no engine change
+    # here: exemption (3) in gie_validate_binding_value already accepts "" for an integer read
+    # from HAVE, through the OSPF_COST path. This was checked in the code before registration.
     #
-    # El equipo lo soporta -- la sonda de la fase 33 mando `ip arp timeout 300` y la linea
-    # aterrizo -- a diferencia de dampening, justo arriba, cuyo CLI no existe en esta plataforma.
+    # The device supports it: the phase33 probe sent `ip arp timeout 300` and the line
+    # appeared, unlike dampening above, whose CLI is unavailable on this platform.
     #
-    # ABIERTO: ninguno de los tres cuerpos llama deleteChildTemplate para este hijo, y el gate
-    # de emision es `if arpTimeout != ""`. O sea que un "" no pide retirar el hijo ya
-    # instanciado. Es el mecanismo del residuo que la ronda de EIGRP dejo en una fisica, y por
-    # eso las tres filas van con removal_semantics: unresolved hasta medirlo en vivo.
+    # OPEN: none of the three template bodies calls deleteChildTemplate for this child, and
+    # emission is gated by `if arpTimeout != ""`. Sending "" does not request removal of an
+    # existing child. This matches the residue left on a physical port during EIGRP testing,
+    # so the three rows retain removal_semantics: unresolved until measured live.
     ("int_routed_host", "ARP_TIMEOUT"): "arp_timeout",
     ("int_subif", "ARP_TIMEOUT"): "arp_timeout",
     ("int_vlan", "ARP_TIMEOUT"): "arp_timeout",
     # --- PIM, across all four parents (slice 0b_31) ---
     #
-    # OCHO, repartidas desigualmente, y el reparto es la asercion:
-    #     ENABLE_PIM_SPARSE        4   los cuatro padres
-    #     PIM_DR_PRIORITY          3   sin int_loopback: una loopback no elige DR
-    #     ENABLE_PIM_BFD_INSTANCE  1   solo int_routed_host lo declara
+    # Eight rows with an uneven distribution; the distribution is the assertion:
+    #     ENABLE_PIM_SPARSE        4   all four parents
+    #     PIM_DR_PRIORITY          3   no int_loopback: a loopback does not elect a DR
+    #     ENABLE_PIM_BFD_INSTANCE  1   declared only by int_routed_host
     #
-    # Una linea de CLI por campo (pim_interface, interface_pim_dr_priority,
-    # pim_bfd_instance_interface), los tres hijos instalados y su contenido leido. Sin fusion, a
-    # diferencia de BFD, HSRP y dampening.
+    # One CLI line per field (pim_interface, interface_pim_dr_priority,
+    # pim_bfd_instance_interface); all three children were installed and inspected.
+    # Their output is not combined, unlike BFD, HSRP and dampening.
     #
-    # LOS TRES SON INDEPENDIENTES: cero IsShow, cero addErrorReport que los relacione, tres `if`
-    # sueltos. Asi que este lote NO tiene negativas de template -- las suyas atacan las cotas del
-    # registry, como ARP_TIMEOUT. Y sparse-mode NO es precondicion de dr-priority en el DSL, asi
-    # que el template deja emitir dr-priority solo; lo que conteste NX-OS es una pregunta abierta
-    # que la ronda mide.
+    # All three are independent: no IsShow or addErrorReport connects them, and each has its
+    # own `if`. Negative tests therefore target registry bounds rather than template rules,
+    # as with ARP_TIMEOUT. The DSL does not require sparse-mode before dr-priority, so the
+    # template can emit dr-priority alone. The device response remains a live-test question.
     #
-    # LA TRAMPA, que el slice explica entera: `if pimDrPriority != "" and pimDrPriority != "1"`.
-    # El valor 1 NO emite linea, y `min = 1` hace que el minimo de la cota sea justo el valor
-    # mudo. Probar la cota inferior y no ver linea es el comportamiento correcto, no un defecto.
+    # Important boundary case: `if pimDrPriority != "" and pimDrPriority != "1"`.
+    # Value 1 emits no line, and `min = 1` makes that value the lower bound.
+    # No CLI at the lower bound is expected behavior, not a defect.
     #
-    # PIM_DR_PRIORITY es `long` en el template y se registra `integer`: _TYPE_TO_VALIDATOR no
-    # conoce `long` y valida identico -- el int de Python no tiene limite y 4294967295 cabe de
-    # sobra. Primer campo del registro cuyo tipo declarado no existe en ese mapa.
+    # PIM_DR_PRIORITY is `long` in the template and registered as `integer`:
+    # _TYPE_TO_VALIDATOR does not recognize `long`; Python integers support 4294967295.
+    # This is the first registry field whose template type is absent from that map.
     ("int_loopback", "ENABLE_PIM_SPARSE"): "enable_pim_sparse",
     ("int_routed_host", "ENABLE_PIM_SPARSE"): "enable_pim_sparse",
     ("int_subif", "ENABLE_PIM_SPARSE"): "enable_pim_sparse",
@@ -515,113 +513,112 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "ENABLE_PIM_BFD_INSTANCE"): "enable_pim_bfd_instance",
     # --- IPv6 link-local on the three overlay parents (slice 0b_32) ---
     #
-    # TRES: int_loopback no lo declara. Hijo instalado,
+    # Three rows: int_loopback does not declare it. The installed child is
     # interface_ipv6_link_local_address_11_1 -> `ipv6 link-local $$IPV6_LINK_LOCAL$$`.
     #
-    # LA CLAVE ES `IPv6_LINK_LOCAL`, CON v MINUSCULA. El padre la declara asi y traduce el mismo
-    # al llamar al hijo, que la espera en mayusculas:
+    # The key is `IPv6_LINK_LOCAL`, with a lowercase v. The parent declares this spelling
+    # and translates it when calling the child, which expects uppercase:
     #     ipv6LinkLocal = normalize(IPv6_LINK_LOCAL)   ->   {"IPV6_LINK_LOCAL": ipv6LinkLocal}
-    # El modulo escribe en los nvPairs del PADRE, asi que va la forma del padre. Copiar la del
-    # hijo -- que es la que se ve al leer el CLI -- haria que NDFC guardara una clave que nadie
-    # lee: exito reportado, linea ausente. Misma forma que PREFIXv6 frente a IPv6_PREFIX.
+    # The module writes parent nvPairs, so it must use the parent's spelling. Copying the
+    # child's spelling would make NDFC store an unread key: success reported, CLI absent.
+    # This is the same distinction as PREFIXv6 versus IPv6_PREFIX.
     #
-    # El template lo declara `ipV6Address` y se registra `string` con max_length 45, igual que
-    # HSRP_VIPv6, que es `ipV6Address` tambien. _TYPE_TO_VALIDATOR no conoce ese tipo y
-    # registrarlo dejaria el binding inalcanzable por fail-closed -- lo mismo que habria pasado
-    # con `long` en PIM_DR_PRIORITY.
+    # The template declares `ipV6Address`; register `string` with max_length 45, as for
+    # HSRP_VIPv6. _TYPE_TO_VALIDATOR does not recognize `ipV6Address`, so registering that
+    # type would make the binding unreachable through fail-closed validation, as `long`
+    # would for PIM_DR_PRIORITY.
     #
-    # NO se registran ipv6_addr ni ipv6_mask_len, la otra mitad de esta familia: son NATIVOS del
-    # arg spec de SVI (24 y 13 usos) y registrarlos romperia int_subif e int_routed_host por el
-    # guard global, que es exactamente lo que paso con ipv6_addr el 20sep.
+    # Do not register ipv6_addr or ipv6_mask_len: they are native SVI arg-spec fields
+    # (24 and 13 uses). Registering them would break int_subif and int_routed_host through
+    # the global guard, as happened with ipv6_addr on 2026-09-20.
     ("int_routed_host", "IPv6_LINK_LOCAL"): "ipv6_link_local",
     ("int_subif", "IPv6_LINK_LOCAL"): "ipv6_link_local",
     ("int_vlan", "IPv6_LINK_LOCAL"): "ipv6_link_local",
     # --- MACSEC on int_routed_host (slice 0b_33) ---
     #
-    # CUATRO, y solo en este padre: es el unico que las declara. Los tres strings cuelgan del
-    # boolean por IsShow, la forma de HSRP, y dos de ellos son ademas IsMandatory cuando el
-    # habilitador esta en true -- lo que da la regla del template gratis para la negativa:
+    # Four rows, only on this parent: it is the only one that declares them. IsShow gates
+    # the three strings on the boolean, as with HSRP. Two strings are also IsMandatory when
+    # enabled, providing the template rule for a negative test:
     # "MACsec keychain and policy are required when MACsec interface policy is enabled."
     #
-    # LOS CUATRO SON NOMBRES, NO SECRETOS: punteros a una keychain y una policy que viven en el
-    # switch. De ahi `no_log: false` -- marcarlos haria que Ansible scrubbeara el nombre de la
-    # keychain por coincidencia de cadena en toda la salida, sin proteger nada. El material de
-    # clave vive en la keychain, que este modulo no crea.
+    # These fields contain an enable flag and object names, not secrets: the strings refer to
+    # a keychain and policy on the switch. Keep `no_log: false`; masking names would scrub
+    # matching strings throughout Ansible output without protecting key material.
+    # The material belongs to the keychain, which this module does not create.
     #
-    # Los nombres del padre y del hijo NO coinciden (MACSEC_KEY_CHAIN_NAME -> KEY_CHAIN_NAME,
-    # etc.); el padre traduce. Estas filas llevan la forma del PADRE, igual que IPv6_LINK_LOCAL.
+    # Parent and child names differ (MACSEC_KEY_CHAIN_NAME -> KEY_CHAIN_NAME, etc.).
+    # The parent translates them; these rows use parent names, as with IPv6_LINK_LOCAL.
     #
-    # El hijo macsec_fallback_interface tiene DOS ramas segun haya fallback o no, asi que una
-    # sola corrida en vivo solo ejercita una.
+    # The macsec_fallback_interface child has two branches, with and without fallback.
+    # A single live run exercises only one.
     #
-    # MEDIDO EN VIVO (FAB4, L1-F4, nxos64-cs.10.6.2.F): `feature macsec` ya estaba encendida, el
-    # CLI EXISTE y la linea aterriza, y la policy `system-default-macsec-policy` ya existe.
+    # Measured live (FAB4, L1-F4, nxos64-cs.10.6.2.F): `feature macsec` was already enabled,
+    # the CLI was supported and applied, and `system-default-macsec-policy` already existed.
     #
-    # ASIMETRIA: NX-OS valida la POLICY -- un nombre inexistente da 500 con "Failed to find
-    # policy" -- y NO valida la KEYCHAIN, que se acepta y se aplica dejando una referencia
-    # colgante sin que nada avise. Ver phase44.
+    # Validation is asymmetric: an unknown policy causes a 500 with "Failed to find policy",
+    # but an unknown keychain is accepted and applied, leaving a dangling reference without
+    # a warning. See phase44.
     ("int_routed_host", "ENABLE_MACSEC_INTERFACE_POLICY"): "enable_macsec_interface_policy",
     ("int_routed_host", "MACSEC_KEY_CHAIN_NAME"): "macsec_key_chain_name",
     ("int_routed_host", "MACSEC_POLICY_NAME"): "macsec_policy_name",
     ("int_routed_host", "MACSEC_FALLBACK_KEY_CHAIN_NAME"): "macsec_fallback_key_chain_name",
-    # --- Tanda 2: tres campos sin relacion entre si, en dos padres (slice 0b_34) ---
+    # --- Batch 2: three unrelated fields on two parents (slice 0b_34) ---
     #
-    # IPV4_ACL_IN en int_vlan. La clave publica ya existe en int_routed_host (arriba); esto la
-    # reutiliza en otro padre, que es el punto de llavear por (parent, nvpair) y no por nombre.
-    # TERCERA vez que el padre y el hijo escriben el nombre distinto: el padre declara
-    # IPV4_ACL_IN y pasa {"IPV4_ACL": ipv4AclIn} al hijo (int_vlan:1641). Va la del PADRE.
-    # Y hay una segunda trampa, en la VERIFICACION: NDFC pasa el nombre de la ACL a minusculas y
-    # el `include` de NX-OS distingue mayusculas -- buscar el nombre como se escribio da vacio.
+    # IPV4_ACL_IN on int_vlan reuses the public key already present on int_routed_host.
+    # This is why bindings are keyed by (parent, nvpair), not by name alone.
+    # Parent and child spellings differ again: the parent declares IPV4_ACL_IN and passes
+    # {"IPV4_ACL": ipv4AclIn} to the child (int_vlan:1641). Use the parent's spelling.
+    # Verification also needs care: NDFC lowercases the ACL name, while NX-OS `include`
+    # is case-sensitive. Searching for the original spelling may return nothing.
     ("int_vlan", "IPV4_ACL_IN"): "ipv4_acl_in",
-    # PRIVATE_VLAN_MAPPING. `integerRange` en el template -- TERCER tipo que _TYPE_TO_VALIDATOR
-    # no conoce, tras `long` en PIM y `ipV6Address` en link-local. Va `string`, y las cotas del
-    # template NO se trasladan: el valor es una LISTA o un RANGO ("3194,3196" / "3194-3196",
-    # segun su propio Description), asi que min/max 1..4094 son la cota de cada VLAN ID dentro
-    # de la lista y las valida NDFC. Poner min/max aqui compararia una cadena contra un entero.
+    # PRIVATE_VLAN_MAPPING is `integerRange` in the template, another type absent from
+    # _TYPE_TO_VALIDATOR after PIM's `long` and link-local's `ipV6Address`. Register `string`,
+    # without copying numeric bounds: the value is a list or range ("3194,3196" / "3194-3196",
+    # according to Description). NDFC applies 1..4094 to each VLAN ID. Adding min/max here
+    # would compare a string against an integer.
     ("int_vlan", "PRIVATE_VLAN_MAPPING"): "private_vlan_mapping",
-    # ENABLE_VPC_PEER_LINK. El binding es trivial; lo que hace no. Emite DOS lineas
-    # -- `vpc peer-link` y `spanning-tree port type network` -- y DESPLAZA la rama del BPDU
-    # guard (:653-655). Este mismo padre declara SPANNING_TREE_PORT_TYPE, ya registrado, y el
-    # template resuelve la precedencia con un `pass` explicito (:670): con el peer-link en true
-    # IGNORA el campo del operador. El descarte es SILENCIOSO -- changed=True, `network` en el
-    # equipo, y el `edge` que se pidio nunca se menciona. Forma del `1` mudo de PIM_DR_PRIORITY,
-    # agravada porque aqui el valor callado lo pidio el operador.
+    # ENABLE_VPC_PEER_LINK emits two lines: `vpc peer-link` and
+    # `spanning-tree port type network`. It takes precedence over the BPDU guard branch
+    # (:653-655). This parent also declares the registered SPANNING_TREE_PORT_TYPE field,
+    # but an explicit `pass` (:670) ignores that field when peer-link is true.
+    # The omission is silent: changed=True, `network` on the device, and no mention of the
+    # requested `edge`. This resembles PIM_DR_PRIORITY's silent value 1, except that here
+    # the ignored value was explicitly requested.
     #
-    # Dos reglas duras del cuerpo (:450, :457) que son negativas gratis.
+    # Two template rules (:450, :457) provide negative test cases.
     #
-    # VALIDADO EN VIVO sobre el par real Leaf-105/106 (domain 105), con un Po510 desechable en
-    # Eth1/7-1/8. Un comentario anterior decia que la capa de dispositivo no era alcanzable,
-    # apoyandose en medidas de Leaf-103 -- que NO es par vPC. El par real si lo es, y lo que se
-    # midio alli le cambia el tamano al hallazgo:
+    # Validated live on the Leaf-105/106 vPC pair (domain 105), using a disposable Po510 on
+    # Eth1/7-1/8. An earlier comment incorrectly excluded device validation based on
+    # observations from Leaf-103, which is not a vPC peer. Testing the actual pair showed:
     #
-    #   NX-OS RECHAZA un segundo peer-link en el dominio, y NDFC no lo comprueba:
+    #   NX-OS rejects a second peer-link in the domain; NDFC does not check this:
     #       ERROR: Operation failed: [vPC Peer-link has already been configured on po500]
-    #   nombrado por switch, con el deploy devolviendo 500. La coherencia la valida el EQUIPO y
-    #   no el controlador -- complemento exacto de la serie keychain/ACL/link-local, donde NDFC
-    #   acepto objetos inexistentes o fuera de rango.
+    #   The error identifies each switch and deployment returns 500. The device enforces
+    #   consistency, not the controller, complementing the keychain/ACL/link-local cases
+    #   where NDFC accepted nonexistent or out-of-range objects.
     #
-    #   EL CORTE ES PARCIAL, y por eso el binding si quedo medido: la linea de :654
-    #   (`spanning-tree port type network`) ATERRIZA y la de :686 (`vpc peer-link`) no. El
-    #   rechazo ocurre en el comando #12, asi que todo lo anterior queda aplicado.
+    #   Application is partial, which is what made the binding measurable on the device:
+    #   `spanning-tree port type network` (:654) reaches it, but `vpc peer-link` (:686) does
+    #   not. Rejection occurs at command #12, leaving earlier commands applied.
     #
-    #   EL DESCARTE SILENCIOSO ES DOBLE, no simple, y esta medido con CONTROL:
-    #       peer-link apagado  ->  `spanning-tree port type normal` + `... bpduguard enable`
-    #       peer-link en true  ->  ninguna de las dos, y `... port type network` en su lugar
-    #   El control importa: sin el, "lo pedido no sale" tambien se explicaria por un campo que no
-    #   hace nada. BPDUFILTER_ENABLED (:660) corre la misma suerte, por codigo.
+    #   Two settings are silently ignored, as demonstrated by a control:
+    #       peer-link false -> `spanning-tree port type normal` + `... bpduguard enable`
+    #       peer-link true  -> neither; `... port type network` appears instead
+    #   Without the control, missing CLI could also mean the field has no effect at all.
+    #   Code inspection shows the same behavior for BPDUFILTER_ENABLED (:660).
     #
-    #   Y NO ES DETECTABLE DESDE NINGUNA CAPA. NDFC GUARDA lo que el operador pidio
-    #   (SPANNING_TREE_PORT_TYPE: "normal") y su propio pendingConfig emite `network`: en un par
-    #   sin peer-link previo, controlador y equipo coincidirian y la interfaz saldria In-Sync con
-    #   el valor pedido guardado y nunca aplicado. Medido con forceShowRun=true.
+    #   The discard is not detectable from any layer. NDFC stores the requested
+    #   SPANNING_TREE_PORT_TYPE: "normal", while its own pendingConfig emits `network`
+    #   (observed with forceShowRun=true) -- the same template generates both. So on a pair
+    #   without an existing peer-link, controller and device would agree and the interface
+    #   would read In-Sync with the requested value stored and never applied.
     #
-    #   Idempotencia: `replaced: []` al reenviar -- converge en la capa de INTENCION; lo que no
-    #   cierra es el deploy de un estado que el equipo rechaza. Omitir la clave preserva el
-    #   "true" guardado. El vPC quedo identico al estado previo, linea por linea en los dos
-    #   peers, e In-Sync con pendingConfig vacio.
+    #   Reapplying returns `replaced: []`: intent converges, but the device rejects deployment.
+    #   Omitting the key preserves the stored "true". After restoration, both peers matched
+    #   their original configuration line for line and were In-Sync with empty pendingConfig.
     #
-    #   Lo unico que el lab NO puede medir es un `vpc peer-link` ACEPTADO: el dominio ya tiene el
-    #   suyo y hay un solo par. Es limite de topologia, no hueco del binding.
+    #   Successful `vpc peer-link` deployment was not measured: the lab has one pair and its
+    #   domain already has a peer-link. This is a topology limit, not missing binding coverage.
     ("int_port_channel_trunk_host", "ENABLE_VPC_PEER_LINK"): "enable_vpc_peer_link",
 }
 

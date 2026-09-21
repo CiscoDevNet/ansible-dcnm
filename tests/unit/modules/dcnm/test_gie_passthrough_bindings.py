@@ -159,21 +159,19 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
         assert (b["applicable_interface_type"], b["applicable_mode"]) == (itype, mode)
 
 
-# compile_rows() valida FILAS DE SLICE, y BINDING_TABLE es su SALIDA. Tres campos del esquema
-# -- presence_model, emit_when, parent_resolution -- son documentales y FIELDS no los propaga a
-# la tabla, asi que una fila de la tabla no es una entrada valida para el compilador.
+# compile_rows() validates slice rows; BINDING_TABLE is its output. Three schema fields
+# -- presence_model, emit_when, parent_resolution -- are documentation-only and FIELDS omits
+# them from the table, so a table row is not a valid compiler input.
 #
-# Reutilizarla como entrada funcionaba por accidente mientras el generador no validaba esquema.
-# Ahora lo valida (el gate se movio ahi porque los dos checkers aparte llevaban cuatro lotes
-# muertos sin que nadie lo notara), asi que los casos que ejercitan el compilador reponen esos
-# tres campos. Reponerlos aqui es lo correcto y no un parche: lo que se quiere ejercitar son las
-# reglas de compilacion -- allowlist, duplicados, profile_key -- no el gate de esquema, que
-# tiene sus propios casos.
+# Reusing output as input only worked while the generator did not validate the schema.
+# Validation moved into the generator after two separate checkers had gone unused for four
+# batches. Compiler tests now restore those three fields to exercise compilation rules
+# (allowlists, duplicates, profile_key), not schema validation, which has separate tests.
 #
-# La alternativa seria meter los tres campos en FIELDS, y eso moveria el binding table y
-# engordaria un artefacto de runtime con datos que nadie lee.
+# Adding the fields to FIELDS instead would change the binding table and enlarge the
+# runtime artifact with metadata that no runtime consumer reads.
 def _as_slice_rows(rows):
-    """Las filas de la tabla, con los campos de esquema que un slice declara y la tabla no."""
+    """Restore slice-only schema fields to binding table rows for compiler tests."""
     return [
         dict(r, presence_model="two_axis", emit_when="explicit_only",
              parent_resolution="desired_parent")
@@ -571,8 +569,8 @@ def test_carry_forward_covers_every_new_passthrough_binding():
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(PC_TRUNK)
     } == {
-        # Tanda 2, slice 0b_34. Solo este padre de los tres de port-channel declara el
-        # peer-link. Su capa de dispositivo no es alcanzable en este lab -- ver el slice.
+        # Batch 2, slice 0b_34: only this port-channel parent declares the peer-link.
+        # See the slice for its validation scope.
         ("ENABLE_VPC_PEER_LINK", "enable_vpc_peer_link"),
         ("GUARD_MODE", "guard_mode"),
         ("ACL_FILTER", "acl_filter"),
@@ -694,22 +692,22 @@ def test_keymap_carries_every_new_nvpair():
     assert km["ENABLE_PIM_SPARSE"] == "enable_pim_sparse"
     assert km["PIM_DR_PRIORITY"] == "pim_dr_priority"
     assert km["ENABLE_PIM_BFD_INSTANCE"] == "enable_pim_bfd_instance"
-    # La forma del PADRE, con v minuscula. El hijo la espera en mayusculas y el padre traduce;
-    # esta asercion es lo que impide que alguien "corrija" la capitalizacion y rompa el binding
-    # en silencio.
+    # Use the parent's spelling, with a lowercase v. The parent translates it to the child's
+    # uppercase spelling. These assertions prevent a capitalization "fix" from silently
+    # breaking the binding.
     assert km["IPv6_LINK_LOCAL"] == "ipv6_link_local"
-    assert "IPV6_LINK_LOCAL" not in km, "esa es la forma del HIJO, no la del padre"
-    # MACSEC: la forma del PADRE lleva el prefijo MACSEC_; el hijo lo omite y el padre traduce.
+    assert "IPV6_LINK_LOCAL" not in km, "this is the child's spelling, not the parent's"
+    # MACSEC: the parent uses the MACSEC_ prefix and translates to the child's unprefixed name.
     assert km["MACSEC_KEY_CHAIN_NAME"] == "macsec_key_chain_name"
     assert km["MACSEC_FALLBACK_KEY_CHAIN_NAME"] == "macsec_fallback_key_chain_name"
-    assert "KEY_CHAIN_NAME" not in km, "esa es la forma del HIJO, sin el prefijo MACSEC_"
-    # 66 = 65 + ARP_TIMEOUT. Una sola clave nueva para tres filas: el mismo nombre publico en
-    # los tres padres, que es el punto de llavear por (parent, nvpair) y no por nombre.
-    # 69 = 66 + las TRES de PIM, que entre ellas cubren ocho filas.
-    # 70 = 69 + IPv6_LINK_LOCAL, una clave para las tres filas overlay.
-    # 74 = 70 + las CUATRO de MACSEC, todas en int_routed_host.
-    # 76 = 74 + DOS de la tanda 2: private_vlan_mapping y enable_vpc_peer_link. IPV4_ACL_IN ya
-    # estaba en el keymap desde int_routed_host -- tres filas, dos claves nuevas.
+    assert "KEY_CHAIN_NAME" not in km, "this is the child's spelling, without the MACSEC_ prefix"
+    # 66 = 65 + ARP_TIMEOUT: one public key for three rows, shared across the three parents.
+    # This is why bindings are keyed by (parent, nvpair), not by name.
+    # 69 = 66 + the three PIM keys across eight rows.
+    # 70 = 69 + IPv6_LINK_LOCAL, one key for three overlay rows.
+    # 74 = 70 + the four MACSEC keys, all on int_routed_host.
+    # 76 = 74 + two from batch 2: private_vlan_mapping and enable_vpc_peer_link. IPV4_ACL_IN
+    # was already in the int_routed_host keymap: three rows, two new keys.
     assert km["PRIVATE_VLAN_MAPPING"] == "private_vlan_mapping"
     assert km["ENABLE_VPC_PEER_LINK"] == "enable_vpc_peer_link"
     assert len(km) == 76
@@ -754,44 +752,44 @@ def test_all_registered_keys():
         "hsrp_priority_forwarding_threshold_lower",
         "hsrp_priority_forwarding_threshold_upper",
         "hsrp_preempt_delay_minimum",
-        # HSRP IPv6, slice 0b_27. Dos: HSRP_VIPv6 es la PRIMERA fila de la tabla que corresponde
-        # a un campo de direccion de la plantilla (ipV6Address -> string, NDFC valida el formato).
-        # IPv6/PREFIXv6 se retiraron: registrar ipv6_addr hizo que el guard lo rechazara en
-        # int_subif, donde el spec nativo si lo soporta. Ver el slice y phase37.
+        # HSRP IPv6, slice 0b_27: two keys. HSRP_VIPv6 is the first template address field
+        # in the table (ipV6Address -> string; NDFC validates the format).
+        # IPv6/PREFIXv6 were removed: registering ipv6_addr made the guard reject it on
+        # int_subif, where the native spec already supports it. See the slice and phase37.
         "hsrp_vipv6",
         "hsrp_groupv6",
-        # Redirects partidos + ND suppress-RA, slice 0b_28. Tres claves publicas, cada una en
-        # los TRES padres overlay. DISABLE_IP_REDIRECTS queda fuera: es nativo y registrarlo
-        # repetiria el fallo de ipv6_addr, porque gie_guarded_keys() no filtra por padre.
+        # Split redirects + ND suppress-RA, slice 0b_28: three public keys on each of the
+        # three overlay parents. DISABLE_IP_REDIRECTS is native and stays out; registering
+        # it would repeat the ipv6_addr defect because gie_guarded_keys() is not parent-scoped.
         "disable_ipv4_redirects",
         "disable_ipv6_redirects",
         "ipv6_nd_suppress_ra",
-        # Dampening, slice 0b_6 con su mecanismo corregido child_pti -> passthrough. Siete
-        # claves, SOLO en int_routed_host. Su CLI no existe en el NX-OS de C9300v -- medido en
-        # las dos imagenes del lab -- asi que estan registradas y validadas en el CONTROLADOR,
-        # nunca en el equipo. Ver phase39.
+        # Dampening, slice 0b_6, corrected from child_pti to passthrough: seven keys on
+        # int_routed_host only. Neither C9300v NX-OS image in the lab supports its CLI,
+        # so these bindings have controller validation, not device validation.
+        # See phase39.
         "enable_dampening", "dampening_half_life", "dampening_reuse", "dampening_suppress",
         "dampening_max_suppress", "dampening_restart", "dampening_restart_penalty",
-        # ARP_TIMEOUT, slice 0b_3, registrado por fin (2026-09-20). UNA clave publica en los
-        # tres padres overlay; int_loopback no lo declara. El caso mas simple del registro:
-        # un campo, un hijo, una linea de CLI, sin gate ni dependencias. Ver phase41.
+        # ARP_TIMEOUT, slice 0b_3, registered on 2026-09-20: one public key on three
+        # overlay parents; int_loopback does not declare it. One field, one child,
+        # one CLI line, with no gate or dependencies. See phase41.
         "arp_timeout",
-        # PIM, slice 0b_31. TRES claves publicas para OCHO filas, repartidas desigualmente:
-        # sparse en los cuatro padres, dr_priority en tres (una loopback no elige DR) y
-        # bfd_instance solo en int_routed_host. Ver phase42.
+        # PIM, slice 0b_31: three public keys across eight rows, distributed unevenly:
+        # sparse on four parents, dr_priority on three (loopbacks do not elect a DR),
+        # and bfd_instance on int_routed_host only. See phase42.
         "enable_pim_sparse", "pim_dr_priority", "enable_pim_bfd_instance",
-        # IPv6 link-local, slice 0b_32. UNA clave publica en los TRES padres overlay
-        # (int_loopback no lo declara). La clave del nvPair es `IPv6_LINK_LOCAL` con v
-        # minuscula -- la forma del PADRE; el hijo la espera en mayusculas y el padre traduce.
+        # IPv6 link-local, slice 0b_32: one public key on three overlay parents,
+        # excluding int_loopback. The parent nvPair is `IPv6_LINK_LOCAL`, with a lowercase
+        # v; the parent translates it to the uppercase name expected by the child.
         "ipv6_link_local",
-        # MACSEC, slice 0b_33. CUATRO claves publicas, todas en int_routed_host -- el unico
-        # padre que las declara. Son NOMBRES (punteros a keychain y policy), no secretos, de
-        # ahi no_log false. Ver phase44.
+        # MACSEC, slice 0b_33: four public keys on int_routed_host, the only parent that
+        # declares them. The enable flag and object names (keychain and policy references)
+        # are not secrets, hence no_log false. See phase44.
         "enable_macsec_interface_policy", "macsec_key_chain_name", "macsec_policy_name",
         "macsec_fallback_key_chain_name",
-        # Tanda 2, slice 0b_34. TRES campos sin relacion entre si en DOS padres. ipv4_acl_in
-        # ya estaba en la lista desde int_routed_host -- aqui lo reutiliza int_vlan, que es el
-        # punto de llavear por (parent, nvpair). Los otros dos son claves nuevas.
+        # Batch 2, slice 0b_34: three unrelated fields on two parents. int_vlan reuses
+        # ipv4_acl_in from int_routed_host, demonstrating why bindings are keyed by
+        # (parent, nvpair). The other two public keys are new.
         "private_vlan_mapping", "enable_vpc_peer_link",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism

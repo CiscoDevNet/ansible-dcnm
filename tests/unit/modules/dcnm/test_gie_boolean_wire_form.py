@@ -84,21 +84,21 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         "enable_ospf", "ospf_mtu_ignore", "ospf_shutdown",
         "ospf_bfd", "ospf_passive_interface",
         "enable_ospf_auth",
-        # Redirects partidos + ND suppress-RA, slice 0b_28. Los tres en los tres padres overlay.
-        # El cuarto del grupo, disable_ip_redirects, es NATIVO y no aparece aqui -- si apareciera
-        # significaria que el registry le quito el nombre al arg spec.
+        # Split redirects + ND suppress-RA, slice 0b_28, on all three overlay parents.
+        # The fourth field, disable_ip_redirects, is native and must stay out of the registry;
+        # registering it would make the engine claim a name already owned by the arg spec.
         "disable_ipv4_redirects", "disable_ipv6_redirects", "ipv6_nd_suppress_ra",
-        # Dampening, slice 0b_6: solo DOS de sus siete son boolean. Los otros cinco son
-        # integer y viven en la lista de representacion HAVE, no aqui.
+        # Dampening, slice 0b_6: two of its seven fields are boolean. The other five are
+        # integers covered by the HAVE representation tests, not this list.
         "enable_dampening", "dampening_restart",
-        # PIM, slice 0b_31: DOS de sus tres claves son boolean. pim_dr_priority es integer y
-        # vive en la lista de representacion HAVE, no aqui.
+        # PIM, slice 0b_31: two of its three keys are boolean. The integer pim_dr_priority
+        # belongs in the HAVE representation tests, not this list.
         "enable_pim_sparse", "enable_pim_bfd_instance",
-        # MACSEC, slice 0b_33: solo el habilitador es boolean. Los otros tres son NOMBRES
-        # (string) y no aparecen aqui.
+        # MACSEC, slice 0b_33: only the enable flag is boolean. The other three fields
+        # are names (strings), so they do not appear here.
         "enable_macsec_interface_policy",
-        # Tanda 2, slice 0b_34: el unico boolean de los tres. ipv4_acl_in y
-        # private_vlan_mapping son string.
+        # Batch 2, slice 0b_34: its only boolean. ipv4_acl_in and
+        # private_vlan_mapping are strings.
         "enable_vpc_peer_link",
         # EIGRP, slice 0b_22 -- eight distinct keys, each on all three overlay parents.
         "enable_eigrp_routing", "enable_eigrp_ipv6_routing", "enable_eigrp_shutdown",
@@ -146,12 +146,12 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 96 = 87 + the NINE of slice 0b_28, all boolean: three fields on each of the three
     # overlay parents. Slice 0b_27 added none here -- hsrp_groupv6 is an integer and
     # hsrp_vipv6 a string.
-    # 98 = 96 + los DOS boolean de dampening. Sus otros cinco campos son integer.
-    # 103 = 98 + los CINCO boolean de PIM: enable_pim_sparse en los cuatro padres y
-    # enable_pim_bfd_instance en int_routed_host. pim_dr_priority es integer y no cuenta aqui.
-    # 104 = 103 + enable_macsec_interface_policy, el UNICO boolean de MACSEC: sus otros tres
-    # campos son nombres (string).
-    # 105 = 104 + enable_vpc_peer_link, el unico boolean de la tanda 2.
+    # 98 = 96 + the two dampening booleans. Its other five fields are integers.
+    # 103 = 98 + the five PIM booleans: enable_pim_sparse on four parents and
+    # enable_pim_bfd_instance on int_routed_host. The integer pim_dr_priority is excluded.
+    # 104 = 103 + enable_macsec_interface_policy, the only MACSEC boolean; the other three
+    # fields are names (strings).
+    # 105 = 104 + enable_vpc_peer_link, the only boolean in batch 2.
     assert len(BOOL_PASSTHROUGH) == 105
 
 
