@@ -224,13 +224,13 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_loopback", "OSPF_PRIORITY"),
         ("int_loopback", "OSPF_RETRANSMIT_INTERVAL"),
         ("int_loopback", "OSPF_TRANSMIT_DELAY"),
-        # Los cinco integers de dampening (slice 0b_6). Misma exencion y misma razon: NDFC
-        # los devuelve como string. No se pueden medir en el equipo -- el CLI no existe en
-        # C9300v -- pero SI llegan al carry-forward, que es de lo que trata esta lista.
-        # ARP_TIMEOUT, slice 0b_3, en los TRES padres. Integer SIN defaultValue, asi que NDFC
-        # devuelve "" cuando nunca se puso -- exactamente la forma que cubre esta exencion, y la
-        # razon por la que registrarlo no necesito tocar el engine. La lista va ordenada por
-        # (padre, nvpair), asi que cada uno cae en la seccion de su padre.
+        # The five dampening integers (slice 0b_6) need the same exemption: NDFC returns
+        # them as strings. C9300v lacks their CLI, so device validation is unavailable,
+        # but they do reach carry-forward, which is what this list covers.
+        # ARP_TIMEOUT, slice 0b_3, on all three parents. It is an integer with no
+        # defaultValue, so NDFC returns "" when unset. The existing exemption covers
+        # that representation; registering it required no engine change. This list is
+        # sorted by (parent, nvpair), placing each row in its parent's section.
         ("int_routed_host", "ARP_TIMEOUT"),
         ("int_routed_host", "DAMPENING_HALF_LIFE"),
         ("int_routed_host", "DAMPENING_MAX_SUPPRESS"),

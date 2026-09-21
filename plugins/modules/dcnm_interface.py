@@ -2334,15 +2334,15 @@ class DcnmIntf:
             "IPv6": "ipv6_addr",
             "PREFIX": "ipv4_mask_len",
             "IPv6_PREFIX": "ipv6_mask_len",
-            # int_vlan nombra su prefijo IPv6 PREFIXv6; int_subif e int_routed_host usan
-            # IPv6_PREFIX. Los dos apuntan a la misma clave publica, siguiendo el patron
-            # que ya existe para ipv6_addr (recibe de V6IP y de IPv6).
+            # int_vlan names its IPv6 prefix PREFIXv6; int_subif and int_routed_host use
+            # IPv6_PREFIX. Both map to the same public key, following the existing
+            # ipv6_addr pattern (mapped from both V6IP and IPv6).
             #
-            # ESTE es el arreglo del KeyError, no cambiar keymap[k] por .get(k):
-            # dcnm_intf_compare_elements accede directo dentro de `if t_e1 != t_e2` y
-            # `elif state == "merged"`, y con .get() un None entraria en
-            # `None not in pb_keys` -> True -> copy_and_add, que es una rama real del
-            # merge. Seria cambiar un fallo ruidoso por un camino silencioso.
+            # Fix the missing mapping rather than replacing keymap[k] with .get(k).
+            # dcnm_intf_compare_elements indexes it inside `if t_e1 != t_e2` and
+            # `elif state == "merged"`. With .get(), None would enter
+            # `None not in pb_keys` -> True -> copy_and_add, an actual merge branch.
+            # That would replace an explicit failure with a silent behavior change.
             "PREFIXv6": "ipv6_mask_len",
             "ROUTING_TAG": "route_tag",
             "ROUTE_MAP_TAG": "route_tag",
@@ -3788,10 +3788,10 @@ class DcnmIntf:
         svi_prof_spec = dict(
             mode=dict(required=True, type="str"),
             ipv4_addr=dict(type="ipv4", default=""),
-            # El direccionamiento IPv6 de la SVI va AQUI, donde ya vive para int_subif e
-            # int_loopback -- no en el registry. Registrar ipv6_addr hizo que gie_guarded_keys(),
-            # que es un set de profile_key SIN padre, lo reclamara globalmente y lo rechazara en
-            # int_subif, que lo soporta de forma nativa. Dos pruebas de subinterfaz lo atraparon.
+            # SVI IPv6 addressing belongs in the native spec, as for int_subif and
+            # int_loopback, not in the registry. Registering ipv6_addr made gie_guarded_keys(),
+            # a set of profile keys without parents, claim it globally and reject it on
+            # int_subif despite native support. Two subinterface tests caught this.
             ipv6_addr=dict(type="ipv6", default=""),
             ipv6_mask_len=dict(type="int", range_min=1, range_max=127, default=""),
             int_vrf=dict(type="str", default="default"),
@@ -4974,18 +4974,16 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["PREFIX"] = str(
                 delem[profile]["ipv4_mask_len"]
             )
-            # El template int_vlan lee PREFIXv6; int_subif e int_routed_host leen
-            # IPv6_PREFIX. Emitir el otro nombre aqui lo descartaria NDFC en silencio. Y sin
-            # el prefijo el DSL cae en un `except` desnudo que borra ipv6_vip, asi que HSRP
-            # IPv6 se saltaria sin error alguno -- medido 2026-09-19.
-            # CONDICIONAL a proposito. Escribirlos siempre, aunque vacios, mete dos nvPairs
-            # nuevos en el payload de TODA SVI: el HAVE de las que ya existen no los tiene, el
-            # comparador ve diferencia y la interfaz deja de converger. Lo atraparon
-            # test_dcnm_intf_svi_merged_idempotent y ..._replaced_existing -- offline, antes de
-            # llegar al lab, que es donde habria aparecido como un diff que nunca cierra.
+            # int_vlan reads PREFIXv6; int_subif and int_routed_host read IPv6_PREFIX.
+            # NDFC would silently discard the wrong name here. Without the prefix, the DSL
+            # reaches a bare `except` that clears ipv6_vip and silently skips HSRP IPv6
+            # (measured on 2026-09-19).
+            # Emit conditionally: always writing these fields, even empty, adds two nvPairs
+            # to every SVI payload. Existing HAVE may omit them, causing a persistent diff.
+            # test_dcnm_intf_svi_merged_idempotent and ..._replaced_existing caught this
+            # offline before it could produce repeated updates in the lab.
             #
-            # Con la guarda, una SVI sin IPv6 produce exactamente el payload de antes de este
-            # cambio.
+            # With this guard, an SVI without IPv6 retains the previous payload exactly.
             if str(delem[profile].get("ipv6_addr", "")) != "":
                 intf["interfaces"][0]["nvPairs"]["IPv6"] = str(
                     delem[profile]["ipv6_addr"]
