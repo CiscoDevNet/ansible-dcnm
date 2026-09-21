@@ -581,8 +581,11 @@ COMMITTED_BINDINGS = {
     ("int_vlan", "PRIVATE_VLAN_MAPPING"): "private_vlan_mapping",
     # ENABLE_VPC_PEER_LINK. El binding es trivial; lo que hace no. Emite DOS lineas
     # -- `vpc peer-link` y `spanning-tree port type network` -- y DESPLAZA la rama del BPDU
-    # guard (:653-655). Este mismo padre declara SPANNING_TREE_PORT_TYPE, ya registrado, asi que
-    # hay dos fuentes para la misma linea de CLI.
+    # guard (:653-655). Este mismo padre declara SPANNING_TREE_PORT_TYPE, ya registrado, y el
+    # template resuelve la precedencia con un `pass` explicito (:670): con el peer-link en true
+    # IGNORA el campo del operador. El descarte es SILENCIOSO -- changed=True, `network` en el
+    # equipo, y el `edge` que se pidio nunca se menciona. Forma del `1` mudo de PIM_DR_PRIORITY,
+    # agravada porque aqui el valor callado lo pidio el operador.
     #
     # Dos reglas duras del cuerpo (:450, :457) que son negativas gratis. La capa de DISPOSITIVO
     # no es alcanzable en este lab -- medido: `show vpc brief` es comando invalido en Leaf-103
