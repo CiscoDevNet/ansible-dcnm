@@ -587,10 +587,13 @@ COMMITTED_BINDINGS = {
     # equipo, y el `edge` que se pidio nunca se menciona. Forma del `1` mudo de PIM_DR_PRIORITY,
     # agravada porque aqui el valor callado lo pidio el operador.
     #
-    # Dos reglas duras del cuerpo (:450, :457) que son negativas gratis. La capa de DISPOSITIVO
-    # no es alcanzable en este lab -- medido: `show vpc brief` es comando invalido en Leaf-103
-    # (feature vpc apagado), hay CERO port-channels, y el otro miembro del par no responde. Se
-    # valida la capa de controlador y el limite queda dicho, como en dampening.
+    # Dos reglas duras del cuerpo (:450, :457) que son negativas gratis.
+    #
+    # CORREGIDO: este comentario decia que la capa de dispositivo no era alcanzable, apoyandose
+    # en medidas de Leaf-103 -- que NO es par vPC. El par real es Leaf-105/106 y esta SANO
+    # (domain 105, adjacency ok, consistency success, peer-link Po500 con las DOS lineas que
+    # este binding produce). El estado correcto es `Registered, untested`: trabajo pendiente, no
+    # limite de hardware como dampening.
     ("int_port_channel_trunk_host", "ENABLE_VPC_PEER_LINK"): "enable_vpc_peer_link",
 }
 
