@@ -422,6 +422,17 @@ MACSEC_ROWS = {
 }
 
 
+# Tanda 2, slice 0b_34. TRES filas en DOS padres, y los tres campos no tienen relacion entre si.
+# ipv4_acl_in reutiliza en int_vlan una clave publica que int_routed_host ya tenia; los otros dos
+# son nuevos. ENABLE_VPC_PEER_LINK se valida solo en la capa de controlador: el lab no tiene vPC
+# operativo (medido) y el limite esta escrito en el slice.
+TANDA2_ROWS = {
+    ("int_vlan", "IPV4_ACL_IN", "ipv4_acl_in"),
+    ("int_vlan", "PRIVATE_VLAN_MAPPING", "private_vlan_mapping"),
+    ("int_port_channel_trunk_host", "ENABLE_VPC_PEER_LINK", "enable_vpc_peer_link"),
+}
+
+
 # ---- binding package runtime contract ----
 def test_package_provenance_and_size():
     expected_keys = (
@@ -430,13 +441,13 @@ def test_package_provenance_and_size():
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
-        | MACSEC_ROWS
+        | MACSEC_ROWS | TANDA2_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 225
+    assert len(BINDING_TABLE) == len(actual_keys) == 228
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -466,6 +477,7 @@ def test_package_provenance_and_size():
     assert len(PIM_ROWS) == 8
     assert len(LINK_LOCAL_ROWS) == 3
     assert len(MACSEC_ROWS) == 4
+    assert len(TANDA2_ROWS) == 3
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -509,7 +521,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 225
+    assert len(rows) == 228
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -596,6 +608,9 @@ def test_registered_keys_per_parent():
     assert registered_profile_keys(PC_TRUNK) == {
         "guard_mode", "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
         "spanning_tree_port_type", "disable_qos_stats", "disable_queuing_stats",
+        # Tanda 2, slice 0b_34: el peer-link solo lo declara este padre de los tres
+        # de port-channel. Su capa de dispositivo no es alcanzable en este lab.
+        "enable_vpc_peer_link",
     }
     assert registered_profile_keys(PC_ACCESS) == {
         "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -913,6 +928,10 @@ def test_all_registered_and_guarded_keys():
         # ahi no_log false. Ver phase44.
         "enable_macsec_interface_policy", "macsec_key_chain_name", "macsec_policy_name",
         "macsec_fallback_key_chain_name",
+        # Tanda 2, slice 0b_34. TRES campos sin relacion entre si en DOS padres. ipv4_acl_in
+        # ya estaba en la lista desde int_routed_host -- aqui lo reutiliza int_vlan, que es el
+        # punto de llavear por (parent, nvpair). Los otros dos son claves nuevas.
+        "private_vlan_mapping", "enable_vpc_peer_link",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -998,6 +1017,10 @@ def test_all_registered_and_guarded_keys():
         # ahi no_log false. Ver phase44.
         "enable_macsec_interface_policy", "macsec_key_chain_name", "macsec_policy_name",
         "macsec_fallback_key_chain_name",
+        # Tanda 2, slice 0b_34. TRES campos sin relacion entre si en DOS padres. ipv4_acl_in
+        # ya estaba en la lista desde int_routed_host -- aqui lo reutiliza int_vlan, que es el
+        # punto de llavear por (parent, nvpair). Los otros dos son claves nuevas.
+        "private_vlan_mapping", "enable_vpc_peer_link",
         "ospf_advertise_subnet",
         # BFD, slice 0b_24 and the eight rows of 0b_4/0b_5 committed with their mechanism
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
@@ -1121,7 +1144,7 @@ def test_a_zero_minimum_is_printed_as_a_bound_not_as_unbounded():
 def test_a_bound_declared_alone_still_reaches_the_range_branch(monkeypatch):
     """The reason the branch tests ``is not None`` rather than truthiness.
 
-    Measured: 0 of the 225 rows declare only one of the two bounds, so today a plain
+    Measured: 0 of the 228 rows declare only one of the two bounds, so today a plain
     ``min_value or max_value`` would reach this branch anyway -- every row with a 0 minimum
     also has a maximum that makes the `or` true. The guard is for the FIRST row that declares a
     minimum of 0 and no maximum, where truthiness would drop the range from the message and

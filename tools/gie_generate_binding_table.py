@@ -564,6 +564,31 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "MACSEC_KEY_CHAIN_NAME"): "macsec_key_chain_name",
     ("int_routed_host", "MACSEC_POLICY_NAME"): "macsec_policy_name",
     ("int_routed_host", "MACSEC_FALLBACK_KEY_CHAIN_NAME"): "macsec_fallback_key_chain_name",
+    # --- Tanda 2: tres campos sin relacion entre si, en dos padres (slice 0b_34) ---
+    #
+    # IPV4_ACL_IN en int_vlan. La clave publica ya existe en int_routed_host (arriba); esto la
+    # reutiliza en otro padre, que es el punto de llavear por (parent, nvpair) y no por nombre.
+    # TERCERA vez que el padre y el hijo escriben el nombre distinto: el padre declara
+    # IPV4_ACL_IN y pasa {"IPV4_ACL": ipv4AclIn} al hijo (int_vlan:1641). Va la del PADRE.
+    # Y hay una segunda trampa, en la VERIFICACION: NDFC pasa el nombre de la ACL a minusculas y
+    # el `include` de NX-OS distingue mayusculas -- buscar el nombre como se escribio da vacio.
+    ("int_vlan", "IPV4_ACL_IN"): "ipv4_acl_in",
+    # PRIVATE_VLAN_MAPPING. `integerRange` en el template -- TERCER tipo que _TYPE_TO_VALIDATOR
+    # no conoce, tras `long` en PIM y `ipV6Address` en link-local. Va `string`, y las cotas del
+    # template NO se trasladan: el valor es una LISTA o un RANGO ("3194,3196" / "3194-3196",
+    # segun su propio Description), asi que min/max 1..4094 son la cota de cada VLAN ID dentro
+    # de la lista y las valida NDFC. Poner min/max aqui compararia una cadena contra un entero.
+    ("int_vlan", "PRIVATE_VLAN_MAPPING"): "private_vlan_mapping",
+    # ENABLE_VPC_PEER_LINK. El binding es trivial; lo que hace no. Emite DOS lineas
+    # -- `vpc peer-link` y `spanning-tree port type network` -- y DESPLAZA la rama del BPDU
+    # guard (:653-655). Este mismo padre declara SPANNING_TREE_PORT_TYPE, ya registrado, asi que
+    # hay dos fuentes para la misma linea de CLI.
+    #
+    # Dos reglas duras del cuerpo (:450, :457) que son negativas gratis. La capa de DISPOSITIVO
+    # no es alcanzable en este lab -- medido: `show vpc brief` es comando invalido en Leaf-103
+    # (feature vpc apagado), hay CERO port-channels, y el otro miembro del par no responde. Se
+    # valida la capa de controlador y el limite queda dicho, como en dampening.
+    ("int_port_channel_trunk_host", "ENABLE_VPC_PEER_LINK"): "enable_vpc_peer_link",
 }
 
 # Fields carried into the runtime table (curated + generated), in a fixed order.
