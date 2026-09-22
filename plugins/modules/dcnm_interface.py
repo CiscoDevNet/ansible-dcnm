@@ -2279,6 +2279,10 @@ class DcnmIntf:
         self.intf_detail_fetch_failed_snos = set()
         self.intf_detail_failed_keys = set()
         self.intf_detail_authoritative_absent_keys = set()
+        # Consecutive FAILED policy-detail read invocations, per queried serial.
+        # Bounds the work spent on a switch that cannot be read; see
+        # _dcnm_intf_read_budget_exhausted for the contract.
+        self.intf_detail_failed_reads = {}
         self.have_all_cached_snos = set()
         self.have_all_failed_snos = set()
         self.have_breakout_cached_snos = set()
@@ -3314,6 +3318,65 @@ class DcnmIntf:
                 for identity in (sno,) + self._dcnm_intf_serial_parts(sno)
             )
         return query_serial in self.intf_detail_fetch_failed_snos
+
+    @classmethod
+    def _dcnm_intf_read_budget_key(cls, serialNumber):
+        """Return the budget key: the serial actually placed in the GET URL.
+
+        One endpoint, one budget. A vPC/AA-FEX pair queries only its first
+        component, so a request sent for ``SN1~PEER`` is charged to ``SN1`` and
+        never to ``PEER`` -- the peer's own endpoint was not contacted. Folded so
+        that two spellings of one serial share an allowance, matching how
+        dcnm_intf_invalidate_serial_authority already compares identities.
+        """
+        query_serial = cls._dcnm_intf_normalize_serial(serialNumber)
+        return query_serial.casefold() if query_serial else None
+
+    def _dcnm_intf_read_budget_exhausted(self, serialNumber):
+        """Whether this serial has spent its consecutive-failure allowance.
+
+        A policy-detail read that cannot establish authority costs up to three
+        HTTP attempts and three seconds of sleep. Nothing used to bound how many
+        such invocations one run could make, so an unreadable switch cost one
+        full invocation per requested interface. This allows two consecutive
+        failed invocations. In the usual bulk-then-individual path, this leaves
+        one individual probe after the bulk failure. A valid response resets
+        the count so useful per-interface recovery can continue. Two failures
+        do not prove that every interface on the switch is unreadable.
+
+        Accepted tradeoff: if that single probe lands on an interface that is
+        genuinely unreadable while others would have answered, the switch closes
+        early for this invocation. A later module invocation starts fresh.
+        """
+        key = self._dcnm_intf_read_budget_key(serialNumber)
+        if key is None:
+            return False
+        return self.intf_detail_failed_reads.get(key, 0) >= 2
+
+    def _dcnm_intf_charge_failed_read(self, serialNumber):
+        """Charge one failed read invocation against this serial."""
+        key = self._dcnm_intf_read_budget_key(serialNumber)
+        if key is None:
+            return
+        self.intf_detail_failed_reads[key] = (
+            self.intf_detail_failed_reads.get(key, 0) + 1
+        )
+
+    def _dcnm_intf_clear_failed_reads(self, serialNumber):
+        """Restore the allowance after a newly obtained, validated response.
+
+        Only a response this run actually received and fully validated resets the
+        count -- present, or authoritatively absent. Wanting to re-read is not
+        evidence that the controller answered, so neither an explicit
+        invalidation, a refresh, a repeated pass, a cache hit nor a bare
+        RETURN_CODE 200 reaches this method. Nothing but this serial's own
+        counter is touched: a successful read proves nothing about any other
+        identity's failures.
+        """
+        key = self._dcnm_intf_read_budget_key(serialNumber)
+        if key is None:
+            return
+        self.intf_detail_failed_reads.pop(key, None)
 
     def dcnm_intf_mark_detail_unavailable(self, serialNumber):
         """Mark the logical identity and every covered physical serial failed."""
@@ -5365,14 +5428,27 @@ class DcnmIntf:
 
         self.dcnm_intf_invalidate_serial_authority(serialNumber)
 
+        # Invalidation above runs first on purpose: a skipped read must not leave
+        # a stale cache entry behind that would let the authority guard pass.
+        if self._dcnm_intf_read_budget_exhausted(serialNumber):
+            self.dcnm_intf_mark_detail_unavailable(serialNumber)
+            return
+
         path = self.paths["IF_WITH_SNO"].format(query_serial)
 
         resp = self._dcnm_intf_get_with_retries(path)
+
+        # Charged up front and refunded only on a proven, fully validated answer.
+        # Every rejection below -- HTTP, envelope, shape, identity, duplicate --
+        # therefore costs the allowance without needing its own bookkeeping, and
+        # a validation branch added later is charged by construction.
+        self._dcnm_intf_charge_failed_read(serialNumber)
 
         if resp == []:
             authorities = {expected_identity, query_serial}
             self.intf_detail_cached_snos.update(authorities)
             self.intf_detail_fetch_failed_snos.difference_update(authorities)
+            self._dcnm_intf_clear_failed_reads(serialNumber)
             return
 
         if not (isinstance(resp, dict) and resp.get("RETURN_CODE") == 200):
@@ -5429,6 +5505,7 @@ class DcnmIntf:
         self.intf_detail_cache.update(entries)
         self.intf_detail_cached_snos.update(authorities)
         self.intf_detail_fetch_failed_snos.difference_update(authorities)
+        self._dcnm_intf_clear_failed_reads(serialNumber)
 
     def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
 
@@ -5453,12 +5530,26 @@ class DcnmIntf:
         self.intf_detail_cache.pop(cache_key, None)
         self.intf_detail_authoritative_absent_keys.discard(cache_key)
         self.intf_detail_failed_keys.discard(cache_key)
+
+        # Stale per-key state is cleared above before the read is skipped, for the
+        # same reason the bulk reader invalidates first: an unread interface is
+        # unavailable, never absent.
+        if self._dcnm_intf_read_budget_exhausted(serialNumber):
+            self.intf_detail_failed_keys.add(cache_key)
+            return []
+
         path = self.paths["IF_WITH_SNO_IFNAME"].format(query_serial, ifName)
         resp = self._dcnm_intf_get_with_retries(path)
+
+        # Charged up front, refunded only by a validated answer -- see the bulk
+        # reader for why the charge precedes the branches rather than following
+        # each of them.
+        self._dcnm_intf_charge_failed_read(serialNumber)
 
         if resp == []:
             self.intf_detail_authoritative_absent_keys.add(cache_key)
             self.intf_detail_failed_keys.discard(cache_key)
+            self._dcnm_intf_clear_failed_reads(serialNumber)
             return []
 
         if isinstance(resp, dict) and resp.get("RETURN_CODE") == 200:
@@ -5467,12 +5558,14 @@ class DcnmIntf:
                 if len(data) == 0:
                     self.intf_detail_authoritative_absent_keys.add(cache_key)
                     self.intf_detail_failed_keys.discard(cache_key)
+                    self._dcnm_intf_clear_failed_reads(serialNumber)
                     return []
                 if len(data) == 1 and self._dcnm_intf_valid_individual_entry(
                     data[0], ifName, query_serial, serialNumber
                 ):
                     self.intf_detail_cache[cache_key] = data[0]
                     self.intf_detail_failed_keys.discard(cache_key)
+                    self._dcnm_intf_clear_failed_reads(serialNumber)
                     return data[0]
 
         self.intf_detail_failed_keys.add(cache_key)
@@ -5483,10 +5576,17 @@ class DcnmIntf:
 
         Only the dcnm_send call is wrapped, so a transport/API exception becomes a
         failed attempt (not a crash), while a programmer error in the parsing
-        logic that follows is NOT masked. Terminates early on a bare [] or a dict
-        bare [] or RETURN_CODE 200 response; otherwise returns the last response
-        after the retry bound. Callers still treat bare [] as unavailable because
-        it lacks the required DATA envelope.
+        logic that follows is NOT masked. Terminates early on a bare [] or on any
+        dict carrying RETURN_CODE 200; otherwise returns the last response after
+        the retry bound.
+
+        A bare [] is AUTHORITATIVE ABSENCE to both policy-detail callers, not
+        unavailability: the bulk reader records the serial as read-and-empty and
+        the individual reader records a confirmed absent key. (The sentence that
+        used to stand here claimed the opposite and had never matched either
+        caller.) This collection's own httpapi cannot produce that shape -- it
+        wraps every 2xx in the RETURN_CODE envelope and renders an empty body as
+        DATA {} -- so the branch is reachable only from a transport that does not.
         """
         resp = []
         for _attempt in range(3):

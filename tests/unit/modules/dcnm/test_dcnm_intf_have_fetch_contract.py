@@ -41,6 +41,10 @@ def _stub():
     s.intf_detail_fetch_failed_snos = set()
     s.intf_detail_failed_keys = set()
     s.intf_detail_authoritative_absent_keys = set()
+    # Consecutive failed policy-detail reads per queried serial. Initialized here
+    # because this namespace stands in for an instance without running __init__;
+    # the readers use the attribute directly, as production does.
+    s.intf_detail_failed_reads = {}
     s.have_all_cached_snos = set()
     s.have_all_failed_snos = set()
     s.have_breakout_cached_snos = set()
@@ -86,6 +90,16 @@ def _stub():
         )
     )
     s._dcnm_intf_get_with_retries = lambda path: DcnmIntf._dcnm_intf_get_with_retries(s, path)
+    s._dcnm_intf_read_budget_key = DcnmIntf._dcnm_intf_read_budget_key
+    s._dcnm_intf_read_budget_exhausted = (
+        lambda serial: DcnmIntf._dcnm_intf_read_budget_exhausted(s, serial)
+    )
+    s._dcnm_intf_charge_failed_read = (
+        lambda serial: DcnmIntf._dcnm_intf_charge_failed_read(s, serial)
+    )
+    s._dcnm_intf_clear_failed_reads = (
+        lambda serial: DcnmIntf._dcnm_intf_clear_failed_reads(s, serial)
+    )
     s.dcnm_intf_ospf_md_have_unavailable = (
         lambda name, sno: DcnmIntf.dcnm_intf_ospf_md_have_unavailable(s, name, sno)
     )
