@@ -2826,20 +2826,128 @@ BINDING_TABLE = (
     },
 )
 
+# --- Structural indexes ---------------------------------------------------------------
+# Built ONCE, at import, from BINDING_TABLE. The registry is packaged static data: no
+# runtime path replaces the table, so nothing here watches for a replacement. There is
+# deliberately NO per-lookup fingerprint, hash or rescan -- that would reintroduce the
+# full-table work these indexes exist to remove. A test that swaps BINDING_TABLE must call
+# rebuild_binding_indexes() explicitly, or it is exercising the previous table.
+#
+# Behaviour preserved exactly, not approximated:
+#   * a (parent, key) that appears more than once maps to None, so an AMBIGUOUS lookup and
+#     a MISSING one both answer None, as the scanning implementation did. Duplicates are
+#     never resolved first-wins or last-wins, and never raise at import;
+#   * rows are stored BY REFERENCE, so a resolved binding is still the original row object;
+#   * registry-wide collections are built over EVERY row, including a duplicated one, which
+#     is what the scanning comprehensions did;
+#   * per-parent selections are built from UNAMBIGUOUS rows only, ordered by profile key,
+#     which is what `sorted(registered_profile_keys(p))` + `resolve_binding()` produced.
+_BINDING_BY_PROFILE_KEY = {}
+_BINDING_BY_NVPAIR = {}
+_PROFILE_KEYS_BY_PARENT = {}
+_PROFILE_KEYS_BY_MECHANISM = {}
+_PARENT_MECHANISM_KEYS = {}
+_PARENT_MECHANISM_BINDINGS = {}
+_ALL_PROFILE_KEYS = frozenset()
+_NO_LOG_PROFILE_KEYS = frozenset()
+
+
+def rebuild_binding_indexes():
+    """Rebuild every structural index from the CURRENT value of BINDING_TABLE.
+
+    Called once below, at import. A test that replaces BINDING_TABLE must call this
+    explicitly and rebuild again on teardown; see tests/unit/modules/dcnm/test_gie_binding_indexes.py.
+    """
+    global _BINDING_BY_PROFILE_KEY, _BINDING_BY_NVPAIR, _PROFILE_KEYS_BY_PARENT
+    global _PROFILE_KEYS_BY_MECHANISM, _PARENT_MECHANISM_KEYS, _PARENT_MECHANISM_BINDINGS
+    global _ALL_PROFILE_KEYS, _NO_LOG_PROFILE_KEYS
+
+    by_profile_key = {}
+    by_nvpair = {}
+    keys_by_parent = {}
+    all_keys = set()
+    no_log_keys = set()
+    keys_by_mechanism = {}
+    for binding in BINDING_TABLE:
+        parent = binding['parent_template']
+        profile_key = binding['profile_key']
+        identity = (parent, profile_key)
+        nvpair_identity = (parent, binding['parent_nvpair'])
+        by_profile_key[identity] = None if identity in by_profile_key else binding
+        by_nvpair[nvpair_identity] = None if nvpair_identity in by_nvpair else binding
+        keys_by_parent.setdefault(parent, set()).add(profile_key)
+        all_keys.add(profile_key)
+        if binding.get('no_log'):
+            no_log_keys.add(profile_key)
+        keys_by_mechanism.setdefault(binding.get('mechanism'), set()).add(profile_key)
+
+    parent_mechanism_bindings = {}
+    for parent, profile_keys in keys_by_parent.items():
+        for profile_key in sorted(profile_keys):
+            binding = by_profile_key[(parent, profile_key)]
+            if binding is None:
+                continue  # duplicated on this parent: resolves to None, so it is not selected
+            parent_mechanism_bindings.setdefault(
+                (parent, binding.get('mechanism')), []).append(binding)
+
+    _BINDING_BY_PROFILE_KEY = by_profile_key
+    _BINDING_BY_NVPAIR = by_nvpair
+    _PROFILE_KEYS_BY_PARENT = {p: frozenset(k) for p, k in keys_by_parent.items()}
+    _PROFILE_KEYS_BY_MECHANISM = {m: frozenset(k) for m, k in keys_by_mechanism.items()}
+    _PARENT_MECHANISM_BINDINGS = {k: tuple(v) for k, v in parent_mechanism_bindings.items()}
+    _PARENT_MECHANISM_KEYS = {
+        k: frozenset(b['profile_key'] for b in v) for k, v in _PARENT_MECHANISM_BINDINGS.items()
+    }
+    _ALL_PROFILE_KEYS = frozenset(all_keys)
+    _NO_LOG_PROFILE_KEYS = frozenset(no_log_keys)
+
 
 def registered_profile_keys(parent_template):
     """Public profile keys registered for a parent (thin: exact set, no name heuristic)."""
-    return {b['profile_key'] for b in BINDING_TABLE if b['parent_template'] == parent_template}
+    return set(_PROFILE_KEYS_BY_PARENT.get(parent_template, ()))
 
 
 def resolve_binding(parent_template, profile_key):
     """Exactly one binding for (parent_template, profile_key), or None."""
-    hits = [b for b in BINDING_TABLE
-            if b['parent_template'] == parent_template and b['profile_key'] == profile_key]
-    return hits[0] if len(hits) == 1 else None
+    return _BINDING_BY_PROFILE_KEY.get((parent_template, profile_key))
 
 
 def resolve_by_nvpair(parent_template, parent_nvpair):
-    hits = [b for b in BINDING_TABLE
-            if b['parent_template'] == parent_template and b['parent_nvpair'] == parent_nvpair]
-    return hits[0] if len(hits) == 1 else None
+    """Exactly one binding for (parent_template, parent_nvpair), or None."""
+    return _BINDING_BY_NVPAIR.get((parent_template, parent_nvpair))
+
+
+def all_registered_profile_keys():
+    """Every public profile key in the registry, across all parents. A fresh set."""
+    return set(_ALL_PROFILE_KEYS)
+
+
+def profile_keys_by_mechanism(mechanism):
+    """Every public profile key registered with `mechanism`, all parents. A fresh set."""
+    return set(_PROFILE_KEYS_BY_MECHANISM.get(mechanism, ()))
+
+
+def no_log_profile_keys():
+    """Profile keys the registry marks `no_log`.
+
+    The frozenset is shared rather than copied: it is immutable, so a caller cannot reach
+    back into the index through it, which is the reason the mutable helpers above copy.
+    """
+    return _NO_LOG_PROFILE_KEYS
+
+
+def parent_profile_keys_by_mechanism(parent_template, mechanism):
+    """Unambiguous profile keys for ONE parent under `mechanism`. A fresh set."""
+    return set(_PARENT_MECHANISM_KEYS.get((parent_template, mechanism), ()))
+
+
+def parent_bindings_by_mechanism(parent_template, mechanism):
+    """Unambiguous bindings for ONE parent under `mechanism`, ordered by profile key.
+
+    A tuple of the ORIGINAL row objects; callers that hand a result to their own caller
+    build their own containers from it (see gie_carry_forward_bindings).
+    """
+    return _PARENT_MECHANISM_BINDINGS.get((parent_template, mechanism), ())
+
+
+rebuild_binding_indexes()
