@@ -5520,25 +5520,29 @@ class DcnmIntf:
             bool: True if reset host interfaces should be admin up,
                   False if they should be admin down.
         """
-        if self.host_intf_admin_state is not None:
+        if getattr(self, "host_intf_admin_state", None) is not None:
             return self.host_intf_admin_state
 
         # Preserve historical behaviour (admin up) if the fabric setting
-        # cannot be determined.
+        # cannot be determined (for example when the module context or
+        # fabric details are unavailable).
         admin_state = True
-        try:
-            fabric_details = get_fabric_details(self.module, self.fabric)
-            if fabric_details:
-                nv_pairs = fabric_details.get("nvPairs") or {}
-                raw_value = nv_pairs.get("HOST_INTF_ADMIN_STATE")
-                if raw_value is not None:
-                    admin_state = (
-                        str(raw_value).strip().lower() in ("true", "yes")
-                    )
-        except Exception:
-            # Any failure reading fabric details falls back to the safe
-            # default of admin up, matching the module's prior behaviour.
-            admin_state = True
+        module = getattr(self, "module", None)
+        fabric = getattr(self, "fabric", None)
+        if module is not None and fabric:
+            try:
+                fabric_details = get_fabric_details(module, fabric)
+                if fabric_details:
+                    nv_pairs = fabric_details.get("nvPairs") or {}
+                    raw_value = nv_pairs.get("HOST_INTF_ADMIN_STATE")
+                    if raw_value is not None:
+                        admin_state = (
+                            str(raw_value).strip().lower() in ("true", "yes")
+                        )
+            except Exception:
+                # Any failure reading fabric details falls back to the safe
+                # default of admin up, matching the module's prior behaviour.
+                admin_state = True
 
         self.host_intf_admin_state = admin_state
         return admin_state
