@@ -3880,6 +3880,13 @@ class DcnmIntf:
         )
         intf["interfaces"][0].update({"ifName": ifname})
 
+        # validate_list_of_dicts materializes an omitted optional FEC value as
+        # None. NDFC stores that default as "auto", so serializing None causes
+        # a perpetual None-versus-auto diff on subsequent runs.
+        fec_value = delem[profile].get("fec")
+        if fec_value is None:
+            fec_value = "auto"
+
         if delem[profile]["mode"] == "trunk":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
                 profile
@@ -3921,7 +3928,7 @@ class DcnmIntf:
             else:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
             if self._ndfc_version_gte("12.4.1"):
-                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
+                intf["interfaces"][0]["nvPairs"]["FEC"] = fec_value
         if delem[profile]["mode"] == "access":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
                 profile
@@ -3960,7 +3967,7 @@ class DcnmIntf:
             else:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
             if self._ndfc_version_gte("12.4.1"):
-                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
+                intf["interfaces"][0]["nvPairs"]["FEC"] = fec_value
         if delem[profile]["mode"] == "routed":
             intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
                 "int_vrf"
@@ -3995,7 +4002,7 @@ class DcnmIntf:
             else:
                 intf["interfaces"][0]["nvPairs"]["QUEUING_POLICY"] = ""
             if self._ndfc_version_gte("12.4.1"):
-                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
+                intf["interfaces"][0]["nvPairs"]["FEC"] = fec_value
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         if delem[profile]["mode"] == "epl_routed":
@@ -4056,7 +4063,7 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
             if self._ndfc_version_gte("12.4.1"):
-                intf["interfaces"][0]["nvPairs"]["FEC"] = delem[profile].get("fec", "auto")
+                intf["interfaces"][0]["nvPairs"]["FEC"] = fec_value
 
         if delem[profile]["mode"] in ("trunk", "access", "dot1q"):
             self.dcnm_intf_set_storm_control_nv_pairs(

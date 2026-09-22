@@ -976,6 +976,55 @@ class TestDcnmIntfModule(TestDcnmModule):
             intf["interfaces"][0]["nvPairs"]["FEC"], "rs-fec"
         )
 
+    def test_dcnm_intf_eth_payload_defaults_null_fec_to_auto(self):
+        for mode in ("trunk", "access", "routed", "dot1q"):
+            with self.subTest(mode=mode):
+                dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+                dcnm_intf.ndfc_version = "12.4.1.245"
+                delem = self._build_eth_trunk_delem(None)
+                delem["profile"]["mode"] = mode
+                if mode in ("access", "dot1q"):
+                    delem["profile"]["access_vlan"] = "10"
+                if mode == "routed":
+                    delem["profile"].update({
+                        "int_vrf": "default",
+                        "ipv4_addr": "",
+                        "ipv4_mask_len": 8,
+                        "route_tag": "",
+                    })
+                intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+
+                dcnm_intf.dcnm_intf_get_eth_payload(
+                    delem, intf, "profile"
+                )
+
+                self.assertEqual(
+                    intf["interfaces"][0]["nvPairs"]["FEC"], "auto"
+                )
+
+    def test_dcnm_intf_eth_payload_defaults_missing_fec_to_auto(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.ndfc_version = "12.4.1.245"
+        delem = self._build_eth_trunk_delem(None)
+        delem["profile"].pop("fec")
+        intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+
+        dcnm_intf.dcnm_intf_get_eth_payload(delem, intf, "profile")
+
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["FEC"], "auto"
+        )
+
+    def test_dcnm_intf_eth_payload_omits_fec_before_ndfc_12_4_1(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.ndfc_version = "12.4.0"
+        delem = self._build_eth_trunk_delem(None)
+        intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+
+        dcnm_intf.dcnm_intf_get_eth_payload(delem, intf, "profile")
+
+        self.assertNotIn("FEC", intf["interfaces"][0]["nvPairs"])
+
     def test_dcnm_intf_fec_version_validation(self):
         cases = (
             (None, True, "version could not be determined"),
