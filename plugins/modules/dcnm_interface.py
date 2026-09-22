@@ -3363,6 +3363,12 @@ class DcnmIntf:
         pol_map = getattr(self, "pol_types", {}).get(
             getattr(self, "dcnm_version", None), {}
         )
+        # Built ONCE per invocation. It used to be rebuilt inside the profile-key loop
+        # below -- once per field of every interface in the play, so a run with 1,000
+        # interfaces declaring five registered fields asked for the same registry-wide set
+        # 5,000 times. The set is a pure function of the packaged registry, which cannot
+        # change while this method runs, so the repetition bought nothing.
+        registered_keys = gie_all_registered_keys()
         for cfg_item in self.config:
             profile = cfg_item.get("profile")
             if not isinstance(profile, dict):
@@ -3393,7 +3399,7 @@ class DcnmIntf:
             if parent is None:
                 continue
             for profile_key in sorted(profile.keys()):
-                if profile_key not in gie_all_registered_keys():
+                if profile_key not in registered_keys:
                     continue
                 if resolve_binding(parent, profile_key) is None:
                     continue

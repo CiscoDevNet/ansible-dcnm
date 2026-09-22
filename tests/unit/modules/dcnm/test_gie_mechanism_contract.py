@@ -314,20 +314,33 @@ def _with_mechanism(key, mechanism):
 
 @pytest.fixture
 def patched_table(monkeypatch):
-    """Swap the table everywhere it is actually read.
+    """Swap the table everywhere it is actually read, then REBUILD THE INDEXES.
 
-    Both targets are load-bearing, and patching only the first is a trap worth naming: it makes
-    the mutation tests pass for the wrong reason. ``gie_engine`` holds its own reference, used
-    by ``gie_guarded_keys()``; but ``resolve_binding`` and ``registered_profile_keys`` live in
-    ``gie_binding_table`` and read ITS module global, which is what ``_generic_keys()`` and
-    ``gie_carry_forward_bindings()`` go through. Patch only ``gie_engine`` and the
-    parent-qualified checks keep reporting the UNMUTATED placement.
+    Both patch targets are load-bearing, and patching only the first is a trap worth naming:
+    it makes the mutation tests pass for the wrong reason. ``gie_engine`` holds its own
+    reference, used by ``gie_nvpair_keymap()``; but the structural lookups and per-parent
+    selections live in ``gie_binding_table`` and read ITS module global, which is what
+    ``_generic_keys()`` and ``gie_carry_forward_bindings()`` go through. Patch only
+    ``gie_engine`` and the parent-qualified checks keep reporting the UNMUTATED placement.
+
+    The rebuild is the third load-bearing step, and it is explicit for the same reason.
+    ``gie_binding_table`` indexes the packaged registry ONCE, at import, and nothing at
+    runtime watches for a replaced table -- a per-lookup fingerprint would put back exactly
+    the full-table work the indexes removed. So a fixture that swaps the global without
+    rebuilding is not testing its mutated table at all: every lookup still answers from the
+    packaged one, and the mutation controls below would pass while measuring nothing.
+
+    Teardown rebuilds from the restored global, so a later test in the same process cannot
+    inherit this fixture's indexes.
     """
     def _apply(table):
         monkeypatch.setattr(gie_engine, "BINDING_TABLE", table)
         monkeypatch.setattr(gie_binding_table, "BINDING_TABLE", table)
+        gie_binding_table.rebuild_binding_indexes()
         return table
-    return _apply
+    yield _apply
+    monkeypatch.undo()
+    gie_binding_table.rebuild_binding_indexes()
 
 
 def test_mislabelling_one_parent_of_a_shared_key_is_caught(patched_table):

@@ -805,9 +805,20 @@ def test_non_ospf_child_pti_does_not_inherit_ospf_withhold(monkeypatch):
         "BINDING_TABLE",
         gie_binding_table.BINDING_TABLE + (synthetic,),
     )
-    add, err = gie_contribute_nvpairs(
-        "synthetic_parent", {"enable_synthetic_child": True}, "12.6.0.266"
-    )
+    # The table indexes the packaged registry once, at import, and deliberately does not
+    # watch for a replaced global -- see rebuild_binding_indexes(). Without this call the
+    # synthetic parent stays invisible to every lookup and the test passes for the wrong
+    # reason: contribute would answer ({}, None) for an unknown parent instead of
+    # exercising the version gate on the synthetic row. Teardown rebuilds from the
+    # restored global so no later test in this process inherits these indexes.
+    gie_binding_table.rebuild_binding_indexes()
+    try:
+        add, err = gie_contribute_nvpairs(
+            "synthetic_parent", {"enable_synthetic_child": True}, "12.6.0.266"
+        )
+    finally:
+        monkeypatch.undo()
+        gie_binding_table.rebuild_binding_indexes()
     assert add is None
     assert err is not None
 

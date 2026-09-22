@@ -15,8 +15,19 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+# The table owns STRUCTURE (which rows exist, indexed by identity and by parent); this
+# engine owns POLICY (which mechanism is the generic route). The selections below read the
+# table's indexes instead of re-deriving the same structures on every call -- each of those
+# derivations was a full pass over the packaged table. BINDING_TABLE itself is still
+# imported: gie_nvpair_keymap() deliberately keeps building its mapping at CALL time, so
+# its ambiguity error keeps its current timing and message.
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
     BINDING_TABLE,
+    all_registered_profile_keys,
+    no_log_profile_keys,
+    parent_bindings_by_mechanism,
+    parent_profile_keys_by_mechanism,
+    profile_keys_by_mechanism,
     registered_profile_keys,
     resolve_binding,
 )
@@ -433,8 +444,12 @@ def gie_validate_binding_value(
 
 
 def gie_all_registered_keys():
-    """Every public profile key known to the packaged registry, across all parents."""
-    return {b["profile_key"] for b in BINDING_TABLE}
+    """Every public profile key known to the packaged registry, across all parents.
+
+    A FRESH set on every call: the caller owns the result and may mutate it. The index
+    behind it is built once, so this no longer walks the table per call.
+    """
+    return all_registered_profile_keys()
 
 
 def gie_nvpair_keymap():
@@ -461,12 +476,12 @@ def gie_nvpair_keymap():
 def gie_guarded_keys():
     """Registry-known keys whose invalid-parent guard is owned by the GENERIC engine
     (mechanism 'passthrough'). Keys with a dedicated compat validate (child_pti, e.g.
-    OSPF-MD) keep their own parent/mode validation and are not double-guarded here."""
-    return {
-        b["profile_key"]
-        for b in BINDING_TABLE
-        if b.get("mechanism") == GIE_MECH_PASSTHROUGH
-    }
+    OSPF-MD) keep their own parent/mode validation and are not double-guarded here.
+
+    A FRESH set on every call, from an index built once. Still NOT parent-qualified --
+    that is the property the callers depend on, and the reason a public key the native arg
+    spec already serves on another parent must never be registered here."""
+    return profile_keys_by_mechanism(GIE_MECH_PASSTHROUGH)
 
 
 def gie_invalid_parent_key(parent_template, profile_keys):
@@ -485,13 +500,13 @@ def gie_invalid_parent_key(parent_template, profile_keys):
 def _generic_keys(parent_template):
     """Registered profile keys for a parent handled by the GENERIC eth passthrough path
     (mechanism 'passthrough'). child_pti keys (OSPF-MD) are transported via
-    gie_contribute_nvpairs on their own path but are not part of the eth generic spec."""
-    keys = set()
-    for pk in registered_profile_keys(parent_template):
-        b = resolve_binding(parent_template, pk)
-        if b and b.get("mechanism") == GIE_MECH_PASSTHROUGH:
-            keys.add(pk)
-    return keys
+    gie_contribute_nvpairs on their own path but are not part of the eth generic spec.
+
+    Reads the per-parent index. It returns the same set the enumerate-then-resolve loop
+    did, INCLUDING the treatment of a key duplicated on this parent: that key resolves to
+    None, so it was never added -- and the index is built from unambiguous rows for the
+    same reason, not as a new rule."""
+    return parent_profile_keys_by_mechanism(parent_template, GIE_MECH_PASSTHROUGH)
 
 
 def gie_no_log_profile_keys():
@@ -506,9 +521,11 @@ def gie_no_log_profile_keys():
     Erring wide costs nothing here. The set holds profile KEY NAMES, so the worst case is
     scrubbing a value the operator put under a name that happens to be secret somewhere else --
     which is the right answer anyway.
+
+    Discovery stays GLOBAL and unconditional: the index is built from every registered row,
+    independently of parent, version or whether any input validated.
     """
-    return frozenset(
-        b["profile_key"] for b in BINDING_TABLE if b.get("no_log"))
+    return no_log_profile_keys()
 
 
 def gie_extend_prof_spec(prof_spec, parent_template, profile_input):
@@ -612,14 +629,18 @@ def gie_carry_forward_bindings(parent_template):
     value must be PRESERVED when the profile key is omitted from the playbook (omission is not
     a value). Returns a list of {parent_nvpair, profile_key}. The OSPF-MD child_pti binding
     keeps its own dedicated carry-forward and is not returned here.
+
+    The index supplies the parent's passthrough bindings already ordered by profile key --
+    the order the previous `sorted(registered_profile_keys(...))` loop produced. The list
+    and every descriptor in it are built fresh here on purpose: callers mutate what they
+    are given, and handing back a cached container would let one caller edit the registry
+    view of the next.
     """
     out = []
     if not parent_template:
         return out
-    for pk in sorted(registered_profile_keys(parent_template)):
-        b = resolve_binding(parent_template, pk)
-        if b and b.get("mechanism") == GIE_MECH_PASSTHROUGH:
-            out.append({"parent_nvpair": b["parent_nvpair"], "profile_key": pk})
+    for b in parent_bindings_by_mechanism(parent_template, GIE_MECH_PASSTHROUGH):
+        out.append({"parent_nvpair": b["parent_nvpair"], "profile_key": b["profile_key"]})
     return out
 
 
