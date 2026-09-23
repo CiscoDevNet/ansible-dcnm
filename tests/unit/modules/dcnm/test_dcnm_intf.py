@@ -1026,6 +1026,56 @@ class TestDcnmIntfModule(TestDcnmModule):
             intf["interfaces"][0]["nvPairs"]["FEC"], "auto"
         )
 
+    def test_dcnm_intf_eth_payload_default_fec_survives_pc_member_rewrite(
+        self,
+    ):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.class_name = "DcnmIntf"
+        dcnm_intf.log = Mock()
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.ndfc_version = "12.4.1.245"
+        member_policy = "int_port_channel_trunk_member_11_1"
+        dcnm_intf.pol_pc_member_types = {
+            12: {"pc_trunk_member": member_policy}
+        }
+
+        for fec_value in (None, "missing"):
+            with self.subTest(fec=fec_value):
+                delem = self._build_eth_trunk_delem(None)
+                if fec_value == "missing":
+                    delem["profile"].pop("fec")
+                intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+                intf["interfaces"][0]["serialNumber"] = "TESTSN1"
+                dcnm_intf.dcnm_intf_get_eth_payload(
+                    delem, intf, "profile"
+                )
+                have = [
+                    {
+                        "policy": member_policy,
+                        "interfaces": [
+                            {
+                                "ifName": "Ethernet1/4",
+                                "serialNumber": "TESTSN1",
+                                "nvPairs": {
+                                    "PO_ID": "Port-channel300",
+                                    "INTF_NAME": "Ethernet1/4",
+                                    "PC_MODE": "active",
+                                    "ALLOWED_VLANS": "all",
+                                },
+                            }
+                        ],
+                    }
+                ]
+
+                dcnm_intf.dcnm_intf_replace_pc_members([intf], have)
+
+                rewritten = dcnm_intf.want[0]
+                self.assertEqual(rewritten["policy"], member_policy)
+                self.assertEqual(
+                    rewritten["interfaces"][0]["nvPairs"]["FEC"],
+                    "auto",
+                )
+
     def test_dcnm_intf_eth_payload_omits_fec_before_ndfc_12_4_1(self):
         dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
         dcnm_intf.ndfc_version = "12.4.0"
@@ -8118,6 +8168,72 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
         self.assert_no_individual_interface_gets()
 
+    def test_dcnm_intf_override_eth_intf_types_only_nd42_edit_allowed_host_admin_down(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        self.set_physical_eth_override_capabilities()
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules."
+            "dcnm_interface.get_fabric_details",
+            return_value={
+                "nvPairs": {"HOST_INTF_ADMIN_STATE": "false"}
+            },
+        ) as mock_fd:
+            result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(mock_fd.call_count, 1)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        for payload in result["diff"][0]["replaced"]:
+            nv_pairs = payload["interfaces"][0]["nvPairs"]
+            self.assertEqual(nv_pairs["ADMIN_STATE"], False)
+            self.assertEqual(nv_pairs["CONF"], "")
+            self.assertEqual(nv_pairs["FEC"], "auto")
+
+    def test_dcnm_intf_override_eth_intf_types_only_nd42_edit_allowed_host_admin_up(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        self.set_physical_eth_override_capabilities()
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules."
+            "dcnm_interface.get_fabric_details",
+            return_value={
+                "nvPairs": {"HOST_INTF_ADMIN_STATE": "true"}
+            },
+        ) as mock_fd:
+            result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(mock_fd.call_count, 1)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        for payload in result["diff"][0]["replaced"]:
+            nv_pairs = payload["interfaces"][0]["nvPairs"]
+            self.assertEqual(nv_pairs["ADMIN_STATE"], True)
+            self.assertEqual(nv_pairs["CONF"], "")
+            self.assertEqual(nv_pairs["FEC"], "auto")
+
     def test_dcnm_intf_override_eth_intf_types_only_nd42_not_editable(
         self,
     ):
@@ -8144,11 +8260,18 @@ class TestDcnmIntfModule(TestDcnmModule):
                         config=[],
                     )
                 )
-                result = self.execute_module(changed=False, failed=False)
+                with patch(
+                    "ansible_collections.cisco.dcnm.plugins.modules."
+                    "dcnm_interface.get_fabric_details"
+                ) as mock_fd:
+                    result = self.execute_module(
+                        changed=False, failed=False
+                    )
 
                 self.assertEqual(len(result["diff"][0]["replaced"]), 0)
                 self.assertEqual(len(result["diff"][0]["deploy"]), 0)
                 self.assertEqual(len(result["diff"][0]["skipped"]), 3)
+                mock_fd.assert_not_called()
                 self.assertTrue(
                     all(
                         skipped["Reason"]
@@ -8157,6 +8280,36 @@ class TestDcnmIntfModule(TestDcnmModule):
                     )
                 )
                 self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_override_eth_intf_types_only_nd42_all_deferred_does_not_fetch_fabric_details(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        self.set_physical_eth_override_capabilities(
+            source="port-channel300"
+        )
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules."
+            "dcnm_interface.get_fabric_details"
+        ) as mock_fd:
+            result = self.execute_module(changed=False, failed=False)
+
+        mock_fd.assert_not_called()
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 0)
+        self.assertEqual(len(result["diff"][0]["deferred"]), 3)
+        self.assert_no_mutating_dcnm_calls()
 
     def test_dcnm_intf_override_eth_intf_types_only_nd42_dependency(
         self,
