@@ -444,7 +444,122 @@ class TestDcnmIntfModule(TestDcnmModule):
             "DCNM_INTF_MATCH",
         )
 
+    def test_dcnm_intf_default_payload_admin_up_when_host_intf_admin_state_true(
+        self,
+    ):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.ndfc_version = "12.4.1.245"
+        dcnm_intf.pol_types = {
+            12: {
+                "eth_trunk": "int_trunk_host",
+                "eth_routed": "int_routed_host",
+            }
+        }
+        dcnm_intf.sno_to_switch_role = {
+            "LEAF_SERIAL": "leaf",
+            "SPINE_SERIAL": "spine",
+        }
+        # Fabric HOST_INTF_ADMIN_STATE is true (admin up). Pre-seed the cache
+        # so the payload builder does not attempt a fabric fetch.
+        dcnm_intf.host_intf_admin_state = True
+
+        for serial in ("LEAF_SERIAL", "SPINE_SERIAL"):
+            with self.subTest(serial=serial):
+                payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+                    "Ethernet1/50", serial, "test_fabric"
+                )
+                nv_pairs = payload["interfaces"][0]["nvPairs"]
+                self.assertEqual(nv_pairs["ADMIN_STATE"], True)
+                # The admin state is governed solely by ADMIN_STATE; the
+                # freeform CONF must stay empty.
+                self.assertEqual(nv_pairs["CONF"], "")
+
+    def test_dcnm_intf_default_payload_admin_down_when_host_intf_admin_state_false(
+        self,
+    ):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.ndfc_version = "12.4.1.245"
+        dcnm_intf.pol_types = {
+            12: {
+                "eth_trunk": "int_trunk_host",
+                "eth_routed": "int_routed_host",
+            }
+        }
+        dcnm_intf.sno_to_switch_role = {
+            "LEAF_SERIAL": "leaf",
+            "SPINE_SERIAL": "spine",
+        }
+        # Fabric HOST_INTF_ADMIN_STATE is false (admin down / shutdown).
+        dcnm_intf.host_intf_admin_state = False
+
+        for serial in ("LEAF_SERIAL", "SPINE_SERIAL"):
+            with self.subTest(serial=serial):
+                payload = dcnm_intf.dcnm_intf_get_default_eth_payload(
+                    "Ethernet1/50", serial, "test_fabric"
+                )
+                nv_pairs = payload["interfaces"][0]["nvPairs"]
+                self.assertEqual(nv_pairs["ADMIN_STATE"], False)
+                self.assertEqual(nv_pairs["CONF"], "")
+
+    def test_dcnm_intf_host_intf_admin_state_false_from_fabric(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.host_intf_admin_state = None
+        dcnm_intf.module = Mock()
+        dcnm_intf.fabric = "test_fabric"
+
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules."
+            "dcnm_interface.get_fabric_details",
+            return_value={"nvPairs": {"HOST_INTF_ADMIN_STATE": "false"}},
+        ) as mock_fd:
+            self.assertFalse(
+                dcnm_intf.dcnm_intf_get_host_intf_admin_state()
+            )
+            # Value is cached and the fabric is not queried again.
+            self.assertFalse(
+                dcnm_intf.dcnm_intf_get_host_intf_admin_state()
+            )
+            self.assertEqual(mock_fd.call_count, 1)
+        self.assertEqual(dcnm_intf.host_intf_admin_state, False)
+
+    def test_dcnm_intf_host_intf_admin_state_true_from_fabric(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.host_intf_admin_state = None
+        dcnm_intf.module = Mock()
+        dcnm_intf.fabric = "test_fabric"
+
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules."
+            "dcnm_interface.get_fabric_details",
+            return_value={"nvPairs": {"HOST_INTF_ADMIN_STATE": "true"}},
+        ):
+            self.assertTrue(
+                dcnm_intf.dcnm_intf_get_host_intf_admin_state()
+            )
+
+    def test_dcnm_intf_host_intf_admin_state_defaults_true_when_unavailable(
+        self,
+    ):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.host_intf_admin_state = None
+        dcnm_intf.module = Mock()
+        dcnm_intf.fabric = "test_fabric"
+
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules."
+            "dcnm_interface.get_fabric_details",
+            side_effect=Exception("fabric details unavailable"),
+        ):
+            # A failure to read fabric details preserves the historical
+            # behaviour (admin up).
+            self.assertTrue(
+                dcnm_intf.dcnm_intf_get_host_intf_admin_state()
+            )
+
     def test_dcnm_intf_default_compare_normalizes_omitted_storm_defaults(self):
+
         dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
         dcnm_intf.dcnm_version = 12
         dcnm_intf.pol_types = {
@@ -1103,8 +1218,13 @@ class TestDcnmIntfModule(TestDcnmModule):
             )
             for intf in playbook_have_all_data["DATA"]:
                 if intf["ifName"] == "Ethernet1/1":
+                    # Non-deletable AND non-editable physical Ethernet with no
+                    # resolvable underlay policy source. In 'overridden' state
+                    # such an interface cannot be reset (editAllowed is false),
+                    # so it must be skipped as a non-resolvable deferred
+                    # interface rather than defaulted.
                     intf["deletable"] = "False"
-                    intf["editAllowed"] = True
+                    intf["editAllowed"] = False
                     intf["underlayPolicies"] = None
                     break
 

@@ -1888,6 +1888,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_get_bulk_api_support,
     dcnm_send,
     get_fabric_inventory_details,
+    get_fabric_details,
     dcnm_get_ip_addr_info,
     validate_list_of_dicts,
     get_ip_sn_dict,
@@ -1988,6 +1989,12 @@ class DcnmIntf:
         self.ip_sn = {}
         self.hn_sn = {}
         self.monitoring = []
+
+        # Cached fabric-level default administrative state for host
+        # (downlink) interfaces, derived from the fabric nvPair
+        # HOST_INTF_ADMIN_STATE. Populated lazily on first use and reused
+        # for the remainder of the module run. None means "not yet fetched".
+        self.host_intf_admin_state = None
 
         # Cache for bulk-fetched interface policy details.
         # Keyed by (serialNumber, ifName_lower) -> interface detail dict.
@@ -5329,7 +5336,8 @@ class DcnmIntf:
                 # NDFC may omit explicit default CLI from stored interface
                 # intent while the module's generated default payload includes
                 # "no shutdown". Treat them as equivalent for deleted-state
-                # idempotence checks.
+                # idempotence checks. The admin state is compared separately
+                # via the dedicated ADMIN_STATE nvPair below.
                 if sval in ("", "no shutdown"):
                     return ""
                 return sval
@@ -5490,7 +5498,69 @@ class DcnmIntf:
 
         return "DCNM_INTF_MATCH"
 
+    def dcnm_intf_get_host_intf_admin_state(self):
+        """
+        Return the fabric-level default administrative state for host
+        (downlink) interfaces.
+
+        When a physical Ethernet host interface is reset to its default
+        configuration during 'deleted' or 'overridden' (and 'replaced')
+        state, its administrative state must follow the fabric setting
+        HOST_INTF_ADMIN_STATE instead of always being enabled.
+
+        NDFC defaults HOST_INTF_ADMIN_STATE to 'true' (admin up / no
+        shutdown). When a fabric administrator sets it to 'false', a reset
+        host interface must come back administratively down (shutdown).
+
+        The value is fetched once from the fabric details and cached for the
+        remainder of the module run. If the fabric setting cannot be read,
+        the historical behaviour (admin up) is preserved.
+
+        Returns:
+            bool: True if reset host interfaces should be admin up,
+                  False if they should be admin down.
+        """
+        if getattr(self, "host_intf_admin_state", None) is not None:
+            return self.host_intf_admin_state
+
+        # Preserve historical behaviour (admin up) if the fabric setting
+        # cannot be determined (for example when the module context or
+        # fabric details are unavailable).
+        admin_state = True
+        module = getattr(self, "module", None)
+        fabric = getattr(self, "fabric", None)
+        if module is not None and fabric:
+            try:
+                fabric_details = get_fabric_details(module, fabric)
+                if fabric_details:
+                    nv_pairs = fabric_details.get("nvPairs") or {}
+                    raw_value = nv_pairs.get("HOST_INTF_ADMIN_STATE")
+                    if raw_value is not None:
+                        admin_state = (
+                            str(raw_value).strip().lower() in ("true", "yes")
+                        )
+            except Exception:
+                # Any failure reading fabric details falls back to the safe
+                # default of admin up, matching the module's prior behaviour.
+                admin_state = True
+
+        self.host_intf_admin_state = admin_state
+        return admin_state
+
     def dcnm_intf_get_default_eth_payload(self, ifname, sno, fabric):
+
+        # The administrative state of a host (downlink) interface reset to
+        # default is governed by the fabric nvPair HOST_INTF_ADMIN_STATE and
+        # is applied solely through the ADMIN_STATE nvPair below. Historically
+        # this payload hard-coded ADMIN_STATE to True, which is wrong for
+        # fabrics that set HOST_INTF_ADMIN_STATE to false. Derive the value
+        # from the fabric so reset interfaces match the fabric-wide default.
+        # The freeform CONF is intentionally left empty: the admin state is
+        # already managed by the ADMIN_STATE flag, so injecting an explicit
+        # "no shutdown" (or "shutdown") CLI here would contradict that flag
+        # (e.g. ADMIN_STATE False + "no shutdown" freeform would bring the
+        # interface back up).
+        host_admin_up = self.dcnm_intf_get_host_intf_admin_state()
 
         eth_payload = {
             "policy": "",
@@ -5506,7 +5576,7 @@ class DcnmIntf:
                         "SPEED": "",
                         "DESC": "",
                         "CONF": "",
-                        "ADMIN_STATE": True,
+                        "ADMIN_STATE": host_admin_up,
                         "INTF_NAME": "",
                     },
                 }
@@ -5523,7 +5593,7 @@ class DcnmIntf:
             ]
             eth_payload["interfaces"][0]["nvPairs"]["MTU"] = "jumbo"
             eth_payload["interfaces"][0]["nvPairs"]["SPEED"] = "Auto"
-            eth_payload["interfaces"][0]["nvPairs"]["CONF"] = "no shutdown"
+            eth_payload["interfaces"][0]["nvPairs"]["CONF"] = ""
             eth_payload["interfaces"][0]["nvPairs"][
                 "BPDUGUARD_ENABLED"
             ] = False
@@ -5551,7 +5621,7 @@ class DcnmIntf:
             ]
             eth_payload["interfaces"][0]["nvPairs"]["MTU"] = 9216
             eth_payload["interfaces"][0]["nvPairs"]["SPEED"] = "Auto"
-            eth_payload["interfaces"][0]["nvPairs"]["CONF"] = "no shutdown"
+            eth_payload["interfaces"][0]["nvPairs"]["CONF"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
             eth_payload["interfaces"][0]["nvPairs"]["INTF_VRF"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["IP"] = ""
@@ -6111,7 +6181,17 @@ class DcnmIntf:
                         )
                         continue
 
-                    if not is_deleted:
+                    # Physical Ethernet interfaces are never deleted; in
+                    # 'overridden' state they are reset to the role-based host
+                    # default policy (int_trunk_host for leaf, int_routed_host
+                    # otherwise). 'deletable' is inherently false for such
+                    # ports, so it must not by itself block an overridden reset.
+                    # Fabric-managed interfaces (uplinks / VPC members) are
+                    # already deferred above via a non-empty underlay policy
+                    # source; reaching this point means the source is empty.
+                    # Skip only when edits are not allowed; otherwise fall
+                    # through and reset to default just like state 'deleted'.
+                    if not is_deleted and not edit_allowed:
                         self.dcnm_intf_skip_non_resolvable_deferred(have)
                         continue
 
