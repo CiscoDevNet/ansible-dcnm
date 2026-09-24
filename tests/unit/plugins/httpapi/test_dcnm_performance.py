@@ -283,7 +283,11 @@ class TestHttpApiEdgeStress:
                     # Paths starting with / should pass validation but may fail later
                     with patch.object(http_api, "check_url_connection"):
                         http_api.connection = mock_connection
-                        http_api.connection.send.side_effect = Exception("Test exception")
+                        from ansible.errors import AnsibleConnectionFailure
+
+                        http_api.connection.send.side_effect = AnsibleConnectionFailure(
+                            "Test transport exception"
+                        )
 
                         with pytest.raises(ConnectionError):
                             http_api._send_request_internal("GET", invalid_path)

@@ -30,10 +30,13 @@ __author__ = "Mike Wiebe"
 
 import json
 import io
+from http.client import IncompleteRead, RemoteDisconnected
+from urllib.error import HTTPError, URLError
 from unittest.mock import Mock, MagicMock, patch
 
 import pytest
 import requests
+from ansible.errors import AnsibleConnectionFailure
 
 from ansible.module_utils.connection import ConnectionError
 from ansible_collections.cisco.dcnm.plugins.httpapi.dcnm import HttpApi
@@ -628,17 +631,41 @@ class TestHttpApiSendRequestInternal:
         assert "Value of <path> does not appear to be formatted properly" in str(exc_info.value)
 
     @patch.object(HttpApi, "check_url_connection")
-    def test_send_request_internal_exception(self, mock_check_url, mock_connection):
-        """Test internal request with exception."""
+    @pytest.mark.parametrize("error", [
+        AnsibleConnectionFailure("connection failed"),
+        ConnectionError("socket failed"),
+        URLError("unreachable"),
+        HTTPError("/api/test", 503, "unavailable", {}, None),
+        IncompleteRead(b"partial"),
+        RemoteDisconnected("closed"),
+        TimeoutError("timed out"),
+    ])
+    def test_send_request_internal_transport_exception(
+        self, mock_check_url, mock_connection, error
+    ):
+        """Only demonstrated transport failures map to ConnectionError."""
         http_api = HttpApi(mock_connection)
         http_api.connection = mock_connection
-        http_api.connection.send.side_effect = Exception("Network error")
+        http_api.connection.send.side_effect = error
 
         with pytest.raises(ConnectionError) as exc_info:
             http_api._send_request_internal("GET", "/api/test")
 
-        assert "Network error" in str(exc_info.value)
         assert "Please verify your login credentials" in str(exc_info.value)
+        assert http_api.connection.send.call_count == 1
+
+    @patch.object(HttpApi, "check_url_connection")
+    @pytest.mark.parametrize("error", [TypeError("bug"), AssertionError("bug")])
+    def test_send_request_internal_programmer_error_propagates_once(
+        self, mock_check_url, mock_connection, error
+    ):
+        http_api = HttpApi(mock_connection)
+        http_api.connection = mock_connection
+        http_api.connection.send.side_effect = error
+
+        with pytest.raises(type(error), match="bug"):
+            http_api._send_request_internal("GET", "/api/test")
+        assert http_api.connection.send.call_count == 1
 
     @patch.object(HttpApi, "check_url_connection")
     def test_send_request_internal_dict_exception(self, mock_check_url, mock_connection):
