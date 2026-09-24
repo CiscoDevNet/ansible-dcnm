@@ -65,6 +65,17 @@ class TestDcnmIntfModule(TestDcnmModule):
             )
         )
 
+    def assert_no_individual_interface_gets(self):
+
+        self.assertFalse(
+            any(
+                "interface?serialNumber=" in call.args[2]
+                and "ifName=" in call.args[2]
+                for call in self.run_dcnm_send.call_args_list
+                if len(call.args) > 2
+            )
+        )
+
     @staticmethod
     def storm_control_default_nvpairs():
         return {
@@ -976,6 +987,105 @@ class TestDcnmIntfModule(TestDcnmModule):
             intf["interfaces"][0]["nvPairs"]["FEC"], "rs-fec"
         )
 
+    def test_dcnm_intf_eth_payload_defaults_null_fec_to_auto(self):
+        for mode in ("trunk", "access", "routed", "dot1q"):
+            with self.subTest(mode=mode):
+                dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+                dcnm_intf.ndfc_version = "12.4.1.245"
+                delem = self._build_eth_trunk_delem(None)
+                delem["profile"]["mode"] = mode
+                if mode in ("access", "dot1q"):
+                    delem["profile"]["access_vlan"] = "10"
+                if mode == "routed":
+                    delem["profile"].update({
+                        "int_vrf": "default",
+                        "ipv4_addr": "",
+                        "ipv4_mask_len": 8,
+                        "route_tag": "",
+                    })
+                intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+
+                dcnm_intf.dcnm_intf_get_eth_payload(
+                    delem, intf, "profile"
+                )
+
+                self.assertEqual(
+                    intf["interfaces"][0]["nvPairs"]["FEC"], "auto"
+                )
+
+    def test_dcnm_intf_eth_payload_defaults_missing_fec_to_auto(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.ndfc_version = "12.4.1.245"
+        delem = self._build_eth_trunk_delem(None)
+        delem["profile"].pop("fec")
+        intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+
+        dcnm_intf.dcnm_intf_get_eth_payload(delem, intf, "profile")
+
+        self.assertEqual(
+            intf["interfaces"][0]["nvPairs"]["FEC"], "auto"
+        )
+
+    def test_dcnm_intf_eth_payload_default_fec_survives_pc_member_rewrite(
+        self,
+    ):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.class_name = "DcnmIntf"
+        dcnm_intf.log = Mock()
+        dcnm_intf.dcnm_version = 12
+        dcnm_intf.ndfc_version = "12.4.1.245"
+        member_policy = "int_port_channel_trunk_member_11_1"
+        dcnm_intf.pol_pc_member_types = {
+            12: {"pc_trunk_member": member_policy}
+        }
+
+        for fec_value in (None, "missing"):
+            with self.subTest(fec=fec_value):
+                delem = self._build_eth_trunk_delem(None)
+                if fec_value == "missing":
+                    delem["profile"].pop("fec")
+                intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+                intf["interfaces"][0]["serialNumber"] = "TESTSN1"
+                dcnm_intf.dcnm_intf_get_eth_payload(
+                    delem, intf, "profile"
+                )
+                have = [
+                    {
+                        "policy": member_policy,
+                        "interfaces": [
+                            {
+                                "ifName": "Ethernet1/4",
+                                "serialNumber": "TESTSN1",
+                                "nvPairs": {
+                                    "PO_ID": "Port-channel300",
+                                    "INTF_NAME": "Ethernet1/4",
+                                    "PC_MODE": "active",
+                                    "ALLOWED_VLANS": "all",
+                                },
+                            }
+                        ],
+                    }
+                ]
+
+                dcnm_intf.dcnm_intf_replace_pc_members([intf], have)
+
+                rewritten = dcnm_intf.want[0]
+                self.assertEqual(rewritten["policy"], member_policy)
+                self.assertEqual(
+                    rewritten["interfaces"][0]["nvPairs"]["FEC"],
+                    "auto",
+                )
+
+    def test_dcnm_intf_eth_payload_omits_fec_before_ndfc_12_4_1(self):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.ndfc_version = "12.4.0"
+        delem = self._build_eth_trunk_delem(None)
+        intf = self._build_intf_skeleton("INTERFACE_ETHERNET")
+
+        dcnm_intf.dcnm_intf_get_eth_payload(delem, intf, "profile")
+
+        self.assertNotIn("FEC", intf["interfaces"][0]["nvPairs"])
+
     def test_dcnm_intf_fec_version_validation(self):
         cases = (
             (None, True, "version could not be determined"),
@@ -1209,7 +1319,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             ]
 
         if (
-            "test_dcnm_intf_override_eth_intf_types_skip_non_resolvable_deferred"
+            "test_dcnm_intf_override_eth_intf_types_skip_non_resolvable_not_editable"
             in self._testMethodName
         ):
 
@@ -3045,7 +3155,11 @@ class TestDcnmIntfModule(TestDcnmModule):
             eth_3_2_access_intf = self.have_all_payloads_data.get(
                 "eth_3_2_access_payload"
             )
-            if "_fec_" in self._testMethodName:
+            if (
+                "_fec_" in self._testMethodName
+                or "_eth_overridden_existing_nd42_"
+                in self._testMethodName
+            ):
                 # The bulk endpoint returns every configured interface for the
                 # switch. Include the physical interfaces exercised by the FEC
                 # defaulting test so the cache reflects a real response.
@@ -3869,7 +3983,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         # setup the side effects
         self.run_dcnm_fabric_details.side_effect = [self.mock_fab_inv]
         self.run_dcnm_ip_sn.side_effect = [[self.mock_ip_sn, []]]
-        if "_fec_" in self._testMethodName:
+        if (
+            "_fec_" in self._testMethodName
+            or "_eth_overridden_existing_nd42_" in self._testMethodName
+            or "_override_eth_intf_types_only_nd42_"
+            in self._testMethodName
+        ):
             self.run_dcnm_version_supported.side_effect = [
                 (12, "12.4.1.245")
             ]
@@ -4845,6 +4964,53 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+    def set_physical_eth_override_capabilities(
+        self,
+        edit_allowed=True,
+        omit_edit_allowed=False,
+        source="",
+    ):
+
+        for intf in self.have_all_payloads_data["payloads"]["DATA"]:
+            if (
+                intf["ifType"] == "INTERFACE_ETHERNET"
+                and str(intf["isPhysical"]).lower() == "true"
+            ):
+                intf["deletable"] = False
+                if omit_edit_allowed:
+                    intf.pop("editAllowed", None)
+                else:
+                    intf["editAllowed"] = edit_allowed
+                intf["underlayPolicies"] = [{"source": source}]
+
+    def prepare_nd42_overridden_existing_test(self):
+
+        self.config_data = loadPlaybookData("dcnm_intf_eth_configs")
+        self.payloads_data = copy.deepcopy(
+            loadPlaybookData("dcnm_intf_eth_payloads")
+        )
+        self.have_all_payloads_data = copy.deepcopy(
+            loadPlaybookData("dcnm_intf_have_all_payloads")
+        )
+        self.set_physical_eth_override_capabilities()
+
+        self.playbook_config = copy.deepcopy(
+            self.config_data.get("eth_overridden_config")
+        )
+        self.playbook_config[0]["deploy"] = False
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        for switch in self.mock_fab_inv.values():
+            switch["switchRole"] = "leaf"
         self.mock_monitor_true_resp = self.config_data.get(
             "mock_monitor_true_resp"
         )
@@ -7966,7 +8132,326 @@ class TestDcnmIntfModule(TestDcnmModule):
             )
         )
 
-    def test_dcnm_intf_override_eth_intf_types_skip_non_resolvable_deferred(
+    def test_dcnm_intf_override_eth_intf_types_only_nd42_edit_allowed(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        self.set_physical_eth_override_capabilities()
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        replaced_names = {
+            payload["interfaces"][0]["ifName"]
+            for payload in result["diff"][0]["replaced"]
+        }
+        self.assertEqual(
+            replaced_names,
+            {"Ethernet1/1", "Ethernet1/2", "Ethernet3/2"},
+        )
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 0)
+        self.assertTrue(
+            all(
+                payload["interfaces"][0]["nvPairs"]["FEC"] == "auto"
+                for payload in result["diff"][0]["replaced"]
+            )
+        )
+        self.assert_no_individual_interface_gets()
+
+    def test_dcnm_intf_override_eth_intf_types_only_nd42_edit_allowed_host_admin_down(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        self.set_physical_eth_override_capabilities()
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules."
+            "dcnm_interface.get_fabric_details",
+            return_value={
+                "nvPairs": {"HOST_INTF_ADMIN_STATE": "false"}
+            },
+        ) as mock_fd:
+            result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(mock_fd.call_count, 1)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        for payload in result["diff"][0]["replaced"]:
+            nv_pairs = payload["interfaces"][0]["nvPairs"]
+            self.assertEqual(nv_pairs["ADMIN_STATE"], False)
+            self.assertEqual(nv_pairs["CONF"], "")
+            self.assertEqual(nv_pairs["FEC"], "auto")
+
+    def test_dcnm_intf_override_eth_intf_types_only_nd42_edit_allowed_host_admin_up(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        self.set_physical_eth_override_capabilities()
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules."
+            "dcnm_interface.get_fabric_details",
+            return_value={
+                "nvPairs": {"HOST_INTF_ADMIN_STATE": "true"}
+            },
+        ) as mock_fd:
+            result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(mock_fd.call_count, 1)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        for payload in result["diff"][0]["replaced"]:
+            nv_pairs = payload["interfaces"][0]["nvPairs"]
+            self.assertEqual(nv_pairs["ADMIN_STATE"], True)
+            self.assertEqual(nv_pairs["CONF"], "")
+            self.assertEqual(nv_pairs["FEC"], "auto")
+
+    def test_dcnm_intf_override_eth_intf_types_only_nd42_not_editable(
+        self,
+    ):
+
+        capability_cases = (
+            ("false", False, False),
+            ("missing", None, True),
+        )
+
+        for description, edit_allowed, omit_edit_allowed in capability_cases:
+            with self.subTest(description):
+                self.prepare_nd42_deleted_all_eth_test()
+                self.set_physical_eth_override_capabilities(
+                    edit_allowed=edit_allowed,
+                    omit_edit_allowed=omit_edit_allowed,
+                )
+
+                set_module_args(
+                    dict(
+                        state="overridden",
+                        fabric="test_fabric",
+                        override_intf_types=["eth"],
+                        deploy=False,
+                        config=[],
+                    )
+                )
+                with patch(
+                    "ansible_collections.cisco.dcnm.plugins.modules."
+                    "dcnm_interface.get_fabric_details"
+                ) as mock_fd:
+                    result = self.execute_module(
+                        changed=False, failed=False
+                    )
+
+                self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+                self.assertEqual(len(result["diff"][0]["deploy"]), 0)
+                self.assertEqual(len(result["diff"][0]["skipped"]), 3)
+                mock_fd.assert_not_called()
+                self.assertTrue(
+                    all(
+                        skipped["Reason"]
+                        == "Non-deletable interface without resolvable underlay policy source"
+                        for skipped in result["diff"][0]["skipped"]
+                    )
+                )
+                self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_override_eth_intf_types_only_nd42_all_deferred_does_not_fetch_fabric_details(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        self.set_physical_eth_override_capabilities(
+            source="port-channel300"
+        )
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules."
+            "dcnm_interface.get_fabric_details"
+        ) as mock_fd:
+            result = self.execute_module(changed=False, failed=False)
+
+        mock_fd.assert_not_called()
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 0)
+        self.assertEqual(len(result["diff"][0]["deferred"]), 3)
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_override_eth_intf_types_only_nd42_dependency(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        self.set_physical_eth_override_capabilities()
+        for intf in self.have_all_payloads_data["payloads"]["DATA"]:
+            if intf["ifName"] == "Ethernet1/1":
+                intf["underlayPolicies"] = [
+                    {"source": "port-channel300"}
+                ]
+                break
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        replaced_names = {
+            payload["interfaces"][0]["ifName"]
+            for payload in result["diff"][0]["replaced"]
+        }
+        self.assertEqual(
+            replaced_names,
+            {"Ethernet1/2", "Ethernet3/2"},
+        )
+        self.assertTrue(
+            any(
+                deferred["Name"] == "Ethernet1/1"
+                and deferred["Source"] == "port-channel300"
+                for deferred in result["diff"][0]["deferred"]
+            )
+        )
+        self.assertFalse(
+            any(
+                skipped["Name"] == "Ethernet1/1"
+                for skipped in result["diff"][0]["skipped"]
+            )
+        )
+        self.assert_no_individual_interface_gets()
+
+    def test_dcnm_intf_override_eth_intf_types_only_nd42_check_mode(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        self.set_physical_eth_override_capabilities()
+
+        set_module_args(
+            dict(
+                state="overridden",
+                _ansible_check_mode=True,
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
+        self.assert_no_individual_interface_gets()
+
+    def test_dcnm_intf_override_eth_intf_types_only_nd42_idempotent(
+        self,
+    ):
+
+        self.prepare_nd42_deleted_all_eth_test()
+        self.set_physical_eth_override_capabilities()
+        for switch in self.mock_fab_inv.values():
+            switch["switchRole"] = "leaf"
+        self.set_eth_overridden_payloads_to_role_default()
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=False, failed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+        self.assertFalse(result.get("response"))
+        self.assert_no_mutating_dcnm_calls()
+        self.assert_no_individual_interface_gets()
+
+    def test_dcnm_intf_eth_overridden_existing_nd42_edit_allowed_nonempty(
+        self,
+    ):
+
+        self.prepare_nd42_overridden_existing_test()
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        replaced_names = {
+            payload["interfaces"][0]["ifName"]
+            for payload in result["diff"][0]["replaced"]
+        }
+        self.assertEqual(
+            replaced_names,
+            {"Ethernet1/1", "Ethernet1/2", "Ethernet3/2"},
+        )
+        self.assertEqual(len(result["diff"][0]["skipped"]), 0)
+        self.assertEqual(len(result["diff"][0]["deploy"]), 0)
+        self.assertTrue(
+            all(
+                payload["interfaces"][0]["nvPairs"]["FEC"] == "auto"
+                for payload in result["diff"][0]["replaced"]
+            )
+        )
+        self.assertTrue(
+            any(
+                payload["interfaces"][0]["ifName"] == "Ethernet1/30"
+                for payload in result["diff"][0]["overridden"]
+            )
+        )
+        self.assert_no_individual_interface_gets()
+
+    def test_dcnm_intf_override_eth_intf_types_skip_non_resolvable_not_editable(
         self,
     ):
 
