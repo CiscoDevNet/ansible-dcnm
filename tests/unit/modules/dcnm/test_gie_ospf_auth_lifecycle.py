@@ -50,7 +50,7 @@ AUTH = {
     "ospf_authentication_key": "AUTHENTICATION-KEY-ALPHA",
 }
 AUTH_NVPAIRS = {
-    "ENABLE_OSPF_AUTH": "true",
+    "ospfAuthentication": "true",
     "OSPF_AUTH_KEY_ID": "7",
     "OSPF_AUTH_KEY": KEY_A,
     "ospfAuthenticationKeyType": "3",
@@ -91,8 +91,8 @@ def test_apply_emits_the_authentication_family_and_nothing_else(parent):
 @pytest.mark.parametrize("parent", PARENTS)
 def test_the_boolean_gate_travels_as_a_string_not_a_python_bool(parent):
     """ENABLE_OSPF_AUTH is the gate; if it never converges the whole family re-pushes."""
-    assert _emit(parent, {"enable_ospf_auth": True})["ENABLE_OSPF_AUTH"] == "true"
-    assert _emit(parent, {"enable_ospf_auth": False})["ENABLE_OSPF_AUTH"] == "false"
+    assert _emit(parent, {"enable_ospf_auth": True})["ospfAuthentication"] == "true"
+    assert _emit(parent, {"enable_ospf_auth": False})["ospfAuthentication"] == "false"
 
 
 # =====================================================================================
@@ -188,8 +188,8 @@ def test_disabling_authentication_is_an_explicit_false_not_an_omission(parent):
     off". A module that treated the first as the second would disable authentication on every
     interface whose playbook happened not to mention it.
     """
-    assert "ENABLE_OSPF_AUTH" not in _emit(parent, {"ospf_auth_key_id": 7})
-    assert _emit(parent, {"enable_ospf_auth": False})["ENABLE_OSPF_AUTH"] == "false"
+    assert "ospfAuthentication" not in _emit(parent, {"ospf_auth_key_id": 7})
+    assert _emit(parent, {"enable_ospf_auth": False})["ospfAuthentication"] == "false"
 
 
 @pytest.mark.parametrize("parent", PARENTS)

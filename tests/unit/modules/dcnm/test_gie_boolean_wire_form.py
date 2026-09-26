@@ -67,6 +67,10 @@ BOOL_PASSTHROUGH = sorted(
     (b["parent_template"], b["profile_key"], b["parent_nvpair"])
     for b in BINDING_TABLE
     if b["type"] == "boolean" and b["mechanism"] == "passthrough"
+    # The one identity with no SMU counterpart refuses contribution by design (see
+    # smu_unsupported). A sweep that expects every registered binding to contribute
+    # must skip it; the refusal has its own tests.
+    and not b.get("smu_unsupported")
 )
 BOOL_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, nvpair in BOOL_PASSTHROUGH]
 
@@ -207,7 +211,7 @@ def test_omitted_boolean_still_contributes_nothing():
     """Serialization must not resurrect the explicit-only contract."""
     add, err = gie_contribute_nvpairs(TRUNK, {"description": "x"}, VERSION)
     assert err is None
-    assert "DISABLE_LLDP_TRANSMIT" not in add
+    assert "lldpTransmit" not in add
 
 
 # ------------------------------------------- what the operator actually observes --

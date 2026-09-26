@@ -49,10 +49,10 @@ BASELINE_ROWS = {
 PASSTHROUGH_ROWS = {
     (TRUNK, "GUARD_MODE", "guard_mode"),
     (PC_TRUNK, "GUARD_MODE", "guard_mode"),
-    (ACCESS, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-    (ACCESS, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-    (TRUNK, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-    (TRUNK, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+    (ACCESS, "lldpTransmit", "disable_lldp_transmit"),
+    (ACCESS, "lldpReceive", "disable_lldp_receive"),
+    (TRUNK, "lldpTransmit", "disable_lldp_transmit"),
+    (TRUNK, "lldpReceive", "disable_lldp_receive"),
     (ACCESS, "aclFilter", "acl_filter"),
     (TRUNK, "aclFilter", "acl_filter"),
     (PC_ACCESS, "aclFilter", "acl_filter"),
@@ -78,10 +78,10 @@ STP_ROWS = {
 # the service-policy line its dependency produces, so with the dependency unmet the value is
 # stored on the controller and is a silent no-op on the device.
 QOS_STATS_ROWS = {
-    (TRUNK, "DISABLE_QOS_STATS", "disable_qos_stats"),
-    (ACCESS, "DISABLE_QOS_STATS", "disable_qos_stats"),
-    (TRUNK, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
-    (ACCESS, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+    (TRUNK, "qosStatsSuppressed", "disable_qos_stats"),
+    (ACCESS, "qosStatsSuppressed", "disable_qos_stats"),
+    (TRUNK, "queuingStats", "disable_queuing_stats"),
+    (ACCESS, "queuingStats", "disable_queuing_stats"),
 }
 # The same four fields on the port-channel host parents. Each was originally registered only on
 # the parents under test at the time; the port-channel templates declare them too, and an
@@ -92,21 +92,21 @@ QOS_STATS_ROWS = {
 # template delegates the value to the member policy instead of emitting the CLI itself. Whether
 # it reaches the member is an empirical question, answered by the lab, not by preference.
 PC_ROWS = {
-    (PC_ACCESS, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-    (PC_ACCESS, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-    (PC_TRUNK, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-    (PC_TRUNK, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-    (PC_DOT1Q, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-    (PC_DOT1Q, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+    (PC_ACCESS, "lldpTransmit", "disable_lldp_transmit"),
+    (PC_ACCESS, "lldpReceive", "disable_lldp_receive"),
+    (PC_TRUNK, "lldpTransmit", "disable_lldp_transmit"),
+    (PC_TRUNK, "lldpReceive", "disable_lldp_receive"),
+    (PC_DOT1Q, "lldpTransmit", "disable_lldp_transmit"),
+    (PC_DOT1Q, "lldpReceive", "disable_lldp_receive"),
     (PC_ACCESS, "spanningTreePortType", "spanning_tree_port_type"),
     (PC_TRUNK, "spanningTreePortType", "spanning_tree_port_type"),
     (PC_DOT1Q, "spanningTreePortType", "spanning_tree_port_type"),
-    (PC_ACCESS, "DISABLE_QOS_STATS", "disable_qos_stats"),
-    (PC_TRUNK, "DISABLE_QOS_STATS", "disable_qos_stats"),
-    (PC_DOT1Q, "DISABLE_QOS_STATS", "disable_qos_stats"),
-    (PC_ACCESS, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
-    (PC_TRUNK, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
-    (PC_DOT1Q, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+    (PC_ACCESS, "qosStatsSuppressed", "disable_qos_stats"),
+    (PC_TRUNK, "qosStatsSuppressed", "disable_qos_stats"),
+    (PC_DOT1Q, "qosStatsSuppressed", "disable_qos_stats"),
+    (PC_ACCESS, "queuingStats", "disable_queuing_stats"),
+    (PC_TRUNK, "queuingStats", "disable_queuing_stats"),
+    (PC_DOT1Q, "queuingStats", "disable_queuing_stats"),
 }
 
 # The two vPC host parents. These are the only vPC parents the module can reach: it builds its
@@ -126,17 +126,17 @@ PC_ROWS = {
 VPC_ROWS = {
     (VPC_TRUNK, "spanningTreePortType", "spanning_tree_port_type"),
     (VPC_ACCESS, "spanningTreePortType", "spanning_tree_port_type"),
-    (VPC_TRUNK, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-    (VPC_TRUNK, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-    (VPC_ACCESS, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-    (VPC_ACCESS, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+    (VPC_TRUNK, "lldpTransmit", "disable_lldp_transmit"),
+    (VPC_TRUNK, "lldpReceive", "disable_lldp_receive"),
+    (VPC_ACCESS, "lldpTransmit", "disable_lldp_transmit"),
+    (VPC_ACCESS, "lldpReceive", "disable_lldp_receive"),
     (VPC_TRUNK, "aclFilter", "acl_filter"),
     (VPC_ACCESS, "aclFilter", "acl_filter"),
     (VPC_TRUNK, "GUARD_MODE", "guard_mode"),
-    (VPC_TRUNK, "DISABLE_QOS_STATS", "disable_qos_stats"),
-    (VPC_ACCESS, "DISABLE_QOS_STATS", "disable_qos_stats"),
-    (VPC_TRUNK, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
-    (VPC_ACCESS, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+    (VPC_TRUNK, "qosStatsSuppressed", "disable_qos_stats"),
+    (VPC_ACCESS, "qosStatsSuppressed", "disable_qos_stats"),
+    (VPC_TRUNK, "queuingStats", "disable_queuing_stats"),
+    (VPC_ACCESS, "queuingStats", "disable_queuing_stats"),
 }
 
 # int_routed_host -- the first non-switchport parent. Reachable as pol_types "eth_routed".
@@ -152,12 +152,12 @@ VPC_ROWS = {
 # int_vlan declare it as well and all three are reachable, so it goes in as one lot across the
 # three parents. The generator enforces that, not a reviewer.
 ROUTED_ROWS = {
-    (ROUTED, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-    (ROUTED, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-    (ROUTED, "DISABLE_BFD_ECHO", "disable_bfd_echo"),
+    (ROUTED, "lldpTransmit", "disable_lldp_transmit"),
+    (ROUTED, "lldpReceive", "disable_lldp_receive"),
+    (ROUTED, "bfdEcho", "disable_bfd_echo"),
     (ROUTED, "ipv4AclIn", "ipv4_acl_in"),
-    (ROUTED, "DISABLE_QOS_STATS", "disable_qos_stats"),
-    (ROUTED, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+    (ROUTED, "qosStatsSuppressed", "disable_qos_stats"),
+    (ROUTED, "queuingStats", "disable_queuing_stats"),
 }
 
 # The OSPF vertical slice on the same parent. Separate set because it is the first feature
@@ -165,7 +165,7 @@ ROUTED_ROWS = {
 # first integer binding to reach the generic carry-forward -- see
 # test_gie_routed_ospf_have_representation.py.
 ROUTED_OSPF_ROWS = {
-    (ROUTED, "ENABLE_OSPF", "enable_ospf"),
+    (ROUTED, "ospf", "enable_ospf"),
     (ROUTED, "ospfTag", "ospf_tag"),
     (ROUTED, "OSPF_AREA_ID", "ospf_area_id"),
     (ROUTED, "ospfCost", "ospf_cost"),
@@ -175,9 +175,9 @@ ROUTED_OSPF_ROWS = {
     (ROUTED, "ospfDeadInterval", "ospf_dead_interval"),
     (ROUTED, "ospfTransmitDelay", "ospf_transmit_delay"),
     (ROUTED, "ospfPriority", "ospf_priority"),
-    (ROUTED, "OSPF_PASSIVE_MODE", "ospf_passive_mode"),
-    (ROUTED, "OSPF_NETWORK_TYPE", "ospf_network_type"),
-    (ROUTED, "OSPF_BFD_MODE", "ospf_bfd_mode"),
+    (ROUTED, "ospfPassiveMode", "ospf_passive_mode"),
+    (ROUTED, "ospfNetworkType", "ospf_network_type"),
+    (ROUTED, "ospfBfdMode", "ospf_bfd_mode"),
 }
 
 
@@ -185,14 +185,14 @@ ROUTED_OSPF_ROWS = {
 # they are NOT the same set: int_subif models passive and bfd as booleans where the other two use
 # enums, and both carry OSPF_RETRANSMIT_INTERVAL, which int_routed_host does not declare at all.
 SUBIF_OSPF_ROWS = {
-    ("int_subif", "ENABLE_OSPF", "enable_ospf"),
+    ("int_subif", "ospf", "enable_ospf"),
     ("int_subif", "OSPF_AREA_ID", "ospf_area_id"),
     ("int_subif", "ospfBfd", "ospf_bfd"),
     ("int_subif", "ospfCost", "ospf_cost"),
     ("int_subif", "ospfDeadInterval", "ospf_dead_interval"),
     ("int_subif", "ospfHelloInterval", "ospf_hello_interval"),
     ("int_subif", "ospfMtuIgnore", "ospf_mtu_ignore"),
-    ("int_subif", "OSPF_NETWORK_TYPE", "ospf_network_type"),
+    ("int_subif", "ospfNetworkType", "ospf_network_type"),
     ("int_subif", "ospfPassiveInterface", "ospf_passive_interface"),
     ("int_subif", "ospfPriority", "ospf_priority"),
     ("int_subif", "ospfRetransmitInterval", "ospf_retransmit_interval"),
@@ -202,15 +202,15 @@ SUBIF_OSPF_ROWS = {
 }
 
 VLAN_OSPF_ROWS = {
-    ("int_vlan", "ENABLE_OSPF", "enable_ospf"),
+    ("int_vlan", "ospf", "enable_ospf"),
     ("int_vlan", "OSPF_AREA_ID", "ospf_area_id"),
-    ("int_vlan", "OSPF_BFD_MODE", "ospf_bfd_mode"),
+    ("int_vlan", "ospfBfdMode", "ospf_bfd_mode"),
     ("int_vlan", "ospfCost", "ospf_cost"),
     ("int_vlan", "ospfDeadInterval", "ospf_dead_interval"),
     ("int_vlan", "ospfHelloInterval", "ospf_hello_interval"),
     ("int_vlan", "ospfMtuIgnore", "ospf_mtu_ignore"),
-    ("int_vlan", "OSPF_NETWORK_TYPE", "ospf_network_type"),
-    ("int_vlan", "OSPF_PASSIVE_MODE", "ospf_passive_mode"),
+    ("int_vlan", "ospfNetworkType", "ospf_network_type"),
+    ("int_vlan", "ospfPassiveMode", "ospf_passive_mode"),
     ("int_vlan", "ospfPriority", "ospf_priority"),
     ("int_vlan", "ospfRetransmitInterval", "ospf_retransmit_interval"),
     ("int_vlan", "ospfShutdown", "ospf_shutdown"),
@@ -226,7 +226,7 @@ AUTH_OSPF_ROWS = {
     (parent, nvpair, key)
     for parent in ("int_routed_host", "int_subif", "int_vlan")
     for nvpair, key in (
-        ("ENABLE_OSPF_AUTH", "enable_ospf_auth"),
+        ("ospfAuthentication", "enable_ospf_auth"),
         ("OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
         ("OSPF_AUTH_KEY", "ospf_auth_key"),
         ("ospfAuthenticationKeyType", "ospf_authentication_key_type"),
@@ -243,14 +243,14 @@ EIGRP_ROWS = {
     for parent in ("int_routed_host", "int_subif", "int_vlan")
     for nvpair, key in (
         ("eigrpProcessTag", "eigrp_process_tag"),
-        ("ENABLE_EIGRP_ROUTING", "enable_eigrp_routing"),
-        ("ENABLE_EIGRP_IPV6_ROUTING", "enable_eigrp_ipv6_routing"),
+        ("eigrpRouting", "enable_eigrp_routing"),
+        ("eigrpIpv6Routing", "enable_eigrp_ipv6_routing"),
         ("eigrpIpv4Passive", "eigrp_ipv4_passive"),
         ("eigrpNoIpv4Passive", "eigrp_no_ipv4_passive"),
         ("eigrpNoIpv6Passive", "eigrp_no_ipv6_passive"),
-        ("ENABLE_EIGRP_SHUTDOWN", "enable_eigrp_shutdown"),
-        ("ENABLE_EIGRP_BFD", "enable_eigrp_bfd"),
-        ("DISABLE_EIGRP_BFD", "disable_eigrp_bfd"),
+        ("eigrpShutdown", "enable_eigrp_shutdown"),
+        ("eigrpBfd", "enable_eigrp_bfd"),
+        ("eigrpBfdDisable", "disable_eigrp_bfd"),
         ("eigrpIpv4DistributeListPrefixList", "eigrp_ipv4_distribute_list_prefix_list"),
         ("eigrpIpv4DistributeListDirection", "eigrp_ipv4_distribute_list_direction"),
         ("eigrpIpv6DistributeListPrefixList", "eigrp_ipv6_distribute_list_prefix_list"),
@@ -266,7 +266,7 @@ EIGRP_ROWS = {
 LOOPBACK_OSPF_ROWS = {
     ("int_loopback", nvpair, key)
     for nvpair, key in (
-        ("ENABLE_OSPF", "enable_ospf"),
+        ("ospf", "enable_ospf"),
         ("ospfTag", "ospf_tag"),
         ("OSPF_AREA_ID", "ospf_area_id"),
         ("ospfAdvertiseSubnet", "ospf_advertise_subnet"),
@@ -278,11 +278,11 @@ LOOPBACK_OSPF_ROWS = {
         ("ospfPriority", "ospf_priority"),
         ("ospfMtuIgnore", "ospf_mtu_ignore"),
         ("ospfShutdown", "ospf_shutdown"),
-        ("OSPF_NETWORK_TYPE", "ospf_network_type"),
+        ("ospfNetworkType", "ospf_network_type"),
         ("ospfBfd", "ospf_bfd"),
         # The five the architect ruled in scope here while they stay retired on the fabric
         # parent: the retirement was about ownership, and a user loopback is not underlay.
-        ("ENABLE_OSPF_AUTH", "enable_ospf_auth"),
+        ("ospfAuthentication", "enable_ospf_auth"),
         ("OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
         ("OSPF_AUTH_KEY", "ospf_auth_key"),
         ("ospfAuthenticationKeyType", "ospf_authentication_key_type"),
@@ -297,12 +297,12 @@ BFD_ROWS = {
     (parent, nvpair, key)
     for parent in ("int_subif", "int_vlan")
     for nvpair, key in (
-        ("ENABLE_BFD_INTERVAL", "enable_bfd_interval"),
+        ("bfdInterval", "enable_bfd_interval"),
         ("bfdTxInterval", "bfd_tx_interval"),
         ("bfdMinRxInterval", "bfd_min_rx_interval"),
         ("bfdMultiplier", "bfd_multiplier"),
     )
-} | {("int_vlan", "DISABLE_BFD_ECHO", "disable_bfd_echo")}
+} | {("int_vlan", "bfdEcho", "disable_bfd_echo")}
 
 # EIGHT of the family's thirteen, on int_loopback alone (slice 0b_25). Listed explicitly rather
 # than reusing EIGRP_ROWS' comprehension with a fourth parent, because the sets are NOT the same:
@@ -313,13 +313,13 @@ LOOPBACK_EIGRP_ROWS = {
     ("int_loopback", nvpair, key)
     for nvpair, key in (
         ("eigrpProcessTag", "eigrp_process_tag"),
-        ("ENABLE_EIGRP_ROUTING", "enable_eigrp_routing"),
+        ("eigrpRouting", "enable_eigrp_routing"),
         ("eigrpIpv4Passive", "eigrp_ipv4_passive"),
         ("eigrpNoIpv4Passive", "eigrp_no_ipv4_passive"),
         ("eigrpNoIpv6Passive", "eigrp_no_ipv6_passive"),
-        ("ENABLE_EIGRP_SHUTDOWN", "enable_eigrp_shutdown"),
-        ("ENABLE_EIGRP_BFD", "enable_eigrp_bfd"),
-        ("DISABLE_EIGRP_BFD", "disable_eigrp_bfd"),
+        ("eigrpShutdown", "enable_eigrp_shutdown"),
+        ("eigrpBfd", "enable_eigrp_bfd"),
+        ("eigrpBfdDisable", "disable_eigrp_bfd"),
     )
 }
 
@@ -351,8 +351,8 @@ REDIRECTS_ROWS = {
     (parent, nvpair, key)
     for parent in ("int_routed_host", "int_subif", "int_vlan")
     for nvpair, key in (
-        ("DISABLE_IPV4_REDIRECTS", "disable_ipv4_redirects"),
-        ("DISABLE_IPV6_REDIRECTS", "disable_ipv6_redirects"),
+        ("ipv4Redirects", "disable_ipv4_redirects"),
+        ("ipv6Redirects", "disable_ipv6_redirects"),
         ("ipv6NdSuppressRa", "ipv6_nd_suppress_ra"),
     )
 }
@@ -364,7 +364,7 @@ REDIRECTS_ROWS = {
 DAMPENING_ROWS = {
     ("int_routed_host", nvpair, key)
     for nvpair, key in (
-        ("ENABLE_DAMPENING", "enable_dampening"),
+        ("dampening", "enable_dampening"),
         ("dampeningHalfLife", "dampening_half_life"),
         ("dampeningReuse", "dampening_reuse"),
         ("dampeningSuppress", "dampening_suppress"),
@@ -394,7 +394,7 @@ PIM_ROWS = (
      for p in ("int_loopback", "int_routed_host", "int_subif", "int_vlan")}
     | {(p, "PIM_DR_PRIORITY", "pim_dr_priority")
        for p in ("int_routed_host", "int_subif", "int_vlan")}
-    | {("int_routed_host", "ENABLE_PIM_BFD_INSTANCE", "enable_pim_bfd_instance")}
+    | {("int_routed_host", "pimBfdInstance", "enable_pim_bfd_instance")}
 )
 
 
@@ -413,7 +413,7 @@ LINK_LOCAL_ROWS = {
 MACSEC_ROWS = {
     ("int_routed_host", nvpair, key)
     for nvpair, key in (
-        ("ENABLE_MACSEC_INTERFACE_POLICY", "enable_macsec_interface_policy"),
+        ("macsecInterfacePolicy", "enable_macsec_interface_policy"),
         ("macsecKeyChainName", "macsec_key_chain_name"),
         ("macsecPolicyName", "macsec_policy_name"),
         ("macsecFallbackKeyChainName", "macsec_fallback_key_chain_name"),
@@ -653,11 +653,11 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("flowcontrolSend", "flowcontrol_send"),
         ("spanningTreePortType", "spanning_tree_port_type"),
         ("GUARD_MODE", "guard_mode"),
-        ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-        ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+        ("lldpTransmit", "disable_lldp_transmit"),
+        ("lldpReceive", "disable_lldp_receive"),
         ("aclFilter", "acl_filter"),
-        ("DISABLE_QOS_STATS", "disable_qos_stats"),
-        ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+        ("qosStatsSuppressed", "disable_qos_stats"),
+        ("queuingStats", "disable_queuing_stats"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -665,11 +665,11 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("flowcontrolReceive", "flowcontrol_receive"),
         ("flowcontrolSend", "flowcontrol_send"),
         ("spanningTreePortType", "spanning_tree_port_type"),
-        ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-        ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+        ("lldpTransmit", "disable_lldp_transmit"),
+        ("lldpReceive", "disable_lldp_receive"),
         ("aclFilter", "acl_filter"),
-        ("DISABLE_QOS_STATS", "disable_qos_stats"),
-        ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+        ("qosStatsSuppressed", "disable_qos_stats"),
+        ("queuingStats", "disable_queuing_stats"),
     }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
@@ -852,7 +852,7 @@ def test_contribute_preserves_native_types_no_stringification():
     # left a value unserialized. With child_pti retired every binding is passthrough, so the
     # wire form is now universal -- which is the property worth asserting.
     a2, err2 = gie_contribute_nvpairs(ROUTED, {"enable_ospf": True}, "12.6.0.267")
-    assert a2["ENABLE_OSPF"] == "true" and isinstance(a2["ENABLE_OSPF"], str)
+    assert a2["ospf"] == "true" and isinstance(a2["ospf"], str)
 
 
 # ---- B2: registry-known key on an invalid desired parent -> fail closed (engine helper) ----

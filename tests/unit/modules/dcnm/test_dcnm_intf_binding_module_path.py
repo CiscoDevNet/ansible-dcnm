@@ -250,7 +250,7 @@ class TestBindingPayloadOnModulePath(A161Base):
     # emitting a native bool there made the field non-idempotent on a live controller.
     def test_eth_trunk_disable_lldp_true_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_trunk_disable_lldp_true", changed=True)
-        value = self._assert_nvpair(result, "Ethernet1/30", "DISABLE_LLDP_TRANSMIT", "true")
+        value = self._assert_nvpair(result, "Ethernet1/30", "lldpTransmit", "true")
         # Exact type, like the ACL cases below: AnsibleUnsafeText satisfies isinstance and is
         # what an unconverted controller value looks like.
         assert type(value) is str  # pylint: disable=unidiomatic-typecheck
@@ -261,7 +261,7 @@ class TestBindingPayloadOnModulePath(A161Base):
         'false' is a value here, never an omission, so the payload must carry the key.
         """
         result = self.run_config("eth_access_disable_lldp_false", changed=True)
-        value = self._assert_nvpair(result, "Ethernet1/31", "DISABLE_LLDP_TRANSMIT", "false")
+        value = self._assert_nvpair(result, "Ethernet1/31", "lldpTransmit", "false")
         assert type(value) is str  # pylint: disable=unidiomatic-typecheck
 
     def test_eth_trunk_acl_filter_reaches_the_parent_nvpair(self):
@@ -316,13 +316,13 @@ class TestBindingPayloadOnModulePath(A161Base):
         nvpairs = merged["Ethernet1/30"]
         assert nvpairs, "empty nvPairs would make the absence assertions meaningless"
         assert "INTF_NAME" in nvpairs or "ADMIN_STATE" in nvpairs, sorted(nvpairs)
-        for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "aclFilter"):
+        for nvpair in ("GUARD_MODE", "lldpTransmit", "aclFilter"):
             assert nvpair not in nvpairs, (
                 f"omission produced {nvpair}={nvpairs.get(nvpair)!r}"
             )
         # And nothing reached the wire carrying them either.
         for sent in self.sent_nvpairs().values():
-            for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "aclFilter"):
+            for nvpair in ("GUARD_MODE", "lldpTransmit", "aclFilter"):
                 assert nvpair not in sent
 
 
@@ -360,7 +360,7 @@ class TestBindingWrongParentOnModulePath(A161Base):
         result = self.run_config("pc_access_disable_lldp", changed=True)
         merged = self.diff_nvpairs(result)
         ifname = next(iter(merged))
-        assert merged[ifname]["DISABLE_LLDP_TRANSMIT"] == "true"
+        assert merged[ifname]["lldpTransmit"] == "true"
 
     def test_acl_filter_raw_type_on_pc_also_fails_before_write(self):
         result = self.run_config("pc_trunk_acl_filter_bool", failed=True)
@@ -429,7 +429,7 @@ class TestBindingFrozenContractRegression(A161Base):
         is what separates them.
         """
         result = self.run_config("eth_trunk_disable_lldp_true", changed=True)
-        value = self.diff_nvpairs(result)["Ethernet1/30"]["DISABLE_LLDP_TRANSMIT"]
+        value = self.diff_nvpairs(result)["Ethernet1/30"]["lldpTransmit"]
         assert value == "true"
         assert type(value) is str  # pylint: disable=unidiomatic-typecheck
         # And explicitly not the Python object: True would be left for the transport to

@@ -208,37 +208,37 @@ def is_integer_binding(applied):
 
 PILOT = {
     (ACCESS, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
-    (ACCESS, "DISABLE_LLDP_TRANSMIT"): ("disable_lldp_transmit", True, "false", {}),
-    (ACCESS, "DISABLE_LLDP_RECEIVE"): ("disable_lldp_receive", True, "false", {}),
+    (ACCESS, "lldpTransmit"): ("disable_lldp_transmit", True, "false", {}),
+    (ACCESS, "lldpReceive"): ("disable_lldp_receive", True, "false", {}),
     (ACCESS, "flowcontrolReceive"): ("flowcontrol_receive", "on", "off", {}),
     (ACCESS, "flowcontrolSend"): ("flowcontrol_send", "on", "off", {}),
-    (ACCESS, "DISABLE_QOS_STATS"): ("disable_qos_stats", True, "false", dict(QOS)),
-    (ACCESS, "DISABLE_QUEUING_STATS"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
+    (ACCESS, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
+    (ACCESS, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (ACCESS, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
     (TRUNK, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
-    (TRUNK, "DISABLE_LLDP_TRANSMIT"): ("disable_lldp_transmit", True, "false", {}),
-    (TRUNK, "DISABLE_LLDP_RECEIVE"): ("disable_lldp_receive", True, "false", {}),
+    (TRUNK, "lldpTransmit"): ("disable_lldp_transmit", True, "false", {}),
+    (TRUNK, "lldpReceive"): ("disable_lldp_receive", True, "false", {}),
     (TRUNK, "flowcontrolReceive"): ("flowcontrol_receive", "on", "off", {}),
     (TRUNK, "flowcontrolSend"): ("flowcontrol_send", "on", "off", {}),
-    (TRUNK, "DISABLE_QOS_STATS"): ("disable_qos_stats", True, "false", dict(QOS)),
-    (TRUNK, "DISABLE_QUEUING_STATS"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
+    (TRUNK, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
+    (TRUNK, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (TRUNK, "GUARD_MODE"): ("guard_mode", "root", "no", {}),
     (TRUNK, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
-    (ROUTED, "DISABLE_IPV4_REDIRECTS"): ("disable_ipv4_redirects", True, "false", dict(IPV6_ON)),
-    (ROUTED, "DISABLE_IPV6_REDIRECTS"): ("disable_ipv6_redirects", True, "false", dict(IPV4_ON)),
+    (ROUTED, "ipv4Redirects"): ("disable_ipv4_redirects", True, "false", dict(IPV6_ON)),
+    (ROUTED, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false", dict(IPV4_ON)),
     # The routed stats pair. Same prerequisites as on access/trunk -- the fields are
     # IsShow-gated on ENABLE_QOS==true and QUEUING_POLICY!='' respectively -- but the CLI
     # effect differs in kind: the withdrawal does not delete a line, it removes the
     # ` no-stats` FRAGMENT and leaves the `service-policy` line standing. Measured live in
     # G33 F1-s2/F2-s2 on Leaf-103 Ethernet1/22.
-    (ROUTED, "DISABLE_QOS_STATS"): ("disable_qos_stats", True, "false", dict(QOS)),
-    (ROUTED, "DISABLE_QUEUING_STATS"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
+    (ROUTED, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
+    (ROUTED, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     # The subinterface pair, measured on int_subif ITSELF in G35 M1-s2/M2-s2 -- the routed
     # parent's result was not carried over. Same companion-held-explicit prerequisite: the
     # gate field DISABLE_IP_REDIRECTS is absent from `sub_prof_spec` too and sits at the
     # template default `false`, which the live capture confirms.
-    (SUBIF, "DISABLE_IPV4_REDIRECTS"): ("disable_ipv4_redirects", True, "false", dict(IPV6_ON)),
-    (SUBIF, "DISABLE_IPV6_REDIRECTS"): ("disable_ipv6_redirects", True, "false", dict(IPV4_ON)),
+    (SUBIF, "ipv4Redirects"): ("disable_ipv4_redirects", True, "false", dict(IPV6_ON)),
+    (SUBIF, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false", dict(IPV4_ON)),
     # The first INTEGER row in this matrix. `applied` is a native int and `reset` is the empty
     # string, measured live in G37 P1-arp-probe on Leaf-103 Ethernet1/22. It is ungated: the
     # template declares ARP_TIMEOUT without IsShow, so nothing has to be opened to observe it,
@@ -287,9 +287,9 @@ PILOT = {
     (SVI, "ospfTransmitDelay"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
     (SVI, "ospfRetransmitInterval"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
     (SVI, "arpTimeout"): ("arp_timeout", 900, "", {}),
-    (SVI, "DISABLE_IPV4_REDIRECTS"): ("disable_ipv4_redirects", True, "false",
+    (SVI, "ipv4Redirects"): ("disable_ipv4_redirects", True, "false",
                                       {"disable_ipv6_redirects": True}),
-    (SVI, "DISABLE_IPV6_REDIRECTS"): ("disable_ipv6_redirects", True, "false",
+    (SVI, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false",
                                       {"disable_ipv4_redirects": True}),
 }
 PILOT_IDS = ["%s::%s" % (p, n) for (p, n) in PILOT]
@@ -311,23 +311,23 @@ PILOT_ITEMS = [(p, n, k, applied, reset, extra)
 # rendering is what the live campaign verified on the device.
 PILOT_PC = {
     (PC_ACCESS, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
-    (PC_ACCESS, "DISABLE_LLDP_TRANSMIT"): ("disable_lldp_transmit", True, "false", {}),
-    (PC_ACCESS, "DISABLE_LLDP_RECEIVE"): ("disable_lldp_receive", True, "false", {}),
-    (PC_ACCESS, "DISABLE_QOS_STATS"): ("disable_qos_stats", True, "false", dict(QOS)),
-    (PC_ACCESS, "DISABLE_QUEUING_STATS"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
+    (PC_ACCESS, "lldpTransmit"): ("disable_lldp_transmit", True, "false", {}),
+    (PC_ACCESS, "lldpReceive"): ("disable_lldp_receive", True, "false", {}),
+    (PC_ACCESS, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
+    (PC_ACCESS, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (PC_ACCESS, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
     (PC_TRUNK, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
-    (PC_TRUNK, "DISABLE_LLDP_TRANSMIT"): ("disable_lldp_transmit", True, "false", {}),
-    (PC_TRUNK, "DISABLE_LLDP_RECEIVE"): ("disable_lldp_receive", True, "false", {}),
-    (PC_TRUNK, "DISABLE_QOS_STATS"): ("disable_qos_stats", True, "false", dict(QOS)),
-    (PC_TRUNK, "DISABLE_QUEUING_STATS"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
+    (PC_TRUNK, "lldpTransmit"): ("disable_lldp_transmit", True, "false", {}),
+    (PC_TRUNK, "lldpReceive"): ("disable_lldp_receive", True, "false", {}),
+    (PC_TRUNK, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
+    (PC_TRUNK, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (PC_TRUNK, "GUARD_MODE"): ("guard_mode", "root", "no", {}),
     (PC_TRUNK, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
     (PC_DOT1Q, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
-    (PC_DOT1Q, "DISABLE_LLDP_TRANSMIT"): ("disable_lldp_transmit", True, "false", {}),
-    (PC_DOT1Q, "DISABLE_LLDP_RECEIVE"): ("disable_lldp_receive", True, "false", {}),
-    (PC_DOT1Q, "DISABLE_QOS_STATS"): ("disable_qos_stats", True, "false", dict(QOS)),
-    (PC_DOT1Q, "DISABLE_QUEUING_STATS"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
+    (PC_DOT1Q, "lldpTransmit"): ("disable_lldp_transmit", True, "false", {}),
+    (PC_DOT1Q, "lldpReceive"): ("disable_lldp_receive", True, "false", {}),
+    (PC_DOT1Q, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
+    (PC_DOT1Q, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (PC_DOT1Q, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
 }
 PILOT_PC_IDS = ["%s::%s" % (p, n) for (p, n) in PILOT_PC]

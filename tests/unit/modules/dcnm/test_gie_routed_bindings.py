@@ -60,20 +60,20 @@ PARENT = "int_routed_host"
 EXPECTED = {
     # The authentication lot. Registered on this parent and on int_subif / int_vlan with
     # identical shape -- the only OSPF family where the three templates agree.
-    "enable_ospf_auth": ("ENABLE_OSPF_AUTH", "boolean"),
+    "enable_ospf_auth": ("ospfAuthentication", "boolean"),
     "ospf_auth_key_id": ("OSPF_AUTH_KEY_ID", "integer"),
     "ospf_auth_key": ("OSPF_AUTH_KEY", "string"),
     "ospf_authentication_key_type": ("ospfAuthenticationKeyType", "enum"),
     "ospf_authentication_key": ("ospfAuthenticationKey", "string"),
-    "disable_lldp_transmit": ("DISABLE_LLDP_TRANSMIT", "boolean"),
-    "disable_lldp_receive": ("DISABLE_LLDP_RECEIVE", "boolean"),
-    "disable_bfd_echo": ("DISABLE_BFD_ECHO", "boolean"),
-    "disable_qos_stats": ("DISABLE_QOS_STATS", "boolean"),
-    "disable_queuing_stats": ("DISABLE_QUEUING_STATS", "boolean"),
+    "disable_lldp_transmit": ("lldpTransmit", "boolean"),
+    "disable_lldp_receive": ("lldpReceive", "boolean"),
+    "disable_bfd_echo": ("bfdEcho", "boolean"),
+    "disable_qos_stats": ("qosStatsSuppressed", "boolean"),
+    "disable_queuing_stats": ("queuingStats", "boolean"),
     "ipv4_acl_in": ("ipv4AclIn", "string"),
     # Slice 0b_28. The fourth field, DISABLE_IP_REDIRECTS, is native and is not registered.
-    "disable_ipv4_redirects": ("DISABLE_IPV4_REDIRECTS", "boolean"),
-    "disable_ipv6_redirects": ("DISABLE_IPV6_REDIRECTS", "boolean"),
+    "disable_ipv4_redirects": ("ipv4Redirects", "boolean"),
+    "disable_ipv6_redirects": ("ipv6Redirects", "boolean"),
     "ipv6_nd_suppress_ra": ("ipv6NdSuppressRa", "boolean"),
     # ARP_TIMEOUT, slice 0b_3. Its declared range changed after the row was written:
     # the September 14 template batch added min=60/max=28800 to
@@ -87,22 +87,22 @@ EXPECTED = {
     "ipv6_link_local": ("ipv6LinkLocal", "string"),
     # MACSEC, slice 0b_33. IsShow gates the three strings on the boolean. They are names,
     # not secrets: references to keychains and a policy on the switch.
-    "enable_macsec_interface_policy": ("ENABLE_MACSEC_INTERFACE_POLICY", "boolean"),
+    "enable_macsec_interface_policy": ("macsecInterfacePolicy", "boolean"),
     "macsec_key_chain_name": ("macsecKeyChainName", "string"),
     "macsec_policy_name": ("macsecPolicyName", "string"),
     "macsec_fallback_key_chain_name": ("macsecFallbackKeyChainName", "string"),
     "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "boolean"),
     "pim_dr_priority": ("PIM_DR_PRIORITY", "integer"),
-    "enable_pim_bfd_instance": ("ENABLE_PIM_BFD_INSTANCE", "boolean"),
+    "enable_pim_bfd_instance": ("pimBfdInstance", "boolean"),
     # Dampening, slice 0b_6. Only this parent declares it; C9300v does not support its CLI.
-    "enable_dampening": ("ENABLE_DAMPENING", "boolean"),
+    "enable_dampening": ("dampening", "boolean"),
     "dampening_half_life": ("dampeningHalfLife", "integer"),
     "dampening_reuse": ("dampeningReuse", "integer"),
     "dampening_suppress": ("dampeningSuppress", "integer"),
     "dampening_max_suppress": ("dampeningMaxSuppress", "integer"),
     "dampening_restart": ("dampeningRestart", "boolean"),
     "dampening_restart_penalty": ("dampeningRestartPenalty", "integer"),
-    "enable_ospf": ("ENABLE_OSPF", "boolean"),
+    "enable_ospf": ("ospf", "boolean"),
     "ospf_tag": ("ospfTag", "string"),
     "ospf_area_id": ("OSPF_AREA_ID", "string"),
     "ospf_cost": ("ospfCost", "integer"),
@@ -112,9 +112,9 @@ EXPECTED = {
     "ospf_dead_interval": ("ospfDeadInterval", "integer"),
     "ospf_transmit_delay": ("ospfTransmitDelay", "integer"),
     "ospf_priority": ("ospfPriority", "integer"),
-    "ospf_passive_mode": ("OSPF_PASSIVE_MODE", "enum"),
-    "ospf_network_type": ("OSPF_NETWORK_TYPE", "enum"),
-    "ospf_bfd_mode": ("OSPF_BFD_MODE", "enum"),
+    "ospf_passive_mode": ("ospfPassiveMode", "enum"),
+    "ospf_network_type": ("ospfNetworkType", "enum"),
+    "ospf_bfd_mode": ("ospfBfdMode", "enum"),
 }
 
 

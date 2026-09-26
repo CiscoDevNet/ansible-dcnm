@@ -60,7 +60,7 @@ NDFC_VERSION = "12.6.0.267"
 
 # The fourteen each, from their own templates. profile_key -> (nvPair, type)
 SUBIF_FIELDS = {
-    "enable_ospf": ("ENABLE_OSPF", "boolean"),
+    "enable_ospf": ("ospf", "boolean"),
     "ospf_tag": ("ospfTag", "string"),
     "ospf_area_id": ("OSPF_AREA_ID", "string"),
     "ospf_cost": ("ospfCost", "integer"),
@@ -71,13 +71,13 @@ SUBIF_FIELDS = {
     "ospf_priority": ("ospfPriority", "integer"),
     "ospf_mtu_ignore": ("ospfMtuIgnore", "boolean"),
     "ospf_shutdown": ("ospfShutdown", "boolean"),
-    "ospf_network_type": ("OSPF_NETWORK_TYPE", "enum"),
+    "ospf_network_type": ("ospfNetworkType", "enum"),
     "ospf_passive_interface": ("ospfPassiveInterface", "boolean"),   # boolean here
     "ospf_bfd": ("ospfBfd", "boolean"),                               # boolean here
 }
 
 VLAN_FIELDS = {
-    "enable_ospf": ("ENABLE_OSPF", "boolean"),
+    "enable_ospf": ("ospf", "boolean"),
     "ospf_tag": ("ospfTag", "string"),
     "ospf_area_id": ("OSPF_AREA_ID", "string"),
     "ospf_cost": ("ospfCost", "integer"),
@@ -88,9 +88,9 @@ VLAN_FIELDS = {
     "ospf_priority": ("ospfPriority", "integer"),
     "ospf_mtu_ignore": ("ospfMtuIgnore", "boolean"),
     "ospf_shutdown": ("ospfShutdown", "boolean"),
-    "ospf_network_type": ("OSPF_NETWORK_TYPE", "enum"),
-    "ospf_passive_mode": ("OSPF_PASSIVE_MODE", "enum"),                # enum here
-    "ospf_bfd_mode": ("OSPF_BFD_MODE", "enum"),                        # enum here
+    "ospf_network_type": ("ospfNetworkType", "enum"),
+    "ospf_passive_mode": ("ospfPassiveMode", "enum"),                # enum here
+    "ospf_bfd_mode": ("ospfBfdMode", "enum"),                        # enum here
 }
 
 CASES = [(SUBIF, SUBIF_FIELDS), (VLAN, VLAN_FIELDS)]
@@ -275,14 +275,14 @@ def _run_chain(itype, name, validator, builder, parent, profile, ospf):
 @pytest.mark.parametrize("itype,name,validator,builder,parent,profile,ospf,wire", [
     ("sub_int", "eth1/5.100", "dcnm_intf_validate_sub_interface_input",
      "dcnm_intf_get_sub_intf_payload", SUBIF, SUBIF_PROFILE, SUBIF_OSPF,
-     {"ENABLE_OSPF": "true", "ospfCost": "110", "ospfRetransmitInterval": "7",
+     {"ospf": "true", "ospfCost": "110", "ospfRetransmitInterval": "7",
       "ospfPassiveInterface": "false", "ospfBfd": "false",
-      "OSPF_NETWORK_TYPE": "point_to_point"}),
+      "ospfNetworkType": "pointToPoint"}),
     ("svi", "vlan1098", "dcnm_intf_validate_vlan_interface_input",
      "dcnm_intf_get_svi_payload", VLAN, VLAN_PROFILE, VLAN_OSPF,
-     {"ENABLE_OSPF": "true", "ospfCost": "120", "ospfRetransmitInterval": "8",
-      "OSPF_PASSIVE_MODE": "no_passive", "OSPF_BFD_MODE": "disable",
-      "OSPF_NETWORK_TYPE": "broadcast"}),
+     {"ospf": "true", "ospfCost": "120", "ospfRetransmitInterval": "8",
+      "ospfPassiveMode": "noPassive", "ospfBfdMode": "disable",
+      "ospfNetworkType": "broadcast"}),
 ])
 def test_the_lot_reaches_the_payload_through_the_real_path(
         itype, name, validator, builder, parent, profile, ospf, wire):
@@ -300,10 +300,10 @@ def test_the_lot_reaches_the_payload_through_the_real_path(
 @pytest.mark.parametrize("itype,name,validator,builder,parent,profile,absent", [
     ("sub_int", "eth1/5.100", "dcnm_intf_validate_sub_interface_input",
      "dcnm_intf_get_sub_intf_payload", SUBIF, SUBIF_PROFILE,
-     ["ENABLE_OSPF", "ospfCost", "ospfBfd", "ospfPassiveInterface"]),
+     ["ospf", "ospfCost", "ospfBfd", "ospfPassiveInterface"]),
     ("svi", "vlan1098", "dcnm_intf_validate_vlan_interface_input",
      "dcnm_intf_get_svi_payload", VLAN, VLAN_PROFILE,
-     ["ENABLE_OSPF", "ospfCost", "OSPF_BFD_MODE", "OSPF_PASSIVE_MODE"]),
+     ["ospf", "ospfCost", "ospfBfdMode", "ospfPassiveMode"]),
 ])
 def test_an_omitted_field_emits_nothing(
         itype, name, validator, builder, parent, profile, absent):
