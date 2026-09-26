@@ -200,7 +200,7 @@ def test_acl_filter_case_is_preserved_exactly():
     """Named explicitly because lowercasing is the plausible way to get this wrong."""
     add, err = gie_contribute_nvpairs(TRUNK, {"acl_filter": "MiXeD-Case_ACL"}, VERSION)
     assert err is None
-    assert add["ACL_FILTER"] == "MiXeD-Case_ACL"
+    assert add["aclFilter"] == "MiXeD-Case_ACL"
 
 
 def test_omitted_boolean_still_contributes_nothing():

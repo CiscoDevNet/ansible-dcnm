@@ -349,7 +349,7 @@ def test_mislabelling_one_parent_of_a_shared_key_is_caught(patched_table):
     ``acl_filter`` is registered on seven parents. Mislabelling ONE leaves the key guarded by
     the other six, so a guard-only test sees nothing wrong. The parent-qualified checks do.
     """
-    key = ("int_access_host", "ACL_FILTER")
+    key = ("int_access_host", "aclFilter")
     table = patched_table(_with_mechanism(key, "child_pti"))
 
     assert "acl_filter" in {
@@ -358,7 +358,7 @@ def test_mislabelling_one_parent_of_a_shared_key_is_caught(patched_table):
 
     violations = _generic_route_violations(table)
     assert violations, "a mislabelled shared key went undetected"
-    assert any("int_access_host" in v and "ACL_FILTER" in v for v in violations)
+    assert any("int_access_host" in v and "aclFilter" in v for v in violations)
 
 
 @pytest.mark.parametrize(
@@ -381,7 +381,7 @@ def test_a_binding_claiming_child_pti_breaks_the_contract(patched_table):
     mutation is the opposite and it is the one that actually happened once: a binding claiming
     child_pti with nothing implementing it. It must not compile silently into the table.
     """
-    key = ("int_routed_host", "OSPF_COST")
+    key = ("int_routed_host", "ospfCost")
     table = patched_table(_with_mechanism(key, "child_pti"))
     violations = _generic_route_violations(table)
     assert any(str(key) in v for v in violations), (
@@ -446,9 +446,9 @@ OSPF_SLICE = {
 }
 OSPF_EXPECTED_NVPAIRS = {
     "ENABLE_OSPF": "true",
-    "OSPF_TAG": "WP98",
+    "ospfTag": "WP98",
     "OSPF_AREA_ID": "0.0.0.0",
-    "OSPF_COST": "100",
+    "ospfCost": "100",
 }
 
 

@@ -207,23 +207,23 @@ def is_integer_binding(applied):
 
 
 PILOT = {
-    (ACCESS, "ACL_FILTER"): ("acl_filter", "ACL-PILOT", "", {}),
+    (ACCESS, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
     (ACCESS, "DISABLE_LLDP_TRANSMIT"): ("disable_lldp_transmit", True, "false", {}),
     (ACCESS, "DISABLE_LLDP_RECEIVE"): ("disable_lldp_receive", True, "false", {}),
-    (ACCESS, "FLOWCONTROL_RECEIVE"): ("flowcontrol_receive", "on", "off", {}),
-    (ACCESS, "FLOWCONTROL_SEND"): ("flowcontrol_send", "on", "off", {}),
+    (ACCESS, "flowcontrolReceive"): ("flowcontrol_receive", "on", "off", {}),
+    (ACCESS, "flowcontrolSend"): ("flowcontrol_send", "on", "off", {}),
     (ACCESS, "DISABLE_QOS_STATS"): ("disable_qos_stats", True, "false", dict(QOS)),
     (ACCESS, "DISABLE_QUEUING_STATS"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
-    (ACCESS, "SPANNING_TREE_PORT_TYPE"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
-    (TRUNK, "ACL_FILTER"): ("acl_filter", "ACL-PILOT", "", {}),
+    (ACCESS, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
+    (TRUNK, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
     (TRUNK, "DISABLE_LLDP_TRANSMIT"): ("disable_lldp_transmit", True, "false", {}),
     (TRUNK, "DISABLE_LLDP_RECEIVE"): ("disable_lldp_receive", True, "false", {}),
-    (TRUNK, "FLOWCONTROL_RECEIVE"): ("flowcontrol_receive", "on", "off", {}),
-    (TRUNK, "FLOWCONTROL_SEND"): ("flowcontrol_send", "on", "off", {}),
+    (TRUNK, "flowcontrolReceive"): ("flowcontrol_receive", "on", "off", {}),
+    (TRUNK, "flowcontrolSend"): ("flowcontrol_send", "on", "off", {}),
     (TRUNK, "DISABLE_QOS_STATS"): ("disable_qos_stats", True, "false", dict(QOS)),
     (TRUNK, "DISABLE_QUEUING_STATS"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (TRUNK, "GUARD_MODE"): ("guard_mode", "root", "no", {}),
-    (TRUNK, "SPANNING_TREE_PORT_TYPE"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
+    (TRUNK, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
     (ROUTED, "DISABLE_IPV4_REDIRECTS"): ("disable_ipv4_redirects", True, "false", dict(IPV6_ON)),
     (ROUTED, "DISABLE_IPV6_REDIRECTS"): ("disable_ipv6_redirects", True, "false", dict(IPV4_ON)),
     # The routed stats pair. Same prerequisites as on access/trunk -- the fields are
@@ -244,49 +244,49 @@ PILOT = {
     # template declares ARP_TIMEOUT without IsShow, so nothing has to be opened to observe it,
     # and its emission gate is `if arpTimeout != ""` -- which is why "" is the withdrawal
     # representation rather than a guess.
-    (ROUTED, "ARP_TIMEOUT"): ("arp_timeout", 900, "", {}),
+    (ROUTED, "arpTimeout"): ("arp_timeout", 900, "", {}),
     # The five routed OSPF integers, each measured live in G37 on Leaf-103 Ethernet1/20 with the
     # reset observed as the EMPTY STRING and the OSPF association kept. All are gated, so each
     # holds the OSPF base group explicit; all are integers, so each also pins the guarantee that
     # the public empty string stays REFUSED.
-    (ROUTED, "OSPF_COST"): ("ospf_cost", 42, "", dict(OSPF_CTX)),
-    (ROUTED, "OSPF_DEAD_INTERVAL"): ("ospf_dead_interval", 44, "", dict(OSPF_CTX)),
-    (ROUTED, "OSPF_HELLO_INTERVAL"): ("ospf_hello_interval", 11, "", dict(OSPF_CTX)),
-    (ROUTED, "OSPF_PRIORITY"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
-    (ROUTED, "OSPF_TRANSMIT_DELAY"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
+    (ROUTED, "ospfCost"): ("ospf_cost", 42, "", dict(OSPF_CTX)),
+    (ROUTED, "ospfDeadInterval"): ("ospf_dead_interval", 44, "", dict(OSPF_CTX)),
+    (ROUTED, "ospfHelloInterval"): ("ospf_hello_interval", 11, "", dict(OSPF_CTX)),
+    (ROUTED, "ospfPriority"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
+    (ROUTED, "ospfTransmitDelay"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
     # The seven int_subif integers, measured live in G39 on Leaf-103 Ethernet1/21.3001. The six
     # OSPF rows hold the subinterface's OWN OSPF base group; ARP_TIMEOUT is ungated and was
     # measured on a deliberately OSPF-free object, so it carries no prerequisite at all.
     # `OSPF_RETRANSMIT_INTERVAL` exists on int_subif, int_vlan and int_loopback but NOT on
     # int_routed_host, which is why it had no counterpart in the routed batch.
-    (SUBIF, "OSPF_COST"): ("ospf_cost", 42, "", dict(OSPF_CTX)),
-    (SUBIF, "OSPF_DEAD_INTERVAL"): ("ospf_dead_interval", 44, "", dict(OSPF_CTX)),
-    (SUBIF, "OSPF_HELLO_INTERVAL"): ("ospf_hello_interval", 11, "", dict(OSPF_CTX)),
-    (SUBIF, "OSPF_PRIORITY"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
-    (SUBIF, "OSPF_TRANSMIT_DELAY"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
-    (SUBIF, "OSPF_RETRANSMIT_INTERVAL"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
-    (SUBIF, "ARP_TIMEOUT"): ("arp_timeout", 900, "", {}),
+    (SUBIF, "ospfCost"): ("ospf_cost", 42, "", dict(OSPF_CTX)),
+    (SUBIF, "ospfDeadInterval"): ("ospf_dead_interval", 44, "", dict(OSPF_CTX)),
+    (SUBIF, "ospfHelloInterval"): ("ospf_hello_interval", 11, "", dict(OSPF_CTX)),
+    (SUBIF, "ospfPriority"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
+    (SUBIF, "ospfTransmitDelay"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
+    (SUBIF, "ospfRetransmitInterval"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
+    (SUBIF, "arpTimeout"): ("arp_timeout", 900, "", {}),
     # int_loopback. Same six OSPF integers, same measured reset -- but measured on THIS parent
     # in G41, not inherited from the subinterface: G39 showed even the envelope differs between
     # parents. The context is held explicit for the same reason it is on subif, and because on
     # this parent an omitted OSPF_TAG makes the template fall back to the FABRIC's process.
-    (LOOPBACK, "OSPF_COST"): ("ospf_cost", 42, "", dict(OSPF_CTX)),
-    (LOOPBACK, "OSPF_DEAD_INTERVAL"): ("ospf_dead_interval", 44, "", dict(OSPF_CTX)),
-    (LOOPBACK, "OSPF_HELLO_INTERVAL"): ("ospf_hello_interval", 11, "", dict(OSPF_CTX)),
-    (LOOPBACK, "OSPF_PRIORITY"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
-    (LOOPBACK, "OSPF_TRANSMIT_DELAY"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
-    (LOOPBACK, "OSPF_RETRANSMIT_INTERVAL"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
+    (LOOPBACK, "ospfCost"): ("ospf_cost", 42, "", dict(OSPF_CTX)),
+    (LOOPBACK, "ospfDeadInterval"): ("ospf_dead_interval", 44, "", dict(OSPF_CTX)),
+    (LOOPBACK, "ospfHelloInterval"): ("ospf_hello_interval", 11, "", dict(OSPF_CTX)),
+    (LOOPBACK, "ospfPriority"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
+    (LOOPBACK, "ospfTransmitDelay"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
+    (LOOPBACK, "ospfRetransmitInterval"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
     # int_vlan. The six OSPF integers behave as on the other parents, but the two SPLIT REDIRECT
     # rows are BOOLEAN and their measured reset is the STRING 'false', not the empty string --
     # measured live in G43, not inferred. Each holds the OTHER split knob true so the shared
     # child survives and only the target's own CLI line is withdrawn.
-    (SVI, "OSPF_COST"): ("ospf_cost", 42, "", dict(OSPF_CTX)),
-    (SVI, "OSPF_DEAD_INTERVAL"): ("ospf_dead_interval", 44, "", dict(OSPF_CTX)),
-    (SVI, "OSPF_HELLO_INTERVAL"): ("ospf_hello_interval", 11, "", dict(OSPF_CTX)),
-    (SVI, "OSPF_PRIORITY"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
-    (SVI, "OSPF_TRANSMIT_DELAY"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
-    (SVI, "OSPF_RETRANSMIT_INTERVAL"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
-    (SVI, "ARP_TIMEOUT"): ("arp_timeout", 900, "", {}),
+    (SVI, "ospfCost"): ("ospf_cost", 42, "", dict(OSPF_CTX)),
+    (SVI, "ospfDeadInterval"): ("ospf_dead_interval", 44, "", dict(OSPF_CTX)),
+    (SVI, "ospfHelloInterval"): ("ospf_hello_interval", 11, "", dict(OSPF_CTX)),
+    (SVI, "ospfPriority"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
+    (SVI, "ospfTransmitDelay"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
+    (SVI, "ospfRetransmitInterval"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
+    (SVI, "arpTimeout"): ("arp_timeout", 900, "", {}),
     (SVI, "DISABLE_IPV4_REDIRECTS"): ("disable_ipv4_redirects", True, "false",
                                       {"disable_ipv6_redirects": True}),
     (SVI, "DISABLE_IPV6_REDIRECTS"): ("disable_ipv6_redirects", True, "false",
@@ -310,25 +310,25 @@ PILOT_ITEMS = [(p, n, k, applied, reset, extra)
 # here is the nvPair on the parent request, which is the same either way; the member-side
 # rendering is what the live campaign verified on the device.
 PILOT_PC = {
-    (PC_ACCESS, "ACL_FILTER"): ("acl_filter", "ACL-PILOT", "", {}),
+    (PC_ACCESS, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
     (PC_ACCESS, "DISABLE_LLDP_TRANSMIT"): ("disable_lldp_transmit", True, "false", {}),
     (PC_ACCESS, "DISABLE_LLDP_RECEIVE"): ("disable_lldp_receive", True, "false", {}),
     (PC_ACCESS, "DISABLE_QOS_STATS"): ("disable_qos_stats", True, "false", dict(QOS)),
     (PC_ACCESS, "DISABLE_QUEUING_STATS"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
-    (PC_ACCESS, "SPANNING_TREE_PORT_TYPE"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
-    (PC_TRUNK, "ACL_FILTER"): ("acl_filter", "ACL-PILOT", "", {}),
+    (PC_ACCESS, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
+    (PC_TRUNK, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
     (PC_TRUNK, "DISABLE_LLDP_TRANSMIT"): ("disable_lldp_transmit", True, "false", {}),
     (PC_TRUNK, "DISABLE_LLDP_RECEIVE"): ("disable_lldp_receive", True, "false", {}),
     (PC_TRUNK, "DISABLE_QOS_STATS"): ("disable_qos_stats", True, "false", dict(QOS)),
     (PC_TRUNK, "DISABLE_QUEUING_STATS"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (PC_TRUNK, "GUARD_MODE"): ("guard_mode", "root", "no", {}),
-    (PC_TRUNK, "SPANNING_TREE_PORT_TYPE"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
-    (PC_DOT1Q, "ACL_FILTER"): ("acl_filter", "ACL-PILOT", "", {}),
+    (PC_TRUNK, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
+    (PC_DOT1Q, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
     (PC_DOT1Q, "DISABLE_LLDP_TRANSMIT"): ("disable_lldp_transmit", True, "false", {}),
     (PC_DOT1Q, "DISABLE_LLDP_RECEIVE"): ("disable_lldp_receive", True, "false", {}),
     (PC_DOT1Q, "DISABLE_QOS_STATS"): ("disable_qos_stats", True, "false", dict(QOS)),
     (PC_DOT1Q, "DISABLE_QUEUING_STATS"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
-    (PC_DOT1Q, "SPANNING_TREE_PORT_TYPE"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
+    (PC_DOT1Q, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
 }
 PILOT_PC_IDS = ["%s::%s" % (p, n) for (p, n) in PILOT_PC]
 PILOT_PC_ITEMS = [(p, n, k, applied, reset, extra)

@@ -264,8 +264,8 @@ def test_flowcontrol_receive_is_mapped_for_access_and_trunk():
         exclude_none=True
     )
     nvpairs = get_nvpairs_by_interface_name(parsed)
-    assert nvpairs["ethernet1/4"]["FLOWCONTROL_RECEIVE"] == "on"
-    assert nvpairs["ethernet1/5"]["FLOWCONTROL_RECEIVE"] == "off"
+    assert nvpairs["ethernet1/4"]["flowcontrolReceive"] == "on"
+    assert nvpairs["ethernet1/5"]["flowcontrolReceive"] == "off"
 
 
 def test_flowcontrol_receive_is_omitted_when_not_configured():
@@ -282,7 +282,7 @@ def test_flowcontrol_receive_is_omitted_when_not_configured():
         exclude_none=True
     )
     nvpairs = get_nvpairs_by_interface_name(parsed)
-    assert "FLOWCONTROL_RECEIVE" not in nvpairs["ethernet1/4"]
+    assert "flowcontrolReceive" not in nvpairs["ethernet1/4"]
 
 
 @pytest.mark.parametrize("value", ["on", "off"])
@@ -296,7 +296,7 @@ def test_flowcontrol_receive_raw_query_preserves_native_string(value):
                 "serialNumber": "SERIAL1",
                 "nvPairs": {
                     "INTF_NAME": "ethernet1/4",
-                    "FLOWCONTROL_RECEIVE": value,
+                    "flowcontrolReceive": value,
                 },
             }],
         }],
@@ -305,6 +305,6 @@ def test_flowcontrol_receive_raw_query_preserves_native_string(value):
         exclude_none=True
     )
     actual = get_nvpairs_by_interface_name(parsed)["ethernet1/4"][
-        "FLOWCONTROL_RECEIVE"
+        "flowcontrolReceive"
     ]
     assert actual == value and isinstance(actual, str)

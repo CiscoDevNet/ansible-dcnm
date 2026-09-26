@@ -43,11 +43,11 @@ from .gie_withdrawal_harness import (
 # only moving part is how many omissions one invocation reconciles. Values and resets are
 # the PILOT rows verbatim; nothing is re-derived here.
 MULTI = {
-    "ACL_FILTER": ("acl_filter", "ACL-PILOT", ""),
+    "aclFilter": ("acl_filter", "ACL-PILOT", ""),
     "DISABLE_LLDP_TRANSMIT": ("disable_lldp_transmit", True, "false"),
     "DISABLE_LLDP_RECEIVE": ("disable_lldp_receive", True, "false"),
-    "FLOWCONTROL_RECEIVE": ("flowcontrol_receive", "on", "off"),
-    "FLOWCONTROL_SEND": ("flowcontrol_send", "on", "off"),
+    "flowcontrolReceive": ("flowcontrol_receive", "on", "off"),
+    "flowcontrolSend": ("flowcontrol_send", "on", "off"),
 }
 
 
@@ -143,7 +143,7 @@ def test_omitted_fec_and_omitted_binding_share_one_payload():
     assert not result.get("failed"), result.get("msg")
     nvpairs = sole_update_nvpairs(calls)
     assert nvpairs.get("FEC") == "auto", "omitted fec did not normalize to auto: %r" % (nvpairs.get("FEC"),)
-    assert nvpairs.get("ACL_FILTER") == "", "the accepted binding was not withdrawn alongside the fec default: %r" % (nvpairs.get("ACL_FILTER"),)
+    assert nvpairs.get("aclFilter") == "", "the accepted binding was not withdrawn alongside the fec default: %r" % (nvpairs.get("aclFilter"),)
 
 
 def test_rerun_against_the_controller_stored_fec_is_a_no_op():

@@ -266,13 +266,13 @@ class TestBindingPayloadOnModulePath(A161Base):
 
     def test_eth_trunk_acl_filter_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_trunk_acl_filter_valid", changed=True)
-        value = self._assert_nvpair(result, "Ethernet1/30", "ACL_FILTER", "ACL_ALPHA")
+        value = self._assert_nvpair(result, "Ethernet1/30", "aclFilter", "ACL_ALPHA")
         # Exact type: a str subclass would satisfy isinstance and still be wrong.
         assert type(value) is str  # pylint: disable=unidiomatic-typecheck
 
     def test_eth_access_acl_filter_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_access_acl_filter_valid", changed=True)
-        self._assert_nvpair(result, "Ethernet1/31", "ACL_FILTER", "ACL_BETA")
+        self._assert_nvpair(result, "Ethernet1/31", "aclFilter", "ACL_BETA")
 
     def test_eth_access_acl_filter_empty_reaches_the_parent_nvpair(self):
         """"" is how the field is CLEARED, so it has to travel like any other value.
@@ -287,7 +287,7 @@ class TestBindingPayloadOnModulePath(A161Base):
         returns for "no ACL configured". So the module must transport it, not block it.
         """
         result = self.run_config("eth_access_acl_filter_empty", changed=True)
-        value = self._assert_nvpair(result, "Ethernet1/31", "ACL_FILTER", "")
+        value = self._assert_nvpair(result, "Ethernet1/31", "aclFilter", "")
         # Not None, not absent: an absent key would mean "leave as-is", the opposite of clear.
         assert type(value) is str  # pylint: disable=unidiomatic-typecheck
 
@@ -297,15 +297,15 @@ class TestBindingPayloadOnModulePath(A161Base):
 
     def test_pc_trunk_acl_filter_reaches_the_parent_nvpair(self):
         result = self.run_config("pc_trunk_acl_filter_valid", changed=True)
-        self._assert_nvpair(result, "Port-channel300", "ACL_FILTER", "ACL_GAMMA")
+        self._assert_nvpair(result, "Port-channel300", "aclFilter", "ACL_GAMMA")
 
     def test_pc_access_acl_filter_reaches_the_parent_nvpair(self):
         result = self.run_config("pc_access_acl_filter_valid", changed=True)
-        self._assert_nvpair(result, "Port-channel301", "ACL_FILTER", "ACL_DELTA")
+        self._assert_nvpair(result, "Port-channel301", "aclFilter", "ACL_DELTA")
 
     def test_pc_dot1q_acl_filter_reaches_the_parent_nvpair(self):
         result = self.run_config("pc_dot1q_acl_filter_valid", changed=True)
-        self._assert_nvpair(result, "Port-channel302", "ACL_FILTER", "ACL_EPS")
+        self._assert_nvpair(result, "Port-channel302", "aclFilter", "ACL_EPS")
 
     def test_omission_contributes_no_nvpair_and_no_default(self):
         result = self.run_config("eth_trunk_omitted", changed=True)
@@ -316,13 +316,13 @@ class TestBindingPayloadOnModulePath(A161Base):
         nvpairs = merged["Ethernet1/30"]
         assert nvpairs, "empty nvPairs would make the absence assertions meaningless"
         assert "INTF_NAME" in nvpairs or "ADMIN_STATE" in nvpairs, sorted(nvpairs)
-        for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "ACL_FILTER"):
+        for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "aclFilter"):
             assert nvpair not in nvpairs, (
                 f"omission produced {nvpair}={nvpairs.get(nvpair)!r}"
             )
         # And nothing reached the wire carrying them either.
         for sent in self.sent_nvpairs().values():
-            for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "ACL_FILTER"):
+            for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "aclFilter"):
                 assert nvpair not in sent
 
 
@@ -407,7 +407,7 @@ class TestBindingFrozenContractRegression(A161Base):
     def test_flowcontrol_receive_still_reaches_the_parent_nvpair(self):
         result = self.run_config("eth_trunk_flowcontrol_on", changed=True)
         merged = self.diff_nvpairs(result)
-        assert merged["Ethernet1/30"]["FLOWCONTROL_RECEIVE"] == "on"
+        assert merged["Ethernet1/30"]["flowcontrolReceive"] == "on"
 
     # The loopback OSPF-MD regression that used to sit here was retired with its binding. It
     # carried one guarantee the FLOWCONTROL case above does not: EXACT type on the wire. That

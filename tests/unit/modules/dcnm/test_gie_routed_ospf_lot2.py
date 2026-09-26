@@ -56,12 +56,12 @@ NDFC_VERSION = "12.6.0.267"
 # profile_key -> (nvPair, type, declared default, declared range)
 # Read from the installed template, sha b9b50077cf49f8cb -- not from the Excel or the ledger.
 LOT2 = {
-    "ospf_mtu_ignore": ("OSPF_MTU_IGNORE", "boolean", False, None),
-    "ospf_shutdown": ("OSPF_SHUTDOWN", "boolean", False, None),
-    "ospf_hello_interval": ("OSPF_HELLO_INTERVAL", "integer", None, (1, 65535)),
-    "ospf_dead_interval": ("OSPF_DEAD_INTERVAL", "integer", None, (1, 65535)),
-    "ospf_transmit_delay": ("OSPF_TRANSMIT_DELAY", "integer", None, (1, 450)),
-    "ospf_priority": ("OSPF_PRIORITY", "integer", None, (0, 255)),
+    "ospf_mtu_ignore": ("ospfMtuIgnore", "boolean", False, None),
+    "ospf_shutdown": ("ospfShutdown", "boolean", False, None),
+    "ospf_hello_interval": ("ospfHelloInterval", "integer", None, (1, 65535)),
+    "ospf_dead_interval": ("ospfDeadInterval", "integer", None, (1, 65535)),
+    "ospf_transmit_delay": ("ospfTransmitDelay", "integer", None, (1, 450)),
+    "ospf_priority": ("ospfPriority", "integer", None, (0, 255)),
     "ospf_passive_mode": ("OSPF_PASSIVE_MODE", "enum", "no_change",
                           ("no_change", "passive", "no_passive")),
     "ospf_network_type": ("OSPF_NETWORK_TYPE", "enum", "no_change",
@@ -85,12 +85,12 @@ SAMPLE = {
 }
 
 WIRE = {
-    "OSPF_MTU_IGNORE": "true",
-    "OSPF_SHUTDOWN": "false",
-    "OSPF_HELLO_INTERVAL": "15",
-    "OSPF_DEAD_INTERVAL": "60",
-    "OSPF_TRANSMIT_DELAY": "3",
-    "OSPF_PRIORITY": "42",
+    "ospfMtuIgnore": "true",
+    "ospfShutdown": "false",
+    "ospfHelloInterval": "15",
+    "ospfDeadInterval": "60",
+    "ospfTransmitDelay": "3",
+    "ospfPriority": "42",
     "OSPF_PASSIVE_MODE": "no_passive",
     "OSPF_NETWORK_TYPE": "point_to_point",
     "OSPF_BFD_MODE": "disable",
@@ -259,8 +259,8 @@ AUTH_FIELDS = {
     "enable_ospf_auth": ("ENABLE_OSPF_AUTH", "boolean", False),
     "ospf_auth_key_id": ("OSPF_AUTH_KEY_ID", "integer", False),
     "ospf_auth_key": ("OSPF_AUTH_KEY", "string", True),
-    "ospf_authentication_key_type": ("OSPF_AUTHENTICATION_KEY_TYPE", "enum", False),
-    "ospf_authentication_key": ("OSPF_AUTHENTICATION_KEY", "string", True),
+    "ospf_authentication_key_type": ("ospfAuthenticationKeyType", "enum", False),
+    "ospf_authentication_key": ("ospfAuthenticationKey", "string", True),
 }
 
 

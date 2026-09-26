@@ -246,7 +246,7 @@ def test_a_real_change_still_writes_and_deploys():
         allow_failed=False)
     split = split_calls(calls)
     assert len(split["updates"]) == 1 and len(split["deploys"]) == 1
-    assert request_nvpairs(calls)[0]["ACL_FILTER"] == "ACL-CHANGED"
+    assert request_nvpairs(calls)[0]["aclFilter"] == "ACL-CHANGED"
 
 
 # ===================================================================== merged preserves
@@ -436,7 +436,7 @@ def test_the_version_boundary_governs_the_omission_reset(version, applicable):
     prof.pop("fec", None)
     have = have_for([IF_A], ACCESS, "acl_filter", "ACL-PILOT")
     result, calls = run_configs([cfg(IF_A, prof)], "replaced", have, ndfc_version=version)
-    sent = [nv["ACL_FILTER"] for nv in request_nvpairs(calls) if "ACL_FILTER" in nv]
+    sent = [nv["aclFilter"] for nv in request_nvpairs(calls) if "aclFilter" in nv]
     if applicable:
         assert len(split_calls(calls)["updates"]) == 1
         assert sent == [""], sent
@@ -503,7 +503,7 @@ def test_an_empty_wire_value_is_absence_not_a_configured_value():
     """NDFC returns `""` for a field its template never defaulted. That is absence, and it
     must not be classified as an unclassifiable configured value."""
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["OSPF_COST"] = ""
+    have[0]["interfaces"][0]["nvPairs"]["ospfCost"] = ""
     result, calls = run(base_for(ROUTED), "replaced", have)
     assert not result.get("failed"), (
         "an empty controller value was treated as a configured one: %s" % result.get("msg"))
@@ -514,7 +514,7 @@ def test_malformed_have_fails_closed_rather_than_receiving_a_reset(malformed):
     """A value the HAVE validator cannot read must stop the run, not be answered with a
     confident reset."""
     have = have_for([IF_A], ACCESS, "acl_filter", "ACL-PILOT")
-    have[0]["interfaces"][0]["nvPairs"]["ACL_FILTER"] = malformed
+    have[0]["interfaces"][0]["nvPairs"]["aclFilter"] = malformed
     result, calls = run_configs([cfg(IF_A, base_for(ACCESS))], "replaced", have)
     assert result.get("failed"), "malformed HAVE was accepted"
     assert "acl_filter" in str(result.get("msg", ""))
@@ -526,11 +526,11 @@ def test_a_value_held_only_by_another_interface_is_not_this_ones_have():
     IF_B only, and a run that touches IF_A alone must not withdraw IF_B's value nor treat
     it as IF_A's own."""
     have = have_for([IF_A, IF_B], ACCESS, "acl_filter", "ACL-PILOT")
-    have[0]["interfaces"][0]["nvPairs"].pop("ACL_FILTER", None)   # absent on IF_A
+    have[0]["interfaces"][0]["nvPairs"].pop("aclFilter", None)   # absent on IF_A
     result, calls = run_configs([cfg(IF_A, base_for(ACCESS))], "replaced", have)
     assert not result.get("failed"), result.get("msg")
     for req in request_nvpairs(calls):
-        assert req.get("ACL_FILTER") != "", (
+        assert req.get("aclFilter") != "", (
             "IF_A was reset using a value that belongs to IF_B's authoritative state")
 
 
@@ -538,7 +538,7 @@ def test_greenfield_creation_carries_no_reset():
     """No HAVE at all. Creation must transmit what was asked for and nothing else."""
     result, calls = run(base_for(ACCESS, acl_filter="ACL-PILOT"), "replaced")
     nv = request_nvpairs(calls)
-    assert nv and nv[0].get("ACL_FILTER") == "ACL-PILOT"
+    assert nv and nv[0].get("aclFilter") == "ACL-PILOT"
 
 
 def test_a_sparse_have_without_any_registry_nvpair_is_not_a_withdrawal_trigger():
@@ -565,7 +565,7 @@ def test_a_sparse_have_without_any_registry_nvpair_is_not_a_withdrawal_trigger()
     result, calls = run_configs([cfg(IF_A, base_for(ACCESS))], "replaced", have)
     assert not result.get("failed"), result.get("msg")
     for req in request_nvpairs(calls):
-        assert req.get("ACL_FILTER") != "", "a reset was invented from a sparse HAVE"
+        assert req.get("aclFilter") != "", "a reset was invented from a sparse HAVE"
 
 
 # ===================================================================== ownership
@@ -692,7 +692,7 @@ def test_suppressing_the_parent_index_does_not_by_itself_produce_the_reset():
     result, calls = run_configs(
         [cfg(IF_A, base_for(ACCESS))], "replaced", have,
         extra_patch=patch.object(module, "gie_carry_forward_bindings", return_value=[]))
-    sent = [nv.get("ACL_FILTER") for nv in request_nvpairs(calls) if "ACL_FILTER" in nv]
+    sent = [nv.get("aclFilter") for nv in request_nvpairs(calls) if "aclFilter" in nv]
     assert "" not in sent, (
         "with the parent index suppressed a reset was still emitted; the detection would "
         "not be coming from the enumeration this design reuses")
