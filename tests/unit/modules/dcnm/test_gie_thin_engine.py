@@ -1315,16 +1315,54 @@ def test_flowcontrol_compare_drift_is_exact_native_delta(parent, state):
 
 @pytest.mark.parametrize("parent", [TRUNK, ACCESS])
 @pytest.mark.parametrize("state", ["replaced", "overridden"])
-def test_omitted_flowcontrol_is_carried_from_have_on_unrelated_update(parent, state):
+def test_omitted_flowcontrol_under_replaced_follows_the_withdrawal_contract(parent, state):
+    """THIS EXPECTATION WAS DELIBERATELY CHANGED. The previous one was:
+
+        assert sent["FLOWCONTROL_RECEIVE"] == "on"
+        assert reported == {"DESC": "new"}
+
+    i.e. an unrelated description edit re-sent the controller's configured value, so the
+    field could never be cleared by omitting it. That is F1. Under the approved contract
+    `replaced` and retained `overridden` treat omission as a withdrawal request, and this
+    binding carries a MEASURED reset on int_access_host ("off") while int_trunk_host
+    carries none -- which is exactly why this test is parametrized over both parents
+    rather than asserting one outcome everywhere.
+
+    The `merged` control below is untouched.
+    """
+    binding = resolve_binding(parent, "flowcontrol_receive")
+    reset = binding.get("reset_wire")
     obj = _compare_obj(
         state, parent, _OMITTED, "on",
         want_description="new", have_description="old",
     )
     obj.dcnm_intf_compare_want_and_have(state)
     sent = obj.diff_replace[0]["interfaces"][0]["nvPairs"]
-    assert sent["FLOWCONTROL_RECEIVE"] == "on"
     reported = obj.changed_dict[0][state][0]["interfaces"][0]["nvPairs"]
-    assert reported == {"DESC": "new"}
+    if reset is None:
+        assert sent["FLOWCONTROL_RECEIVE"] == "on"
+        assert reported == {"DESC": "new"}
+    else:
+        assert sent["FLOWCONTROL_RECEIVE"] == reset
+        assert reported == {"DESC": "new", "FLOWCONTROL_RECEIVE": reset}, (
+            "the withdrawal was sent but not reported")
+
+
+@pytest.mark.parametrize("parent", [TRUNK, ACCESS])
+def test_omitted_flowcontrol_is_preserved_under_merged(parent):
+    """The preserved historical control. `merged` has no withdrawal contract."""
+    obj = _compare_obj(
+        "merged", parent, _OMITTED, "on",
+        want_description="new", have_description="old",
+    )
+    obj.dcnm_intf_compare_want_and_have("merged")
+    # An EXISTING interface lands in diff_replace whatever the state -- merging into one
+    # is still a modify.
+    sent = obj.diff_replace[0]["interfaces"][0]["nvPairs"]
+    assert sent["FLOWCONTROL_RECEIVE"] == "on"
+    reported = obj.changed_dict[0]["merged"][0]["interfaces"][0]["nvPairs"]
+    assert reported == {"DESC": "new"}, (
+        "merged reported a withdrawal it must not perform: %s" % reported)
 
 
 @pytest.mark.parametrize("parent", [TRUNK, ACCESS])

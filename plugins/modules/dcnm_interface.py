@@ -2142,6 +2142,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_invalid_parent_key,
     gie_nvpair_keymap,
     gie_carry_forward_bindings,
+    gie_withdrawal_action,
+    gie_binding_is_owned_elsewhere,
+    GIE_WITHDRAW_RESET,
+    GIE_WITHDRAW_UNSUPPORTED,
+    GIE_WITHDRAW_UNCLASSIFIED,
     gie_describe_value_type,
     gie_fabric_owned_carry_forward,
     gie_have_carry_forward_nvpairs,
@@ -2292,6 +2297,9 @@ class DcnmIntf:
         self.deferred_delete_member_defaults = []
         self._deferred_delete_member_default_keys = set()
 
+        # Bindings whose required withdrawal cannot be completed. Collected during the
+        # comparison pass and raised ONCE by main(), before anything is sent.
+        self.withdrawal_blocked = []
         self.changed_dict = [
             {
                 "merged": [],
@@ -6439,6 +6447,129 @@ class DcnmIntf:
                                 if ik == "nvPairs":
                                     nv_keys = list(want[k][0][ik].keys())
 
+                                    # ---------------------------------------- withdrawal
+                                    # Omission-only reconciliation for `replaced` and for an
+                                    # interface RETAINED under `overridden`. `merged` keeps
+                                    # its preservation contract and never enters here.
+                                    #
+                                    # This runs BEFORE the generic carry-forward below, and
+                                    # that ordering is the whole integration: the
+                                    # carry-forward already skips any nvPair present in
+                                    # `want`, so a reset written here makes it stand down
+                                    # for that binding without a second flag.
+                                    #
+                                    # The reset is written into THREE places, not one:
+                                    #   want[...]      -> it reaches the outgoing request
+                                    #   nv_keys        -> the comparator treats it as a
+                                    #                     normal difference, so omission
+                                    #                     ALONE produces the write
+                                    #   changed_dict   -> it is REPORTED. changed_dict is
+                                    #                     deep-copied from want further up,
+                                    #                     before this point, so a value put
+                                    #                     only in `want` would be sent and
+                                    #                     never shown -- the exact defect
+                                    #                     measured on the carry-forward.
+                                    if state in ("replaced", "overridden"):
+                                        for _w_b in gie_carry_forward_bindings(
+                                            want.get("policy")
+                                        ):
+                                            _w_nvp = _w_b["parent_nvpair"]
+                                            _w_key = _w_b["profile_key"]
+                                            if _w_key in pb_keys:
+                                                continue        # explicit input: not ours
+                                            if _w_nvp in want[k][0][ik]:
+                                                continue        # already emitted by the builder
+                                            if gie_binding_is_owned_elsewhere(
+                                                want.get("policy"), _w_nvp
+                                            ):
+                                                continue        # another path owns this pair
+                                            _w_absent = object()
+                                            _w_have = next(
+                                                (
+                                                    intf[ik][_w_nvp]
+                                                    for intf in d[k]
+                                                    if isinstance(intf.get(ik), dict)
+                                                    and _w_nvp in intf[ik]
+                                                ),
+                                                _w_absent,
+                                            )
+                                            if _w_have is _w_absent:
+                                                # Authoritatively absent. Nothing to
+                                                # withdraw, and no default is invented.
+                                                continue
+                                            # The authoritative value must be READABLE
+                                            # before it is classified. Without this the
+                                            # step would short-circuit the HAVE validation
+                                            # the carry-forward below performs: it writes
+                                            # into `want`, the carry-forward then skips the
+                                            # binding, and a malformed controller value
+                                            # would be answered with a confident reset
+                                            # instead of failing closed. Same call, same
+                                            # value_source, same failure text.
+                                            try:
+                                                gie_validate_binding_value(
+                                                    want.get("policy"),
+                                                    _w_key,
+                                                    _w_have,
+                                                    value_source="have",
+                                                )
+                                            except GieBindingError as exc:
+                                                self.module.fail_json(msg=str(exc))
+                                            if _w_have == "":
+                                                # NDFC's own encoding of "no value": the
+                                                # engine documents and has measured it for
+                                                # strings (ACL_FILTER), booleans whose
+                                                # template declares no default, and
+                                                # integers (OSPF_COST). It is absence, not
+                                                # a configured value, so there is nothing
+                                                # to withdraw -- and it never PRODUCES a
+                                                # reset. Where "" is itself the verified
+                                                # reset the branch above has already
+                                                # matched it.
+                                                continue
+                                            _w_action, _w_wire = gie_withdrawal_action(
+                                                want.get("policy"),
+                                                _w_key,
+                                                _w_have,
+                                                getattr(self, "ndfc_version", None),
+                                            )
+                                            # GIE_WITHDRAW_INAPPLICABLE falls through to
+                                            # nothing, deliberately. The controller cannot
+                                            # carry this nvPair: emitting a reset would
+                                            # transport what an explicit key is REFUSED at
+                                            # gie_contribute_nvpairs, and refusing the run
+                                            # would reject it over a field this controller
+                                            # never had. The classifier owns that boundary
+                                            # and it is the ONLY copy -- an earlier draft
+                                            # repeated the check here as well, which made
+                                            # each copy individually unkillable by mutation
+                                            # while protecting nothing the generic
+                                            # carry-forward below does not already do.
+                                            if _w_action == GIE_WITHDRAW_RESET:
+                                                want[k][0][ik][_w_nvp] = _w_wire
+                                                if _w_nvp not in nv_keys:
+                                                    nv_keys.append(_w_nvp)
+                                                changed_dict[k][0][ik][_w_nvp] = _w_wire
+                                            elif _w_action in (
+                                                GIE_WITHDRAW_UNSUPPORTED,
+                                                GIE_WITHDRAW_UNCLASSIFIED,
+                                            ):
+                                                # Collected, never raised here: the failure
+                                                # is invocation-wide and must precede EVERY
+                                                # interface's write, including ones already
+                                                # diffed. main() raises it after the whole
+                                                # comparison pass. The value is never
+                                                # recorded -- a binding may carry a secret.
+                                                self.withdrawal_blocked.append(
+                                                    {
+                                                        "parent": want.get("policy"),
+                                                        "field": _w_key,
+                                                        "nvpair": _w_nvp,
+                                                        "interface": name,
+                                                        "reason": _w_action,
+                                                    }
+                                                )
+
                                     # Preserve an authoritative current value for every omitted
                                     # registry passthrough binding on this SAME parent.  This is
                                     # transport preservation for replaced/overridden/full-payload
@@ -9189,6 +9320,60 @@ def main():
 
     if module.params["state"] == "query":
         dcnm_intf.dcnm_intf_get_diff_query()
+
+    # ------------------------------------------------ withdrawal preflight
+    # Placed here deliberately: every state has finished building its diffs, and NOTHING
+    # has been sent. A valid first interface followed by an unsupported second one
+    # therefore writes nothing at all -- the failure is invocation-wide.
+    #
+    # This is preflight, not a transaction: the module offers no rollback and none is
+    # implied. It simply refuses to start.
+    #
+    # It fires in check mode too. Check mode is a report, and reporting a replacement
+    # that could not be completed would be the same false claim as performing one.
+    #
+    # The message names the public field and the parent and NEVER the value: a binding
+    # may carry key material, and a refusal is still a result with invocation.module_args
+    # attached to it.
+    if dcnm_intf.withdrawal_blocked:
+        unsupported = sorted(
+            {
+                (b["parent"], b["field"])
+                for b in dcnm_intf.withdrawal_blocked
+                if b["reason"] == GIE_WITHDRAW_UNSUPPORTED
+            }
+        )
+        unclassified = sorted(
+            {
+                (b["parent"], b["field"])
+                for b in dcnm_intf.withdrawal_blocked
+                if b["reason"] == GIE_WITHDRAW_UNCLASSIFIED
+            }
+        )
+        parts = []
+        if unsupported:
+            parts.append(
+                "These fields were omitted while the controller holds a different "
+                "configured value, so state '{0}' must withdraw them, and no verified "
+                "reset is established for them on this parent: {1}.".format(
+                    module.params["state"],
+                    ", ".join("{0} on {1}".format(f, p) for p, f in unsupported),
+                )
+            )
+        if unclassified:
+            parts.append(
+                "These fields were omitted while the controller holds a value that "
+                "cannot be classified as already withdrawn, so state '{0}' cannot "
+                "confirm the replacement is complete: {1}.".format(
+                    module.params["state"],
+                    ", ".join("{0} on {1}".format(f, p) for p, f in unclassified),
+                )
+            )
+        parts.append(
+            "No configuration or deployment request was sent. Set the field explicitly "
+            "to the value you want, or use state 'merged' to preserve it."
+        )
+        module.fail_json(msg=" ".join(parts), **dcnm_intf.result)
 
     dcnm_intf.result["diff"] = dcnm_intf.changed_dict
 

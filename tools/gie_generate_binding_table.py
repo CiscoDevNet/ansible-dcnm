@@ -761,9 +761,25 @@ rebuild_binding_indexes()
 # Fields carried into the runtime table (curated + generated), in a fixed order.
 # min_length/max_length carry the registry string constraints (ACL_FILTER).
 FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interface_type",
-          "applicable_mode", "type", "valid_values", "default_template", "mechanism",
-          "min_ndfc_version", "min_length", "max_length", "min_value", "max_value",
-          "no_log"]
+          "applicable_mode", "type", "valid_values", "default_template", "reset_wire",
+          "mechanism", "min_ndfc_version", "min_length", "max_length", "min_value",
+          "max_value", "no_log"]
+
+# `reset_wire` -- the nvPair wire STRING that withdraws this binding, for the exact
+# (parent_template, parent_nvpair) it is declared on.
+#
+# PRESENCE is the signal, and that is why it is a separate field rather than a value inside
+# `default_template`. The empty string is a legitimate reset (ACL_FILTER), so "no reset is
+# established" cannot be spelled as "" and cannot be spelled as null either -- null is a
+# plausible wire value somewhere in this registry. A row that omits the key has no established
+# reset; a row that carries it has one that was MEASURED against a controller and a device.
+#
+# It answers only "what do we transmit to withdraw this?". It does NOT say whether a current
+# value needs withdrawing -- `default_template` answers that, and the two are deliberately
+# independent: a declared template default classifies state, it does not prove reset transport.
+#
+# Stored already in wire form so the comparison path performs no type inference at reconcile
+# time: `_to_nvpair_wire` semantics are applied once, here, by the author of the row.
 
 # The registry spells the numeric bounds `min` and `max`; the runtime table spells them
 # `min_value` and `max_value`. The rename is deliberate: a substring test for "min" -- the
@@ -847,6 +863,21 @@ def _check_registry_schema(r, key):
                 key, r["type"], sorted(SCHEMA_TYPES)
             )
         )
+    # `reset_wire` is optional, and when present it must be the exact nvPair WIRE STRING.
+    #
+    # `bool` is rejected explicitly and before the str test, because in Python True is not a
+    # str but a YAML author writing `reset_wire: false` means the wire string "false" and
+    # would otherwise ship a native bool into a map the controller reads as strings. Making
+    # that a loud rejection is cheaper than a payload whose boolean never converges -- the
+    # failure `_to_nvpair_wire` exists to prevent.
+    if "reset_wire" in r:
+        v = r["reset_wire"]
+        if isinstance(v, bool) or not isinstance(v, str):
+            raise ValueError(
+                "binding {0!r} declares reset_wire {1!r}; it must be the nvPair wire "
+                "STRING (\"false\", \"off\", \"\" ...), never a native "
+                "bool/int/null".format(key, v)
+            )
 
 
 def compile_rows(slice_rows):
