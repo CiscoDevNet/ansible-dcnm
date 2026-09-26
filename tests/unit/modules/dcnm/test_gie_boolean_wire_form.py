@@ -49,6 +49,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_contribute_nvpairs,
     gie_validate_binding_value,
+    resolve_binding,
 )
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
@@ -321,23 +322,76 @@ def test_a_real_boolean_change_is_still_detected(parent, profile_key, nvpair, st
 
 @pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_PASSTHROUGH, ids=BOOL_IDS)
 @pytest.mark.parametrize("state", ["replaced", "overridden"])
-def test_omitted_boolean_is_carried_forward_from_have(parent, profile_key, nvpair, state):
-    """Omission is not intent: an unrelated edit must not reset the controller's value.
+def test_omitted_boolean_under_replaced_follows_the_withdrawal_contract(
+    parent, profile_key, nvpair, state
+):
+    """Omission under `replaced` / retained `overridden` is a WITHDRAWAL request.
 
-    This matters more for the QoS-stats pair than for anything registered before it. Both are
-    the " no-stats" suffix of a service-policy line, so a value silently reset to false does not
-    remove a line -- it changes one in place, which is exactly the kind of drift nobody notices
-    until statistics quietly come back.
+    THIS EXPECTATION WAS DELIBERATELY CHANGED, and the previous one is stated here rather
+    than deleted. It read:
+
+        "Omission is not intent: an unrelated edit must not reset the controller's value.
+         This matters more for the QoS-stats pair than for anything registered before it.
+         Both are the ' no-stats' suffix of a service-policy line, so a value silently
+         reset to false does not remove a line -- it changes one in place, which is
+         exactly the kind of drift nobody notices until statistics quietly come back."
+
+        assert sent[nvpair] == "true"
+        assert reported == {"DESC": "new"}
+
+    That was the F1 behaviour PR #725 set out to fix: a field could be set and never
+    unset, because omission was read as "no opinion" even while `replaced` claims to
+    describe the whole interface. The concern in that docstring is real, which is why the
+    replacement is NOT "reset everything on omission": only a row carrying a MEASURED
+    `reset_wire` is withdrawn, and a row without one stops the run instead of guessing.
+
+    The `merged` control is untouched and still asserts preservation -- see
+    `test_omitted_boolean_is_preserved_under_merged` below. That is the state to use when
+    omission really does mean "leave it alone".
     """
+    binding = resolve_binding(parent, profile_key)
+    reset = binding.get("reset_wire")
     obj = _compare_obj(
         state, parent, profile_key, nvpair, _OMITTED, "true",
         want_description="new", have_description="old",
     )
     obj.dcnm_intf_compare_want_and_have(state)
     sent = obj.diff_replace[0]["interfaces"][0]["nvPairs"]
-    assert sent[nvpair] == "true"
     reported = obj.changed_dict[0][state][0]["interfaces"][0]["nvPairs"]
-    assert reported == {"DESC": "new"}
+    if reset is None:
+        # No verified reset for this binding and parent. Transport preservation still
+        # applies at this layer; the invocation-wide refusal lives in main() and is
+        # covered by the W2 acceptance suite, not here.
+        assert sent[nvpair] == "true"
+        assert reported == {"DESC": "new"}
+    else:
+        assert sent[nvpair] == reset, (
+            "the withdrawal did not reach the request; omission must transmit the "
+            "registered reset for a row that declares one")
+        assert reported == {"DESC": "new", nvpair: reset}, (
+            "the withdrawal was sent but not reported -- a change the operator cannot see "
+            "in the diff is the defect this contract exists to remove")
+
+
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_PASSTHROUGH, ids=BOOL_IDS)
+def test_omitted_boolean_is_preserved_under_merged(parent, profile_key, nvpair):
+    """The preserved historical control, now stated as its own test.
+
+    `merged` has no withdrawal contract. Omission there means exactly what the previous
+    expectation said it meant everywhere, and nothing in the withdrawal work may change it.
+    """
+    obj = _compare_obj(
+        "merged", parent, profile_key, nvpair, _OMITTED, "true",
+        want_description="new", have_description="old",
+    )
+    obj.dcnm_intf_compare_want_and_have("merged")
+    # An EXISTING interface lands in diff_replace whatever the state -- merging into one
+    # is still a modify. The surrounding tests read the same list for merged.
+    sent = obj.diff_replace[0]["interfaces"][0]["nvPairs"]
+    assert sent[nvpair] == "true", "merged must never withdraw an omitted value"
+    reported = obj.changed_dict[0]["merged"][0]["interfaces"][0]["nvPairs"]
+    assert reported == {"DESC": "new"}, (
+        "merged reported a withdrawal it must not perform: %s" % reported)
 
 
 # ---- HAVE encoding: "" for a boolean the template never defaulted --------------------

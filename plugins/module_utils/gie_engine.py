@@ -443,6 +443,149 @@ def gie_validate_binding_value(
     return value
 
 
+# --------------------------------------------------------------------------- withdrawal
+# Classification of an OMITTED registered binding under `replaced` / retained `overridden`.
+#
+# Two independent questions, deliberately answered by two independent fields:
+#
+#   Q1  does the current value need withdrawing?   -> `default_template`, and `reset_wire`
+#                                                     when the value already equals it
+#   Q2  what do we transmit to withdraw it?        -> `reset_wire`, and only that
+#
+# Conflating them is what produced the contradiction this contract had to fix: the ABSENCE
+# of a reset was being read as "nothing to withdraw", which it never meant. A declared
+# template default classifies state; it does not prove reset transport.
+GIE_WITHDRAW_NONE = "none"                  # already withdrawn, or nothing to withdraw
+GIE_WITHDRAW_RESET = "reset"                # withdraw by transmitting a verified wire value
+GIE_WITHDRAW_UNSUPPORTED = "unsupported"    # withdrawal IS needed, no verified reset exists
+GIE_WITHDRAW_UNCLASSIFIED = "unclassified"  # cannot tell whether withdrawal is needed
+GIE_WITHDRAW_INAPPLICABLE = "inapplicable"  # this controller cannot carry the binding at all
+
+# Parent-QUALIFIED ownership exclusions. Never a bare nvPair name.
+#
+# A name-only rule was measured against this registry and is wrong: the four fabric-owned
+# names have ZERO registered rows on their owning parent -- those bindings were retired --
+# while `OSPF_AUTH_KEY` and `OSPF_AUTH_KEY_ID` carry EIGHT legitimate user-interface rows on
+# int_loopback, int_routed_host, int_subif and int_vlan, four of them no_log. Excluding by
+# name would protect nothing and silently drop exactly the interface authentication this
+# project unblocked.
+GIE_LOOPBACK_OWNER_PARENT = "int_fabric_loopback_11_1"
+GIE_OWNED_BY_OTHER_PATH = frozenset(
+    (GIE_LOOPBACK_OWNER_PARENT, nvpair)
+    for nvpair in (set(GIE_FABRIC_OWNED_LOOPBACK_NVPAIRS) | set(GIE_OSPF_MD_DOMAIN_NVPAIRS))
+)
+
+
+def gie_binding_is_owned_elsewhere(parent_template, parent_nvpair):
+    """True when this exact (parent, nvPair) is managed by a different, dedicated path.
+
+    The pair is the unit. `gie_fabric_owned_carry_forward` keeps its own raw-HAVE contract
+    for those nvPairs on the owning parent, and this step must not touch them there -- nor
+    exclude a same-named binding anywhere else.
+    """
+    return (parent_template, parent_nvpair) in GIE_OWNED_BY_OTHER_PATH
+
+
+def gie_declared_default_wire(binding):
+    """The declared template default in nvPair WIRE form, or None when none is declared.
+
+    Reuses `_to_nvpair_wire`, so a native `False` is compared as "false" -- the string the
+    controller actually returns -- instead of by Python truthiness.
+    """
+    if binding is None or "default_template" not in binding:
+        return None
+    return _to_nvpair_wire(binding["default_template"])
+
+
+def gie_binding_applicable(parent_template, profile_key, ndfc_version):
+    """True when the binding exists on this parent AND the controller version can carry it.
+
+    The SAME applicability contract explicit contribution enforces at
+    ``gie_contribute_nvpairs``: a binding below ``min_ndfc_version`` is not transportable,
+    and an unknown or malformed version fails closed (``gie_version_supported`` returns
+    False). Callers use this to SELECT before classifying, so an inapplicable row is
+    skipped outright -- neither reset nor rejected.
+    """
+    binding = resolve_binding(parent_template, profile_key)
+    if binding is None:
+        return False
+    return gie_version_supported(ndfc_version, binding["min_ndfc_version"])
+
+
+def _have_comparison_wire(have_value):
+    """HAVE in nvPair wire form, FOR COMPARISON ONLY.
+
+    ``gie_validate_binding_value(..., value_source="have")`` accepts more than one spelling
+    of the same controller state -- a boolean arrives as native ``False`` or as the string
+    ``"false"``, an integer as ``100`` or ``"100"`` -- and both are legitimate. Comparing
+    the raw value against a wire string therefore classified two encodings of ONE state
+    differently: ``"false"`` was recognised as the declared baseline while native ``False``
+    became "withdrawal required, no reset known" and aborted the run.
+
+    ``_to_nvpair_wire`` is the established type-aware serialisation and is reused verbatim,
+    so this introduces no second set of rules: bools take their lowercase JSON spelling,
+    strings pass through untouched (``""`` stays ``""`` -- never coerced to a zero or a
+    False), and anything else takes ``str``. It is NOT Python truthiness and it does not
+    launder a malformed value: the caller validates HAVE before classifying, so only
+    already-accepted encodings reach here.
+
+    The normalised form is used for comparison ONLY. Nothing transported is derived from
+    it -- a reset transmits its own declared ``reset_wire``.
+    """
+    return _to_nvpair_wire(have_value)
+
+
+def gie_withdrawal_action(parent_template, profile_key, have_value, ndfc_version):
+    """Classify an omitted binding whose nvPair IS present in authoritative HAVE.
+
+    Returns (action, wire_value). `wire_value` is meaningful only for GIE_WITHDRAW_RESET.
+
+    ``ndfc_version`` is REQUIRED, not optional: withdrawal transports an nvPair exactly as
+    an explicit key does, so it answers to the same applicability boundary. Omitting the
+    argument used to be possible and that is precisely how the boundary was bypassed --
+    an explicit clear was refused below ``min_ndfc_version`` while omitting the same field
+    sent the clear anyway.
+
+    The caller has already established, and this function does NOT re-check: that the key
+    was omitted by the operator, that the nvPair is present in an authoritative HAVE, and
+    that the binding is not owned by another path. Absence from HAVE is the caller's
+    GIE_WITHDRAW_NONE: there is nothing to withdraw and no default may be invented for it.
+    """
+    binding = resolve_binding(parent_template, profile_key)
+    if binding is None:
+        # Not applicable to this parent. Not this step's business.
+        return GIE_WITHDRAW_NONE, None
+
+    if not gie_version_supported(ndfc_version, binding["min_ndfc_version"]):
+        # The controller cannot carry this nvPair at all. Emitting a reset here would
+        # transport what an explicit key is refused, and failing here would reject a run
+        # over a field this controller never had. Neither: it is not in scope.
+        return GIE_WITHDRAW_INAPPLICABLE, None
+
+    have_wire = _have_comparison_wire(have_value)
+
+    reset = binding.get("reset_wire")
+    if reset is not None and have_wire == reset:
+        return GIE_WITHDRAW_NONE, None          # already at its verified reset
+
+    default_wire = gie_declared_default_wire(binding)
+    if default_wire is not None and have_wire == default_wire:
+        return GIE_WITHDRAW_NONE, None          # already at its declared baseline
+
+    if reset is not None:
+        return GIE_WITHDRAW_RESET, reset        # differs, and we know how to withdraw it
+
+    if default_wire is not None:
+        # Differs from a known baseline, so withdrawal IS required -- and no verified reset
+        # exists for this exact binding and parent. Reporting success here would claim a
+        # replacement that did not happen.
+        return GIE_WITHDRAW_UNSUPPORTED, None
+
+    # Nothing packaged says whether this value is the untouched state or a deliberate
+    # choice. Unknown is not converged.
+    return GIE_WITHDRAW_UNCLASSIFIED, None
+
+
 def gie_all_registered_keys():
     """Every public profile key known to the packaged registry, across all parents.
 
