@@ -3343,6 +3343,63 @@ class TestDcnmIntfModule(TestDcnmModule):
                 playbook_deployed_data,
             ]
 
+            if "_eth_overridden_existing_nd42_" in self._testMethodName:
+                # This case reads through the bulk endpoints, so the request
+                # ORDER is a property of the read strategy, not of the scenario.
+                # A positional list silently hands a per-interface policy
+                # payload to the breakout summary GET
+                # (control/policies/switches/<sno>), which the module correctly
+                # refuses as non-authoritative -- and the switch then has no
+                # readable state, so its physical ports drop out of the reset
+                # set. Answer by METHOD + PATH + IDENTITY instead, so the same
+                # scenario is served regardless of how many reads the strategy
+                # issues or in which order.
+                self.run_dcnm_send.side_effect = (
+                    self.build_eth_overridden_router(
+                        bulk=eth_bulk_sal,
+                        have_all=playbook_have_all_data,
+                        per_interface={
+                            "ethernet1/1": eth_1_1_access_intf,
+                            "ethernet1/2": eth_1_2_access_intf,
+                            "ethernet3/2": eth_3_2_access_intf,
+                        },
+                    )
+                )
+
+    def build_eth_overridden_router(self, bulk, have_all, per_interface):
+        """Answer interface reads by method, path and interface identity.
+
+        Returns a dcnm_send replacement for the overridden Ethernet scenario.
+        Mutating methods return the scenario's success response; every GET is
+        matched on its endpoint, and the per-interface endpoint on the ifName it
+        asks for, so a response is never served to a request it does not answer.
+        """
+        empty_ok = {
+            "RETURN_CODE": 200,
+            "MESSAGE": "OK",
+            "METHOD": "GET",
+            "DATA": [],
+        }
+
+        def router(module, method, path, *args, **kwargs):
+            if (method or "").upper() != "GET":
+                return self.playbook_mock_succ_resp
+            if "accessmode" in path:
+                return self.mock_monitor_false_resp
+            if "control/policies/switches" in path:
+                # Valid breakout summary with no breakout_interface policies.
+                return empty_ok
+            if "/interface/detail?" in path:
+                return have_all
+            if "ifName=" in path:
+                ifname = path.split("ifName=")[1].split("&")[0].lower()
+                return per_interface.get(ifname, empty_ok)
+            if "/interface?serialNumber=" in path:
+                return bulk
+            return empty_ok
+
+        return router
+
     # -------------------------- SUBINT-FIXTURES --------------------------
 
     def load_subint_fixtures(self):
