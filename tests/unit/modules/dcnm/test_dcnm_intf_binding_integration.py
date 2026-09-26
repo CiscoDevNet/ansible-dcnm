@@ -62,15 +62,15 @@ ETH_BUILDER_NV = {
 ETH_HAVE_REGISTERED = {
     "GUARD_MODE": "root",            # enum
     "DISABLE_LLDP_TRANSMIT": True,            # boolean
-    "ACL_FILTER": "ACL_FROM_HAVE",   # string
-    "FLOWCONTROL_RECEIVE": "on",     # enum (baseline binding)
+    "aclFilter": "ACL_FROM_HAVE",   # string
+    "flowcontrolReceive": "on",     # enum (baseline binding)
 }
 ETH_KEYMAP = {
     "INTF_NAME": "name", "DESC": "description", "CONF": "cmds",
     "ADMIN_STATE": "admin_state", "SPEED": "speed",
     "BPDUGUARD_ENABLED": "bpdu_guard", "MTU": "mtu",
     "GUARD_MODE": "guard_mode", "DISABLE_LLDP_TRANSMIT": "disable_lldp_transmit",
-    "ACL_FILTER": "acl_filter", "FLOWCONTROL_RECEIVE": "flowcontrol_receive",
+    "aclFilter": "acl_filter", "flowcontrolReceive": "flowcontrol_receive",
 }
 
 
@@ -151,7 +151,7 @@ def test_no_double_injection_on_the_loopback_parent():
     for key, value in HAVE_ONLY_WRITABLE.items():
         assert payload[key] == value, f"{key} must equal the exact HAVE value"
     # The registered-binding path contributes nothing here: none of its nvPairs may appear.
-    for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "ACL_FILTER", "FLOWCONTROL_RECEIVE"):
+    for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "aclFilter", "flowcontrolReceive"):
         assert nvpair not in payload, (
             f"{nvpair} is not registered on {PARENT}; the registered path must not run here"
         )
@@ -276,8 +276,8 @@ def test_generic_carry_forward_does_not_run_outside_merged(state):
 @pytest.mark.parametrize("nvpair,profile_key,value", [
     ("GUARD_MODE", "guard_mode", "root"),
     ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit", True),
-    ("ACL_FILTER", "acl_filter", "ACL_FROM_HAVE"),
-    ("FLOWCONTROL_RECEIVE", "flowcontrol_receive", "on"),
+    ("aclFilter", "acl_filter", "ACL_FROM_HAVE"),
+    ("flowcontrolReceive", "flowcontrol_receive", "on"),
 ])
 def test_registered_binding_is_carried_when_omitted(nvpair, profile_key, value):
     """Omitted explicit input + populated HAVE -> the authoritative value is preserved."""
@@ -335,7 +335,7 @@ def test_absent_have_carries_nothing_and_invents_no_default():
     _run(s)
     payload = _payload_nv(s)
     if payload is not None:
-        for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "ACL_FILTER"):
+        for nvpair in ("GUARD_MODE", "DISABLE_LLDP_TRANSMIT", "aclFilter"):
             assert nvpair not in payload, (
                 f"{nvpair} absent from HAVE must not be invented"
             )

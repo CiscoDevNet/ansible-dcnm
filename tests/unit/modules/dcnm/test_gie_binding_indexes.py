@@ -298,7 +298,7 @@ PROFILE = {"enable_ospf": True, "ospf_cost": 100}
 
 def _exact_lookups():
     gie_binding_table.resolve_binding(ROUTED, "ospf_cost")
-    gie_binding_table.resolve_by_nvpair(ROUTED, "OSPF_COST")
+    gie_binding_table.resolve_by_nvpair(ROUTED, "ospfCost")
     gie_binding_table.resolve_binding("no_such_parent", "ospf_cost")
     gie_binding_table.resolve_binding(ROUTED, "no_such_profile_key")
 

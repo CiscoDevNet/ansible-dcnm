@@ -44,23 +44,23 @@ COMMITTED_BINDINGS = {
     # still preserves everything the fabric manages.
 
     # Host ethernet and port-channel parents, passthrough.
-    ("int_access_host", "FLOWCONTROL_RECEIVE"): "flowcontrol_receive",
-    ("int_trunk_host", "FLOWCONTROL_RECEIVE"): "flowcontrol_receive",
-    ("int_access_host", "FLOWCONTROL_SEND"): "flowcontrol_send",
-    ("int_trunk_host", "FLOWCONTROL_SEND"): "flowcontrol_send",
+    ("int_access_host", "flowcontrolReceive"): "flowcontrol_receive",
+    ("int_trunk_host", "flowcontrolReceive"): "flowcontrol_receive",
+    ("int_access_host", "flowcontrolSend"): "flowcontrol_send",
+    ("int_trunk_host", "flowcontrolSend"): "flowcontrol_send",
 
     ("int_trunk_host", "GUARD_MODE"): "guard_mode",
     ("int_port_channel_trunk_host", "GUARD_MODE"): "guard_mode",
 
 
-    ("int_access_host", "ACL_FILTER"): "acl_filter",
-    ("int_trunk_host", "ACL_FILTER"): "acl_filter",
-    ("int_port_channel_access_host", "ACL_FILTER"): "acl_filter",
-    ("int_port_channel_trunk_host", "ACL_FILTER"): "acl_filter",
-    ("int_port_channel_dot1q_tunnel_host", "ACL_FILTER"): "acl_filter",
+    ("int_access_host", "aclFilter"): "acl_filter",
+    ("int_trunk_host", "aclFilter"): "acl_filter",
+    ("int_port_channel_access_host", "aclFilter"): "acl_filter",
+    ("int_port_channel_trunk_host", "aclFilter"): "acl_filter",
+    ("int_port_channel_dot1q_tunnel_host", "aclFilter"): "acl_filter",
 
-    ("int_access_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
-    ("int_trunk_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
+    ("int_access_host", "spanningTreePortType"): "spanning_tree_port_type",
+    ("int_trunk_host", "spanningTreePortType"): "spanning_tree_port_type",
 
     ("int_access_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
     ("int_trunk_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
@@ -74,9 +74,9 @@ COMMITTED_BINDINGS = {
     # port-channel parents declare them too. An unregistered binding does not fail -- the
     # module answers "not supported on this interface", which is false: the template declares
     # it, the registry did not.
-    ("int_port_channel_access_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
-    ("int_port_channel_trunk_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
-    ("int_port_channel_dot1q_tunnel_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
+    ("int_port_channel_access_host", "spanningTreePortType"): "spanning_tree_port_type",
+    ("int_port_channel_trunk_host", "spanningTreePortType"): "spanning_tree_port_type",
+    ("int_port_channel_dot1q_tunnel_host", "spanningTreePortType"): "spanning_tree_port_type",
 
 
     ("int_port_channel_access_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
@@ -101,12 +101,12 @@ COMMITTED_BINDINGS = {
     #
     # Measured, not inferred: writing GUARD_MODE=root into the vpc55 parent's nvPairs produced
     # `spanning-tree guard root` on both peers. See registry_slice_0b_15.yaml.
-    ("int_vpc_trunk_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
-    ("int_vpc_access_host", "SPANNING_TREE_PORT_TYPE"): "spanning_tree_port_type",
+    ("int_vpc_trunk_host", "spanningTreePortType"): "spanning_tree_port_type",
+    ("int_vpc_access_host", "spanningTreePortType"): "spanning_tree_port_type",
 
 
-    ("int_vpc_trunk_host", "ACL_FILTER"): "acl_filter",
-    ("int_vpc_access_host", "ACL_FILTER"): "acl_filter",
+    ("int_vpc_trunk_host", "aclFilter"): "acl_filter",
+    ("int_vpc_access_host", "aclFilter"): "acl_filter",
 
     # trunk only: int_vpc_access_host does not declare GUARD_MODE.
     ("int_vpc_trunk_host", "GUARD_MODE"): "guard_mode",
@@ -139,7 +139,7 @@ COMMITTED_BINDINGS = {
     # It goes in as one lot across the three parents, with its own prof_spec work and its own
     # live run. The generator enforces this: it rejects a row that claims a committed public
     # profile_key from an uncommitted parent rather than skipping it silently.
-    ("int_routed_host", "IPV4_ACL_IN"): "ipv4_acl_in",
+    ("int_routed_host", "ipv4AclIn"): "ipv4_acl_in",
     # DISABLE_LLDP was retired: the 2026-09-14 release removes it from all eight parents
     # and splits it into two independent fields. This is not a rename: the old field disabled
     # both directions together; these can disable either direction. See registry_slice_0b_17.
@@ -172,14 +172,14 @@ COMMITTED_BINDINGS = {
     # OSPF_COST is the value field under test, with unambiguous CLI and no secret.
     # The remaining OSPF fields stay out until this slice is measured on hardware.
     ("int_routed_host", "ENABLE_OSPF"): "enable_ospf",
-    ("int_routed_host", "OSPF_TAG"): "ospf_tag",
+    ("int_routed_host", "ospfTag"): "ospf_tag",
     ("int_routed_host", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
     ("int_routed_host", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
     ("int_routed_host", "OSPF_AUTH_KEY"): "ospf_auth_key",
-    ("int_routed_host", "OSPF_AUTHENTICATION_KEY_TYPE"): "ospf_authentication_key_type",
-    ("int_routed_host", "OSPF_AUTHENTICATION_KEY"): "ospf_authentication_key",
+    ("int_routed_host", "ospfAuthenticationKeyType"): "ospf_authentication_key_type",
+    ("int_routed_host", "ospfAuthenticationKey"): "ospf_authentication_key",
     ("int_routed_host", "OSPF_AREA_ID"): "ospf_area_id",
-    ("int_routed_host", "OSPF_COST"): "ospf_cost",
+    ("int_routed_host", "ospfCost"): "ospf_cost",
 
     # Lot 2: the nine non-authentication OSPF fields on the same parent. All gated by
     # ENABLE_OSPF, all IsMandatory=false, each with its own child template -- so they are
@@ -192,12 +192,12 @@ COMMITTED_BINDINGS = {
     # The five authentication fields are deliberately NOT here: they carry or gate secrets, and
     # three already exist as child_pti on int_fabric_loopback_11_1. Registering the same nvPair
     # on a second parent is a per-(parent, nvpair) mechanism decision, not a copy.
-    ("int_routed_host", "OSPF_MTU_IGNORE"): "ospf_mtu_ignore",
-    ("int_routed_host", "OSPF_SHUTDOWN"): "ospf_shutdown",
-    ("int_routed_host", "OSPF_HELLO_INTERVAL"): "ospf_hello_interval",
-    ("int_routed_host", "OSPF_DEAD_INTERVAL"): "ospf_dead_interval",
-    ("int_routed_host", "OSPF_TRANSMIT_DELAY"): "ospf_transmit_delay",
-    ("int_routed_host", "OSPF_PRIORITY"): "ospf_priority",
+    ("int_routed_host", "ospfMtuIgnore"): "ospf_mtu_ignore",
+    ("int_routed_host", "ospfShutdown"): "ospf_shutdown",
+    ("int_routed_host", "ospfHelloInterval"): "ospf_hello_interval",
+    ("int_routed_host", "ospfDeadInterval"): "ospf_dead_interval",
+    ("int_routed_host", "ospfTransmitDelay"): "ospf_transmit_delay",
+    ("int_routed_host", "ospfPriority"): "ospf_priority",
     ("int_routed_host", "OSPF_PASSIVE_MODE"): "ospf_passive_mode",
     ("int_routed_host", "OSPF_NETWORK_TYPE"): "ospf_network_type",
     ("int_routed_host", "OSPF_BFD_MODE"): "ospf_bfd_mode",
@@ -219,114 +219,114 @@ COMMITTED_BINDINGS = {
     # the routed parent would have registered nvPairs that do not exist on the other two.
     ("int_subif", "ENABLE_OSPF"): "enable_ospf",
     ("int_subif", "OSPF_AREA_ID"): "ospf_area_id",
-    ("int_subif", "OSPF_BFD"): "ospf_bfd",
-    ("int_subif", "OSPF_COST"): "ospf_cost",
-    ("int_subif", "OSPF_DEAD_INTERVAL"): "ospf_dead_interval",
-    ("int_subif", "OSPF_HELLO_INTERVAL"): "ospf_hello_interval",
-    ("int_subif", "OSPF_MTU_IGNORE"): "ospf_mtu_ignore",
+    ("int_subif", "ospfBfd"): "ospf_bfd",
+    ("int_subif", "ospfCost"): "ospf_cost",
+    ("int_subif", "ospfDeadInterval"): "ospf_dead_interval",
+    ("int_subif", "ospfHelloInterval"): "ospf_hello_interval",
+    ("int_subif", "ospfMtuIgnore"): "ospf_mtu_ignore",
     ("int_subif", "OSPF_NETWORK_TYPE"): "ospf_network_type",
-    ("int_subif", "OSPF_PASSIVE_INTERFACE"): "ospf_passive_interface",
-    ("int_subif", "OSPF_PRIORITY"): "ospf_priority",
-    ("int_subif", "OSPF_RETRANSMIT_INTERVAL"): "ospf_retransmit_interval",
-    ("int_subif", "OSPF_SHUTDOWN"): "ospf_shutdown",
-    ("int_subif", "OSPF_TAG"): "ospf_tag",
+    ("int_subif", "ospfPassiveInterface"): "ospf_passive_interface",
+    ("int_subif", "ospfPriority"): "ospf_priority",
+    ("int_subif", "ospfRetransmitInterval"): "ospf_retransmit_interval",
+    ("int_subif", "ospfShutdown"): "ospf_shutdown",
+    ("int_subif", "ospfTag"): "ospf_tag",
     ("int_subif", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
     ("int_subif", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
     ("int_subif", "OSPF_AUTH_KEY"): "ospf_auth_key",
-    ("int_subif", "OSPF_AUTHENTICATION_KEY_TYPE"): "ospf_authentication_key_type",
-    ("int_subif", "OSPF_AUTHENTICATION_KEY"): "ospf_authentication_key",
-    ("int_subif", "OSPF_TRANSMIT_DELAY"): "ospf_transmit_delay",
+    ("int_subif", "ospfAuthenticationKeyType"): "ospf_authentication_key_type",
+    ("int_subif", "ospfAuthenticationKey"): "ospf_authentication_key",
+    ("int_subif", "ospfTransmitDelay"): "ospf_transmit_delay",
     ("int_vlan", "ENABLE_OSPF"): "enable_ospf",
     ("int_vlan", "OSPF_AREA_ID"): "ospf_area_id",
     ("int_vlan", "OSPF_BFD_MODE"): "ospf_bfd_mode",
-    ("int_vlan", "OSPF_COST"): "ospf_cost",
-    ("int_vlan", "OSPF_DEAD_INTERVAL"): "ospf_dead_interval",
-    ("int_vlan", "OSPF_HELLO_INTERVAL"): "ospf_hello_interval",
-    ("int_vlan", "OSPF_MTU_IGNORE"): "ospf_mtu_ignore",
+    ("int_vlan", "ospfCost"): "ospf_cost",
+    ("int_vlan", "ospfDeadInterval"): "ospf_dead_interval",
+    ("int_vlan", "ospfHelloInterval"): "ospf_hello_interval",
+    ("int_vlan", "ospfMtuIgnore"): "ospf_mtu_ignore",
     ("int_vlan", "OSPF_NETWORK_TYPE"): "ospf_network_type",
     ("int_vlan", "OSPF_PASSIVE_MODE"): "ospf_passive_mode",
-    ("int_vlan", "OSPF_PRIORITY"): "ospf_priority",
-    ("int_vlan", "OSPF_RETRANSMIT_INTERVAL"): "ospf_retransmit_interval",
-    ("int_vlan", "OSPF_SHUTDOWN"): "ospf_shutdown",
-    ("int_vlan", "OSPF_TAG"): "ospf_tag",
+    ("int_vlan", "ospfPriority"): "ospf_priority",
+    ("int_vlan", "ospfRetransmitInterval"): "ospf_retransmit_interval",
+    ("int_vlan", "ospfShutdown"): "ospf_shutdown",
+    ("int_vlan", "ospfTag"): "ospf_tag",
     ("int_vlan", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
     ("int_vlan", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
     ("int_vlan", "OSPF_AUTH_KEY"): "ospf_auth_key",
-    ("int_vlan", "OSPF_AUTHENTICATION_KEY_TYPE"): "ospf_authentication_key_type",
-    ("int_vlan", "OSPF_AUTHENTICATION_KEY"): "ospf_authentication_key",
-    ("int_vlan", "OSPF_TRANSMIT_DELAY"): "ospf_transmit_delay",
+    ("int_vlan", "ospfAuthenticationKeyType"): "ospf_authentication_key_type",
+    ("int_vlan", "ospfAuthenticationKey"): "ospf_authentication_key",
+    ("int_vlan", "ospfTransmitDelay"): "ospf_transmit_delay",
 
     # --- EIGRP on int_routed_host (slice 0b_22) ---
-    ("int_routed_host", "EIGRP_PROCESS_TAG"): "eigrp_process_tag",
+    ("int_routed_host", "eigrpProcessTag"): "eigrp_process_tag",
     ("int_routed_host", "ENABLE_EIGRP_ROUTING"): "enable_eigrp_routing",
     ("int_routed_host", "ENABLE_EIGRP_IPV6_ROUTING"): "enable_eigrp_ipv6_routing",
-    ("int_routed_host", "EIGRP_IPV4_PASSIVE"): "eigrp_ipv4_passive",
-    ("int_routed_host", "EIGRP_NO_IPV4_PASSIVE"): "eigrp_no_ipv4_passive",
-    ("int_routed_host", "EIGRP_NO_IPV6_PASSIVE"): "eigrp_no_ipv6_passive",
+    ("int_routed_host", "eigrpIpv4Passive"): "eigrp_ipv4_passive",
+    ("int_routed_host", "eigrpNoIpv4Passive"): "eigrp_no_ipv4_passive",
+    ("int_routed_host", "eigrpNoIpv6Passive"): "eigrp_no_ipv6_passive",
     ("int_routed_host", "ENABLE_EIGRP_SHUTDOWN"): "enable_eigrp_shutdown",
     ("int_routed_host", "ENABLE_EIGRP_BFD"): "enable_eigrp_bfd",
     ("int_routed_host", "DISABLE_EIGRP_BFD"): "disable_eigrp_bfd",
-    ("int_routed_host", "EIGRP_IPV4_DISTRIBUTE_LIST_PREFIX_LIST"): "eigrp_ipv4_distribute_list_prefix_list",
-    ("int_routed_host", "EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION"): "eigrp_ipv4_distribute_list_direction",
-    ("int_routed_host", "EIGRP_IPV6_DISTRIBUTE_LIST_PREFIX_LIST"): "eigrp_ipv6_distribute_list_prefix_list",
-    ("int_routed_host", "EIGRP_IPV6_DISTRIBUTE_LIST_DIRECTION"): "eigrp_ipv6_distribute_list_direction",
+    ("int_routed_host", "eigrpIpv4DistributeListPrefixList"): "eigrp_ipv4_distribute_list_prefix_list",
+    ("int_routed_host", "eigrpIpv4DistributeListDirection"): "eigrp_ipv4_distribute_list_direction",
+    ("int_routed_host", "eigrpIpv6DistributeListPrefixList"): "eigrp_ipv6_distribute_list_prefix_list",
+    ("int_routed_host", "eigrpIpv6DistributeListDirection"): "eigrp_ipv6_distribute_list_direction",
     # --- EIGRP on int_subif (slice 0b_22) ---
-    ("int_subif", "EIGRP_PROCESS_TAG"): "eigrp_process_tag",
+    ("int_subif", "eigrpProcessTag"): "eigrp_process_tag",
     ("int_subif", "ENABLE_EIGRP_ROUTING"): "enable_eigrp_routing",
     ("int_subif", "ENABLE_EIGRP_IPV6_ROUTING"): "enable_eigrp_ipv6_routing",
-    ("int_subif", "EIGRP_IPV4_PASSIVE"): "eigrp_ipv4_passive",
-    ("int_subif", "EIGRP_NO_IPV4_PASSIVE"): "eigrp_no_ipv4_passive",
-    ("int_subif", "EIGRP_NO_IPV6_PASSIVE"): "eigrp_no_ipv6_passive",
+    ("int_subif", "eigrpIpv4Passive"): "eigrp_ipv4_passive",
+    ("int_subif", "eigrpNoIpv4Passive"): "eigrp_no_ipv4_passive",
+    ("int_subif", "eigrpNoIpv6Passive"): "eigrp_no_ipv6_passive",
     ("int_subif", "ENABLE_EIGRP_SHUTDOWN"): "enable_eigrp_shutdown",
     ("int_subif", "ENABLE_EIGRP_BFD"): "enable_eigrp_bfd",
     ("int_subif", "DISABLE_EIGRP_BFD"): "disable_eigrp_bfd",
-    ("int_subif", "EIGRP_IPV4_DISTRIBUTE_LIST_PREFIX_LIST"): "eigrp_ipv4_distribute_list_prefix_list",
-    ("int_subif", "EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION"): "eigrp_ipv4_distribute_list_direction",
-    ("int_subif", "EIGRP_IPV6_DISTRIBUTE_LIST_PREFIX_LIST"): "eigrp_ipv6_distribute_list_prefix_list",
-    ("int_subif", "EIGRP_IPV6_DISTRIBUTE_LIST_DIRECTION"): "eigrp_ipv6_distribute_list_direction",
+    ("int_subif", "eigrpIpv4DistributeListPrefixList"): "eigrp_ipv4_distribute_list_prefix_list",
+    ("int_subif", "eigrpIpv4DistributeListDirection"): "eigrp_ipv4_distribute_list_direction",
+    ("int_subif", "eigrpIpv6DistributeListPrefixList"): "eigrp_ipv6_distribute_list_prefix_list",
+    ("int_subif", "eigrpIpv6DistributeListDirection"): "eigrp_ipv6_distribute_list_direction",
     # --- EIGRP on int_vlan (slice 0b_22) ---
-    ("int_vlan", "EIGRP_PROCESS_TAG"): "eigrp_process_tag",
+    ("int_vlan", "eigrpProcessTag"): "eigrp_process_tag",
     ("int_vlan", "ENABLE_EIGRP_ROUTING"): "enable_eigrp_routing",
     ("int_vlan", "ENABLE_EIGRP_IPV6_ROUTING"): "enable_eigrp_ipv6_routing",
-    ("int_vlan", "EIGRP_IPV4_PASSIVE"): "eigrp_ipv4_passive",
-    ("int_vlan", "EIGRP_NO_IPV4_PASSIVE"): "eigrp_no_ipv4_passive",
-    ("int_vlan", "EIGRP_NO_IPV6_PASSIVE"): "eigrp_no_ipv6_passive",
+    ("int_vlan", "eigrpIpv4Passive"): "eigrp_ipv4_passive",
+    ("int_vlan", "eigrpNoIpv4Passive"): "eigrp_no_ipv4_passive",
+    ("int_vlan", "eigrpNoIpv6Passive"): "eigrp_no_ipv6_passive",
     ("int_vlan", "ENABLE_EIGRP_SHUTDOWN"): "enable_eigrp_shutdown",
     ("int_vlan", "ENABLE_EIGRP_BFD"): "enable_eigrp_bfd",
     ("int_vlan", "DISABLE_EIGRP_BFD"): "disable_eigrp_bfd",
-    ("int_vlan", "EIGRP_IPV4_DISTRIBUTE_LIST_PREFIX_LIST"): "eigrp_ipv4_distribute_list_prefix_list",
-    ("int_vlan", "EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION"): "eigrp_ipv4_distribute_list_direction",
-    ("int_vlan", "EIGRP_IPV6_DISTRIBUTE_LIST_PREFIX_LIST"): "eigrp_ipv6_distribute_list_prefix_list",
-    ("int_vlan", "EIGRP_IPV6_DISTRIBUTE_LIST_DIRECTION"): "eigrp_ipv6_distribute_list_direction",
+    ("int_vlan", "eigrpIpv4DistributeListPrefixList"): "eigrp_ipv4_distribute_list_prefix_list",
+    ("int_vlan", "eigrpIpv4DistributeListDirection"): "eigrp_ipv4_distribute_list_direction",
+    ("int_vlan", "eigrpIpv6DistributeListPrefixList"): "eigrp_ipv6_distribute_list_prefix_list",
+    ("int_vlan", "eigrpIpv6DistributeListDirection"): "eigrp_ipv6_distribute_list_direction",
     # --- OSPF on int_loopback (slice 0b_23) ---
     ("int_loopback", "ENABLE_OSPF"): "enable_ospf",
-    ("int_loopback", "OSPF_TAG"): "ospf_tag",
+    ("int_loopback", "ospfTag"): "ospf_tag",
     ("int_loopback", "OSPF_AREA_ID"): "ospf_area_id",
-    ("int_loopback", "OSPF_ADVERTISE_SUBNET"): "ospf_advertise_subnet",
-    ("int_loopback", "OSPF_COST"): "ospf_cost",
-    ("int_loopback", "OSPF_HELLO_INTERVAL"): "ospf_hello_interval",
-    ("int_loopback", "OSPF_DEAD_INTERVAL"): "ospf_dead_interval",
-    ("int_loopback", "OSPF_RETRANSMIT_INTERVAL"): "ospf_retransmit_interval",
-    ("int_loopback", "OSPF_TRANSMIT_DELAY"): "ospf_transmit_delay",
-    ("int_loopback", "OSPF_PRIORITY"): "ospf_priority",
-    ("int_loopback", "OSPF_MTU_IGNORE"): "ospf_mtu_ignore",
-    ("int_loopback", "OSPF_SHUTDOWN"): "ospf_shutdown",
+    ("int_loopback", "ospfAdvertiseSubnet"): "ospf_advertise_subnet",
+    ("int_loopback", "ospfCost"): "ospf_cost",
+    ("int_loopback", "ospfHelloInterval"): "ospf_hello_interval",
+    ("int_loopback", "ospfDeadInterval"): "ospf_dead_interval",
+    ("int_loopback", "ospfRetransmitInterval"): "ospf_retransmit_interval",
+    ("int_loopback", "ospfTransmitDelay"): "ospf_transmit_delay",
+    ("int_loopback", "ospfPriority"): "ospf_priority",
+    ("int_loopback", "ospfMtuIgnore"): "ospf_mtu_ignore",
+    ("int_loopback", "ospfShutdown"): "ospf_shutdown",
     ("int_loopback", "OSPF_NETWORK_TYPE"): "ospf_network_type",
-    ("int_loopback", "OSPF_BFD"): "ospf_bfd",
+    ("int_loopback", "ospfBfd"): "ospf_bfd",
     ("int_loopback", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
     ("int_loopback", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
     ("int_loopback", "OSPF_AUTH_KEY"): "ospf_auth_key",
-    ("int_loopback", "OSPF_AUTHENTICATION_KEY_TYPE"): "ospf_authentication_key_type",
-    ("int_loopback", "OSPF_AUTHENTICATION_KEY"): "ospf_authentication_key",
+    ("int_loopback", "ospfAuthenticationKeyType"): "ospf_authentication_key_type",
+    ("int_loopback", "ospfAuthenticationKey"): "ospf_authentication_key",
     # --- BFD on int_subif and int_vlan (slice 0b_24) ---
     ("int_subif", "ENABLE_BFD_INTERVAL"): "enable_bfd_interval",
-    ("int_subif", "BFD_TX_INTERVAL"): "bfd_tx_interval",
-    ("int_subif", "BFD_MIN_RX_INTERVAL"): "bfd_min_rx_interval",
-    ("int_subif", "BFD_MULTIPLIER"): "bfd_multiplier",
+    ("int_subif", "bfdTxInterval"): "bfd_tx_interval",
+    ("int_subif", "bfdMinRxInterval"): "bfd_min_rx_interval",
+    ("int_subif", "bfdMultiplier"): "bfd_multiplier",
     ("int_vlan", "ENABLE_BFD_INTERVAL"): "enable_bfd_interval",
-    ("int_vlan", "BFD_TX_INTERVAL"): "bfd_tx_interval",
-    ("int_vlan", "BFD_MIN_RX_INTERVAL"): "bfd_min_rx_interval",
-    ("int_vlan", "BFD_MULTIPLIER"): "bfd_multiplier",
+    ("int_vlan", "bfdTxInterval"): "bfd_tx_interval",
+    ("int_vlan", "bfdMinRxInterval"): "bfd_min_rx_interval",
+    ("int_vlan", "bfdMultiplier"): "bfd_multiplier",
     ("int_vlan", "DISABLE_BFD_ECHO"): "disable_bfd_echo",
     # --- EIGRP on int_loopback (slice 0b_25) ---
     #
@@ -340,11 +340,11 @@ COMMITTED_BINDINGS = {
     # Every one of the seven CLI commands these eight produce was measured as ACCEPTED on FAB4
     # (nxos64-cs.10.6.2.F.bin) through NDFC before this entry was added, including the two that
     # needed `feature bfd` and the two `no ...` forms. See the phase34 FAB4 EIGRP evidence.
-    ("int_loopback", "EIGRP_PROCESS_TAG"): "eigrp_process_tag",
+    ("int_loopback", "eigrpProcessTag"): "eigrp_process_tag",
     ("int_loopback", "ENABLE_EIGRP_ROUTING"): "enable_eigrp_routing",
-    ("int_loopback", "EIGRP_IPV4_PASSIVE"): "eigrp_ipv4_passive",
-    ("int_loopback", "EIGRP_NO_IPV4_PASSIVE"): "eigrp_no_ipv4_passive",
-    ("int_loopback", "EIGRP_NO_IPV6_PASSIVE"): "eigrp_no_ipv6_passive",
+    ("int_loopback", "eigrpIpv4Passive"): "eigrp_ipv4_passive",
+    ("int_loopback", "eigrpNoIpv4Passive"): "eigrp_no_ipv4_passive",
+    ("int_loopback", "eigrpNoIpv6Passive"): "eigrp_no_ipv6_passive",
     ("int_loopback", "ENABLE_EIGRP_SHUTDOWN"): "enable_eigrp_shutdown",
     ("int_loopback", "ENABLE_EIGRP_BFD"): "enable_eigrp_bfd",
     ("int_loopback", "DISABLE_EIGRP_BFD"): "disable_eigrp_bfd",
@@ -359,9 +359,9 @@ COMMITTED_BINDINGS = {
     # dependency chain itself (six rules around :782-:830), including `lower cannot be greater
     # than upper` -- a relationship BETWEEN two fields that no per-field min/max can express and
     # the registry cannot declare. Not duplicated here; NDFC fails loudly on it.
-    ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER"): "hsrp_priority_forwarding_threshold_lower",
-    ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_UPPER"): "hsrp_priority_forwarding_threshold_upper",
-    ("int_vlan", "HSRP_PREEMPT_DELAY_MINIMUM"): "hsrp_preempt_delay_minimum",
+    ("int_vlan", "hsrpPriorityForwardingThresholdLower"): "hsrp_priority_forwarding_threshold_lower",
+    ("int_vlan", "hsrpPriorityForwardingThresholdUpper"): "hsrp_priority_forwarding_threshold_upper",
+    ("int_vlan", "hsrpPreemptDelayMinimum"): "hsrp_preempt_delay_minimum",
     # --- HSRP IPv6 on int_vlan (slice 0b_27) ---
     #
     # Four rows for what was asked as one. HSRP_GROUPv6 cannot produce a line on its own: the
@@ -423,13 +423,13 @@ COMMITTED_BINDINGS = {
     # routed_interface_redirects_disable child tests each value independently.
     ("int_routed_host", "DISABLE_IPV4_REDIRECTS"): "disable_ipv4_redirects",
     ("int_routed_host", "DISABLE_IPV6_REDIRECTS"): "disable_ipv6_redirects",
-    ("int_routed_host", "IPV6_ND_SUPPRESS_RA"): "ipv6_nd_suppress_ra",
+    ("int_routed_host", "ipv6NdSuppressRa"): "ipv6_nd_suppress_ra",
     ("int_subif", "DISABLE_IPV4_REDIRECTS"): "disable_ipv4_redirects",
     ("int_subif", "DISABLE_IPV6_REDIRECTS"): "disable_ipv6_redirects",
-    ("int_subif", "IPV6_ND_SUPPRESS_RA"): "ipv6_nd_suppress_ra",
+    ("int_subif", "ipv6NdSuppressRa"): "ipv6_nd_suppress_ra",
     ("int_vlan", "DISABLE_IPV4_REDIRECTS"): "disable_ipv4_redirects",
     ("int_vlan", "DISABLE_IPV6_REDIRECTS"): "disable_ipv6_redirects",
-    ("int_vlan", "IPV6_ND_SUPPRESS_RA"): "ipv6_nd_suppress_ra",
+    ("int_vlan", "ipv6NdSuppressRa"): "ipv6_nd_suppress_ra",
     # --- Dampening on int_routed_host (slice 0b_6) ---
     #
     # Seven, on this parent only: int_subif, int_vlan and int_loopback declare none.
@@ -453,12 +453,12 @@ COMMITTED_BINDINGS = {
     # One rule links three registered fields ("reuse, suppress and max suppress must
     # be configured together"), unlike earlier batches. None of those rules is duplicated here.
     ("int_routed_host", "ENABLE_DAMPENING"): "enable_dampening",
-    ("int_routed_host", "DAMPENING_HALF_LIFE"): "dampening_half_life",
-    ("int_routed_host", "DAMPENING_REUSE"): "dampening_reuse",
-    ("int_routed_host", "DAMPENING_SUPPRESS"): "dampening_suppress",
-    ("int_routed_host", "DAMPENING_MAX_SUPPRESS"): "dampening_max_suppress",
-    ("int_routed_host", "DAMPENING_RESTART"): "dampening_restart",
-    ("int_routed_host", "DAMPENING_RESTART_PENALTY"): "dampening_restart_penalty",
+    ("int_routed_host", "dampeningHalfLife"): "dampening_half_life",
+    ("int_routed_host", "dampeningReuse"): "dampening_reuse",
+    ("int_routed_host", "dampeningSuppress"): "dampening_suppress",
+    ("int_routed_host", "dampeningMaxSuppress"): "dampening_max_suppress",
+    ("int_routed_host", "dampeningRestart"): "dampening_restart",
+    ("int_routed_host", "dampeningRestartPenalty"): "dampening_restart_penalty",
     # --- ARP_TIMEOUT on the three overlay parents (slice 0b_30) ---
     #
     # The simplest registry case: one field, one child, one CLI line
@@ -477,9 +477,9 @@ COMMITTED_BINDINGS = {
     # emission is gated by `if arpTimeout != ""`. Sending "" does not request removal of an
     # existing child. This matches the residue left on a physical port during EIGRP testing,
     # so the three rows retain removal_semantics: unresolved until measured live.
-    ("int_routed_host", "ARP_TIMEOUT"): "arp_timeout",
-    ("int_subif", "ARP_TIMEOUT"): "arp_timeout",
-    ("int_vlan", "ARP_TIMEOUT"): "arp_timeout",
+    ("int_routed_host", "arpTimeout"): "arp_timeout",
+    ("int_subif", "arpTimeout"): "arp_timeout",
+    ("int_vlan", "arpTimeout"): "arp_timeout",
     # --- PIM, across all four parents (slice 0b_31) ---
     #
     # Eight rows with an uneven distribution; the distribution is the assertion:
@@ -531,9 +531,9 @@ COMMITTED_BINDINGS = {
     # Do not register ipv6_addr or ipv6_mask_len: they are native SVI arg-spec fields
     # (24 and 13 uses). Registering them would break int_subif and int_routed_host through
     # the global guard, as happened with ipv6_addr on 2026-09-20.
-    ("int_routed_host", "IPv6_LINK_LOCAL"): "ipv6_link_local",
-    ("int_subif", "IPv6_LINK_LOCAL"): "ipv6_link_local",
-    ("int_vlan", "IPv6_LINK_LOCAL"): "ipv6_link_local",
+    ("int_routed_host", "ipv6LinkLocal"): "ipv6_link_local",
+    ("int_subif", "ipv6LinkLocal"): "ipv6_link_local",
+    ("int_vlan", "ipv6LinkLocal"): "ipv6_link_local",
     # --- MACSEC on int_routed_host (slice 0b_33) ---
     #
     # Four rows, only on this parent: it is the only one that declares them. IsShow gates
@@ -559,9 +559,9 @@ COMMITTED_BINDINGS = {
     # but an unknown keychain is accepted and applied, leaving a dangling reference without
     # a warning. See phase44.
     ("int_routed_host", "ENABLE_MACSEC_INTERFACE_POLICY"): "enable_macsec_interface_policy",
-    ("int_routed_host", "MACSEC_KEY_CHAIN_NAME"): "macsec_key_chain_name",
-    ("int_routed_host", "MACSEC_POLICY_NAME"): "macsec_policy_name",
-    ("int_routed_host", "MACSEC_FALLBACK_KEY_CHAIN_NAME"): "macsec_fallback_key_chain_name",
+    ("int_routed_host", "macsecKeyChainName"): "macsec_key_chain_name",
+    ("int_routed_host", "macsecPolicyName"): "macsec_policy_name",
+    ("int_routed_host", "macsecFallbackKeyChainName"): "macsec_fallback_key_chain_name",
     # --- Batch 2: three unrelated fields on two parents (slice 0b_34) ---
     #
     # IPV4_ACL_IN on int_vlan reuses the public key already present on int_routed_host.
@@ -570,13 +570,13 @@ COMMITTED_BINDINGS = {
     # {"IPV4_ACL": ipv4AclIn} to the child (int_vlan:1641). Use the parent's spelling.
     # Verification also needs care: NDFC lowercases the ACL name, while NX-OS `include`
     # is case-sensitive. Searching for the original spelling may return nothing.
-    ("int_vlan", "IPV4_ACL_IN"): "ipv4_acl_in",
+    ("int_vlan", "ipv4AclIn"): "ipv4_acl_in",
     # PRIVATE_VLAN_MAPPING is `integerRange` in the template, another type absent from
     # _TYPE_TO_VALIDATOR after PIM's `long` and link-local's `ipV6Address`. Register `string`,
     # without copying numeric bounds: the value is a list or range ("3194,3196" / "3194-3196",
     # according to Description). NDFC applies 1..4094 to each VLAN ID. Adding min/max here
     # would compare a string against an integer.
-    ("int_vlan", "PRIVATE_VLAN_MAPPING"): "private_vlan_mapping",
+    ("int_vlan", "privateVlanMapping"): "private_vlan_mapping",
     # ENABLE_VPC_PEER_LINK emits two lines: `vpc peer-link` and
     # `spanning-tree port type network`. It takes precedence over the BPDU guard branch
     # (:653-655). This parent also declares the registered SPANNING_TREE_PORT_TYPE field,

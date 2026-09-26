@@ -42,8 +42,8 @@ VPC_ACCESS = "int_vpc_access_host"
 
 # Baseline rows. These three and their behaviour must not change.
 BASELINE_ROWS = {
-    (ACCESS, "FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
-    (TRUNK, "FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
+    (ACCESS, "flowcontrolReceive", "flowcontrol_receive"),
+    (TRUNK, "flowcontrolReceive", "flowcontrol_receive"),
 }
 # Simple passthrough rows.
 PASSTHROUGH_ROWS = {
@@ -53,26 +53,26 @@ PASSTHROUGH_ROWS = {
     (ACCESS, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
     (TRUNK, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
     (TRUNK, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-    (ACCESS, "ACL_FILTER", "acl_filter"),
-    (TRUNK, "ACL_FILTER", "acl_filter"),
-    (PC_ACCESS, "ACL_FILTER", "acl_filter"),
-    (PC_TRUNK, "ACL_FILTER", "acl_filter"),
-    (PC_DOT1Q, "ACL_FILTER", "acl_filter"),
+    (ACCESS, "aclFilter", "acl_filter"),
+    (TRUNK, "aclFilter", "acl_filter"),
+    (PC_ACCESS, "aclFilter", "acl_filter"),
+    (PC_TRUNK, "aclFilter", "acl_filter"),
+    (PC_DOT1Q, "aclFilter", "acl_filter"),
 }
 # The OSPF legacy-key pair. Both rows feed the SAME child (ospf_interface_auth), so both
 # are child_pti on the loopback parent.
 # FLOWCONTROL_SEND, companion of the receive rows. Only these two parents carry FLOWCONTROL,
 # so these two rows plus the receive pair close the field's universe.
 FC_SEND_ROWS = {
-    (TRUNK, "FLOWCONTROL_SEND", "flowcontrol_send"),
-    (ACCESS, "FLOWCONTROL_SEND", "flowcontrol_send"),
+    (TRUNK, "flowcontrolSend", "flowcontrol_send"),
+    (ACCESS, "flowcontrolSend", "flowcontrol_send"),
 }
 # SPANNING_TREE_PORT_TYPE is NOT independent: the template rejects a non-"no" value while
 # PORTTYPE_FAST_ENABLED is true, and true is the default on both sides. That relation is
 # deliberately not registered -- the precondition lives in a field the registry does not own.
 STP_ROWS = {
-    (TRUNK, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
-    (ACCESS, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+    (TRUNK, "spanningTreePortType", "spanning_tree_port_type"),
+    (ACCESS, "spanningTreePortType", "spanning_tree_port_type"),
 }
 # QoS statistics. Neither field emits a CLI line of its own: each is the " no-stats" suffix of
 # the service-policy line its dependency produces, so with the dependency unmet the value is
@@ -98,9 +98,9 @@ PC_ROWS = {
     (PC_TRUNK, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
     (PC_DOT1Q, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
     (PC_DOT1Q, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-    (PC_ACCESS, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
-    (PC_TRUNK, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
-    (PC_DOT1Q, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+    (PC_ACCESS, "spanningTreePortType", "spanning_tree_port_type"),
+    (PC_TRUNK, "spanningTreePortType", "spanning_tree_port_type"),
+    (PC_DOT1Q, "spanningTreePortType", "spanning_tree_port_type"),
     (PC_ACCESS, "DISABLE_QOS_STATS", "disable_qos_stats"),
     (PC_TRUNK, "DISABLE_QOS_STATS", "disable_qos_stats"),
     (PC_DOT1Q, "DISABLE_QOS_STATS", "disable_qos_stats"),
@@ -124,14 +124,14 @@ PC_ROWS = {
 #
 # GUARD_MODE appears on trunk only -- int_vpc_access_host does not declare it.
 VPC_ROWS = {
-    (VPC_TRUNK, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
-    (VPC_ACCESS, "SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+    (VPC_TRUNK, "spanningTreePortType", "spanning_tree_port_type"),
+    (VPC_ACCESS, "spanningTreePortType", "spanning_tree_port_type"),
     (VPC_TRUNK, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
     (VPC_TRUNK, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
     (VPC_ACCESS, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
     (VPC_ACCESS, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-    (VPC_TRUNK, "ACL_FILTER", "acl_filter"),
-    (VPC_ACCESS, "ACL_FILTER", "acl_filter"),
+    (VPC_TRUNK, "aclFilter", "acl_filter"),
+    (VPC_ACCESS, "aclFilter", "acl_filter"),
     (VPC_TRUNK, "GUARD_MODE", "guard_mode"),
     (VPC_TRUNK, "DISABLE_QOS_STATS", "disable_qos_stats"),
     (VPC_ACCESS, "DISABLE_QOS_STATS", "disable_qos_stats"),
@@ -155,7 +155,7 @@ ROUTED_ROWS = {
     (ROUTED, "DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
     (ROUTED, "DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
     (ROUTED, "DISABLE_BFD_ECHO", "disable_bfd_echo"),
-    (ROUTED, "IPV4_ACL_IN", "ipv4_acl_in"),
+    (ROUTED, "ipv4AclIn", "ipv4_acl_in"),
     (ROUTED, "DISABLE_QOS_STATS", "disable_qos_stats"),
     (ROUTED, "DISABLE_QUEUING_STATS", "disable_queuing_stats"),
 }
@@ -166,15 +166,15 @@ ROUTED_ROWS = {
 # test_gie_routed_ospf_have_representation.py.
 ROUTED_OSPF_ROWS = {
     (ROUTED, "ENABLE_OSPF", "enable_ospf"),
-    (ROUTED, "OSPF_TAG", "ospf_tag"),
+    (ROUTED, "ospfTag", "ospf_tag"),
     (ROUTED, "OSPF_AREA_ID", "ospf_area_id"),
-    (ROUTED, "OSPF_COST", "ospf_cost"),
-    (ROUTED, "OSPF_MTU_IGNORE", "ospf_mtu_ignore"),
-    (ROUTED, "OSPF_SHUTDOWN", "ospf_shutdown"),
-    (ROUTED, "OSPF_HELLO_INTERVAL", "ospf_hello_interval"),
-    (ROUTED, "OSPF_DEAD_INTERVAL", "ospf_dead_interval"),
-    (ROUTED, "OSPF_TRANSMIT_DELAY", "ospf_transmit_delay"),
-    (ROUTED, "OSPF_PRIORITY", "ospf_priority"),
+    (ROUTED, "ospfCost", "ospf_cost"),
+    (ROUTED, "ospfMtuIgnore", "ospf_mtu_ignore"),
+    (ROUTED, "ospfShutdown", "ospf_shutdown"),
+    (ROUTED, "ospfHelloInterval", "ospf_hello_interval"),
+    (ROUTED, "ospfDeadInterval", "ospf_dead_interval"),
+    (ROUTED, "ospfTransmitDelay", "ospf_transmit_delay"),
+    (ROUTED, "ospfPriority", "ospf_priority"),
     (ROUTED, "OSPF_PASSIVE_MODE", "ospf_passive_mode"),
     (ROUTED, "OSPF_NETWORK_TYPE", "ospf_network_type"),
     (ROUTED, "OSPF_BFD_MODE", "ospf_bfd_mode"),
@@ -187,35 +187,35 @@ ROUTED_OSPF_ROWS = {
 SUBIF_OSPF_ROWS = {
     ("int_subif", "ENABLE_OSPF", "enable_ospf"),
     ("int_subif", "OSPF_AREA_ID", "ospf_area_id"),
-    ("int_subif", "OSPF_BFD", "ospf_bfd"),
-    ("int_subif", "OSPF_COST", "ospf_cost"),
-    ("int_subif", "OSPF_DEAD_INTERVAL", "ospf_dead_interval"),
-    ("int_subif", "OSPF_HELLO_INTERVAL", "ospf_hello_interval"),
-    ("int_subif", "OSPF_MTU_IGNORE", "ospf_mtu_ignore"),
+    ("int_subif", "ospfBfd", "ospf_bfd"),
+    ("int_subif", "ospfCost", "ospf_cost"),
+    ("int_subif", "ospfDeadInterval", "ospf_dead_interval"),
+    ("int_subif", "ospfHelloInterval", "ospf_hello_interval"),
+    ("int_subif", "ospfMtuIgnore", "ospf_mtu_ignore"),
     ("int_subif", "OSPF_NETWORK_TYPE", "ospf_network_type"),
-    ("int_subif", "OSPF_PASSIVE_INTERFACE", "ospf_passive_interface"),
-    ("int_subif", "OSPF_PRIORITY", "ospf_priority"),
-    ("int_subif", "OSPF_RETRANSMIT_INTERVAL", "ospf_retransmit_interval"),
-    ("int_subif", "OSPF_SHUTDOWN", "ospf_shutdown"),
-    ("int_subif", "OSPF_TAG", "ospf_tag"),
-    ("int_subif", "OSPF_TRANSMIT_DELAY", "ospf_transmit_delay"),
+    ("int_subif", "ospfPassiveInterface", "ospf_passive_interface"),
+    ("int_subif", "ospfPriority", "ospf_priority"),
+    ("int_subif", "ospfRetransmitInterval", "ospf_retransmit_interval"),
+    ("int_subif", "ospfShutdown", "ospf_shutdown"),
+    ("int_subif", "ospfTag", "ospf_tag"),
+    ("int_subif", "ospfTransmitDelay", "ospf_transmit_delay"),
 }
 
 VLAN_OSPF_ROWS = {
     ("int_vlan", "ENABLE_OSPF", "enable_ospf"),
     ("int_vlan", "OSPF_AREA_ID", "ospf_area_id"),
     ("int_vlan", "OSPF_BFD_MODE", "ospf_bfd_mode"),
-    ("int_vlan", "OSPF_COST", "ospf_cost"),
-    ("int_vlan", "OSPF_DEAD_INTERVAL", "ospf_dead_interval"),
-    ("int_vlan", "OSPF_HELLO_INTERVAL", "ospf_hello_interval"),
-    ("int_vlan", "OSPF_MTU_IGNORE", "ospf_mtu_ignore"),
+    ("int_vlan", "ospfCost", "ospf_cost"),
+    ("int_vlan", "ospfDeadInterval", "ospf_dead_interval"),
+    ("int_vlan", "ospfHelloInterval", "ospf_hello_interval"),
+    ("int_vlan", "ospfMtuIgnore", "ospf_mtu_ignore"),
     ("int_vlan", "OSPF_NETWORK_TYPE", "ospf_network_type"),
     ("int_vlan", "OSPF_PASSIVE_MODE", "ospf_passive_mode"),
-    ("int_vlan", "OSPF_PRIORITY", "ospf_priority"),
-    ("int_vlan", "OSPF_RETRANSMIT_INTERVAL", "ospf_retransmit_interval"),
-    ("int_vlan", "OSPF_SHUTDOWN", "ospf_shutdown"),
-    ("int_vlan", "OSPF_TAG", "ospf_tag"),
-    ("int_vlan", "OSPF_TRANSMIT_DELAY", "ospf_transmit_delay"),
+    ("int_vlan", "ospfPriority", "ospf_priority"),
+    ("int_vlan", "ospfRetransmitInterval", "ospf_retransmit_interval"),
+    ("int_vlan", "ospfShutdown", "ospf_shutdown"),
+    ("int_vlan", "ospfTag", "ospf_tag"),
+    ("int_vlan", "ospfTransmitDelay", "ospf_transmit_delay"),
 }
 
 
@@ -229,8 +229,8 @@ AUTH_OSPF_ROWS = {
         ("ENABLE_OSPF_AUTH", "enable_ospf_auth"),
         ("OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
         ("OSPF_AUTH_KEY", "ospf_auth_key"),
-        ("OSPF_AUTHENTICATION_KEY_TYPE", "ospf_authentication_key_type"),
-        ("OSPF_AUTHENTICATION_KEY", "ospf_authentication_key"),
+        ("ospfAuthenticationKeyType", "ospf_authentication_key_type"),
+        ("ospfAuthenticationKey", "ospf_authentication_key"),
     )
 }
 
@@ -242,19 +242,19 @@ EIGRP_ROWS = {
     (parent, nvpair, key)
     for parent in ("int_routed_host", "int_subif", "int_vlan")
     for nvpair, key in (
-        ("EIGRP_PROCESS_TAG", "eigrp_process_tag"),
+        ("eigrpProcessTag", "eigrp_process_tag"),
         ("ENABLE_EIGRP_ROUTING", "enable_eigrp_routing"),
         ("ENABLE_EIGRP_IPV6_ROUTING", "enable_eigrp_ipv6_routing"),
-        ("EIGRP_IPV4_PASSIVE", "eigrp_ipv4_passive"),
-        ("EIGRP_NO_IPV4_PASSIVE", "eigrp_no_ipv4_passive"),
-        ("EIGRP_NO_IPV6_PASSIVE", "eigrp_no_ipv6_passive"),
+        ("eigrpIpv4Passive", "eigrp_ipv4_passive"),
+        ("eigrpNoIpv4Passive", "eigrp_no_ipv4_passive"),
+        ("eigrpNoIpv6Passive", "eigrp_no_ipv6_passive"),
         ("ENABLE_EIGRP_SHUTDOWN", "enable_eigrp_shutdown"),
         ("ENABLE_EIGRP_BFD", "enable_eigrp_bfd"),
         ("DISABLE_EIGRP_BFD", "disable_eigrp_bfd"),
-        ("EIGRP_IPV4_DISTRIBUTE_LIST_PREFIX_LIST", "eigrp_ipv4_distribute_list_prefix_list"),
-        ("EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION", "eigrp_ipv4_distribute_list_direction"),
-        ("EIGRP_IPV6_DISTRIBUTE_LIST_PREFIX_LIST", "eigrp_ipv6_distribute_list_prefix_list"),
-        ("EIGRP_IPV6_DISTRIBUTE_LIST_DIRECTION", "eigrp_ipv6_distribute_list_direction"),
+        ("eigrpIpv4DistributeListPrefixList", "eigrp_ipv4_distribute_list_prefix_list"),
+        ("eigrpIpv4DistributeListDirection", "eigrp_ipv4_distribute_list_direction"),
+        ("eigrpIpv6DistributeListPrefixList", "eigrp_ipv6_distribute_list_prefix_list"),
+        ("eigrpIpv6DistributeListDirection", "eigrp_ipv6_distribute_list_direction"),
     )
 }
 
@@ -267,26 +267,26 @@ LOOPBACK_OSPF_ROWS = {
     ("int_loopback", nvpair, key)
     for nvpair, key in (
         ("ENABLE_OSPF", "enable_ospf"),
-        ("OSPF_TAG", "ospf_tag"),
+        ("ospfTag", "ospf_tag"),
         ("OSPF_AREA_ID", "ospf_area_id"),
-        ("OSPF_ADVERTISE_SUBNET", "ospf_advertise_subnet"),
-        ("OSPF_COST", "ospf_cost"),
-        ("OSPF_HELLO_INTERVAL", "ospf_hello_interval"),
-        ("OSPF_DEAD_INTERVAL", "ospf_dead_interval"),
-        ("OSPF_RETRANSMIT_INTERVAL", "ospf_retransmit_interval"),
-        ("OSPF_TRANSMIT_DELAY", "ospf_transmit_delay"),
-        ("OSPF_PRIORITY", "ospf_priority"),
-        ("OSPF_MTU_IGNORE", "ospf_mtu_ignore"),
-        ("OSPF_SHUTDOWN", "ospf_shutdown"),
+        ("ospfAdvertiseSubnet", "ospf_advertise_subnet"),
+        ("ospfCost", "ospf_cost"),
+        ("ospfHelloInterval", "ospf_hello_interval"),
+        ("ospfDeadInterval", "ospf_dead_interval"),
+        ("ospfRetransmitInterval", "ospf_retransmit_interval"),
+        ("ospfTransmitDelay", "ospf_transmit_delay"),
+        ("ospfPriority", "ospf_priority"),
+        ("ospfMtuIgnore", "ospf_mtu_ignore"),
+        ("ospfShutdown", "ospf_shutdown"),
         ("OSPF_NETWORK_TYPE", "ospf_network_type"),
-        ("OSPF_BFD", "ospf_bfd"),
+        ("ospfBfd", "ospf_bfd"),
         # The five the architect ruled in scope here while they stay retired on the fabric
         # parent: the retirement was about ownership, and a user loopback is not underlay.
         ("ENABLE_OSPF_AUTH", "enable_ospf_auth"),
         ("OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
         ("OSPF_AUTH_KEY", "ospf_auth_key"),
-        ("OSPF_AUTHENTICATION_KEY_TYPE", "ospf_authentication_key_type"),
-        ("OSPF_AUTHENTICATION_KEY", "ospf_authentication_key"),
+        ("ospfAuthenticationKeyType", "ospf_authentication_key_type"),
+        ("ospfAuthenticationKey", "ospf_authentication_key"),
     )
 }
 
@@ -298,9 +298,9 @@ BFD_ROWS = {
     for parent in ("int_subif", "int_vlan")
     for nvpair, key in (
         ("ENABLE_BFD_INTERVAL", "enable_bfd_interval"),
-        ("BFD_TX_INTERVAL", "bfd_tx_interval"),
-        ("BFD_MIN_RX_INTERVAL", "bfd_min_rx_interval"),
-        ("BFD_MULTIPLIER", "bfd_multiplier"),
+        ("bfdTxInterval", "bfd_tx_interval"),
+        ("bfdMinRxInterval", "bfd_min_rx_interval"),
+        ("bfdMultiplier", "bfd_multiplier"),
     )
 } | {("int_vlan", "DISABLE_BFD_ECHO", "disable_bfd_echo")}
 
@@ -312,11 +312,11 @@ BFD_ROWS = {
 LOOPBACK_EIGRP_ROWS = {
     ("int_loopback", nvpair, key)
     for nvpair, key in (
-        ("EIGRP_PROCESS_TAG", "eigrp_process_tag"),
+        ("eigrpProcessTag", "eigrp_process_tag"),
         ("ENABLE_EIGRP_ROUTING", "enable_eigrp_routing"),
-        ("EIGRP_IPV4_PASSIVE", "eigrp_ipv4_passive"),
-        ("EIGRP_NO_IPV4_PASSIVE", "eigrp_no_ipv4_passive"),
-        ("EIGRP_NO_IPV6_PASSIVE", "eigrp_no_ipv6_passive"),
+        ("eigrpIpv4Passive", "eigrp_ipv4_passive"),
+        ("eigrpNoIpv4Passive", "eigrp_no_ipv4_passive"),
+        ("eigrpNoIpv6Passive", "eigrp_no_ipv6_passive"),
         ("ENABLE_EIGRP_SHUTDOWN", "enable_eigrp_shutdown"),
         ("ENABLE_EIGRP_BFD", "enable_eigrp_bfd"),
         ("DISABLE_EIGRP_BFD", "disable_eigrp_bfd"),
@@ -332,9 +332,9 @@ LOOPBACK_EIGRP_ROWS = {
 HSRP_ROWS = {
     ("int_vlan", nvpair, key)
     for nvpair, key in (
-        ("HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER", "hsrp_priority_forwarding_threshold_lower"),
-        ("HSRP_PRIORITY_FORWARDING_THRESHOLD_UPPER", "hsrp_priority_forwarding_threshold_upper"),
-        ("HSRP_PREEMPT_DELAY_MINIMUM", "hsrp_preempt_delay_minimum"),
+        ("hsrpPriorityForwardingThresholdLower", "hsrp_priority_forwarding_threshold_lower"),
+        ("hsrpPriorityForwardingThresholdUpper", "hsrp_priority_forwarding_threshold_upper"),
+        ("hsrpPreemptDelayMinimum", "hsrp_preempt_delay_minimum"),
         # Slice 0b_27. Registered and tested offline; the live cycle requires IPv6 addressing
         # support in the native SVI arg spec, not in this table.
         ("HSRP_VIPv6", "hsrp_vipv6"),
@@ -353,7 +353,7 @@ REDIRECTS_ROWS = {
     for nvpair, key in (
         ("DISABLE_IPV4_REDIRECTS", "disable_ipv4_redirects"),
         ("DISABLE_IPV6_REDIRECTS", "disable_ipv6_redirects"),
-        ("IPV6_ND_SUPPRESS_RA", "ipv6_nd_suppress_ra"),
+        ("ipv6NdSuppressRa", "ipv6_nd_suppress_ra"),
     )
 }
 
@@ -365,12 +365,12 @@ DAMPENING_ROWS = {
     ("int_routed_host", nvpair, key)
     for nvpair, key in (
         ("ENABLE_DAMPENING", "enable_dampening"),
-        ("DAMPENING_HALF_LIFE", "dampening_half_life"),
-        ("DAMPENING_REUSE", "dampening_reuse"),
-        ("DAMPENING_SUPPRESS", "dampening_suppress"),
-        ("DAMPENING_MAX_SUPPRESS", "dampening_max_suppress"),
-        ("DAMPENING_RESTART", "dampening_restart"),
-        ("DAMPENING_RESTART_PENALTY", "dampening_restart_penalty"),
+        ("dampeningHalfLife", "dampening_half_life"),
+        ("dampeningReuse", "dampening_reuse"),
+        ("dampeningSuppress", "dampening_suppress"),
+        ("dampeningMaxSuppress", "dampening_max_suppress"),
+        ("dampeningRestart", "dampening_restart"),
+        ("dampeningRestartPenalty", "dampening_restart_penalty"),
     )
 }
 
@@ -380,7 +380,7 @@ DAMPENING_ROWS = {
 # with no boolean gate or field dependencies. A fourth row would incorrectly include
 # int_loopback, which does not declare ARP_TIMEOUT.
 ARP_ROWS = {
-    (parent, "ARP_TIMEOUT", "arp_timeout")
+    (parent, "arpTimeout", "arp_timeout")
     for parent in ("int_routed_host", "int_subif", "int_vlan")
 }
 
@@ -403,7 +403,7 @@ PIM_ROWS = (
 # IPV6_LINK_LOCAL. Emitting the child spelling would store a key the parent never reads,
 # leaving the device without the intended CLI line.
 LINK_LOCAL_ROWS = {
-    (parent, "IPv6_LINK_LOCAL", "ipv6_link_local")
+    (parent, "ipv6LinkLocal", "ipv6_link_local")
     for parent in ("int_routed_host", "int_subif", "int_vlan")
 }
 
@@ -414,9 +414,9 @@ MACSEC_ROWS = {
     ("int_routed_host", nvpair, key)
     for nvpair, key in (
         ("ENABLE_MACSEC_INTERFACE_POLICY", "enable_macsec_interface_policy"),
-        ("MACSEC_KEY_CHAIN_NAME", "macsec_key_chain_name"),
-        ("MACSEC_POLICY_NAME", "macsec_policy_name"),
-        ("MACSEC_FALLBACK_KEY_CHAIN_NAME", "macsec_fallback_key_chain_name"),
+        ("macsecKeyChainName", "macsec_key_chain_name"),
+        ("macsecPolicyName", "macsec_policy_name"),
+        ("macsecFallbackKeyChainName", "macsec_fallback_key_chain_name"),
     )
 }
 
@@ -425,8 +425,8 @@ MACSEC_ROWS = {
 # ipv4_acl_in key already registered for int_routed_host; the other two keys are new.
 # The slice records the validation scope for ENABLE_VPC_PEER_LINK.
 BATCH2_ROWS = {
-    ("int_vlan", "IPV4_ACL_IN", "ipv4_acl_in"),
-    ("int_vlan", "PRIVATE_VLAN_MAPPING", "private_vlan_mapping"),
+    ("int_vlan", "ipv4AclIn", "ipv4_acl_in"),
+    ("int_vlan", "privateVlanMapping", "private_vlan_mapping"),
     ("int_port_channel_trunk_host", "ENABLE_VPC_PEER_LINK", "enable_vpc_peer_link"),
 }
 
@@ -543,14 +543,14 @@ def test_compiler_renames_the_registry_numeric_bounds():
     rows = []
     for binding in _as_slice_rows(BINDING_TABLE):
         row = dict(binding)
-        if row["parent_nvpair"] == "OSPF_COST":
+        if row["parent_nvpair"] == "ospfCost":
             row.pop("min_value", None)
             row.pop("max_value", None)
             row["min"] = 1            # registry spelling
             row["max"] = 65535
         rows.append(row)
     compiled = generator.compile_rows(rows)
-    cost = next(r for r in compiled if r["parent_nvpair"] == "OSPF_COST")
+    cost = next(r for r in compiled if r["parent_nvpair"] == "ospfCost")
     assert cost["min_value"] == 1
     assert cost["max_value"] == 65535
     assert "min" not in cost and "max" not in cost, "the registry spelling must not leak"
@@ -623,7 +623,7 @@ def test_registered_keys_per_parent():
 
 def test_flowcontrol_binding_shape():
     b = resolve_binding(TRUNK, "flowcontrol_receive")
-    assert b["parent_nvpair"] == "FLOWCONTROL_RECEIVE"
+    assert b["parent_nvpair"] == "flowcontrolReceive"
     assert b["mechanism"] == "passthrough"
     assert b["type"] == "enum" and b["valid_values"] == ("on", "off")
     assert b["min_ndfc_version"] == "12.6.0.267"
@@ -640,34 +640,34 @@ def test_flowcontrol_public_documentation_is_enum_without_default():
 
 
 def test_registry_drives_comparator_keymap_and_carry_forward():
-    assert gie_nvpair_keymap()["FLOWCONTROL_RECEIVE"] == "flowcontrol_receive"
-    assert gie_nvpair_keymap()["FLOWCONTROL_SEND"] == "flowcontrol_send"
-    assert gie_nvpair_keymap()["SPANNING_TREE_PORT_TYPE"] == "spanning_tree_port_type"
+    assert gie_nvpair_keymap()["flowcontrolReceive"] == "flowcontrol_receive"
+    assert gie_nvpair_keymap()["flowcontrolSend"] == "flowcontrol_send"
+    assert gie_nvpair_keymap()["spanningTreePortType"] == "spanning_tree_port_type"
     # FLOWCONTROL_SEND is passthrough, so it DOES join the carry-forward set -- the opposite
     # of the OSPF bindings, which are child_pti and are excluded. That difference is what
     # makes omitting the key preserve the controller's value instead of being a silent no-op.
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(TRUNK)
     } == {
-        ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
-        ("FLOWCONTROL_SEND", "flowcontrol_send"),
-        ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+        ("flowcontrolReceive", "flowcontrol_receive"),
+        ("flowcontrolSend", "flowcontrol_send"),
+        ("spanningTreePortType", "spanning_tree_port_type"),
         ("GUARD_MODE", "guard_mode"),
         ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
         ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-        ("ACL_FILTER", "acl_filter"),
+        ("aclFilter", "acl_filter"),
         ("DISABLE_QOS_STATS", "disable_qos_stats"),
         ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
     } == {
-        ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
-        ("FLOWCONTROL_SEND", "flowcontrol_send"),
-        ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+        ("flowcontrolReceive", "flowcontrol_receive"),
+        ("flowcontrolSend", "flowcontrol_send"),
+        ("spanningTreePortType", "spanning_tree_port_type"),
         ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
         ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-        ("ACL_FILTER", "acl_filter"),
+        ("aclFilter", "acl_filter"),
         ("DISABLE_QOS_STATS", "disable_qos_stats"),
         ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
     }
@@ -703,8 +703,8 @@ def test_binding_value_accepts_exact_native_enum(value):
 def test_flowcontrol_explicit_contributes_native_string(val):
     add, err = gie_contribute_nvpairs(TRUNK, {"mode": "trunk", "flowcontrol_receive": val}, "12.6.0.267")
     assert err is None
-    assert add == {"FLOWCONTROL_RECEIVE": val}
-    assert isinstance(add["FLOWCONTROL_RECEIVE"], str)
+    assert add == {"flowcontrolReceive": val}
+    assert isinstance(add["flowcontrolReceive"], str)
 
 
 def test_flowcontrol_omitted_contributes_nothing():
@@ -715,7 +715,7 @@ def test_flowcontrol_omitted_contributes_nothing():
 def test_flowcontrol_present_on_both_parents():
     for p, m in [(TRUNK, "trunk"), (ACCESS, "access")]:
         add, err = gie_contribute_nvpairs(p, {"mode": m, "flowcontrol_receive": "on"}, "12.6.0.267")
-        assert err is None and add == {"FLOWCONTROL_RECEIVE": "on"}
+        assert err is None and add == {"flowcontrolReceive": "on"}
 
 
 # ---- version fail-closed for a registered explicit key (FLOWCONTROL normal rule) ----
@@ -729,7 +729,7 @@ def test_flowcontrol_below_or_bad_version_fails_closed(ver):
 @pytest.mark.parametrize("ver", ["12.6.0.267", "12.6.0.300", "12.7.0.1", "13.0.0.0"])
 def test_flowcontrol_at_or_above_floor_ok(ver):
     add, err = gie_contribute_nvpairs(TRUNK, {"flowcontrol_receive": "off"}, ver)
-    assert err is None and add == {"FLOWCONTROL_RECEIVE": "off"}
+    assert err is None and add == {"flowcontrolReceive": "off"}
 
 
 def test_version_supported_matches_semantics():
@@ -847,7 +847,7 @@ def test_extend_spec_flowcontrol_enum_maps_to_str():
 def test_contribute_preserves_native_types_no_stringification():
     # enum -> native str; boolean -> native bool (not the "True"/"true" string)
     a1, err1 = gie_contribute_nvpairs(TRUNK, {"flowcontrol_receive": "on"}, "12.6.0.267")
-    assert a1["FLOWCONTROL_RECEIVE"] == "on" and isinstance(a1["FLOWCONTROL_RECEIVE"], str)
+    assert a1["flowcontrolReceive"] == "on" and isinstance(a1["flowcontrolReceive"], str)
     # The native-value case used to be the loopback child_pti binding, the only mechanism that
     # left a value unserialized. With child_pti retired every binding is passthrough, so the
     # wire form is now universal -- which is the property worth asserting.
@@ -1223,19 +1223,19 @@ def _intf_obj(ndfc_version):
 def test_module_path_flowcontrol_on_reaches_payload_nvpair():
     m, intf = _intf_obj("12.6.0.267"), _intf_trunk()
     m.dcnm_intf_get_eth_payload(_trunk_delem("on"), intf, "profile")
-    assert intf["interfaces"][0]["nvPairs"]["FLOWCONTROL_RECEIVE"] == "on"
+    assert intf["interfaces"][0]["nvPairs"]["flowcontrolReceive"] == "on"
 
 
 def test_module_path_flowcontrol_off_reaches_payload_nvpair():
     m, intf = _intf_obj("12.6.0.267"), _intf_trunk()
     m.dcnm_intf_get_eth_payload(_trunk_delem("off"), intf, "profile")
-    assert intf["interfaces"][0]["nvPairs"]["FLOWCONTROL_RECEIVE"] == "off"
+    assert intf["interfaces"][0]["nvPairs"]["flowcontrolReceive"] == "off"
 
 
 def test_module_path_flowcontrol_omitted_absent_from_payload():
     m, intf = _intf_obj("12.6.0.267"), _intf_trunk()
     m.dcnm_intf_get_eth_payload(_trunk_delem(None), intf, "profile")
-    assert "FLOWCONTROL_RECEIVE" not in intf["interfaces"][0]["nvPairs"]
+    assert "flowcontrolReceive" not in intf["interfaces"][0]["nvPairs"]
 
 
 # ---- module compare/HAVE path: idempotency, preservation, parent transition ----
@@ -1246,7 +1246,7 @@ _OMITTED = object()
 def _compare_payload(parent, flow=_OMITTED, description="same"):
     nvpairs = {"DESC": description}
     if flow is not _OMITTED:
-        nvpairs["FLOWCONTROL_RECEIVE"] = flow
+        nvpairs["flowcontrolReceive"] = flow
     return {
         "deploy": False,
         "policy": parent,
@@ -1307,10 +1307,10 @@ def test_flowcontrol_compare_drift_is_exact_native_delta(parent, state):
     obj.dcnm_intf_compare_want_and_have(state)
     assert len(obj.diff_replace) == 1
     sent = obj.diff_replace[0]["interfaces"][0]["nvPairs"]
-    assert sent["FLOWCONTROL_RECEIVE"] == "off"
-    assert isinstance(sent["FLOWCONTROL_RECEIVE"], str)
+    assert sent["flowcontrolReceive"] == "off"
+    assert isinstance(sent["flowcontrolReceive"], str)
     reported = obj.changed_dict[0][state][0]["interfaces"][0]["nvPairs"]
-    assert reported == {"FLOWCONTROL_RECEIVE": "off"}
+    assert reported == {"flowcontrolReceive": "off"}
 
 
 @pytest.mark.parametrize("parent", [TRUNK, ACCESS])
@@ -1318,7 +1318,7 @@ def test_flowcontrol_compare_drift_is_exact_native_delta(parent, state):
 def test_omitted_flowcontrol_under_replaced_follows_the_withdrawal_contract(parent, state):
     """THIS EXPECTATION WAS DELIBERATELY CHANGED. The previous one was:
 
-        assert sent["FLOWCONTROL_RECEIVE"] == "on"
+        assert sent["flowcontrolReceive"] == "on"
         assert reported == {"DESC": "new"}
 
     i.e. an unrelated description edit re-sent the controller's configured value, so the
@@ -1340,11 +1340,11 @@ def test_omitted_flowcontrol_under_replaced_follows_the_withdrawal_contract(pare
     sent = obj.diff_replace[0]["interfaces"][0]["nvPairs"]
     reported = obj.changed_dict[0][state][0]["interfaces"][0]["nvPairs"]
     if reset is None:
-        assert sent["FLOWCONTROL_RECEIVE"] == "on"
+        assert sent["flowcontrolReceive"] == "on"
         assert reported == {"DESC": "new"}
     else:
-        assert sent["FLOWCONTROL_RECEIVE"] == reset
-        assert reported == {"DESC": "new", "FLOWCONTROL_RECEIVE": reset}, (
+        assert sent["flowcontrolReceive"] == reset
+        assert reported == {"DESC": "new", "flowcontrolReceive": reset}, (
             "the withdrawal was sent but not reported")
 
 
@@ -1359,7 +1359,7 @@ def test_omitted_flowcontrol_is_preserved_under_merged(parent):
     # An EXISTING interface lands in diff_replace whatever the state -- merging into one
     # is still a modify.
     sent = obj.diff_replace[0]["interfaces"][0]["nvPairs"]
-    assert sent["FLOWCONTROL_RECEIVE"] == "on"
+    assert sent["flowcontrolReceive"] == "on"
     reported = obj.changed_dict[0]["merged"][0]["interfaces"][0]["nvPairs"]
     assert reported == {"DESC": "new"}, (
         "merged reported a withdrawal it must not perform: %s" % reported)
@@ -1392,7 +1392,7 @@ def test_explicit_flowcontrol_survives_legacy_parent_transition():
     obj.dcnm_intf_compare_want_and_have("replaced")
     assert obj.diff_replace[0]["policy"] == TRUNK
     assert (
-        obj.diff_replace[0]["interfaces"][0]["nvPairs"]["FLOWCONTROL_RECEIVE"]
+        obj.diff_replace[0]["interfaces"][0]["nvPairs"]["flowcontrolReceive"]
         == "on"
     )
 
@@ -1416,7 +1416,7 @@ def test_check_mode_diff_keeps_native_flowcontrol_string():
     obj.module.check_mode = True
     obj.dcnm_intf_compare_want_and_have("merged")
     value = obj.changed_dict[0]["merged"][0]["interfaces"][0]["nvPairs"][
-        "FLOWCONTROL_RECEIVE"
+        "flowcontrolReceive"
     ]
     assert value == "off" and isinstance(value, str)
 
@@ -1428,16 +1428,16 @@ def test_query_keeps_controller_flowcontrol_string_without_normalization(monkeyp
     obj.dcnm_extract_if_name = lambda info: (
         "Ethernet1/4", "INTERFACE_ETHERNET"
     )
-    raw = {"nvPairs": {"FLOWCONTROL_RECEIVE": "on"}}
+    raw = {"nvPairs": {"flowcontrolReceive": "on"}}
     monkeypatch.setattr(
         dcnm_interface,
         "dcnm_send",
         lambda module, method, path: {"RETURN_CODE": 200, "DATA": [raw]},
     )
     obj.dcnm_intf_get_diff_query()
-    assert obj.result["response"][0]["nvPairs"]["FLOWCONTROL_RECEIVE"] == "on"
+    assert obj.result["response"][0]["nvPairs"]["flowcontrolReceive"] == "on"
     assert isinstance(
-        obj.changed_dict[0]["query"][0]["nvPairs"]["FLOWCONTROL_RECEIVE"],
+        obj.changed_dict[0]["query"][0]["nvPairs"]["flowcontrolReceive"],
         str,
     )
 
@@ -1634,7 +1634,7 @@ def test_subclass_acceptance_does_not_bypass_the_other_registered_checks():
 def test_flowcontrol_send_binding_shape(parent, mode):
     b = resolve_binding(parent, "flowcontrol_send")
     assert b is not None, "%s::flowcontrol_send missing" % parent
-    assert b["parent_nvpair"] == "FLOWCONTROL_SEND"
+    assert b["parent_nvpair"] == "flowcontrolSend"
     assert b["type"] == "enum"
     assert tuple(b["valid_values"]) == ("on", "off")
     assert b["default_template"] == "off"
@@ -1652,7 +1652,7 @@ def test_flowcontrol_send_transports_a_wrapped_playbook_value(parent, value):
     wrapped = _SubStr(value)
     add, err = gie_contribute_nvpairs(parent, {"flowcontrol_send": wrapped}, "12.6.0.267")
     assert err is None
-    assert add == {"FLOWCONTROL_SEND": value}
+    assert add == {"flowcontrolSend": value}
 
 
 @pytest.mark.parametrize("parent", [TRUNK, ACCESS])
@@ -1664,7 +1664,7 @@ def test_flowcontrol_send_is_explicit_only(parent):
     omission into an assertion of 'off'.
     """
     add, err = gie_contribute_nvpairs(parent, {}, "12.6.0.267")
-    assert err is None and "FLOWCONTROL_SEND" not in add
+    assert err is None and "flowcontrolSend" not in add
     spec = {}
     gie_extend_prof_spec(spec, parent, {})
     assert "flowcontrol_send" not in spec
@@ -1712,8 +1712,8 @@ def test_flowcontrol_send_reaches_the_action_plugin_schema():
         / "pydantic_schemas" / "dcnm_interface" / "schemas.py"
     )
     source = path.read_text(encoding="utf-8")
-    assert '"flowcontrol_send": "FLOWCONTROL_SEND"' in source
-    assert '"flowcontrol_receive": "FLOWCONTROL_RECEIVE"' in source
+    assert '"flowcontrol_send": "flowcontrolSend"' in source
+    assert '"flowcontrol_receive": "flowcontrolReceive"' in source
 
 
 # ---- SPANNING_TREE_PORT_TYPE: the first registered field that is not independent ----
@@ -1723,7 +1723,7 @@ def test_flowcontrol_send_reaches_the_action_plugin_schema():
 def test_spanning_tree_port_type_binding_shape(parent, mode):
     b = resolve_binding(parent, "spanning_tree_port_type")
     assert b is not None, "%s::spanning_tree_port_type missing" % parent
-    assert b["parent_nvpair"] == "SPANNING_TREE_PORT_TYPE"
+    assert b["parent_nvpair"] == "spanningTreePortType"
     assert b["type"] == "enum"
     assert tuple(b["valid_values"]) == ("no", "network", "normal")
     assert b["default_template"] == "no"
@@ -1754,7 +1754,7 @@ def test_spanning_tree_transports_a_wrapped_playbook_value(parent, value):
         parent, {"spanning_tree_port_type": _SubStr(value)}, "12.6.0.267"
     )
     assert err is None
-    assert add == {"SPANNING_TREE_PORT_TYPE": value}
+    assert add == {"spanningTreePortType": value}
 
 
 @pytest.mark.parametrize("parent", [TRUNK, ACCESS])
@@ -1791,7 +1791,7 @@ def test_spanning_tree_mutual_exclusion_is_not_expressed_in_the_registry():
         add, err = gie_contribute_nvpairs(
             parent, {"spanning_tree_port_type": _SubStr("network")}, "12.6.0.267"
         )
-        assert err is None and add == {"SPANNING_TREE_PORT_TYPE": "network"}
+        assert err is None and add == {"spanningTreePortType": "network"}
 
 
 def test_spanning_tree_public_documentation_warns_about_port_type_fast():
@@ -1815,7 +1815,7 @@ def test_spanning_tree_reaches_the_action_plugin_schema():
         / "pydantic_schemas" / "dcnm_interface" / "schemas.py"
     )
     source = path.read_text(encoding="utf-8")
-    assert '"spanning_tree_port_type": "SPANNING_TREE_PORT_TYPE"' in source
+    assert '"spanning_tree_port_type": "spanningTreePortType"' in source
 
 
 if __name__ == "__main__":

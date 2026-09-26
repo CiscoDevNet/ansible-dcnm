@@ -71,7 +71,7 @@ def expand_interface_name(name):
 class DcnmInterfaceQuerySchema(BaseModel):
     class NvPairs(BaseModel):
         ACCESS_VLAN: Optional[str] = None
-        ACL_FILTER: Optional[str] = None
+        aclFilter: Optional[str] = None
         ADMIN_STATE: Optional[str] = None
         ALLOWED_VLANS: Optional[str] = None
         BPDUGUARD_ENABLED: Optional[str] = None
@@ -93,7 +93,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
         ENABLE_QOS: Optional[str] = None
         ENABLE_STORM_CONTROL: Optional[str] = None
         FABRIC_NAME: Optional[str] = None
-        FLOWCONTROL_RECEIVE: Optional[str] = None
+        flowcontrolReceive: Optional[str] = None
         GUARD_MODE: Optional[str] = None
         INTF_NAME: Optional[str] = None
         INTF_VRF: Optional[str] = None
@@ -361,9 +361,9 @@ class DcnmInterfaceQuerySchema(BaseModel):
             # Fabric loopback only. The generic bool->str conversion below already
             # produces the "true"/"false" strings NDFC echoes back.
             "enable_ospf_auth_message_digest": "ENABLE_OSPF_AUTH_MESSAGE_DIGEST",
-            "flowcontrol_receive": "FLOWCONTROL_RECEIVE",
-            "flowcontrol_send": "FLOWCONTROL_SEND",
-            "spanning_tree_port_type": "SPANNING_TREE_PORT_TYPE",
+            "flowcontrol_receive": "flowcontrolReceive",
+            "flowcontrol_send": "flowcontrolSend",
+            "spanning_tree_port_type": "spanningTreePortType",
             # Simple passthrough bindings. The generic bool->str conversion below
             # produces the "true"/"false" strings NDFC echoes back for these.
             "guard_mode": "GUARD_MODE",
@@ -371,7 +371,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
             # independent fields, so transmit and receive can be turned off separately.
             "disable_lldp_transmit": "DISABLE_LLDP_TRANSMIT",
             "disable_lldp_receive": "DISABLE_LLDP_RECEIVE",
-            "acl_filter": "ACL_FILTER",
+            "acl_filter": "aclFilter",
             # QoS statistics slice. Both are the " no-stats" suffix of the service-policy
             # line their dependency emits, never a CLI line of their own.
             "disable_qos_stats": "DISABLE_QOS_STATS",

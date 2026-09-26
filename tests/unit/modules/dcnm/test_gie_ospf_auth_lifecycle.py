@@ -53,8 +53,8 @@ AUTH_NVPAIRS = {
     "ENABLE_OSPF_AUTH": "true",
     "OSPF_AUTH_KEY_ID": "7",
     "OSPF_AUTH_KEY": KEY_A,
-    "OSPF_AUTHENTICATION_KEY_TYPE": "3",
-    "OSPF_AUTHENTICATION_KEY": "AUTHENTICATION-KEY-ALPHA",
+    "ospfAuthenticationKeyType": "3",
+    "ospfAuthenticationKey": "AUTHENTICATION-KEY-ALPHA",
 }
 
 
@@ -202,7 +202,7 @@ def test_clearing_a_key_travels_as_an_empty_string(parent):
     """
     emitted = _emit(parent, {"ospf_auth_key": "", "ospf_authentication_key": ""})
     assert emitted["OSPF_AUTH_KEY"] == ""
-    assert emitted["OSPF_AUTHENTICATION_KEY"] == ""
+    assert emitted["ospfAuthenticationKey"] == ""
 
 
 @pytest.mark.parametrize("parent", PARENTS)

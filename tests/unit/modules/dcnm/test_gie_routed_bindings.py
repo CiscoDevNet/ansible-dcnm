@@ -63,55 +63,55 @@ EXPECTED = {
     "enable_ospf_auth": ("ENABLE_OSPF_AUTH", "boolean"),
     "ospf_auth_key_id": ("OSPF_AUTH_KEY_ID", "integer"),
     "ospf_auth_key": ("OSPF_AUTH_KEY", "string"),
-    "ospf_authentication_key_type": ("OSPF_AUTHENTICATION_KEY_TYPE", "enum"),
-    "ospf_authentication_key": ("OSPF_AUTHENTICATION_KEY", "string"),
+    "ospf_authentication_key_type": ("ospfAuthenticationKeyType", "enum"),
+    "ospf_authentication_key": ("ospfAuthenticationKey", "string"),
     "disable_lldp_transmit": ("DISABLE_LLDP_TRANSMIT", "boolean"),
     "disable_lldp_receive": ("DISABLE_LLDP_RECEIVE", "boolean"),
     "disable_bfd_echo": ("DISABLE_BFD_ECHO", "boolean"),
     "disable_qos_stats": ("DISABLE_QOS_STATS", "boolean"),
     "disable_queuing_stats": ("DISABLE_QUEUING_STATS", "boolean"),
-    "ipv4_acl_in": ("IPV4_ACL_IN", "string"),
+    "ipv4_acl_in": ("ipv4AclIn", "string"),
     # Slice 0b_28. The fourth field, DISABLE_IP_REDIRECTS, is native and is not registered.
     "disable_ipv4_redirects": ("DISABLE_IPV4_REDIRECTS", "boolean"),
     "disable_ipv6_redirects": ("DISABLE_IPV6_REDIRECTS", "boolean"),
-    "ipv6_nd_suppress_ra": ("IPV6_ND_SUPPRESS_RA", "boolean"),
+    "ipv6_nd_suppress_ra": ("ipv6NdSuppressRa", "boolean"),
     # ARP_TIMEOUT, slice 0b_3. Its declared range changed after the row was written:
     # the September 14 template batch added min=60/max=28800 to
     # `integer ARP_TIMEOUT;`, which previously had no bounds.
-    "arp_timeout": ("ARP_TIMEOUT", "integer"),
+    "arp_timeout": ("arpTimeout", "integer"),
     # PIM, slice 0b_31. Only this parent declares all three fields. The template's `long`
     # pim_dr_priority is registered as `integer`: _TYPE_TO_VALIDATOR has no `long` type,
     # and integer validation is equivalent. A value of 1 emits no CLI line; see the slice.
     # IPv6 link-local, slice 0b_32. The template's `ipV6Address` is registered as `string`
     # with max_length 45, matching HSRP_VIPv6, which also uses ipV6Address.
-    "ipv6_link_local": ("IPv6_LINK_LOCAL", "string"),
+    "ipv6_link_local": ("ipv6LinkLocal", "string"),
     # MACSEC, slice 0b_33. IsShow gates the three strings on the boolean. They are names,
     # not secrets: references to keychains and a policy on the switch.
     "enable_macsec_interface_policy": ("ENABLE_MACSEC_INTERFACE_POLICY", "boolean"),
-    "macsec_key_chain_name": ("MACSEC_KEY_CHAIN_NAME", "string"),
-    "macsec_policy_name": ("MACSEC_POLICY_NAME", "string"),
-    "macsec_fallback_key_chain_name": ("MACSEC_FALLBACK_KEY_CHAIN_NAME", "string"),
+    "macsec_key_chain_name": ("macsecKeyChainName", "string"),
+    "macsec_policy_name": ("macsecPolicyName", "string"),
+    "macsec_fallback_key_chain_name": ("macsecFallbackKeyChainName", "string"),
     "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "boolean"),
     "pim_dr_priority": ("PIM_DR_PRIORITY", "integer"),
     "enable_pim_bfd_instance": ("ENABLE_PIM_BFD_INSTANCE", "boolean"),
     # Dampening, slice 0b_6. Only this parent declares it; C9300v does not support its CLI.
     "enable_dampening": ("ENABLE_DAMPENING", "boolean"),
-    "dampening_half_life": ("DAMPENING_HALF_LIFE", "integer"),
-    "dampening_reuse": ("DAMPENING_REUSE", "integer"),
-    "dampening_suppress": ("DAMPENING_SUPPRESS", "integer"),
-    "dampening_max_suppress": ("DAMPENING_MAX_SUPPRESS", "integer"),
-    "dampening_restart": ("DAMPENING_RESTART", "boolean"),
-    "dampening_restart_penalty": ("DAMPENING_RESTART_PENALTY", "integer"),
+    "dampening_half_life": ("dampeningHalfLife", "integer"),
+    "dampening_reuse": ("dampeningReuse", "integer"),
+    "dampening_suppress": ("dampeningSuppress", "integer"),
+    "dampening_max_suppress": ("dampeningMaxSuppress", "integer"),
+    "dampening_restart": ("dampeningRestart", "boolean"),
+    "dampening_restart_penalty": ("dampeningRestartPenalty", "integer"),
     "enable_ospf": ("ENABLE_OSPF", "boolean"),
-    "ospf_tag": ("OSPF_TAG", "string"),
+    "ospf_tag": ("ospfTag", "string"),
     "ospf_area_id": ("OSPF_AREA_ID", "string"),
-    "ospf_cost": ("OSPF_COST", "integer"),
-    "ospf_mtu_ignore": ("OSPF_MTU_IGNORE", "boolean"),
-    "ospf_shutdown": ("OSPF_SHUTDOWN", "boolean"),
-    "ospf_hello_interval": ("OSPF_HELLO_INTERVAL", "integer"),
-    "ospf_dead_interval": ("OSPF_DEAD_INTERVAL", "integer"),
-    "ospf_transmit_delay": ("OSPF_TRANSMIT_DELAY", "integer"),
-    "ospf_priority": ("OSPF_PRIORITY", "integer"),
+    "ospf_cost": ("ospfCost", "integer"),
+    "ospf_mtu_ignore": ("ospfMtuIgnore", "boolean"),
+    "ospf_shutdown": ("ospfShutdown", "boolean"),
+    "ospf_hello_interval": ("ospfHelloInterval", "integer"),
+    "ospf_dead_interval": ("ospfDeadInterval", "integer"),
+    "ospf_transmit_delay": ("ospfTransmitDelay", "integer"),
+    "ospf_priority": ("ospfPriority", "integer"),
     "ospf_passive_mode": ("OSPF_PASSIVE_MODE", "enum"),
     "ospf_network_type": ("OSPF_NETWORK_TYPE", "enum"),
     "ospf_bfd_mode": ("OSPF_BFD_MODE", "enum"),
@@ -184,7 +184,7 @@ def test_arp_timeout_landed_on_all_three_parents_as_one_lot():
         assert b is not None, (
             "{0} lost arp_timeout; the three parents go in as one lot".format(parent)
         )
-        assert b["parent_nvpair"] == "ARP_TIMEOUT"
+        assert b["parent_nvpair"] == "arpTimeout"
         assert b["type"] == "integer"
         assert b["mechanism"] == "passthrough"
         # The declaration's bound, not the body's `<= 0`. Spelled min_value/max_value in the
@@ -249,6 +249,7 @@ def test_the_parent_is_registered_exactly_once_per_nvpair():
     # EXPECTED covers this parent's pre-EIGRP inventory. Subtracting the EIGRP rows keeps the
     # equality strict -- anything else new still fails here -- while pointing at the file that
     # owns them. Widening it to a subset check would have retired the guard instead of scoping it.
-    eigrp = {b["parent_nvpair"] for b in BINDING_TABLE if "EIGRP" in b["parent_nvpair"]}
+    eigrp = {b["parent_nvpair"] for b in BINDING_TABLE
+             if "eigrp" in b["parent_nvpair"].lower()}
     assert set(names) - eigrp == {nvpair for nvpair, _native in EXPECTED.values()}
     assert len(eigrp & set(names)) == 13, "int_routed_host should carry 13 EIGRP rows"

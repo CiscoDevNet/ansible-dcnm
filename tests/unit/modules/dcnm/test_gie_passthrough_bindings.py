@@ -70,11 +70,11 @@ NINE = (
     (PC_TRUNK, "guard_mode", "GUARD_MODE", "loop"),
     (ACCESS, "disable_lldp_transmit", "DISABLE_LLDP_TRANSMIT", True),
     (TRUNK, "disable_lldp_transmit", "DISABLE_LLDP_TRANSMIT", False),
-    (ACCESS, "acl_filter", "ACL_FILTER", "ACL_A"),
-    (TRUNK, "acl_filter", "ACL_FILTER", "ACL_B"),
-    (PC_ACCESS, "acl_filter", "ACL_FILTER", "ACL_C"),
-    (PC_TRUNK, "acl_filter", "ACL_FILTER", "ACL_D"),
-    (PC_DOT1Q, "acl_filter", "ACL_FILTER", "ACL_E"),
+    (ACCESS, "acl_filter", "aclFilter", "ACL_A"),
+    (TRUNK, "acl_filter", "aclFilter", "ACL_B"),
+    (PC_ACCESS, "acl_filter", "aclFilter", "ACL_C"),
+    (PC_TRUNK, "acl_filter", "aclFilter", "ACL_D"),
+    (PC_DOT1Q, "acl_filter", "aclFilter", "ACL_E"),
 )
 
 
@@ -348,7 +348,7 @@ def test_acl_filter_accepts_boundary_lengths():
     for parent in (ACCESS, TRUNK, PC_ACCESS, PC_TRUNK, PC_DOT1Q):
         for value in ("A", "A" * 64):
             add, err = gie_contribute_nvpairs(parent, {"acl_filter": value}, SUPPORTED)
-            assert err is None and add == {"ACL_FILTER": value}
+            assert err is None and add == {"aclFilter": value}
 
 
 def test_multiple_new_keys_on_one_parent_contribute_together():
@@ -362,8 +362,8 @@ def test_multiple_new_keys_on_one_parent_contribute_together():
     assert add == {
         "GUARD_MODE": "root",
         "DISABLE_LLDP_TRANSMIT": "true",
-        "ACL_FILTER": "ACL_X",
-        "FLOWCONTROL_RECEIVE": "on",
+        "aclFilter": "ACL_X",
+        "flowcontrolReceive": "on",
     }
 
 
@@ -543,25 +543,25 @@ def test_carry_forward_covers_every_new_passthrough_binding():
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(TRUNK)
     } == {
-        ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
-        ("FLOWCONTROL_SEND", "flowcontrol_send"),
-        ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+        ("flowcontrolReceive", "flowcontrol_receive"),
+        ("flowcontrolSend", "flowcontrol_send"),
+        ("spanningTreePortType", "spanning_tree_port_type"),
         ("GUARD_MODE", "guard_mode"),
         ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
         ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-        ("ACL_FILTER", "acl_filter"),
+        ("aclFilter", "acl_filter"),
         ("DISABLE_QOS_STATS", "disable_qos_stats"),
         ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
     } == {
-        ("FLOWCONTROL_RECEIVE", "flowcontrol_receive"),
-        ("FLOWCONTROL_SEND", "flowcontrol_send"),
-        ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+        ("flowcontrolReceive", "flowcontrol_receive"),
+        ("flowcontrolSend", "flowcontrol_send"),
+        ("spanningTreePortType", "spanning_tree_port_type"),
         ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
         ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-        ("ACL_FILTER", "acl_filter"),
+        ("aclFilter", "acl_filter"),
         ("DISABLE_QOS_STATS", "disable_qos_stats"),
         ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
     }
@@ -573,10 +573,10 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         # See the slice for its validation scope.
         ("ENABLE_VPC_PEER_LINK", "enable_vpc_peer_link"),
         ("GUARD_MODE", "guard_mode"),
-        ("ACL_FILTER", "acl_filter"),
+        ("aclFilter", "acl_filter"),
         ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
         ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
-        ("SPANNING_TREE_PORT_TYPE", "spanning_tree_port_type"),
+        ("spanningTreePortType", "spanning_tree_port_type"),
         ("DISABLE_QOS_STATS", "disable_qos_stats"),
         ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
     }
@@ -653,53 +653,53 @@ def test_keymap_carries_every_new_nvpair():
     km = gie_nvpair_keymap()
     assert km["GUARD_MODE"] == "guard_mode"
     assert km["DISABLE_LLDP_TRANSMIT"] == "disable_lldp_transmit"
-    assert km["ACL_FILTER"] == "acl_filter"
-    assert km["FLOWCONTROL_RECEIVE"] == "flowcontrol_receive"
-    assert km["FLOWCONTROL_SEND"] == "flowcontrol_send"
-    assert km["SPANNING_TREE_PORT_TYPE"] == "spanning_tree_port_type"
+    assert km["aclFilter"] == "acl_filter"
+    assert km["flowcontrolReceive"] == "flowcontrol_receive"
+    assert km["flowcontrolSend"] == "flowcontrol_send"
+    assert km["spanningTreePortType"] == "spanning_tree_port_type"
     # The OSPF slice on int_routed_host. No module change was needed for these: the keymap is
     # derived from the binding table by gie_nvpair_keymap(), so a new row lands here by itself.
     # Both key-bearing nvPairs reach the keymap like any other. The keymap is how a HAVE
     # nvPair is translated back to a profile key, so leaving a secret out of it would make the
     # controller's value invisible to the comparator -- a re-push on every run, not a leak.
     assert km["OSPF_AUTH_KEY"] == "ospf_auth_key"
-    assert km["OSPF_AUTHENTICATION_KEY"] == "ospf_authentication_key"
+    assert km["ospfAuthenticationKey"] == "ospf_authentication_key"
     assert km["OSPF_AUTH_KEY_ID"] == "ospf_auth_key_id"
-    assert km["OSPF_AUTHENTICATION_KEY_TYPE"] == "ospf_authentication_key_type"
+    assert km["ospfAuthenticationKeyType"] == "ospf_authentication_key_type"
     assert km["ENABLE_OSPF_AUTH"] == "enable_ospf_auth"
     assert km["ENABLE_OSPF"] == "enable_ospf"
-    assert km["OSPF_TAG"] == "ospf_tag"
+    assert km["ospfTag"] == "ospf_tag"
     assert km["OSPF_AREA_ID"] == "ospf_area_id"
-    assert km["OSPF_COST"] == "ospf_cost"
+    assert km["ospfCost"] == "ospf_cost"
     # EIGRP, slice 0b_22: thirteen distinct nvPairs, each shared by the three overlay parents,
     # so the keymap grows by thirteen and not by thirty-nine.
-    assert km["EIGRP_PROCESS_TAG"] == "eigrp_process_tag"
+    assert km["eigrpProcessTag"] == "eigrp_process_tag"
     assert km["ENABLE_EIGRP_ROUTING"] == "enable_eigrp_routing"
-    assert km["EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION"] == "eigrp_ipv4_distribute_list_direction"
+    assert km["eigrpIpv4DistributeListDirection"] == "eigrp_ipv4_distribute_list_direction"
     assert km["DISABLE_EIGRP_BFD"] == "disable_eigrp_bfd"
-    assert km["OSPF_ADVERTISE_SUBNET"] == "ospf_advertise_subnet"
+    assert km["ospfAdvertiseSubnet"] == "ospf_advertise_subnet"
     assert km["ENABLE_BFD_INTERVAL"] == "enable_bfd_interval"
-    assert km["BFD_TX_INTERVAL"] == "bfd_tx_interval"
-    assert km["HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER"] == "hsrp_priority_forwarding_threshold_lower"
-    assert km["HSRP_PREEMPT_DELAY_MINIMUM"] == "hsrp_preempt_delay_minimum"
+    assert km["bfdTxInterval"] == "bfd_tx_interval"
+    assert km["hsrpPriorityForwardingThresholdLower"] == "hsrp_priority_forwarding_threshold_lower"
+    assert km["hsrpPreemptDelayMinimum"] == "hsrp_preempt_delay_minimum"
     assert km["HSRP_VIPv6"] == "hsrp_vipv6"
     assert km["HSRP_GROUPv6"] == "hsrp_groupv6"
     assert km["DISABLE_IPV4_REDIRECTS"] == "disable_ipv4_redirects"
-    assert km["IPV6_ND_SUPPRESS_RA"] == "ipv6_nd_suppress_ra"
+    assert km["ipv6NdSuppressRa"] == "ipv6_nd_suppress_ra"
     assert km["ENABLE_DAMPENING"] == "enable_dampening"
-    assert km["DAMPENING_RESTART_PENALTY"] == "dampening_restart_penalty"
-    assert km["ARP_TIMEOUT"] == "arp_timeout"
+    assert km["dampeningRestartPenalty"] == "dampening_restart_penalty"
+    assert km["arpTimeout"] == "arp_timeout"
     assert km["ENABLE_PIM_SPARSE"] == "enable_pim_sparse"
     assert km["PIM_DR_PRIORITY"] == "pim_dr_priority"
     assert km["ENABLE_PIM_BFD_INSTANCE"] == "enable_pim_bfd_instance"
     # Use the parent's spelling, with a lowercase v. The parent translates it to the child's
     # uppercase spelling. These assertions prevent a capitalization "fix" from silently
     # breaking the binding.
-    assert km["IPv6_LINK_LOCAL"] == "ipv6_link_local"
+    assert km["ipv6LinkLocal"] == "ipv6_link_local"
     assert "IPV6_LINK_LOCAL" not in km, "this is the child's spelling, not the parent's"
     # MACSEC: the parent uses the MACSEC_ prefix and translates to the child's unprefixed name.
-    assert km["MACSEC_KEY_CHAIN_NAME"] == "macsec_key_chain_name"
-    assert km["MACSEC_FALLBACK_KEY_CHAIN_NAME"] == "macsec_fallback_key_chain_name"
+    assert km["macsecKeyChainName"] == "macsec_key_chain_name"
+    assert km["macsecFallbackKeyChainName"] == "macsec_fallback_key_chain_name"
     assert "KEY_CHAIN_NAME" not in km, "this is the child's spelling, without the MACSEC_ prefix"
     # 66 = 65 + ARP_TIMEOUT: one public key for three rows, shared across the three parents.
     # This is why bindings are keyed by (parent, nvpair), not by name.
@@ -708,7 +708,7 @@ def test_keymap_carries_every_new_nvpair():
     # 74 = 70 + the four MACSEC keys, all on int_routed_host.
     # 76 = 74 + two from batch 2: private_vlan_mapping and enable_vpc_peer_link. IPV4_ACL_IN
     # was already in the int_routed_host keymap: three rows, two new keys.
-    assert km["PRIVATE_VLAN_MAPPING"] == "private_vlan_mapping"
+    assert km["privateVlanMapping"] == "private_vlan_mapping"
     assert km["ENABLE_VPC_PEER_LINK"] == "enable_vpc_peer_link"
     assert len(km) == 76
 
@@ -823,7 +823,7 @@ def test_same_value_produces_the_same_payload():
 def test_a15_flowcontrol_contract_is_unchanged():
     for parent in (ACCESS, TRUNK):
         b = resolve_binding(parent, "flowcontrol_receive")
-        assert b["parent_nvpair"] == "FLOWCONTROL_RECEIVE"
+        assert b["parent_nvpair"] == "flowcontrolReceive"
         assert b["type"] == "enum"
         assert tuple(b["valid_values"]) == ("on", "off")
         assert b["default_template"] == "off"
@@ -833,7 +833,7 @@ def test_a15_flowcontrol_contract_is_unchanged():
             add, err = gie_contribute_nvpairs(
                 parent, {"flowcontrol_receive": value}, SUPPORTED
             )
-            assert err is None and add == {"FLOWCONTROL_RECEIVE": value}
+            assert err is None and add == {"flowcontrolReceive": value}
         add, err = gie_contribute_nvpairs(
             parent, {"flowcontrol_receive": "on"}, BELOW
         )

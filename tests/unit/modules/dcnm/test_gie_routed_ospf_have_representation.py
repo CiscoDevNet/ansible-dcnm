@@ -47,7 +47,7 @@ THE SEPARATION THESE TESTS PIN
 NO MODULE WIRING WAS NEEDED FOR THIS SLICE
     An earlier draft of this file claimed the four keys were unwired. That was wrong, and the
     mistake is worth recording because it is easy to repeat: grepping ``dcnm_interface.py`` for
-    a literal ``"OSPF_COST"`` finds nothing, which looks like a missing entry. The wiring is
+    a literal ``"ospfCost"`` finds nothing, which looks like a missing entry. The wiring is
     generated, not written:
 
         dcnm_interface.py:2330   self.keymap.update(gie_nvpair_keymap())
@@ -140,10 +140,10 @@ ROUTED_BUILDER_NV = {
 # Ethernet1/5, as the controller returned it. Every value a str -- that is the whole point.
 ROUTED_HAVE_FULL = {
     "ENABLE_OSPF": "false",
-    "OSPF_TAG": "",
+    "ospfTag": "",
     "OSPF_AREA_ID": "0.0.0.0",
-    "OSPF_COST": "",
-    "IPV4_ACL_IN": "",
+    "ospfCost": "",
+    "ipv4AclIn": "",
     "DISABLE_LLDP_TRANSMIT": "false",
 }
 
@@ -151,9 +151,9 @@ ROUTED_KEYMAP = {
     "INTF_NAME": "name", "DESC": "description", "CONF": "cmds",
     "ADMIN_STATE": "admin_state", "SPEED": "speed", "MTU": "mtu",
     "INTF_VRF": "vrf", "IP": "ipv4_addr", "PREFIX": "ipv4_mask_len",
-    "ENABLE_OSPF": "enable_ospf", "OSPF_TAG": "ospf_tag",
-    "OSPF_AREA_ID": "ospf_area_id", "OSPF_COST": "ospf_cost",
-    "IPV4_ACL_IN": "ipv4_acl_in", "DISABLE_LLDP_TRANSMIT": "disable_lldp_transmit",
+    "ENABLE_OSPF": "enable_ospf", "ospfTag": "ospf_tag",
+    "OSPF_AREA_ID": "ospf_area_id", "ospfCost": "ospf_cost",
+    "ipv4AclIn": "ipv4_acl_in", "DISABLE_LLDP_TRANSMIT": "disable_lldp_transmit",
 }
 
 
@@ -216,14 +216,18 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         and any(cf["parent_nvpair"] == b["parent_nvpair"]
                 for cf in gie_carry_forward_bindings(b["parent_template"]))
     )
-    assert exposed == [
+    # Compared order-independently: the expected rows below stay in their documented
+    # order, but camelCase and UPPER_SNAKE sort differently in ASCII, so the SMU rename
+    # reshuffles `exposed` without changing its membership. Membership is still exact --
+    # an unreviewed integer binding reaching carry-forward still fails here.
+    assert exposed == sorted([
         ("int_loopback", "OSPF_AUTH_KEY_ID"),
-        ("int_loopback", "OSPF_COST"),
-        ("int_loopback", "OSPF_DEAD_INTERVAL"),
-        ("int_loopback", "OSPF_HELLO_INTERVAL"),
-        ("int_loopback", "OSPF_PRIORITY"),
-        ("int_loopback", "OSPF_RETRANSMIT_INTERVAL"),
-        ("int_loopback", "OSPF_TRANSMIT_DELAY"),
+        ("int_loopback", "ospfCost"),
+        ("int_loopback", "ospfDeadInterval"),
+        ("int_loopback", "ospfHelloInterval"),
+        ("int_loopback", "ospfPriority"),
+        ("int_loopback", "ospfRetransmitInterval"),
+        ("int_loopback", "ospfTransmitDelay"),
         # The five dampening integers (slice 0b_6) need the same exemption: NDFC returns
         # them as strings. C9300v lacks their CLI, so device validation is unavailable,
         # but they do reach carry-forward, which is what this list covers.
@@ -231,40 +235,40 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         # defaultValue, so NDFC returns "" when unset. The existing exemption covers
         # that representation; registering it required no engine change. This list is
         # sorted by (parent, nvpair), placing each row in its parent's section.
-        ("int_routed_host", "ARP_TIMEOUT"),
-        ("int_routed_host", "DAMPENING_HALF_LIFE"),
-        ("int_routed_host", "DAMPENING_MAX_SUPPRESS"),
-        ("int_routed_host", "DAMPENING_RESTART_PENALTY"),
-        ("int_routed_host", "DAMPENING_REUSE"),
-        ("int_routed_host", "DAMPENING_SUPPRESS"),
+        ("int_routed_host", "arpTimeout"),
+        ("int_routed_host", "dampeningHalfLife"),
+        ("int_routed_host", "dampeningMaxSuppress"),
+        ("int_routed_host", "dampeningRestartPenalty"),
+        ("int_routed_host", "dampeningReuse"),
+        ("int_routed_host", "dampeningSuppress"),
         ("int_routed_host", "OSPF_AUTH_KEY_ID"),
-        ("int_routed_host", "OSPF_COST"),
-        ("int_routed_host", "OSPF_DEAD_INTERVAL"),
-        ("int_routed_host", "OSPF_HELLO_INTERVAL"),
-        ("int_routed_host", "OSPF_PRIORITY"),
-        ("int_routed_host", "OSPF_TRANSMIT_DELAY"),
+        ("int_routed_host", "ospfCost"),
+        ("int_routed_host", "ospfDeadInterval"),
+        ("int_routed_host", "ospfHelloInterval"),
+        ("int_routed_host", "ospfPriority"),
+        ("int_routed_host", "ospfTransmitDelay"),
         ("int_routed_host", "PIM_DR_PRIORITY"),
         # The six BFD intervals, committed 2026-09-19. Reviewed individually, not generated
         # into this list: each was read off the installed template (tx and min_rx 50-999,
         # multiplier 1-50) and takes the same exemption for the same measured reason -- NDFC
         # hands them back as strings. They are also the first bindings here with a narrow
         # maximum, which is what exposed the flat sample value in test_gie_mechanism_contract.
-        ("int_subif", "ARP_TIMEOUT"),
-        ("int_subif", "BFD_MIN_RX_INTERVAL"),
-        ("int_subif", "BFD_MULTIPLIER"),
-        ("int_subif", "BFD_TX_INTERVAL"),
+        ("int_subif", "arpTimeout"),
+        ("int_subif", "bfdMinRxInterval"),
+        ("int_subif", "bfdMultiplier"),
+        ("int_subif", "bfdTxInterval"),
         ("int_subif", "OSPF_AUTH_KEY_ID"),
-        ("int_subif", "OSPF_COST"),
-        ("int_subif", "OSPF_DEAD_INTERVAL"),
-        ("int_subif", "OSPF_HELLO_INTERVAL"),
-        ("int_subif", "OSPF_PRIORITY"),
-        ("int_subif", "OSPF_RETRANSMIT_INTERVAL"),
-        ("int_subif", "OSPF_TRANSMIT_DELAY"),
+        ("int_subif", "ospfCost"),
+        ("int_subif", "ospfDeadInterval"),
+        ("int_subif", "ospfHelloInterval"),
+        ("int_subif", "ospfPriority"),
+        ("int_subif", "ospfRetransmitInterval"),
+        ("int_subif", "ospfTransmitDelay"),
         ("int_subif", "PIM_DR_PRIORITY"),
-        ("int_vlan", "ARP_TIMEOUT"),
-        ("int_vlan", "BFD_MIN_RX_INTERVAL"),
-        ("int_vlan", "BFD_MULTIPLIER"),
-        ("int_vlan", "BFD_TX_INTERVAL"),
+        ("int_vlan", "arpTimeout"),
+        ("int_vlan", "bfdMinRxInterval"),
+        ("int_vlan", "bfdMultiplier"),
+        ("int_vlan", "bfdTxInterval"),
         # The three HSRP integers of slice 0b_26 take the same exemption, and the decision is
         # recorded here rather than absorbed by a passing test. NDFC hands all three back as
         # strings, exactly like OSPF_COST, so validating against the returned string is the same
@@ -275,18 +279,18 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         # nor the registry's per-field min/max can express it; NDFC enforces it and fails loudly.
         # This list is about representation, not about that constraint.
         ("int_vlan", "HSRP_GROUPv6"),
-        ("int_vlan", "HSRP_PREEMPT_DELAY_MINIMUM"),
-        ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER"),
-        ("int_vlan", "HSRP_PRIORITY_FORWARDING_THRESHOLD_UPPER"),
+        ("int_vlan", "hsrpPreemptDelayMinimum"),
+        ("int_vlan", "hsrpPriorityForwardingThresholdLower"),
+        ("int_vlan", "hsrpPriorityForwardingThresholdUpper"),
         ("int_vlan", "OSPF_AUTH_KEY_ID"),
-        ("int_vlan", "OSPF_COST"),
-        ("int_vlan", "OSPF_DEAD_INTERVAL"),
-        ("int_vlan", "OSPF_HELLO_INTERVAL"),
-        ("int_vlan", "OSPF_PRIORITY"),
-        ("int_vlan", "OSPF_RETRANSMIT_INTERVAL"),
-        ("int_vlan", "OSPF_TRANSMIT_DELAY"),
+        ("int_vlan", "ospfCost"),
+        ("int_vlan", "ospfDeadInterval"),
+        ("int_vlan", "ospfHelloInterval"),
+        ("int_vlan", "ospfPriority"),
+        ("int_vlan", "ospfRetransmitInterval"),
+        ("int_vlan", "ospfTransmitDelay"),
         ("int_vlan", "PIM_DR_PRIORITY"),
-    ], "an integer binding reached the generic carry-forward without being reviewed here"
+    ]), "an integer binding reached the generic carry-forward without being reviewed here"
 
     # The loopback OSPF-MD key id stays out: its parent registers no passthrough binding, so it
     # never reaches this path and keeps its dedicated validator's [0,255] check.
@@ -303,7 +307,7 @@ def test_the_slice_is_registered_on_the_generic_path():
     so the regression test would pass for the wrong reason. Assert the classification first.
     """
     carried = {b["parent_nvpair"] for b in gie_carry_forward_bindings(ROUTED)}
-    for nvpair in ("ENABLE_OSPF", "OSPF_TAG", "OSPF_AREA_ID", "OSPF_COST"):
+    for nvpair in ("ENABLE_OSPF", "ospfTag", "OSPF_AREA_ID", "ospfCost"):
         assert nvpair in carried, "{0} is not on the generic path".format(nvpair)
 
 
@@ -415,7 +419,7 @@ def test_the_absent_shape_is_unaffected_and_invents_no_default():
     assert not s.module.fail_json.called, "the absent shape must not abort"
     payload = _payload_nv(s)
     if payload is not None:
-        for nvpair in ("OSPF_COST", "OSPF_TAG", "ENABLE_OSPF", "OSPF_AREA_ID"):
+        for nvpair in ("ospfCost", "ospfTag", "ENABLE_OSPF", "OSPF_AREA_ID"):
             assert nvpair not in payload, "{0} absent from HAVE must not be invented".format(nvpair)
 
 
@@ -485,16 +489,16 @@ def test_an_out_of_range_cost_is_rejected():
 def test_an_explicit_value_is_not_overwritten_by_have():
     s = _routed_instance()
     want_nv = dict(ROUTED_BUILDER_NV, DESC="changed")
-    want_nv["OSPF_TAG"] = "WP98"
+    want_nv["ospfTag"] = "WP98"
     s.want = [_routed_want(want_nv)]
-    have = dict(ROUTED_BUILDER_NV, **dict(ROUTED_HAVE_FULL, OSPF_TAG="OLD"))
-    have.pop("OSPF_COST")                          # isolate from the defect above
+    have = dict(ROUTED_BUILDER_NV, **dict(ROUTED_HAVE_FULL, ospfTag="OLD"))
+    have.pop("ospfCost")                          # isolate from the defect above
     s.have = _routed_have(have)
     s.pb_input = [_routed_pb(ospf_tag="WP98", description="changed")]
     _run(s)
     payload = _payload_nv(s)
     assert payload is not None
-    assert payload["OSPF_TAG"] == "WP98", "the explicit value must win over HAVE"
+    assert payload["ospfTag"] == "WP98", "the explicit value must win over HAVE"
 
 
 def test_an_explicit_cost_is_not_overwritten_by_have():
@@ -507,28 +511,28 @@ def test_an_explicit_cost_is_not_overwritten_by_have():
     """
     s = _routed_instance()
     want_nv = dict(ROUTED_BUILDER_NV, DESC="changed")
-    want_nv["OSPF_COST"] = "100"                   # builder-emitted wire form
+    want_nv["ospfCost"] = "100"                   # builder-emitted wire form
     s.want = [_routed_want(want_nv)]
     s.have = _routed_have(dict(ROUTED_BUILDER_NV, **ROUTED_HAVE_FULL))
     s.pb_input = [_routed_pb(ospf_cost=100, description="changed")]
     _run(s)
     payload = _payload_nv(s)
     assert payload is not None
-    assert payload["OSPF_COST"] == "100", "the explicit cost must win over the HAVE value"
+    assert payload["ospfCost"] == "100", "the explicit cost must win over the HAVE value"
 
 
 def test_a_carried_value_is_not_reported_as_a_requested_change():
     """Transport preservation must not manufacture a diff the operator did not ask for."""
     s = _routed_instance()
     s.want = [_routed_want(dict(ROUTED_BUILDER_NV, DESC="changed"))]
-    have = dict(ROUTED_BUILDER_NV, **dict(ROUTED_HAVE_FULL, OSPF_TAG="WP98"))
-    have.pop("OSPF_COST")                          # isolate from the defect above
+    have = dict(ROUTED_BUILDER_NV, **dict(ROUTED_HAVE_FULL, ospfTag="WP98"))
+    have.pop("ospfCost")                          # isolate from the defect above
     s.have = _routed_have(have)
     s.pb_input = [_routed_pb(description="changed")]
     _run(s)
     public = _public_nv(s)
     if public is not None:
-        assert "OSPF_TAG" not in public, "a carried value is not a requested change"
+        assert "ospfTag" not in public, "a carried value is not a requested change"
 
 
 def test_an_unchanged_run_is_a_no_op_with_the_cost_present():
@@ -551,7 +555,7 @@ def test_a_second_identical_run_produces_no_payload():
     """Idempotence with the cost removed, so the other guarantees are visible today."""
     s = _routed_instance()
     have = dict(ROUTED_BUILDER_NV, **ROUTED_HAVE_FULL)
-    have.pop("OSPF_COST")                          # isolate from the defect above
+    have.pop("ospfCost")                          # isolate from the defect above
     s.want = [_routed_want(dict(ROUTED_BUILDER_NV))]
     s.have = _routed_have(have)
     s.pb_input = [_routed_pb()]
@@ -595,8 +599,8 @@ def test_characterize_the_payload_when_ospf_is_disabled_with_a_cost_in_have():
     s.want = [_routed_want(want_nv)]
     s.have = _routed_have(dict(ROUTED_BUILDER_NV, **dict(ROUTED_HAVE_FULL,
                                                          ENABLE_OSPF="true",
-                                                         OSPF_TAG="WP98",
-                                                         OSPF_COST="100")))
+                                                         ospfTag="WP98",
+                                                         ospfCost="100")))
     s.pb_input = [_routed_pb(enable_ospf=False)]
     # No skips here any more. Before the fix this aborted, and skipping past it was the honest
     # outcome; with the fix in place either an abort or a missing payload is a REGRESSION in the
@@ -628,7 +632,7 @@ def test_characterize_the_payload_when_ospf_is_disabled_with_a_cost_in_have():
     # NDFC cycle, and inventing the contract here would be the mistake this file exists to
     # avoid. When that measurement happens, this test is the baseline it changes against.
     assert payload.get("ENABLE_OSPF") == "false"
-    assert payload.get("OSPF_COST") == "100", (
+    assert payload.get("ospfCost") == "100", (
         "the omitted cost is expected to be carried forward verbatim; if this changed, the "
         "withdrawal characterization above is stale and must be re-measured"
     )
