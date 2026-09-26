@@ -497,10 +497,22 @@ def gie_declared_default_wire(binding):
 
     Reuses `_to_nvpair_wire`, so a native `False` is compared as "false" -- the string the
     controller actually returns -- instead of by Python truthiness.
+
+    It also applies `gie_wire_value`, for the same reason and in the same direction as
+    `gie_contribute_nvpairs`: `default_template` is recorded in the PUBLIC vocabulary, so for
+    a binding that declares `wire_values` the untranslated default is a spelling the
+    controller never sends. `gie_withdrawal_action` compares a HAVE that came FROM the
+    controller against this value, so both sides have to be in the wire representation or a
+    field already sitting at its declared neutral -- `noChange` against `no_change` -- reads
+    as an unclassifiable value and the whole invocation is refused.
+
+    The translation belongs here rather than at the comparison: this function is the one
+    place the declared default becomes a wire string, so every caller gets the same answer
+    and no caller has to remember to convert. A binding without `wire_values` is unaffected.
     """
     if binding is None or "default_template" not in binding:
         return None
-    return _to_nvpair_wire(binding["default_template"])
+    return gie_wire_value(binding, _to_nvpair_wire(binding["default_template"]))
 
 
 def gie_binding_applicable(parent_template, profile_key, ndfc_version):
