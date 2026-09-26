@@ -67,12 +67,23 @@ BOOL_PASSTHROUGH = sorted(
     (b["parent_template"], b["profile_key"], b["parent_nvpair"])
     for b in BINDING_TABLE
     if b["type"] == "boolean" and b["mechanism"] == "passthrough"
-    # The one identity with no SMU counterpart refuses contribution by design (see
-    # smu_unsupported). A sweep that expects every registered binding to contribute
-    # must skip it; the refusal has its own tests.
-    and not b.get("smu_unsupported")
 )
 BOOL_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, nvpair in BOOL_PASSTHROUGH]
+
+# The inventory above stays COMPLETE: it is what pins the boolean passthrough set, and an
+# identity with no SMU counterpart is still registered, still boolean and still passthrough.
+# The sweeps that expect a contribution to SUCCEED run on the supported side; the other side
+# has its own contract, asserted in test_an_unsupported_boolean_refuses_before_emitting.
+_UNSUPPORTED = {
+    (b["parent_template"], b["profile_key"])
+    for b in BINDING_TABLE
+    if b.get("smu_unsupported")
+}
+BOOL_SUPPORTED = [t for t in BOOL_PASSTHROUGH if (t[0], t[1]) not in _UNSUPPORTED]
+BOOL_SUPPORTED_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, nvpair in BOOL_SUPPORTED]
+BOOL_UNSUPPORTED = [t for t in BOOL_PASSTHROUGH if (t[0], t[1]) in _UNSUPPORTED]
+BOOL_UNSUPPORTED_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, nvpair in BOOL_UNSUPPORTED]
+assert BOOL_SUPPORTED and BOOL_UNSUPPORTED, "the partition must cover both sides"
 
 
 def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
@@ -162,7 +173,7 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
 
 # ------------------------------------------------------- what the engine emits --
 
-@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_PASSTHROUGH, ids=BOOL_IDS)
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_SUPPORTED, ids=BOOL_SUPPORTED_IDS)
 @pytest.mark.parametrize(
     "value,wire", [(True, "true"), (False, "false")], ids=["true", "false"]
 )
@@ -285,7 +296,7 @@ def _compare_obj(state, parent, profile_key, nvpair, want=_OMITTED, have=_OMITTE
     return obj
 
 
-@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_PASSTHROUGH, ids=BOOL_IDS)
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_SUPPORTED, ids=BOOL_SUPPORTED_IDS)
 @pytest.mark.parametrize(
     "playbook_value,controller_value",
     [(True, "true"), (False, "false")],
@@ -308,7 +319,7 @@ def test_reapplying_the_same_boolean_is_idempotent(
     assert obj.changed_dict[0]["merged"] == []
 
 
-@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_PASSTHROUGH, ids=BOOL_IDS)
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_SUPPORTED, ids=BOOL_SUPPORTED_IDS)
 @pytest.mark.parametrize("state", ["merged", "replaced", "overridden"])
 def test_a_real_boolean_change_is_still_detected(parent, profile_key, nvpair, state):
     """The opposite direction: the fix must not make the field unwritable.
@@ -324,7 +335,7 @@ def test_a_real_boolean_change_is_still_detected(parent, profile_key, nvpair, st
     assert reported == {nvpair: "true"}
 
 
-@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_PASSTHROUGH, ids=BOOL_IDS)
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_SUPPORTED, ids=BOOL_SUPPORTED_IDS)
 @pytest.mark.parametrize("state", ["replaced", "overridden"])
 def test_omitted_boolean_under_replaced_follows_the_withdrawal_contract(
     parent, profile_key, nvpair, state
@@ -377,7 +388,7 @@ def test_omitted_boolean_under_replaced_follows_the_withdrawal_contract(
             "in the diff is the defect this contract exists to remove")
 
 
-@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_PASSTHROUGH, ids=BOOL_IDS)
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_SUPPORTED, ids=BOOL_SUPPORTED_IDS)
 def test_omitted_boolean_is_preserved_under_merged(parent, profile_key, nvpair):
     """The preserved historical control, now stated as its own test.
 
@@ -432,3 +443,19 @@ def test_an_empty_string_is_not_accepted_as_operator_input_for_a_boolean():
         gie_validate_binding_value(
             "int_routed_host", "disable_ipv4_redirects", "", value_source="explicit"
         )
+
+
+# =====================================================================================
+# the other half of the partition
+# =====================================================================================
+@pytest.mark.parametrize(
+    "parent,profile_key,nvpair", BOOL_UNSUPPORTED, ids=BOOL_UNSUPPORTED_IDS
+)
+@pytest.mark.parametrize("value", [True, False])
+def test_an_unsupported_boolean_refuses_before_emitting(parent, profile_key, nvpair, value):
+    """A boolean identity the installed SMU build does not declare refuses the contribution
+    for BOTH values and emits nothing -- neither the SMU name nor the pre-SMU one."""
+    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION)
+    assert add is None, "{0}::{1} produced a payload".format(parent, profile_key)
+    assert err and "not supported by the interface templates installed" in err, err
+    assert nvpair not in (add or {})

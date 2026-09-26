@@ -369,13 +369,18 @@ class DcnmInterfaceQuerySchema(BaseModel):
             "guard_mode": "GUARD_MODE",
             # DISABLE_LLDP was removed by the 14sep2026 template batch and split into two
             # independent fields, so transmit and receive can be turned off separately.
-            "disable_lldp_transmit": "DISABLE_LLDP_TRANSMIT",
-            "disable_lldp_receive": "DISABLE_LLDP_RECEIVE",
+            # The SMU templates renamed both to camelCase without changing meaning: the
+            # declarations still read DisplayName "Disable LLDP transmit"/"receive" with
+            # defaultValue=false, so "true" still means disabled.
+            "disable_lldp_transmit": "lldpTransmit",
+            "disable_lldp_receive": "lldpReceive",
             "acl_filter": "aclFilter",
             # QoS statistics slice. Both are the " no-stats" suffix of the service-policy
             # line their dependency emits, never a CLI line of their own.
-            "disable_qos_stats": "DISABLE_QOS_STATS",
-            "disable_queuing_stats": "DISABLE_QUEUING_STATS",
+            # Same: qosStatsSuppressed and queuingStats keep the negative sense the
+            # bodies show -- noStats = " no-stats" if <field> == "true" else "".
+            "disable_qos_stats": "qosStatsSuppressed",
+            "disable_queuing_stats": "queuingStats",
             "speed": "SPEED",
             "description": "DESC",
             "copy_description": "COPY_DESC",

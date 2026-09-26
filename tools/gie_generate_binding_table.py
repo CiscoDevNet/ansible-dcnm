@@ -883,6 +883,45 @@ def _check_registry_schema(r, key):
     # would otherwise ship a native bool into a map the controller reads as strings. Making
     # that a loud rejection is cheaper than a payload whose boolean never converges -- the
     # failure `_to_nvpair_wire` exists to prevent.
+    # New SMU metadata. Validated here so a bad map cannot reach the runtime table, where the
+    # inverse conversion would become ambiguous or silently wrong.
+    if "wire_values" in r:
+        wv = r["wire_values"]
+        if not isinstance(wv, dict) or not wv:
+            raise ValueError(
+                "binding {0!r} declares wire_values {1!r}; it must be a non-empty mapping "
+                "of public value -> SMU nvPair value".format(key, wv)
+            )
+        valid = r.get("valid_values")
+        for public, wire in wv.items():
+            if not isinstance(public, str) or not isinstance(wire, str):
+                raise ValueError(
+                    "binding {0!r} wire_values entry {1!r}->{2!r} must map string to "
+                    "string".format(key, public, wire)
+                )
+            if valid is not None and public not in valid:
+                raise ValueError(
+                    "binding {0!r} maps public value {1!r}, which is not in its registered "
+                    "valid_values {2!r}".format(key, public, list(valid))
+                )
+        if len(set(wv.values())) != len(wv):
+            # The reverse lookup has to be a function; two public values sharing one wire
+            # value would make gie_public_value pick arbitrarily.
+            raise ValueError(
+                "binding {0!r} wire_values are not injective: {1!r}".format(key, wv)
+            )
+        if valid is not None and set(wv) != set(valid):
+            raise ValueError(
+                "binding {0!r} declares wire_values for {1!r} but valid_values is {2!r}; "
+                "every public choice needs a wire spelling".format(
+                    key, sorted(wv), list(valid)
+                )
+            )
+    if "smu_unsupported" in r and r["smu_unsupported"] is not True:
+        raise ValueError(
+            "binding {0!r} declares smu_unsupported {1!r}; the marker is the boolean True "
+            "or absent".format(key, r["smu_unsupported"])
+        )
     if "reset_wire" in r:
         v = r["reset_wire"]
         if isinstance(v, bool) or not isinstance(v, str):

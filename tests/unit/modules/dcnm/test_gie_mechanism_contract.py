@@ -11,8 +11,7 @@ WHY THE OBVIOUS TEST DOES NOT WORK
     concrete. ``gie_guarded_keys()`` returns bare ``profile_key`` strings with no parent
     qualification:
 
-        return {b["profile_key"] for b in BINDING_TABLE
-                if b["mechanism"] == "passthrough" and not b.get("smu_unsupported")}
+        return {b["profile_key"] for b in BINDING_TABLE if b["mechanism"] == "passthrough"}
 
     Seven parents register ``acl_filter``. Flip ONE of them to ``child_pti`` and the key stays
     in the guarded set via the other six -- the wrong-parent rejection still fires, looking
@@ -99,6 +98,39 @@ def _key(binding):
     return (binding["parent_template"], binding["parent_nvpair"])
 
 
+# The identities are PARTITIONED, not filtered: an identity with no SMU counterpart still
+# has a contract, it is just the opposite one, and it is asserted below rather than dropped.
+SUPPORTED_KEYS = sorted(
+    {_key(b) for b in BINDING_TABLE
+     if _key(b) not in DEDICATED_ROUTE and not b.get("smu_unsupported")}
+)
+UNSUPPORTED_KEYS = sorted(
+    {_key(b) for b in BINDING_TABLE
+     if _key(b) not in DEDICATED_ROUTE and b.get("smu_unsupported")}
+)
+assert SUPPORTED_KEYS and UNSUPPORTED_KEYS, "the partition must cover both sides"
+
+# Independently reviewed SMU enum vocabularies, transcribed by hand from the captured
+# declarations on .90 (capture-S2, byte-identical to capture-R2 at 12.6.0.267). Deliberately
+# NOT obtained from gie_wire_value: a test must not use the production mapper as its own
+# oracle. `validValues` in the installed bodies:
+#     ospfNetworkType   noChange,broadcast,pointToPoint
+#     ospfBfdMode       noChange,enable,disable
+#     ospfPassiveMode   noChange,passive,noPassive
+REVIEWED_WIRE_ENUM = {
+    "no_change": "noChange",
+    "point_to_point": "pointToPoint",
+    "no_passive": "noPassive",
+}
+
+
+def _reviewed_wire(binding, value):
+    """The nvPair value this binding must emit for `value`, from the reviewed table above."""
+    if "wire_values" in binding and isinstance(value, str):
+        return REVIEWED_WIRE_ENUM.get(value, value)
+    return str(value)
+
+
 def _sample_for(binding):
     if binding["type"] == "enum":
         return binding["valid_values"][0]
@@ -130,8 +162,7 @@ def _generic_route_violations(table):
     """
     violations = []
     guarded = {
-        b["profile_key"] for b in table
-        if b.get("mechanism") == "passthrough" and not b.get("smu_unsupported")
+        b["profile_key"] for b in table if b.get("mechanism") == "passthrough"
     }
     for binding in table:
         key = _key(binding)
@@ -254,9 +285,7 @@ def test_a_generic_binding_is_rejected_on_a_parent_that_does_not_support_it(key)
 # =====================================================================================
 # BEHAVIOUR — 2. the correct parent carries the intent through to the nvPair
 # =====================================================================================
-@pytest.mark.parametrize(
-    "key", sorted({_key(b) for b in BINDING_TABLE if _key(b) not in DEDICATED_ROUTE})
-)
+@pytest.mark.parametrize("key", SUPPORTED_KEYS)
 def test_a_generic_binding_reaches_the_payload_in_wire_form(key):
     """ENGINE-level: gie_contribute_nvpairs, not the module's validator/builder pair.
 
@@ -281,15 +310,17 @@ def test_a_generic_binding_reaches_the_payload_in_wire_form(key):
     if binding["type"] == "boolean":
         assert emitted == "true"
     else:
-        assert emitted == str(value)
+        assert emitted == _reviewed_wire(binding, value), (
+            "{0}: emitted {1!r}; the reviewed declaration expects {2!r}".format(
+                key, emitted, _reviewed_wire(binding, value)
+            )
+        )
 
 
 # =====================================================================================
 # 3. omission — the SELECTOR only
 # =====================================================================================
-@pytest.mark.parametrize(
-    "key", sorted({_key(b) for b in BINDING_TABLE if _key(b) not in DEDICATED_ROUTE})
-)
+@pytest.mark.parametrize("key", SUPPORTED_KEYS)
 def test_a_generic_binding_is_offered_to_the_carry_forward_selector(key):
     """Named for what it checks: the binding is OFFERED for carry-forward.
 
@@ -355,8 +386,7 @@ def test_mislabelling_one_parent_of_a_shared_key_is_caught(patched_table):
     table = patched_table(_with_mechanism(key, "child_pti"))
 
     assert "acl_filter" in {
-        b["profile_key"] for b in table
-        if b.get("mechanism") == "passthrough" and not b.get("smu_unsupported")
+        b["profile_key"] for b in table if b.get("mechanism") == "passthrough"
     }, "fixture no longer reproduces the counterexample: the key must stay globally guarded"
 
     violations = _generic_route_violations(table)
@@ -513,3 +543,22 @@ def test_the_ospf_slice_reaches_the_payload_through_the_real_builder():
             "{0}: expected {1!r}, got {2!r}".format(nvpair, expected, nvpairs[nvpair])
         )
         assert isinstance(nvpairs[nvpair], str), "nvPairs must be strings"
+
+
+# =====================================================================================
+# the other half of the partition — an identity with NO SMU counterpart
+# =====================================================================================
+@pytest.mark.parametrize("key", UNSUPPORTED_KEYS)
+def test_an_unsupported_identity_refuses_before_emitting_anything(key):
+    """The counterpart of the sweep above. An identity the installed build does not declare
+    must refuse at the contribution boundary and emit nothing -- not fall back to the
+    pre-SMU nvPair name, and not be quietly dropped from coverage either."""
+    binding = next(b for b in BINDING_TABLE if _key(b) == key)
+    nvpairs, error = gie_contribute_nvpairs(
+        binding["parent_template"],
+        {binding["profile_key"]: _sample_for(binding)},
+        NDFC_VERSION,
+    )
+    assert nvpairs is None, "{0}: an unsupported identity produced a payload".format(key)
+    assert error and "not supported by the interface templates installed" in error, error
+    assert binding["parent_nvpair"] not in (nvpairs or {})

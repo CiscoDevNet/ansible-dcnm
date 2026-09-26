@@ -598,7 +598,7 @@ def test_characterize_the_payload_when_ospf_is_disabled_with_a_cost_in_have():
     want_nv["ospf"] = "false"
     s.want = [_routed_want(want_nv)]
     s.have = _routed_have(dict(ROUTED_BUILDER_NV, **dict(ROUTED_HAVE_FULL,
-                                                         ENABLE_OSPF="true",
+                                                         ospf="true",
                                                          ospfTag="WP98",
                                                          ospfCost="100")))
     s.pb_input = [_routed_pb(enable_ospf=False)]
