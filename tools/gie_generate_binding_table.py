@@ -62,10 +62,10 @@ COMMITTED_BINDINGS = {
     ("int_access_host", "spanningTreePortType"): "spanning_tree_port_type",
     ("int_trunk_host", "spanningTreePortType"): "spanning_tree_port_type",
 
-    ("int_access_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
-    ("int_trunk_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
-    ("int_access_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
-    ("int_trunk_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+    ("int_access_host", "qosStatsSuppressed"): "disable_qos_stats",
+    ("int_trunk_host", "qosStatsSuppressed"): "disable_qos_stats",
+    ("int_access_host", "queuingStats"): "disable_queuing_stats",
+    ("int_trunk_host", "queuingStats"): "disable_queuing_stats",
 
     # The same four fields on the port-channel host parents. DISABLE_LLDP differs from the
     # other three: the parent delegates it to the member policy instead of emitting the CLI
@@ -79,13 +79,13 @@ COMMITTED_BINDINGS = {
     ("int_port_channel_dot1q_tunnel_host", "spanningTreePortType"): "spanning_tree_port_type",
 
 
-    ("int_port_channel_access_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
-    ("int_port_channel_trunk_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
-    ("int_port_channel_dot1q_tunnel_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
+    ("int_port_channel_access_host", "qosStatsSuppressed"): "disable_qos_stats",
+    ("int_port_channel_trunk_host", "qosStatsSuppressed"): "disable_qos_stats",
+    ("int_port_channel_dot1q_tunnel_host", "qosStatsSuppressed"): "disable_qos_stats",
 
-    ("int_port_channel_access_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
-    ("int_port_channel_trunk_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
-    ("int_port_channel_dot1q_tunnel_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+    ("int_port_channel_access_host", "queuingStats"): "disable_queuing_stats",
+    ("int_port_channel_trunk_host", "queuingStats"): "disable_queuing_stats",
+    ("int_port_channel_dot1q_tunnel_host", "queuingStats"): "disable_queuing_stats",
 
     # The two vPC host parents, passthrough. These are the only vPC parents a playbook can
     # reach: the module builds its policy key as <type>_<mode> and pol_types carries just
@@ -111,11 +111,11 @@ COMMITTED_BINDINGS = {
     # trunk only: int_vpc_access_host does not declare GUARD_MODE.
     ("int_vpc_trunk_host", "GUARD_MODE"): "guard_mode",
 
-    ("int_vpc_trunk_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
-    ("int_vpc_access_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
+    ("int_vpc_trunk_host", "qosStatsSuppressed"): "disable_qos_stats",
+    ("int_vpc_access_host", "qosStatsSuppressed"): "disable_qos_stats",
 
-    ("int_vpc_trunk_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
-    ("int_vpc_access_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+    ("int_vpc_trunk_host", "queuingStats"): "disable_queuing_stats",
+    ("int_vpc_access_host", "queuingStats"): "disable_queuing_stats",
 
     # int_routed_host -- the first non-switchport parent after the fabric loopback.
     #
@@ -124,13 +124,13 @@ COMMITTED_BINDINGS = {
     # interface_ip_access_group_in_11_1), all verified present on 12.6.0.267. Per the
     # precedent recorded above for int_port_channel_trunk_host::DISABLE_LLDP, delegation does
     # not decide the mechanism: the module writes one parent nvPair, so these stay passthrough.
-    ("int_routed_host", "DISABLE_BFD_ECHO"): "disable_bfd_echo",
+    ("int_routed_host", "bfdEcho"): "disable_bfd_echo",
 
     # IsShow="ENABLE_QOS==true" / QUEUING_POLICY!='' -- these only append `no-stats` to the
     # service-policy line the QoS scaffold emits. Unlike the dot1q port-channel, the scaffold
     # is native to eth_prof_spec_routed_host, so they are reachable from the data model.
-    ("int_routed_host", "DISABLE_QOS_STATS"): "disable_qos_stats",
-    ("int_routed_host", "DISABLE_QUEUING_STATS"): "disable_queuing_stats",
+    ("int_routed_host", "qosStatsSuppressed"): "disable_qos_stats",
+    ("int_routed_host", "queuingStats"): "disable_queuing_stats",
 
     # ARP_TIMEOUT is deliberately NOT committed yet. int_subif and int_vlan declare it too and
     # both are reachable (pol_types "sub_int_subint" and "svi_vlan"), so committing it on the
@@ -147,23 +147,23 @@ COMMITTED_BINDINGS = {
     # Keeping the old binding would be worse than removing it: a PTI accepts nvPairs its
     # template does not declare. DISABLE_LLDP would still travel through the API and appear
     # valid, but would never produce CLI.
-    ("int_access_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
-    ("int_trunk_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
-    ("int_routed_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
-    ("int_port_channel_access_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
-    ("int_port_channel_trunk_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
-    ("int_port_channel_dot1q_tunnel_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
-    ("int_vpc_access_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
-    ("int_vpc_trunk_host", "DISABLE_LLDP_TRANSMIT"): "disable_lldp_transmit",
+    ("int_access_host", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_trunk_host", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_routed_host", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_port_channel_access_host", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_port_channel_trunk_host", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_port_channel_dot1q_tunnel_host", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_vpc_access_host", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_vpc_trunk_host", "lldpTransmit"): "disable_lldp_transmit",
 
-    ("int_access_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
-    ("int_trunk_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
-    ("int_routed_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
-    ("int_port_channel_access_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
-    ("int_port_channel_trunk_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
-    ("int_port_channel_dot1q_tunnel_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
-    ("int_vpc_access_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
-    ("int_vpc_trunk_host", "DISABLE_LLDP_RECEIVE"): "disable_lldp_receive",
+    ("int_access_host", "lldpReceive"): "disable_lldp_receive",
+    ("int_trunk_host", "lldpReceive"): "disable_lldp_receive",
+    ("int_routed_host", "lldpReceive"): "disable_lldp_receive",
+    ("int_port_channel_access_host", "lldpReceive"): "disable_lldp_receive",
+    ("int_port_channel_trunk_host", "lldpReceive"): "disable_lldp_receive",
+    ("int_port_channel_dot1q_tunnel_host", "lldpReceive"): "disable_lldp_receive",
+    ("int_vpc_access_host", "lldpReceive"): "disable_lldp_receive",
+    ("int_vpc_trunk_host", "lldpReceive"): "disable_lldp_receive",
 
     # OSPF on the routed host parent, child_pti. FOUR ONLY, on purpose: this is the first
     # time child_pti is exercised on a routed parent rather than the fabric loopback, and
@@ -171,9 +171,9 @@ COMMITTED_BINDINGS = {
     # The gate plus the two the template marks IsMandatory feed one shared base child;
     # OSPF_COST is the value field under test, with unambiguous CLI and no secret.
     # The remaining OSPF fields stay out until this slice is measured on hardware.
-    ("int_routed_host", "ENABLE_OSPF"): "enable_ospf",
+    ("int_routed_host", "ospf"): "enable_ospf",
     ("int_routed_host", "ospfTag"): "ospf_tag",
-    ("int_routed_host", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
+    ("int_routed_host", "ospfAuthentication"): "enable_ospf_auth",
     ("int_routed_host", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
     ("int_routed_host", "OSPF_AUTH_KEY"): "ospf_auth_key",
     ("int_routed_host", "ospfAuthenticationKeyType"): "ospf_authentication_key_type",
@@ -198,9 +198,9 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "ospfDeadInterval"): "ospf_dead_interval",
     ("int_routed_host", "ospfTransmitDelay"): "ospf_transmit_delay",
     ("int_routed_host", "ospfPriority"): "ospf_priority",
-    ("int_routed_host", "OSPF_PASSIVE_MODE"): "ospf_passive_mode",
-    ("int_routed_host", "OSPF_NETWORK_TYPE"): "ospf_network_type",
-    ("int_routed_host", "OSPF_BFD_MODE"): "ospf_bfd_mode",
+    ("int_routed_host", "ospfPassiveMode"): "ospf_passive_mode",
+    ("int_routed_host", "ospfNetworkType"): "ospf_network_type",
+    ("int_routed_host", "ospfBfdMode"): "ospf_bfd_mode",
 
     # int_subif and int_vlan -- the first bindings ever registered for these two parents. Both
     # needed the engine hooked into their validator and builder first; neither had it.
@@ -217,39 +217,39 @@ COMMITTED_BINDINGS = {
     #
     # This is why the table is keyed by (parent_template, parent_nvpair). A slice copied from
     # the routed parent would have registered nvPairs that do not exist on the other two.
-    ("int_subif", "ENABLE_OSPF"): "enable_ospf",
+    ("int_subif", "ospf"): "enable_ospf",
     ("int_subif", "OSPF_AREA_ID"): "ospf_area_id",
     ("int_subif", "ospfBfd"): "ospf_bfd",
     ("int_subif", "ospfCost"): "ospf_cost",
     ("int_subif", "ospfDeadInterval"): "ospf_dead_interval",
     ("int_subif", "ospfHelloInterval"): "ospf_hello_interval",
     ("int_subif", "ospfMtuIgnore"): "ospf_mtu_ignore",
-    ("int_subif", "OSPF_NETWORK_TYPE"): "ospf_network_type",
+    ("int_subif", "ospfNetworkType"): "ospf_network_type",
     ("int_subif", "ospfPassiveInterface"): "ospf_passive_interface",
     ("int_subif", "ospfPriority"): "ospf_priority",
     ("int_subif", "ospfRetransmitInterval"): "ospf_retransmit_interval",
     ("int_subif", "ospfShutdown"): "ospf_shutdown",
     ("int_subif", "ospfTag"): "ospf_tag",
-    ("int_subif", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
+    ("int_subif", "ospfAuthentication"): "enable_ospf_auth",
     ("int_subif", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
     ("int_subif", "OSPF_AUTH_KEY"): "ospf_auth_key",
     ("int_subif", "ospfAuthenticationKeyType"): "ospf_authentication_key_type",
     ("int_subif", "ospfAuthenticationKey"): "ospf_authentication_key",
     ("int_subif", "ospfTransmitDelay"): "ospf_transmit_delay",
-    ("int_vlan", "ENABLE_OSPF"): "enable_ospf",
+    ("int_vlan", "ospf"): "enable_ospf",
     ("int_vlan", "OSPF_AREA_ID"): "ospf_area_id",
-    ("int_vlan", "OSPF_BFD_MODE"): "ospf_bfd_mode",
+    ("int_vlan", "ospfBfdMode"): "ospf_bfd_mode",
     ("int_vlan", "ospfCost"): "ospf_cost",
     ("int_vlan", "ospfDeadInterval"): "ospf_dead_interval",
     ("int_vlan", "ospfHelloInterval"): "ospf_hello_interval",
     ("int_vlan", "ospfMtuIgnore"): "ospf_mtu_ignore",
-    ("int_vlan", "OSPF_NETWORK_TYPE"): "ospf_network_type",
-    ("int_vlan", "OSPF_PASSIVE_MODE"): "ospf_passive_mode",
+    ("int_vlan", "ospfNetworkType"): "ospf_network_type",
+    ("int_vlan", "ospfPassiveMode"): "ospf_passive_mode",
     ("int_vlan", "ospfPriority"): "ospf_priority",
     ("int_vlan", "ospfRetransmitInterval"): "ospf_retransmit_interval",
     ("int_vlan", "ospfShutdown"): "ospf_shutdown",
     ("int_vlan", "ospfTag"): "ospf_tag",
-    ("int_vlan", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
+    ("int_vlan", "ospfAuthentication"): "enable_ospf_auth",
     ("int_vlan", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
     ("int_vlan", "OSPF_AUTH_KEY"): "ospf_auth_key",
     ("int_vlan", "ospfAuthenticationKeyType"): "ospf_authentication_key_type",
@@ -258,48 +258,48 @@ COMMITTED_BINDINGS = {
 
     # --- EIGRP on int_routed_host (slice 0b_22) ---
     ("int_routed_host", "eigrpProcessTag"): "eigrp_process_tag",
-    ("int_routed_host", "ENABLE_EIGRP_ROUTING"): "enable_eigrp_routing",
-    ("int_routed_host", "ENABLE_EIGRP_IPV6_ROUTING"): "enable_eigrp_ipv6_routing",
+    ("int_routed_host", "eigrpRouting"): "enable_eigrp_routing",
+    ("int_routed_host", "eigrpIpv6Routing"): "enable_eigrp_ipv6_routing",
     ("int_routed_host", "eigrpIpv4Passive"): "eigrp_ipv4_passive",
     ("int_routed_host", "eigrpNoIpv4Passive"): "eigrp_no_ipv4_passive",
     ("int_routed_host", "eigrpNoIpv6Passive"): "eigrp_no_ipv6_passive",
-    ("int_routed_host", "ENABLE_EIGRP_SHUTDOWN"): "enable_eigrp_shutdown",
-    ("int_routed_host", "ENABLE_EIGRP_BFD"): "enable_eigrp_bfd",
-    ("int_routed_host", "DISABLE_EIGRP_BFD"): "disable_eigrp_bfd",
+    ("int_routed_host", "eigrpShutdown"): "enable_eigrp_shutdown",
+    ("int_routed_host", "eigrpBfd"): "enable_eigrp_bfd",
+    ("int_routed_host", "eigrpBfdDisable"): "disable_eigrp_bfd",
     ("int_routed_host", "eigrpIpv4DistributeListPrefixList"): "eigrp_ipv4_distribute_list_prefix_list",
     ("int_routed_host", "eigrpIpv4DistributeListDirection"): "eigrp_ipv4_distribute_list_direction",
     ("int_routed_host", "eigrpIpv6DistributeListPrefixList"): "eigrp_ipv6_distribute_list_prefix_list",
     ("int_routed_host", "eigrpIpv6DistributeListDirection"): "eigrp_ipv6_distribute_list_direction",
     # --- EIGRP on int_subif (slice 0b_22) ---
     ("int_subif", "eigrpProcessTag"): "eigrp_process_tag",
-    ("int_subif", "ENABLE_EIGRP_ROUTING"): "enable_eigrp_routing",
-    ("int_subif", "ENABLE_EIGRP_IPV6_ROUTING"): "enable_eigrp_ipv6_routing",
+    ("int_subif", "eigrpRouting"): "enable_eigrp_routing",
+    ("int_subif", "eigrpIpv6Routing"): "enable_eigrp_ipv6_routing",
     ("int_subif", "eigrpIpv4Passive"): "eigrp_ipv4_passive",
     ("int_subif", "eigrpNoIpv4Passive"): "eigrp_no_ipv4_passive",
     ("int_subif", "eigrpNoIpv6Passive"): "eigrp_no_ipv6_passive",
-    ("int_subif", "ENABLE_EIGRP_SHUTDOWN"): "enable_eigrp_shutdown",
-    ("int_subif", "ENABLE_EIGRP_BFD"): "enable_eigrp_bfd",
-    ("int_subif", "DISABLE_EIGRP_BFD"): "disable_eigrp_bfd",
+    ("int_subif", "eigrpShutdown"): "enable_eigrp_shutdown",
+    ("int_subif", "eigrpBfd"): "enable_eigrp_bfd",
+    ("int_subif", "eigrpBfdDisable"): "disable_eigrp_bfd",
     ("int_subif", "eigrpIpv4DistributeListPrefixList"): "eigrp_ipv4_distribute_list_prefix_list",
     ("int_subif", "eigrpIpv4DistributeListDirection"): "eigrp_ipv4_distribute_list_direction",
     ("int_subif", "eigrpIpv6DistributeListPrefixList"): "eigrp_ipv6_distribute_list_prefix_list",
     ("int_subif", "eigrpIpv6DistributeListDirection"): "eigrp_ipv6_distribute_list_direction",
     # --- EIGRP on int_vlan (slice 0b_22) ---
     ("int_vlan", "eigrpProcessTag"): "eigrp_process_tag",
-    ("int_vlan", "ENABLE_EIGRP_ROUTING"): "enable_eigrp_routing",
-    ("int_vlan", "ENABLE_EIGRP_IPV6_ROUTING"): "enable_eigrp_ipv6_routing",
+    ("int_vlan", "eigrpRouting"): "enable_eigrp_routing",
+    ("int_vlan", "eigrpIpv6Routing"): "enable_eigrp_ipv6_routing",
     ("int_vlan", "eigrpIpv4Passive"): "eigrp_ipv4_passive",
     ("int_vlan", "eigrpNoIpv4Passive"): "eigrp_no_ipv4_passive",
     ("int_vlan", "eigrpNoIpv6Passive"): "eigrp_no_ipv6_passive",
-    ("int_vlan", "ENABLE_EIGRP_SHUTDOWN"): "enable_eigrp_shutdown",
-    ("int_vlan", "ENABLE_EIGRP_BFD"): "enable_eigrp_bfd",
-    ("int_vlan", "DISABLE_EIGRP_BFD"): "disable_eigrp_bfd",
+    ("int_vlan", "eigrpShutdown"): "enable_eigrp_shutdown",
+    ("int_vlan", "eigrpBfd"): "enable_eigrp_bfd",
+    ("int_vlan", "eigrpBfdDisable"): "disable_eigrp_bfd",
     ("int_vlan", "eigrpIpv4DistributeListPrefixList"): "eigrp_ipv4_distribute_list_prefix_list",
     ("int_vlan", "eigrpIpv4DistributeListDirection"): "eigrp_ipv4_distribute_list_direction",
     ("int_vlan", "eigrpIpv6DistributeListPrefixList"): "eigrp_ipv6_distribute_list_prefix_list",
     ("int_vlan", "eigrpIpv6DistributeListDirection"): "eigrp_ipv6_distribute_list_direction",
     # --- OSPF on int_loopback (slice 0b_23) ---
-    ("int_loopback", "ENABLE_OSPF"): "enable_ospf",
+    ("int_loopback", "ospf"): "enable_ospf",
     ("int_loopback", "ospfTag"): "ospf_tag",
     ("int_loopback", "OSPF_AREA_ID"): "ospf_area_id",
     ("int_loopback", "ospfAdvertiseSubnet"): "ospf_advertise_subnet",
@@ -311,23 +311,23 @@ COMMITTED_BINDINGS = {
     ("int_loopback", "ospfPriority"): "ospf_priority",
     ("int_loopback", "ospfMtuIgnore"): "ospf_mtu_ignore",
     ("int_loopback", "ospfShutdown"): "ospf_shutdown",
-    ("int_loopback", "OSPF_NETWORK_TYPE"): "ospf_network_type",
+    ("int_loopback", "ospfNetworkType"): "ospf_network_type",
     ("int_loopback", "ospfBfd"): "ospf_bfd",
-    ("int_loopback", "ENABLE_OSPF_AUTH"): "enable_ospf_auth",
+    ("int_loopback", "ospfAuthentication"): "enable_ospf_auth",
     ("int_loopback", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
     ("int_loopback", "OSPF_AUTH_KEY"): "ospf_auth_key",
     ("int_loopback", "ospfAuthenticationKeyType"): "ospf_authentication_key_type",
     ("int_loopback", "ospfAuthenticationKey"): "ospf_authentication_key",
     # --- BFD on int_subif and int_vlan (slice 0b_24) ---
-    ("int_subif", "ENABLE_BFD_INTERVAL"): "enable_bfd_interval",
+    ("int_subif", "bfdInterval"): "enable_bfd_interval",
     ("int_subif", "bfdTxInterval"): "bfd_tx_interval",
     ("int_subif", "bfdMinRxInterval"): "bfd_min_rx_interval",
     ("int_subif", "bfdMultiplier"): "bfd_multiplier",
-    ("int_vlan", "ENABLE_BFD_INTERVAL"): "enable_bfd_interval",
+    ("int_vlan", "bfdInterval"): "enable_bfd_interval",
     ("int_vlan", "bfdTxInterval"): "bfd_tx_interval",
     ("int_vlan", "bfdMinRxInterval"): "bfd_min_rx_interval",
     ("int_vlan", "bfdMultiplier"): "bfd_multiplier",
-    ("int_vlan", "DISABLE_BFD_ECHO"): "disable_bfd_echo",
+    ("int_vlan", "bfdEcho"): "disable_bfd_echo",
     # --- EIGRP on int_loopback (slice 0b_25) ---
     #
     # EIGHT, not the family's thirteen. The INSTALLED parent -- int_loopback.template@27cd9ce7e671b5f3,
@@ -341,13 +341,13 @@ COMMITTED_BINDINGS = {
     # (nxos64-cs.10.6.2.F.bin) through NDFC before this entry was added, including the two that
     # needed `feature bfd` and the two `no ...` forms. See the phase34 FAB4 EIGRP evidence.
     ("int_loopback", "eigrpProcessTag"): "eigrp_process_tag",
-    ("int_loopback", "ENABLE_EIGRP_ROUTING"): "enable_eigrp_routing",
+    ("int_loopback", "eigrpRouting"): "enable_eigrp_routing",
     ("int_loopback", "eigrpIpv4Passive"): "eigrp_ipv4_passive",
     ("int_loopback", "eigrpNoIpv4Passive"): "eigrp_no_ipv4_passive",
     ("int_loopback", "eigrpNoIpv6Passive"): "eigrp_no_ipv6_passive",
-    ("int_loopback", "ENABLE_EIGRP_SHUTDOWN"): "enable_eigrp_shutdown",
-    ("int_loopback", "ENABLE_EIGRP_BFD"): "enable_eigrp_bfd",
-    ("int_loopback", "DISABLE_EIGRP_BFD"): "disable_eigrp_bfd",
+    ("int_loopback", "eigrpShutdown"): "enable_eigrp_shutdown",
+    ("int_loopback", "eigrpBfd"): "enable_eigrp_bfd",
+    ("int_loopback", "eigrpBfdDisable"): "disable_eigrp_bfd",
     # --- HSRP on int_vlan (slice 0b_26) ---
     #
     # The first three rows that sit on top of MODULE-NATIVE fields. enable_hsrp, hsrp_vip,
@@ -421,14 +421,14 @@ COMMITTED_BINDINGS = {
     #
     # Unlike BFD and HSRP, each field has its own CLI line. The
     # routed_interface_redirects_disable child tests each value independently.
-    ("int_routed_host", "DISABLE_IPV4_REDIRECTS"): "disable_ipv4_redirects",
-    ("int_routed_host", "DISABLE_IPV6_REDIRECTS"): "disable_ipv6_redirects",
+    ("int_routed_host", "ipv4Redirects"): "disable_ipv4_redirects",
+    ("int_routed_host", "ipv6Redirects"): "disable_ipv6_redirects",
     ("int_routed_host", "ipv6NdSuppressRa"): "ipv6_nd_suppress_ra",
-    ("int_subif", "DISABLE_IPV4_REDIRECTS"): "disable_ipv4_redirects",
-    ("int_subif", "DISABLE_IPV6_REDIRECTS"): "disable_ipv6_redirects",
+    ("int_subif", "ipv4Redirects"): "disable_ipv4_redirects",
+    ("int_subif", "ipv6Redirects"): "disable_ipv6_redirects",
     ("int_subif", "ipv6NdSuppressRa"): "ipv6_nd_suppress_ra",
-    ("int_vlan", "DISABLE_IPV4_REDIRECTS"): "disable_ipv4_redirects",
-    ("int_vlan", "DISABLE_IPV6_REDIRECTS"): "disable_ipv6_redirects",
+    ("int_vlan", "ipv4Redirects"): "disable_ipv4_redirects",
+    ("int_vlan", "ipv6Redirects"): "disable_ipv6_redirects",
     ("int_vlan", "ipv6NdSuppressRa"): "ipv6_nd_suppress_ra",
     # --- Dampening on int_routed_host (slice 0b_6) ---
     #
@@ -452,7 +452,7 @@ COMMITTED_BINDINGS = {
     # This is the registry's deepest chain, with four levels and four template rules.
     # One rule links three registered fields ("reuse, suppress and max suppress must
     # be configured together"), unlike earlier batches. None of those rules is duplicated here.
-    ("int_routed_host", "ENABLE_DAMPENING"): "enable_dampening",
+    ("int_routed_host", "dampening"): "enable_dampening",
     ("int_routed_host", "dampeningHalfLife"): "dampening_half_life",
     ("int_routed_host", "dampeningReuse"): "dampening_reuse",
     ("int_routed_host", "dampeningSuppress"): "dampening_suppress",
@@ -510,7 +510,7 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "PIM_DR_PRIORITY"): "pim_dr_priority",
     ("int_subif", "PIM_DR_PRIORITY"): "pim_dr_priority",
     ("int_vlan", "PIM_DR_PRIORITY"): "pim_dr_priority",
-    ("int_routed_host", "ENABLE_PIM_BFD_INSTANCE"): "enable_pim_bfd_instance",
+    ("int_routed_host", "pimBfdInstance"): "enable_pim_bfd_instance",
     # --- IPv6 link-local on the three overlay parents (slice 0b_32) ---
     #
     # Three rows: int_loopback does not declare it. The installed child is
@@ -558,7 +558,7 @@ COMMITTED_BINDINGS = {
     # Validation is asymmetric: an unknown policy causes a 500 with "Failed to find policy",
     # but an unknown keychain is accepted and applied, leaving a dangling reference without
     # a warning. See phase44.
-    ("int_routed_host", "ENABLE_MACSEC_INTERFACE_POLICY"): "enable_macsec_interface_policy",
+    ("int_routed_host", "macsecInterfacePolicy"): "enable_macsec_interface_policy",
     ("int_routed_host", "macsecKeyChainName"): "macsec_key_chain_name",
     ("int_routed_host", "macsecPolicyName"): "macsec_policy_name",
     ("int_routed_host", "macsecFallbackKeyChainName"): "macsec_fallback_key_chain_name",
@@ -763,8 +763,21 @@ rebuild_binding_indexes()
 FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interface_type",
           "applicable_mode", "type", "valid_values", "default_template", "reset_wire",
           "mechanism", "min_ndfc_version", "min_length", "max_length", "min_value",
-          "max_value", "no_log"]
+          "max_value", "no_log", "wire_values", "smu_unsupported"]
 
+# `smu_unsupported` -- this identity has NO counterpart in the installed SMU build. The
+# row is KEPT so its history and provenance survive; the engine refuses explicit input for
+# it before anything is written, and never falls back to the pre-SMU nvPair name. Omission
+# is unaffected: the controller cannot return a key it does not declare, so there is
+# nothing to carry forward and no reset to invent.
+#
+# `wire_values` -- public enum value -> SMU nvPair value, for the exact
+# (parent_template, parent_nvpair) it is declared on. The SMU templates renamed three OSPF
+# enum VOCABULARIES (no_change -> noChange, point_to_point -> pointToPoint, no_passive ->
+# noPassive) without changing their meaning. `valid_values` stays the PUBLIC contract, so a
+# playbook keeps writing no_change and an SMU spelling is still rejected on input; this map
+# is applied only at the wire boundary, in both directions. Absent means identity.
+#
 # `reset_wire` -- the nvPair wire STRING that withdraws this binding, for the exact
 # (parent_template, parent_nvpair) it is declared on.
 #

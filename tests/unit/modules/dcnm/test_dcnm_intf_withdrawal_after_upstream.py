@@ -44,8 +44,8 @@ from .gie_withdrawal_harness import (
 # the PILOT rows verbatim; nothing is re-derived here.
 MULTI = {
     "aclFilter": ("acl_filter", "ACL-PILOT", ""),
-    "DISABLE_LLDP_TRANSMIT": ("disable_lldp_transmit", True, "false"),
-    "DISABLE_LLDP_RECEIVE": ("disable_lldp_receive", True, "false"),
+    "lldpTransmit": ("disable_lldp_transmit", True, "false"),
+    "lldpReceive": ("disable_lldp_receive", True, "false"),
     "flowcontrolReceive": ("flowcontrol_receive", "on", "off"),
     "flowcontrolSend": ("flowcontrol_send", "on", "off"),
 }

@@ -68,8 +68,8 @@ def _wire(value):
 NINE = (
     (TRUNK, "guard_mode", "GUARD_MODE", "root"),
     (PC_TRUNK, "guard_mode", "GUARD_MODE", "loop"),
-    (ACCESS, "disable_lldp_transmit", "DISABLE_LLDP_TRANSMIT", True),
-    (TRUNK, "disable_lldp_transmit", "DISABLE_LLDP_TRANSMIT", False),
+    (ACCESS, "disable_lldp_transmit", "lldpTransmit", True),
+    (TRUNK, "disable_lldp_transmit", "lldpTransmit", False),
     (ACCESS, "acl_filter", "aclFilter", "ACL_A"),
     (TRUNK, "acl_filter", "aclFilter", "ACL_B"),
     (PC_ACCESS, "acl_filter", "aclFilter", "ACL_C"),
@@ -338,10 +338,10 @@ def test_disable_lldp_transports_both_booleans():
     for parent in (ACCESS, TRUNK):
         for value, wire in ((True, "true"), (False, "false")):
             add, err = gie_contribute_nvpairs(parent, {"disable_lldp_transmit": value}, SUPPORTED)
-            assert err is None and add == {"DISABLE_LLDP_TRANSMIT": wire}
+            assert err is None and add == {"lldpTransmit": wire}
             # Lowercase JSON spelling, which is what the template DSL tests against --
             # not Python's str(True) == "True".
-            assert add["DISABLE_LLDP_TRANSMIT"] == wire != str(value)
+            assert add["lldpTransmit"] == wire != str(value)
 
 
 def test_acl_filter_accepts_boundary_lengths():
@@ -361,7 +361,7 @@ def test_multiple_new_keys_on_one_parent_contribute_together():
     assert err is None
     assert add == {
         "GUARD_MODE": "root",
-        "DISABLE_LLDP_TRANSMIT": "true",
+        "lldpTransmit": "true",
         "aclFilter": "ACL_X",
         "flowcontrolReceive": "on",
     }
@@ -547,11 +547,11 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("flowcontrolSend", "flowcontrol_send"),
         ("spanningTreePortType", "spanning_tree_port_type"),
         ("GUARD_MODE", "guard_mode"),
-        ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-        ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+        ("lldpTransmit", "disable_lldp_transmit"),
+        ("lldpReceive", "disable_lldp_receive"),
         ("aclFilter", "acl_filter"),
-        ("DISABLE_QOS_STATS", "disable_qos_stats"),
-        ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+        ("qosStatsSuppressed", "disable_qos_stats"),
+        ("queuingStats", "disable_queuing_stats"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -559,11 +559,11 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("flowcontrolReceive", "flowcontrol_receive"),
         ("flowcontrolSend", "flowcontrol_send"),
         ("spanningTreePortType", "spanning_tree_port_type"),
-        ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-        ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+        ("lldpTransmit", "disable_lldp_transmit"),
+        ("lldpReceive", "disable_lldp_receive"),
         ("aclFilter", "acl_filter"),
-        ("DISABLE_QOS_STATS", "disable_qos_stats"),
-        ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+        ("qosStatsSuppressed", "disable_qos_stats"),
+        ("queuingStats", "disable_queuing_stats"),
     }
     # The port-channel parents carry every field registered for them.
     assert {
@@ -574,11 +574,11 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("ENABLE_VPC_PEER_LINK", "enable_vpc_peer_link"),
         ("GUARD_MODE", "guard_mode"),
         ("aclFilter", "acl_filter"),
-        ("DISABLE_LLDP_TRANSMIT", "disable_lldp_transmit"),
-        ("DISABLE_LLDP_RECEIVE", "disable_lldp_receive"),
+        ("lldpTransmit", "disable_lldp_transmit"),
+        ("lldpReceive", "disable_lldp_receive"),
         ("spanningTreePortType", "spanning_tree_port_type"),
-        ("DISABLE_QOS_STATS", "disable_qos_stats"),
-        ("DISABLE_QUEUING_STATS", "disable_queuing_stats"),
+        ("qosStatsSuppressed", "disable_qos_stats"),
+        ("queuingStats", "disable_queuing_stats"),
     }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
@@ -652,7 +652,7 @@ def test_have_rejection_is_labelled_as_a_controller_value():
 def test_keymap_carries_every_new_nvpair():
     km = gie_nvpair_keymap()
     assert km["GUARD_MODE"] == "guard_mode"
-    assert km["DISABLE_LLDP_TRANSMIT"] == "disable_lldp_transmit"
+    assert km["lldpTransmit"] == "disable_lldp_transmit"
     assert km["aclFilter"] == "acl_filter"
     assert km["flowcontrolReceive"] == "flowcontrol_receive"
     assert km["flowcontrolSend"] == "flowcontrol_send"
@@ -666,32 +666,32 @@ def test_keymap_carries_every_new_nvpair():
     assert km["ospfAuthenticationKey"] == "ospf_authentication_key"
     assert km["OSPF_AUTH_KEY_ID"] == "ospf_auth_key_id"
     assert km["ospfAuthenticationKeyType"] == "ospf_authentication_key_type"
-    assert km["ENABLE_OSPF_AUTH"] == "enable_ospf_auth"
-    assert km["ENABLE_OSPF"] == "enable_ospf"
+    assert km["ospfAuthentication"] == "enable_ospf_auth"
+    assert km["ospf"] == "enable_ospf"
     assert km["ospfTag"] == "ospf_tag"
     assert km["OSPF_AREA_ID"] == "ospf_area_id"
     assert km["ospfCost"] == "ospf_cost"
     # EIGRP, slice 0b_22: thirteen distinct nvPairs, each shared by the three overlay parents,
     # so the keymap grows by thirteen and not by thirty-nine.
     assert km["eigrpProcessTag"] == "eigrp_process_tag"
-    assert km["ENABLE_EIGRP_ROUTING"] == "enable_eigrp_routing"
+    assert km["eigrpRouting"] == "enable_eigrp_routing"
     assert km["eigrpIpv4DistributeListDirection"] == "eigrp_ipv4_distribute_list_direction"
-    assert km["DISABLE_EIGRP_BFD"] == "disable_eigrp_bfd"
+    assert km["eigrpBfdDisable"] == "disable_eigrp_bfd"
     assert km["ospfAdvertiseSubnet"] == "ospf_advertise_subnet"
-    assert km["ENABLE_BFD_INTERVAL"] == "enable_bfd_interval"
+    assert km["bfdInterval"] == "enable_bfd_interval"
     assert km["bfdTxInterval"] == "bfd_tx_interval"
     assert km["hsrpPriorityForwardingThresholdLower"] == "hsrp_priority_forwarding_threshold_lower"
     assert km["hsrpPreemptDelayMinimum"] == "hsrp_preempt_delay_minimum"
     assert km["HSRP_VIPv6"] == "hsrp_vipv6"
     assert km["HSRP_GROUPv6"] == "hsrp_groupv6"
-    assert km["DISABLE_IPV4_REDIRECTS"] == "disable_ipv4_redirects"
+    assert km["ipv4Redirects"] == "disable_ipv4_redirects"
     assert km["ipv6NdSuppressRa"] == "ipv6_nd_suppress_ra"
-    assert km["ENABLE_DAMPENING"] == "enable_dampening"
+    assert km["dampening"] == "enable_dampening"
     assert km["dampeningRestartPenalty"] == "dampening_restart_penalty"
     assert km["arpTimeout"] == "arp_timeout"
     assert km["ENABLE_PIM_SPARSE"] == "enable_pim_sparse"
     assert km["PIM_DR_PRIORITY"] == "pim_dr_priority"
-    assert km["ENABLE_PIM_BFD_INSTANCE"] == "enable_pim_bfd_instance"
+    assert km["pimBfdInstance"] == "enable_pim_bfd_instance"
     # Use the parent's spelling, with a lowercase v. The parent translates it to the child's
     # uppercase spelling. These assertions prevent a capitalization "fix" from silently
     # breaking the binding.

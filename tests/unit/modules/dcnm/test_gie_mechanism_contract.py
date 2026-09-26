@@ -11,7 +11,8 @@ WHY THE OBVIOUS TEST DOES NOT WORK
     concrete. ``gie_guarded_keys()`` returns bare ``profile_key`` strings with no parent
     qualification:
 
-        return {b["profile_key"] for b in BINDING_TABLE if b["mechanism"] == "passthrough"}
+        return {b["profile_key"] for b in BINDING_TABLE
+                if b["mechanism"] == "passthrough" and not b.get("smu_unsupported")}
 
     Seven parents register ``acl_filter``. Flip ONE of them to ``child_pti`` and the key stays
     in the guarded set via the other six -- the wrong-parent rejection still fires, looking
@@ -129,7 +130,8 @@ def _generic_route_violations(table):
     """
     violations = []
     guarded = {
-        b["profile_key"] for b in table if b.get("mechanism") == "passthrough"
+        b["profile_key"] for b in table
+        if b.get("mechanism") == "passthrough" and not b.get("smu_unsupported")
     }
     for binding in table:
         key = _key(binding)
@@ -353,7 +355,8 @@ def test_mislabelling_one_parent_of_a_shared_key_is_caught(patched_table):
     table = patched_table(_with_mechanism(key, "child_pti"))
 
     assert "acl_filter" in {
-        b["profile_key"] for b in table if b.get("mechanism") == "passthrough"
+        b["profile_key"] for b in table
+        if b.get("mechanism") == "passthrough" and not b.get("smu_unsupported")
     }, "fixture no longer reproduces the counterexample: the key must stay globally guarded"
 
     violations = _generic_route_violations(table)
@@ -445,7 +448,7 @@ OSPF_SLICE = {
     "ospf_cost": 100,
 }
 OSPF_EXPECTED_NVPAIRS = {
-    "ENABLE_OSPF": "true",
+    "ospf": "true",
     "ospfTag": "WP98",
     "OSPF_AREA_ID": "0.0.0.0",
     "ospfCost": "100",

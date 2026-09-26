@@ -139,21 +139,21 @@ ROUTED_BUILDER_NV = {
 
 # Ethernet1/5, as the controller returned it. Every value a str -- that is the whole point.
 ROUTED_HAVE_FULL = {
-    "ENABLE_OSPF": "false",
+    "ospf": "false",
     "ospfTag": "",
     "OSPF_AREA_ID": "0.0.0.0",
     "ospfCost": "",
     "ipv4AclIn": "",
-    "DISABLE_LLDP_TRANSMIT": "false",
+    "lldpTransmit": "false",
 }
 
 ROUTED_KEYMAP = {
     "INTF_NAME": "name", "DESC": "description", "CONF": "cmds",
     "ADMIN_STATE": "admin_state", "SPEED": "speed", "MTU": "mtu",
     "INTF_VRF": "vrf", "IP": "ipv4_addr", "PREFIX": "ipv4_mask_len",
-    "ENABLE_OSPF": "enable_ospf", "ospfTag": "ospf_tag",
+    "ospf": "enable_ospf", "ospfTag": "ospf_tag",
     "OSPF_AREA_ID": "ospf_area_id", "ospfCost": "ospf_cost",
-    "ipv4AclIn": "ipv4_acl_in", "DISABLE_LLDP_TRANSMIT": "disable_lldp_transmit",
+    "ipv4AclIn": "ipv4_acl_in", "lldpTransmit": "disable_lldp_transmit",
 }
 
 
@@ -307,7 +307,7 @@ def test_the_slice_is_registered_on_the_generic_path():
     so the regression test would pass for the wrong reason. Assert the classification first.
     """
     carried = {b["parent_nvpair"] for b in gie_carry_forward_bindings(ROUTED)}
-    for nvpair in ("ENABLE_OSPF", "ospfTag", "OSPF_AREA_ID", "ospfCost"):
+    for nvpair in ("ospf", "ospfTag", "OSPF_AREA_ID", "ospfCost"):
         assert nvpair in carried, "{0} is not on the generic path".format(nvpair)
 
 
@@ -419,7 +419,7 @@ def test_the_absent_shape_is_unaffected_and_invents_no_default():
     assert not s.module.fail_json.called, "the absent shape must not abort"
     payload = _payload_nv(s)
     if payload is not None:
-        for nvpair in ("ospfCost", "ospfTag", "ENABLE_OSPF", "OSPF_AREA_ID"):
+        for nvpair in ("ospfCost", "ospfTag", "ospf", "OSPF_AREA_ID"):
             assert nvpair not in payload, "{0} absent from HAVE must not be invented".format(nvpair)
 
 
@@ -595,7 +595,7 @@ def test_characterize_the_payload_when_ospf_is_disabled_with_a_cost_in_have():
     """Record the payload shape. No claim about what NDFC should do with it."""
     s = _routed_instance()
     want_nv = dict(ROUTED_BUILDER_NV)
-    want_nv["ENABLE_OSPF"] = "false"
+    want_nv["ospf"] = "false"
     s.want = [_routed_want(want_nv)]
     s.have = _routed_have(dict(ROUTED_BUILDER_NV, **dict(ROUTED_HAVE_FULL,
                                                          ENABLE_OSPF="true",
@@ -631,7 +631,7 @@ def test_characterize_the_payload_when_ospf_is_disabled_with_a_cost_in_have():
     # cost ought to be cleared, nor how -- deciding that needs a live observation of the full
     # NDFC cycle, and inventing the contract here would be the mistake this file exists to
     # avoid. When that measurement happens, this test is the baseline it changes against.
-    assert payload.get("ENABLE_OSPF") == "false"
+    assert payload.get("ospf") == "false"
     assert payload.get("ospfCost") == "100", (
         "the omitted cost is expected to be carried forward verbatim; if this changed, the "
         "withdrawal characterization above is stale and must be re-measured"

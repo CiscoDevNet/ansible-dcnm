@@ -62,11 +62,11 @@ LOT2 = {
     "ospf_dead_interval": ("ospfDeadInterval", "integer", None, (1, 65535)),
     "ospf_transmit_delay": ("ospfTransmitDelay", "integer", None, (1, 450)),
     "ospf_priority": ("ospfPriority", "integer", None, (0, 255)),
-    "ospf_passive_mode": ("OSPF_PASSIVE_MODE", "enum", "no_change",
+    "ospf_passive_mode": ("ospfPassiveMode", "enum", "no_change",
                           ("no_change", "passive", "no_passive")),
-    "ospf_network_type": ("OSPF_NETWORK_TYPE", "enum", "no_change",
+    "ospf_network_type": ("ospfNetworkType", "enum", "no_change",
                           ("no_change", "broadcast", "point_to_point")),
-    "ospf_bfd_mode": ("OSPF_BFD_MODE", "enum", "no_change",
+    "ospf_bfd_mode": ("ospfBfdMode", "enum", "no_change",
                       ("no_change", "enable", "disable")),
 }
 
@@ -91,9 +91,9 @@ WIRE = {
     "ospfDeadInterval": "60",
     "ospfTransmitDelay": "3",
     "ospfPriority": "42",
-    "OSPF_PASSIVE_MODE": "no_passive",
-    "OSPF_NETWORK_TYPE": "point_to_point",
-    "OSPF_BFD_MODE": "disable",
+    "ospfPassiveMode": "noPassive",
+    "ospfNetworkType": "pointToPoint",
+    "ospfBfdMode": "disable",
 }
 
 BASE_PROFILE = {
@@ -256,7 +256,7 @@ def test_an_omitted_field_emits_nothing():
 # as child_pti on int_fabric_loopback_11_1; that capability was withdrawn, so there is no
 # second mechanism to reconcile with -- all five are passthrough, like every other binding.
 AUTH_FIELDS = {
-    "enable_ospf_auth": ("ENABLE_OSPF_AUTH", "boolean", False),
+    "enable_ospf_auth": ("ospfAuthentication", "boolean", False),
     "ospf_auth_key_id": ("OSPF_AUTH_KEY_ID", "integer", False),
     "ospf_auth_key": ("OSPF_AUTH_KEY", "string", True),
     "ospf_authentication_key_type": ("ospfAuthenticationKeyType", "enum", False),

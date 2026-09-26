@@ -385,6 +385,12 @@ def gie_validate_binding_value(
             "was sent".format(source_label, profile_key, parent_template)
         )
     valid_values = binding.get("valid_values")
+    if valid_values and value_source != "explicit":
+        # A value that came FROM the controller is in the SMU vocabulary. Fold it back to the
+        # public spelling before the choices check, or the validator rejects the controller's
+        # own answer. Explicit playbook input is deliberately NOT folded: the public contract
+        # still refuses an SMU spelling as input.
+        value = gie_public_value(binding, value)
     if valid_values and value not in valid_values:
         raise GieBindingError(
             "{0} for {1!r} on parent {2!r} is outside the registered choices; no "
@@ -724,6 +730,42 @@ def _to_nvpair_wire(value):
     return str(value)
 
 
+def gie_wire_value(binding, value):
+    """Public enum value -> the SMU nvPair value declared for THIS binding.
+
+    The SMU templates renamed three OSPF enum vocabularies without changing their meaning:
+    no_change -> noChange, point_to_point -> pointToPoint, no_passive -> noPassive. The
+    installed bodies validate the new spellings directly, e.g.
+
+        if ospfPassiveMode not in ["noChange", "passive", "noPassive"]:
+
+    `valid_values` stays the PUBLIC contract, so a playbook keeps writing `no_change` and an
+    SMU spelling is still rejected on input. This is the only place a value is translated,
+    and `gie_public_value` is its exact inverse. A binding with no `wire_values` is identity,
+    so no other field can be touched by accident.
+    """
+    mapping = binding.get("wire_values") if binding else None
+    if not mapping or not isinstance(value, str):
+        return value
+    return mapping.get(value, value)
+
+
+def gie_public_value(binding, value):
+    """The SMU nvPair value -> the public enum value. Inverse of gie_wire_value.
+
+    Used when a value arrives FROM the controller: a HAVE carrying `noChange` has to be
+    recognised as the public `no_change` before anything compares or validates it, otherwise
+    the public validator rejects the controller's own answer.
+    """
+    mapping = binding.get("wire_values") if binding else None
+    if not mapping or not isinstance(value, str):
+        return value
+    for public, wire in mapping.items():
+        if wire == value:
+            return public
+    return value
+
+
 def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version):
     """Compute the parent nvPairs the engine contributes for one interface, keyed by the
     registered binding mechanism. Returns (nvpairs_dict, error_message).
@@ -746,6 +788,16 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version):
         if pk not in profile_dict:
             continue  # omitted -> not emitted
         b = resolve_binding(parent_template, pk)
+        if b.get("smu_unsupported"):
+            # The identity is registered so its history survives, but the installed SMU build
+            # declares no counterpart under any spelling. Refuse the WHOLE invocation here,
+            # before any configuration or deployment call and regardless of the value, rather
+            # than emitting the pre-SMU name or dropping the key. Omission never reaches this
+            # branch, so a supported sibling in the same play is unaffected.
+            return None, (
+                "'{0}' is not supported by the interface templates installed on this "
+                "controller; no change was sent.".format(pk)
+            )
         gie_validate_binding_value(parent_template, pk, profile_dict[pk])
         supported = gie_version_supported(ndfc_version, b["min_ndfc_version"])
         if not supported:
@@ -763,6 +815,10 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version):
         value = profile_dict[pk]
         if b.get("mechanism") == GIE_MECH_PASSTHROUGH:
             value = _to_nvpair_wire(value)
+            # Enum vocabulary, only for bindings that declare one. Applied AFTER validation so
+            # the public contract is what an operator is held to, and only here, so a value can
+            # never be translated twice.
+            value = gie_wire_value(b, value)
         add[b["parent_nvpair"]] = value
     return add, None
 

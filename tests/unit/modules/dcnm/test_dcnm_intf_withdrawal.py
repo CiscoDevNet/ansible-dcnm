@@ -274,7 +274,7 @@ def test_merged_is_never_blocked_by_an_unsupported_row():
     """merged has no withdrawal contract, so C7/C8 must not fire for it at all.
     Rehomed to the routed parent with the rest of the C7 family."""
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["DISABLE_LLDP_RECEIVE"] = "true"
+    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "true"
     result, calls = run_configs(
         [cfg(IF_A, base_for(ROUTED, description="x"))], "merged", have)
     assert not result.get("failed"), result.get("msg")
@@ -348,7 +348,7 @@ def test_c7_configured_value_without_an_established_reset_refuses_the_run():
     a declared default of false, and no established reset.
     """
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["DISABLE_LLDP_RECEIVE"] = "true"
+    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "true"
     result, calls = run_configs([cfg(IF_A, base_for(ROUTED))], "replaced", have)
     split = split_calls(calls)
     assert result.get("failed"), "a required withdrawal that cannot complete reported success"
@@ -361,7 +361,7 @@ def test_c7_configured_value_without_an_established_reset_refuses_the_run():
 def test_c7_the_same_row_at_its_declared_default_still_succeeds():
     """The control proving the refusal above is not a blanket rejection. Rehomed with it."""
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["DISABLE_LLDP_RECEIVE"] = "false"
+    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "false"
     result, calls = run_configs([cfg(IF_A, base_for(ROUTED))], "replaced", have)
     assert not result.get("failed"), result.get("msg")
 
@@ -388,7 +388,7 @@ def test_check_mode_also_refuses_an_unsupported_withdrawal():
     """Check mode is a report. Reporting a replacement that cannot complete is the same
     false claim as performing one."""
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["DISABLE_LLDP_RECEIVE"] = "true"
+    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "true"
     result, calls = run_configs([cfg(IF_A, base_for(ROUTED))], "replaced", have,
                                 check_mode=True)
     assert result.get("failed")
@@ -405,7 +405,7 @@ def test_valid_first_interface_unsupported_second_writes_nothing_at_all():
         h = build_have(ROUTED)
         h[0]["interfaces"][0]["ifName"] = name
         have.extend(h)
-    have[1]["interfaces"][0]["nvPairs"]["DISABLE_LLDP_RECEIVE"] = "true"
+    have[1]["interfaces"][0]["nvPairs"]["lldpReceive"] = "true"
     result, calls = run_configs(
         [cfg(IF_A, base_for(ROUTED)), cfg(IF_B, base_for(ROUTED))], "replaced", have)
     split = split_calls(calls)
@@ -473,7 +473,7 @@ def test_equivalent_have_encodings_classify_identically(have_value):
     Comparing raw HAVE against a wire string made `"false"` the baseline and native
     `False` a C7 abort."""
     have = have_for([IF_A], ACCESS, "acl_filter", "ACL-PILOT")
-    have[0]["interfaces"][0]["nvPairs"]["DISABLE_LLDP_RECEIVE"] = have_value
+    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = have_value
     result, calls = run_configs([cfg(IF_A, base_for(ACCESS))], "replaced", have)
     assert not result.get("failed"), (
         "HAVE %r was rejected while its equivalent encoding is accepted: %s"
@@ -677,7 +677,7 @@ def test_deleted_state_does_not_enter_the_withdrawal_path():
     """`deleted` is a lifecycle decision with its own contract. No reset is invented for it
     here; its authoritative coverage stays in the module's own lifecycle suites."""
     have = have_for([IF_A], ACCESS, "acl_filter", "ACL-PILOT")
-    have[0]["interfaces"][0]["nvPairs"]["DISABLE_LLDP_RECEIVE"] = "true"   # a C7 row
+    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "true"   # a C7 row
     result, calls = run_configs([cfg(IF_A, base_for(ACCESS), deploy=False)], "deleted", have)
     assert not result.get("failed"), (
         "the withdrawal preflight fired on `deleted`: %s" % result.get("msg"))
