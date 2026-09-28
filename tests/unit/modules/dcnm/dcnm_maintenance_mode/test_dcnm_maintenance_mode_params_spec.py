@@ -1,4 +1,8 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+"""
+Unit tests for dcnm_maintenance_mode ParamsSpec class.
+"""
+
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,50 +28,54 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import \
-    ParamsSpec
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import (
-    does_not_raise, params)
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import ParamsSpec
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import does_not_raise, params
 
 
 def test_dcnm_maintenance_mode_params_spec_00000() -> None:
     """
-    ### Classes and Methods
-    - ParamsSpec
-        - __init__()
+    # Summary
 
-    ### Summary
-    - Verify the class attributes are initialized to expected values.
+    Verify the class attributes are initialized to expected values.
 
-    ### Test
+    ## Test
+
     - Class attributes are initialized to expected values
-    - ``ValueError`` is not called
+    - `ValueError` is not called
+
+    ## Classes and Methods
+
+    - ParamsSpec
+        - `__init__()`
     """
     with does_not_raise():
         instance = ParamsSpec()
     assert instance.class_name == "ParamsSpec"
-    assert instance._params is None
+    assert instance._params == {}
     assert instance._params_spec == {}
-    assert instance.valid_states == ["merged", "query"]
+    assert instance._valid_states == ["merged", "query"]
 
 
 def test_dcnm_maintenance_mode_params_spec_00100() -> None:
     """
-    ### Classes and Methods
-    - ParamsSpec
-        - params.setter
+    # Summary
 
-    ### Summary
-    -   Verify ``TypeError`` is raised.
-    -   params is not a dict.
+    Verify `TypeError` is raised.
+
+    - `params` is not a dict.
+
+    ## Classes and Methods
+
+    - ParamsSpec
+        - `params.setter`
     """
     params_test = "foo"
 
@@ -77,18 +85,21 @@ def test_dcnm_maintenance_mode_params_spec_00100() -> None:
     match = r"ParamsSpec\.params.setter:\s+"
     match += r"Invalid type\. Expected dict but got type str, value foo\."
     with pytest.raises(TypeError, match=match):
-        instance.params = params_test
+        instance.params = params_test  # type: ignore
 
 
 def test_dcnm_maintenance_mode_params_spec_00110() -> None:
     """
-    ### Classes and Methods
-    - ParamsSpec
-        - params.setter
+    # Summary
 
-    ### Summary
-    -   Verify ``ValueError`` is raised.
-    -   params is missing ``state`` key/value.
+    Verify `ValueError` is raised.
+
+    - `params` is missing `state` key/value.
+
+    ## Classes and Methods
+
+    - ParamsSpec
+        - `params.setter`
     """
     params_test = copy.deepcopy(params)
     params_test.pop("state", None)
@@ -104,13 +115,16 @@ def test_dcnm_maintenance_mode_params_spec_00110() -> None:
 
 def test_dcnm_maintenance_mode_params_spec_00120() -> None:
     """
-    ### Classes and Methods
-    - ParamsSpec
-        - params.setter
+    # Summary
 
-    ### Summary
-    -   Verify ``ValueError`` is raised.
-    -   params ``state`` has invalid value.
+    Verify `ValueError` is raised.
+
+    - `params` `state` has invalid value.
+
+    ## Classes and Methods
+
+    - ParamsSpec
+        - `params.setter`
     """
     params_test = copy.deepcopy(params)
     params_test.update({"state": "foo"})
@@ -126,13 +140,15 @@ def test_dcnm_maintenance_mode_params_spec_00120() -> None:
 
 def test_dcnm_maintenance_mode_params_spec_00200() -> None:
     """
-    ### Classes and Methods
-    - ParamsSpec
-        - params.setter
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify commit() happy path for merged state.
+    Verify `commit()` happy path for merged state.
+
+    ## Classes and Methods
+
+    - ParamsSpec
+        - `params.setter`
+        - `commit()`
     """
     params_test = copy.deepcopy(params)
 
@@ -162,13 +178,15 @@ def test_dcnm_maintenance_mode_params_spec_00200() -> None:
 
 def test_dcnm_maintenance_mode_params_spec_00210() -> None:
     """
-    ### Classes and Methods
-    - ParamsSpec
-        - params.setter
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify commit() happy path for query state.
+    Verify `commit()` happy path for query state.
+
+    ## Classes and Methods
+
+    - ParamsSpec
+        - `params.setter`
+        - `commit()`
     """
     params_test = copy.deepcopy(params)
     params_test.update({"state": "query"})
@@ -186,15 +204,18 @@ def test_dcnm_maintenance_mode_params_spec_00210() -> None:
 
 def test_dcnm_maintenance_mode_params_spec_00220() -> None:
     """
-    ### Classes and Methods
-    - ParamsSpec
-        - params.setter
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify commit() sad path.
-    -   params is not set before calling commit.
-    -   commit() raises ``ValueError`` when params is not set.
+    Verify `commit()` sad path.
+
+    - `params` is not set before calling `commit()`.
+    - `commit()` raises `ValueError` when `params` is not set.
+
+    ## Classes and Methods
+
+    - ParamsSpec
+        - `params.setter`
+        - `commit()`
     """
     params_test = copy.deepcopy(params)
     params_test.update({"state": "query"})

@@ -1,4 +1,8 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+"""
+Unit tests for dcnm_maintenance_mode Merged class.
+"""
+
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,45 +25,48 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import \
-    Merged
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import Merged
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import (
-    MockAnsibleModule, configs_merged, does_not_raise, params,
-    responses_ep_all_switches, responses_ep_fabrics,
+    MockAnsibleModule,
+    configs_merged,
+    does_not_raise,
+    params,
+    responses_ep_all_switches,
+    responses_ep_fabrics,
     responses_ep_maintenance_mode_deploy,
     responses_ep_maintenance_mode_disable,
-    responses_ep_maintenance_mode_enable)
+    responses_ep_maintenance_mode_enable,
+)
 
 
 def test_dcnm_maintenance_mode_merged_00000() -> None:
     """
-    ### Classes and Methods
-    - Common
-        - __init__()
+    # Summary
 
-    ### Summary
-    - Verify the class attributes are initialized to expected values.
+    Verify the class attributes are initialized to expected values.
 
-    ### Test
+    ## Test
+
     - Class attributes are initialized to expected values.
     - Exception is not raised.
+
+    ## Classes and Methods
+
+    - Common
+        - `__init__()`
     """
     with does_not_raise():
         instance = Merged(params)
@@ -68,7 +75,7 @@ def test_dcnm_maintenance_mode_merged_00000() -> None:
     assert instance.class_name == "Merged"
     assert instance.log.name == "dcnm.Merged"
 
-    assert instance.check_mode is False
+    assert instance._check_mode is False
     assert instance.state == "merged"
 
     assert isinstance(instance.config, dict)
@@ -83,7 +90,7 @@ def test_dcnm_maintenance_mode_merged_00000() -> None:
 
     assert instance.maintenance_mode.class_name == "MaintenanceMode"
     assert instance.maintenance_mode.state == "merged"
-    assert instance.maintenance_mode.check_mode is False
+    assert instance.maintenance_mode._check_mode is False
 
     assert instance.results.class_name == "Results"
     assert instance.results.state == "merged"
@@ -92,15 +99,18 @@ def test_dcnm_maintenance_mode_merged_00000() -> None:
 
 def test_dcnm_maintenance_mode_merged_00100() -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``commit()`` happy path.
-    -   Change switch mode from maintenance to normal.
-    -   No exceptions are raised.
-    -   want contains expected structure and values.
+    Verify `commit()` happy path.
+
+    - Change switch mode from maintenance to normal.
+    - No exceptions are raised.
+    - want contains expected structure and values.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -188,15 +198,18 @@ def test_dcnm_maintenance_mode_merged_00100() -> None:
 
 def test_dcnm_maintenance_mode_merged_00110() -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``commit()`` happy path.
-    -   Change switch mode from normal to maintenance.
-    -   No exceptions are raised.
-    -   want contains expected structure and values.
+    Verify `commit()` happy path.
+
+    - Change switch mode from normal to maintenance.
+    - No exceptions are raised.
+    - want contains expected structure and values.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -284,17 +297,20 @@ def test_dcnm_maintenance_mode_merged_00110() -> None:
 
 def test_dcnm_maintenance_mode_merged_00115() -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``commit()`` happy path.
-    -   User wants to change switches to maintenance mode, but all
-        switches are already in maintenance mode.
-    -   send_need() returns without sending any requests since
-        instance.need is empty.
-    -   No exceptions are raised.
+    Verify `commit()` happy path.
+
+    - User wants to change switches to maintenance mode, but all
+      switches are already in maintenance mode.
+    - `send_need()` returns without sending any requests since
+      `instance.need` is empty.
+    - No exceptions are raised.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -346,14 +362,16 @@ def test_dcnm_maintenance_mode_merged_00115() -> None:
 
 def test_dcnm_maintenance_mode_merged_00120() -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - get_need()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``get_have()`` raises ``ValueError`` when ip_address
-        does not exist on the controller.
+    Verify `get_have()` raises `ValueError` when `ip_address`
+    does not exist on the controller.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `get_need()`
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -414,14 +432,16 @@ def test_dcnm_maintenance_mode_merged_00120() -> None:
 
 def test_dcnm_maintenance_mode_merged_00130() -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - fabric_deployment_disabled()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``fabric_deployment_disabled()`` raises ``ValueError`` when
-        have ip_address is in migration mode.
+    Verify `fabric_deployment_disabled()` raises `ValueError` when
+    have `ip_address` is in migration mode.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `fabric_deployment_disabled()`
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -495,14 +515,16 @@ def test_dcnm_maintenance_mode_merged_00130() -> None:
 
 def test_dcnm_maintenance_mode_merged_00140() -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - fabric_deployment_disabled()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``fabric_deployment_disabled()`` raises ``ValueError`` when
-        the fabric is in read-only mode.
+    Verify `fabric_deployment_disabled()` raises `ValueError` when
+    the fabric is in read-only mode.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `fabric_deployment_disabled()`
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -568,14 +590,16 @@ def test_dcnm_maintenance_mode_merged_00140() -> None:
 
 def test_dcnm_maintenance_mode_merged_00150() -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - fabric_deployment_disabled()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``fabric_deployment_disabled()`` raises ``ValueError`` when
-        fabric freeze-mode is True.
+    Verify `fabric_deployment_disabled()` raises `ValueError` when
+    fabric freeze-mode is True.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `fabric_deployment_disabled()`
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -606,9 +630,7 @@ def test_dcnm_maintenance_mode_merged_00150() -> None:
         instance.rest_send = rest_send
         instance.config = params_test.get("config")
     match = r"Merged\.fabric_deployment_disabled:\s+"
-    match += (
-        r"The hosting fabric is in 'Deployment Disable' state for the switch with\s+"
-    )
+    match += r"The hosting fabric is in 'Deployment Disable' state for the switch with\s+"
     match += r"ip_address 192\.168\.1\.2,\s+"
     match += r"serial_number FD2222222GA\.\s+"
     match += r"Review the 'Deployment Enable / Deployment Disable' setting on the controller at:\s+"
@@ -643,13 +665,15 @@ def test_dcnm_maintenance_mode_merged_00150() -> None:
 
 def test_dcnm_maintenance_mode_merged_00200() -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``commit()`` raises ``ValueError`` when rest_send has not
-        been set.
+    Verify `commit()` raises `ValueError` when `rest_send` has not
+    been set.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `commit()`
     """
     with does_not_raise():
         instance = Merged(params)
@@ -666,14 +690,16 @@ def test_dcnm_maintenance_mode_merged_00200() -> None:
 
 def test_dcnm_maintenance_mode_merged_00300(monkeypatch) -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - get_need()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``get_need()`` raises ``ValueError`` when ip_address
-        does not exist in self.have.
+    Verify `get_need()` raises `ValueError` when `ip_address`
+    does not exist in `self.have`.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `get_need()`
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -720,14 +746,16 @@ def test_dcnm_maintenance_mode_merged_00300(monkeypatch) -> None:
 
 def test_dcnm_maintenance_mode_merged_00400(monkeypatch) -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - get_want()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``commit`` re-raises ``ValueError`` when ``get_want()``
-        raises ``ValueError``.
+    Verify `commit()` re-raises `ValueError` when `get_want()`
+    raises `ValueError`.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `get_want()`
+        - `commit()`
     """
     params_test = copy.deepcopy(params)
     params_test.update({"config": {}})
@@ -755,13 +783,15 @@ def test_dcnm_maintenance_mode_merged_00400(monkeypatch) -> None:
 
 def test_dcnm_maintenance_mode_merged_00500() -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - __init__()
+    # Summary
 
-    ### Summary
-    -   Verify ``__init__`` re-raises ``ValueError`` when ``Common().__init__``
-        raises ``ValueError``.
+    Verify `__init__()` re-raises `ValueError` when `Common().__init__()`
+    raises `ValueError`.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `__init__()`
     """
     params_test = copy.deepcopy(params)
     params_test.update({"config": {}})
@@ -777,14 +807,16 @@ def test_dcnm_maintenance_mode_merged_00500() -> None:
 
 def test_dcnm_maintenance_mode_merged_00600(monkeypatch) -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - send_need()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``commit()`` re-raises ``ValueError`` when
-        send_need() raises ``ValueError``.
+    Verify `commit()` re-raises `ValueError` when
+    `send_need()` raises `ValueError`.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `send_need()`
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -845,14 +877,16 @@ def test_dcnm_maintenance_mode_merged_00600(monkeypatch) -> None:
 
 def test_dcnm_maintenance_mode_merged_00700(monkeypatch) -> None:
     """
-    ### Classes and Methods
-    - Merged()
-        - send_need()
-        - commit()
+    # Summary
 
-    ### Summary
-    -   Verify ``send_need()`` re-raises ``ValueError`` when
-        MaintenanceMode.commit() raises ``ValueError``.
+    Verify `send_need()` re-raises `ValueError` when
+    `MaintenanceMode.commit()` raises `ValueError`.
+
+    ## Classes and Methods
+
+    - Merged()
+        - `send_need()`
+        - `commit()`
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -902,9 +936,7 @@ def test_dcnm_maintenance_mode_merged_00700(monkeypatch) -> None:
     match += r"Error detail:\s+"
     match += r"MockMaintenanceModeInfo\.refresh: Mocked ValueError\."
     with pytest.raises(ValueError, match=match):
-        monkeypatch.setattr(
-            instance, "maintenance_mode", MockMaintenanceMode(params_test)
-        )
+        monkeypatch.setattr(instance, "maintenance_mode", MockMaintenanceMode(params_test))
         instance.commit()
 
     assert len(instance.results.diff) == 2
