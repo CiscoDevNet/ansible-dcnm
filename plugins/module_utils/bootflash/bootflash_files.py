@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Delete files from bootflash devices.
+"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type  # pylint: disable=invalid-name
@@ -30,25 +33,30 @@ from ..common.switch_details import SwitchDetails
 
 class BootflashFiles:
     """
-    ### Summary
+    # Summary
+
     Delete files from bootflash devices.
 
-    ### Raises
-    -   ``ValueError`` if:
-            -   ``rest_send`` is not set before calling commit()
-            -   ``results`` is not set before calling commit()
-            -   ``switch_details`` is not set before calling commit()
-            -   payload.deleteFiles is empty when calling commit()
-            -   ``filename`` is not set before calling add_file()
-            -   ``filepath`` is not set before calling add_file()
-            -   ``ip_address`` is not set before calling add_file()
-            -   ``supervisor`` is not set before calling add_file()
-            -   ``switch_details`` is not set before calling add_file()
-    -   ``TypeError`` if:
-            -   ``switch_details`` is not an instance of ``SwitchDetails``.
-            -   ip_address to serial_number conversion fails.
+    ## Raises
 
-    ### Usage
+    ### ValueError
+
+    - `rest_send` is not set before calling commit()
+    - `results` is not set before calling commit()
+    - `switch_details` is not set before calling commit()
+    - payload.deleteFiles is empty when calling commit()
+    - `filename` is not set before calling add_file()
+    - `filepath` is not set before calling add_file()
+    - `ip_address` is not set before calling add_file()
+    - `supervisor` is not set before calling add_file()
+    - `switch_details` is not set before calling add_file()
+
+    ### TypeError
+
+    - `switch_details` is not an instance of `SwitchDetails`.
+    - ip_address to serial_number conversion fails.
+
+    ## Usage
 
     ```python
     sender = Sender()
@@ -84,7 +92,7 @@ class BootflashFiles:
     instance.commit()
     ```
 
-    ### Payload Structure
+    ## Payload Structure
 
     The structure of the request body to delete bootflash files.
 
@@ -146,13 +154,16 @@ class BootflashFiles:
 
     def refresh_switch_details(self) -> None:
         """
-        ### Summary
+        # Summary
+
         If switch details are not already refreshed, refresh them.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``switch_details`` is not set.
-                -   ``rest_send`` is not set.
+        ## Raises
+
+        ### ValueError
+
+        - `switch_details` is not set.
+        - `rest_send` is not set.
         """
         method_name: str = inspect.stack()[0][3]
 
@@ -172,12 +183,15 @@ class BootflashFiles:
 
     def ip_address_to_serial_number(self, ip_address: str) -> str:
         """
-        ### Summary
+        # Summary
+
         Convert ip_address to serial_number.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   switch_details is not set.
+        ## Raises
+
+        ### ValueError
+
+        - switch_details is not set.
         """
         method_name: str = inspect.stack()[0][3]
 
@@ -194,11 +208,13 @@ class BootflashFiles:
 
     def ok_to_delete_files(self, ip_address: str) -> bool:
         """
-        ### Summary
-        -   Return True if files can be deleted on the switch with ip_address.
-        -   Return False otherwise.
+        # Summary
 
-        ### Raises
+        - Return True if files can be deleted on the switch with ip_address.
+        - Return False otherwise.
+
+        ## Raises
+
         None
         """
         self.refresh_switch_details()
@@ -274,14 +290,17 @@ class BootflashFiles:
 
     def commit(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Send the payload to delete files.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   Mandatory parameters are not set.
+        ## Raises
 
-        ### Notes
+        ### ValueError
+
+        - Mandatory parameters are not set.
+
+        ## Notes
         -   pylint: disable=no-member is needed due to the results property
             being dynamically created by the @Properties.add_results decorator.
         """
@@ -296,10 +315,12 @@ class BootflashFiles:
 
     def delete_files(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Delete files that have been added with add_files().
 
-        ### Raises
+        ## Raises
+
         None
         """
         # pylint: disable=no-member
@@ -322,17 +343,20 @@ class BootflashFiles:
 
     def validate_prerequisites_for_add_file(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Verify that mandatory prerequisites are met before calling add_file()
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``filename`` is not set.
-                -   ``filepath`` is not set.
-                -   ``ip_address`` is not set.
-                -   ``supervisor`` is not set.
-                -   ``switch_details`` is not set.
-                -   ``target`` is not set.
+        ## Raises
+
+        ### ValueError
+
+        - `filename` is not set.
+        - `filepath` is not set.
+        - `ip_address` is not set.
+        - `supervisor` is not set.
+        - `switch_details` is not set.
+        - `target` is not set.
         """
         method_name: str = inspect.stack()[0][3]
 
@@ -356,40 +380,45 @@ class BootflashFiles:
 
     def partition_and_serial_number_exist_in_payload(self) -> bool:
         """
-        ### Summary
-        -   Return True if the partition and serialNumber associated with the
-            file exist in the payload.
-        -   Return False otherwise.
+        # Summary
 
-        ### Raises
+        - Return True if the partition and serialNumber associated with the file exist in the payload.
+        - Return False otherwise.
+
+        ## Raises
+
         None
 
-        ### payload Structure
+        ## payload Structure
 
-        "deleteFiles": [
-            {
-                "files": [
-                    {
-                        "bootflashType": "active",
-                        "fileName": "bar.txt",
-                        "filePath": "bootflash:"
-                    }
-                ],
-                "partition": "bootflash:",
-                "serialNumber": "FOX2109PGCS"
-            },
-            {
-                "files": [
-                    {
-                        "bootflashType": "active",
-                        "fileName": "black.txt",
-                        "filePath": "bootflash:"
-                    }
-                ],
-                "partition": "bootflash:",
-                "serialNumber": "FOX2109PGD0"
-            }
-        ]
+        ```json
+        {
+            "deleteFiles": [
+                {
+                    "files": [
+                        {
+                            "bootflashType": "active",
+                            "fileName": "bar.txt",
+                            "filePath": "bootflash:"
+                        }
+                    ],
+                    "partition": "bootflash:",
+                    "serialNumber": "FOX2109PGCS"
+                },
+                {
+                    "files": [
+                        {
+                            "bootflashType": "active",
+                            "fileName": "black.txt",
+                            "filePath": "bootflash:"
+                        }
+                    ],
+                    "partition": "bootflash:",
+                    "serialNumber": "FOX2109PGD0"
+                }
+            ]
+        }
+        ```
         """
         found: bool = False
         for item in self.payload["deleteFiles"]:
@@ -409,10 +438,8 @@ class BootflashFiles:
 
         Add a file to the payload if the following are true:
 
-        -   The serialNumber and partition associated with the file exist in
-            the payload.
-        -   The file does not already exist in the files list for that
-            serialNumber and partition.
+        - The serialNumber and partition associated with the file exist in the payload.
+        - The file does not already exist in the files list for that serialNumber and partition.
 
         ## Raises
 
@@ -420,7 +447,7 @@ class BootflashFiles:
 
         ## Details
 
-        We are looking at the following structure.
+        self.payload consists of the following structure.
 
         ```json
         {
@@ -475,11 +502,13 @@ class BootflashFiles:
 
     def add_file_to_payload(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Add a file to the payload if the serialNumber and partition do not
         yet exist in the payload.
 
-        ### Raises
+        ## Raises
+
         None
         """
         if not self.partition_and_serial_number_exist_in_payload():
@@ -500,12 +529,16 @@ class BootflashFiles:
 
     def add_file(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Add a file to the payload.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   The switch does not allow file deletion.
+        ## Raises
+
+        ### ValueError
+
+        - The switch does not allow file deletion.
+        - Mandatory parameters are not set (see `validate_prerequisites_for_add_file()`).
         """
         method_name: str = inspect.stack()[0][3]
         self.validate_prerequisites_for_add_file()
@@ -521,17 +554,18 @@ class BootflashFiles:
 
     def update_diff(self) -> None:
         """
-        ### Summary
-        Update ``diff`` with ``target``.
+        # Summary
 
-        ### Raises
+        Update `diff` with `target`.
+
+        ## Raises
+
         None
 
-        ### Notes
-        -   ``target`` has already been validated to be set (not None) in
-            ``validate_prerequisites_for_add_file()``.
-        -   ``target`` has already been validated to be a dictionary and to
-            contain ``ip_address`` in ``target.setter``.
+        ## Notes
+
+        - `target` has already been validated to be set (not None) in `validate_prerequisites_for_add_file()`.
+        - `target` has already been validated to be a dictionary and to contain `ip_address` in `target.setter`.
         """
         ip_address: str = self.target.get("ip_address", "")
         if ip_address not in self.diff:
@@ -541,20 +575,24 @@ class BootflashFiles:
     @property
     def filepath(self) -> str:
         """
-        ### Summary
-        Return the current ``filepath``.
+        # Summary
 
-        ``filepath`` is the path to the file to be deleted.
+        Return the current `filepath`.
 
-        ### Raises
+        `filepath` is the path to the file to be deleted.
+
+        ## Raises
+
         None
 
-        ### Associated key
-        ``filePath``
+        ## Associated key
 
-        ### Example values
-        -   ``bootflash:``
-        -   ``bootflash:/mydir/mysubdir/``
+        `filePath`
+
+        ## Example values
+
+        - `bootflash:`
+        - `bootflash:/mydir/mysubdir/`
         """
         return self._filepath
 
@@ -565,19 +603,22 @@ class BootflashFiles:
     @property
     def filename(self) -> str:
         """
-        ### Summary
-        Return the current ``filename``.
+        # Summary
 
-        ``filename`` is the name of the file to be deleted.
+        Return the current `filename`.
 
-        ### Raises
+        `filename` is the name of the file to be deleted.
+
+        ## Raises
+
         None
 
-        ### Associated key
-        ``fileName``
+        ## Associated key
+        `fileName`
 
-        ### Example value
-        ``n9000-epld.10.2.5.M.img``
+        ## Example value
+
+        `n9000-epld.10.2.5.M.img`
         """
         return self._filename
 
@@ -588,17 +629,21 @@ class BootflashFiles:
     @property
     def ip_address(self) -> str:
         """
-        ### Summary
-        The ip address of the switch on which ``filename`` resides.
+        # Summary
 
-        ### Raises
+        The ip address of the switch on which `filename` resides.
+
+        ## Raises
+
         None
 
-        ### Associated key
-        ``serialNumber`` (ip_address is converted to serialNumber)
+        ## Associated key
 
-        ### Example value
-        ``192.168.1.2``
+        `serialNumber` (ip_address is converted to serialNumber)
+
+        ## Example value
+
+        `192.168.1.2`
         """
         return self._ip_address
 
@@ -609,17 +654,21 @@ class BootflashFiles:
     @property
     def partition(self) -> str:
         """
-        ### Summary
-        The partition on which ``filename`` resides.
+        # Summary
 
-        ### Raises
+        The partition on which `filename` resides.
+
+        ## Raises
+
         None
 
-        ### Associated key
-        ``partition``
+        ## Associated key
 
-        ### Example value
-        ``bootflash:``
+        `partition`
+
+        ## Example value
+
+        `bootflash:`
         """
         return self._partition
 
@@ -632,20 +681,18 @@ class BootflashFiles:
         """
         # Summary
 
-        An instance of the RestSend class.
+        Set/get an instance of the RestSend class.
 
         ## Raises
 
-        -   setter: `TypeError` if the value is not an instance of RestSend.
-        -   setter: `ValueError` if RestSend.params is not set.
+        ### TypeError
 
-        ## getter
+        - setter: if the value is not an instance of RestSend.
 
-        Return an instance of the RestSend class.
+        ### ValueError
 
-        ## setter
+        - setter: if RestSend.params is not set.
 
-        Set an instance of the RestSend class.
         """
         method_name: str = inspect.stack()[0][3]
         if not self._rest_send.params:
@@ -676,19 +723,13 @@ class BootflashFiles:
         """
         # Summary
 
-        An instance of the Results class.
+        Set/get an instance of the Results class.
 
         ## Raises
 
-        -   setter: `TypeError` if the value is not an instance of Results.
+        ### TypeError
 
-        ## getter
-
-        Return an instance of the Results class.
-
-        ## setter
-
-        Set an instance of the Results class.
+        - setter: if the value is not an instance of Results.
         """
         return self._results
 
@@ -712,21 +753,24 @@ class BootflashFiles:
     @property
     def supervisor(self) -> str:
         """
-        ### Summary
-        Return the current ``supervisor``.
+        # Summary
 
-        ``supervisor`` is the switch supervisor card (active or standby)
-        on which ``filename`` resides.
+        Return the current `supervisor`.
 
-        ### Raises
+        `supervisor` is the switch supervisor card (active or standby) on which `filename` resides.
+
+        ## Raises
+
         None
 
-        ### Associated key
-        ``bootflashType``
+        ## Associated key
 
-        ### Example values
-        -   ``active``
-        -   ``standby``
+        `bootflashType`
+
+        ## Example values
+
+        - `active`
+        - `standby`
         """
         return self._supervisor
 
@@ -737,12 +781,15 @@ class BootflashFiles:
     @property
     def switch_details(self) -> SwitchDetails:
         """
-        ### Summary
+        # Summary
+
         An instance of the ``SwitchDetails()`` class.
 
-        ### Raises
-        -   ``TypeError`` if ``switch_details`` is not an instance of
-            ``SwitchDetails``.
+        ## Raises
+
+        ### TypeError
+
+        - `switch_details` is not an instance of `SwitchDetails`.
         """
         return self._switch_details
 
@@ -766,15 +813,25 @@ class BootflashFiles:
     @property
     def target(self) -> dict[str, str]:
         """
-        ### Summary
-        ``target`` is a dictionary that is used to set the diff passed to
-        Results.
+        # Summary
 
-        ``target`` is appended to a list of targets in
-        ``BootflashFiles().add_file()``, so must be passed for each file
-        to be deleted.  See Usage example in the class docstring.
+        `target` is a dictionary that is used to set the diff passed to Results.
 
-        ### ``target`` Structure
+        `target` is appended to a list of targets in `BootflashFiles().add_file()`, so must be
+        passed for each file to be deleted.  See Usage example in the class docstring.
+
+        ## Raises
+
+        ### TypeError
+
+        -   `target` is not a dictionary.
+
+        ### ValueError
+
+        -   `target` is missing a mandatory key.
+
+        ## `target` Structure
+
         ```json
         {
             "date": "2023-09-19 22:20:07",
@@ -787,25 +844,21 @@ class BootflashFiles:
         }
         ```
 
-        ### Raises
-        -   ``TypeError`` if:
-                -   ``target`` is not a dictionary.
-        -   ``ValueError`` if:
-                -   ``target`` is missing a mandatory key.
+        ## Associated key
 
-        ### Associated key
         None
 
-        ### Notes
+        ## Notes
+
         1.  Since (at least with the dcnm_bootflash module) the
             user references switches using ip_address, and the NDFC
             bootflash-files payload includes only serialNumber, we
-            decided to use ``target`` as the diff since it contains the
+            decided to use `target` as the diff since it contains the
             ip_address and serial_number (as well as the size, date
             etc, which are potentially more useful than the info in
             the payload.
-        2.  ``BootflashFiles()`` requires that the ``ip_address`` key
-            be present in target, since it uses ``ip_address`` as the key
+        2.  `BootflashFiles()` requires that the `ip_address` key
+            be present in `target`, since it uses `ip_address` as the key
             for the diff.  Of the other fields, we also require that filepath,
             serial_number and supervisor are present since they add value
             to the diff.  The other fields shown above SHOULD be included
