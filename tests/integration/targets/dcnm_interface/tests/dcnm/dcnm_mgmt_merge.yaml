@@ -1,0 +1,186 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+# NOTE: A management interface carries the address the controller uses to
+# reach the switch. These tests never change the address: the existing
+# freeform configuration must be supplied in 'test_data_common.mgmt_conf'
+# and is sent with every request. All tasks use 'deploy: false' so that the
+# intent is updated on the controller without being pushed to the device.
+
+- name: Skip MGMT tests if mgmt_switch or mgmt_conf is not defined
+  ansible.builtin.meta: end_play
+  when: >
+    test_data_common.mgmt_switch is not defined or
+    test_data_common.mgmt_switch == "" or
+    test_data_common.mgmt_conf is not defined or
+    test_data_common.mgmt_conf == ""
+
+- name: MGMT MERGE - Test Entry Point - [ndfc_interface]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [ndfc_interface]               +"
+      - "+                     MGMT MERGE Tests                          +"
+      - "----------------------------------------------------------------"
+
+- name: Remove local log file
+  ansible.builtin.command: rm -f dcnm_intf.log
+  delegate_to: localhost
+
+- block:
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
+
+    - name: Configure management interface
+      cisco.dcnm.dcnm_interface: &mgmt_merge
+        check_deploy: false
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config:
+          - name: mgmt0
+            type: mgmt
+            switch:
+              - "{{ test_data_common.mgmt_switch }}"
+            deploy: false
+            profile:
+              mode: mgmt
+              admin_state: true
+              enable_cdp: true
+              description: "managed by dcnm_interface integration test"
+              cmds:
+                - "{{ test_data_common.mgmt_conf }}"
+      register: result
+
+    - name: ASSERT - Verify management interface merge results
+      ansible.builtin.assert:
+        that:
+          - "result.changed == true"
+          - 'item["RETURN_CODE"] == 200'
+        fail_msg: "Configuration of management interface failed - {{ result }}"
+        success_msg: "Configuration of management interface succeeded"
+      loop: "{{ result.response }}"
+
+    - name: ASSERT - Verify the payload sent to the controller
+      ansible.builtin.assert:
+        that:
+          - 'item["policy"] == "int_mgmt"'
+          - 'item["interfaces"][0]["ifName"] == "Mgmt0"'
+          - 'item["interfaces"][0]["interfaceType"] == "INTERFACE_MGMT"'
+          - 'item["interfaces"][0]["nvPairs"]["ADMIN_STATE"] == "true"'
+          - 'item["interfaces"][0]["nvPairs"]["CDP_ENABLE"] == "true"'
+        fail_msg: "Management interface payload is not as expected - {{ item }}"
+        success_msg: "Management interface payload is as expected"
+      loop: '{{ result.diff[0]["merged"] }}'
+
+    ##############################################
+    ##              IDEMPOTENCE                 ##
+    ##############################################
+
+    - name: Configure management interface - Idempotence
+      cisco.dcnm.dcnm_interface: *mgmt_merge
+      register: result
+
+    - name: ASSERT - Verify idempotence
+      ansible.builtin.assert:
+        that:
+          - "result.changed == false"
+          - 'result.diff[0]["merged"] | length == 0'
+          - 'result.diff[0]["replaced"] | length == 0'
+        fail_msg: "Management interface merge is not idempotent - {{ result }}"
+        success_msg: "Management interface merge is idempotent"
+
+    ##############################################
+    ##                REPLACE                   ##
+    ##############################################
+
+    - name: Replace management interface configuration
+      cisco.dcnm.dcnm_interface:
+        check_deploy: false
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced
+        config:
+          - name: mgmt0
+            type: mgmt
+            switch:
+              - "{{ test_data_common.mgmt_switch }}"
+            deploy: false
+            profile:
+              mode: mgmt
+              admin_state: true
+              enable_cdp: false
+              description: "dcnm_interface test - replaced"
+              cmds:
+                - "{{ test_data_common.mgmt_conf }}"
+      register: result
+
+    - name: ASSERT - Verify management interface replace results
+      ansible.builtin.assert:
+        that:
+          - "result.changed == true"
+          - 'result.diff[0]["replaced"] | length == 1'
+        fail_msg: "Replace of management interface failed - {{ result }}"
+        success_msg: "Replace of management interface succeeded"
+
+    - name: ASSERT - Verify replaced values
+      ansible.builtin.assert:
+        that:
+          - 'item["interfaces"][0]["ifName"] == "Mgmt0"'
+          - 'item["interfaces"][0]["nvPairs"]["CDP_ENABLE"] == "false"'
+          - '"replaced" in item["interfaces"][0]["nvPairs"]["DESC"]'
+        fail_msg: "Replaced management interface values are wrong - {{ item }}"
+        success_msg: "Replaced management interface values are correct"
+      loop: '{{ result.diff[0]["replaced"] }}'
+
+    ##############################################
+    ##             INVALID PARAMS               ##
+    ##############################################
+
+    - name: Configure management interface without mode
+      cisco.dcnm.dcnm_interface:
+        check_deploy: false
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config:
+          - name: mgmt0
+            type: mgmt
+            switch:
+              - "{{ test_data_common.mgmt_switch }}"
+            deploy: false
+            profile:
+              admin_state: true
+              description: "missing mode"
+      ignore_errors: true
+      register: result
+
+    - name: ASSERT - Check condition
+      ansible.builtin.assert:
+        that:
+          - '"mode" in result.msg'
+
+  always:
+    ##############################################
+    ##                CLEANUP                   ##
+    ##############################################
+
+    - name: Restore the original management interface configuration
+      cisco.dcnm.dcnm_interface:
+        check_deploy: false
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced
+        config:
+          - name: mgmt0
+            type: mgmt
+            switch:
+              - "{{ test_data_common.mgmt_switch }}"
+            deploy: false
+            profile:
+              mode: mgmt
+              admin_state: true
+              enable_cdp: "{{ test_data_common.mgmt_cdp | default(false) }}"
+              description: "{{ test_data_common.mgmt_desc | default('') }}"
+              cmds:
+                - "{{ test_data_common.mgmt_conf }}"
+      ignore_errors: true
+      register: cleanup_result

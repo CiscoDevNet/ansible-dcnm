@@ -1,0 +1,84 @@
+{
+    "mgmt_merged_payloads_1": {
+        "MESSAGE": "OK",
+        "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Mgmt0",
+        "DATA": [
+            {
+                "policy": "int_mgmt",
+                "interfaces": [
+                    {
+                        "interfaceType": "INTERFACE_MGMT",
+                        "nvPairs": {
+                            "ADMIN_STATE": "true",
+                            "CDP_ENABLE": "true",
+                            "CONF": "ip address 192.168.1.108/24",
+                            "DESC": "out of band management",
+                            "INTF_NAME": "Mgmt0"
+                        },
+                        "ifName": "Mgmt0",
+                        "serialNumber": "SAL1819SAN8",
+                        "fabricName": "test_fabric"
+                    }
+                ]
+            }
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET"
+    },
+    "mgmt_bst_payloads": {
+        "MESSAGE": "OK",
+        "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=mgmt0",
+        "DATA": [
+            {
+                "policy": "int_mgmt",
+                "interfaces": [
+                    {
+                        "interfaceType": "INTERFACE_MGMT",
+                        "nvPairs": {
+                            "ADMIN_STATE": "true",
+                            "BST": "true",
+                            "CDP_ENABLE": "true",
+                            "CONF": "  ip address 192.168.1.108/24",
+                            "DESC": "original description",
+                            "INTF_NAME": "mgmt0",
+                            "POLICY_DESC": "",
+                            "POLICY_ID": "POLICY-2020",
+                            "PRIORITY": "900"
+                        },
+                        "ifName": "mgmt0",
+                        "serialNumber": "SAL1819SAN8",
+                        "fabricName": "test_fabric"
+                    }
+                ]
+            }
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET"
+    },
+    "mgmt_query_payloads": {
+        "MESSAGE": "OK",
+        "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Mgmt0",
+        "DATA": [
+            {
+                "policy": "int_mgmt",
+                "interfaces": [
+                    {
+                        "interfaceType": "INTERFACE_MGMT",
+                        "nvPairs": {
+                            "ADMIN_STATE": "true",
+                            "CDP_ENABLE": "true",
+                            "CONF": "ip address 192.168.1.108/24",
+                            "DESC": "out of band management",
+                            "INTF_NAME": "Mgmt0"
+                        },
+                        "ifName": "Mgmt0",
+                        "serialNumber": "SAL1819SAN8",
+                        "fabricName": "test_fabric"
+                    }
+                ]
+            }
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET"
+    }
+}

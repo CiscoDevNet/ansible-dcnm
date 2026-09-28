@@ -1,0 +1,57 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: Skip MGMT tests if mgmt_switch is not defined
+  ansible.builtin.meta: end_play
+  when: >
+    test_data_common.mgmt_switch is not defined or
+    test_data_common.mgmt_switch == ""
+
+- name: MGMT QUERY - Test Entry Point - [ndfc_interface]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [ndfc_interface]               +"
+      - "+                     MGMT QUERY Tests                          +"
+      - "----------------------------------------------------------------"
+
+- name: Remove local log file
+  ansible.builtin.command: rm -f dcnm_intf.log
+  delegate_to: localhost
+
+- block:
+    ##############################################
+    ##                QUERY                     ##
+    ##############################################
+
+    - name: Query management interface
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ test_data_common.fabric }}"
+        state: query
+        config:
+          - name: mgmt0
+            switch:
+              - "{{ test_data_common.mgmt_switch }}"
+      register: result
+
+    - name: ASSERT - Verify query made no changes
+      ansible.builtin.assert:
+        that:
+          - "result.changed == false"
+          - 'result.diff[0]["merged"] | length == 0'
+          - 'result.diff[0]["deleted"] | length == 0'
+          - 'result.diff[0]["replaced"] | length == 0'
+          - 'result.diff[0]["query"] | length != 0'
+        fail_msg: "Query of management interface failed - {{ result }}"
+        success_msg: "Query of management interface succeeded"
+
+    - name: ASSERT - Verify the queried interface details
+      ansible.builtin.assert:
+        that:
+          - 'item["policy"] == "int_mgmt"'
+          - 'item["interfaces"][0]["ifName"] == "Mgmt0"'
+          - 'item["interfaces"][0]["interfaceType"] == "INTERFACE_MGMT"'
+        fail_msg: "Queried management interface is not as expected - {{ item }}"
+        success_msg: "Queried management interface is as expected"
+      loop: '{{ result.diff[0]["query"] }}'
