@@ -18,10 +18,12 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 from unittest.mock import Mock, patch
+import inspect
 
 # from units.compat.mock import patch
 
 from ansible_collections.cisco.dcnm.plugins.action import dcnm_network as dcnm_network_action
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm import dcnm as dcnm_utils
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_network
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
@@ -240,6 +242,13 @@ class TestDcnmNetworkModule(TestDcnmModule):
         dcnm_net.is_ms_fabric = False
         dcnm_net.fabric_type = "standalone"
         dcnm_net.dcnm_version = 11
+        # DCNM715: a real NDFC deployment always propagates the full version
+        # through the action plugin (see the handoff's "Exact Version
+        # Propagation" section), so tests of unrelated legacy-field
+        # add/clear/preserve behavior use a compatible-build default here.
+        # Callers that specifically exercise version-capability behavior
+        # (the U-matrix below) override this attribute explicitly afterward.
+        dcnm_net.ndfc_version = self.NDFC_VERSION_COMPATIBLE_MINIMUM
         return dcnm_net
 
     def _build_secondary_ip_update_payload(self, template_conf):
@@ -555,6 +564,2655 @@ class TestDcnmNetworkModule(TestDcnmModule):
         fail_msg = dcnm_net.module.fail_json.call_args[1]["msg"]
         self.assertIn("cannot clear secondary_ip_gw2", fail_msg)
         self.assertIn("compact list", fail_msg)
+
+    # ------------------------------------------------------------------
+    # DCNM715-SECONDARYGWS-001 / issue #715 offline compatibility matrix
+    # (U1-U15). Added before any functional change per the tests-first
+    # mandate. Each test encodes the APPROVED post-fix contract; against
+    # unmodified functional code the ones documented as "fail-before" are
+    # expected to fail for the reason noted in their assertion message.
+    # Tests marked "regression lock" already pass unmodified and must keep
+    # passing unchanged after the fix.
+    # ------------------------------------------------------------------
+
+    NDFC_VERSION_FAILING_CONFIRMED = "12.2.2.238"
+    NDFC_VERSION_COMPATIBLE_MINIMUM = "12.2.3.70"
+
+    def _build_secgw_capability_network(self, fabric_type="standalone", dcnm_version=12, ndfc_version=None, is_ms_fabric=False):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.params = {"state": "merged"}
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.dcnm_version = dcnm_version
+        dcnm_net.ndfc_version = ndfc_version
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.is_ms_fabric = is_ms_fabric
+        dcnm_net.fabric_type = fabric_type
+        return dcnm_net
+
+    @staticmethod
+    def _secgw_capability_config(
+        net_name="secgw-net", vrf_name="test-vrf", gw1="", gw2="", gw3="", gw4="", vlan_id=None, gw_ip_subnet=None
+    ):
+        config = {
+            "net_name": net_name,
+            "vrf_name": vrf_name,
+            "is_l2only": False,
+            "secondary_ip_gw1": gw1,
+            "secondary_ip_gw2": gw2,
+            "secondary_ip_gw3": gw3,
+            "secondary_ip_gw4": gw4,
+        }
+        if vlan_id is not None:
+            config["vlan_id"] = vlan_id
+        if gw_ip_subnet is not None:
+            config["gw_ip_subnet"] = gw_ip_subnet
+        return config
+
+    def _build_secgw_push_to_remote_network(self, fabric_type="standalone", dcnm_version=12.2, ndfc_version=None):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.module = Mock(check_mode=False)
+        dcnm_net.result = {"changed": False, "response": []}
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = fabric_type
+        dcnm_net.dcnm_version = dcnm_version
+        dcnm_net.ndfc_version = ndfc_version
+        dcnm_net.paths = {
+            "GET_NET": "/fabrics/{0}/networks",
+            "GET_NET_BULK": "/fabrics/bulk-networks",
+            "GET_VLAN": "/fabrics/{0}/vlan",
+        }
+        dcnm_net.diff_create = []
+        dcnm_net.diff_create_update = []
+        dcnm_net.diff_detach = []
+        dcnm_net.diff_undeploy = {}
+        dcnm_net.diff_delete = {}
+        dcnm_net.diff_attach = []
+        dcnm_net.diff_deploy = {}
+        dcnm_net.network_sn_attach_map = {}
+        dcnm_net.network_sn_detach_map = {}
+        dcnm_net.have_attach_by_name = {}
+        dcnm_net.populate_sn_maps_from_diffs = Mock()
+        dcnm_net.wait_for_network_attachments_del_ready = Mock(return_value=True)
+        dcnm_net.wait_for_network_del_ready = Mock(return_value=True)
+        return dcnm_net
+
+    def _build_secgw_auto_id_network(self, fabric_type="standalone", dcnm_version=12.2, ndfc_version=None):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.module = Mock(check_mode=False)
+        dcnm_net.params = {"state": "merged"}
+        dcnm_net.result = {"changed": False, "response": []}
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = fabric_type
+        dcnm_net.is_ms_fabric = False
+        dcnm_net.dcnm_version = dcnm_version
+        dcnm_net.ndfc_version = ndfc_version
+        dcnm_net.paths = {
+            "GET_NET_ID": "/fabrics/{0}/networkid",
+            "GET_NET": "/fabrics/{0}/networks",
+        }
+        dcnm_net.want_create = []
+        dcnm_net.have_create = []
+        dcnm_net.want_attach = []
+        dcnm_net.have_attach = []
+        dcnm_net.config = []
+        return dcnm_net
+
+    def test_dcnm_net_secgw_compat_u1_standalone_create_zero_gateways_legacy_version(self):
+        """U1: standalone update_create_params(), confirmed-failing version, zero gateways."""
+        dcnm_net = self._build_secgw_capability_network(
+            fabric_type="standalone", ndfc_version=self.NDFC_VERSION_FAILING_CONFIRMED
+        )
+
+        payload = dcnm_net.update_create_params(self._secgw_capability_config())
+        template = json.loads(payload["networkTemplateConfig"])
+
+        self.assertEqual(template["secondaryGW1"], "")
+        self.assertEqual(template["secondaryGW2"], "")
+        self.assertEqual(template["secondaryGW3"], "")
+        self.assertEqual(template["secondaryGW4"], "")
+        self.assertNotIn(
+            "secondaryGWs",
+            template,
+            "fail-before: unfixed code always emits the aggregate; a confirmed "
+            "legacy controller must never receive it, even when empty",
+        )
+
+    def test_dcnm_net_secgw_compat_u2_multicluster_parent_create_four_gateways_legacy_version(self):
+        """U2: multicluster_parent update_create_params(), confirmed-failing version, four gateways."""
+        dcnm_net = self._build_secgw_capability_network(
+            fabric_type="multicluster_parent", ndfc_version=self.NDFC_VERSION_FAILING_CONFIRMED
+        )
+
+        payload = dcnm_net.update_create_params(
+            self._secgw_capability_config(
+                gw1="192.166.88.1/24",
+                gw2="192.167.88.1/24",
+                gw3="192.168.88.1/24",
+                gw4="192.169.88.1/24",
+            )
+        )
+        template = json.loads(payload["networkTemplateConfig"])
+
+        self.assertEqual(template["secondaryGW1"], "192.166.88.1/24")
+        self.assertEqual(template["secondaryGW2"], "192.167.88.1/24")
+        self.assertEqual(template["secondaryGW3"], "192.168.88.1/24")
+        self.assertEqual(template["secondaryGW4"], "192.169.88.1/24")
+        self.assertNotIn(
+            "secondaryGWs",
+            template,
+            "fail-before: unfixed code always emits the aggregate even though "
+            "this exact build is the ND32-confirmed failing one",
+        )
+
+    def test_dcnm_net_secgw_compat_u3_standalone_normalize_have_legacy_only(self):
+        """U3: standalone normalize_have_network(), confirmed-failing version, legacy-only remote state."""
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = self.NDFC_VERSION_FAILING_CONFIRMED
+        dcnm_net.fabric_type = "standalone"
+
+        raw_template = self._build_secondary_ip_network_template(
+            secondary_gw1="192.166.88.1/24",
+            secondary_gw2="192.167.88.1/24",
+        )
+        network = self._build_secondary_ip_update_payload(raw_template)
+
+        normalized = dcnm_net.normalize_have_network(network)
+        normalized_template = json.loads(normalized["networkTemplateConfig"])
+
+        self.assertEqual(normalized_template["secondaryGW1"], "192.166.88.1/24")
+        self.assertEqual(normalized_template["secondaryGW2"], "192.167.88.1/24")
+        self.assertNotIn(
+            "secondaryGWs",
+            normalized_template,
+            "fail-before: unfixed code always synthesizes an aggregate from the "
+            "four legacy slots even when the raw remote state never had one",
+        )
+
+    def test_dcnm_net_secgw_compat_u4_multicluster_parent_merged_update_legacy_version(self):
+        """U4: multicluster_parent dcnm_update_network_information(), confirmed-failing version, add/clear/preserve."""
+        dcnm_net = self._build_secondary_ip_update_network()
+        dcnm_net.fabric_type = "multicluster_parent"
+        dcnm_net.ndfc_version = self.NDFC_VERSION_FAILING_CONFIRMED
+        have = self._build_secondary_ip_update_payload(
+            self._build_secondary_ip_network_template(
+                secondary_gw1="192.166.88.1/24",
+                secondary_gw2="192.167.88.1/24",
+            )
+        )
+        want = self._build_secondary_ip_update_payload(
+            self._build_secondary_ip_network_template(secondary_gw3="10.0.0.9/24")
+        )
+
+        dcnm_net.dcnm_update_network_information(
+            want, have, {"secondary_ip_gw2": "", "secondary_ip_gw3": "10.0.0.9/24"}
+        )
+
+        updated_template = json.loads(want["networkTemplateConfig"])
+        self.assertEqual(updated_template["secondaryGW1"], "192.166.88.1/24")  # preserved
+        self.assertEqual(updated_template["secondaryGW2"], "")  # cleared
+        self.assertEqual(updated_template["secondaryGW3"], "10.0.0.9/24")  # added
+        self.assertNotIn(
+            "secondaryGWs",
+            updated_template,
+            "fail-before: unfixed code always regenerates the aggregate during "
+            "a merged update regardless of controller version",
+        )
+
+    def test_dcnm_net_secgw_compat_u5_explicit_id_create_push_to_remote_legacy_version(self):
+        """U5: explicit-ID create reconstruction inside push_to_remote(), confirmed-failing version."""
+        dcnm_net = self._build_secgw_push_to_remote_network(
+            fabric_type="standalone", dcnm_version=12.2, ndfc_version=self.NDFC_VERSION_FAILING_CONFIRMED
+        )
+        template = self._build_secondary_ip_network_template(
+            secondary_gw1="192.166.88.1/24",
+            secondary_gw4="192.169.88.1/24",
+        )
+        network = self._build_secondary_ip_update_payload(template)
+        dcnm_net.diff_create = [network]
+
+        self.run_dcnm_send.reset_mock()
+        self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}}
+
+        dcnm_net.push_to_remote()
+
+        self.assertEqual(self.run_dcnm_send.call_count, 1)
+        sent_payload = json.loads(self.run_dcnm_send.call_args[0][3])
+        sent_template = json.loads(sent_payload[0]["networkTemplateConfig"])
+        self.assertEqual(sent_template["secondaryGW1"], "192.166.88.1/24")
+        self.assertEqual(sent_template["secondaryGW4"], "192.169.88.1/24")
+        self.assertNotIn(
+            "secondaryGWs",
+            sent_template,
+            "fail-before: push_to_remote() reconstructs the template from "
+            "scratch and always re-adds the aggregate, independent of "
+            "update_create_params()",
+        )
+
+    def test_dcnm_net_secgw_compat_u6_auto_id_create_get_diff_merge_legacy_version(self):
+        """U6: auto-generated-networkId create path inside get_diff_merge(), confirmed-failing version."""
+        dcnm_net = self._build_secgw_auto_id_network(
+            fabric_type="standalone", dcnm_version=12.2, ndfc_version=self.NDFC_VERSION_FAILING_CONFIRMED
+        )
+        # want_c must come from the real update_create_params() output (as
+        # get_want() would build it), not a hand-built fixture: only that
+        # function decides whether the aggregate is present, and a synthetic
+        # fixture without it would pass this test for the wrong reason.
+        want_c = dcnm_net.update_create_params(
+            self._secgw_capability_config(
+                gw1="192.166.88.1/24",
+                gw4="192.169.88.1/24",
+            )
+        )
+        self.assertIsNone(want_c.get("networkId"))
+        dcnm_net.want_create = [want_c]
+
+        self.run_dcnm_send.reset_mock()
+        self.run_dcnm_send.side_effect = [
+            {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {"l2vni": 50999}},
+            {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}},
+        ]
+
+        dcnm_net.get_diff_merge()
+
+        self.assertEqual(self.run_dcnm_send.call_count, 2)
+        sent_network = json.loads(self.run_dcnm_send.call_args_list[1][0][3])
+        sent_template = json.loads(sent_network["networkTemplateConfig"])
+        self.assertEqual(sent_template["secondaryGW1"], "192.166.88.1/24")
+        self.assertEqual(sent_template["secondaryGW4"], "192.169.88.1/24")
+        self.assertNotIn(
+            "secondaryGWs",
+            sent_template,
+            "fail-before: the auto-ID create path sends normalized want "
+            "directly and it always carries the aggregate today",
+        )
+
+    def test_dcnm_net_secgw_compat_u7_compatible_version_characterization(self):
+        """U7 (regression lock): standalone/multisite_parent/multicluster_parent already emit the
+        aggregate on the minimum known-compatible build; the fix must not change this.
+
+        Hardened per architect review: zero AND a full four-gateway case are exercised
+        independently for all three fabric types (the original multisite_parent/
+        multicluster_parent "four" cases only populated two of four slots).
+        """
+        four_gw_values = ("192.166.88.1/24", "192.167.88.1/24", "192.168.88.1/24", "192.169.88.1/24")
+        four_gw_expected = [{"gatewayIpAddress": ip} for ip in four_gw_values]
+        cases = (
+            ("standalone", "", "", "", "", []),
+            ("standalone", *four_gw_values, four_gw_expected),
+            ("multisite_parent", "", "", "", "", []),
+            ("multisite_parent", *four_gw_values, four_gw_expected),
+            ("multicluster_parent", "", "", "", "", []),
+            ("multicluster_parent", *four_gw_values, four_gw_expected),
+        )
+        for fabric_type, gw1, gw2, gw3, gw4, expected_gws in cases:
+            with self.subTest(fabric_type=fabric_type, gw1=gw1, gw2=gw2, gw3=gw3, gw4=gw4):
+                dcnm_net = self._build_secgw_capability_network(
+                    fabric_type=fabric_type, ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                )
+
+                payload = dcnm_net.update_create_params(
+                    self._secgw_capability_config(gw1=gw1, gw2=gw2, gw3=gw3, gw4=gw4)
+                )
+                template = json.loads(payload["networkTemplateConfig"])
+
+                self.assertEqual(template["secondaryGW1"], gw1)
+                self.assertEqual(template["secondaryGW2"], gw2)
+                self.assertEqual(template["secondaryGW3"], gw3)
+                self.assertEqual(template["secondaryGW4"], gw4)
+                self.assertIn("secondaryGWs", template)
+                self.assertEqual(json.loads(template["secondaryGWs"]), {"secondaryGWs": expected_gws})
+
+    def test_dcnm_net_secgw_compat_u8_child_fabric_exclusion_both_controls(self):
+        """U8 (regression lock): multisite_child/multicluster_child never emit the aggregate,
+        on both the failing and the compatible control build."""
+        for fabric_type in ("multisite_child", "multicluster_child"):
+            for version in (self.NDFC_VERSION_FAILING_CONFIRMED, self.NDFC_VERSION_COMPATIBLE_MINIMUM):
+                with self.subTest(fabric_type=fabric_type, version=version):
+                    dcnm_net = self._build_secgw_capability_network(fabric_type=fabric_type, ndfc_version=version)
+
+                    payload = dcnm_net.update_create_params(
+                        self._secgw_capability_config(
+                            gw1="192.166.88.1/24",
+                            gw2="192.167.88.1/24",
+                            gw3="192.168.88.1/24",
+                            gw4="192.169.88.1/24",
+                        )
+                    )
+                    template = json.loads(payload["networkTemplateConfig"])
+
+                    self.assertEqual(template["secondaryGW1"], "192.166.88.1/24")
+                    self.assertEqual(template["secondaryGW4"], "192.169.88.1/24")
+                    self.assertNotIn("secondaryGWs", template)
+
+    def test_dcnm_net_secgw_compat_u9_unknown_version_zero_gateways_omits_safely(self):
+        """U9: missing/malformed/truncated/boundary version, zero secondary-gateway intent."""
+        invalid_versions = (None, "", "bad", "12", "12.2.3")
+        for version in invalid_versions:
+            with self.subTest(version=version):
+                dcnm_net = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version=version)
+
+                payload = dcnm_net.update_create_params(self._secgw_capability_config())
+                template = json.loads(payload["networkTemplateConfig"])
+
+                self.assertEqual(template["secondaryGW1"], "")
+                self.assertNotIn(
+                    "secondaryGWs",
+                    template,
+                    f"fail-before: unfixed code emits the aggregate regardless of "
+                    f"the missing/malformed version {version!r}",
+                )
+
+    def test_dcnm_net_secgw_compat_u10_unknown_version_nonempty_gateway_fails_closed(self):
+        """U10: missing/malformed/truncated/boundary version, nonempty secondary-gateway intent must fail closed."""
+        invalid_versions = (None, "", "bad", "12", "12.2.3")
+        for version in invalid_versions:
+            with self.subTest(version=version):
+                dcnm_net = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version=version)
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+                self.run_dcnm_send.reset_mock()
+
+                with self.assertRaises(
+                    RuntimeError,
+                    msg="fail-before: unfixed code never classifies the version and "
+                    "completes normally instead of failing closed",
+                ):
+                    dcnm_net.update_create_params(self._secgw_capability_config(gw1="192.166.88.1/24"))
+
+                dcnm_net.module.fail_json.assert_called_once()
+                self.run_dcnm_send.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_u10a_unknown_version_nonempty_gateway_real_sink_transport_not_called(self):
+        """U10 (hardened): a real outbound sink (push_to_remote()'s explicit-ID create path)
+        must also fail closed and never reach the mocked transport for an unknown/malformed
+        version with nonempty secondary-gateway intent. The plain update_create_params()
+        assertion above never calls transport by construction, so it cannot prove transport
+        was avoided; this variant proves it against a function that normally does call it."""
+        invalid_versions = (None, "", "bad", "12", "12.2.3")
+        for version in invalid_versions:
+            with self.subTest(version=version):
+                dcnm_net = self._build_secgw_push_to_remote_network(
+                    fabric_type="standalone", dcnm_version=12.2, ndfc_version=version
+                )
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+                template = self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+                network = self._build_secondary_ip_update_payload(template)
+                dcnm_net.diff_create = [network]
+
+                self.run_dcnm_send.reset_mock()
+                self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}}
+
+                with self.assertRaises(
+                    RuntimeError,
+                    msg="fail-before: push_to_remote() never classifies the version "
+                    "and proceeds to send the create request instead of failing closed",
+                ):
+                    dcnm_net.push_to_remote()
+
+                dcnm_net.module.fail_json.assert_called_once()
+                self.run_dcnm_send.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_u11_normalize_have_brownfield_nonrepresentable(self):
+        """U11: brownfield remote have must fail before write. Hardened per architect review
+        into four separate, non-combined cells: malformed aggregate JSON, aggregate-only state
+        (legacy slots empty but the aggregate is nonempty), an aggregate that contradicts
+        populated legacy slots (same count, different values), and an aggregate with more than
+        four entries (excess alone, values otherwise consistent with the legacy slots)."""
+        malformed_template = self._build_secondary_ip_network_template(
+            secondary_gw1="192.166.88.1/24",
+            secondary_gw2="192.167.88.1/24",
+        )
+        malformed_template["secondaryGWs"] = "{not-valid-json"
+
+        aggregate_only_template = self._build_secondary_ip_network_template()  # all four slots empty
+        aggregate_only_template["secondaryGWs"] = json.dumps(
+            {
+                "secondaryGWs": [
+                    {"gatewayIpAddress": "10.0.0.1/24"},
+                    {"gatewayIpAddress": "10.0.0.2/24"},
+                ]
+            },
+            separators=(",", ":"),
+        )
+
+        contradictory_template = self._build_secondary_ip_network_template(
+            secondary_gw1="192.166.88.1/24",
+            secondary_gw2="192.167.88.1/24",
+        )
+        # Same count (two) as the populated legacy slots, but different values.
+        contradictory_template["secondaryGWs"] = json.dumps(
+            {
+                "secondaryGWs": [
+                    {"gatewayIpAddress": "10.0.0.1/24"},
+                    {"gatewayIpAddress": "10.0.0.2/24"},
+                ]
+            },
+            separators=(",", ":"),
+        )
+
+        excess_template = self._build_secondary_ip_network_template(
+            secondary_gw1="192.166.88.1/24",
+            secondary_gw2="192.167.88.1/24",
+            secondary_gw3="192.168.88.1/24",
+            secondary_gw4="192.169.88.1/24",
+        )
+        # Consistent with the four legacy slots, but a fifth entry makes it
+        # nonrepresentable in the four-slot public contract.
+        excess_template["secondaryGWs"] = json.dumps(
+            {
+                "secondaryGWs": [
+                    {"gatewayIpAddress": "192.166.88.1/24"},
+                    {"gatewayIpAddress": "192.167.88.1/24"},
+                    {"gatewayIpAddress": "192.168.88.1/24"},
+                    {"gatewayIpAddress": "192.169.88.1/24"},
+                    {"gatewayIpAddress": "10.0.0.9/24"},
+                ]
+            },
+            separators=(",", ":"),
+        )
+
+        cases = (
+            ("malformed_json", malformed_template),
+            ("aggregate_only", aggregate_only_template),
+            ("contradictory", contradictory_template),
+            ("more_than_four", excess_template),
+        )
+        for label, raw_template in cases:
+            with self.subTest(case=label):
+                dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+                dcnm_net.dcnm_version = 12
+                dcnm_net.ndfc_version = self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                dcnm_net.fabric_type = "standalone"
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                network = self._build_secondary_ip_update_payload(raw_template)
+
+                with self.assertRaises(
+                    RuntimeError,
+                    msg=f"fail-before ({label}): unfixed code never inspects the raw remote "
+                    "aggregate and silently discards/overwrites it instead of "
+                    "failing on nonrepresentable brownfield state",
+                ):
+                    dcnm_net.normalize_have_network(network)
+
+                dcnm_net.module.fail_json.assert_called_once()
+
+    def test_dcnm_net_secgw_compat_u12_idempotency_both_controls(self):
+        """U12 (regression lock): want built via the real update_create_params(), have built via
+        the real normalize_have_network() from a realistic raw controller response, then diffed
+        with the real diff_for_create() -- for zero and four gateways, on both exact controls.
+
+        Hardened per architect review: two hand-built, already-identical payloads (the original
+        design) do not exercise or prove the normalization/idempotency contract; only running the
+        actual production functions on independently-constructed want/have inputs does.
+        """
+        gateway_sets = (
+            ("", "", "", ""),
+            ("192.166.88.1/24", "192.167.88.1/24", "192.168.88.1/24", "192.169.88.1/24"),
+        )
+        for version in (self.NDFC_VERSION_FAILING_CONFIRMED, self.NDFC_VERSION_COMPATIBLE_MINIMUM):
+            for gws in gateway_sets:
+                with self.subTest(version=version, gws=gws):
+                    dcnm_net = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version=version)
+                    dcnm_net.module = Mock()
+
+                    # Independently-built want, via the real create-params path.
+                    want = dcnm_net.update_create_params(
+                        self._secgw_capability_config(
+                            net_name="sec-ip-test",
+                            vrf_name="test-vrf",
+                            gw1=gws[0],
+                            gw2=gws[1],
+                            gw3=gws[2],
+                            gw4=gws[3],
+                            vlan_id=993,
+                            gw_ip_subnet="10.250.93.1/24",
+                        )
+                    )
+
+                    # Independently-built raw remote response, via the real
+                    # normalize-have path. A compatible controller is modeled
+                    # with its own real aggregate string on the wire; a legacy
+                    # controller is modeled with no aggregate key at all
+                    # (matching U3's confirmed-failing-build fixture shape).
+                    raw_have_template = self._build_secondary_ip_network_template(
+                        secondary_gw1=gws[0], secondary_gw2=gws[1], secondary_gw3=gws[2], secondary_gw4=gws[3]
+                    )
+                    if version == self.NDFC_VERSION_COMPATIBLE_MINIMUM:
+                        raw_have_template["secondaryGWs"] = dcnm_network.DcnmNetwork.get_secondary_gws_template_config(
+                            raw_have_template
+                        )
+                    raw_have_network = self._build_secondary_ip_update_payload(raw_have_template)
+                    have = dcnm_net.normalize_have_network(raw_have_network)
+
+                    diff = dcnm_net.diff_for_create(want, have)
+
+                    self.assertEqual(diff[0], {})
+                    self.assertFalse(diff[-1])
+
+    def test_dcnm_net_secgw_compat_u13_existing_merged_safety_both_controls(self):
+        """U13 (regression lock): ambiguous merged-clear guard is unchanged and version-independent."""
+        for version in (self.NDFC_VERSION_FAILING_CONFIRMED, self.NDFC_VERSION_COMPATIBLE_MINIMUM):
+            with self.subTest(version=version):
+                dcnm_net = self._build_secondary_ip_update_network()
+                dcnm_net.ndfc_version = version
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+                have = self._build_secondary_ip_update_payload(
+                    self._build_secondary_ip_network_template(
+                        secondary_gw1="192.166.88.1/24",
+                        secondary_gw2="192.167.88.1/24",
+                        secondary_gw3="192.168.88.1/24",
+                    )
+                )
+                want = self._build_secondary_ip_update_payload(self._build_secondary_ip_network_template())
+
+                with self.assertRaises(RuntimeError):
+                    dcnm_net.dcnm_update_network_information(want, have, {"secondary_ip_gw2": ""})
+
+                fail_msg = dcnm_net.module.fail_json.call_args[1]["msg"]
+                self.assertIn("cannot clear secondary_ip_gw2", fail_msg)
+                self.assertIn("compact list", fail_msg)
+
+    def test_dcnm_net_secgw_compat_u14_older_versions_legacy_classification(self):
+        """U14: unambiguously older versions classify as legacy for zero and four gateways."""
+        older_versions = ("11.5.1", "12.1.2", "12.2.2", "12.2.3.69")
+        gateway_sets = (
+            ("", "", "", ""),
+            ("192.166.88.1/24", "192.167.88.1/24", "192.168.88.1/24", "192.169.88.1/24"),
+        )
+        for version in older_versions:
+            for gws in gateway_sets:
+                with self.subTest(version=version, gws=gws):
+                    dcnm_net = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version=version)
+
+                    payload = dcnm_net.update_create_params(
+                        self._secgw_capability_config(gw1=gws[0], gw2=gws[1], gw3=gws[2], gw4=gws[3])
+                    )
+                    template = json.loads(payload["networkTemplateConfig"])
+
+                    self.assertEqual(template["secondaryGW1"], gws[0])
+                    self.assertEqual(template["secondaryGW4"], gws[3])
+                    self.assertNotIn(
+                        "secondaryGWs",
+                        template,
+                        f"fail-before: unfixed code emits the aggregate for legacy "
+                        f"version {version!r} regardless of gateway count",
+                    )
+
+    def test_dcnm_net_secgw_compat_u15_untested_interval_conservative_legacy(self):
+        """U15: representative untested builds after 12.2.2.238 and below 12.2.3.70 get
+        conservative legacy handling, for zero AND four gateways. This is a conservative
+        policy, not a claim that these builds lack aggregate support.
+
+        Hardened per architect review: the original test covered only one gapped
+        nonempty case (gw1+gw4) per build; a true zero-gateway case is now included too.
+        """
+        representative_untested_builds = ("12.2.2.250", "12.2.3.1", "12.2.3.50")
+        gateway_sets = (
+            ("", "", "", ""),
+            ("192.166.88.1/24", "192.167.88.1/24", "192.168.88.1/24", "192.169.88.1/24"),
+        )
+        for version in representative_untested_builds:
+            for gws in gateway_sets:
+                with self.subTest(version=version, gws=gws):
+                    dcnm_net = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version=version)
+
+                    payload = dcnm_net.update_create_params(
+                        self._secgw_capability_config(gw1=gws[0], gw2=gws[1], gw3=gws[2], gw4=gws[3])
+                    )
+                    template = json.loads(payload["networkTemplateConfig"])
+
+                    self.assertEqual(template["secondaryGW1"], gws[0])
+                    self.assertEqual(template["secondaryGW2"], gws[1])
+                    self.assertEqual(template["secondaryGW3"], gws[2])
+                    self.assertEqual(template["secondaryGW4"], gws[3])
+                    self.assertNotIn(
+                        "secondaryGWs",
+                        template,
+                        f"fail-before: unfixed code emits the aggregate for this "
+                        f"untested-interval build {version!r}; approved policy is "
+                        f"conservative legacy handling (untested, not confirmed unsupported)",
+                    )
+
+    # ------------------------------------------------------------------
+    # DCNM715-SECONDARYGWS-001 / G2A correction cycle (architect review
+    # after G2). G1/G1A/G2 above are untouched. These tests are added
+    # before any further functional change, against the current G2
+    # candidate, per the four blocking findings: (1) present empty/null
+    # remote aggregate fails open, (2) query blocked by mutating-only
+    # safety, (3) insufficiently strict version grammar, (4) compatible
+    # gapped-slot idempotency unproven.
+    # ------------------------------------------------------------------
+
+    def _build_get_have_query_network(self, ndfc_version=None):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.module = Mock()
+        dcnm_net.module.params = {"state": "query"}
+        dcnm_net.module.fail_json = Mock()  # no side effect: must never be called
+        dcnm_net.params = {"state": "query"}
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.is_ms_fabric = False
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = ndfc_version
+        dcnm_net.paths = {
+            "GET_VRF": "/fabrics/{0}/vrfs",
+            "GET_VRF_NET": "/fabrics/{0}/vrfs/{1}/networks",
+            "GET_NET_NAME": "/fabrics/{0}/networks/{1}",
+            "GET_NET": "/fabrics/{0}/networks",
+            "GET_NET_ATTACH": "/fabrics/{0}/networks/attachments",
+        }
+        dcnm_net.BULK_GET_HAVE_NETWORK_THRESHOLD = 50
+        return dcnm_net
+
+    def _assert_get_have_query_survives_malformed_network(self, targeted):
+        dcnm_net = self._build_get_have_query_network(ndfc_version=self.NDFC_VERSION_FAILING_CONFIRMED)
+        dcnm_net.config = [{"net_name": "clean-net", "vrf_name": "test-vrf"}] if targeted else []
+
+        clean_template = self._build_secondary_ip_network_template(secondary_gw1="")
+        clean_template["networkName"] = "clean-net"
+        clean_network = self._build_secondary_ip_update_payload(clean_template)
+        clean_network["networkName"] = "clean-net"
+        clean_network["vrf"] = "test-vrf"
+
+        malformed_template = self._build_secondary_ip_network_template(
+            secondary_gw1="192.166.88.1/24",
+            secondary_gw2="192.167.88.1/24",
+        )
+        malformed_template["networkName"] = "unrelated-malformed-net"
+        malformed_template["secondaryGWs"] = json.dumps(
+            {"secondaryGWs": [{"gatewayIpAddress": "10.0.0.1/24"}, {"gatewayIpAddress": "10.0.0.2/24"}]},
+            separators=(",", ":"),
+        )
+        malformed_network = self._build_secondary_ip_update_payload(malformed_template)
+        malformed_network["networkName"] = "unrelated-malformed-net"
+        malformed_network["vrf"] = "test-vrf"
+
+        self.run_dcnm_send.reset_mock()
+        self.run_dcnm_send.side_effect = [
+            {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": [{"vrfName": "test-vrf"}]},
+            {"DATA": [clean_network, malformed_network]},
+        ]
+        self.run_dcnm_get_url.return_value = {"DATA": []}
+
+        dcnm_net.get_have()
+
+        dcnm_net.module.fail_json.assert_not_called()
+        self.assertTrue(
+            all(call.args[1] == "GET" for call in self.run_dcnm_send.call_args_list),
+            "query must never issue a non-GET (write) transport call",
+        )
+
+    def test_dcnm_net_secgw_compat_g2a_query_targeted_get_have_does_not_block_on_unrelated_malformed_network(self):
+        """G2A finding 2 (targeted): get_have() always uses its per-VRF lookup for
+        state=query regardless of a targeted self.config -- get_diff_query(), not
+        get_have(), is what filters to the requested network -- so an unrelated
+        malformed network in the same VRF must not abort a targeted query, and no
+        write transport may occur."""
+        self._assert_get_have_query_survives_malformed_network(targeted=True)
+
+    def test_dcnm_net_secgw_compat_g2a_query_all_get_have_does_not_block_on_malformed_network(self):
+        """G2A finding 2 (query-all): same guarantee with no self.config."""
+        self._assert_get_have_query_survives_malformed_network(targeted=False)
+
+    def test_dcnm_net_secgw_compat_g2a_query_normalize_have_preserves_raw_state(self):
+        """G2A finding 2 (mechanism): normalize_have_network() itself must never
+        fail_json during state=query and must preserve the raw remote secondaryGWs
+        value verbatim -- capability/representability processing must not run at
+        all for a read-only query, since get_diff_query() never uses this
+        normalized value (only checks self.have_create for truthiness)."""
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = self.NDFC_VERSION_FAILING_CONFIRMED
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.module = Mock(params={"state": "query"})
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+        raw_template = self._build_secondary_ip_network_template(
+            secondary_gw1="192.166.88.1/24",
+            secondary_gw2="192.167.88.1/24",
+        )
+        # Deliberately nonrepresentable (more than four entries, contradicting
+        # the two populated legacy slots) -- would fail closed on any mutating
+        # path, but must be preserved as-is and reported during query.
+        raw_aggregate = json.dumps(
+            {"secondaryGWs": [{"gatewayIpAddress": f"10.0.0.{i}/24"} for i in range(1, 6)]},
+            separators=(",", ":"),
+        )
+        raw_template["secondaryGWs"] = raw_aggregate
+        network = self._build_secondary_ip_update_payload(raw_template)
+
+        normalized = dcnm_net.normalize_have_network(network)
+
+        dcnm_net.module.fail_json.assert_not_called()
+        normalized_template = json.loads(normalized["networkTemplateConfig"])
+        self.assertEqual(normalized_template["secondaryGW1"], "192.166.88.1/24")
+        self.assertEqual(normalized_template["secondaryGW2"], "192.167.88.1/24")
+        self.assertEqual(
+            normalized_template.get("secondaryGWs"),
+            raw_aggregate,
+            "query must preserve/report the exact raw controller state, not a "
+            "capability-processed value",
+        )
+
+    def test_dcnm_net_secgw_compat_g2a_present_empty_or_null_aggregate_key_presence(self):
+        """G2A finding 1: a raw remote secondaryGWs key that is PRESENT but
+        null/empty must not bypass representability validation the way an
+        absent key correctly does.
+
+        CORRECTED in G3 (architect review after G2B): the original two
+        "consistent" cases below asserted that null/"" was safe (no failure)
+        specifically when the legacy slots were also empty. The architect
+        confirmed this was itself wrong -- null/"" is not a valid "declares
+        zero" encoding on a mutating path (the only valid empty encoding is
+        the compact JSON string '{"secondaryGWs":[]}'), regardless of
+        legacy-slot contents. All four cases now expect fail_json; see
+        test_dcnm_net_secgw_compat_g3_present_null_or_empty_always_fails_on_mutation
+        for the comprehensive, corrected version of this matrix."""
+        cases = (
+            ("empty_string_contradicts", "", ("192.166.88.1/24", "192.167.88.1/24", "", "")),
+            ("null_contradicts", None, ("192.166.88.1/24", "192.167.88.1/24", "", "")),
+            ("empty_string_consistent", "", ("", "", "", "")),
+            ("null_consistent", None, ("", "", "", "")),
+        )
+        for label, raw_value, gws in cases:
+            with self.subTest(case=label):
+                dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+                dcnm_net.dcnm_version = 12
+                dcnm_net.ndfc_version = self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                dcnm_net.fabric_type = "standalone"
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                raw_template = self._build_secondary_ip_network_template(
+                    secondary_gw1=gws[0], secondary_gw2=gws[1], secondary_gw3=gws[2], secondary_gw4=gws[3]
+                )
+                raw_template["secondaryGWs"] = raw_value
+                network = self._build_secondary_ip_update_payload(raw_template)
+
+                with self.assertRaises(
+                    RuntimeError,
+                    msg=f"present-but-empty/null remote aggregate ({label}) must always fail "
+                    "closed on a mutating path",
+                ):
+                    dcnm_net.normalize_have_network(network)
+                dcnm_net.module.fail_json.assert_called_once()
+
+    def test_dcnm_net_secgw_compat_g2a_malformed_aggregate_entry_value_types(self):
+        """G2A finding 1 (associated cell): an aggregate entry with a non-string,
+        empty, or missing gatewayIpAddress must fail clearly and explicitly."""
+        cases = (
+            ("non_string_ip", {"gatewayIpAddress": 192168001024}),
+            ("null_ip", {"gatewayIpAddress": None}),
+            ("empty_string_ip", {"gatewayIpAddress": ""}),
+            ("missing_ip_key", {}),
+            ("non_dict_entry", "192.166.88.1/24"),
+        )
+        for label, bad_entry in cases:
+            with self.subTest(case=label):
+                dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+                dcnm_net.dcnm_version = 12
+                dcnm_net.ndfc_version = self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                dcnm_net.fabric_type = "standalone"
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                raw_template = self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+                raw_template["secondaryGWs"] = json.dumps(
+                    {"secondaryGWs": [bad_entry]}, separators=(",", ":")
+                )
+                network = self._build_secondary_ip_update_payload(raw_template)
+
+                with self.assertRaises(
+                    RuntimeError, msg=f"malformed aggregate entry ({label}) must fail closed"
+                ):
+                    dcnm_net.normalize_have_network(network)
+
+                dcnm_net.module.fail_json.assert_called_once()
+
+    def test_dcnm_net_secgw_compat_g2a_malformed_boundary_versions_classify_unknown(self):
+        """G2A finding 3: non-canonical version grammar -- whitespace, an explicit
+        sign, underscore digit separators, a negative build, an extra empty
+        component, and Unicode decimal digits -- must classify unknown. Python's
+        bare int() accepts all of these, which can misclassify a value like
+        "12.2.3.+70" as aggregate instead of unknown right at the boundary."""
+        malformed_versions = (
+            " 12.2.3.70",
+            "12.2.3.70 ",
+            "12.2.3.+70",
+            "12.2.3.7_0",
+            "12.2.3.-70",
+            "12.2..3.70",
+            "12.2.3.٧٠",  # Arabic-Indic digits for "70"
+        )
+        for version in malformed_versions:
+            with self.subTest(version=repr(version)):
+                dcnm_net = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version=version)
+
+                capability = dcnm_net.secondary_gws_capability()
+
+                self.assertEqual(
+                    capability,
+                    "unknown",
+                    f"fail-before: unfixed int()-based parsing accepts the non-canonical "
+                    f"version {version!r} (classified {capability!r}) instead of unknown",
+                )
+
+        for version in malformed_versions:
+            with self.subTest(version=repr(version), intent="nonempty"):
+                dcnm_net = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version=version)
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+                self.run_dcnm_send.reset_mock()
+
+                with self.assertRaises(
+                    RuntimeError,
+                    msg=f"fail-before: non-canonical version {version!r} was not rejected as "
+                    "unknown, so nonempty intent did not fail closed",
+                ):
+                    dcnm_net.update_create_params(self._secgw_capability_config(gw1="192.166.88.1/24"))
+
+                dcnm_net.module.fail_json.assert_called_once()
+                self.run_dcnm_send.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_g2a_compatible_gapped_gateway_idempotency(self):
+        """CORRECTED in G3 (architect review after G2B): this test previously
+        claimed gapped-gateway idempotency (GW1+GW4) was proven safe on a
+        compatible controller, because a self-constructed raw "have" fixture
+        assumed the controller would reflect the same GW1+GW4 positions back.
+        The architect reproduced a plausible, more realistic controller
+        reflection instead: a compact aggregate [GW1,GW4] returned as
+        *reindexed contiguous* legacy slots GW1+GW2 (not GW1+GW4). Under that
+        reflection, want (still GW1+GW4) and have (now GW1+GW2) permanently
+        disagree on secondaryGW2 and secondaryGW4, producing a non-empty diff
+        on every run -- a resend loop, not idempotency. The old claim was
+        false and is retracted; see the G3 correction cycle:
+        - test_dcnm_net_secgw_compat_g3_non_prefix_patterns_fail_before_transport
+          proves GW1+GW4 (and every other non-contiguous-prefix pattern) is now
+          rejected before transport on an aggregate-capable controller instead
+          of silently risking this resend loop.
+        - test_dcnm_net_secgw_compat_g3_contiguous_prefixes_accepted_and_idempotent
+          proves idempotency for every pattern the aggregate encoding can
+          actually represent safely (a contiguous prefix).
+        - test_dcnm_net_secgw_compat_g3_legacy_preserves_gapped_slots proves
+          gaps remain fully safe on a legacy (no-aggregate) controller, where
+          there is no compact encoding and therefore no reflection risk.
+        This method is kept (rather than deleted) only to document the
+        retraction at the point where the false claim used to live; it now
+        asserts the corrected behavior directly.
+
+        CORRECTED AGAIN in G5-LIFECYCLE (architect review after
+        G5-BROWNFIELD): the G3 correction above asserted
+        update_create_params() alone fails immediately for GW1+GW4 under
+        the default merged state. G5-LIFECYCLE found that assumption itself
+        unsafe as a blanket rule: for state: merged, a transient
+        non-contiguous-prefix result is now deferred (see
+        apply_secondary_gws_compat()'s defer_prefix_fail_closed), since it
+        may simply be an omitted value have will later restore (see
+        test_dcnm_net_secgw_compat_g5_lifecycle_merged_gw2_over_existing_gw1).
+        GW1+GW4 with no have wired up at all (as here) is still correctly
+        rejected -- just at finalize_secondary_gws_compat(), the checkpoint
+        for want entries with no have match, instead of inside
+        update_create_params() itself. The end behavior this test
+        documents -- GW1+GW4 on a compatible controller must fail closed,
+        not silently produce a permanently-diffing aggregate -- is
+        unchanged; only the mechanism and call sequence proving it are
+        updated."""
+        dcnm_net = self._build_secgw_capability_network(
+            fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+        )
+        dcnm_net.module = Mock()
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+        dcnm_net.have_create = []
+
+        want_c = dcnm_net.update_create_params(
+            self._secgw_capability_config(
+                net_name="sec-ip-test",
+                vrf_name="test-vrf",
+                gw1="192.166.88.1/24",
+                gw2="",
+                gw3="",
+                gw4="192.169.88.1/24",
+                vlan_id=993,
+                gw_ip_subnet="10.250.93.1/24",
+            )
+        )
+        dcnm_net.want_create = [want_c]
+
+        with self.assertRaises(
+            RuntimeError,
+            msg="GW1+GW4 on a compatible controller must fail closed, not silently "
+            "produce a permanently-diffing aggregate",
+        ):
+            dcnm_net.finalize_secondary_gws_compat()
+        dcnm_net.module.fail_json.assert_called_once()
+
+    # ------------------------------------------------------------------
+    # DCNM715-SECONDARYGWS-001 / G3 final correction cycle (architect review
+    # after G2B). G1/G1A/G2/G2A/G2B above are untouched except for the one
+    # G2A test corrected immediately above (its old claim was disproven).
+    # Scope for this cycle only, per the handoff: plugins/module_utils/
+    # network/dcnm/dcnm.py, plugins/action/dcnm_network.py,
+    # plugins/modules/dcnm_network.py, and both authorized test files.
+    # ------------------------------------------------------------------
+
+    def test_dcnm_net_secgw_compat_g7_split_config_propagates_normalized_version_only(self):
+        """G7: parent and child receive the one normalized full version."""
+        action = dcnm_network_action.ActionModule.__new__(dcnm_network_action.ActionModule)
+        fabrics = {
+            "msd-parent": {"type": "multisite_parent", "fabricParent": "None", "cluster_name": ""},
+            "msd-child-1": {"type": "multisite_child", "fabricParent": "msd-parent", "cluster_name": ""},
+        }
+        config = [
+            {
+                "net_name": "ansible-msd-net1",
+                "vrf_name": "Tenant-1",
+                "is_l2only": False,
+                "child_fabric_config": [{"fabric": "msd-child-1", "dhcp_loopback_id": 204}],
+            }
+        ]
+
+        configs, error_msg = action._split_config(
+            fabrics, "msd-parent", config, "merged", {}, 12.2, "12.2.3.70"
+        )
+
+        self.assertIsNone(error_msg)
+        for fabric_config in configs:
+            details = fabric_config["_fabric_details"]
+            self.assertIs(type(details["nd_version"]), float)
+            self.assertEqual(details["nd_version"], 12.2)
+            self.assertIs(type(details["ndfc_version"]), str)
+            self.assertEqual(details["ndfc_version"], "12.2.3.70")
+            self.assertEqual(set(details), {"fabric_type", "cluster_name", "nd_version", "ndfc_version"})
+
+    def test_dcnm_net_secgw_compat_g7_normalization_tradeoff_classifies_aggregate(self):
+        """G7 accepted tradeoff: punctuation is normalized upstream, and the
+        canonical result alone drives the module capability decision."""
+        action = Mock()
+        action._execute_module.return_value = {
+            "failed": False,
+            "response": {"RETURN_CODE": 200, "DATA": {"version": "12.2.3.+70"}},
+        }
+        version_info = dcnm_utils.get_nd_version(action, {}, None, return_full_version=True)
+        self.assertIs(type(version_info), tuple)
+        self.assertEqual(version_info, (12.2, "12.2.3.70"))
+
+        dcnm_net = self._build_secgw_capability_network(
+            fabric_type="standalone", ndfc_version=version_info[1]
+        )
+        self.assertEqual(dcnm_net.secondary_gws_capability(), "aggregate")
+
+    def test_dcnm_net_secgw_compat_g7_real_sink_uses_normalized_version(self):
+        """G7: a compatible normalized version reaches the real create sink."""
+        dcnm_net = self._build_secgw_push_to_remote_network(
+            fabric_type="standalone", dcnm_version=12.2, ndfc_version="12.2.3.70"
+        )
+        template = self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+        network = self._build_secondary_ip_update_payload(template)
+        dcnm_net.diff_create = [network]
+
+        self.run_dcnm_send.reset_mock()
+        self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}}
+
+        dcnm_net.push_to_remote()
+
+        dcnm_net.module.fail_json.assert_not_called()
+        self.run_dcnm_send.assert_called_once()
+        sent_payload = json.loads(self.run_dcnm_send.call_args.args[3])
+        self.assertIs(type(sent_payload), list)
+        self.assertEqual(len(sent_payload), 1)
+        sent_template = json.loads(sent_payload[0]["networkTemplateConfig"])
+        self.assertEqual(
+            json.loads(sent_template["secondaryGWs"]),
+            {"secondaryGWs": [{"gatewayIpAddress": "192.166.88.1/24"}]},
+        )
+
+    def test_dcnm_net_secgw_compat_g3_present_null_or_empty_always_fails_on_mutation(self):
+        """G3 finding 3: present secondaryGWs: null/"" must fail on mutating
+        normalization REGARDLESS of legacy-slot contents -- the valid empty
+        encoding is the JSON string '{"secondaryGWs":[]}', not null/"". G2B
+        incorrectly treated null/"" as safe when legacy slots were also
+        empty; the architect confirmed these are malformed values, not a
+        valid "declares zero" encoding. Key truly absent is unaffected
+        (proved by U3 and the legacy-only tests elsewhere in this file)."""
+        cases = (
+            ("empty_string_empty_legacy", "", ("", "", "", "")),
+            ("null_empty_legacy", None, ("", "", "", "")),
+            ("empty_string_populated_legacy", "", ("192.166.88.1/24", "192.167.88.1/24", "", "")),
+            ("null_populated_legacy", None, ("192.166.88.1/24", "192.167.88.1/24", "", "")),
+        )
+        for label, raw_value, gws in cases:
+            with self.subTest(case=label):
+                dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+                dcnm_net.dcnm_version = 12
+                dcnm_net.ndfc_version = self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                dcnm_net.fabric_type = "standalone"
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                raw_template = self._build_secondary_ip_network_template(
+                    secondary_gw1=gws[0], secondary_gw2=gws[1], secondary_gw3=gws[2], secondary_gw4=gws[3]
+                )
+                raw_template["secondaryGWs"] = raw_value
+                network = self._build_secondary_ip_update_payload(raw_template)
+
+                with self.assertRaises(
+                    RuntimeError,
+                    msg=f"fail-before ({label}): present null/empty secondaryGWs must "
+                    "always fail on mutating normalization, regardless of legacy-slot "
+                    "contents",
+                ):
+                    dcnm_net.normalize_have_network(network)
+                dcnm_net.module.fail_json.assert_called_once()
+
+    def test_dcnm_net_secgw_compat_g3_query_preserves_null_or_empty_without_failure(self):
+        """G3 finding 3 (unchanged contract, explicit coverage): query must
+        still preserve and report present null/"" verbatim without failure,
+        even under the new stricter mutating-path policy above -- the
+        stricter rule applies only when validate_remote is actually
+        exercised, which query already bypasses entirely."""
+        for raw_value in (None, ""):
+            for gws in (("", "", "", ""), ("192.166.88.1/24", "192.167.88.1/24", "", "")):
+                with self.subTest(raw_value=raw_value, gws=gws):
+                    dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+                    dcnm_net.dcnm_version = 12
+                    dcnm_net.ndfc_version = self.NDFC_VERSION_FAILING_CONFIRMED
+                    dcnm_net.fabric_type = "standalone"
+                    dcnm_net.module = Mock(params={"state": "query"})
+                    dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                    raw_template = self._build_secondary_ip_network_template(
+                        secondary_gw1=gws[0], secondary_gw2=gws[1], secondary_gw3=gws[2], secondary_gw4=gws[3]
+                    )
+                    raw_template["secondaryGWs"] = raw_value
+                    network = self._build_secondary_ip_update_payload(raw_template)
+
+                    normalized = dcnm_net.normalize_have_network(network)
+
+                    dcnm_net.module.fail_json.assert_not_called()
+                    normalized_template = json.loads(normalized["networkTemplateConfig"])
+                    self.assertEqual(normalized_template.get("secondaryGWs"), raw_value)
+
+    def test_dcnm_net_secgw_compat_g3_non_prefix_patterns_fail_before_transport(self):
+        """G3 finding 1: every non-contiguous-prefix gateway pattern must
+        fail before transport on an aggregate-capable controller -- the
+        compact aggregate encoding can only safely represent a contiguous
+        prefix (GW1, GW1+GW2, GW1+GW2+GW3, or all four); the architect
+        reproduced a plausible controller reflection that reindexes a gapped
+        aggregate like [GW1,GW4] into contiguous legacy slots GW1+GW2, which
+        would otherwise silently produce a permanent resend loop."""
+        A, B, C, D = "192.166.88.1/24", "192.167.88.1/24", "192.168.88.1/24", "192.169.88.1/24"
+        non_prefix_patterns = (
+            ("", B, "", ""),
+            ("", "", C, ""),
+            ("", "", "", D),
+            (A, "", C, ""),
+            (A, "", "", D),
+            ("", B, C, ""),
+            ("", B, "", D),
+            ("", "", C, D),
+            (A, B, "", D),
+            (A, "", C, D),
+            ("", B, C, D),
+        )
+        for gws in non_prefix_patterns:
+            with self.subTest(gws=gws):
+                dcnm_net = self._build_secgw_push_to_remote_network(
+                    fabric_type="standalone", dcnm_version=12.2, ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                )
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+                template = self._build_secondary_ip_network_template(
+                    secondary_gw1=gws[0], secondary_gw2=gws[1], secondary_gw3=gws[2], secondary_gw4=gws[3]
+                )
+                network = self._build_secondary_ip_update_payload(template)
+                dcnm_net.diff_create = [network]
+
+                self.run_dcnm_send.reset_mock()
+                self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}}
+
+                with self.assertRaises(
+                    RuntimeError, msg=f"fail-before: non-prefix pattern {gws} was not rejected"
+                ):
+                    dcnm_net.push_to_remote()
+
+                dcnm_net.module.fail_json.assert_called_once()
+                self.run_dcnm_send.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_g3_contiguous_prefixes_accepted_and_idempotent(self):
+        """G3 finding 1 (positive proof): every contiguous prefix (0 through
+        4 gateways) remains accepted on an aggregate-capable controller and
+        idempotent via a real want/normalize-have/diff round trip -- a
+        contiguous prefix is unambiguous under reflection (there is no gap
+        for a controller to reindex away)."""
+        A, B, C, D = "192.166.88.1/24", "192.167.88.1/24", "192.168.88.1/24", "192.169.88.1/24"
+        prefixes = (
+            ("", "", "", ""),
+            (A, "", "", ""),
+            (A, B, "", ""),
+            (A, B, C, ""),
+            (A, B, C, D),
+        )
+        for gws in prefixes:
+            with self.subTest(gws=gws):
+                dcnm_net = self._build_secgw_capability_network(
+                    fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                )
+                dcnm_net.module = Mock()
+
+                want = dcnm_net.update_create_params(
+                    self._secgw_capability_config(
+                        net_name="sec-ip-test",
+                        vrf_name="test-vrf",
+                        gw1=gws[0],
+                        gw2=gws[1],
+                        gw3=gws[2],
+                        gw4=gws[3],
+                        vlan_id=993,
+                        gw_ip_subnet="10.250.93.1/24",
+                    )
+                )
+
+                raw_have_template = self._build_secondary_ip_network_template(
+                    secondary_gw1=gws[0], secondary_gw2=gws[1], secondary_gw3=gws[2], secondary_gw4=gws[3]
+                )
+                raw_have_template["secondaryGWs"] = dcnm_network.DcnmNetwork.get_secondary_gws_template_config(
+                    raw_have_template
+                )
+                raw_have_network = self._build_secondary_ip_update_payload(raw_have_template)
+                have = dcnm_net.normalize_have_network(raw_have_network)
+
+                diff = dcnm_net.diff_for_create(want, have)
+
+                self.assertEqual(diff[0], {})
+                self.assertFalse(diff[-1])
+
+    def test_dcnm_net_secgw_compat_g3_legacy_preserves_gapped_slots(self):
+        """G3 finding 1 (legacy contract, unaffected): a legacy (no-aggregate)
+        controller has no compact encoding and therefore no
+        reflection-reindexing risk, so gapped patterns remain fully
+        supported -- the prefix restriction applies only to the
+        aggregate-capable branch."""
+        dcnm_net = self._build_secgw_capability_network(
+            fabric_type="standalone", ndfc_version=self.NDFC_VERSION_FAILING_CONFIRMED
+        )
+
+        payload = dcnm_net.update_create_params(
+            self._secgw_capability_config(gw1="192.166.88.1/24", gw2="", gw3="", gw4="192.169.88.1/24")
+        )
+        template = json.loads(payload["networkTemplateConfig"])
+
+        self.assertEqual(template["secondaryGW1"], "192.166.88.1/24")
+        self.assertEqual(template["secondaryGW2"], "")
+        self.assertEqual(template["secondaryGW3"], "")
+        self.assertEqual(template["secondaryGW4"], "192.169.88.1/24")
+        self.assertNotIn("secondaryGWs", template)
+
+    # ------------------------------------------------------------------
+    # DCNM715-SECONDARYGWS-001 / G4 coverage, corrected by G7. Documented
+    # Cisco controller spellings are normalized in get_nd_version(); these
+    # module/action tests therefore exercise only the canonical values that
+    # cross the action-to-module boundary.
+    # ------------------------------------------------------------------
+
+    def test_dcnm_net_secgw_compat_g4_normalized_cisco_versions_classify_correctly(self):
+        """G7 correction to G4: the module receives only normalized dotted
+        forms. Documented controller spellings are normalized upstream."""
+        cases = (
+            ("11.5.1", "legacy"),
+            ("12.1.2", "legacy"),
+            ("12.4.1", "aggregate"),
+            ("12.2.3.70", "aggregate"),
+            ("12.2.3", "unknown"),
+        )
+        for normalized_version, expected_capability in cases:
+            with self.subTest(normalized_version=normalized_version):
+                dcnm_net = self._build_secgw_capability_network(
+                    fabric_type="standalone", ndfc_version=normalized_version
+                )
+
+                capability = dcnm_net.secondary_gws_capability()
+
+                self.assertEqual(
+                    capability,
+                    expected_capability,
+                    f"{normalized_version!r} classified {capability!r} instead of "
+                    f"{expected_capability!r}",
+                )
+
+    def test_dcnm_net_secgw_compat_g4_split_config_propagates_normalized_formats(self):
+        """G7 correction to G4: action propagation carries canonical forms."""
+        action = dcnm_network_action.ActionModule.__new__(dcnm_network_action.ActionModule)
+        fabrics = {
+            "msd-parent": {"type": "multisite_parent", "fabricParent": "None", "cluster_name": ""},
+            "msd-child-1": {"type": "multisite_child", "fabricParent": "msd-parent", "cluster_name": ""},
+        }
+        for normalized_version in ("11.5.1", "12.1.2", "12.4.1"):
+            with self.subTest(normalized_version=normalized_version):
+                config = [
+                    {
+                        "net_name": "ansible-msd-net1",
+                        "vrf_name": "Tenant-1",
+                        "is_l2only": False,
+                        "child_fabric_config": [{"fabric": "msd-child-1", "dhcp_loopback_id": 204}],
+                    }
+                ]
+
+                configs, error_msg = action._split_config(
+                    fabrics, "msd-parent", config, "merged", {}, 12.2, normalized_version
+                )
+
+                self.assertIsNone(error_msg)
+                for fabric_config in configs:
+                    details = fabric_config["_fabric_details"]
+                    self.assertEqual(details["ndfc_version"], normalized_version)
+                    self.assertEqual(set(details), {"fabric_type", "cluster_name", "nd_version", "ndfc_version"})
+
+    def test_dcnm_net_secgw_compat_g4_known_legacy_formats_preserve_gapped_slots(self):
+        """G7-corrected G4 coverage: normalized "11.5.1" and "12.1.2"
+        preserve populated/gapped legacy slots and omit the aggregate."""
+        for normalized_version in ("11.5.1", "12.1.2"):
+            with self.subTest(normalized_version=normalized_version):
+                dcnm_net = self._build_secgw_capability_network(
+                    fabric_type="standalone", ndfc_version=normalized_version
+                )
+                # G3's unknown-capability branch calls self.module.fail_json();
+                # provide a harmless mock so a fail-before misclassification
+                # surfaces as a clean assertion below instead of an unrelated
+                # AttributeError (self.module is otherwise unset on this bare
+                # test double, matching _build_secgw_capability_network()).
+                dcnm_net.module = Mock()
+
+                payload = dcnm_net.update_create_params(
+                    self._secgw_capability_config(
+                        gw1="192.166.88.1/24", gw2="", gw3="", gw4="192.169.88.1/24"
+                    )
+                )
+                template = json.loads(payload["networkTemplateConfig"])
+
+                self.assertEqual(template["secondaryGW1"], "192.166.88.1/24")
+                self.assertEqual(template["secondaryGW4"], "192.169.88.1/24")
+                self.assertNotIn(
+                    "secondaryGWs",
+                    template,
+                    f"{normalized_version!r} did not use legacy fields",
+                )
+
+    def test_dcnm_net_secgw_compat_g4_known_aggregate_format_prefix_rules_apply(self):
+        """G7-corrected G4 coverage: normalized "12.4.1" is aggregate-capable;
+        prefix, empty, and non-prefix behavior matches canonical "12.2.3.70"."""
+        dcnm_net = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version="12.4.1")
+        # See test_dcnm_net_secgw_compat_g4_known_legacy_formats_preserve_gapped_slots
+        # for why this harmless mock is needed on this bare test double.
+        dcnm_net.module = Mock()
+        payload = dcnm_net.update_create_params(
+            self._secgw_capability_config(gw1="192.166.88.1/24", gw2="192.167.88.1/24", gw3="", gw4="")
+        )
+        template = json.loads(payload["networkTemplateConfig"])
+        self.assertIn(
+            "secondaryGWs",
+            template,
+            "normalized '12.4.1' was misclassified unknown; contiguous intent did not "
+            "emit the aggregate",
+        )
+        self.assertEqual(
+            json.loads(template["secondaryGWs"]),
+            {"secondaryGWs": [{"gatewayIpAddress": "192.166.88.1/24"}, {"gatewayIpAddress": "192.167.88.1/24"}]},
+        )
+
+        dcnm_net_zero = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version="12.4.1")
+        dcnm_net_zero.module = Mock()
+        payload_zero = dcnm_net_zero.update_create_params(self._secgw_capability_config())
+        template_zero = json.loads(payload_zero["networkTemplateConfig"])
+        self.assertIn(
+            "secondaryGWs",
+            template_zero,
+            "normalized '12.4.1' with zero gateways incorrectly OMITTED the aggregate "
+            "(treated as unknown-safe-zero) instead of emitting the empty aggregate a "
+            "compatible controller requires",
+        )
+        self.assertEqual(json.loads(template_zero["secondaryGWs"]), {"secondaryGWs": []})
+
+        dcnm_net_nonprefix = self._build_secgw_push_to_remote_network(
+            fabric_type="standalone", dcnm_version=12.4, ndfc_version="12.4.1"
+        )
+        dcnm_net_nonprefix.module.fail_json.side_effect = RuntimeError("fail_json called")
+        template_np = self._build_secondary_ip_network_template(
+            secondary_gw1="192.166.88.1/24", secondary_gw4="192.169.88.1/24"
+        )
+        network_np = self._build_secondary_ip_update_payload(template_np)
+        dcnm_net_nonprefix.diff_create = [network_np]
+        self.run_dcnm_send.reset_mock()
+        self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}}
+        with self.assertRaises(
+            RuntimeError, msg="normalized '12.4.1' non-prefix intent (GW1+GW4) was not rejected"
+        ):
+            dcnm_net_nonprefix.push_to_remote()
+        dcnm_net_nonprefix.module.fail_json.assert_called_once()
+        self.run_dcnm_send.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_g4_invalid_normalized_forms_fail_closed(self):
+        """G7: the module accepts only canonical three/four component ASCII
+        dotted forms; invalid values that somehow bypass the helper fail closed."""
+        invalid_versions = ("12.2.3.+70", "12.2.3.7_0", "12.2.3.-70", " 12.2.3.70", "12.2.3.٧٠")
+        for invalid_version in invalid_versions:
+            with self.subTest(invalid_version=repr(invalid_version)):
+                dcnm_net = self._build_secgw_push_to_remote_network(
+                    fabric_type="standalone", dcnm_version=12.2, ndfc_version=invalid_version
+                )
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+                template = self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+                network = self._build_secondary_ip_update_payload(template)
+                dcnm_net.diff_create = [network]
+
+                self.run_dcnm_send.reset_mock()
+                self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}}
+
+                with self.assertRaises(RuntimeError):
+                    dcnm_net.push_to_remote()
+
+                dcnm_net.module.fail_json.assert_called_once()
+                self.run_dcnm_send.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_g4_fail_closed_message_reports_normalized_version(self):
+        """G7: failures report the one authoritative normalized value."""
+        dcnm_net = self._build_secgw_capability_network(
+            fabric_type="standalone", ndfc_version="12.2.3.70\n"
+        )
+        dcnm_net.module = Mock()
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+        with self.assertRaises(RuntimeError):
+            dcnm_net.update_create_params(self._secgw_capability_config(gw1="192.166.88.1/24"))
+
+        message = dcnm_net.module.fail_json.call_args[1]["msg"]
+        self.assertIn(
+            "12.2.3.70\\n",
+            message,
+            "the fail-closed message does not report the authoritative normalized version",
+        )
+
+    def _build_secgw_update_push_to_remote_network(
+        self, fabric_type="standalone", dcnm_version=12.2, ndfc_version=None, has_bulk_api=False
+    ):
+        """G5: a single instance wired for the real end-to-end UPDATE flow --
+        get_diff_merge() (which fills self.diff_create_update from
+        want_create/have_create) immediately followed by push_to_remote()
+        (which sends the actual individual or bulk PUT) -- so PUT-body
+        assertions exercise the real production path instead of a
+        hand-filled diff_create_update entry."""
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.module = Mock(check_mode=False)
+        dcnm_net.params = {"state": "merged"}
+        dcnm_net.result = {"changed": False, "response": []}
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.fabric_type = fabric_type
+        dcnm_net.is_ms_fabric = False
+        dcnm_net.dcnm_version = dcnm_version
+        dcnm_net.ndfc_version = ndfc_version
+        dcnm_net.has_bulk_api = has_bulk_api
+        dcnm_net.config = []
+        dcnm_net.want_attach = []
+        dcnm_net.have_attach = []
+        dcnm_net.paths = {
+            "GET_NET_ID": "/fabrics/{0}/networkid",
+            "GET_NET": "/fabrics/{0}/networks",
+            "GET_NET_BULK": "/fabrics/bulk-networks",
+            "UPDATE_NET_BULK": "/fabrics/bulk-networks",
+            "GET_VLAN": "/fabrics/{0}/vlan",
+        }
+        dcnm_net.diff_create = []
+        dcnm_net.diff_create_update = []
+        dcnm_net.diff_detach = []
+        dcnm_net.diff_undeploy = {}
+        dcnm_net.diff_delete = {}
+        dcnm_net.diff_attach = []
+        dcnm_net.diff_deploy = {}
+        dcnm_net.network_sn_attach_map = {}
+        dcnm_net.network_sn_detach_map = {}
+        dcnm_net.have_attach_by_name = {}
+        dcnm_net.populate_sn_maps_from_diffs = Mock()
+        dcnm_net.wait_for_network_attachments_del_ready = Mock(return_value=True)
+        dcnm_net.wait_for_network_del_ready = Mock(return_value=True)
+        return dcnm_net
+
+    def test_dcnm_net_secgw_compat_g5_unapproved_whole_version_forms_rejected(self):
+        """G5 (architect finding 1): the parser must reject any whole-version
+        string that is not one of the three closed, approved grammars, even
+        when a naive per-component match (or a match with a trailing-$
+        allowance) would otherwise accept it. Covers a trailing newline on
+        all three known-format shapes, CRLF, a trailing tab, and the two
+        unapproved suffix placements (a parenthesized suffix after three
+        already-canonical segments, and an alpha suffix after four)."""
+        unapproved_versions = (
+            "12.2.3.70\n",
+            "12.4.1a\n",
+            "11.5(1)\n",
+            "12.2.3.70\r\n",
+            "12.2.3.70\t",
+            "12.2.3(70)",
+            "12.2.3.70a",
+        )
+        for invalid_version in unapproved_versions:
+            with self.subTest(invalid_version=repr(invalid_version)):
+                dcnm_net = self._build_secgw_capability_network(
+                    fabric_type="standalone", ndfc_version=invalid_version
+                )
+
+                capability = dcnm_net.secondary_gws_capability()
+
+                self.assertEqual(
+                    capability,
+                    "unknown",
+                    f"fail-before: {invalid_version!r} was accepted as {capability!r} instead of "
+                    "being rejected by a strict whole-string fullmatch() grammar",
+                )
+
+    def test_dcnm_net_secgw_compat_g5_unrepresentable_intent_fails_before_update_put(self):
+        """G5 (architect finding 2, negative half): unrepresentable intent --
+        an unapproved whole-version leak form with populated gateways, or a
+        compatible-capability non-contiguous-prefix gap -- must fail before
+        the real UPDATE flow (get_diff_merge() -> push_to_remote(),
+        individual or bulk PUT) can ever be reached, so transport is never
+        called either way.
+
+        CORRECTED in G5-LIFECYCLE (architect review after G5-BROWNFIELD):
+        the compatible_non_prefix_gap scenario no longer fails inside
+        update_create_params() itself for state: merged -- a transient
+        non-contiguous-prefix result there is now deferred (see
+        apply_secondary_gws_compat()'s defer_prefix_fail_closed), since it
+        may simply be an omitted value have will later restore (see
+        test_dcnm_net_secgw_compat_g5_lifecycle_merged_gw2_over_existing_gw1).
+        With no have wired up here, this scenario instead fails at
+        finalize_secondary_gws_compat() -- the checkpoint for want entries
+        with no have match, still strictly before get_diff_merge() and any
+        transport. unapproved_leak_form is unaffected: the unknown-capability
+        fail-closed path depends only on the NDFC version, never on have, so
+        it is never deferred and still fails immediately in
+        update_create_params()."""
+        scenarios = (
+            (
+                "unapproved_leak_form",
+                {"ndfc_version": "12.2.3.70\n"},
+                {"gw1": "192.166.88.1/24"},
+                "update_create_params",
+            ),
+            (
+                "compatible_non_prefix_gap",
+                {"ndfc_version": self.NDFC_VERSION_COMPATIBLE_MINIMUM},
+                {"gw1": "192.166.88.1/24", "gw4": "192.169.88.1/24"},
+                "finalize_secondary_gws_compat",
+            ),
+        )
+        for label, version_kwargs, gws, fails_at in scenarios:
+            for has_bulk_api in (False, True):
+                with self.subTest(scenario=label, has_bulk_api=has_bulk_api):
+                    dcnm_net = self._build_secgw_update_push_to_remote_network(
+                        fabric_type="standalone",
+                        ndfc_version=version_kwargs.get("ndfc_version"),
+                        has_bulk_api=has_bulk_api,
+                    )
+                    dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+                    dcnm_net.have_create = []
+
+                    self.run_dcnm_send.reset_mock()
+                    self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}}
+
+                    config = self._secgw_capability_config(
+                        net_name="sec-ip-test",
+                        vrf_name="test-vrf",
+                        vlan_id=993,
+                        gw_ip_subnet="10.250.93.1/24",
+                        **gws,
+                    )
+
+                    if fails_at == "update_create_params":
+                        with self.assertRaises(
+                            RuntimeError,
+                            msg=f"fail-before: scenario {label!r} did not fail closed during want construction",
+                        ):
+                            dcnm_net.update_create_params(config)
+                    else:
+                        want_c = dcnm_net.update_create_params(config)
+                        dcnm_net.want_create = [want_c]
+                        with self.assertRaises(
+                            RuntimeError,
+                            msg=f"fail-before: scenario {label!r} did not fail closed before transport",
+                        ):
+                            dcnm_net.finalize_secondary_gws_compat()
+
+                    dcnm_net.module.fail_json.assert_called_once()
+                    self.run_dcnm_send.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_g5_real_update_put_legacy_and_compatible(self):
+        """G5 (architect finding 2, positive half): route a realistic
+        want/have pair through the real production UPDATE flow --
+        get_diff_merge() (which fills self.diff_create_update from
+        want_create/have_create) followed by push_to_remote() (which sends
+        the actual individual or bulk PUT) -- and inspect the literal PUT
+        body. Legacy must omit the aggregate while preserving a real gap
+        (GW1+GW4) across all four slots unchanged; compatible/aggregate must
+        carry the exact contiguous aggregate. Both the individual-PUT and
+        bulk-PUT branches are exercised for each."""
+        cases = (
+            ("legacy", self.NDFC_VERSION_FAILING_CONFIRMED, False, {"gw1": "192.166.88.1/24", "gw4": "192.169.88.1/24"}),
+            ("legacy", self.NDFC_VERSION_FAILING_CONFIRMED, True, {"gw1": "192.166.88.1/24", "gw4": "192.169.88.1/24"}),
+            ("aggregate", self.NDFC_VERSION_COMPATIBLE_MINIMUM, False, {"gw1": "192.166.88.1/24", "gw2": "192.167.88.1/24"}),
+            ("aggregate", self.NDFC_VERSION_COMPATIBLE_MINIMUM, True, {"gw1": "192.166.88.1/24", "gw2": "192.167.88.1/24"}),
+        )
+        for capability, ndfc_version, has_bulk_api, gws in cases:
+            with self.subTest(capability=capability, has_bulk_api=has_bulk_api):
+                dcnm_net = self._build_secgw_update_push_to_remote_network(
+                    fabric_type="standalone", ndfc_version=ndfc_version, has_bulk_api=has_bulk_api
+                )
+
+                want_c = dcnm_net.update_create_params(
+                    self._secgw_capability_config(
+                        net_name="sec-ip-test",
+                        vrf_name="test-vrf",
+                        vlan_id=993,
+                        gw_ip_subnet="10.250.93.1/24",
+                        **gws,
+                    )
+                )
+                have_template = self._build_secondary_ip_network_template()
+                have_c = self._build_secondary_ip_update_payload(have_template)
+                dcnm_net.want_create = [want_c]
+                dcnm_net.have_create = [have_c]
+
+                dcnm_net.get_diff_merge()
+
+                self.assertEqual(
+                    len(dcnm_net.diff_create_update),
+                    1,
+                    "the real update-diff path did not populate diff_create_update for this want/have pair",
+                )
+
+                self.run_dcnm_send.reset_mock()
+                self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}}
+
+                dcnm_net.push_to_remote()
+
+                self.assertEqual(self.run_dcnm_send.call_count, 1)
+                sent_body = self.run_dcnm_send.call_args[0][3]
+                if has_bulk_api:
+                    sent_bulk = json.loads(sent_body)
+                    self.assertEqual(len(sent_bulk), 1)
+                    sent_template = sent_bulk[0]["networkTemplateConfig"]
+                else:
+                    sent_network = json.loads(sent_body)
+                    sent_template = json.loads(sent_network["networkTemplateConfig"])
+
+                self.assertEqual(sent_template["secondaryGW1"], gws.get("gw1", ""))
+                self.assertEqual(sent_template["secondaryGW2"], gws.get("gw2", ""))
+                self.assertEqual(sent_template["secondaryGW3"], gws.get("gw3", ""))
+                self.assertEqual(sent_template["secondaryGW4"], gws.get("gw4", ""))
+
+                if capability == "legacy":
+                    self.assertNotIn(
+                        "secondaryGWs",
+                        sent_template,
+                        "fail-before: the real UPDATE PUT body does not yet omit the aggregate "
+                        "for a legacy controller",
+                    )
+                else:
+                    self.assertIn(
+                        "secondaryGWs",
+                        sent_template,
+                        "fail-before: the real UPDATE PUT body does not yet carry the aggregate "
+                        "for a compatible controller",
+                    )
+                    self.assertEqual(
+                        json.loads(sent_template["secondaryGWs"]),
+                        {
+                            "secondaryGWs": [
+                                {"gatewayIpAddress": gws["gw1"]},
+                                {"gatewayIpAddress": gws["gw2"]},
+                            ]
+                        },
+                    )
+
+    def test_dcnm_net_secgw_compat_g5_brownfield_unexpected_top_level_key_fails_before_mutation(self):
+        """G5-BROWNFIELD (architect finding, brownfield): a remote secondaryGWs
+        aggregate carrying an extra top-level key alongside "secondaryGWs" (e.g. a
+        future/unknown controller field) is not representable by this module and
+        must fail before mutating normalization completes -- not be silently
+        discarded. Reproduced for both a populated and a zero-gateway aggregate."""
+        cases = (
+            ("populated", [{"gatewayIpAddress": "192.166.88.1/24"}], ("192.166.88.1/24", "", "", "")),
+            ("zero_gateway", [], ("", "", "", "")),
+        )
+        for label, entries, gws in cases:
+            with self.subTest(case=label):
+                dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+                dcnm_net.dcnm_version = 12
+                dcnm_net.ndfc_version = self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                dcnm_net.fabric_type = "standalone"
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                raw_value = json.dumps({"secondaryGWs": entries, "futureField": "preserve-me"})
+                raw_template = self._build_secondary_ip_network_template(
+                    secondary_gw1=gws[0], secondary_gw2=gws[1], secondary_gw3=gws[2], secondary_gw4=gws[3]
+                )
+                raw_template["secondaryGWs"] = raw_value
+                network = self._build_secondary_ip_update_payload(raw_template)
+
+                with self.assertRaises(
+                    RuntimeError,
+                    msg=f"fail-before ({label}): an unexpected top-level key alongside "
+                    "'secondaryGWs' must fail before mutating normalization, not be "
+                    "silently discarded",
+                ):
+                    dcnm_net.normalize_have_network(network)
+                dcnm_net.module.fail_json.assert_called_once()
+
+    def test_dcnm_net_secgw_compat_g5_brownfield_unexpected_entry_key_fails_before_mutation(self):
+        """G5-BROWNFIELD (architect finding, brownfield): a secondaryGWs entry
+        carrying an extra key alongside "gatewayIpAddress" (e.g. a future/unknown
+        per-gateway controller field) is not representable by this module and must
+        fail before mutating normalization completes -- not be silently discarded."""
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = self.NDFC_VERSION_COMPATIBLE_MINIMUM
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.module = Mock()
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+        raw_value = json.dumps(
+            {"secondaryGWs": [{"gatewayIpAddress": "192.166.88.1/24", "futureField": "preserve-me"}]}
+        )
+        raw_template = self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+        raw_template["secondaryGWs"] = raw_value
+        network = self._build_secondary_ip_update_payload(raw_template)
+
+        with self.assertRaises(
+            RuntimeError,
+            msg="fail-before: an unexpected key alongside 'gatewayIpAddress' in a "
+            "secondaryGWs entry must fail before mutating normalization, not be "
+            "silently discarded",
+        ):
+            dcnm_net.normalize_have_network(network)
+        dcnm_net.module.fail_json.assert_called_once()
+
+    def test_dcnm_net_secgw_compat_g5_brownfield_exact_schema_still_accepted(self):
+        """G5-BROWNFIELD (regression lock): the exact representable top-level
+        schema {"secondaryGWs": [...]} and exact entry schema
+        {"gatewayIpAddress": "..."} -- with no extra keys anywhere -- must
+        continue to be accepted on mutating normalization, including the
+        zero-gateway empty-aggregate encoding."""
+        cases = (
+            ("populated", [{"gatewayIpAddress": "192.166.88.1/24"}], ("192.166.88.1/24", "", "", "")),
+            ("zero_gateway", [], ("", "", "", "")),
+        )
+        for label, entries, gws in cases:
+            with self.subTest(case=label):
+                dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+                dcnm_net.dcnm_version = 12
+                dcnm_net.ndfc_version = self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                dcnm_net.fabric_type = "standalone"
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                raw_value = json.dumps({"secondaryGWs": entries})
+                raw_template = self._build_secondary_ip_network_template(
+                    secondary_gw1=gws[0], secondary_gw2=gws[1], secondary_gw3=gws[2], secondary_gw4=gws[3]
+                )
+                raw_template["secondaryGWs"] = raw_value
+                network = self._build_secondary_ip_update_payload(raw_template)
+
+                dcnm_net.normalize_have_network(network)
+
+                dcnm_net.module.fail_json.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_g5_brownfield_query_preserves_unknown_keys_without_failure(self):
+        """G5-BROWNFIELD (unchanged contract, explicit coverage): query must
+        preserve and report a secondaryGWs aggregate carrying unknown
+        top-level or entry keys verbatim, without failure or any write --
+        the stricter exact-key-set rule applies only on mutating
+        normalization, which query already bypasses entirely (see
+        test_dcnm_net_secgw_compat_g3_query_preserves_null_or_empty_without_failure)."""
+        raw_values = (
+            json.dumps({"secondaryGWs": [{"gatewayIpAddress": "192.166.88.1/24"}], "futureField": "preserve-me"}),
+            json.dumps(
+                {"secondaryGWs": [{"gatewayIpAddress": "192.166.88.1/24", "futureField": "preserve-me"}]}
+            ),
+        )
+        for raw_value in raw_values:
+            with self.subTest(raw_value=raw_value):
+                dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+                dcnm_net.dcnm_version = 12
+                dcnm_net.ndfc_version = self.NDFC_VERSION_FAILING_CONFIRMED
+                dcnm_net.fabric_type = "standalone"
+                dcnm_net.module = Mock(params={"state": "query"})
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                raw_template = self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+                raw_template["secondaryGWs"] = raw_value
+                network = self._build_secondary_ip_update_payload(raw_template)
+
+                normalized = dcnm_net.normalize_have_network(network)
+
+                dcnm_net.module.fail_json.assert_not_called()
+                normalized_template = json.loads(normalized["networkTemplateConfig"])
+                self.assertEqual(normalized_template.get("secondaryGWs"), raw_value)
+
+    def _build_secgw_merged_lifecycle_network(
+        self, fabric_type="standalone", dcnm_version=12.2, ndfc_version=None, has_bulk_api=False, state="merged"
+    ):
+        """G5-LIFECYCLE: a single instance wired for the real merged-state
+        lifecycle from update_want() (which restores omitted
+        secondary_ip_gw1-4 values from have via
+        dcnm_update_network_information()) through
+        finalize_secondary_gws_compat() and get_diff_merge() to
+        push_to_remote() -- so the deferred-guard fix is exercised against
+        the actual production reconciliation path, not a hand-filled want."""
+        dcnm_net = self._build_secgw_update_push_to_remote_network(
+            fabric_type=fabric_type, dcnm_version=dcnm_version, ndfc_version=ndfc_version, has_bulk_api=has_bulk_api
+        )
+        dcnm_net.params = {"state": state}
+        dcnm_net.module.params = {"state": state}
+        dcnm_net.want_create = []
+        dcnm_net.have_create = []
+        return dcnm_net
+
+    @staticmethod
+    def _secgw_merged_config(net_name="sec-ip-test", vrf_name="test-vrf", vlan_id=993, gw_ip_subnet="10.250.93.1/24", **gw_overrides):
+        """Unlike _secgw_capability_config(), secondary_ip_gw1-4 keys are
+        NOT defaulted to "" -- only the keys actually passed in
+        gw_overrides are present in the resulting dict, matching a real
+        playbook where an omitted key is genuinely absent from cfg (not
+        merely set to an empty string), which is the exact distinction
+        dcnm_update_network_information() relies on to decide whether to
+        restore a value from have."""
+        config = {
+            "net_name": net_name,
+            "vrf_name": vrf_name,
+            "is_l2only": False,
+            "vlan_id": vlan_id,
+            "gw_ip_subnet": gw_ip_subnet,
+        }
+        config.update(gw_overrides)
+        return config
+
+    def test_dcnm_net_secgw_compat_g5_lifecycle_merged_gw2_over_existing_gw1(self):
+        """G5-LIFECYCLE (architect finding): have GW1=A, merged intent
+        supplies only secondary_ip_gw2=B (GW1 omitted, not cleared). The
+        transient want built by update_create_params(), before have is
+        consulted, is ["", B, "", ""] -- a non-prefix gap if validated
+        immediately. Once update_want() restores GW1=A from have, the final
+        reconciled want [A, B, "", ""] is a safe contiguous prefix and must
+        succeed, with the real individual and bulk PUT bodies carrying the
+        exact aggregate. A second pass with have already reflecting
+        GW1=A/GW2=B must be idempotent (no diff, no PUT)."""
+        for has_bulk_api in (False, True):
+            with self.subTest(has_bulk_api=has_bulk_api):
+                dcnm_net = self._build_secgw_merged_lifecycle_network(
+                    fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM, has_bulk_api=has_bulk_api
+                )
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                config = self._secgw_merged_config(secondary_ip_gw2="192.167.88.1/24")
+                want_c = dcnm_net.update_create_params(config)
+
+                have_template = self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+                have_c = self._build_secondary_ip_update_payload(have_template)
+
+                dcnm_net.want_create = [want_c]
+                dcnm_net.have_create = [have_c]
+                dcnm_net.config = [config]
+
+                dcnm_net.update_want()
+                dcnm_net.finalize_secondary_gws_compat()
+                dcnm_net.get_diff_merge()
+
+                self.assertEqual(
+                    len(dcnm_net.diff_create_update),
+                    1,
+                    "the real merged-update-diff path did not populate diff_create_update for this want/have pair",
+                )
+
+                self.run_dcnm_send.reset_mock()
+                self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}}
+
+                dcnm_net.push_to_remote()
+
+                self.assertEqual(self.run_dcnm_send.call_count, 1)
+                sent_body = self.run_dcnm_send.call_args[0][3]
+                if has_bulk_api:
+                    sent_bulk = json.loads(sent_body)
+                    self.assertEqual(len(sent_bulk), 1)
+                    sent_template = sent_bulk[0]["networkTemplateConfig"]
+                else:
+                    sent_network = json.loads(sent_body)
+                    sent_template = json.loads(sent_network["networkTemplateConfig"])
+
+                self.assertEqual(
+                    sent_template["secondaryGW1"],
+                    "192.166.88.1/24",
+                    "fail-before: GW1 was not preserved from have into the final reconciled want",
+                )
+                self.assertEqual(sent_template["secondaryGW2"], "192.167.88.1/24")
+                self.assertIn(
+                    "secondaryGWs",
+                    sent_template,
+                    "fail-before: the real merged UPDATE PUT body does not yet carry the reconciled aggregate",
+                )
+                self.assertEqual(
+                    json.loads(sent_template["secondaryGWs"]),
+                    {
+                        "secondaryGWs": [
+                            {"gatewayIpAddress": "192.166.88.1/24"},
+                            {"gatewayIpAddress": "192.167.88.1/24"},
+                        ]
+                    },
+                )
+
+                # Second pass: have now reflects the applied change -- must be idempotent.
+                dcnm_net2 = self._build_secgw_merged_lifecycle_network(
+                    fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM, has_bulk_api=has_bulk_api
+                )
+                dcnm_net2.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                want_c2 = dcnm_net2.update_create_params(config)
+                have_template2 = self._build_secondary_ip_network_template(
+                    secondary_gw1="192.166.88.1/24", secondary_gw2="192.167.88.1/24"
+                )
+                have_c2 = self._build_secondary_ip_update_payload(have_template2)
+
+                dcnm_net2.want_create = [want_c2]
+                dcnm_net2.have_create = [have_c2]
+                dcnm_net2.config = [config]
+
+                dcnm_net2.update_want()
+                dcnm_net2.finalize_secondary_gws_compat()
+                dcnm_net2.get_diff_merge()
+
+                self.assertEqual(
+                    len(dcnm_net2.diff_create_update),
+                    0,
+                    "fail-before: second pass with have already reflecting GW1=A/GW2=B must be idempotent (no diff)",
+                )
+
+                self.run_dcnm_send.reset_mock()
+                dcnm_net2.push_to_remote()
+                self.run_dcnm_send.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_g5_lifecycle_merged_clear_preserves_gw1(self):
+        """G5-LIFECYCLE (required case): have GW1=A/GW2=B, merged intent
+        explicitly clears secondary_ip_gw2 (empty string, not omitted) while
+        leaving GW1 unspecified. The final reconciled want GW1=A (restored
+        from have) with GW2 cleared is a safe one-element prefix and must
+        succeed, carrying only the GW1 aggregate."""
+        dcnm_net = self._build_secgw_merged_lifecycle_network(
+            fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+        )
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+        config = self._secgw_merged_config(secondary_ip_gw2="")
+        want_c = dcnm_net.update_create_params(config)
+
+        have_template = self._build_secondary_ip_network_template(
+            secondary_gw1="192.166.88.1/24", secondary_gw2="192.167.88.1/24"
+        )
+        have_c = self._build_secondary_ip_update_payload(have_template)
+
+        dcnm_net.want_create = [want_c]
+        dcnm_net.have_create = [have_c]
+        dcnm_net.config = [config]
+
+        dcnm_net.update_want()
+        dcnm_net.finalize_secondary_gws_compat()
+        dcnm_net.get_diff_merge()
+
+        self.assertEqual(len(dcnm_net.diff_create_update), 1)
+
+        self.run_dcnm_send.reset_mock()
+        self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}}
+        dcnm_net.push_to_remote()
+
+        self.assertEqual(self.run_dcnm_send.call_count, 1)
+        sent_network = json.loads(self.run_dcnm_send.call_args[0][3])
+        sent_template = json.loads(sent_network["networkTemplateConfig"])
+
+        self.assertEqual(sent_template["secondaryGW1"], "192.166.88.1/24")
+        self.assertEqual(sent_template["secondaryGW2"], "")
+        self.assertIn("secondaryGWs", sent_template)
+        self.assertEqual(
+            json.loads(sent_template["secondaryGWs"]),
+            {"secondaryGWs": [{"gatewayIpAddress": "192.166.88.1/24"}]},
+        )
+
+    def test_dcnm_net_secgw_compat_g5_lifecycle_merged_non_prefix_after_reconciliation_fails(self):
+        """G5-LIFECYCLE (required case, architect's exact reproduction):
+        have GW1=A, merged intent supplies only secondary_ip_gw3=C (GW1,
+        GW2 omitted). The final reconciled want GW1=A/GW2=""/GW3=C is
+        non-prefix and must fail closed -- via update_want()'s existing
+        dcnm_update_network_information() call, which re-validates after
+        restoring omitted values from have -- before any transport."""
+        dcnm_net = self._build_secgw_merged_lifecycle_network(
+            fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+        )
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+        config = self._secgw_merged_config(secondary_ip_gw3="192.168.88.1/24")
+        want_c = dcnm_net.update_create_params(config)
+
+        have_template = self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+        have_c = self._build_secondary_ip_update_payload(have_template)
+
+        dcnm_net.want_create = [want_c]
+        dcnm_net.have_create = [have_c]
+        dcnm_net.config = [config]
+
+        self.run_dcnm_send.reset_mock()
+        self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {}}
+
+        with self.assertRaises(
+            RuntimeError,
+            msg="fail-before: the final reconciled want GW1=A/GW2=''/GW3=C is non-prefix and must fail",
+        ):
+            dcnm_net.update_want()
+
+        dcnm_net.module.fail_json.assert_called_once()
+        message = dcnm_net.module.fail_json.call_args[1]["msg"]
+        self.assertIn("192.166.88.1/24", message)
+        self.assertIn("192.168.88.1/24", message)
+        self.run_dcnm_send.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_g5_lifecycle_non_merged_states_retain_immediate_validation(self):
+        """G5-LIFECYCLE (regression lock, required case): state replaced and
+        overridden must retain their immediate update_create_params()
+        validation -- no merged have-overlay ever runs for them, so their
+        transient want IS their final want, and deferring would let an
+        unsafe non-prefix payload reach transport."""
+        for state in ("replaced", "overridden"):
+            with self.subTest(state=state):
+                dcnm_net = self._build_secgw_capability_network(
+                    fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                )
+                dcnm_net.params = {"state": state}
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                with self.assertRaises(
+                    RuntimeError,
+                    msg=f"fail-before ({state}): non-prefix intent must still fail immediately in update_create_params()",
+                ):
+                    dcnm_net.update_create_params(
+                        self._secgw_capability_config(gw1="192.166.88.1/24", gw4="192.169.88.1/24")
+                    )
+                dcnm_net.module.fail_json.assert_called_once()
+
+    def test_dcnm_net_secgw_compat_g5_lifecycle_auto_id_create_fails_before_post(self):
+        """G5-LIFECYCLE (required case): a brand-new network under merged
+        state (no matching have, so update_want()'s reconciliation loop
+        never touches it) with non-prefix intent must still fail before
+        get_diff_merge() can issue its auto-ID POST -- proving the deferred
+        check is finalized somewhere real have-overlay reconciliation never
+        runs for it."""
+        dcnm_net = self._build_secgw_merged_lifecycle_network(
+            fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+        )
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+        config = self._secgw_merged_config(
+            secondary_ip_gw1="192.166.88.1/24", secondary_ip_gw4="192.169.88.1/24"
+        )
+        want_c = dcnm_net.update_create_params(config)
+
+        dcnm_net.want_create = [want_c]
+        dcnm_net.have_create = []
+        dcnm_net.config = [config]
+
+        dcnm_net.update_want()
+
+        self.run_dcnm_send.reset_mock()
+        self.run_dcnm_send.return_value = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {"l2vni": 50999}}
+
+        with self.assertRaises(
+            RuntimeError,
+            msg="fail-before: a brand-new network's non-prefix intent under merged state must fail "
+            "before the auto-ID POST",
+        ):
+            dcnm_net.finalize_secondary_gws_compat()
+
+        dcnm_net.module.fail_json.assert_called_once()
+        self.run_dcnm_send.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_g5_query_update_create_params_never_mutates_or_fails(self):
+        """G5-QUERY (architect finding): state: query is read-only and must
+        never apply the mutating secondaryGWs capability/prefix policy to
+        query input -- get_diff_query() never reads a want entry's
+        networkTemplateConfig for anything except networkName (see
+        get_diff_query()), so nothing downstream needs (or should receive) a
+        computed aggregate. update_create_params() must skip
+        apply_secondary_gws_compat() entirely for state: query -- not defer
+        it (as for merged), skip it -- so a query config carrying a
+        non-prefix gap on a compatible version, or a populated secondary
+        gateway filter on an unknown/malformed version, both proceed without
+        failure, and secondaryGW1-4 pass through exactly as given with no
+        "secondaryGWs" key ever added."""
+        cases = (
+            ("compatible_non_prefix_gap", self.NDFC_VERSION_COMPATIBLE_MINIMUM, {"gw2": "192.167.88.1/24"}),
+            ("unknown_populated", "not-a-real-version", {"gw1": "192.166.88.1/24"}),
+        )
+        for label, ndfc_version, gws in cases:
+            with self.subTest(case=label):
+                dcnm_net = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version=ndfc_version)
+                dcnm_net.params = {"state": "query"}
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                payload = dcnm_net.update_create_params(self._secgw_capability_config(**gws))
+
+                dcnm_net.module.fail_json.assert_not_called()
+                template = json.loads(payload["networkTemplateConfig"])
+
+                self.assertEqual(template["secondaryGW1"], gws.get("gw1", ""))
+                self.assertEqual(template["secondaryGW2"], gws.get("gw2", ""))
+                self.assertEqual(template["secondaryGW3"], gws.get("gw3", ""))
+                self.assertEqual(template["secondaryGW4"], gws.get("gw4", ""))
+                self.assertNotIn(
+                    "secondaryGWs",
+                    template,
+                    f"fail-before ({label}): query input still ran the mutating aggregate "
+                    "applicator instead of skipping it entirely",
+                )
+
+    def test_dcnm_net_secgw_compat_g5_query_real_flow_read_only_preserves_raw_state(self):
+        """G5-QUERY (real flow): route a query config carrying a non-prefix
+        gateway gap through the actual get_want() -> get_diff_query() path
+        (want built via the real update_create_params(), transport mocked)
+        and confirm the query proceeds to completion -- issuing only GET
+        calls, never failing, and reporting the network exactly as the
+        (mocked) controller GET responses describe it, independent of the
+        local gap in the query config's secondary_ip_gw1-4 filter fields."""
+        dcnm_net = self._build_get_have_query_network(ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM)
+        dcnm_net.params = {"state": "query"}
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+        config = self._secgw_capability_config(
+            net_name="sec-ip-test", vrf_name="test-vrf", gw2="192.167.88.1/24"
+        )
+        dcnm_net.config = [config]
+        want_c = dcnm_net.update_create_params(config)
+        dcnm_net.want_create = [want_c]
+        dcnm_net.have_create = [{"networkName": "sec-ip-test"}]
+        dcnm_net.have_attach = []
+
+        remote_template = self._build_secondary_ip_network_template(secondary_gw1="10.0.0.1/24")
+        remote_template["networkName"] = "sec-ip-test"
+        remote_template["secondaryGWs"] = json.dumps({"secondaryGWs": [{"gatewayIpAddress": "10.0.0.1/24"}]})
+        remote_network = dict(self._build_secondary_ip_update_payload(remote_template))
+        remote_network["networkName"] = "sec-ip-test"
+
+        self.run_dcnm_send.reset_mock()
+        self.run_dcnm_send.side_effect = [
+            {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": [{"vrfName": "test-vrf"}]},
+            {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": remote_network},
+            {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": [{"networkName": "sec-ip-test", "lanAttachList": [{"serialNumber": "SN1"}]}]},
+        ]
+
+        dcnm_net.get_diff_query()
+
+        dcnm_net.module.fail_json.assert_not_called()
+        self.assertTrue(
+            all(call.args[1] == "GET" for call in self.run_dcnm_send.call_args_list),
+            "fail-before: a read-only query must never issue a non-GET (write) transport call",
+        )
+        self.assertEqual(len(dcnm_net.query), 1)
+        reported_template = dcnm_net.query[0]["parent"]["networkTemplateConfig"]
+        self.assertEqual(
+            json.loads(reported_template["secondaryGWs"]),
+            {"secondaryGWs": [{"gatewayIpAddress": "10.0.0.1/24"}]},
+            "fail-before: reported query state must echo the raw controller response, "
+            "independent of the local query config's gateway filter fields",
+        )
+
+    def test_dcnm_net_secgw_compat_g5_query_non_query_states_unchanged(self):
+        """G5-QUERY (regression lock, required case): merged/replaced/
+        overridden must be completely unaffected by the query-only skip --
+        merged still defers the prefix check (not fully skips it), and
+        replaced/overridden still validate immediately."""
+        gws = {"gw1": "192.166.88.1/24", "gw4": "192.169.88.1/24"}
+
+        # merged: deferred, not failed, not skipped -- template still carries no
+        # aggregate yet (deferred), but the call must not raise.
+        dcnm_net_merged = self._build_secgw_capability_network(
+            fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+        )
+        dcnm_net_merged.module = Mock()
+        dcnm_net_merged.module.fail_json.side_effect = RuntimeError("fail_json called")
+        payload = dcnm_net_merged.update_create_params(self._secgw_capability_config(**gws))
+        dcnm_net_merged.module.fail_json.assert_not_called()
+        template = json.loads(payload["networkTemplateConfig"])
+        self.assertNotIn("secondaryGWs", template)
+
+        # replaced/overridden: still fail immediately, exactly as before.
+        for state in ("replaced", "overridden"):
+            with self.subTest(state=state):
+                dcnm_net = self._build_secgw_capability_network(
+                    fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                )
+                dcnm_net.params = {"state": state}
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                with self.assertRaises(RuntimeError):
+                    dcnm_net.update_create_params(self._secgw_capability_config(**gws))
+                dcnm_net.module.fail_json.assert_called_once()
+
+    def _build_secgw_delete_override_have_network(self, state, ndfc_version=None, want_create=None):
+        """G5-DELETE: a bare instance for testing normalize_have_network()'s
+        path-sensitive aggregate-validation skip for state: deleted (always
+        skipped -- delete never writes networkTemplateConfig) and
+        state: overridden (skipped only for a remote network with no
+        matching entry in self.want_create, the desired config -- only
+        those are delete-only; a network retained in the desired config may
+        still be updated and must continue to validate)."""
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = ndfc_version
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.is_ms_fabric = False
+        dcnm_net.module = Mock(params={"state": state})
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+        dcnm_net.want_create = want_create if want_create is not None else []
+        return dcnm_net
+
+    def test_dcnm_net_secgw_compat_g5_delete_update_create_params_never_mutates_or_fails(self):
+        """G5-DELETE (architect finding 1, want side): state: deleted never
+        writes networkTemplateConfig -- get_diff_delete() only needs
+        networkName and attachment identity to issue its DELETE -- so
+        update_create_params() must skip apply_secondary_gws_compat()
+        entirely for state: deleted, exactly as it already does for query,
+        instead of letting an unknown-version or non-prefix gateway filter
+        block deletion."""
+        cases = (
+            ("compatible_non_prefix_gap", self.NDFC_VERSION_COMPATIBLE_MINIMUM, {"gw1": "192.166.88.1/24", "gw4": "192.169.88.1/24"}),
+            ("unknown_populated", "not-a-real-version", {"gw1": "192.166.88.1/24"}),
+        )
+        for label, ndfc_version, gws in cases:
+            with self.subTest(case=label):
+                dcnm_net = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version=ndfc_version)
+                dcnm_net.params = {"state": "deleted"}
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+                payload = dcnm_net.update_create_params(self._secgw_capability_config(**gws))
+
+                dcnm_net.module.fail_json.assert_not_called()
+                template = json.loads(payload["networkTemplateConfig"])
+                self.assertEqual(template["secondaryGW1"], gws.get("gw1", ""))
+                self.assertEqual(template["secondaryGW4"], gws.get("gw4", ""))
+                self.assertNotIn(
+                    "secondaryGWs",
+                    template,
+                    f"fail-before ({label}): deleted input still ran the mutating aggregate "
+                    "applicator instead of skipping it entirely",
+                )
+
+    def test_dcnm_net_secgw_compat_g5_delete_normalize_have_skips_validation(self):
+        """G5-DELETE (architect finding 1, have side, required case): a
+        remote network's brownfield aggregate state must never block its
+        own deletion for state: deleted. get_diff_delete() never reads
+        networkTemplateConfig (only networkName and attachment identity),
+        so a malformed, null/empty, unknown-key, or
+        aggregate-only-contradicting-legacy remote aggregate -- and a
+        non-contiguous gap in the legacy secondaryGW1-4 fields themselves --
+        must all be preserved verbatim (not validated), while the
+        networkName identity field survives untouched for
+        get_diff_delete()'s matching logic."""
+        cases = (
+            ("malformed_json", "not-json", ("", "", "", "")),
+            ("null", None, ("", "", "", "")),
+            ("empty_string", "", ("", "", "", "")),
+            (
+                "unknown_key",
+                json.dumps({"secondaryGWs": [{"gatewayIpAddress": "192.166.88.1/24"}], "futureField": "x"}),
+                ("192.166.88.1/24", "", "", ""),
+            ),
+            (
+                "aggregate_only_contradicts_legacy",
+                json.dumps({"secondaryGWs": [{"gatewayIpAddress": "10.0.0.9/24"}]}),
+                ("", "", "", ""),
+            ),
+        )
+        for label, raw_value, gws in cases:
+            with self.subTest(case=label):
+                dcnm_net = self._build_secgw_delete_override_have_network(
+                    state="deleted", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                )
+                raw_template = self._build_secondary_ip_network_template(
+                    secondary_gw1=gws[0], secondary_gw2=gws[1], secondary_gw3=gws[2], secondary_gw4=gws[3]
+                )
+                raw_template["secondaryGWs"] = raw_value
+                network = self._build_secondary_ip_update_payload(raw_template)
+
+                normalized = dcnm_net.normalize_have_network(network)
+
+                dcnm_net.module.fail_json.assert_not_called()
+                self.assertEqual(normalized["networkName"], "sec-ip-test")
+                normalized_template = json.loads(normalized["networkTemplateConfig"])
+                self.assertEqual(normalized_template.get("secondaryGWs"), raw_value)
+
+        with self.subTest(case="non_prefix_legacy_gap"):
+            dcnm_net = self._build_secgw_delete_override_have_network(
+                state="deleted", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+            )
+            raw_template = self._build_secondary_ip_network_template(
+                secondary_gw1="192.166.88.1/24", secondary_gw4="192.169.88.1/24"
+            )
+            network = self._build_secondary_ip_update_payload(raw_template)
+
+            normalized = dcnm_net.normalize_have_network(network)
+
+            dcnm_net.module.fail_json.assert_not_called()
+            self.assertEqual(normalized["networkName"], "sec-ip-test")
+
+    def test_dcnm_net_secgw_compat_g5_overridden_normalize_have_path_sensitive(self):
+        """G5-DELETE (architect finding 2, required case, path-sensitive):
+        for state: overridden, a remote network with NO matching entry in
+        self.want_create (the desired config) is a delete-only candidate --
+        omitted from the desired model entirely -- and must not be blocked
+        by a malformed aggregate. A remote network WITH a matching
+        want_create entry may still be updated and must continue to receive
+        full validation -- this is a per-network decision, not a state-wide
+        bypass."""
+        raw_value = json.dumps({"secondaryGWs": [{"gatewayIpAddress": "192.166.88.1/24"}], "futureField": "x"})
+        raw_template = self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+        raw_template["secondaryGWs"] = raw_value
+        network = self._build_secondary_ip_update_payload(raw_template)
+
+        with self.subTest(case="omitted_delete_only"):
+            dcnm_net = self._build_secgw_delete_override_have_network(
+                state="overridden", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM, want_create=[]
+            )
+            normalized = dcnm_net.normalize_have_network(network)
+            dcnm_net.module.fail_json.assert_not_called()
+            normalized_template = json.loads(normalized["networkTemplateConfig"])
+            self.assertEqual(normalized_template.get("secondaryGWs"), raw_value)
+
+        with self.subTest(case="retained_still_validates"):
+            dcnm_net = self._build_secgw_delete_override_have_network(
+                state="overridden",
+                ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM,
+                want_create=[{"networkName": "sec-ip-test"}],
+            )
+            with self.assertRaises(
+                RuntimeError,
+                msg="fail-before: a retained network in the overridden desired config must still "
+                "receive full brownfield validation",
+            ):
+                dcnm_net.normalize_have_network(network)
+            dcnm_net.module.fail_json.assert_called_once()
+
+    def test_dcnm_net_secgw_compat_g5_delete_real_flow_reaches_diff_delete_without_failure(self):
+        """G5-DELETE (real flow): route a deleted-state config, plus a
+        remote network carrying a malformed aggregate, through the real
+        update_create_params() -> normalize_have_network() -> get_diff_delete()
+        path and confirm it reaches a ready-to-delete state
+        (self.diff_delete populated) without any failure and without any
+        transport call -- get_diff_delete() never sends anything itself;
+        the actual DELETE happens later, in push_to_remote(), reading only
+        networkName, never networkTemplateConfig."""
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = self.NDFC_VERSION_COMPATIBLE_MINIMUM
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.is_ms_fabric = False
+        dcnm_net.module = Mock(params={"state": "deleted"})
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+        dcnm_net.params = {"state": "deleted"}
+
+        config = self._secgw_capability_config(net_name="sec-ip-test", vrf_name="test-vrf")
+        want_c = dcnm_net.update_create_params(config)
+        dcnm_net.want_create = [want_c]
+        dcnm_net.config = [config]
+
+        raw_template = self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+        raw_template["secondaryGWs"] = "not-json"
+        raw_network = self._build_secondary_ip_update_payload(raw_template)
+        have_c = dcnm_net.normalize_have_network(raw_network)
+        dcnm_net.have_create = [have_c]
+        dcnm_net.have_attach = [
+            {
+                "networkName": "sec-ip-test",
+                "lanAttachList": [{"serialNumber": "SN1", "isAttached": True}],
+            }
+        ]
+
+        self.run_dcnm_send.reset_mock()
+
+        dcnm_net.get_diff_delete()
+
+        dcnm_net.module.fail_json.assert_not_called()
+        self.run_dcnm_send.assert_not_called()
+        self.assertEqual(dcnm_net.diff_delete, {"sec-ip-test": "DEPLOYED"})
+        self.assertEqual(len(dcnm_net.diff_detach), 1)
+
+    def test_dcnm_net_secgw_compat_g6_aggregate_canonical_and_stale_regenerated(self):
+        """G6 characterization: aggregate capability always ends with the
+        exact compact JSON regenerated from the authoritative legacy slots,
+        whether the incoming aggregate is already canonical or stale."""
+        gateway = "192.166.88.1/24"
+        expected = '{"secondaryGWs":[{"gatewayIpAddress":"192.166.88.1/24"}]}'
+        cases = (
+            ("canonical", expected),
+            ("stale", '{"secondaryGWs":[{"gatewayIpAddress":"192.199.88.1/24"}]}'),
+        )
+        for label, incoming in cases:
+            with self.subTest(case=label):
+                dcnm_net = self._build_secgw_capability_network(
+                    fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+                )
+                template = {
+                    "networkName": "secgw-net",
+                    "secondaryGW1": gateway,
+                    "secondaryGW2": "",
+                    "secondaryGW3": "",
+                    "secondaryGW4": "",
+                    "secondaryGWs": incoming,
+                }
+
+                dcnm_net.apply_secondary_gws_compat(template)
+
+                self.assertIs(type(template["secondaryGWs"]), str)
+                self.assertEqual(template["secondaryGWs"], expected)
+                for index, value in enumerate((gateway, "", "", ""), start=1):
+                    self.assertIs(type(template[f"secondaryGW{index}"]), str)
+                    self.assertEqual(template[f"secondaryGW{index}"], value)
+
+    def test_dcnm_net_secgw_compat_g6_brownfield_validation_receives_original_raw_value(self):
+        """G6 characterization: brownfield validation receives the exact raw
+        aggregate object before capability classification and regeneration."""
+        original_raw = "".join(
+            ("{\"secondaryGWs\":[{\"gatewayIpAddress\":", "\"192.166.88.1/24\"}]}")
+        )
+        gateway = "192.166.88.1/24"
+        events = []
+        dcnm_net = self._build_secgw_capability_network(
+            fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+        )
+        template = {
+            "networkName": "secgw-net",
+            "secondaryGW1": gateway,
+            "secondaryGW2": "",
+            "secondaryGW3": "",
+            "secondaryGW4": "",
+            "secondaryGWs": original_raw,
+        }
+
+        def validate(raw_aggregate, gw_values, observed_template):
+            events.append("validate")
+            self.assertIs(raw_aggregate, original_raw)
+            self.assertIs(type(raw_aggregate), str)
+            self.assertIs(observed_template, template)
+            self.assertIn("secondaryGWs", observed_template)
+            self.assertIs(observed_template["secondaryGWs"], original_raw)
+            self.assertEqual(gw_values, [gateway, "", "", ""])
+            self.assertTrue(all(value.__class__ is str for value in gw_values))
+
+        dcnm_net._validate_remote_secondary_gws_representable = Mock(side_effect=validate)
+        dcnm_net.secondary_gws_capability = Mock(side_effect=lambda: events.append("classify") or "aggregate")
+
+        dcnm_net.apply_secondary_gws_compat(template, validate_remote=True)
+
+        self.assertEqual(events, ["validate", "classify"])
+        dcnm_net._validate_remote_secondary_gws_representable.assert_called_once()
+        self.assertEqual(template["secondaryGWs"], original_raw)
+
+    def test_dcnm_net_secgw_compat_g6_legacy_removes_only_aggregate(self):
+        """G6 characterization: legacy capability removes only the aggregate
+        and preserves every authoritative legacy slot exactly."""
+        slots = ("192.166.88.1/24", "", "192.168.88.1/24", "")
+        dcnm_net = self._build_secgw_capability_network(
+            fabric_type="standalone", ndfc_version=self.NDFC_VERSION_FAILING_CONFIRMED
+        )
+        template = {
+            "networkName": "secgw-net",
+            "secondaryGW1": slots[0],
+            "secondaryGW2": slots[1],
+            "secondaryGW3": slots[2],
+            "secondaryGW4": slots[3],
+            "secondaryGWs": '{"secondaryGWs":[{"gatewayIpAddress":"stale"}]}',
+        }
+
+        dcnm_net.apply_secondary_gws_compat(template)
+
+        self.assertNotIn("secondaryGWs", template)
+        for index, value in enumerate(slots, start=1):
+            self.assertIs(type(template[f"secondaryGW{index}"]), str)
+            self.assertEqual(template[f"secondaryGW{index}"], value)
+
+    def test_dcnm_net_secgw_compat_g6_unknown_removes_aggregate_and_populated_fails_closed(self):
+        """G6 characterization: unknown capability removes stale aggregate
+        state for empty or populated slots; populated intent still fails
+        before any transport call."""
+        cases = (("empty", "", False), ("populated", "192.166.88.1/24", True))
+        for label, gw1, must_fail in cases:
+            with self.subTest(case=label):
+                dcnm_net = self._build_secgw_capability_network(fabric_type="standalone", ndfc_version="bad")
+                dcnm_net.module = Mock()
+                dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+                template = {
+                    "networkName": "secgw-net",
+                    "secondaryGW1": gw1,
+                    "secondaryGW2": "",
+                    "secondaryGW3": "",
+                    "secondaryGW4": "",
+                    "secondaryGWs": '{"secondaryGWs":[{"gatewayIpAddress":"stale"}]}',
+                }
+                self.run_dcnm_send.reset_mock()
+
+                if must_fail:
+                    with self.assertRaises(RuntimeError):
+                        dcnm_net.apply_secondary_gws_compat(template)
+                    dcnm_net.module.fail_json.assert_called_once()
+                else:
+                    dcnm_net.apply_secondary_gws_compat(template)
+                    dcnm_net.module.fail_json.assert_not_called()
+
+                self.assertNotIn("secondaryGWs", template)
+                for index, value in enumerate((gw1, "", "", ""), start=1):
+                    self.assertIs(type(template[f"secondaryGW{index}"]), str)
+                    self.assertEqual(template[f"secondaryGW{index}"], value)
+                self.run_dcnm_send.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_g6_deferred_non_prefix_removes_stale_aggregate(self):
+        """G6 characterization: bounded merged deferral cannot leak a stale
+        aggregate while final reconciliation is still pending."""
+        slots = ("192.166.88.1/24", "", "192.168.88.1/24", "")
+        dcnm_net = self._build_secgw_capability_network(
+            fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+        )
+        template = {
+            "networkName": "secgw-net",
+            "secondaryGW1": slots[0],
+            "secondaryGW2": slots[1],
+            "secondaryGW3": slots[2],
+            "secondaryGW4": slots[3],
+            "secondaryGWs": '{"secondaryGWs":[{"gatewayIpAddress":"stale"}]}',
+        }
+
+        dcnm_net.apply_secondary_gws_compat(template, defer_prefix_fail_closed=True)
+
+        self.assertNotIn("secondaryGWs", template)
+        for index, value in enumerate(slots, start=1):
+            self.assertIs(type(template[f"secondaryGW{index}"]), str)
+            self.assertEqual(template[f"secondaryGW{index}"], value)
+
+    # ------------------------------------------------------------------
+    # DCNM715-SECONDARYGWS-001 / G7 removal of duplicate version plumbing.
+    # These tests were introduced before the G7 production edit and are the
+    # focused fail-before/pass-after contract for the generation.
+    # ------------------------------------------------------------------
+
+    def test_dcnm_net_secgw_compat_g7_version_plumbing_surface_is_normalized_only(self):
+        """G7 structural contract across helper, action, and module."""
+        self.assertEqual(
+            tuple(inspect.signature(dcnm_network_action.ActionModule._split_config).parameters),
+            (
+                "self",
+                "fabrics",
+                "fabric_name",
+                "config",
+                "state",
+                "result",
+                "ndfc_version",
+                "ndfc_full_version",
+            ),
+        )
+
+        forbidden_names = (
+            "return_" + "raw_version",
+            "ndfc_" + "raw_version",
+            "ndfc_version_" + "raw",
+        )
+        production_sources = (
+            inspect.getsource(dcnm_utils.get_nd_version),
+            inspect.getsource(dcnm_network_action.ActionModule),
+            inspect.getsource(dcnm_network.DcnmNetwork.__init__),
+            inspect.getsource(dcnm_network.DcnmNetwork._parse_ndfc_version_components),
+            inspect.getsource(dcnm_network.DcnmNetwork.apply_secondary_gws_compat),
+            inspect.getsource(dcnm_network.main),
+        )
+        for forbidden_name in forbidden_names:
+            for source in production_sources:
+                self.assertNotIn(forbidden_name, source)
+
+    def test_dcnm_net_secgw_compat_g7_documented_controller_versions_normalize_end_to_end(self):
+        """The real helper normalization feeds action propagation and module
+        classification without a parallel version value."""
+        cases = (
+            ("11.5(1)", (11.0, "11.5.1"), "legacy"),
+            ("12.1.2e", (12.1, "12.1.2"), "legacy"),
+            ("12.4.1a", (12.4, "12.4.1"), "aggregate"),
+        )
+        fabrics = {
+            "msd-parent": {"type": "multisite_parent", "fabricParent": "None", "cluster_name": ""},
+            "msd-child-1": {"type": "multisite_child", "fabricParent": "msd-parent", "cluster_name": ""},
+        }
+        config = [
+            {
+                "net_name": "ansible-msd-net1",
+                "vrf_name": "Tenant-1",
+                "is_l2only": False,
+                "child_fabric_config": [{"fabric": "msd-child-1", "dhcp_loopback_id": 204}],
+            }
+        ]
+        action_plugin = dcnm_network_action.ActionModule.__new__(dcnm_network_action.ActionModule)
+
+        for controller_version, expected_pair, expected_capability in cases:
+            with self.subTest(controller_version=controller_version):
+                version_action = Mock()
+                version_action._execute_module.return_value = {
+                    "failed": False,
+                    "response": {"RETURN_CODE": 200, "DATA": {"version": controller_version}},
+                }
+                version_info = dcnm_utils.get_nd_version(
+                    version_action, {}, None, return_full_version=True
+                )
+                self.assertIs(type(version_info), tuple)
+                self.assertEqual(version_info, expected_pair)
+
+                configs, error_msg = action_plugin._split_config(
+                    fabrics,
+                    "msd-parent",
+                    copy.deepcopy(config),
+                    "merged",
+                    {},
+                    version_info[0],
+                    version_info[1],
+                )
+                self.assertIsNone(error_msg)
+                for fabric_config in configs:
+                    details = fabric_config["_fabric_details"]
+                    self.assertEqual(details["nd_version"], expected_pair[0])
+                    self.assertEqual(details["ndfc_version"], expected_pair[1])
+                    self.assertEqual(
+                        set(details),
+                        {"fabric_type", "cluster_name", "nd_version", "ndfc_version"},
+                    )
+
+                dcnm_net = self._build_secgw_capability_network(
+                    fabric_type="standalone", ndfc_version=configs[0]["_fabric_details"]["ndfc_version"]
+                )
+                self.assertEqual(dcnm_net.secondary_gws_capability(), expected_capability)
+
+    def test_dcnm_net_secgw_compat_g7_parser_accepts_only_canonical_normalized_forms(self):
+        dcnm_net = self._build_secgw_capability_network(fabric_type="standalone")
+        accepted = (
+            ("11.5.1", (11, 5, 1)),
+            ("12.2.3.70", (12, 2, 3, 70)),
+        )
+        rejected = (
+            None,
+            "",
+            12.2,
+            True,
+            b"12.2.3.70",
+            "12.2",
+            "12.2.3.70.1",
+            "11.5(1)",
+            "12.1.2e",
+            "12.4.1a",
+            "12.2.3.70\n",
+            "１２.２.３.７０",
+        )
+
+        for version, expected in accepted:
+            with self.subTest(version=version):
+                dcnm_net.ndfc_version = version
+                parsed = dcnm_net._parse_ndfc_version_components()
+                self.assertIs(type(parsed), tuple)
+                self.assertEqual(parsed, expected)
+                self.assertTrue(all(component.__class__ is int for component in parsed))
+
+        for version in rejected:
+            with self.subTest(version=repr(version)):
+                dcnm_net.ndfc_version = version
+                self.assertIsNone(dcnm_net._parse_ndfc_version_components())
+
+    def test_dcnm_net_secgw_compat_g7_action_preserves_pair_and_scalar_compatibility(self):
+        """The real action run path still accepts the normalized helper pair
+        and historical scalar mocks while storing only the two established
+        action attributes."""
+        cases = (
+            ((12.4, "12.4.1.245"), 12.4, "12.4.1.245"),
+            (12.2, 12.2, None),
+        )
+        for helper_result, expected_major_minor, expected_full in cases:
+            with self.subTest(helper_result=helper_result):
+                action = dcnm_network_action.ActionModule.__new__(dcnm_network_action.ActionModule)
+                action._task = Mock(args={"fabric": "fabric-a", "state": "query"})
+                with patch.object(
+                    dcnm_network_action, "get_nd_version", return_value=helper_result
+                ) as version_lookup, patch.object(
+                    dcnm_network_action,
+                    "obtain_federated_fabric_associations",
+                    return_value=None,
+                ):
+                    result = action.run(task_vars={})
+
+                self.assertTrue(result["failed"])
+                self.assertEqual(result["msg"], "Failed to get federated fabric associations from OneManage API")
+                self.assertEqual(action.ndfc_version, expected_major_minor)
+                self.assertEqual(action.ndfc_full_version, expected_full)
+                self.assertEqual(
+                    set(action.__dict__),
+                    {"_task", "ndfc_version", "ndfc_full_version"},
+                )
+                version_lookup.assert_called_once_with(action, {}, None, return_full_version=True)
 
     def test_dcnm_net_split_msd_merged_keeps_secondary_gws_parent_only(self):
         action = dcnm_network_action.ActionModule.__new__(dcnm_network_action.ActionModule)
