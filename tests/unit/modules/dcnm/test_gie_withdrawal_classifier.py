@@ -7,6 +7,20 @@ batch's classification preflight. Such a caller never goes through `main()`, so 
 must live inside the function itself, and that copy needs its own proof.
 
 NOT LIVE TESTED IN THIS GENERATION.
+
+REHOMED AGAIN 2026-09-28 (PR725-SMU-LLDP-ROUTED-002): the C7 counter-example moved from
+``int_routed_host::disable_lldp_receive`` to ``int_routed_host::disable_bfd_echo``, because the
+LLDP row gained a measured reset and stopped being unsupported. Three cases in this file were
+PASSING before the move -- asserting "the run must refuse" against a row that now resets cleanly --
+so the staleness was partly silent. That is guarded now by ``FIXTURE_CONTRACTS`` in
+``test_gie_routed_lldp_reset.py`` -- a table of every fixture these suites rely on with the
+property each one needs, checked PER PARENT -- which fails loudly the next time a row this file
+depends on gains or loses a reset. (It replaced an earlier single-row guard,
+``test_the_rehomed_c7_row_is_genuinely_unsupported``, which covered only the ROUTED row; that
+guard was retired rather than left alongside, because two sources of the same truth drift apart.)
+The ACCESS occurrences were deliberately NOT touched: that row does carry a reset and
+serves as a positive example, and ``disable_bfd_echo`` is not registered on that parent at all, so
+rewriting them would have resolved to no binding and passed vacuously.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -81,7 +95,7 @@ def test_both_encodings_of_a_non_default_also_agree(have):
     unsupported-but-applicable row -- a declared default, no established reset -- so the
     guarantee moves rather than weakening.
     """
-    action, _ = gie_withdrawal_action(ROUTED, "disable_lldp_receive", have, OK)
+    action, _ = gie_withdrawal_action(ROUTED, "disable_bfd_echo", have, OK)
     assert action == GIE_WITHDRAW_UNSUPPORTED
 
 
@@ -100,8 +114,8 @@ def test_normalisation_does_not_turn_an_empty_string_into_a_false():
     """
     # REHOMED to int_routed_host for the same reason as above: the access row now has a
     # reset, and this case needs one that does not.
-    empty, _ = gie_withdrawal_action(ROUTED, "disable_lldp_receive", "", OK)
-    false_wire, _ = gie_withdrawal_action(ROUTED, "disable_lldp_receive", "false", OK)
+    empty, _ = gie_withdrawal_action(ROUTED, "disable_bfd_echo", "", OK)
+    false_wire, _ = gie_withdrawal_action(ROUTED, "disable_bfd_echo", "false", OK)
     assert false_wire == GIE_WITHDRAW_NONE
     assert empty != GIE_WITHDRAW_RESET, (
         "an empty HAVE produced a reset; absence is not a configured value")
@@ -133,7 +147,7 @@ def test_an_integer_zero_is_not_an_empty_value():
     (ACCESS, "disable_lldp_receive", "false", GIE_WITHDRAW_NONE),   # at declared default
     # REHOMED: access disable_lldp_receive now carries a reset, so the
     # differs-without-a-reset row moves to a parent where that is still true.
-    (ROUTED, "disable_lldp_receive", "true", GIE_WITHDRAW_UNSUPPORTED),
+    (ROUTED, "disable_bfd_echo", "true", GIE_WITHDRAW_UNSUPPORTED),
     # DERIVED: `ospf_cost` held this slot until G37 measured its reset.
     (ROUTED, an_unclassifiable_key(ROUTED, "integer"), "100", GIE_WITHDRAW_UNCLASSIFIED),
     (ACCESS, an_unclassifiable_key(ROUTED, "integer"), "100", GIE_WITHDRAW_NONE),
