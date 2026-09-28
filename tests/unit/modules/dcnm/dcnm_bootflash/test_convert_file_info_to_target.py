@@ -16,11 +16,14 @@
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 # Due to the above, we also need to disable unused-import
 # Also, fixtures need to use *args to match the signature of the function they are mocking
+"""
+Unit tests for ConvertFileInfoToTarget class
+"""
 # pylint: disable=unused-import, protected-access, use-implicit-booleaness-not-comparison
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -53,13 +56,13 @@ def test_convert_file_info_to_target_00000() -> None:
     assert instance.action == "convert_file_info_to_target"
     assert instance.class_name == "ConvertFileInfoToTarget"
 
-    assert instance._file_info is None
-    assert instance._filename is None
-    assert instance._filepath is None
-    assert instance._ip_address is None
-    assert instance._serial_number is None
-    assert instance._supervisor is None
-    assert instance._target is None
+    assert instance._file_info == {}
+    assert instance._filename == ""
+    assert instance._filepath == ""
+    assert instance._ip_address == ""
+    assert instance._serial_number == ""
+    assert instance._supervisor == ""
+    assert instance._target == {}
     assert instance.timestamp_format == "%b %d %H:%M:%S %Y"
 
 
@@ -115,8 +118,8 @@ def test_convert_file_info_to_target_00110() -> None:
     """
     with does_not_raise():
         instance = ConvertFileInfoToTarget()
-    match = r"ConvertFileInfoToTarget\.validate_commit_parameters:\s+"
-    match += r"file_info must be set before calling commit\(\)\."
+    match = r"ConvertFileInfoToTarget\._get:\s+"
+    match += r"file_info must be set before calling _get\(\)\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -198,7 +201,7 @@ def test_convert_file_info_to_target_00200() -> None:
         instance = ConvertFileInfoToTarget()
 
     match = r"ConvertFileInfoToTarget\._get:\s+"
-    match += r"file_info must be set before calling ``_get\(\)``\."
+    match += r"file_info must be set before calling _get\(\)\."
     with pytest.raises(ValueError, match=match):
         instance.date  # pylint: disable=pointless-statement
 

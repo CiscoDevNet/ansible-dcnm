@@ -17,7 +17,9 @@
 # Due to the above, we also need to disable unused-import
 # Also, fixtures need to use *args to match the signature of the function they are mocking
 # pylint: disable=unused-import, protected-access, use-implicit-booleaness-not-comparison
-
+"""
+Unit tests for BootflashInfo class
+"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type  # pylint: disable=invalid-name
@@ -176,8 +178,8 @@ def test_bootflash_info_00110() -> None:
         instance.results = Results()
         instance.switches = ["192.168.1.1"]
 
-    match = r"BootflashInfo\.rest_send: "
-    match += r"RestSend.params must be set before accessing\."
+    match = r"BootflashInfo\.validate_refresh_parameters: "
+    match += r"rest_send must be set prior to calling refresh\."
     with pytest.raises(ValueError, match=match):
         instance.refresh()
 
@@ -276,7 +278,7 @@ def test_bootflash_info_00200() -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
         instance.switches = ["172.22.150.112", "172.22.150.113"]
 
@@ -509,7 +511,7 @@ def test_bootflash_info_00300(filter_filepath, filepath, expected) -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
         instance.switches = ["172.22.150.112"]
         if filter_filepath is not None:
@@ -549,7 +551,7 @@ def test_bootflash_info_00310(filter_supervisor, supervisor, expected) -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
         instance.switches = ["172.22.150.112"]
         if filter_supervisor is not None:
@@ -592,7 +594,7 @@ def test_bootflash_info_00320(filter_switch, switch, expected) -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
         instance.switches = ["172.22.150.112"]
         if filter_switch is not None:
@@ -622,7 +624,7 @@ def test_bootflash_info_00400() -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
         instance.switches = ["172.22.150.112"]
     match = r"BootflashInfo\.filter_supervisor\.setter:\s+"
@@ -649,7 +651,7 @@ def test_bootflash_info_00500() -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
         instance.switches = ["172.22.150.112"]
     match = r"BootflashInfo.switch_details:\s+"
@@ -678,7 +680,7 @@ def test_bootflash_info_00510() -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
         instance.switches = ["172.22.150.112"]
     match = r"BootflashInfo.switch_details:\s+"
@@ -704,7 +706,7 @@ def test_bootflash_info_00600() -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
     match = r"BootflashInfo\.switches:\s+"
     match += r"switches must be a list\. got str for value foo\."
@@ -728,7 +730,7 @@ def test_bootflash_info_00610() -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
     match = r"BootflashInfo.switches:\s+"
     match += r"switches must be a list with at least one ip address\.\s+"
@@ -753,7 +755,7 @@ def test_bootflash_info_00620() -> None:
     """
     with does_not_raise():
         instance = BootflashInfo()
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params_query)
         instance.results = Results()
     match = r"BootflashInfo\.switches:\s+"
     match += r"switches must be a list of ip addresses\.\s+"
