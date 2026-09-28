@@ -88,7 +88,23 @@ def test_the_pre_smu_spelling_is_not_silently_accepted_as_neutral(parent, profil
     not quietly treated as already-withdrawn.
     """
     action, _wire = engine.gie_withdrawal_action(parent, profile_key, "no_change", SUPPORTED)
-    assert action == engine.GIE_WITHDRAW_UNSUPPORTED, action
+    # THE GUARANTEE, invariant and the whole reason this case exists: the pre-SMU spelling is
+    # NEVER read as already-withdrawn.
+    assert action != engine.GIE_WITHDRAW_NONE, (
+        "the pre-SMU spelling was read as already-withdrawn: %r" % action)
+    # The CONCRETE outcome depends on whether the row carries a registered reset, and both
+    # branches are declared rather than letting a future registration invalidate the case:
+    #
+    #   no reset   -> UNSUPPORTED: there is no known way to withdraw it, so it fails closed.
+    #   with reset -> RESET: it differs from the neutral, so it is NORMALISED by sending it.
+    #
+    # B3 registered two of these eight rows, which is what stopped the second branch from
+    # being hypothetical. The first version of this case covered only the first branch.
+    binding = engine.resolve_binding(parent, profile_key)
+    if binding.get("reset_wire") is None:
+        assert action == engine.GIE_WITHDRAW_UNSUPPORTED, action
+    else:
+        assert action == engine.GIE_WITHDRAW_RESET, action
 
 
 @pytest.mark.parametrize("state", ["replaced", "merged"])
@@ -137,9 +153,29 @@ def test_an_unknown_value_does_not_become_neutral():
 
 def test_a_configured_enum_without_a_measured_reset_still_fails_closed_when_omitted():
     """The contract that must NOT have been weakened: a non-neutral configured value on a row
-    with no measured reset still refuses, rather than being silently left or reset."""
-    action, _wire = engine.gie_withdrawal_action("int_routed_host", "ospf_passive_mode", "passive", SUPPORTED)
-    assert action == engine.GIE_WITHDRAW_UNSUPPORTED, action
+    with no measured reset still refuses, rather than being silently left or reset.
+
+    The example is DERIVED from the table instead of hardcoded. It used to name
+    `int_routed_host::ospf_passive_mode`, and B3 registered a reset for exactly that row --
+    which made the case fail while the contract it guards was intact. Deriving it means a
+    future registration can never invalidate this case; if the table ever ran out of
+    unregistered neutral enums, the guard below says so loudly instead of the case passing
+    for the wrong reason.
+    """
+    without_reset = [(p, k, nv) for (p, k, nv) in NEUTRAL_ROWS
+                     if (engine.resolve_binding(p, k) or {}).get("reset_wire") is None]
+    assert without_reset, (
+        "every reviewed neutral enum now carries a reset; this case has nothing left to "
+        "guard and must be rehomed deliberately, not deleted")
+    for parent, profile_key, _nvpair in without_reset:
+        binding = engine.resolve_binding(parent, profile_key)
+        configured = next(v for pub, v in binding["wire_values"].items()
+                          if pub != "no_change")
+        action, _wire = engine.gie_withdrawal_action(
+            parent, profile_key, configured, SUPPORTED)
+        assert action == engine.GIE_WITHDRAW_UNSUPPORTED, (
+            "%s::%s has no reset, so HAVE=%r must fail closed, got %r"
+            % (parent, profile_key, configured, action))
 
 
 def test_merged_preservation_still_works_for_a_neutral_row():

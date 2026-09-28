@@ -123,6 +123,8 @@ QUEUE = {"queuing_policy": "pilot_queue"}
 NOFAST = {"port_type_fast": False}
 IPV6_ON = {"disable_ipv6_redirects": True}
 IPV4_ON = {"disable_ipv4_redirects": True}
+LLDP_RX_ON = {"disable_lldp_receive": True}
+LLDP_TX_ON = {"disable_lldp_transmit": True}
 # The OSPF base group the template makes mandatory under its gate: OSPF_TAG and
 # OSPF_AREA_ID carry IsMandatory="ENABLE_OSPF==true", and they feed the same base child as
 # the gate itself. Every OSPF value row therefore holds all three explicit, so the omission
@@ -199,6 +201,59 @@ def wire_of(applied):
     return applied
 
 
+def wire_for(parent, key, applied):
+    """The wire form of `applied`, CONSULTING the binding's SMU vocabulary.
+
+    `wire_of` above assumes a string fixture is already spelled the way the controller
+    stores it. That held for every fixture registered before the SMU rename -- `"ACL-PILOT"`,
+    `"on"`, `"network"` are their own wire form -- and it breaks for the eight OSPF enums
+    whose public and wire spellings differ (`no_passive` -> `noPassive`,
+    `point_to_point` -> `pointToPoint`, `no_change` -> `noChange`).
+
+    Measured: with the B3 resets registered, the preservation assertion compared the
+    controller's `noPassive` against the fixture's public `no_passive` and failed. The
+    fixture was right; the derivation was vocabulary-blind.
+
+    Bindings without `wire_values` fall through to `wire_of`, so every pre-existing caller
+    keeps its exact previous behaviour.
+    """
+    from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
+        resolve_binding,
+    )
+    wv = (resolve_binding(parent, key) or {}).get("wire_values")
+    if wv and isinstance(applied, str) and applied in wv:
+        return wv[applied]
+    return wire_of(applied)
+
+
+def public_clear_for(parent, key, reset):
+    """The PUBLIC input that requests the registered `reset`, or None if there is none.
+
+    The registry stores `reset_wire` as the nvPair WIRE string. An explicit-clear test has
+    to type what an operator types, and for the OSPF enums that is `no_change`, never
+    `noChange` -- the wire spelling is deliberately NOT public vocabulary and the module
+    refuses it.
+
+    Measured: feeding `reset` straight through produced no request at all, because the
+    module rejected the wire spelling as an invalid public choice. That refusal is correct
+    and stays; what was wrong was asking for it in the first place.
+
+    Returns None when the reset has no public spelling, so a caller can say so instead of
+    inventing one.
+    """
+    from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
+        resolve_binding,
+    )
+    wv = (resolve_binding(parent, key) or {}).get("wire_values")
+    if wv:
+        for public, wire in wv.items():
+            if wire == reset:
+                return public
+        return None
+    # No SMU vocabulary: the wire value IS the public spelling, as before.
+    return False if reset == "false" else reset
+
+
 def is_integer_binding(applied):
     """True for a native-integer fixture. `bool` is a subclass of `int`, so it is excluded
     first -- the distinction matters because the public integer input REFUSES the empty
@@ -233,6 +288,19 @@ PILOT = {
     # G33 F1-s2/F2-s2 on Leaf-103 Ethernet1/22.
     (ROUTED, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
     (ROUTED, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
+    # The routed LLDP pair, measured live 2026-09-28 on Leaf-103 Ethernet1/64 (fabric SMU90,
+    # NDFC 12.6.0.267), stages M1-M4 of PR725-SMU-LLDP-ROUTED-002.
+    #
+    # The companion is held explicit for a reason specific to this parent, read from the
+    # template body on the controller rather than assumed: `int_routed_host` emits no LLDP
+    # line itself. It instantiates the child `interface_lldp_disable` and gates it on an OR --
+    #     if lldpTransmit == "true" or lldpReceive == "true"
+    # -- forwarding BOTH values, and the child renders one line per direction. So driving both
+    # to "false" destroys the child and both lines vanish together, which proves nothing about
+    # either field alone. Holding the companion at True keeps the child alive, so the line that
+    # disappears is attributable to the field that was withdrawn.
+    (ROUTED, "lldpTransmit"): ("disable_lldp_transmit", True, "false", LLDP_RX_ON),
+    (ROUTED, "lldpReceive"): ("disable_lldp_receive", True, "false", LLDP_TX_ON),
     # The subinterface pair, measured on int_subif ITSELF in G35 M1-s2/M2-s2 -- the routed
     # parent's result was not carried over. Same companion-held-explicit prerequisite: the
     # gate field DISABLE_IP_REDIRECTS is absent from `sub_prof_spec` too and sits at the
@@ -254,6 +322,19 @@ PILOT = {
     (ROUTED, "ospfHelloInterval"): ("ospf_hello_interval", 11, "", dict(OSPF_CTX)),
     (ROUTED, "ospfPriority"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
     (ROUTED, "ospfTransmitDelay"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
+    # B3: the two routed ENUM identities. Their reset is the NEUTRAL WIRE SPELLING
+    # `noChange`, not "" -- for an enum the unset state is a named choice, so an empty
+    # string would be the typo this suite rejects elsewhere for enums.
+    #
+    # The applied value of each is the one whose CLI artifact was measured live:
+    # `no_passive` renders `no ip ospf passive-interface`, `point_to_point` renders
+    # `ip ospf network point-to-point`. The OTHER non-neutral value of each pair
+    # (`passive`, `broadcast`) is exercised in test_gie_routed_enum_omission_b3.py, so
+    # both variants of both enums are covered.
+    (ROUTED, "ospfPassiveMode"): ("ospf_passive_mode", "no_passive", "noChange",
+                                  dict(OSPF_CTX)),
+    (ROUTED, "ospfNetworkType"): ("ospf_network_type", "point_to_point", "noChange",
+                                  dict(OSPF_CTX)),
     # The seven int_subif integers, measured live in G39 on Leaf-103 Ethernet1/21.3001. The six
     # OSPF rows hold the subinterface's OWN OSPF base group; ARP_TIMEOUT is ungated and was
     # measured on a deliberately OSPF-free object, so it carries no prerequisite at all.

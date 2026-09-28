@@ -28,6 +28,20 @@ Helper-level tests are labelled `test_helper_*`. A direct helper assertion is no
 integration coverage and is not counted as such.
 
 NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted.
+
+REHOMED AGAIN 2026-09-28 (PR725-SMU-LLDP-ROUTED-002): the C7 counter-example moved from
+``int_routed_host::disable_lldp_receive`` to ``int_routed_host::disable_bfd_echo``, because the
+LLDP row gained a measured reset and stopped being unsupported. Three cases in this file were
+PASSING before the move -- asserting "the run must refuse" against a row that now resets cleanly --
+so the staleness was partly silent. That is guarded now by ``FIXTURE_CONTRACTS`` in
+``test_gie_routed_lldp_reset.py`` -- a table of every fixture these suites rely on with the
+property each one needs, checked PER PARENT -- which fails loudly the next time a row this file
+depends on gains or loses a reset. (It replaced an earlier single-row guard,
+``test_the_rehomed_c7_row_is_genuinely_unsupported``, which covered only the ROUTED row; that
+guard was retired rather than left alongside, because two sources of the same truth drift apart.)
+The ACCESS occurrences were deliberately NOT touched: that row does carry a reset and
+serves as a positive example, and ``disable_bfd_echo`` is not registered on that parent at all, so
+rewriting them would have resolved to no binding and passed vacuously.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -66,7 +80,9 @@ from .gie_withdrawal_harness import (
     cfg_for,
     diff_nvpairs,
     have_for,
+    public_clear_for,
     request_nvpairs,
+    wire_for,
     run,
     run_configs,
     split_calls,
@@ -267,14 +283,17 @@ def test_merged_unrelated_update_preserves_the_omitted_value(
     result, calls = run(base_for(parent, description="changed-under-merged", **extra), "merged", have, **_pkw(parent))
     nv = request_nvpairs(calls)
     assert nv, "the description change produced no request"
-    assert nv[0].get(nvpair) == wire_of(applied)
+    # `wire_for` rather than `wire_of`: preservation is compared against the WIRE spelling of
+    # the applied value, and for the SMU OSPF enums that spelling is not the public one
+    # (`no_passive` -> `noPassive`).
+    assert nv[0].get(nvpair) == wire_for(parent, key, applied)
 
 
 def test_merged_is_never_blocked_by_an_unsupported_row():
     """merged has no withdrawal contract, so C7/C8 must not fire for it at all.
     Rehomed to the routed parent with the rest of the C7 family."""
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "true"
+    have[0]["interfaces"][0]["nvPairs"]["bfdEcho"] = "true"
     result, calls = run_configs(
         [cfg(IF_A, base_for(ROUTED, description="x"))], "merged", have)
     assert not result.get("failed"), result.get("msg")
@@ -306,7 +325,44 @@ def test_an_explicit_clear_retains_precedence_and_is_still_validated(
         assert [c for c in calls if c["method"] != "GET"] == [], (
             "the refused integer clear still sent a write")
         return
-    clear_input = False if reset == "false" else reset
+    # The public input that requests the registered reset. For an SMU enum the `reset_wire`
+    # is the WIRE spelling (`noChange`), which is deliberately NOT public vocabulary: the
+    # module refuses it, and that refusal is correct. What an operator types is `no_change`.
+    clear_input = public_clear_for(parent, key, reset)
+    # A missing public clear is a fixture/registry DISAGREEMENT, not something to step over.
+    # An earlier version skipped here. It never triggered for the two registered enums, whose
+    # public clear is `no_change`, but a skip is indistinguishable from a pass in a summary,
+    # so the one thing this parametrised suite exists to catch -- a row whose fixture and
+    # registry stopped agreeing -- would have gone unreported. A reset that genuinely has no
+    # public spelling is a refusal to be asserted, not a case to omit: that is covered
+    # explicitly by `test_gie_routed_enum_omission_b3.py::
+    # test_the_public_neutral_is_accepted_and_the_wire_spelling_is_refused`.
+    assert clear_input is not None, (
+        "no public input spells the registered reset %r of %s::%s, so this pilot fixture and "
+        "the registry disagree. If the reset is genuinely not expressible publicly, assert "
+        "that refusal in its own case instead of reaching this line." % (reset, parent, nvpair))
+    # The public representation is ASSERTED, not merely resolved. Registering a reset must
+    # not broaden the public schema, so for a binding with an SMU vocabulary the clear has to
+    # be a real public choice that maps to the registered wire reset, and the wire spelling
+    # must NOT have become public alongside it.
+    binding = engine.resolve_binding(parent, key) or {}
+    vocabulary = binding.get("wire_values")
+    if vocabulary:
+        assert vocabulary.get(clear_input) == reset, (
+            "%s::%s public clear %r maps to wire %r, not to the registered reset %r"
+            % (parent, nvpair, clear_input, vocabulary.get(clear_input), reset))
+        assert clear_input in binding.get("valid_values", ()), (
+            "%s::%s public clear %r is not among the public valid_values %r"
+            % (parent, nvpair, clear_input, binding.get("valid_values")))
+        assert reset not in binding.get("valid_values", ()), (
+            "%s::%s wire spelling %r leaked into the public valid_values: registering a reset "
+            "widened the public schema" % (parent, nvpair, reset))
+    else:
+        expected = False if reset == "false" else reset
+        assert clear_input == expected, (
+            "%s::%s declares no SMU vocabulary, so its public clear must still be the wire "
+            "value itself (a native False for a boolean): expected %r, got %r"
+            % (parent, nvpair, expected, clear_input))
     result, calls = run(base_for(parent, **dict(extra, **{key: clear_input})), "replaced", have, **_pkw(parent))
     nv = request_nvpairs(calls)
     assert nv, "the explicit clear produced no request"
@@ -348,20 +404,20 @@ def test_c7_configured_value_without_an_established_reset_refuses_the_run():
     a declared default of false, and no established reset.
     """
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "true"
+    have[0]["interfaces"][0]["nvPairs"]["bfdEcho"] = "true"
     result, calls = run_configs([cfg(IF_A, base_for(ROUTED))], "replaced", have)
     split = split_calls(calls)
     assert result.get("failed"), "a required withdrawal that cannot complete reported success"
     assert len(split["updates"]) == 0 and len(split["deploys"]) == 0
     msg = str(result.get("msg", ""))
-    assert "disable_lldp_receive" in msg and ROUTED in msg
+    assert "disable_bfd_echo" in msg and ROUTED in msg
     assert "must withdraw" in msg
 
 
 def test_c7_the_same_row_at_its_declared_default_still_succeeds():
     """The control proving the refusal above is not a blanket rejection. Rehomed with it."""
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "false"
+    have[0]["interfaces"][0]["nvPairs"]["bfdEcho"] = "false"
     result, calls = run_configs([cfg(IF_A, base_for(ROUTED))], "replaced", have)
     assert not result.get("failed"), result.get("msg")
 
@@ -388,7 +444,7 @@ def test_check_mode_also_refuses_an_unsupported_withdrawal():
     """Check mode is a report. Reporting a replacement that cannot complete is the same
     false claim as performing one."""
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "true"
+    have[0]["interfaces"][0]["nvPairs"]["bfdEcho"] = "true"
     result, calls = run_configs([cfg(IF_A, base_for(ROUTED))], "replaced", have,
                                 check_mode=True)
     assert result.get("failed")
@@ -405,7 +461,7 @@ def test_valid_first_interface_unsupported_second_writes_nothing_at_all():
         h = build_have(ROUTED)
         h[0]["interfaces"][0]["ifName"] = name
         have.extend(h)
-    have[1]["interfaces"][0]["nvPairs"]["lldpReceive"] = "true"
+    have[1]["interfaces"][0]["nvPairs"]["bfdEcho"] = "true"
     result, calls = run_configs(
         [cfg(IF_A, base_for(ROUTED)), cfg(IF_B, base_for(ROUTED))], "replaced", have)
     split = split_calls(calls)
@@ -472,6 +528,12 @@ def test_equivalent_have_encodings_classify_identically(have_value):
     """Both spellings are accepted by the HAVE validator and describe ONE controller state.
     Comparing raw HAVE against a wire string made `"false"` the baseline and native
     `False` a C7 abort."""
+    # ACCESS, not ROUTED: `bfdEcho` is NOT registered on int_access_host, so assigning it here
+    # made the engine ignore the key entirely and this case passed without exercising any
+    # registered field. Restored to the row that is registered on this parent.
+    assert engine.resolve_binding(ACCESS, "disable_lldp_receive") is not None, (
+        "int_access_host::disable_lldp_receive is not registered, so this HAVE carries a key the "
+        "engine ignores and the case proves nothing about encoding equivalence")
     have = have_for([IF_A], ACCESS, "acl_filter", "ACL-PILOT")
     have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = have_value
     result, calls = run_configs([cfg(IF_A, base_for(ACCESS))], "replaced", have)
@@ -676,8 +738,16 @@ def test_query_succeeds_and_returns_the_interface_state():
 def test_deleted_state_does_not_enter_the_withdrawal_path():
     """`deleted` is a lifecycle decision with its own contract. No reset is invented for it
     here; its authoritative coverage stays in the module's own lifecycle suites."""
+    # ACCESS again, and the old `# a C7 row` comment was wrong even before the LLDP lot:
+    # int_access_host::disable_lldp_receive carries a measured reset, so at "true" it is a row that
+    # `replaced` WOULD WITHDRAW -- not an unsupported C7 row that `replaced` would refuse. Either
+    # way it is the right fixture for this case, because what is under test is that `deleted` does
+    # not enter the withdrawal path at all. The claim is now stated as what it is.
+    assert engine.resolve_binding(ACCESS, "disable_lldp_receive").get("reset_wire") is not None, (
+        "this case needs a row `replaced` would actually withdraw, so that `deleted` skipping the "
+        "withdrawal path means something; int_access_host::disable_lldp_receive no longer has a reset")
     have = have_for([IF_A], ACCESS, "acl_filter", "ACL-PILOT")
-    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "true"   # a C7 row
+    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "true"   # a row `replaced` would withdraw
     result, calls = run_configs([cfg(IF_A, base_for(ACCESS), deploy=False)], "deleted", have)
     assert not result.get("failed"), (
         "the withdrawal preflight fired on `deleted`: %s" % result.get("msg"))
