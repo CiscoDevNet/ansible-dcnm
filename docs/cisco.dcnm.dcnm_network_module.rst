@@ -884,6 +884,26 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ipv4_acl_in</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>IPv4 access-list applied inbound on the SVI.</div>
+                        <div>The access-list name must contain 1 to 64 characters.</div>
+                        <div>Requires the top-level <code>patch_version</code> option.</div>
+                        <div>Supported on standalone and parent fabrics only. It cannot be overridden in <code>config[].child_fabric_config</code>.</div>
+                        <div>In <code>state=merged</code>, omitting this option preserves the value returned by the controller.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>is_l2only</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -1305,6 +1325,22 @@ Parameters
             <tr>
                 <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>patch_version</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Exact ND patch version used to enable features delivered by a patch.</div>
+                        <div>This is a control parameter and is not sent to the controller.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -1434,6 +1470,16 @@ Examples
               - ip_address: 192.168.1.225
                 ports: [Ethernet1/18]
             deploy: true
+
+    - name: Configure an inbound IPv4 ACL on a patched ND controller
+      cisco.dcnm.dcnm_network:
+        fabric: vxlan-fabric
+        patch_version: "{{ nd_patch_version }}"
+        state: merged
+        config:
+          - net_name: ansible-acl-net
+            vrf_name: Tenant-1
+            ipv4_acl_in: TENANT-1-IN
 
     # ---------------------------------------------------------------------------
     # STATE: REPLACED - Replace Network Configuration
