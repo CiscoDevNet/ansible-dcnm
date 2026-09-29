@@ -515,12 +515,44 @@ class TestDcnmNetworkModule(TestDcnmModule):
                     "ACL-IN",
                 )
 
-    def test_dcnm_net_ipv4_acl_in_requires_exact_patch(self):
+    def test_dcnm_net_ipv4_acl_in_official_versions_are_accepted(self):
+        for patch_version in (
+            "4.4.1",
+            "4.4.1.0",
+            "4.4.2",
+            "4.5.0",
+            "5.0.0",
+            "10.0.0",
+        ):
+            with self.subTest(patch_version=patch_version):
+                dcnm_net = self._build_ipv4_acl_validator(
+                    patch_version,
+                    "ACL-IN",
+                )
+
+                dcnm_net.validate_input()
+
+                self.assertEqual(
+                    dcnm_net.validated[0]["ipv4_acl_in"],
+                    "ACL-IN",
+                )
+
+    def test_dcnm_net_ipv4_acl_in_unsupported_versions_are_rejected(self):
         for patch_version in (
             None,
             "4.3.1",
             "4.3.1.0175006010",
             "4.3.1.0175006012",
+            "4.3.99",
+            "4.4",
+            "4.4.0",
+            "4.4.0.9999999999",
+            "4.4.1-rc1",
+            "4.4.1.",
+            "4.4.1.bad",
+            "4.4.1.2.bad",
+            "5.-1.0",
+            "not-a-version",
         ):
             with self.subTest(patch_version=patch_version):
                 dcnm_net = self._build_ipv4_acl_validator(
@@ -534,6 +566,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 error = dcnm_net.module.fail_json.call_args.kwargs["msg"]
                 self.assertIn("ipv4_acl_in", error)
                 self.assertIn("4.3.1.0175006011", error)
+                self.assertIn("4.4.1", error)
 
     def test_dcnm_net_ipv4_acl_in_length_boundaries_are_accepted(self):
         for ipv4_acl_in in ("A", "A" * 64):
@@ -570,6 +603,20 @@ class TestDcnmNetworkModule(TestDcnmModule):
         dcnm_net = self._build_ipv4_acl_payload_network(
             "4.3.1.0175006011"
         )
+
+        payload = dcnm_net.update_create_params(
+            {
+                "net_name": "acl-net",
+                "vrf_name": "Tenant-1",
+                "ipv4_acl_in": "ACL-IN",
+            }
+        )
+        template = json.loads(payload["networkTemplateConfig"])
+
+        self.assertEqual(template["IPV4_ACL_IN"], "ACL-IN")
+
+    def test_dcnm_net_ipv4_acl_in_official_version_serializes_template_key(self):
+        dcnm_net = self._build_ipv4_acl_payload_network("4.4.1")
 
         payload = dcnm_net.update_create_params(
             {
@@ -629,7 +676,13 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(sent_template["IPV4_ACL_IN"], "ACL-IN")
 
     def test_dcnm_net_unpatched_payload_omits_ipv4_acl_in(self):
-        for patch_version in (None, "4.3.1.0175006010"):
+        for patch_version in (
+            None,
+            "4.3.1.0175006010",
+            "4.3.1.0175006012",
+            "4.4.0",
+            "4.4.0.9999999999",
+        ):
             with self.subTest(patch_version=patch_version):
                 dcnm_net = self._build_ipv4_acl_payload_network(
                     patch_version

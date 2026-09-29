@@ -37,7 +37,8 @@ options:
     required: yes
   patch_version:
     description:
-    - Exact ND patch version used to enable features delivered by a patch.
+    - ND software version used to enable version-gated features.
+    - For C(ipv4_acl_in), specify the applicable patched release or ND 4.4.1 or later.
     - This is a control parameter and is not sent to the controller.
     type: str
     required: false
@@ -327,7 +328,7 @@ options:
         description:
         - IPv4 access-list applied inbound on the SVI.
         - The access-list name must contain 1 to 64 characters.
-        - Requires the top-level O(patch_version) option.
+        - Requires the top-level O(patch_version) option set to the applicable patched release or ND 4.4.1 or later.
         - Supported on standalone and parent fabrics only. It cannot be overridden in O(config[].child_fabric_config).
         - In C(state=merged), omitting this option preserves the value returned by the controller.
         type: str
@@ -637,7 +638,7 @@ EXAMPLES = """
             ports: [Ethernet1/18]
         deploy: true
 
-- name: Configure an inbound IPv4 ACL on a patched ND controller
+- name: Configure an inbound IPv4 ACL on a supported ND controller
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
     patch_version: "{{ nd_patch_version }}"
@@ -1079,6 +1080,7 @@ class DcnmNetwork:
 
     BULK_GET_HAVE_NETWORK_THRESHOLD = 5
     IPV4_ACL_IN_PATCH_VERSION = "4.3.1.0175006011"
+    IPV4_ACL_IN_MIN_ND_VERSION = (4, 4, 1)
 
     dcnm_network_paths = {
         11: {
@@ -5367,10 +5369,26 @@ class DcnmNetwork:
         except (ValueError, AttributeError):
             return False
 
+    def _supports_ipv4_acl_in_version(self):
+        """Return whether patch_version enables the SVI ACL field."""
+        patch_version = getattr(self, "patch_version", None)
+        if patch_version == self.IPV4_ACL_IN_PATCH_VERSION:
+            return True
+        if not isinstance(patch_version, str):
+            return False
+
+        version_parts = patch_version.split(".")
+        if len(version_parts) < 3 or any(
+            not part.isdigit() for part in version_parts
+        ):
+            return False
+        current_version = tuple(int(part) for part in version_parts[:3])
+        return current_version >= self.IPV4_ACL_IN_MIN_ND_VERSION
+
     def _supports_ipv4_acl_in(self):
-        """Return whether this invocation may manage the patched SVI ACL field."""
+        """Return whether this invocation may manage the SVI ACL field."""
         return (
-            getattr(self, "patch_version", None) == self.IPV4_ACL_IN_PATCH_VERSION
+            self._supports_ipv4_acl_in_version()
             and getattr(self, "fabric_type", None) in [
                 "standalone",
                 "multisite_parent",
@@ -5545,9 +5563,8 @@ class DcnmNetwork:
 
         """Parse the playbook values, validate to param specs."""
 
-        # IPV4_ACL_IN exists only in the explicitly identified ND patch.  Keep
-        # this check ahead of want/diff construction so an unsupported request
-        # cannot reach a controller mutation path.
+        # Keep this check ahead of want/diff construction so an unsupported
+        # request cannot reach a controller mutation path.
         if self.config:
             for net in self.config:
                 if "ipv4_acl_in" not in net:
@@ -5560,12 +5577,14 @@ class DcnmNetwork:
                             "configure it on the parent network."
                         )
                     )
-                if self.patch_version != self.IPV4_ACL_IN_PATCH_VERSION:
+                if not self._supports_ipv4_acl_in_version():
                     supplied_patch = self.patch_version if self.patch_version is not None else "not provided"
+                    min_version = ".".join(str(part) for part in self.IPV4_ACL_IN_MIN_ND_VERSION)
                     self.module.fail_json(
                         msg=(
-                            f"Network '{network_name}': ipv4_acl_in requires patch_version to be exactly "
-                            f"'{self.IPV4_ACL_IN_PATCH_VERSION}' (received: {supplied_patch})."
+                            f"Network '{network_name}': ipv4_acl_in requires patch_version "
+                            f"'{self.IPV4_ACL_IN_PATCH_VERSION}' or ND version '{min_version}' or later "
+                            f"(received: {supplied_patch})."
                         )
                     )
 

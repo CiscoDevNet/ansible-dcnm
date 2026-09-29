@@ -895,7 +895,7 @@ Parameters
                 <td>
                         <div>IPv4 access-list applied inbound on the SVI.</div>
                         <div>The access-list name must contain 1 to 64 characters.</div>
-                        <div>Requires the top-level <code>patch_version</code> option.</div>
+                        <div>Requires the top-level <code>patch_version</code> option set to the applicable patched release or ND 4.4.1 or later.</div>
                         <div>Supported on standalone and parent fabrics only. It cannot be overridden in <code>config[].child_fabric_config</code>.</div>
                         <div>In <code>state=merged</code>, omitting this option preserves the value returned by the controller.</div>
                 </td>
@@ -1334,7 +1334,8 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Exact ND patch version used to enable features delivered by a patch.</div>
+                        <div>ND software version used to enable version-gated features.</div>
+                        <div>For <code>ipv4_acl_in</code>, specify the applicable patched release or ND 4.4.1 or later.</div>
                         <div>This is a control parameter and is not sent to the controller.</div>
                 </td>
             </tr>
@@ -1471,7 +1472,7 @@ Examples
                 ports: [Ethernet1/18]
             deploy: true
 
-    - name: Configure an inbound IPv4 ACL on a patched ND controller
+    - name: Configure an inbound IPv4 ACL on a supported ND controller
       cisco.dcnm.dcnm_network:
         fabric: vxlan-fabric
         patch_version: "{{ nd_patch_version }}"
