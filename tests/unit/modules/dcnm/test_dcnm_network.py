@@ -446,7 +446,609 @@ class TestDcnmNetworkModule(TestDcnmModule):
         diff = dcnm_net.diff_for_create(want, have)
 
         self.assertEqual(diff[0], {})
+        self.assertFalse(diff[-2])
+
+    def _build_ipv4_acl_validator(
+        self,
+        patch_version,
+        ipv4_acl_in,
+        fabric_type="standalone",
+    ):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(
+            dcnm_network.DcnmNetwork
+        )
+        dcnm_net.params = {
+            "state": "merged",
+            "patch_version": patch_version,
+        }
+        dcnm_net.patch_version = patch_version
+        dcnm_net.config = [
+            {
+                "net_name": "acl-net",
+                "vrf_name": "Tenant-1",
+                "ipv4_acl_in": ipv4_acl_in,
+            }
+        ]
+        dcnm_net.fabric_type = fabric_type
+        dcnm_net.ndfc_version = "12.4.1"
+        dcnm_net.dcnm_version = 12
+        dcnm_net.check_extra_params = True
+        dcnm_net.validated = []
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.module = Mock(params=dcnm_net.params)
+        dcnm_net.module.fail_json.side_effect = ValueError
+        dcnm_net.get_fabric_multicast_group_address = Mock(
+            return_value=""
+        )
+        return dcnm_net
+
+    def _build_ipv4_acl_payload_network(self, patch_version=None):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(
+            dcnm_network.DcnmNetwork
+        )
+        dcnm_net.params = {
+            "state": "merged",
+            "patch_version": patch_version,
+        }
+        dcnm_net.patch_version = patch_version
+        dcnm_net.fabric = "test-fabric"
+        dcnm_net.dcnm_version = 12
+        dcnm_net.ndfc_version = "12.4.1"
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.is_ms_fabric = False
+        dcnm_net.fabric_type = "standalone"
+        return dcnm_net
+
+    def test_dcnm_net_ipv4_acl_in_exact_patch_is_accepted(self):
+        for fabric_type in ("standalone", "multisite_parent"):
+            with self.subTest(fabric_type=fabric_type):
+                dcnm_net = self._build_ipv4_acl_validator(
+                    "4.3.1.0175006011",
+                    "ACL-IN",
+                    fabric_type=fabric_type,
+                )
+
+                dcnm_net.validate_input()
+
+                self.assertEqual(
+                    dcnm_net.validated[0]["ipv4_acl_in"],
+                    "ACL-IN",
+                )
+
+    def test_dcnm_net_ipv4_acl_in_official_versions_are_accepted(self):
+        for patch_version in (
+            "4.4.1",
+            "4.4.1.0",
+            "4.4.2",
+            "4.5.0",
+            "5.0.0",
+            "10.0.0",
+        ):
+            with self.subTest(patch_version=patch_version):
+                dcnm_net = self._build_ipv4_acl_validator(
+                    patch_version,
+                    "ACL-IN",
+                )
+
+                dcnm_net.validate_input()
+
+                self.assertEqual(
+                    dcnm_net.validated[0]["ipv4_acl_in"],
+                    "ACL-IN",
+                )
+
+    def test_dcnm_net_ipv4_acl_in_unsupported_versions_are_rejected(self):
+        for patch_version in (
+            None,
+            "4.3.1",
+            "4.3.1.0175006010",
+            "4.3.1.0175006012",
+            "4.3.99",
+            "4.4",
+            "4.4.0",
+            "4.4.0.9999999999",
+            "4.4.1-rc1",
+            "4.4.1.",
+            "4.4.1.bad",
+            "4.4.1.2.bad",
+            "5.-1.0",
+            "not-a-version",
+        ):
+            with self.subTest(patch_version=patch_version):
+                dcnm_net = self._build_ipv4_acl_validator(
+                    patch_version,
+                    "ACL-IN",
+                )
+
+                with self.assertRaises(ValueError):
+                    dcnm_net.validate_input()
+
+                error = dcnm_net.module.fail_json.call_args.kwargs["msg"]
+                self.assertIn("ipv4_acl_in", error)
+                self.assertIn("4.3.1.0175006011", error)
+                self.assertIn("4.4.1", error)
+
+    def test_dcnm_net_ipv4_acl_in_length_boundaries_are_accepted(self):
+        for ipv4_acl_in in ("A", "A" * 64):
+            with self.subTest(length=len(ipv4_acl_in)):
+                dcnm_net = self._build_ipv4_acl_validator(
+                    "4.3.1.0175006011",
+                    ipv4_acl_in,
+                )
+
+                dcnm_net.validate_input()
+
+                self.assertEqual(
+                    dcnm_net.validated[0]["ipv4_acl_in"],
+                    ipv4_acl_in,
+                )
+
+    def test_dcnm_net_ipv4_acl_in_invalid_lengths_are_rejected(self):
+        for ipv4_acl_in in ("", "A" * 65):
+            with self.subTest(length=len(ipv4_acl_in)):
+                dcnm_net = self._build_ipv4_acl_validator(
+                    "4.3.1.0175006011",
+                    ipv4_acl_in,
+                )
+
+                with self.assertRaises(ValueError):
+                    dcnm_net.validate_input()
+
+                self.assertIn(
+                    "ipv4_acl_in",
+                    dcnm_net.module.fail_json.call_args.kwargs["msg"],
+                )
+
+    def test_dcnm_net_ipv4_acl_in_payload_serializes_template_key(self):
+        dcnm_net = self._build_ipv4_acl_payload_network(
+            "4.3.1.0175006011"
+        )
+
+        payload = dcnm_net.update_create_params(
+            {
+                "net_name": "acl-net",
+                "vrf_name": "Tenant-1",
+                "ipv4_acl_in": "ACL-IN",
+            }
+        )
+        template = json.loads(payload["networkTemplateConfig"])
+
+        self.assertEqual(template["inboundIpv4Acl"], "ACL-IN")
+        self.assertNotIn("IPV4_ACL_IN", template)
+
+    def test_dcnm_net_ipv4_acl_in_official_version_serializes_template_key(self):
+        dcnm_net = self._build_ipv4_acl_payload_network("4.4.1")
+
+        payload = dcnm_net.update_create_params(
+            {
+                "net_name": "acl-net",
+                "vrf_name": "Tenant-1",
+                "ipv4_acl_in": "ACL-IN",
+            }
+        )
+        template = json.loads(payload["networkTemplateConfig"])
+
+        self.assertEqual(template["inboundIpv4Acl"], "ACL-IN")
+        self.assertNotIn("IPV4_ACL_IN", template)
+
+    def test_dcnm_net_standard_create_rebuild_preserves_ipv4_acl_in(self):
+        dcnm_net = self._build_ipv4_acl_payload_network(
+            "4.3.1.0175006011"
+        )
+        payload = dcnm_net.update_create_params(
+            {
+                "net_name": "acl-net",
+                "net_id": 50001,
+                "vlan_id": 201,
+                "vrf_name": "Tenant-1",
+                "ipv4_acl_in": "ACL-IN",
+            }
+        )
+        dcnm_net.fabric_type = "multicluster_parent"
+        dcnm_net.dcnm_version = 12.4
+        dcnm_net.paths = {"GET_NET": "/networks/{}"}
+        dcnm_net.module = Mock(check_mode=False)
+        dcnm_net.result = {"changed": False, "response": []}
+        dcnm_net.diff_create_update = []
+        dcnm_net.diff_detach = []
+        dcnm_net.diff_undeploy = {}
+        dcnm_net.diff_delete = {}
+        dcnm_net.diff_create = [payload]
+        dcnm_net.diff_attach = []
+        dcnm_net.diff_deploy = {}
+        dcnm_net.populate_sn_maps_from_diffs = Mock()
+        dcnm_net.wait_for_network_attachments_del_ready = Mock(
+            return_value=True
+        )
+        dcnm_net.wait_for_network_del_ready = Mock(return_value=True)
+        dcnm_net.handle_response = Mock(return_value=(False, True))
+        self.run_dcnm_send.return_value = {
+            "RETURN_CODE": 200,
+            "DATA": {},
+        }
+
+        dcnm_net.push_to_remote()
+
+        sent_payload = json.loads(
+            self.run_dcnm_send.call_args.args[3]
+        )
+        sent_template = json.loads(
+            sent_payload["networkTemplateConfig"]
+        )
+        self.assertEqual(sent_template["inboundIpv4Acl"], "ACL-IN")
+        self.assertNotIn("IPV4_ACL_IN", sent_template)
+
+    def test_dcnm_net_multisite_bulk_create_uses_canonical_ipv4_acl_in_key(self):
+        dcnm_net = self._build_ipv4_acl_payload_network(
+            "4.3.1.0175006011"
+        )
+        payload = dcnm_net.update_create_params(
+            {
+                "net_name": "acl-net",
+                "net_id": 50001,
+                "vlan_id": 201,
+                "vrf_name": "Tenant-1",
+                "ipv4_acl_in": "ACL-IN",
+            }
+        )
+        dcnm_net.fabric_type = "multisite_parent"
+        dcnm_net.dcnm_version = 12.4
+        dcnm_net.paths = {
+            "GET_NET": "/networks/{}",
+            "GET_NET_BULK": "/bulk-create/networks",
+        }
+        dcnm_net.module = Mock(check_mode=False)
+        dcnm_net.result = {"changed": False, "response": []}
+        dcnm_net.diff_create_update = []
+        dcnm_net.diff_detach = []
+        dcnm_net.diff_undeploy = {}
+        dcnm_net.diff_delete = {}
+        dcnm_net.diff_create = [payload]
+        dcnm_net.diff_attach = []
+        dcnm_net.diff_deploy = {}
+        dcnm_net.populate_sn_maps_from_diffs = Mock()
+        dcnm_net.wait_for_network_attachments_del_ready = Mock(
+            return_value=True
+        )
+        dcnm_net.wait_for_network_del_ready = Mock(return_value=True)
+        dcnm_net.handle_response = Mock(return_value=(False, True))
+        self.run_dcnm_send.return_value = {
+            "RETURN_CODE": 200,
+            "DATA": {},
+        }
+
+        dcnm_net.push_to_remote()
+
+        self.assertEqual(
+            self.run_dcnm_send.call_args.args[2],
+            "/bulk-create/networks",
+        )
+        sent_payload = json.loads(
+            self.run_dcnm_send.call_args.args[3]
+        )
+        sent_template = json.loads(
+            sent_payload[0]["networkTemplateConfig"]
+        )
+        self.assertEqual(sent_template["inboundIpv4Acl"], "ACL-IN")
+        self.assertNotIn("IPV4_ACL_IN", sent_template)
+
+    def test_dcnm_net_unpatched_payload_omits_ipv4_acl_in(self):
+        for patch_version in (
+            None,
+            "4.3.1.0175006010",
+            "4.3.1.0175006012",
+            "4.4.0",
+            "4.4.0.9999999999",
+        ):
+            with self.subTest(patch_version=patch_version):
+                dcnm_net = self._build_ipv4_acl_payload_network(
+                    patch_version
+                )
+
+                payload = dcnm_net.update_create_params(
+                    {
+                        "net_name": "acl-net",
+                        "vrf_name": "Tenant-1",
+                    }
+                )
+                template = json.loads(
+                    payload["networkTemplateConfig"]
+                )
+
+                self.assertNotIn("inboundIpv4Acl", template)
+                self.assertNotIn("IPV4_ACL_IN", template)
+
+    def test_dcnm_net_replaced_and_overridden_omission_reset_ipv4_acl_in(self):
+        for state in ("replaced", "overridden"):
+            with self.subTest(state=state):
+                dcnm_net = self._build_ipv4_acl_payload_network(
+                    "4.3.1.0175006011"
+                )
+                dcnm_net.params["state"] = state
+                dcnm_net.module = Mock()
+
+                want = dcnm_net.update_create_params(
+                    {
+                        "net_name": "acl-net",
+                        "vrf_name": "Tenant-1",
+                    }
+                )
+                have_template = json.loads(
+                    want["networkTemplateConfig"]
+                )
+                have_template["inboundIpv4Acl"] = "ACL-IN"
+                have = copy.deepcopy(want)
+                have["networkTemplateConfig"] = json.dumps(
+                    have_template
+                )
+
+                diff = dcnm_net.diff_for_create(want, have)
+
+                updated_template = json.loads(
+                    diff[0]["networkTemplateConfig"]
+                )
+                self.assertEqual(updated_template["inboundIpv4Acl"], "")
+                self.assertTrue(diff[-1])
+
+    def test_dcnm_net_normalize_preserves_returned_ipv4_acl_in(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(
+            dcnm_network.DcnmNetwork
+        )
+        dcnm_net.dcnm_version = 12
+        dcnm_net.patch_version = None
+        dcnm_net.fabric_type = "standalone"
+        template = self._build_secondary_ip_network_template()
+        template["inboundIpv4Acl"] = "ACL-IN"
+        network = self._build_secondary_ip_update_payload(template)
+
+        normalized = dcnm_net.normalize_have_network(network)
+        normalized_template = json.loads(
+            normalized["networkTemplateConfig"]
+        )
+
+        self.assertEqual(
+            normalized_template["inboundIpv4Acl"],
+            "ACL-IN",
+        )
+
+    def test_dcnm_net_normalize_accepts_legacy_ipv4_acl_in_key(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(
+            dcnm_network.DcnmNetwork
+        )
+        dcnm_net.dcnm_version = 12
+        dcnm_net.patch_version = None
+        dcnm_net.fabric_type = "standalone"
+        template = self._build_secondary_ip_network_template()
+        template["IPV4_ACL_IN"] = "ACL-IN"
+        network = self._build_secondary_ip_update_payload(template)
+
+        normalized = dcnm_net.normalize_have_network(network)
+        normalized_template = json.loads(
+            normalized["networkTemplateConfig"]
+        )
+
+        self.assertEqual(
+            normalized_template["inboundIpv4Acl"],
+            "ACL-IN",
+        )
+        self.assertNotIn("IPV4_ACL_IN", normalized_template)
+
+    def test_dcnm_net_empty_canonical_ipv4_acl_in_overrides_legacy_echo(self):
+        dcnm_net = self._build_ipv4_acl_payload_network(
+            "4.3.1.0175006011"
+        )
+        dcnm_net.module = Mock()
+        want_template = self._build_secondary_ip_network_template()
+        want_template["inboundIpv4Acl"] = "ACL-IN"
+        have_template = self._build_secondary_ip_network_template()
+        have_template["inboundIpv4Acl"] = ""
+        have_template["IPV4_ACL_IN"] = "ACL-IN"
+        want = self._build_secondary_ip_update_payload(want_template)
+        raw_have = self._build_secondary_ip_update_payload(have_template)
+
+        normalized = dcnm_net.normalize_have_network(raw_have)
+        normalized_template = json.loads(
+            normalized["networkTemplateConfig"]
+        )
+        diff = dcnm_net.diff_for_create(want, normalized)
+
+        self.assertEqual(
+            normalized_template["inboundIpv4Acl"],
+            "",
+        )
+        self.assertNotIn("IPV4_ACL_IN", normalized_template)
+        self.assertEqual(
+            json.loads(diff[0]["networkTemplateConfig"])[
+                "inboundIpv4Acl"
+            ],
+            "ACL-IN",
+        )
+        self.assertTrue(diff[-1])
+
+    def test_dcnm_net_merged_omission_preserves_returned_ipv4_acl_in(self):
+        dcnm_net = self._build_secondary_ip_update_network()
+        dcnm_net.patch_version = None
+        have_template = self._build_secondary_ip_network_template()
+        have_template["inboundIpv4Acl"] = "ACL-IN"
+        want_template = self._build_secondary_ip_network_template()
+        have = self._build_secondary_ip_update_payload(have_template)
+        want = self._build_secondary_ip_update_payload(want_template)
+
+        dcnm_net.dcnm_update_network_information(want, have, {})
+
+        updated_template = json.loads(want["networkTemplateConfig"])
+        self.assertEqual(updated_template["inboundIpv4Acl"], "ACL-IN")
+
+    def test_dcnm_net_unpatched_unrelated_update_preserves_ipv4_acl_in(self):
+        dcnm_net = self._build_ipv4_acl_payload_network()
+        dcnm_net.module = Mock()
+        want_template = self._build_secondary_ip_network_template()
+        want_template["vlanName"] = "new-name"
+        have_template = self._build_secondary_ip_network_template()
+        have_template["vlanName"] = "old-name"
+        have_template["inboundIpv4Acl"] = "ACL-IN"
+        want = self._build_secondary_ip_update_payload(want_template)
+        have = self._build_secondary_ip_update_payload(have_template)
+
+        diff = dcnm_net.diff_for_create(want, have)
+
+        updated_template = json.loads(
+            diff[0]["networkTemplateConfig"]
+        )
+        self.assertEqual(updated_template["inboundIpv4Acl"], "ACL-IN")
         self.assertFalse(diff[-1])
+
+    def test_dcnm_net_formatted_output_includes_ipv4_acl_in(self):
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(
+            dcnm_network.DcnmNetwork
+        )
+        template = self._build_secondary_ip_network_template()
+        template["inboundIpv4Acl"] = "ACL-IN"
+        dcnm_net.diff_create = [
+            self._build_secondary_ip_update_payload(template)
+        ]
+        dcnm_net.diff_create_quick = []
+        dcnm_net.diff_create_update = []
+        dcnm_net.diff_attach = []
+        dcnm_net.diff_detach = []
+        dcnm_net.diff_deploy = {}
+        dcnm_net.diff_undeploy = {}
+        dcnm_net.dcnm_version = 12
+        dcnm_net.patch_version = None
+
+        dcnm_net.format_diff()
+
+        self.assertEqual(
+            dcnm_net.diff_input_format[0]["ipv4_acl_in"],
+            "ACL-IN",
+        )
+
+    def test_dcnm_net_ipv4_acl_in_equal_state_is_idempotent(self):
+        dcnm_net = self._build_ipv4_acl_payload_network(
+            "4.3.1.0175006011"
+        )
+        dcnm_net.module = Mock()
+        template = self._build_secondary_ip_network_template()
+        template["inboundIpv4Acl"] = "ACL-IN"
+        want = self._build_secondary_ip_update_payload(template)
+        have = copy.deepcopy(want)
+
+        diff = dcnm_net.diff_for_create(want, have)
+
+        self.assertEqual(diff[0], {})
+        self.assertFalse(diff[-1])
+
+    def test_dcnm_net_ipv4_acl_in_change_sets_redeploy_flag(self):
+        dcnm_net = self._build_ipv4_acl_payload_network(
+            "4.3.1.0175006011"
+        )
+        dcnm_net.module = Mock()
+        want_template = self._build_secondary_ip_network_template()
+        want_template["inboundIpv4Acl"] = "ACL-IN-NEW"
+        have_template = self._build_secondary_ip_network_template()
+        have_template["inboundIpv4Acl"] = "ACL-IN-OLD"
+        want = self._build_secondary_ip_update_payload(want_template)
+        have = self._build_secondary_ip_update_payload(have_template)
+
+        diff = dcnm_net.diff_for_create(want, have)
+
+        self.assertEqual(
+            json.loads(diff[0]["networkTemplateConfig"])[
+                "inboundIpv4Acl"
+            ],
+            "ACL-IN-NEW",
+        )
+        self.assertTrue(diff[-1])
+
+    def test_dcnm_net_split_rejects_ipv4_acl_in_child_override(self):
+        action = dcnm_network_action.ActionModule.__new__(
+            dcnm_network_action.ActionModule
+        )
+        fabrics = {
+            "msd-parent": {
+                "type": "multisite_parent",
+                "fabricParent": "None",
+                "cluster_name": "",
+            },
+            "msd-child-1": {
+                "type": "multisite_child",
+                "fabricParent": "msd-parent",
+                "cluster_name": "",
+            },
+        }
+        config = [
+            {
+                "net_name": "acl-net",
+                "vrf_name": "Tenant-1",
+                "ipv4_acl_in": "PARENT-ACL",
+                "child_fabric_config": [
+                    {
+                        "fabric": "msd-child-1",
+                        "ipv4_acl_in": "CHILD-ACL",
+                    }
+                ],
+            }
+        ]
+
+        configs, error_msg = action._split_config(
+            fabrics,
+            "msd-parent",
+            config,
+            "merged",
+            {},
+            12,
+            "12.4.1.245",
+        )
+
+        self.assertIsNone(configs)
+        self.assertIn("ipv4_acl_in", error_msg)
+        self.assertIn("child", error_msg.lower())
+
+    def test_dcnm_net_action_forwards_patch_version_to_module(self):
+        action = dcnm_network_action.ActionModule.__new__(
+            dcnm_network_action.ActionModule
+        )
+        action._execute_module = Mock(return_value={"changed": False})
+        configs = [
+            {
+                "fabric": "standalone-fabric",
+                "_fabric_details": {
+                    "fabric_type": "standalone",
+                    "cluster_name": "",
+                },
+                "state": "merged",
+                "config": [
+                    {
+                        "net_name": "acl-net",
+                        "vrf_name": "Tenant-1",
+                        "ipv4_acl_in": "ACL-IN",
+                    }
+                ],
+            }
+        ]
+        module_args = {
+            "fabric": "standalone-fabric",
+            "state": "merged",
+            "config": configs[0]["config"],
+            "patch_version": "4.3.1.0175006011",
+        }
+
+        result = action._execute_fabric_configs(
+            configs,
+            module_args,
+            {"changed": False},
+            {},
+            None,
+        )
+
+        self.assertEqual(result, {"changed": False})
+        forwarded_args = action._execute_module.call_args.kwargs[
+            "module_args"
+        ]
+        self.assertEqual(
+            forwarded_args["patch_version"],
+            "4.3.1.0175006011",
+        )
 
     def test_dcnm_net_secondary_gws_template_config(self):
         template_conf = self._build_secondary_ip_network_template(
