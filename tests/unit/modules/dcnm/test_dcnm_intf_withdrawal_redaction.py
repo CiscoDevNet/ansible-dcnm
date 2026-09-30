@@ -33,6 +33,10 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
+    resolve_binding as _resolve_binding,
+)
+
 from .gie_withdrawal_harness import (
     IF_A,
     ROUTED,
@@ -123,8 +127,17 @@ def test_input_material_is_redacted_on_the_c8_refusal_which_must_fail_for_its_ow
     DERIVED: this named `ospf_cost` until G37 measured its reset.
     """
     unclassifiable = an_unclassifiable_key(ROUTED)
+    # The VALUE is derived from the row's declared type, not hardcoded. It used to be the
+    # literal `100`, which silently assumed the derived row was an integer; once a local
+    # EXPERIMENTAL generation registered the last unclassifiable integers on this parent the
+    # helper began returning a STRING row and `build_have` refused the int before any payload
+    # existed -- the case then failed deep in the harness instead of stating the real problem.
+    _b = _resolve_binding(ROUTED, unclassifiable)
+    # Keep the synthetic string within ospf_tag's public length bound so the
+    # C8 refusal, rather than input validation, remains the branch under test.
+    probe_value = {"integer": 100, "boolean": True}.get(_b["type"], "PILOT-UNCLASSIFIED")
     have = build_have(ROUTED, enable_ospf_auth=True, ospf_auth_key=MARKER,
-                      ospf_auth_key_id=9, **{unclassifiable: 100})
+                      ospf_auth_key_id=9, **{unclassifiable: probe_value})
     out, calls = emit_real_result(
         _routed_cfg(enable_ospf_auth=True, ospf_auth_key=MARKER, ospf_auth_key_id=9),
         "replaced", have)
@@ -132,7 +145,7 @@ def test_input_material_is_redacted_on_the_c8_refusal_which_must_fail_for_its_ow
     assert doc.get("failed"), "this case advertises the C8 refusal; the run succeeded"
     msg = str(doc.get("msg", ""))
     assert unclassifiable in msg and "cannot be classified" in msg, msg
-    assert "100" not in msg, "the refusal named the value"
+    assert str(probe_value) not in msg, "the refusal named the value"
     assert len(split_calls(calls)["updates"]) == 0
     assert MARKER not in out, "a refusal serialised the material it was handed"
 

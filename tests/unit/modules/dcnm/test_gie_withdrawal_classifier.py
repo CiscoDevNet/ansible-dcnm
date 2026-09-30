@@ -8,19 +8,9 @@ must live inside the function itself, and that copy needs its own proof.
 
 NOT LIVE TESTED IN THIS GENERATION.
 
-REHOMED AGAIN 2026-09-28 (PR725-SMU-LLDP-ROUTED-002): the C7 counter-example moved from
-``int_routed_host::disable_lldp_receive`` to ``int_routed_host::disable_bfd_echo``, because the
-LLDP row gained a measured reset and stopped being unsupported. Three cases in this file were
-PASSING before the move -- asserting "the run must refuse" against a row that now resets cleanly --
-so the staleness was partly silent. That is guarded now by ``FIXTURE_CONTRACTS`` in
-``test_gie_routed_lldp_reset.py`` -- a table of every fixture these suites rely on with the
-property each one needs, checked PER PARENT -- which fails loudly the next time a row this file
-depends on gains or loses a reset. (It replaced an earlier single-row guard,
-``test_the_rehomed_c7_row_is_genuinely_unsupported``, which covered only the ROUTED row; that
-guard was retired rather than left alongside, because two sources of the same truth drift apart.)
-The ACCESS occurrences were deliberately NOT touched: that row does carry a reset and
-serves as a positive example, and ``disable_bfd_echo`` is not registered on that parent at all, so
-rewriting them would have resolved to no binding and passed vacuously.
+The unsupported routed fixture is now ``eigrp_ipv4_passive`` because PIM/BFD
+gained a measured reset. ``FIXTURE_CONTRACTS`` checks its registration and
+no-reset property per parent. ACCESS positive cases keep their own measured rows.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -42,6 +32,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
 
 ACCESS = "int_access_host"
 ROUTED = "int_routed_host"
+SUBIF = "int_subif"
+SVI = "int_vlan"
 OK = "12.6.0.267"
 
 
@@ -95,7 +87,7 @@ def test_both_encodings_of_a_non_default_also_agree(have):
     unsupported-but-applicable row -- a declared default, no established reset -- so the
     guarantee moves rather than weakening.
     """
-    action, _ = gie_withdrawal_action(ROUTED, "disable_bfd_echo", have, OK)
+    action, _ = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", have, OK)
     assert action == GIE_WITHDRAW_UNSUPPORTED
 
 
@@ -114,8 +106,8 @@ def test_normalisation_does_not_turn_an_empty_string_into_a_false():
     """
     # REHOMED to int_routed_host for the same reason as above: the access row now has a
     # reset, and this case needs one that does not.
-    empty, _ = gie_withdrawal_action(ROUTED, "disable_bfd_echo", "", OK)
-    false_wire, _ = gie_withdrawal_action(ROUTED, "disable_bfd_echo", "false", OK)
+    empty, _ = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", "", OK)
+    false_wire, _ = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", "false", OK)
     assert false_wire == GIE_WITHDRAW_NONE
     assert empty != GIE_WITHDRAW_RESET, (
         "an empty HAVE produced a reset; absence is not a configured value")
@@ -127,15 +119,20 @@ def test_an_integer_zero_is_not_an_empty_value():
     The key is DERIVED, not named: this used `ospf_cost` until G37 measured its reset, which is
     the second time a registration invalidated a hardcoded example here.
     """
-    key = an_unclassifiable_key(ROUTED, "integer")
-    zero, _ = gie_withdrawal_action(ROUTED, key, 0, OK)
-    empty, _ = gie_withdrawal_action(ROUTED, key, "", OK)
+    # REHOMED to `int_vlan`, for the same reason as the decision-table row below and one step
+    # further: the dampening generation consumed `int_routed_host`'s last unclassifiable integers,
+    # BETA moved this to `int_subif`, and this union registers the three BFD timers there too.
+    # `int_vlan` still carries four (the HSRP integers). The harness asserts loudly when a parent
+    # runs out, which is how this was caught.
+    key = an_unclassifiable_key(SVI, "integer")
+    zero, _ = gie_withdrawal_action(SVI, key, 0, OK)
+    empty, _ = gie_withdrawal_action(SVI, key, "", OK)
     assert zero == GIE_WITHDRAW_UNCLASSIFIED, (
         "a real integer value was treated as absence (%s)" % key)
     assert empty == GIE_WITHDRAW_UNCLASSIFIED
     # They classify the same here only because this row has neither metadata; the point is
     # that "0" and "" took different routes to get there, not that they are interchangeable.
-    assert gie_withdrawal_action(ROUTED, key, "0", OK)[0] == zero
+    assert gie_withdrawal_action(SVI, key, "0", OK)[0] == zero
 
 
 # ------------------------------------------------------------------ the decision table
@@ -147,10 +144,21 @@ def test_an_integer_zero_is_not_an_empty_value():
     (ACCESS, "disable_lldp_receive", "false", GIE_WITHDRAW_NONE),   # at declared default
     # REHOMED: access disable_lldp_receive now carries a reset, so the
     # differs-without-a-reset row moves to a parent where that is still true.
-    (ROUTED, "disable_bfd_echo", "true", GIE_WITHDRAW_UNSUPPORTED),
-    # DERIVED: `ospf_cost` held this slot until G37 measured its reset.
-    (ROUTED, an_unclassifiable_key(ROUTED, "integer"), "100", GIE_WITHDRAW_UNCLASSIFIED),
-    (ACCESS, an_unclassifiable_key(ROUTED, "integer"), "100", GIE_WITHDRAW_NONE),
+    # BFD echo and PIM/BFD gained measured resets in separate campaigns. The
+    # withheld EIGRP passive row remains a registered no-reset example.
+    (ROUTED, "eigrp_ipv4_passive", "true", GIE_WITHDRAW_UNSUPPORTED),
+    # DERIVED, and REHOMED THREE TIMES NOW. `ospf_cost` held this slot until G37 measured its
+    # reset; the five dampening integers held it next, which is why BETA moved it to `int_subif`;
+    # and THIS union registers the three BFD timers on `int_subif` as well, so that parent has run
+    # out too. Measured on the integrated table: int_routed_host 0 candidates, int_subif 0,
+    # int_vlan 4 (the HSRP integers). So it moves to `int_vlan`.
+    #
+    # The harness refuses to let this pass vacuously -- `an_unclassifiable_key` asserts loudly
+    # when a parent has no candidate left -- which is exactly how this was caught rather than
+    # discovered by a green suite. Deriving the key keeps the row honest the next time a
+    # generation consumes the last candidate on a parent.
+    (SVI, an_unclassifiable_key(SVI, "integer"), "100", GIE_WITHDRAW_UNCLASSIFIED),
+    (ACCESS, an_unclassifiable_key(SVI, "integer"), "100", GIE_WITHDRAW_NONE),
 ], ids=["reset_already_applied", "reset_needed", "default_is_the_reset",
         "enum_needs_reset", "at_declared_default", "differs_no_reset",
         "no_metadata", "not_on_this_parent"])

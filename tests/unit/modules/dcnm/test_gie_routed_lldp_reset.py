@@ -206,7 +206,40 @@ def test_rerun_over_the_reset_converges(key, nvpair, companion, comp_nv):
 
 # --------------------------------------------------------------- scope of the registration
 
-SISTERS_WITHOUT_RESET = ["enable_ospf", "ospf_area_id", "ospf_tag", "disable_bfd_echo"]
+# `ospf_area_id` LEAVES this list: the OSPF-ALL campaign (profile P4) measured and registered its
+# reset `0.0.0.0` on all four parents on 2026-09-28, so it is no longer a sister WITHOUT a reset,
+# and demanding that it refuse would assert the opposite of the evidence.
+#
+# `enable_ospf` LEAVES it too: the OSPF-ALL campaign (profile P5) measured and registered its
+# reset `'false'` on int_routed_host, int_subif and int_vlan on 2026-09-29, with every dependent
+# field at its neutral. int_loopback IS ALSO REGISTERED, in a non-default VRF:
+#
+#   * In the `default` VRF of a fabric that routes with OSPF the withdrawal is UNOBSERVABLE on
+#     the device -- the parent emits the association by DISJUNCTION and the second branch does
+#     not consult the gate, so the line survives while the controller stores `ospf=false`. That
+#     boundary is real and stays documented here.
+#   * With `intfVrf != "default"` the second branch is false and the withdrawal IS visible, which
+#     is what the campaign measured and what the row was registered on.
+#
+# `disable_bfd_echo` LEAVES it in THIS generation: the BFD campaign measured and registered its
+# reset `'false'` on int_routed_host and int_vlan, so it stopped being an unregistered example.
+# BETA subsequently registered PIM/BFD, so the unsupported fixture now uses
+# `eigrp_ipv4_passive`, a declared routed row with default false and no reset.
+#
+# The two that remain carry NO REGISTERED reset: `ospf_tag` and `eigrp_ipv4_passive`.
+#
+# Said precisely, because an earlier wording overreached. `ospf_tag` declares no defaultValue and
+# carries minLength=1, so NOTHING WAS MEASURED for it -- which is not the same as "no withdrawal
+# value exists": the engine's reviewed `""` exemption does admit the empty string on a plain
+# string binding, and the withdrawal path transports a declared wire value without passing
+# through public input validation. `eigrp_ipv4_passive` is a withheld EIGRP
+# identity; this integration does not infer a reset from a different EIGRP row.
+# Both are UNMEASURED, and they stay in this list because fail-closed is what an unregistered row
+# must do, not because their behaviour has been ruled out.
+#
+# The list stays EXPLICIT on purpose: deriving it from the table would make it unable to detect
+# a registration nobody declared.
+SISTERS_WITHOUT_RESET = ["ospf_tag", "eigrp_ipv4_passive"]
 
 
 @pytest.mark.parametrize("key", SISTERS_WITHOUT_RESET)
@@ -229,22 +262,19 @@ def test_a_sister_binding_on_the_same_parent_still_refuses(key):
     assert wire is None
 
 
-# The two vPC parents declare the same public keys and were NOT measured: SMU90 has one leaf and one
-# spine, no `feature vpc`, so no vPC pair exists to test them on. Registering them from this parent's
-# result is exactly the "copy it to the other parents" move the mandate forbids, and this case is what
-# would catch it.
+# ALPHA measured both vPC parents on its paired fabric. These checks name the
+# per-parent result; the routed measurement alone is not their evidence.
 VPC_PARENTS = ["int_vpc_access_host", "int_vpc_trunk_host"]
 
 
 @pytest.mark.parametrize("parent", VPC_PARENTS)
 @pytest.mark.parametrize("key", [TX, RX])
-def test_the_unmeasured_vpc_parents_did_not_inherit_the_reset(parent, key):
-    """Same public key, different parent, no measurement: still no reset."""
+def test_the_measured_vpc_parents_have_their_own_reset(parent, key):
+    """ALPHA measured both vPC parents; keep their exact independent registrations."""
     binding = resolve_binding(parent, key)
     assert binding is not None, "{0}::{1} is not registered".format(parent, key)
-    assert binding.get("reset_wire") is None, (
-        "{0}::{1} gained a reset from the routed measurement; support is per parent and this one "
-        "was never measured".format(parent, key))
+    assert binding.get("reset_wire") == "false"
+    assert isinstance(binding["reset_wire"], str)
 
 
 # --------------------------------------------------------------- fixtures other suites depend on
@@ -259,7 +289,9 @@ def test_the_unmeasured_vpc_parents_did_not_inherit_the_reset(parent, key):
 # History of this exact fixture:
 #   * it was ``int_access_host::disable_lldp_receive``; the access batch measured its reset, so the
 #     C7 cases were rehomed to ``int_routed_host::disable_lldp_receive``;
-#   * this lot measured that one, so they were rehomed again, to ``int_routed_host::disable_bfd_echo``;
+#   * a later lot measured that one, so they were rehomed again, to ``int_routed_host::disable_bfd_echo``;
+#   * PR725-BFD-ALL-001 measured `disable_bfd_echo` on routed and vlan; BETA later
+#     measured PIM/BFD, so this integration uses routed `eigrp_ipv4_passive`.
 #   * in doing so I over-replaced and put ``bfdEcho`` into two ACCESS cases where it is NOT
 #     registered at all, making them pass while exercising nothing. The peer review caught it.
 #
@@ -269,12 +301,12 @@ def test_the_unmeasured_vpc_parents_did_not_inherit_the_reset(parent, key):
 # configured value classifies as UNSUPPORTED rather than UNCLASSIFIED.
 FIXTURE_CONTRACTS = [
     # (parent, key, requirement, which cases depend on it)
-    pytest.param(ROUTED, "disable_bfd_echo", "no_reset",
+    pytest.param(ROUTED, "eigrp_ipv4_passive", "no_reset",
                  "the C7 unsupported row: test_c7_*, test_check_mode_also_refuses_*, "
                  "test_valid_first_interface_unsupported_second_*, "
                  "test_merged_is_never_blocked_by_an_unsupported_row, and the classifier's "
                  "differs_no_reset row",
-                 id="routed-bfd_echo-no_reset"),
+                 id="routed-eigrp_ipv4_passive-no_reset"),
     pytest.param(ACCESS, "disable_lldp_receive", "reset",
                  "test_equivalent_have_encodings_classify_identically (needs a REGISTERED row so "
                  "the HAVE validator processes both encodings) and "

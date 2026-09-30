@@ -162,15 +162,37 @@ def test_a_configured_enum_without_a_measured_reset_still_fails_closed_when_omit
     unregistered neutral enums, the guard below says so loudly instead of the case passing
     for the wrong reason.
     """
+    # MEASURED 2026-09-28: the table no longer holds a SINGLE enum that lacks a reset while
+    # carrying `no_change` in its vocabulary -- zero rows. Profiles P1 and P2 of the OSPF-ALL
+    # campaign measured and registered the last of them (`ospf_network_type` on three parents,
+    # `ospf_passive_mode` on int_vlan, `ospf_bfd_mode` on routed and vlan). This case ran out of
+    # an example, and its own message asked for it to be rehomed deliberately, not deleted.
+    #
+    # THE CONTRACT IT GUARDS DID NOT CHANGE: a configured value on a row WITHOUT a measured
+    # reset still refuses. What changed is where the example comes from: no longer "an enum with
+    # a neutral vocabulary" -- there is none -- but "an enum with a declared default and no
+    # reset", which is the same engine property without depending on a vocabulary that ran out.
     without_reset = [(p, k, nv) for (p, k, nv) in NEUTRAL_ROWS
                      if (engine.resolve_binding(p, k) or {}).get("reset_wire") is None]
+    if not without_reset:
+        rows = list(engine.BINDING_TABLE.values()) if isinstance(engine.BINDING_TABLE, dict) \
+            else list(engine.BINDING_TABLE)
+        without_reset = [(r["parent_template"], r["profile_key"], r["parent_nvpair"])
+                         for r in rows
+                         if r["type"] == "enum" and r.get("reset_wire") is None
+                         and r.get("default_template") is not None]
     assert without_reset, (
-        "every reviewed neutral enum now carries a reset; this case has nothing left to "
-        "guard and must be rehomed deliberately, not deleted")
+        "every enum in the table now carries a reset; this case has nothing left to guard and "
+        "must be rehomed deliberately, not deleted")
     for parent, profile_key, _nvpair in without_reset:
         binding = engine.resolve_binding(parent, profile_key)
-        configured = next(v for pub, v in binding["wire_values"].items()
-                          if pub != "no_change")
+        vocab = binding.get("wire_values") or {}
+        if vocab:
+            configured = next(v for pub, v in vocab.items() if pub != "no_change")
+        else:
+            # no declared vocabulary: any value other than the default counts as "configured"
+            d = binding["default_template"]
+            configured = "0" if str(d) != "0" else "7"
         action, _wire = engine.gie_withdrawal_action(
             parent, profile_key, configured, SUPPORTED)
         assert action == engine.GIE_WITHDRAW_UNSUPPORTED, (
