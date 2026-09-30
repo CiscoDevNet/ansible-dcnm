@@ -29,17 +29,10 @@ integration coverage and is not counted as such.
 
 NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted.
 
-REHOMED AGAIN 2026-09-28 (PR725-SMU-LLDP-ROUTED-002): the C7 counter-example moved from
-``int_routed_host::disable_lldp_receive`` to ``int_routed_host::disable_bfd_echo``, because the
-LLDP row gained a measured reset and stopped being unsupported. Three cases in this file were
-PASSING before the move -- asserting "the run must refuse" against a row that now resets cleanly --
-so the staleness was partly silent. That is guarded now by ``FIXTURE_CONTRACTS`` in
-``test_gie_routed_lldp_reset.py`` -- a table of every fixture these suites rely on with the
-property each one needs, checked PER PARENT -- which fails loudly the next time a row this file
-depends on gains or loses a reset. (It replaced an earlier single-row guard,
-``test_the_rehomed_c7_row_is_genuinely_unsupported``, which covered only the ROUTED row; that
-guard was retired rather than left alongside, because two sources of the same truth drift apart.)
-The ACCESS occurrences were deliberately NOT touched: that row does carry a reset and
+The C7 unsupported fixture is now ``int_routed_host::eigrp_ipv4_passive``. PIM/BFD gained
+a measured reset in BETA's campaign, so it could no longer prove the refusal. The
+per-parent ``FIXTURE_CONTRACTS`` guard checks that the replacement is registered,
+declares a default, and still has no reset. The ACCESS positive cases remain separate.
 serves as a positive example, and ``disable_bfd_echo`` is not registered on that parent at all, so
 rewriting them would have resolved to no binding and passed vacuously.
 """
@@ -59,6 +52,7 @@ from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as mod
 
 from .gie_withdrawal_harness import (
     ACCESS,
+    GROUPED_ONLY_NO_PER_ROW_FIXTURE,
     BELOW,
     IF_A,
     IF_B,
@@ -75,6 +69,7 @@ from .gie_withdrawal_harness import (
     wire_of,
     TRUNK,
     base_for,
+    want_omitting,
     build_have,
     cfg,
     cfg_for,
@@ -119,6 +114,15 @@ def test_the_fixture_matrix_covers_every_registered_reset():
     registered = {(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE
                   if b.get("reset_wire") is not None}
     fixtures = {(p, n) for p, n, _k, _a, _r, _e in PILOT_ALL_ITEMS}
+    # Identities whose per-row omission cannot describe a reachable controller state are
+    # DECLARED, never silently dropped. The two assertions below keep this honest: the set
+    # must not be empty (or it is dead weight hiding nothing) and every member must actually
+    # be registered (or it is parking a row that does not exist).
+    assert GROUPED_ONLY_NO_PER_ROW_FIXTURE, "the grouped-only declaration is empty"
+    undeclared = {k for k in GROUPED_ONLY_NO_PER_ROW_FIXTURE if k not in registered}
+    assert not undeclared, (
+        "grouped-only names an identity that is not registered: %s" % sorted(undeclared))
+    registered = registered - set(GROUPED_ONLY_NO_PER_ROW_FIXTURE)
     assert fixtures, "the fixture matrix collected nothing; every test below is a no-op"
     assert fixtures == registered, (
         "fixture matrix and registry disagree.\n  registered but untested: %s\n"
@@ -164,7 +168,7 @@ def test_omission_alone_under_replaced_emits_the_verified_reset(
 ):
     """Omission with NOTHING else changed must produce the reset in the outbound request."""
     have = build_have(parent, key, applied, **extra)
-    result, calls = run(base_for(parent, **extra), "replaced", have, **_pkw(parent))
+    result, calls = run(want_omitting(parent, key, **extra), "replaced", have, **_pkw(parent))
     nv = request_nvpairs(calls)
     assert nv, ("no request was sent at all: the omission was not detected. changed=%s"
                 % result.get("changed"))
@@ -178,7 +182,7 @@ def test_omission_alone_under_replaced_emits_the_verified_reset(
 def test_the_reset_is_reported_in_the_public_diff(parent, nvpair, key, applied, reset, extra):
     """The guard against transmitting what is never reported."""
     have = build_have(parent, key, applied, **extra)
-    result, calls = run(base_for(parent, **extra), "replaced", have, **_pkw(parent))
+    result, calls = run(want_omitting(parent, key, **extra), "replaced", have, **_pkw(parent))
     assert request_nvpairs(calls), "no request was sent; the request half fails first"
     reported = [nv for nv in diff_nvpairs(result) if nvpair in nv]
     assert reported, (
@@ -198,7 +202,7 @@ def test_retained_interface_under_overridden_follows_the_same_contract(
     keeps its existing coverage in `test_dcnm_intf_override_authority_scope.py`.
     """
     have = build_have(parent, key, applied, **extra)
-    result, calls = run_configs([cfg_for(parent, base_for(parent, **extra), deploy=False)],
+    result, calls = run_configs([cfg_for(parent, want_omitting(parent, key, **extra), deploy=False)],
                                 "overridden", have)
     nv = request_nvpairs(calls)
     assert nv, ("retained interface under overridden sent no request (changed=%s)"
@@ -223,7 +227,7 @@ def test_apply_then_omit_then_identical_rerun_converges(
     """
     have = build_have(parent, key, applied, **extra)
 
-    first, calls1 = run(base_for(parent, **extra), "replaced", have, **_pkw(parent))
+    first, calls1 = run(want_omitting(parent, key, **extra), "replaced", have, **_pkw(parent))
     split1 = split_calls(calls1)
     assert len(split1["updates"]) == 1, "positive control: expected exactly one update"
     assert len(split1["deploys"]) == 1, (
@@ -234,7 +238,7 @@ def test_apply_then_omit_then_identical_rerun_converges(
 
     have2 = copy.deepcopy(have)
     have2[0]["interfaces"][0]["nvPairs"][nvpair] = emitted
-    second, calls2 = run(base_for(parent, **extra), "replaced", have2, **_pkw(parent))
+    second, calls2 = run(want_omitting(parent, key, **extra), "replaced", have2, **_pkw(parent))
     split2 = split_calls(calls2)
     assert len(split2["updates"]) == 0 and len(split2["deploys"]) == 0, (
         "the same omitted input against the state the module itself produced sent "
@@ -269,7 +273,7 @@ def test_a_real_change_still_writes_and_deploys():
 @pytest.mark.parametrize("parent,nvpair,key,applied,reset,extra", PILOT_ITEMS, ids=PILOT_IDS)
 def test_merged_omission_is_a_no_op(parent, nvpair, key, applied, reset, extra):
     have = build_have(parent, key, applied, **extra)
-    result, calls = run(base_for(parent, **extra), "merged", have, **_pkw(parent))
+    result, calls = run(want_omitting(parent, key, **extra), "merged", have, **_pkw(parent))
     assert len(split_calls(calls)["updates"]) == 0
     assert result.get("changed") is False
 
@@ -280,7 +284,7 @@ def test_merged_unrelated_update_preserves_the_omitted_value(
 ):
     """An unrelated edit under merged must re-send the controller's value, not reset it."""
     have = build_have(parent, key, applied, **extra)
-    result, calls = run(base_for(parent, description="changed-under-merged", **extra), "merged", have, **_pkw(parent))
+    result, calls = run(want_omitting(parent, key, description="changed-under-merged", **extra), "merged", have, **_pkw(parent))
     nv = request_nvpairs(calls)
     assert nv, "the description change produced no request"
     # `wire_for` rather than `wire_of`: preservation is compared against the WIRE spelling of
@@ -293,7 +297,7 @@ def test_merged_is_never_blocked_by_an_unsupported_row():
     """merged has no withdrawal contract, so C7/C8 must not fire for it at all.
     Rehomed to the routed parent with the rest of the C7 family."""
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["bfdEcho"] = "true"
+    have[0]["interfaces"][0]["nvPairs"]["eigrpIpv4Passive"] = "true"
     result, calls = run_configs(
         [cfg(IF_A, base_for(ROUTED, description="x"))], "merged", have)
     assert not result.get("failed"), result.get("msg")
@@ -385,7 +389,7 @@ def test_an_explicit_non_default_value_is_not_withdrawn(
 @pytest.mark.parametrize("parent,nvpair,key,applied,reset,extra", PILOT_ITEMS, ids=PILOT_IDS)
 def test_check_mode_reports_the_reset_without_writing(parent, nvpair, key, applied, reset, extra):
     have = build_have(parent, key, applied, **extra)
-    result, calls = run(base_for(parent, **extra), "replaced", have, check_mode=True, **_pkw(parent))
+    result, calls = run(want_omitting(parent, key, **extra), "replaced", have, check_mode=True, **_pkw(parent))
     assert len(split_calls(calls)["updates"]) == 0, "check mode sent a configuration request"
     reported = [nv for nv in diff_nvpairs(result) if nvpair in nv]
     assert reported and reported[0][nvpair] == reset, (
@@ -404,20 +408,20 @@ def test_c7_configured_value_without_an_established_reset_refuses_the_run():
     a declared default of false, and no established reset.
     """
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["bfdEcho"] = "true"
+    have[0]["interfaces"][0]["nvPairs"]["eigrpIpv4Passive"] = "true"
     result, calls = run_configs([cfg(IF_A, base_for(ROUTED))], "replaced", have)
     split = split_calls(calls)
     assert result.get("failed"), "a required withdrawal that cannot complete reported success"
     assert len(split["updates"]) == 0 and len(split["deploys"]) == 0
     msg = str(result.get("msg", ""))
-    assert "disable_bfd_echo" in msg and ROUTED in msg
+    assert "eigrp_ipv4_passive" in msg and ROUTED in msg
     assert "must withdraw" in msg
 
 
 def test_c7_the_same_row_at_its_declared_default_still_succeeds():
     """The control proving the refusal above is not a blanket rejection. Rehomed with it."""
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["bfdEcho"] = "false"
+    have[0]["interfaces"][0]["nvPairs"]["eigrpIpv4Passive"] = "false"
     result, calls = run_configs([cfg(IF_A, base_for(ROUTED))], "replaced", have)
     assert not result.get("failed"), result.get("msg")
 
@@ -427,16 +431,30 @@ def test_c8_unclassifiable_value_refuses_with_its_own_distinct_reason():
     the present value is untouched or deliberate, and unknown is not converged.
 
     The row is DERIVED: this named `ospf_cost` until G37 measured its reset.
+
+    THE VALUE IS DERIVED TOO, and that is not cosmetic. It used to be the literal `100`,
+    which silently assumed the derived row was an INTEGER. When a later generation registered
+    the last unclassifiable integers on this parent, the helper started returning a STRING row
+    and `build_have` refused the int before any payload was built -- the case then failed deep
+    inside the harness ("expected exactly one emitted policy payload, got 0") instead of
+    stating the real problem. Deriving the value from the row's declared type keeps the case
+    about what it claims to test, whichever row survives as unclassifiable.
     """
     key = an_unclassifiable_key(ROUTED)
-    have = build_have(ROUTED, key, 100)
+    binding = engine.resolve_binding(ROUTED, key)
+    declared = binding["type"]
+    # The remaining routed example is ospf_tag, whose public length bound makes
+    # a longer arbitrary probe invalid before the withdrawal classifier runs.
+    value = {"integer": 100, "boolean": True}.get(declared, "PILOT-UNCLASSIFIED")
+    have = build_have(ROUTED, key, value)
     result, calls = run(base_for(ROUTED), "replaced", have)
     split = split_calls(calls)
-    assert result.get("failed"), "an unclassifiable configured value must not pass"
+    assert result.get("failed"), (
+        "an unclassifiable configured value must not pass (row %r, type %r)" % (key, declared))
     msg = str(result.get("msg", ""))
     assert key in msg and ROUTED in msg
     assert "cannot be classified" in msg, msg
-    assert "100" not in msg, "the refusal named the value"
+    assert str(value) not in msg, "the refusal named the value"
     assert len(split["updates"]) == 0 and len(split["deploys"]) == 0
 
 
@@ -444,7 +462,7 @@ def test_check_mode_also_refuses_an_unsupported_withdrawal():
     """Check mode is a report. Reporting a replacement that cannot complete is the same
     false claim as performing one."""
     have = build_have(ROUTED)
-    have[0]["interfaces"][0]["nvPairs"]["bfdEcho"] = "true"
+    have[0]["interfaces"][0]["nvPairs"]["eigrpIpv4Passive"] = "true"
     result, calls = run_configs([cfg(IF_A, base_for(ROUTED))], "replaced", have,
                                 check_mode=True)
     assert result.get("failed")
@@ -461,7 +479,7 @@ def test_valid_first_interface_unsupported_second_writes_nothing_at_all():
         h = build_have(ROUTED)
         h[0]["interfaces"][0]["ifName"] = name
         have.extend(h)
-    have[1]["interfaces"][0]["nvPairs"]["bfdEcho"] = "true"
+    have[1]["interfaces"][0]["nvPairs"]["eigrpIpv4Passive"] = "true"
     result, calls = run_configs(
         [cfg(IF_A, base_for(ROUTED)), cfg(IF_B, base_for(ROUTED))], "replaced", have)
     split = split_calls(calls)
@@ -546,7 +564,7 @@ def test_equivalent_have_encodings_classify_identically(have_value):
 def test_have_already_at_the_reset_invents_no_write(parent, nvpair, key, applied, reset, extra):
     have = build_have(parent, key, applied, **extra)
     have[0]["interfaces"][0]["nvPairs"][nvpair] = reset
-    result, calls = run(base_for(parent, **extra), "replaced", have, **_pkw(parent))
+    result, calls = run(want_omitting(parent, key, **extra), "replaced", have, **_pkw(parent))
     assert len(split_calls(calls)["updates"]) == 0
 
 
@@ -555,7 +573,7 @@ def test_authoritative_absence_is_nothing_to_withdraw(parent, nvpair, key, appli
     """An absent key is absent. No default may be invented for it."""
     have = build_have(parent, key, applied, **extra)
     have[0]["interfaces"][0]["nvPairs"].pop(nvpair, None)
-    result, calls = run(base_for(parent, **extra), "replaced", have, **_pkw(parent))
+    result, calls = run(want_omitting(parent, key, **extra), "replaced", have, **_pkw(parent))
     assert len(split_calls(calls)["updates"]) == 0, (
         "an absent HAVE key produced a write: a reset was invented for a field the "
         "controller does not hold")
@@ -635,18 +653,31 @@ def test_ownership_a_user_parent_binding_sharing_a_fabric_owned_name_is_reconcil
     """OSPF_AUTH_KEY_ID on int_routed_host shares its NAME with a fabric-owned nvPair. A
     name-only exclusion would drop it; the parent-qualified rule must still consider it.
 
-    It has no verified reset, so the observable proof that it WAS considered is that the
-    invocation is refused rather than silently succeeding.
+    THE OBSERVABLE CHANGED, THE CONTRACT DID NOT. This case used to prove "it was considered"
+    by the invocation being REFUSED, because the row carried no verified reset. The OSPF-ALL
+    P3a profile measured and registered one (`'1'`, its declared default, measured live on the
+    four subjects in P3a-a4-keyid-default), so a refusal is no longer the right observable --
+    and the case failed against its own expired premise, not against the rule it guards.
+
+    The replacement observable is STRONGER: proof of consideration is now that the withdrawal
+    is EMITTED. The outgoing body must carry the registered reset for this parent's row. A
+    name-only exclusion would leave the field untouched, which this assertion would catch.
     """
+    b = engine.resolve_binding(ROUTED, "ospf_auth_key_id")
+    assert b is not None and b.get("reset_wire") is not None, (
+        "the row lost its reset; this case would be asserting the wrong observable again")
+    expected = b["reset_wire"]
     have = build_have(ROUTED, enable_ospf_auth=True, ospf_auth_key_id=7,
                       ospf_auth_key="SyntheticSetupKey0001")
     result, calls = run(base_for(ROUTED, enable_ospf_auth=True,
                                  ospf_auth_key="SyntheticSetupKey0001"), "replaced", have)
-    assert result.get("failed"), (
-        "a user-parent binding whose name matches a fabric-owned field was skipped; the "
-        "exclusion is not parent-qualified")
-    assert "ospf_auth_key_id" in str(result.get("msg", ""))
-    assert len(split_calls(calls)["updates"]) == 0
+    assert not result.get("failed"), (
+        "the registered row was refused: %s" % result.get("msg"))
+    emitted = [nv.get("OSPF_AUTH_KEY_ID") for nv in request_nvpairs(calls)]
+    assert expected in emitted, (
+        "a user-parent binding whose name matches a fabric-owned field was skipped: the "
+        "outgoing body carries %r and the registered reset is %r, so the exclusion is not "
+        "parent-qualified" % (emitted, expected))
 
 
 def test_helper_ownership_exclusion_is_keyed_on_parent_and_nvpair():

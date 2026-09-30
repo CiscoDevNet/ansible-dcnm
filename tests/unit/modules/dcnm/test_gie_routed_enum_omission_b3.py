@@ -249,17 +249,36 @@ def test_rerun_from_the_neutral_state_converges():
 def test_a_sibling_routed_enum_without_a_reset_still_rejects():
     """`ospf_bfd_mode` is the third routed OSPF enum and carries NO reset. Registering
     these two must not turn into a blanket exemption for the family."""
-    b = resolve_binding(ROUTED, "ospf_bfd_mode")
-    assert b is not None, "the sibling row vanished; this case would be vacuous"
-    assert b.get("reset_wire") is None, (
-        "ospf_bfd_mode gained a reset; this case no longer guards anything")
-    action, wire = gie_withdrawal_action(ROUTED, "ospf_bfd_mode", "enable", SUPPORTED)
+    # THE EXAMPLE IS DERIVED, NOT HARDCODED. This case named `ospf_bfd_mode` and asserted that
+    # it carried no reset, with the message "this case no longer guards anything" -- which is
+    # exactly what happened when the OSPF-ALL P2 profile measured and registered it on
+    # int_routed_host. The contract it guards is intact; only the example expired.
+    #
+    # Deriving it from the loaded table means a future registration can never invalidate this
+    # case again, and if routed ever ran out of unregistered enums the assertion below says so
+    # loudly instead of the case passing for the wrong reason.
+    from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
+        BINDING_TABLE as _BT,
+    )
+    _rows = list(_BT.values()) if isinstance(_BT, dict) else list(_BT)
+    siblings = [r for r in _rows
+                if r["parent_template"] == ROUTED and r["type"] == "enum"
+                and r.get("reset_wire") is None
+                and r.get("default_template") is not None]
+    assert siblings, (
+        "every routed enum now carries a reset; this case has nothing left to guard and must "
+        "be rehomed deliberately, not deleted")
+    b = siblings[0]
+    key, default = b["profile_key"], b["default_template"]
+    # A CONFIGURED value, i.e. anything that is not the declared default.
+    configured = "0" if default != "0" else "7"
+    action, wire = gie_withdrawal_action(ROUTED, key, configured, SUPPORTED)
     assert (action, wire) == (GIE_WITHDRAW_UNSUPPORTED, None), (
-        "a configured value with no registered reset must stay UNSUPPORTED, got %r"
-        % ((action, wire),))
-    # And its own neutral is still NONE, for the same reason as the registered rows.
-    assert gie_withdrawal_action(
-        ROUTED, "ospf_bfd_mode", RESET, SUPPORTED) == (GIE_WITHDRAW_NONE, None)
+        "%s: a configured value with no registered reset must stay UNSUPPORTED, got %r"
+        % (key, (action, wire)))
+    # And its own declared default is still NONE, for the same reason as the registered rows.
+    assert gie_withdrawal_action(ROUTED, key, default, SUPPORTED) == (GIE_WITHDRAW_NONE, None), (
+        "%s: its own declared default %r must classify NONE" % (key, default))
 
 
 # ========================================= the two vocabulary-aware harness helpers
