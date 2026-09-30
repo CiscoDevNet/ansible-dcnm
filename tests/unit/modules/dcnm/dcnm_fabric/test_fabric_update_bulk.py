@@ -116,6 +116,89 @@ def test_remove_nd4x_problematic_keys_does_not_add_absent_previous_values(fabric
 
 
 @pytest.mark.parametrize(
+    "is_controller_version_4x, fabric_type, controller_enable_dsvni, requested_enable_dsvni, expected_enable_dsvni",
+    [
+        (True, "VXLAN_EVPN_MSD", "", None, "false"),
+        (True, "VXLAN_EVPN_MSD", "false", None, "false"),
+        (True, "VXLAN_EVPN_MSD", "true", None, "true"),
+        (False, "VXLAN_EVPN_MSD", "", None, None),
+        (True, "VXLAN_EVPN_MSD", "true", "", ""),
+        (True, "VXLAN_EVPN_MSD", "true", "false", "false"),
+        (True, "VXLAN_EVPN_MSD", "true", "true", "true"),
+        (True, "VXLAN_EVPN_MSD", "true", False, "false"),
+        (True, "VXLAN_EVPN_MSD", "false", True, "true"),
+        (True, "VXLAN_EVPN", "", None, ""),
+    ],
+)
+def test_fabric_update_payload_normalizes_only_inherited_empty_enable_dsvni_for_nd4x_msd(
+    fabric_update_bulk,
+    is_controller_version_4x,
+    fabric_type,
+    controller_enable_dsvni,
+    requested_enable_dsvni,
+    expected_enable_dsvni,
+) -> None:
+    controller_version = MockControllerVersion()
+    controller_version.is_controller_version_4x = is_controller_version_4x
+
+    fabric_update_bulk.controller_version = controller_version
+    fabric_update_bulk.fabric_details = FabricDetailsByName()
+    fabric_update_bulk.fabric_details.data = {
+        "msd1": {
+            "nvPairs": {
+                "DELAY_RESTORE": "300",
+                "ENABLE_DSVNI": controller_enable_dsvni,
+                "ENABLE_DSVNI_PREV": "",
+                "FABRIC_NAME": "msd1",
+            }
+        }
+    }
+    payload = {
+        "DELAY_RESTORE": 301,
+        "DEPLOY": False,
+        "FABRIC_NAME": "msd1",
+        "FABRIC_TYPE": fabric_type,
+    }
+    if requested_enable_dsvni is not None:
+        payload["ENABLE_DSVNI"] = requested_enable_dsvni
+
+    fabric_update_bulk._fabric_needs_update_for_merged_state(payload)
+
+    update_payload = fabric_update_bulk._fabric_changes_payload["msd1"]
+    assert update_payload.get("ENABLE_DSVNI") == expected_enable_dsvni
+    assert update_payload.get("ENABLE_DSVNI_PREV") == ("" if is_controller_version_4x else None)
+    assert update_payload["DELAY_RESTORE"] == "301"
+
+
+def test_fabric_update_payload_does_not_add_absent_enable_dsvni(fabric_update_bulk) -> None:
+    controller_version = MockControllerVersion()
+    controller_version.is_controller_version_4x = True
+
+    fabric_update_bulk.controller_version = controller_version
+    fabric_update_bulk.fabric_details = FabricDetailsByName()
+    fabric_update_bulk.fabric_details.data = {
+        "msd1": {
+            "nvPairs": {
+                "DELAY_RESTORE": "300",
+                "FABRIC_NAME": "msd1",
+            }
+        }
+    }
+    payload = {
+        "DELAY_RESTORE": 301,
+        "DEPLOY": False,
+        "FABRIC_NAME": "msd1",
+        "FABRIC_TYPE": "VXLAN_EVPN_MSD",
+    }
+
+    fabric_update_bulk._fabric_needs_update_for_merged_state(payload)
+
+    update_payload = fabric_update_bulk._fabric_changes_payload["msd1"]
+    assert "ENABLE_DSVNI" not in update_payload
+    assert update_payload["DELAY_RESTORE"] == "301"
+
+
+@pytest.mark.parametrize(
     "is_controller_version_4x, expected_payload",
     [
         (
