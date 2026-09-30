@@ -1081,6 +1081,10 @@ class DcnmNetwork:
     BULK_GET_HAVE_NETWORK_THRESHOLD = 5
     IPV4_ACL_IN_PATCH_VERSION = "4.3.1.0175006011"
     IPV4_ACL_IN_MIN_ND_VERSION = (4, 4, 1)
+    # The template declares IPV4_ACL_IN, but the network REST API persists
+    # the effective value under inboundIpv4Acl.
+    IPV4_ACL_IN_TEMPLATE_KEY = "inboundIpv4Acl"
+    IPV4_ACL_IN_LEGACY_TEMPLATE_KEY = "IPV4_ACL_IN"
 
     dcnm_network_paths = {
         11: {
@@ -2130,9 +2134,12 @@ class DcnmNetwork:
         if (
             not self._supports_ipv4_acl_in()
             and self.fabric_type not in ["multisite_child", "multicluster_child"]
-            and "IPV4_ACL_IN" in json_to_dict_have
+            and self._has_ipv4_acl_in(json_to_dict_have)
         ):
-            json_to_dict_want["IPV4_ACL_IN"] = json_to_dict_have["IPV4_ACL_IN"]
+            json_to_dict_want[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                json_to_dict_have
+            )
+            json_to_dict_want.pop(self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY, None)
             want["networkTemplateConfig"] = json.dumps(json_to_dict_want)
 
         gw_ip_want = json_to_dict_want.get("gatewayIpAddress", "")
@@ -2181,8 +2188,8 @@ class DcnmNetwork:
         vlan_nfen_have = json_to_dict_have.get("VLAN_NETFLOW_MONITOR", "")
         xconnect_want = str(json_to_dict_want.get("xconnect", "")).lower()
         xconnect_have = str(json_to_dict_have.get("xconnect", "")).lower()
-        ipv4_acl_in_want = json_to_dict_want.get("IPV4_ACL_IN", "")
-        ipv4_acl_in_have = json_to_dict_have.get("IPV4_ACL_IN", "")
+        ipv4_acl_in_want = self._get_ipv4_acl_in(json_to_dict_want)
+        ipv4_acl_in_have = self._get_ipv4_acl_in(json_to_dict_have)
 
         if vlanId_have != "":
             vlanId_have = int(vlanId_have)
@@ -2304,7 +2311,10 @@ class DcnmNetwork:
                 xconnect_diff = xconnect_have != xconnect_want
                 comparisons.append(xconnect_diff)
 
-            if self._supports_ipv4_acl_in() and "IPV4_ACL_IN" not in skipped_template_keys:
+            if (
+                self._supports_ipv4_acl_in()
+                and self.IPV4_ACL_IN_TEMPLATE_KEY not in skipped_template_keys
+            ):
                 ipv4_acl_in_diff = ipv4_acl_in_have != ipv4_acl_in_want
                 comparisons.append(ipv4_acl_in_diff)
 
@@ -2479,7 +2489,10 @@ class DcnmNetwork:
                 xconnect_diff = xconnect_have != xconnect_want
                 comparisons.append(xconnect_diff)
 
-            if self._supports_ipv4_acl_in() and "IPV4_ACL_IN" not in skipped_template_keys:
+            if (
+                self._supports_ipv4_acl_in()
+                and self.IPV4_ACL_IN_TEMPLATE_KEY not in skipped_template_keys
+            ):
                 ipv4_acl_in_diff = ipv4_acl_in_have != ipv4_acl_in_want
                 comparisons.append(ipv4_acl_in_diff)
 
@@ -2651,7 +2664,9 @@ class DcnmNetwork:
                 xconnect=False if xconnect is None else xconnect
             )
         if self._supports_ipv4_acl_in():
-            template_conf.update(IPV4_ACL_IN=net.get("ipv4_acl_in") or "")
+            template_conf[self.IPV4_ACL_IN_TEMPLATE_KEY] = (
+                net.get("ipv4_acl_in") or ""
+            )
 
         if template_conf["vlanId"] is None:
             template_conf["vlanId"] = ""
@@ -2755,8 +2770,10 @@ class DcnmNetwork:
             t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
         if "xconnect" in json_to_dict:
             t_conf.update(xconnect=json_to_dict["xconnect"])
-        if "IPV4_ACL_IN" in json_to_dict:
-            t_conf.update(IPV4_ACL_IN=json_to_dict.get("IPV4_ACL_IN") or "")
+        if self._has_ipv4_acl_in(json_to_dict):
+            t_conf[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                json_to_dict
+            )
 
         if self.fabric_type not in ["multisite_child", "multicluster_child"]:
             t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
@@ -4067,8 +4084,8 @@ class DcnmNetwork:
                 found_c.update({"vlan_nf_monitor": json_to_dict.get("VLAN_NETFLOW_MONITOR", "")})
             if "xconnect" in json_to_dict:
                 found_c.update({"xconnect": json_to_dict["xconnect"]})
-            if "IPV4_ACL_IN" in json_to_dict:
-                found_c.update({"ipv4_acl_in": json_to_dict["IPV4_ACL_IN"]})
+            if self._has_ipv4_acl_in(json_to_dict):
+                found_c.update({"ipv4_acl_in": self._get_ipv4_acl_in(json_to_dict)})
             found_c.update({"attach": []})
 
             del found_c["fabric"]
@@ -5157,8 +5174,10 @@ class DcnmNetwork:
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
                 if "xconnect" in json_to_dict:
                     t_conf.update(xconnect=json_to_dict["xconnect"])
-                if "IPV4_ACL_IN" in json_to_dict:
-                    t_conf.update(IPV4_ACL_IN=json_to_dict["IPV4_ACL_IN"])
+                if self._has_ipv4_acl_in(json_to_dict):
+                    t_conf[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                        json_to_dict
+                    )
 
                 if self.fabric_type not in ["multisite_child", "multicluster_child"]:
                     t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
@@ -5396,6 +5415,19 @@ class DcnmNetwork:
             ]
         )
 
+    def _has_ipv4_acl_in(self, template_config):
+        """Return whether a controller template contains the SVI ACL field."""
+        return (
+            self.IPV4_ACL_IN_TEMPLATE_KEY in template_config
+            or self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY in template_config
+        )
+
+    def _get_ipv4_acl_in(self, template_config):
+        """Return the controller SVI ACL value, preferring its canonical key."""
+        if self.IPV4_ACL_IN_TEMPLATE_KEY in template_config:
+            return template_config.get(self.IPV4_ACL_IN_TEMPLATE_KEY) or ""
+        return template_config.get(self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY) or ""
+
     def get_template_config_mapping(self):
         """
         Get mapping from network spec attributes to template config keys.
@@ -5436,7 +5468,7 @@ class DcnmNetwork:
         if self._ndfc_version_gte("12.4.1"):
             mapping["xconnect"] = "xconnect"
         if self._supports_ipv4_acl_in():
-            mapping["ipv4_acl_in"] = "IPV4_ACL_IN"
+            mapping["ipv4_acl_in"] = self.IPV4_ACL_IN_TEMPLATE_KEY
         return mapping
 
     def get_network_spec(self, fabric_type=None):
@@ -6146,9 +6178,12 @@ class DcnmNetwork:
         if (
             self.fabric_type not in ["multisite_child", "multicluster_child"]
             and cfg.get("ipv4_acl_in", None) is None
-            and "IPV4_ACL_IN" in json_to_dict_have
+            and self._has_ipv4_acl_in(json_to_dict_have)
         ):
-            json_to_dict_want["IPV4_ACL_IN"] = json_to_dict_have["IPV4_ACL_IN"]
+            json_to_dict_want[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                json_to_dict_have
+            )
+            json_to_dict_want.pop(self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY, None)
 
         want.update({"networkTemplateConfig": json.dumps(json_to_dict_want)})
 
