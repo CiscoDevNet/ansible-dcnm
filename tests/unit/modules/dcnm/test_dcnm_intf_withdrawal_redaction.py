@@ -75,7 +75,7 @@ def test_the_emitted_result_carries_a_real_invocation_block():
     """Without `invocation` there is nothing for no_log to protect and every absence
     assertion below is trivially true."""
     have = build_have(ROUTED)
-    out, _ = emit_real_result(_routed_cfg(), "replaced", have)
+    out, _calls = emit_real_result(_routed_cfg(), "replaced", have)
     doc = parsed(out)
     assert "invocation" in doc and "module_args" in doc["invocation"]
 
@@ -83,7 +83,7 @@ def test_the_emitted_result_carries_a_real_invocation_block():
 def test_an_unregistered_value_does_appear_so_absence_is_meaningful():
     """The non-vacuity control: an ordinary non-secret field must reach the output."""
     have = build_have(ROUTED)
-    out, _ = emit_real_result(_routed_cfg(), "replaced", have)
+    out, _calls = emit_real_result(_routed_cfg(), "replaced", have)
     assert VISIBLE in out, (
         "an ordinary non-secret value did not reach the emitted result; the absence of a "
         "secret would then say nothing about redaction")
@@ -154,7 +154,7 @@ def test_the_key_id_is_not_registered_and_stays_readable():
     """Over-registering is its own defect: registering the id would blank every '9'."""
     have = build_have(ROUTED, enable_ospf_auth=True, ospf_auth_key=MARKER,
                       ospf_auth_key_id=9)
-    out, _ = emit_real_result(
+    out, _calls = emit_real_result(
         _routed_cfg(enable_ospf_auth=True, ospf_auth_key=MARKER, ospf_auth_key_id=9),
         "replaced", have)
     doc = parsed(out)
@@ -194,7 +194,7 @@ def test_disabling_registration_makes_the_controller_only_check_fail():
     Without it, that test would also pass if the material simply never reached the result
     for an unrelated reason -- which is exactly what happened on the first arrangement.
     """
-    out, _ = emit_real_result(
+    out, _calls = emit_real_result(
         [cfg(IF_A, {"mode": "routed"}, deploy=False)], "query", _controller_only_have(),
         extra_patch=patch.object(
             module.DcnmIntf, "dcnm_intf_register_controller_secrets",

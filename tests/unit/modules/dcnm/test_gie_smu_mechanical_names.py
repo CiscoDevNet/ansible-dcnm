@@ -130,7 +130,7 @@ def test_native_fields_were_not_swept_into_camel_case():
     for key in NATIVE_UPPER:
         assert key in nv, "native field %s vanished from the payload: %s" % (key, sorted(nv))
     for key in NATIVE_UPPER:
-        camel = key.lower() if "_" not in key else key.split("_")[0].lower() + "".join(p.capitalize() for p in key.split("_")[1:])
+        camel = key.lower() if "_" not in key else key.split("_", maxsplit=1)[0].lower() + "".join(p.capitalize() for p in key.split("_")[1:])
         assert camel not in nv, "native field %s was camelCased to %s" % (key, camel)
 
 

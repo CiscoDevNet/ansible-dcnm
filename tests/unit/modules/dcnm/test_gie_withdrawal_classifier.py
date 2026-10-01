@@ -63,14 +63,14 @@ def test_applicability_helper_agrees_with_the_classifier():
     classifies must never see the two disagree."""
     for version in ("12.6.0.266", OK, "nonsense", None):
         applicable = gie_binding_applicable(ACCESS, "acl_filter", version)
-        action, _ = gie_withdrawal_action(ACCESS, "acl_filter", "ACL-PILOT", version)
+        action, _reset = gie_withdrawal_action(ACCESS, "acl_filter", "ACL-PILOT", version)
         assert applicable == (action != GIE_WITHDRAW_INAPPLICABLE), version
 
 
 # ------------------------------------------------------------------ HAVE encodings
 @pytest.mark.parametrize("have", ["false", False], ids=["wire_string", "native_bool"])
 def test_both_accepted_encodings_of_the_declared_default_mean_the_same_state(have):
-    action, _ = gie_withdrawal_action(ACCESS, "disable_lldp_receive", have, OK)
+    action, _reset = gie_withdrawal_action(ACCESS, "disable_lldp_receive", have, OK)
     assert action == GIE_WITHDRAW_NONE, (
         "encoding %r of the declared default classified as %r; the HAVE validator accepts "
         "both spellings and they describe one controller state" % (have, action))
@@ -87,7 +87,7 @@ def test_both_encodings_of_a_non_default_also_agree(have):
     unsupported-but-applicable row -- a declared default, no established reset -- so the
     guarantee moves rather than weakening.
     """
-    action, _ = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", have, OK)
+    action, _reset = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", have, OK)
     assert action == GIE_WITHDRAW_UNSUPPORTED
 
 
@@ -106,8 +106,8 @@ def test_normalisation_does_not_turn_an_empty_string_into_a_false():
     """
     # REHOMED to int_routed_host for the same reason as above: the access row now has a
     # reset, and this case needs one that does not.
-    empty, _ = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", "", OK)
-    false_wire, _ = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", "false", OK)
+    empty, _empty_reset = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", "", OK)
+    false_wire, _false_reset = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", "false", OK)
     assert false_wire == GIE_WITHDRAW_NONE
     assert empty != GIE_WITHDRAW_RESET, (
         "an empty HAVE produced a reset; absence is not a configured value")
@@ -125,8 +125,8 @@ def test_an_integer_zero_is_not_an_empty_value():
     # `int_vlan` still carries four (the HSRP integers). The harness asserts loudly when a parent
     # runs out, which is how this was caught.
     key = an_unclassifiable_key(SVI, "integer")
-    zero, _ = gie_withdrawal_action(SVI, key, 0, OK)
-    empty, _ = gie_withdrawal_action(SVI, key, "", OK)
+    zero, _zero_reset = gie_withdrawal_action(SVI, key, 0, OK)
+    empty, _empty_reset = gie_withdrawal_action(SVI, key, "", OK)
     assert zero == GIE_WITHDRAW_UNCLASSIFIED, (
         "a real integer value was treated as absence (%s)" % key)
     assert empty == GIE_WITHDRAW_UNCLASSIFIED

@@ -712,9 +712,9 @@ PILOT = {
     (SVI, "ospfRetransmitInterval"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
     (SVI, "arpTimeout"): ("arp_timeout", 900, "", {}),
     (SVI, "ipv4Redirects"): ("disable_ipv4_redirects", True, "false",
-                                      {"disable_ipv6_redirects": True}),
+                             {"disable_ipv6_redirects": True}),
     (SVI, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false",
-                                      {"disable_ipv4_redirects": True}),
+                             {"disable_ipv4_redirects": True}),
     # The four int_vlan rows BETA measured live in the B01 SVI group, on BETAENUM /
     # Leaf-105 / Vlan991 (VLAN 991 and the SVI are distinct objects; both were
     # created and recovered separately). Not inferred from int_loopback or
@@ -1148,7 +1148,7 @@ def _transport(calls, have):
                                 VPC_ACCESS: "INTERFACE_VPC",
                                 VPC_TRUNK: "INTERFACE_VPC",
                                 SVI: "INTERFACE_VLAN"}.get(p.get("policy"),
-                                                          "INTERFACE_ETHERNET"),
+                                                           "INTERFACE_ETHERNET"),
                      "isPhysical": ("false" if p.get("policy") in (SUBIF, LOOPBACK, SVI)
                                     or p.get("policy") in VPC_PARENTS
                                     else "true"),
@@ -1169,6 +1169,7 @@ def run_configs(configs, state, have=None, deploy=True, check_mode=False,
     caller can separate reads from updates and deploys.
     """
     calls = []
+    result = None
     have = copy.deepcopy(have or [])
     with harness_case(ndfc_version) as test:
         test.load_fixtures()
@@ -1343,8 +1344,8 @@ def build_have(parent, key=None, value=None, **extra):
     # The parent is threaded through so a port-channel's HAVE is built from a `pc` config
     # on a Port-channel name. Built as `eth` it would carry the wrong policy and the
     # withdrawal under test would be measured against a HAVE the module never produces.
-    _, calls = run(profile, "replaced",
-                   parent=parent if parent in NON_ETH_PARENTS else None)
+    _result, calls = run(profile, "replaced",
+                         parent=parent if parent in NON_ETH_PARENTS else None)
     return _payload_as_have(calls)
 
 
