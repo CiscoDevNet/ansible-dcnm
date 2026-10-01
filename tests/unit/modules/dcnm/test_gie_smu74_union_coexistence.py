@@ -105,7 +105,9 @@ UNION_RESET_TOTAL = 74
 #       lab platform does not support that CLI.
 # This file pins REGISTRATION only, which is what a table can be asked about. Acceptance
 # lives in the campaign reviews, and 174 must not be described as device-validated.
-CANDIDATE_RESET_TOTAL = 197
+# PR725-HSRP5 (2026-09-30) adds three int_vlan HSRP rows measured live on Leaf-103: the preempt
+# delay and the coordinated forwarding-threshold pair. 197 + 3 = 200.
+CANDIDATE_RESET_TOTAL = 200
 
 # The additions this candidate is allowed to carry, and nothing else: ALPHA's
 # four `int_routed_host` and four `int_subif` rows, plus BETA's two
@@ -456,15 +458,25 @@ VPC13_ADDITIONS = tuple(
 ) + (("int_vpc_trunk_host", "GUARD_MODE", "guard_mode", "no"),)
 VPC13_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in VPC13_ADDITIONS)
 
+# PR725-HSRP5, IPv4 scope. The two IPv6 rows of that campaign (HSRP_VIPv6, HSRP_GROUPv6) are NOT
+# here: the installed int_vlan body emitted no IPv6 line on the measured controller, so neither
+# has an observable positive. The two thresholds are one coordinated group, not two removals.
+HSRP3_ADDITIONS = (
+    ("int_vlan", "hsrpPreemptDelayMinimum", "hsrp_preempt_delay_minimum", ""),
+    ("int_vlan", "hsrpPriorityForwardingThresholdLower", "hsrp_priority_forwarding_threshold_lower", ""),
+    ("int_vlan", "hsrpPriorityForwardingThresholdUpper", "hsrp_priority_forwarding_threshold_upper", ""),
+)
+HSRP3_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in HSRP3_ADDITIONS)
+
 # Every addition this checkout carries over the published 74, by lot. The dampening lot is
 # included in the SET arithmetic -- it is registered, so it must be accounted for -- while its
 # controller-only evidence status is recorded above and asserted in its own grouped test.
 ALL_ADDITIONS = (CANDIDATE_ADDITIONS + EIGRP_ADDITIONS + MACSEC_ADDITIONS
                  + DAMPENING_EXPERIMENTAL_ADDITIONS + PIMACL_ADDITIONS
-                 + VPC13_ADDITIONS)
+                 + VPC13_ADDITIONS + HSRP3_ADDITIONS)
 ALL_ADDED_IDENTITIES = (CANDIDATE_IDENTITIES | EIGRP_IDENTITIES | MACSEC_IDENTITIES
                         | DAMPENING_EXPERIMENTAL_IDENTITIES | PIMACL_IDENTITIES
-                        | VPC13_IDENTITIES)
+                        | VPC13_IDENTITIES | HSRP3_IDENTITIES)
 
 
 def _rows():
@@ -546,8 +558,11 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     assert len(PIMACL_IDENTITIES) == len(PIMACL_ADDITIONS) == 10
     assert len(VPC13_IDENTITIES) == len(VPC13_ADDITIONS) == 13
     assert PIMACL_IDENTITIES <= registered and VPC13_IDENTITIES <= registered
+    assert len(HSRP3_IDENTITIES) == len(HSRP3_ADDITIONS) == 3
+    assert HSRP3_IDENTITIES <= registered
     groups = (CANDIDATE_IDENTITIES, EIGRP_IDENTITIES, MACSEC_IDENTITIES,
-              DAMPENING_EXPERIMENTAL_IDENTITIES, PIMACL_IDENTITIES, VPC13_IDENTITIES)
+              DAMPENING_EXPERIMENTAL_IDENTITIES, PIMACL_IDENTITIES, VPC13_IDENTITIES,
+              HSRP3_IDENTITIES)
     for pos, group in enumerate(groups):
         for prior in groups[:pos]:
             assert not group & prior, "two source lots overlap"
@@ -606,8 +621,9 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     # CANDIDATE_ADDITIONS; the other three lots keep their own tuples. 54 + 35 + 4 + 7 = 100,
     # and 74 + 100 = 174. Written as the sum so the arithmetic is visible rather than a bare
     # total somebody has to take on trust.
-    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 == len(ALL_ADDITIONS), (
-        "the lots together declare %d additions over %d distinct identities; expected 123"
+    # + 3 PR725-HSRP5 int_vlan rows (HSRP3_ADDITIONS) = 126, and 74 + 126 = 200.
+    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 == len(ALL_ADDITIONS), (
+        "the lots together declare %d additions over %d distinct identities; expected 126"
         % (len(ALL_ADDITIONS), len(ALL_ADDED_IDENTITIES)))
 
     # NEGATIVE CONTROL: the withheld EIGRP identities must still carry NO reset. Without
@@ -703,7 +719,8 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
               ("EIGRP-ALL", set(EIGRP_IDENTITIES), 35),
               ("MACSEC", set(MACSEC_IDENTITIES), 4),
               ("PIM/ACL", set(PIMACL_IDENTITIES), 10),
-              ("vPC", set(VPC13_IDENTITIES), 13))
+              ("vPC", set(VPC13_IDENTITIES), 13),
+              ("HSRP/IPv4", set(HSRP3_IDENTITIES), 3))
     for name, group, expected in groups:
         assert len(group) == expected, (
             "%s declares %d identities, expected %d" % (name, len(group), expected))
@@ -713,16 +730,16 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     union = (B01_ALPHA | B01_BETA | OSPF_ALL_P1 | OSPF_ALL_P2_P4 | OSPF_ALL_P3A
              | OSPF_ALL_P3B | OSPF_ALL_P5 | BFD_ECHO | BFD_INTERVAL
              | EIGRP_IDENTITIES | MACSEC_IDENTITIES | DAMPENING_EXPERIMENTAL_IDENTITIES
-             | PIMACL_IDENTITIES | VPC13_IDENTITIES)
+             | PIMACL_IDENTITIES | VPC13_IDENTITIES | HSRP3_IDENTITIES)
     assert union == set(ALL_ADDED_IDENTITIES), (
         "the named campaign groups are not exactly the declared additions.\n"
         "  in a group but not declared: %s\n  declared but in no group: %s"
         % (sorted(union - set(ALL_ADDED_IDENTITIES)),
            sorted(set(ALL_ADDED_IDENTITIES) - union)))
-    assert len(union) == 123, (
+    assert len(union) == 126, (
         "the named groups cover %d identities; the delta over the published 74 is "
         "14 base88 + 30 OSPF-ALL + 10 BFD-ALL + 35 EIGRP + 4 MACsec + 7 dampening "
-        "+ 10 PIM/ACL + 13 vPC = 123, and 74 + 123 = 197" % len(union))
+        "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 = 126, and 74 + 126 = 200" % len(union))
 
 
 def test_the_published_seventy_four_are_present_unaltered_and_nothing_else_was_added():

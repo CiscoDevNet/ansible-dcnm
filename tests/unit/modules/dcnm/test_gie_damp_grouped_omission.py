@@ -115,7 +115,9 @@ def test_the_three_all_or_none_members_are_the_declared_grouped_only_set():
     """The harness's declaration and this file's reason must not drift apart. If a per-row
     fixture is ever added for one of the three, this fails and points at the rule that made it
     impossible."""
-    assert set(GROUPED_ONLY_NO_PER_ROW_FIXTURE) == {
+    # Scoped to this family: other families may declare their own grouped-only members (the HSRP
+    # forwarding-threshold pair on int_vlan does), and that must not read as dampening drift.
+    assert {k for k in GROUPED_ONLY_NO_PER_ROW_FIXTURE if k[1].startswith("dampening")} == {
         (ROUTED, "dampeningReuse"),
         (ROUTED, "dampeningSuppress"),
         (ROUTED, "dampeningMaxSuppress"),
