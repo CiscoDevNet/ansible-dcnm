@@ -53,11 +53,11 @@ MULTI = {
 
 def applied_profile():
     """`base_for(ACCESS)` with all five bindings held explicit."""
-    return base_for(ACCESS, **{key: applied for (key, applied, _) in MULTI.values()})
+    return base_for(ACCESS, **{key: applied for (key, applied, _reset) in MULTI.values()})
 
 
 def multi_have():
-    return build_have(ACCESS, **{key: applied for (key, applied, _) in MULTI.values()})
+    return build_have(ACCESS, **{key: applied for (key, applied, _reset) in MULTI.values()})
 
 
 def emitted_policies(calls):
@@ -95,7 +95,8 @@ def test_every_omitted_binding_reaches_the_same_payload():
     assert not result.get("failed"), result.get("msg")
     nvpairs = sole_update_nvpairs(calls)
 
-    missing = {nvpair: reset for nvpair, (_, _, reset) in MULTI.items() if nvpairs.get(nvpair) != reset}
+    missing = {nvpair: reset for nvpair, (_key, _applied, reset) in MULTI.items()
+               if nvpairs.get(nvpair) != reset}
     assert not missing, "resets absent or wrong in the single payload: %s (got %s)" % (
         missing,
         {n: nvpairs.get(n) for n in MULTI},
@@ -105,7 +106,7 @@ def test_every_omitted_binding_reaches_the_same_payload():
 def test_every_omitted_binding_is_reported_in_the_public_diff():
     """A transmitted reset that is not reported is the defect class this pins."""
     have = multi_have()
-    result, _ = run(base_for(ACCESS), "replaced", have=have)
+    result, _calls = run(base_for(ACCESS), "replaced", have=have)
 
     assert not result.get("failed"), result.get("msg")
     reported = {}
@@ -116,7 +117,8 @@ def test_every_omitted_binding_is_reported_in_the_public_diff():
                     continue
                 reported.update(item["interfaces"][0].get("nvPairs") or {})
 
-    missing = {nvpair: reset for nvpair, (_, _, reset) in MULTI.items() if reported.get(nvpair) != reset}
+    missing = {nvpair: reset for nvpair, (_key, _applied, reset) in MULTI.items()
+               if reported.get(nvpair) != reset}
     assert not missing, "resets transmitted but not reported: %s" % missing
 
 

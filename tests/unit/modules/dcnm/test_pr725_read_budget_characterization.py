@@ -41,7 +41,7 @@ POLICY = "int_routed_host"
 # individual path is a strict extension of the bulk path, and a classifier that
 # gets that wrong would silently report every individual GET as a bulk GET.
 PATHS = DcnmIntf.dcnm_intf_paths[12]
-BULK_PREFIX = PATHS["IF_WITH_SNO"].split("{")[0]
+BULK_PREFIX = PATHS["IF_WITH_SNO"].split("{", maxsplit=1)[0]
 INDIVIDUAL_MARKER = "&ifName="
 
 
@@ -586,7 +586,7 @@ def test_failed_switch_does_not_consume_or_contaminate_another_switch(count):
     assert "SN2" in state.intf_detail_cached_snos
     failed = _unavailable(state, want)
     assert len(failed) == count
-    assert {serial for serial, _ in failed} == {"SN1"}
+    assert {serial for serial, _interface in failed} == {"SN1"}
 
 
 def test_combined_vpc_identity_failure_marks_the_pair_and_both_members():
@@ -652,8 +652,8 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import (  # 
 SWITCH = "192.0.2.1"  # RFC 5737 TEST-NET-1
 SERIAL = "SYNTHSERIAL1"
 FABRIC = "synthetic_fabric"
-DETAIL_PREFIX = PATHS["IF_DETAIL_WITH_SNO"].split("{")[0]
-ACCESS_MODE_PREFIX = PATHS["FABRIC_ACCESS_MODE"].split("{")[0]
+DETAIL_PREFIX = PATHS["IF_DETAIL_WITH_SNO"].split("{", maxsplit=1)[0]
+ACCESS_MODE_PREFIX = PATHS["FABRIC_ACCESS_MODE"].split("{", maxsplit=1)[0]
 
 INVENTORY = {
     SWITCH: {
@@ -850,7 +850,7 @@ def test_module_path_with_authoritative_state_does_write(count):
     assert run.policy_total == 1
     assert run.outcome == "exit_json"
     assert run.counts["mutating"] >= 1
-    assert any(method == "POST" for method, _ in run.mutations)
+    assert any(method == "POST" for method, _payload in run.mutations)
 
 
 @pytest.mark.parametrize("count", [1, 10])
@@ -1602,8 +1602,8 @@ def test_the_pathological_first_probe_tradeoff_is_real():
     unlucky = _want(3)                       # Ethernet1/1 first: it is the probe
     lucky = _want(2, first=2)                # Ethernet1/2 first: it answers
 
-    unlucky_state, unlucky_tx, _ = _run_get_have(unlucky, responder)
-    lucky_state, lucky_tx, _ = _run_get_have(lucky, responder)
+    unlucky_state, unlucky_tx, _unlucky_result = _run_get_have(unlucky, responder)
+    lucky_state, lucky_tx, _lucky_result = _run_get_have(lucky, responder)
 
     # Unlucky: the probe burns the allowance and the other two are never read.
     assert unlucky_tx.counts["individual"] == 3
