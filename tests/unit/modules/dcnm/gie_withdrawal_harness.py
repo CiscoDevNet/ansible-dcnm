@@ -213,6 +213,14 @@ MACSEC_FB_CTX = {"enable_macsec_interface_policy": True,
 
 # The PIM/ACL campaign kept PIM enabled while clearing its dependent rows.
 PIM_ON = {"enable_pim_sparse": True}
+# HSRP on the SVI parent. The installed body rejects every advanced HSRP field unless HSRP is
+# enabled with a primary IPv4 VIP, and the preempt delay additionally needs `preempt: true`; the
+# native argspec requires `hsrp_vip` and `hsrp_group` whenever `enable_hsrp` is true. Priority 120
+# (not the template default 100) keeps the priority child emitted, so the threshold withdrawal
+# degrades `priority 120 forwarding-threshold ...` to `priority 120` instead of removing a line.
+HSRP_CTX = {"ipv4_addr": "192.0.2.1", "ipv4_mask_len": 24, "enable_hsrp": True,
+            "hsrp_vip": "192.0.2.254", "hsrp_group": 79, "hsrp_version": 2,
+            "hsrp_priority": 120, "preempt": True}
 
 
 # ---------------------------------------------------------------- DAMPENING
@@ -846,6 +854,11 @@ PILOT = {
     (ROUTED, "ipv4AclIn"): ("ipv4_acl_in", "PILOT-ACL", "", {}),
     (SVI, "ipv4AclIn"): ("ipv4_acl_in", "PILOT-ACL", "", {}),
     (ROUTED, "pimBfdInstance"): ("enable_pim_bfd_instance", True, "false", dict(PIM_ON)),
+    # PR725-HSRP5, measured live on a source-campaign SVI (NDFC 12.6.0.267). An
+    # INTEGER: the public empty string stays refused, so the clear was measured through a raw
+    # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became
+    # `preempt`, with PREEMPT held true. The two forwarding thresholds are grouped-only below.
+    (SVI, "hsrpPreemptDelayMinimum"): ("hsrp_preempt_delay_minimum", 45, "", dict(HSRP_CTX)),
 }
 # The registered identities that deliberately have NO per-row fixture, each with the reason.
 # NAMED, not silently subtracted: the coverage guard requires every member to be registered and
@@ -857,6 +870,12 @@ GROUPED_ONLY_NO_PER_ROW_FIXTURE = {
     (ROUTED, "dampeningReuse"): "all_or_none with suppress/max_suppress",
     (ROUTED, "dampeningSuppress"): "all_or_none with reuse/max_suppress",
     (ROUTED, "dampeningMaxSuppress"): "all_or_none with reuse/suppress",
+    # One child emits BOTH thresholds and the installed int_vlan body rejects either one alone
+    # ("Both HSRP lower and upper forwarding thresholds are required"), so a per-row omission of
+    # one describes a request the controller refuses. Covered as a pair in
+    # `test_gie_hsrp3_resets.py`.
+    (SVI, "hsrpPriorityForwardingThresholdLower"): "coordinated pair with the upper threshold",
+    (SVI, "hsrpPriorityForwardingThresholdUpper"): "coordinated pair with the lower threshold",
 }
 
 PILOT_IDS = ["%s::%s" % (p, n) for (p, n) in PILOT]

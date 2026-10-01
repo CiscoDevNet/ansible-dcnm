@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = d173a5c39c116c205038ae11b8867b46023ebc4b9aca47ea76fccd18b9cff3a9
+# provenance_sha256 = fc31ba1550bca8ffd8c6b7324db0411b6ee4ec4ebddb5627f0728538b93b8c93
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "d173a5c39c116c205038ae11b8867b46023ebc4b9aca47ea76fccd18b9cff3a9"
+PROVENANCE_SHA256 = "fc31ba1550bca8ffd8c6b7324db0411b6ee4ec4ebddb5627f0728538b93b8c93"
 
 BINDING_TABLE = (
     {
@@ -2538,6 +2538,7 @@ BINDING_TABLE = (
         'applicable_interface_type': 'svi',
         'applicable_mode': 'vlan',
         'type': 'integer',
+        'reset_wire': '',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'min_value': 0,
@@ -2551,6 +2552,7 @@ BINDING_TABLE = (
         'applicable_interface_type': 'svi',
         'applicable_mode': 'vlan',
         'type': 'integer',
+        'reset_wire': '',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'min_value': 0,
@@ -2564,6 +2566,7 @@ BINDING_TABLE = (
         'applicable_interface_type': 'svi',
         'applicable_mode': 'vlan',
         'type': 'integer',
+        'reset_wire': '',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'min_value': 0,
