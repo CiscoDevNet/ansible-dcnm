@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = fc31ba1550bca8ffd8c6b7324db0411b6ee4ec4ebddb5627f0728538b93b8c93
+# provenance_sha256 = 13ccf6fb0ffa1abce42a18878128789b3fb6d71fbb3ac6da14bc6ea6be79945a
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "fc31ba1550bca8ffd8c6b7324db0411b6ee4ec4ebddb5627f0728538b93b8c93"
+PROVENANCE_SHA256 = "13ccf6fb0ffa1abce42a18878128789b3fb6d71fbb3ac6da14bc6ea6be79945a"
 
 BINDING_TABLE = (
     {
@@ -2863,6 +2863,7 @@ BINDING_TABLE = (
         'applicable_interface_type': 'svi',
         'applicable_mode': 'vlan',
         'type': 'string',
+        'reset_wire': '',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
@@ -2941,6 +2942,86 @@ BINDING_TABLE = (
         'applicable_mode': 'access',
         'type': 'enum',
         'valid_values': ('no', 'network', 'normal'),
+        'reset_wire': 'no',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vpc_dot1q_tunnel',
+        'parent_nvpair': 'aclFilter',
+        'profile_key': 'acl_filter',
+        'applicable_interface_type': 'vpc',
+        'applicable_mode': 'dot1q',
+        'type': 'string',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 64,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vpc_dot1q_tunnel',
+        'parent_nvpair': 'lldpReceive',
+        'profile_key': 'disable_lldp_receive',
+        'applicable_interface_type': 'vpc',
+        'applicable_mode': 'dot1q',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vpc_dot1q_tunnel',
+        'parent_nvpair': 'lldpTransmit',
+        'profile_key': 'disable_lldp_transmit',
+        'applicable_interface_type': 'vpc',
+        'applicable_mode': 'dot1q',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vpc_dot1q_tunnel',
+        'parent_nvpair': 'qosStatsSuppressed',
+        'profile_key': 'disable_qos_stats',
+        'applicable_interface_type': 'vpc',
+        'applicable_mode': 'dot1q',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vpc_dot1q_tunnel',
+        'parent_nvpair': 'queuingStats',
+        'profile_key': 'disable_queuing_stats',
+        'applicable_interface_type': 'vpc',
+        'applicable_mode': 'dot1q',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vpc_dot1q_tunnel',
+        'parent_nvpair': 'spanningTreePortType',
+        'profile_key': 'spanning_tree_port_type',
+        'applicable_interface_type': 'vpc',
+        'applicable_mode': 'dot1q',
+        'type': 'enum',
+        'valid_values': ('no', 'network', 'normal'),
+        'default_template': 'no',
         'reset_wire': 'no',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',

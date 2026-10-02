@@ -168,7 +168,9 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 104 = 103 + enable_macsec_interface_policy, the only MACSEC boolean; the other three
     # fields are names (strings).
     # 105 = 104 + enable_vpc_peer_link, the only boolean in batch 2.
-    assert len(BOOL_PASSTHROUGH) == 105
+    # 109 = 105 + the four int_vpc_dot1q_tunnel booleans (disable_lldp_transmit,
+    # disable_lldp_receive, disable_qos_stats, disable_queuing_stats).
+    assert len(BOOL_PASSTHROUGH) == 109
 
 
 # ------------------------------------------------------- what the engine emits --

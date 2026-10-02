@@ -117,6 +117,19 @@ COMMITTED_BINDINGS = {
     ("int_vpc_trunk_host", "queuingStats"): "disable_queuing_stats",
     ("int_vpc_access_host", "queuingStats"): "disable_queuing_stats",
 
+    # int_vpc_dot1q_tunnel -- the vPC dot1q-tunnel parent. The same six public keys as
+    # int_vpc_access_host and int_port_channel_dot1q_tunnel_host, read from the INSTALLED
+    # parent declarations and its forwarding: four reach each peer's
+    # int_vpc_dot1q_tunnel_po_11_1, the two LLDP fields each member's
+    # int_vpc_dot1q_tunnel_po_member_11_1. Each carries the reset of its explicit neutral,
+    # measured on this parent on both peers. See registry_slice_0b_36_vpc_dot1q.yaml.
+    ("int_vpc_dot1q_tunnel", "aclFilter"): "acl_filter",
+    ("int_vpc_dot1q_tunnel", "spanningTreePortType"): "spanning_tree_port_type",
+    ("int_vpc_dot1q_tunnel", "qosStatsSuppressed"): "disable_qos_stats",
+    ("int_vpc_dot1q_tunnel", "queuingStats"): "disable_queuing_stats",
+    ("int_vpc_dot1q_tunnel", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_vpc_dot1q_tunnel", "lldpReceive"): "disable_lldp_receive",
+
     # int_routed_host -- the first non-switchport parent after the fabric loopback.
     #
     # Four of these six delegate to a child template (interface_lldp_disable,

@@ -431,6 +431,21 @@ BATCH2_ROWS = {
 }
 
 
+# The vPC dot1q-tunnel parent (PR725-VPC-DOT1Q-001): the six keys int_vpc_access_host also
+# registers, read from the installed int_vpc_dot1q_tunnel. Registered without a reset.
+VPC_DOT1Q_ROWS = {
+    ("int_vpc_dot1q_tunnel", nvpair, key)
+    for nvpair, key in (
+        ("aclFilter", "acl_filter"),
+        ("spanningTreePortType", "spanning_tree_port_type"),
+        ("qosStatsSuppressed", "disable_qos_stats"),
+        ("queuingStats", "disable_queuing_stats"),
+        ("lldpTransmit", "disable_lldp_transmit"),
+        ("lldpReceive", "disable_lldp_receive"),
+    )
+}
+
+
 # ---- binding package runtime contract ----
 def test_package_provenance_and_size():
     expected_keys = (
@@ -439,13 +454,14 @@ def test_package_provenance_and_size():
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
-        | MACSEC_ROWS | BATCH2_ROWS
+        | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    assert len(BINDING_TABLE) == len(actual_keys) == 228
+    # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS).
+    assert len(BINDING_TABLE) == len(actual_keys) == 234
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -476,6 +492,7 @@ def test_package_provenance_and_size():
     assert len(LINK_LOCAL_ROWS) == 3
     assert len(MACSEC_ROWS) == 4
     assert len(BATCH2_ROWS) == 3
+    assert len(VPC_DOT1Q_ROWS) == 6
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -517,7 +534,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 228
+    assert len(rows) == 234   # 228 + six int_vpc_dot1q_tunnel rows
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():

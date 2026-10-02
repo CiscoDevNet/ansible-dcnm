@@ -228,10 +228,14 @@ def test_the_previous_lot_is_untouched():
     would have hit instead. It is not part of this lot and must stay unregistered.
     """
     con_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
-    assert len(BINDING_TABLE) == 228, "the table has {0} identities".format(len(BINDING_TABLE))
-    # 197 integrated + 3 PR725-HSRP5 int_vlan rows (test_gie_hsrp3_resets.py) = 200.
-    assert len(con_reset) == 200, (
-        "the integrated table carries {0} resets, expected 200".format(len(con_reset)))
+    # 234 = 228 + six int_vpc_dot1q_tunnel rows (PR725-VPC-DOT1Q-001).
+    assert len(BINDING_TABLE) == 234, "the table has {0} identities".format(len(BINDING_TABLE))
+    # 197 integrated + 3 PR725-HSRP5 int_vlan rows (test_gie_hsrp3_resets.py) = 200, + the six
+    # int_vpc_dot1q_tunnel resets of PR725-VPC-DOT1Q-001 c2 = 206, + the existing
+    # int_vlan::privateVlanMapping reset = 207. Those rows live on other parents, so the
+    # access/trunk set below is unchanged.
+    assert len(con_reset) == 197 + 3 + 6 + 1, (
+        "the integrated table carries {0} resets, expected 207".format(len(con_reset)))
     nuestras = {(r["parent_template"], r["profile_key"]) for r in con_reset
                 if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK)}
     assert nuestras == {(f[0], f[1]) for f in FILAS}

@@ -102,10 +102,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
        + 5 vPC access + 6 vPC trunk + 3 fabric loopback
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
-    assert len(BINDING_TABLE) == 228
-    assert len(set(keys)) == 228, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 234   # 228 + six int_vpc_dot1q_tunnel rows
+    assert len(set(keys)) == 234, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 228, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 234, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -183,7 +183,7 @@ def _as_slice_rows(rows):
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 228
+    assert len(gen.compile_rows(rows)) == 234
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -215,7 +215,7 @@ def test_generator_enforces_the_registry_schema_per_row():
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 228
+    assert len(gen.compile_rows(rows)) == 234
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -311,7 +311,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 228
+    assert len(gen.compile_rows(rows)) == 234
 
 
 # ------------------------------------------------------------------ positive transport
