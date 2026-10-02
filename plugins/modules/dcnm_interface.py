@@ -299,7 +299,9 @@ options:
           mode:
             description:
             -  Interface mode
-            choices: ['trunk', 'access']
+            - C(dot1q) selects the dot1q-tunnel vPC template (C(int_vpc_dot1q_tunnel)) and
+              requires NDFC 12. It takes the same options as C(access), plus the LACP options.
+            choices: ['trunk', 'access', 'dot1q']
             type: str
             required: true
           peer1_pcid:
@@ -381,13 +383,15 @@ options:
           peer1_access_vlan:
             description:
             - Vlan for the interface of first peer.
-              This option is applicable only for interfaces whose 'mode' is 'access'
+              This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q'.
+              For 'dot1q' it is the dot1q-tunnel VLAN of that peer.
             type: str
             default: ''
           peer2_access_vlan:
             description:
             - Vlan for the interface of second peer.
-              This option is applicable only for interfaces whose 'mode' is 'access'
+              This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q'.
+              For 'dot1q' it is the dot1q-tunnel VLAN of that peer.
             type: str
             default: ''
           peer1_cmds:
@@ -992,6 +996,39 @@ options:
             - Flag to enable/disable overthrow of low priority active routers. This parameter is valid only if "enable_hsrp" is True.
             type: bool
             default: false
+          secondary_gws:
+            description:
+            - Secondary IPv4 addresses of the SVI, each with its prefix length. At most 16 entries.
+            - Entries are identified by address. Order is not significant.
+            - With I(state=merged), an omitted key or an empty list leaves the current entries
+              unchanged, and a non-empty list is added to them; an address that already exists
+              takes the prefix length given here.
+            - With I(state=replaced) and for an interface kept by I(state=overridden), the list
+              is the complete set; omitting the key or giving an empty list removes every entry.
+            - Requires a primary IPv4 address on the SVI.
+            type: list
+            elements: dict
+            suboptions:
+              gateway_ip_address:
+                description:
+                - IPv4 address and prefix length, for example 192.0.2.254/24. Host bits are kept.
+                type: str
+                required: true
+          hsrp_secondary_vips:
+            description:
+            - Secondary IPv4 virtual addresses of the existing HSRP group. At most 16 entries.
+            - Same merged, replaced and overridden behavior as I(secondary_gws), identified by
+              address. The HSRP group and its primary virtual address are not changed.
+            - The controller requires HSRP enabled with a primary IPv4 virtual address, and each
+              entry in the subnet of the SVI primary address.
+            type: list
+            elements: dict
+            suboptions:
+              hsrp_secondary_vip:
+                description:
+                - IPv4 address, for example 192.0.2.123.
+                type: str
+                required: true
       profile_st_fex:
         description:
         - Though the key shown here is 'profile_st_fex' the actual key to be used in playbook
@@ -1560,6 +1597,32 @@ EXAMPLES = """
           peer2_description: "VPC acting as trunk peer2"
 
 
+- name: Create a dot1q-tunnel vPC
+  cisco.dcnm.dcnm_interface:
+    fabric: mmudigon-fabric
+    state: merged
+    config:
+      - name: vpc760                      # should be of the form vpc<port-id>
+        type: vpc
+        switch:                           # both switches of the vPC pair
+          - "192.172.1.1"
+          - "192.172.1.2"
+        deploy: true
+        profile:
+          mode: dot1q                     # dot1q-tunnel vPC (int_vpc_dot1q_tunnel), NDFC 12
+          peer1_pcid: 760
+          peer2_pcid: 760
+          peer1_members:
+            - e1/27
+          peer2_members:
+            - e1/27
+          peer1_access_vlan: 3790         # dot1q-tunnel VLAN on peer 1
+          peer2_access_vlan: 3790         # dot1q-tunnel VLAN on peer 2
+          peer1_description: "dot1q-tunnel vPC peer1"
+          peer2_description: "dot1q-tunnel vPC peer2"
+          disable_lldp_transmit: true     # registered generic fields of this parent
+          disable_lldp_receive: true
+
 - name: Replace vPC interfaces
   cisco.dcnm.dcnm_interface:
     fabric: mmudigon-fabric
@@ -1654,7 +1717,7 @@ EXAMPLES = """
         deploy: true                                # choose from [true, false]
         profile:
           int_vrf: blue                             # optional, Interface VRF name, default is "default"
-          ipv4_addr: 192.168.2.1                    # optional, Interfae IP, default is ""
+          ipv4_addr: 192.0.2.1                      # optional, Interfae IP, default is ""
           ipv4_mask_len: 24                         # optional, IP mask length, default is ""
           mtu: 9216                                 # optional, MTU default is ""
           route_tag: 1001                           # optional, Routing TAG, default is ""
@@ -1663,7 +1726,7 @@ EXAMPLES = """
             - no shutdown
           admin_state: true                         # Flag to enable/disable Vlan interaface
           enable_hsrp: true                         # optional, flag to enable/disable HSRP on the interface, default is "false"
-          hsrp_vip: 192.168.2.100                   # optional, Virtual IP address for HSRP, default is ""
+          hsrp_vip: 192.0.2.100                     # optional, Virtual IP address for HSRP, default is ""
           hsrp_group: 10                            # optional, HSRP group, default is ""
           hsrp_priority: 5                          # optional, HSRP priority, default is ""
           hsrp_vmac: 0000.0101.ac0a                 # optional, HSRP virtual MAC, default is ""
@@ -1683,6 +1746,12 @@ EXAMPLES = """
           preempt: true                             # optional, flag to enable/disable overthrow of low priority active routers, optional is "false"
           mode: vlan                                # choose from [vlan, vlan_admin_state], default is "vlan"
           description: Switched vlan interface 1001 # optional, Interface description, default is ""
+          secondary_gws:                            # optional, secondary IPv4 addresses (max 16)
+            - gateway_ip_address: 198.51.100.1/24
+            - gateway_ip_address: 203.0.113.1/24
+          hsrp_secondary_vips:                      # optional, secondary HSRP virtual addresses (max 16)
+            - hsrp_secondary_vip: 192.0.2.101
+            - hsrp_secondary_vip: 192.0.2.102
 
 - name: Replace SVI interface
   cisco.dcnm.dcnm_interface:
@@ -2030,6 +2099,7 @@ EXAMPLES = """
 
 import copy
 import inspect
+import ipaddress
 import json
 import logging
 import re
@@ -2179,6 +2249,232 @@ def json_pretty(msg):
     Return a pretty-printed JSON string for logging messages
     """
     return json.dumps(msg, indent=4, sort_keys=True)
+
+
+# ----------------------------------------------------------------------------- SVI address lists
+# The two structured int_vlan fields. Both are native module arguments, NOT registry bindings:
+# each is a list whose members are compared by identity, which the scalar engine cannot express.
+#
+#   public key           nvPair               element key           wire element key
+#   secondary_gws        secondaryGws         gateway_ip_address    gatewayIpAddress   (A.B.C.D/P)
+#   hsrp_secondary_vips  hsrpSecondaryVips    hsrp_secondary_vip    hsrpSecondaryVip   (A.B.C.D)
+#
+# Wire form, measured on the controller readback: compact JSON text with a wrapper object,
+#     {"secondaryGws":[{"gatewayIpAddress":"192.0.2.254/24"}]}
+# and the empty string for "no entries". The installed template parses the text with
+# ast.literal_eval and accepts either the wrapper or a bare list; it caps each list at 16.
+SVI_ADDRESS_LIST_MAX = 16
+SVI_ADDRESS_LISTS = {
+    "secondary_gws": {
+        "nvpair": "secondaryGws",
+        "element": "gateway_ip_address",
+        "wire_element": "gatewayIpAddress",
+        "wire_element_aliases": ("gatewayIpAddress",),
+        "wire_wrappers": ("secondaryGws", "secondaryGWs"),
+        "with_prefix": True,
+    },
+    "hsrp_secondary_vips": {
+        "nvpair": "hsrpSecondaryVips",
+        "element": "hsrp_secondary_vip",
+        "wire_element": "hsrpSecondaryVip",
+        "wire_element_aliases": ("hsrpSecondaryVip", "HSRP_SECONDARY_VIP"),
+        "wire_wrappers": ("hsrpSecondaryVips", "HSRP_SECONDARY_VIPS"),
+        "with_prefix": False,
+    },
+}
+
+
+class SviAddressListError(ValueError):
+    """An SVI address list that is malformed, in the playbook or in the controller readback."""
+
+
+def svi_address_normalize(key, value):
+    """Return (identity, canonical) for one list element value, or raise SviAddressListError.
+
+    The identity is the IPv4 address. For secondary_gws the canonical form keeps the host bits
+    and the prefix ("192.0.2.254/24"); the prefix is data, not identity, so an explicit new prefix
+    for the same address is an update of that entry.
+    """
+    if not isinstance(value, str) or value == "":
+        raise SviAddressListError(
+            "{0}: element value must be a non-empty string, got {1!r}".format(key, value)
+        )
+    if SVI_ADDRESS_LISTS[key]["with_prefix"]:
+        parts = value.split("/")
+        if len(parts) != 2 or not re.match(r"^[0-9]{1,2}$", parts[1]):
+            raise SviAddressListError(
+                "{0}: {1!r} is not in IPv4 address/prefix format".format(key, value)
+            )
+        prefix = int(parts[1])
+        if str(prefix) != parts[1] or not 1 <= prefix <= 32:
+            raise SviAddressListError(
+                "{0}: {1!r} has a prefix outside 1-32".format(key, value)
+            )
+        address = parts[0]
+    else:
+        address = value
+        prefix = None
+    try:
+        parsed = ipaddress.IPv4Address(address)
+    except ValueError:
+        raise SviAddressListError(
+            "{0}: {1!r} is not a valid IPv4 address".format(key, value)
+        )
+    identity = str(parsed)
+    if identity != address:
+        raise SviAddressListError(
+            "{0}: {1!r} is not in canonical IPv4 notation".format(key, value)
+        )
+    canonical = identity if prefix is None else "{0}/{1}".format(identity, prefix)
+    return identity, canonical
+
+
+def svi_address_list_from_input(key, value):
+    """Validate a playbook list and return [(identity, canonical), ...] in input order.
+
+    Rejects null, non-list values, non-dict elements, unknown or missing element keys,
+    invalid addresses, duplicate identities and more than SVI_ADDRESS_LIST_MAX entries.
+    """
+    element = SVI_ADDRESS_LISTS[key]["element"]
+    if value is None:
+        raise SviAddressListError(
+            "{0} must be a list; null is not accepted. Omit the key to leave the list "
+            "untouched under merged, or give [] for an explicit empty list".format(key)
+        )
+    if not isinstance(value, list):
+        raise SviAddressListError(
+            "{0} must be a list of dictionaries, got {1}".format(key, type(value).__name__)
+        )
+    if len(value) > SVI_ADDRESS_LIST_MAX:
+        raise SviAddressListError(
+            "{0} supports at most {1} entries, got {2}".format(
+                key, SVI_ADDRESS_LIST_MAX, len(value))
+        )
+    entries = []
+    seen = {}
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            raise SviAddressListError(
+                "{0}[{1}] must be a dictionary with the key {2!r}".format(key, index, element)
+            )
+        unknown = sorted(str(k) for k in item if k != element)
+        if unknown:
+            raise SviAddressListError(
+                "{0}[{1}] has unsupported keys {2}; the only key is {3!r}".format(
+                    key, index, unknown, element)
+            )
+        if element not in item:
+            raise SviAddressListError(
+                "{0}[{1}] is missing the required key {2!r}".format(key, index, element)
+            )
+        identity, canonical = svi_address_normalize(key, item[element])
+        if identity in seen:
+            raise SviAddressListError(
+                "{0} lists the address {1} more than once ({2!r} and {3!r})".format(
+                    key, identity, seen[identity], canonical)
+            )
+        seen[identity] = canonical
+        entries.append((identity, canonical))
+    return entries
+
+
+def svi_address_list_from_wire(key, raw):
+    """Parse the nvPair text into [(identity, canonical), ...].
+
+    "" is the measured empty representation. Anything else must be JSON with the wrapper or a
+    bare list, exactly as the template accepts it. A malformed value raises: it is never read
+    as an empty list, because that would turn a parse failure into a withdrawal.
+    """
+    meta = SVI_ADDRESS_LISTS[key]
+    if raw == "":
+        return []
+    if not isinstance(raw, str):
+        raise SviAddressListError(
+            "{0}: unrecognized controller representation {1!r}".format(meta["nvpair"], raw)
+        )
+    try:
+        obj = json.loads(raw)
+    except ValueError:
+        raise SviAddressListError(
+            "{0}: controller value is not valid JSON".format(meta["nvpair"])
+        )
+    if isinstance(obj, dict):
+        wrappers = [w for w in meta["wire_wrappers"] if w in obj]
+        if len(obj) != 1 or len(wrappers) != 1:
+            raise SviAddressListError(
+                "{0}: unexpected wrapper keys {1}".format(meta["nvpair"], sorted(obj))
+            )
+        obj = obj[wrappers[0]]
+    if not isinstance(obj, list):
+        raise SviAddressListError(
+            "{0}: controller value is not a list".format(meta["nvpair"])
+        )
+    if len(obj) > SVI_ADDRESS_LIST_MAX:
+        raise SviAddressListError(
+            "{0}: controller value has more than {1} entries".format(
+                meta["nvpair"], SVI_ADDRESS_LIST_MAX)
+        )
+    entries = []
+    seen = set()
+    for item in obj:
+        if not isinstance(item, dict):
+            raise SviAddressListError(
+                "{0}: controller list element is not an object".format(meta["nvpair"])
+            )
+        keys = [k for k in meta["wire_element_aliases"] if k in item]
+        if len(item) != 1 or len(keys) != 1:
+            raise SviAddressListError(
+                "{0}: unexpected element keys {1}".format(meta["nvpair"], sorted(item))
+            )
+        if item[keys[0]] == "":
+            # The template skips empty elements; they configure nothing.
+            continue
+        identity, canonical = svi_address_normalize(key, item[keys[0]])
+        if identity in seen:
+            raise SviAddressListError(
+                "{0}: controller value repeats {1}".format(meta["nvpair"], identity)
+            )
+        seen.add(identity)
+        entries.append((identity, canonical))
+    return entries
+
+
+def svi_address_list_to_wire(key, entries):
+    """Serialize [(identity, canonical), ...] in the measured wire form; [] -> ""."""
+    meta = SVI_ADDRESS_LISTS[key]
+    if not entries:
+        return ""
+    return json.dumps(
+        {meta["wire_wrappers"][0]: [{meta["wire_element"]: c} for _i, c in entries]},
+        separators=(",", ":"),
+    )
+
+
+def svi_address_list_desired(state, requested, have):
+    """The effective list for one state.
+
+    requested is None when the key was omitted. merged: omitted or [] preserves HAVE, a
+    nonempty list is a union with upsert by identity (an existing entry keeps its position).
+    replaced/overridden: exact requested membership; omitted or [] removes every entry.
+    """
+    if state == "merged":
+        if not requested:
+            return list(have)
+        result = list(have)
+        position = dict((identity, index) for index, (identity, _c) in enumerate(result))
+        for identity, canonical in requested:
+            if identity in position:
+                result[position[identity]] = (identity, canonical)
+            else:
+                position[identity] = len(result)
+                result.append((identity, canonical))
+        return result
+    return list(requested or [])
+
+
+def svi_address_list_same(left, right):
+    """Membership equality; order is not a functional difference."""
+    return dict(left) == dict(right)
 
 
 class DcnmIntf:
@@ -2367,6 +2663,8 @@ class DcnmIntf:
             "advSubnetInUnderlay": "adv_subnet_in_unbderlay",
             "ENABLE_NETFLOW": "enable_netflow",
             "NETFLOW_MONITOR": "netflow_monitor",
+            "secondaryGws": "secondary_gws",
+            "hsrpSecondaryVips": "hsrp_secondary_vips",
             "policy": "policy",
             "ifName": "ifname",
             "serialNumber": "sno",
@@ -2498,6 +2796,7 @@ class DcnmIntf:
                 "eth_dot1q": "int_dot1q_tunnel_host",
                 "vpc_trunk": "int_vpc_trunk_host",
                 "vpc_access": "int_vpc_access_host",
+                "vpc_dot1q": "int_vpc_dot1q_tunnel",
                 "svi_vlan": "int_vlan",
                 "svi_vlan_admin_state": "int_vlan_admin_state",
                 "st_fex_port_channel_st": "int_port_channel_fex",
@@ -2927,6 +3226,24 @@ class DcnmIntf:
                         pol_ind_str = (
                             cfg["type"] + "_" + cfg["profile"]["mode"]
                         )
+                        if (
+                            cfg["type"] == "vpc"
+                            and pol_ind_str not in self.pol_types[self.dcnm_version]
+                        ):
+                            # Without this an unsupported vPC mode -- or dot1q on a controller
+                            # without int_vpc_dot1q_tunnel -- raised a bare KeyError here.
+                            self.module.fail_json(
+                                msg="Invalid parameters in playbook: while processing interface "
+                                + ifname
+                                + ", mode : {0!r} is not a supported vPC mode on this controller; "
+                                "supported: {1}".format(
+                                    cfg["profile"]["mode"],
+                                    ", ".join(sorted(
+                                        k[len("vpc_"):] for k in self.pol_types[self.dcnm_version]
+                                        if k.startswith("vpc_")
+                                    )),
+                                )
+                            )
 
                         c[ck]["ifname"] = ifname
                         c[ck]["policy"] = self.pol_types[self.dcnm_version][
@@ -3217,6 +3534,18 @@ class DcnmIntf:
         )
         vpc_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
 
+        # dot1q-tunnel (int_vpc_dot1q_tunnel). The installed parent declares the access-port
+        # set -- per-peer access VLAN, which is the dot1q-tunnel (outer) VLAN on each peer --
+        # plus the four LACP options that the trunk spec already exposes. Same public names and
+        # defaults as the sibling specs; nothing here is new public vocabulary.
+        vpc_prof_spec_dot1q = dict(vpc_prof_spec_access)
+        vpc_prof_spec_dot1q.update(
+            disable_lacp_suspend_individual=dict(type="bool", default=False),
+            enable_lacp_vpc_convergence=dict(type="bool", default=False),
+            lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
+            lacp_rate=dict(type="str", default="normal"),
+        )
+
         # Registered keys must reach the vPC spec exactly as they reach the ethernet and
         # port-channel ones. Without this the keys are not in the spec, so
         # validate_list_of_dicts drops them as unknown legacy fields and the value never
@@ -3229,14 +3558,24 @@ class DcnmIntf:
         gie_extend_prof_spec(
             vpc_prof_spec_access, "int_vpc_access_host", cfg[0]["profile"]
         )
+        gie_extend_prof_spec(
+            vpc_prof_spec_dot1q, "int_vpc_dot1q_tunnel", cfg[0]["profile"]
+        )
 
-        if "trunk" == cfg[0]["profile"]["mode"]:
+        # An unsupported vPC mode, or dot1q on a controller without int_vpc_dot1q_tunnel, is
+        # refused earlier, in dcnm_intf_copy_config, where pol_types is first indexed.
+        mode = cfg[0]["profile"]["mode"]
+        if "trunk" == mode:
             self.dcnm_intf_validate_interface_input(
                 cfg, vpc_spec, vpc_prof_spec_trunk
             )
-        if "access" == cfg[0]["profile"]["mode"]:
+        if "access" == mode:
             self.dcnm_intf_validate_interface_input(
                 cfg, vpc_spec, vpc_prof_spec_access
+            )
+        if "dot1q" == mode:
+            self.dcnm_intf_validate_interface_input(
+                cfg, vpc_spec, vpc_prof_spec_dot1q
             )
 
     def dcnm_intf_validate_sub_interface_input(self, cfg):
@@ -3886,6 +4225,24 @@ class DcnmIntf:
 
     def dcnm_intf_validate_vlan_interface_input(self, cfg):
 
+        # The two SVI address lists are validated on the RAW profile, before
+        # validate_list_of_dicts: that helper turns an explicit null into the default, which
+        # would make `null` indistinguishable from omission. Omission and [] must stay distinct.
+        raw_profile = cfg[0].get("profile")
+        if isinstance(raw_profile, dict):
+            for list_key in SVI_ADDRESS_LISTS:
+                if list_key not in raw_profile:
+                    continue
+                try:
+                    svi_address_list_from_input(list_key, raw_profile[list_key])
+                except SviAddressListError as exc:
+                    self.module.fail_json(
+                        msg="Invalid parameters in playbook: while processing interface "
+                        + str(cfg[0].get("name"))
+                        + ", "
+                        + str(exc)
+                    )
+
         svi_spec = dict(
             name=dict(required=True, type="str"),
             switch=dict(required=True, type="list", elements="str"),
@@ -3928,6 +4285,10 @@ class DcnmIntf:
             adv_subnet_in_underlay=dict(type="bool", default=False),
             enable_hsrp=dict(type="bool", default=False),
             enable_netflow=dict(type="bool", default=False),
+            # No default on purpose: an omitted list stays None, which the comparison reads as
+            # "not requested" (merged preserves, replaced withdraws). [] is an explicit list.
+            secondary_gws=dict(type="list", elements="dict"),
+            hsrp_secondary_vips=dict(type="list", elements="dict"),
         )
 
         if cfg[0]["profile"].get("dhcp_server_addr1", "") != "":
@@ -4492,7 +4853,10 @@ class DcnmIntf:
             else:
                 intf["interfaces"][0]["nvPairs"]["PEER2_PCID"] = str(peer2_pcid)
 
-        if delem[profile]["mode"] == "access":
+        # dot1q-tunnel carries the same base nvPairs as access: members, PC mode, BPDU guard,
+        # port type fast, MTU, per-peer access VLAN (the tunnel VLAN) and per-peer PC IDs, all
+        # declared by int_vpc_dot1q_tunnel with the same names. The peer mapping above applies.
+        if delem[profile]["mode"] in ("access", "dot1q"):
 
             if peer1_members is None:
                 intf["interfaces"][0]["nvPairs"][
@@ -5247,6 +5611,18 @@ class DcnmIntf:
                 intf["interfaces"][0]["nvPairs"]["NETFLOW_MONITOR"] = ""
 
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+
+            # The address lists are emitted only when the playbook gives them; an omitted list
+            # leaves its nvPair out, exactly as before this feature. The comparison step decides
+            # what an omission means for the state (dcnm_intf_reconcile_svi_address_lists).
+            for list_key, list_meta in SVI_ADDRESS_LISTS.items():
+                requested = delem[profile].get(list_key)
+                if requested is not None:
+                    intf["interfaces"][0]["nvPairs"][list_meta["nvpair"]] = (
+                        svi_address_list_to_wire(
+                            list_key, svi_address_list_from_input(list_key, requested)
+                        )
+                    )
 
             intf["interfaces"][0]["nvPairs"][
                 "SPEED"
@@ -6182,6 +6558,68 @@ class DcnmIntf:
                     return "add"
         return "dont_add"
 
+    def dcnm_intf_reconcile_svi_address_lists(
+        self, state, name, want_nv, have_entries, ik, nv_keys, changed_nv
+    ):
+        """Resolve the two int_vlan address lists against HAVE, in place.
+
+        Runs before the generic nvPair comparison, which then sees either the HAVE text itself
+        (no change, nothing reported) or the serialized desired list (a reported change):
+
+            requested   merged                     replaced / retained overridden
+            omitted     preserve HAVE              remove every entry
+            []          preserve HAVE              remove every entry
+            nonempty    union, upsert by address   exact requested membership
+
+        Equality is by membership, so a reordered list is not a change. When the result equals
+        HAVE, the HAVE text is carried unchanged instead of relying on how the controller treats
+        an absent nvPair. A malformed HAVE fails the run before any request is sent.
+        """
+        have_nv = next(
+            (intf[ik] for intf in have_entries if isinstance(intf.get(ik), dict)), None
+        )
+        if have_nv is None:
+            self.module.fail_json(
+                msg="Interface {0}: the controller returned no nvPairs, so the SVI address "
+                "lists cannot be compared. No change was sent.".format(name)
+            )
+        for list_key, list_meta in SVI_ADDRESS_LISTS.items():
+            nvpair = list_meta["nvpair"]
+            requested = None
+            if nvpair in want_nv:
+                # The builder emits this nvPair only from a validated playbook list.
+                requested = svi_address_list_from_wire(list_key, want_nv[nvpair])
+            # A key the controller does not return carries no list; null is not a measured
+            # representation and is refused rather than read as empty.
+            have_raw = have_nv.get(nvpair, "")
+            try:
+                have_list = svi_address_list_from_wire(list_key, have_raw)
+            except SviAddressListError as exc:
+                self.module.fail_json(
+                    msg="Interface {0}: {1}. No change was sent.".format(name, exc)
+                )
+            desired = svi_address_list_desired(state, requested, have_list)
+            if len(desired) > SVI_ADDRESS_LIST_MAX:
+                self.module.fail_json(
+                    msg="Interface {0}: {1} would hold {2} entries after the merge; the "
+                    "maximum is {3}. No change was sent.".format(
+                        name, list_key, len(desired), SVI_ADDRESS_LIST_MAX)
+                )
+            if svi_address_list_same(desired, have_list):
+                if nvpair in have_nv:
+                    want_nv[nvpair] = have_raw
+                else:
+                    want_nv.pop(nvpair, None)
+                    if nvpair in nv_keys:
+                        nv_keys.remove(nvpair)
+                    changed_nv.pop(nvpair, None)
+                continue
+            wire = svi_address_list_to_wire(list_key, desired)
+            want_nv[nvpair] = wire
+            if nvpair not in nv_keys:
+                nv_keys.append(nvpair)
+            changed_nv[nvpair] = wire
+
     def dcnm_intf_can_be_added(self, want):
 
         name = want["interfaces"][0]["ifName"]
@@ -6673,6 +7111,17 @@ class DcnmIntf:
                                     # capability gate and the binding gone there is no explicit
                                     # request to safeguard: the module never sends the nvPair,
                                     # and the carry-forward above keeps whatever the fabric set.
+
+                                    if want.get("policy") == "int_vlan":
+                                        self.dcnm_intf_reconcile_svi_address_lists(
+                                            state,
+                                            name,
+                                            want[k][0][ik],
+                                            d[k],
+                                            ik,
+                                            nv_keys,
+                                            changed_dict[k][0][ik],
+                                        )
 
                                     # List of keys to check and potentially remove from nv_keys
                                     # Some keys are not present in the first GET and must be removed

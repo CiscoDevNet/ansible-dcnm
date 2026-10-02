@@ -93,7 +93,8 @@ PC_DOT1Q = "int_port_channel_dot1q_tunnel_host"
 PC_PARENTS = (PC_ACCESS, PC_TRUNK, PC_DOT1Q)
 VPC_ACCESS = "int_vpc_access_host"
 VPC_TRUNK = "int_vpc_trunk_host"
-VPC_PARENTS = (VPC_ACCESS, VPC_TRUNK)
+VPC_DOT1Q = "int_vpc_dot1q_tunnel"
+VPC_PARENTS = (VPC_ACCESS, VPC_TRUNK, VPC_DOT1Q)
 
 # Parents whose config is NOT an `eth` on `IF_A`. Every place that used to ask
 # `parent in PC_PARENTS` to decide "does this config need a different type/name?" asks this
@@ -859,6 +860,12 @@ PILOT = {
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became
     # `preempt`, with PREEMPT held true. The two forwarding thresholds are grouped-only below.
     (SVI, "hsrpPreemptDelayMinimum"): ("hsrp_preempt_delay_minimum", 45, "", dict(HSRP_CTX)),
+    # PR725-PVLAN2222, measured live on L1-F4 / Vlan2222 (NDFC 12.6.0.267). A STRING whose
+    # values are PREFIXES of one another -- `3214` is a prefix of `3214,3216` -- so the pilot
+    # value carries the comma on purpose: a fixture using `3214` alone would pass against a
+    # comparison that only matched a prefix. `min_length: 1` does not block the clear, because
+    # the plain-string exemption returns before the length check.
+    (SVI, "privateVlanMapping"): ("private_vlan_mapping", "3214,3216", "", {}),
 }
 # The registered identities that deliberately have NO per-row fixture, each with the reason.
 # NAMED, not silently subtracted: the coverage guard requires every member to be registered and
@@ -937,6 +944,14 @@ PILOT_VPC = {
     (VPC_TRUNK, "queuingStats"): ("disable_queuing_stats", True, "false", {}),
     (VPC_TRUNK, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", {}),
     (VPC_TRUNK, "GUARD_MODE"): ("guard_mode", "root", "no", {}),
+    # PR725-VPC-DOT1Q-001 c2: the dot1q-tunnel parent's own six, registered only after its
+    # explicit neutrals were measured on both peers. Same public keys, its own identities.
+    (VPC_DOT1Q, "aclFilter"): ("acl_filter", "PILOT-ACL", "", {}),
+    (VPC_DOT1Q, "lldpReceive"): ("disable_lldp_receive", True, "false", {}),
+    (VPC_DOT1Q, "lldpTransmit"): ("disable_lldp_transmit", True, "false", {}),
+    (VPC_DOT1Q, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", {}),
+    (VPC_DOT1Q, "queuingStats"): ("disable_queuing_stats", True, "false", {}),
+    (VPC_DOT1Q, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", {}),
 }
 
 # The combined matrix. Tests parametrized over this cover ethernet and port-channel in one
@@ -970,6 +985,12 @@ BASE_VPC_ACCESS = {"mode": "access", "peer1_pcid": 11, "peer2_pcid": 11,
                    "qos_policy": "pilot_qos", "queuing_policy": "pilot_queue"}
 BASE_VPC_TRUNK = dict(BASE_VPC_ACCESS, mode="trunk", peer1_pcid=12, peer2_pcid=12,
                       peer1_allowed_vlans="none", peer2_allowed_vlans="none")
+# dot1q-tunnel. Every per-peer value DIFFERS between the peers (PC ID, member, tunnel VLAN,
+# description), so a swapped peer mapping cannot pass by coincidence.
+BASE_VPC_DOT1Q = dict(BASE_VPC_ACCESS, mode="dot1q", peer1_pcid=13, peer2_pcid=14,
+                      peer1_members=["Ethernet1/53"], peer2_members=["Ethernet1/54"],
+                      peer1_access_vlan="3801", peer2_access_vlan="3802",
+                      peer1_description="dot1q peer1", peer2_description="dot1q peer2")
 # Distinguishes "the caller said nothing" from "the caller said None". `None` is a real
 # case -- an unreachable controller whose version could not be determined -- and the
 # boundary must fail closed on it, so it cannot share a default with "unspecified".
@@ -1012,7 +1033,7 @@ def base_for(parent, **extra):
     base = {TRUNK: BASE_TRUNK, ROUTED: BASE_ROUTED, SUBIF: BASE_SUBIF,
             PC_ACCESS: BASE_PC_ACCESS, PC_TRUNK: BASE_PC_TRUNK,
             PC_DOT1Q: BASE_PC_DOT1Q, VPC_ACCESS: BASE_VPC_ACCESS,
-            VPC_TRUNK: BASE_VPC_TRUNK, LOOPBACK: BASE_LOOPBACK,
+            VPC_TRUNK: BASE_VPC_TRUNK, VPC_DOT1Q: BASE_VPC_DOT1Q, LOOPBACK: BASE_LOOPBACK,
             SVI: BASE_SVI}.get(parent, BASE_ACCESS)
     prof = dict(base)
     prof.update(extra)
@@ -1057,7 +1078,7 @@ def ifname_for(parent):
     """The interface name to drive. A `pc` config named Ethernet1/31 is rejected, and a
     `sub_int` config needs the dotted name -- an undotted one resolves a different policy."""
     if parent in VPC_PARENTS:
-        return "vpc11" if parent == VPC_ACCESS else "vpc12"
+        return {VPC_ACCESS: "vpc11", VPC_TRUNK: "vpc12", VPC_DOT1Q: "vpc13"}[parent]
     if parent in PC_PARENTS:
         return PC_A
     if parent == LOOPBACK:
@@ -1147,6 +1168,7 @@ def _transport(calls, have):
                      "ifType": {LOOPBACK: "INTERFACE_LOOPBACK",
                                 VPC_ACCESS: "INTERFACE_VPC",
                                 VPC_TRUNK: "INTERFACE_VPC",
+                                VPC_DOT1Q: "INTERFACE_VPC",
                                 SVI: "INTERFACE_VLAN"}.get(p.get("policy"),
                                                            "INTERFACE_ETHERNET"),
                      "isPhysical": ("false" if p.get("policy") in (SUBIF, LOOPBACK, SVI)

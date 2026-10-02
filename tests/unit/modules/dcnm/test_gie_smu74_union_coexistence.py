@@ -107,7 +107,10 @@ UNION_RESET_TOTAL = 74
 # lives in the campaign reviews, and 174 must not be described as device-validated.
 # PR725-HSRP5 (2026-09-30) adds three int_vlan HSRP rows measured live on Leaf-103: the preempt
 # delay and the coordinated forwarding-threshold pair. 197 + 3 = 200.
-CANDIDATE_RESET_TOTAL = 200
+# PR725-VPC-DOT1Q-001 c2 adds the six int_vpc_dot1q_tunnel rows, registered only after their
+# explicit neutrals were measured on both peers of the pair. 200 + 6 = 206.
+# PR725-PVLAN2222 adds int_vlan::privateVlanMapping. 206 + 1 = 207.
+CANDIDATE_RESET_TOTAL = 207
 
 # The additions this candidate is allowed to carry, and nothing else: ALPHA's
 # four `int_routed_host` and four `int_subif` rows, plus BETA's two
@@ -468,15 +471,39 @@ HSRP3_ADDITIONS = (
 )
 HSRP3_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in HSRP3_ADDITIONS)
 
+# PR725-VPC-DOT1Q-001 c2: the vPC dot1q-tunnel parent's own six. Same public keys and reset forms
+# as the VPC13 lot, but separate identities measured on their own parent -- not transferred.
+VPC_DOT1Q6_ADDITIONS = tuple(
+    ("int_vpc_dot1q_tunnel", nv, key, reset)
+    for nv, key, reset in (
+        ("aclFilter", "acl_filter", ""),
+        ("lldpReceive", "disable_lldp_receive", "false"),
+        ("lldpTransmit", "disable_lldp_transmit", "false"),
+        ("qosStatsSuppressed", "disable_qos_stats", "false"),
+        ("queuingStats", "disable_queuing_stats", "false"),
+        ("spanningTreePortType", "spanning_tree_port_type", "no"),
+    )
+)
+VPC_DOT1Q6_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in VPC_DOT1Q6_ADDITIONS)
+
+# PR725-PVLAN2222 adds ONE int_vlan row. The explicit empty string clears
+# `private-vlan mapping 3214,3216` while protected SVI state remains present.
+PVLAN1_ADDITIONS = (
+    ("int_vlan", "privateVlanMapping", "private_vlan_mapping", ""),
+)
+PVLAN1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in PVLAN1_ADDITIONS)
+
 # Every addition this checkout carries over the published 74, by lot. The dampening lot is
 # included in the SET arithmetic -- it is registered, so it must be accounted for -- while its
 # controller-only evidence status is recorded above and asserted in its own grouped test.
 ALL_ADDITIONS = (CANDIDATE_ADDITIONS + EIGRP_ADDITIONS + MACSEC_ADDITIONS
                  + DAMPENING_EXPERIMENTAL_ADDITIONS + PIMACL_ADDITIONS
-                 + VPC13_ADDITIONS + HSRP3_ADDITIONS)
+                 + VPC13_ADDITIONS + HSRP3_ADDITIONS + VPC_DOT1Q6_ADDITIONS
+                 + PVLAN1_ADDITIONS)
 ALL_ADDED_IDENTITIES = (CANDIDATE_IDENTITIES | EIGRP_IDENTITIES | MACSEC_IDENTITIES
                         | DAMPENING_EXPERIMENTAL_IDENTITIES | PIMACL_IDENTITIES
-                        | VPC13_IDENTITIES | HSRP3_IDENTITIES)
+                        | VPC13_IDENTITIES | HSRP3_IDENTITIES | VPC_DOT1Q6_IDENTITIES
+                        | PVLAN1_IDENTITIES)
 
 
 def _rows():
@@ -560,9 +587,13 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     assert PIMACL_IDENTITIES <= registered and VPC13_IDENTITIES <= registered
     assert len(HSRP3_IDENTITIES) == len(HSRP3_ADDITIONS) == 3
     assert HSRP3_IDENTITIES <= registered
+    assert len(VPC_DOT1Q6_IDENTITIES) == len(VPC_DOT1Q6_ADDITIONS) == 6
+    assert VPC_DOT1Q6_IDENTITIES <= registered
+    assert len(PVLAN1_IDENTITIES) == len(PVLAN1_ADDITIONS) == 1
+    assert PVLAN1_IDENTITIES <= registered
     groups = (CANDIDATE_IDENTITIES, EIGRP_IDENTITIES, MACSEC_IDENTITIES,
               DAMPENING_EXPERIMENTAL_IDENTITIES, PIMACL_IDENTITIES, VPC13_IDENTITIES,
-              HSRP3_IDENTITIES)
+              HSRP3_IDENTITIES, VPC_DOT1Q6_IDENTITIES, PVLAN1_IDENTITIES)
     for pos, group in enumerate(groups):
         for prior in groups[:pos]:
             assert not group & prior, "two source lots overlap"
@@ -622,8 +653,10 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     # and 74 + 100 = 174. Written as the sum so the arithmetic is visible rather than a bare
     # total somebody has to take on trust.
     # + 3 PR725-HSRP5 int_vlan rows (HSRP3_ADDITIONS) = 126, and 74 + 126 = 200.
-    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 == len(ALL_ADDITIONS), (
-        "the lots together declare %d additions over %d distinct identities; expected 126"
+    # + 6 PR725-VPC-DOT1Q-001 int_vpc_dot1q_tunnel rows (VPC_DOT1Q6_ADDITIONS) = 132, 74 + 132 = 206.
+    # + 1 PR725-PVLAN2222 int_vlan row (PVLAN1_ADDITIONS) = 133, and 74 + 133 = 207.
+    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 == len(ALL_ADDITIONS), (
+        "the lots together declare %d additions over %d distinct identities; expected 133"
         % (len(ALL_ADDITIONS), len(ALL_ADDED_IDENTITIES)))
 
     # NEGATIVE CONTROL: the withheld EIGRP identities must still carry NO reset. Without
@@ -720,7 +753,9 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
               ("MACSEC", set(MACSEC_IDENTITIES), 4),
               ("PIM/ACL", set(PIMACL_IDENTITIES), 10),
               ("vPC", set(VPC13_IDENTITIES), 13),
-              ("HSRP/IPv4", set(HSRP3_IDENTITIES), 3))
+              ("HSRP/IPv4", set(HSRP3_IDENTITIES), 3),
+              ("vPC dot1q-tunnel", set(VPC_DOT1Q6_IDENTITIES), 6),
+              ("PVLAN mapping", set(PVLAN1_IDENTITIES), 1))
     for name, group, expected in groups:
         assert len(group) == expected, (
             "%s declares %d identities, expected %d" % (name, len(group), expected))
@@ -730,16 +765,19 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     union = (B01_ALPHA | B01_BETA | OSPF_ALL_P1 | OSPF_ALL_P2_P4 | OSPF_ALL_P3A
              | OSPF_ALL_P3B | OSPF_ALL_P5 | BFD_ECHO | BFD_INTERVAL
              | EIGRP_IDENTITIES | MACSEC_IDENTITIES | DAMPENING_EXPERIMENTAL_IDENTITIES
-             | PIMACL_IDENTITIES | VPC13_IDENTITIES | HSRP3_IDENTITIES)
+             | PIMACL_IDENTITIES | VPC13_IDENTITIES | HSRP3_IDENTITIES
+             | VPC_DOT1Q6_IDENTITIES | PVLAN1_IDENTITIES)
     assert union == set(ALL_ADDED_IDENTITIES), (
         "the named campaign groups are not exactly the declared additions.\n"
         "  in a group but not declared: %s\n  declared but in no group: %s"
         % (sorted(union - set(ALL_ADDED_IDENTITIES)),
            sorted(set(ALL_ADDED_IDENTITIES) - union)))
-    assert len(union) == 126, (
+    assert len(union) == 133, (
         "the named groups cover %d identities; the delta over the published 74 is "
         "14 base88 + 30 OSPF-ALL + 10 BFD-ALL + 35 EIGRP + 4 MACsec + 7 dampening "
-        "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 = 126, and 74 + 126 = 200" % len(union))
+        "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 + 6 vPC dot1q-tunnel + 1 PVLAN "
+        "= 133, and 74 + 133 = 207"
+        % len(union))
 
 
 def test_the_published_seventy_four_are_present_unaltered_and_nothing_else_was_added():
@@ -950,7 +988,7 @@ def test_the_four_share_one_parent_and_did_not_spread_to_its_unmeasured_siblings
         "int_access_host", "int_trunk_host", "int_routed_host",
         "int_port_channel_access_host", "int_port_channel_trunk_host",
         "int_port_channel_dot1q_tunnel_host", "int_vpc_access_host",
-        "int_vpc_trunk_host",
+        "int_vpc_trunk_host", "int_vpc_dot1q_tunnel",
     }
     expected = {(p, key): "false" for p in lldp_parents
                 for key in ("disable_lldp_receive", "disable_lldp_transmit")}

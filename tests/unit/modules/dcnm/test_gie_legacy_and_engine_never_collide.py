@@ -51,6 +51,9 @@ BUILDERS = {
     "dcnm_intf_get_vpc_payload": (
         "int_vpc_trunk_host",
         "int_vpc_access_host",
+        # dot1q-tunnel shares the vPC builder: the base nvPairs come from the access branch and
+        # gie_contribute_nvpairs sits at method level, after every mode branch.
+        "int_vpc_dot1q_tunnel",
     ),
     # The two parents wired for the OSPF work. Neither had an engine hook before; both got the
     # same two calls as the eth path -- gie_extend_prof_spec in the validator and
