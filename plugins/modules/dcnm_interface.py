@@ -659,7 +659,10 @@ options:
             - When ethernet interface is a PortChannel or vPC member, mode is ignored.
               The only properties that can be managed for PortChannel or vPC member interfaces
               are 'admin_state', 'description' and 'cmds'. All other properties are ignored.
-            choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed', 'dot1q']
+            - Mode 'pvlan' selects the NDFC 12 policy 'int_pvlan_host' on a standalone physical
+              Ethernet interface; see 'pvlan_mode'. It is refused on a PortChannel or vPC member
+              and on an interface owned by a network attachment.
+            choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed', 'dot1q', 'pvlan']
             type: str
             required: true
           bpdu_guard:
@@ -884,6 +887,87 @@ options:
             - Explicit-only, no default. When omitted the current controller value is
               left untouched.
             type: bool
+          pvlan_mode:
+            description:
+            - Private VLAN port mode. Required, and only valid, when 'mode' is 'pvlan'.
+            - With 'mode' 'pvlan' no field has a module default. State 'merged' keeps every
+              omitted field at its current controller value; 'replaced' and a retained
+              'overridden' interface clear omitted lists and 'native_vlan'/'allowed_vlans' and
+              return omitted companion fields to the int_pvlan_host template defaults.
+            - Changing the submode of an existing PVLAN port requires 'replaced' or
+              'overridden'; 'merged' refuses it.
+            - In mode 'pvlan' the supported companion fields are 'description', 'admin_state',
+              'bpdu_guard', 'port_type_fast', 'mtu', 'speed', 'enable_cdp', 'orphan_port',
+              'duplex', 'enable_pfc', 'enable_qos', 'qos_policy', 'queuing_policy' and 'cmds'.
+              Any other field is refused. 'cmds' must not carry private-vlan or switchport
+              lines. 'native_vlan' ('' or one VLAN) and 'allowed_vlans' ('', 'none' or VLAN
+              ranges; 'all' is refused) apply to the two trunk submodes only.
+            - Before every deployment attempt (including the check_deploy resend and the
+              deployment-status retries) the module recomputes the switch pending configuration
+              through the legacy config-preview API. Using that answer's device running
+              configuration and the controller's expected configuration, it deploys only the
+              remaining work when every pending command for the interface leads from the device
+              state to the intended state; it skips the attempt for an interface whose device
+              state is already verified as the intended state. When a check fails after the
+              intent was written, the intent change is reported and is not rolled back.
+            - Every deployment response is judged on its original body; a failed or
+              unrecognised response fails the task even if a later read reports In-Sync, and no
+              further deployment is sent.
+            - The interface must be a standalone physical Ethernet with exactly one direct
+              policy, both in the interface summary and in the switch policy list; a network
+              attachment, port-channel membership or incomplete ownership data is refused.
+            - The CLI coverage of the current and destination configurations is verified
+              before any write, also in check mode. The bulk interface update capability is
+              verified before any write in normal mode only; its sole probe is a POST request,
+              so in check mode a native PVLAN invocation that would change intent is refused
+              with "could not be verified in check mode", and nothing is sent.
+            - Removal authority comes from the requested transition, not from the device. A
+              pending command may withdraw only a line the int_pvlan_host (or, for a reset or
+              conversion, int_trunk_host) template renders, or a 'cmds' line of the current or
+              requested intent. A device command outside that set is never withdrawn by the
+              deployment, and one inside a field these policies own but that cannot be
+              interpreted blocks the deployment.
+            - Removing a secondary VLAN from a 'promiscuous' mapping that keeps other
+              secondaries is refused before any write, because the controller generates an
+              invalid removal command for that transition. Clear the mapping or use
+              'trunk promiscuous'.
+            type: str
+            choices: ['host', 'promiscuous', 'trunk promiscuous', 'trunk secondary']
+          pvlan_association:
+            description:
+            - Primary/secondary VLAN associations for 'pvlan_mode' 'host' (at most one) and
+              'trunk secondary' (one secondary per primary). A new 'trunk secondary'
+              association requires the fabric network of the secondary VLAN to be isolated.
+            type: list
+            elements: dict
+            suboptions:
+              primary_vlan:
+                description:
+                - Primary VLAN ID (1-4094).
+                type: int
+                required: true
+              secondary_vlan:
+                description:
+                - Secondary VLAN ID (1-4094).
+                type: int
+                required: true
+          pvlan_mapping:
+            description:
+            - Promiscuous mappings for 'pvlan_mode' 'promiscuous' (one primary) and
+              'trunk promiscuous'. Ranges are expanded and sent as one row per pair.
+            type: list
+            elements: dict
+            suboptions:
+              primary_vlan:
+                description:
+                - Primary VLAN ID (1-4094).
+                type: int
+                required: true
+              secondary_vlans:
+                description:
+                - Secondary VLAN IDs as a string, for example "2211" or "2211-2212,2214".
+                type: str
+                required: true
       profile_svi:
         description:
         - Though the key shown here is 'profile_svi' the actual key to be used in playbook
@@ -2074,6 +2158,45 @@ EXAMPLES = """
         access_vlan: 41
         description: "ETH 1/12 Dot1q Tunnel"
 
+# Private VLAN (int_pvlan_host, NDFC 12)
+
+- name: Configure a trunk promiscuous PVLAN port
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_fabric }}"
+    state: merged
+    config:
+      - name: eth1/7
+        type: eth
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          mode: pvlan
+          pvlan_mode: trunk promiscuous
+          admin_state: false
+          pvlan_mapping:
+            - primary_vlan: 2210
+              secondary_vlans: "2211-2212"
+          native_vlan: "2301"
+          allowed_vlans: "2301"
+
+- name: Make a PVLAN host port exactly one association (replaced clears omitted fields)
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_fabric }}"
+    state: replaced
+    config:
+      - name: eth1/8
+        type: eth
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          mode: pvlan
+          pvlan_mode: host
+          pvlan_association:
+            - primary_vlan: 2210
+              secondary_vlan: 2212
+
 # Breakout interfaces
 
 - name: Configure breakout interface
@@ -2275,6 +2398,32 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
     resolve_binding,
+)
+# Native standalone Ethernet PVLAN (int_pvlan_host). Pure helpers; transport stays here.
+from ansible_collections.cisco.dcnm.plugins.module_utils.interface_pvlan import (
+    PROFILE_KEYS as PVLAN_PROFILE_KEYS,
+    PVLAN_POLICY,
+    PvlanError,
+    preview_entry as pvlan_preview_entry,
+    reconcile as pvlan_reconcile,
+    render as pvlan_render,
+    split_blocks as pvlan_split_blocks,
+    validate_raw_profile as pvlan_validate_raw_profile,
+    pairs_from_wire as pvlan_pairs_from_wire,
+    native_equal as pvlan_native_equal,
+    allowed_equal as pvlan_allowed_equal,
+    classify_secondary as pvlan_classify_secondary,
+    template_declared_names as pvlan_template_declared_names,
+    modify_outcome_problems as pvlan_modify_outcome_problems,
+    deploy_outcome as pvlan_deploy_outcome,
+    assess_target as pvlan_assess_target,
+    transition_vocabulary as pvlan_transition_vocabulary,
+    VOCABULARY_POLICIES as PVLAN_VOCABULARY_POLICIES,
+    SUMMARY_ABSENT as PVLAN_SUMMARY_ABSENT,
+    SUMMARY_KNOWN as PVLAN_SUMMARY_KNOWN,
+    SUMMARY_UNKNOWN as PVLAN_SUMMARY_UNKNOWN,
+    summary_mentions_policy as pvlan_summary_mentions_policy,
+    summary_policy as pvlan_summary_policy,
 )
 SECRET_PROFILE_KEYS = gie_no_log_profile_keys() | RETIRED_LOOPBACK_OSPF_AUTH_SECRETS
 
@@ -2557,6 +2706,15 @@ class DcnmIntf:
             "IF_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/markdelete",
             "FABRIC_ACCESS_MODE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/accessmode",
             "BREAKOUT": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/breakout",
+            # PVLAN: documented legacy forced recompute of switch pending (configPreview).
+            # recomputeMapEnable invalidates the compliance cache and recalculates; it is a GET
+            # but refreshes controller state, so it never runs in check mode.
+            "PVLAN_CONFIG_PREVIEW": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-preview/{}"
+            "?forceShowRun=true&showBrief=false&recomputeMapEnable=true&shRunOptimization=false",
+            "PVLAN_FABRIC_NETWORKS": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
+            "PVLAN_TEMPLATE": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/int_pvlan_host",
+            # Existing legacy policy listing (also read by the breakout path): policy ownership.
+            "PVLAN_SWITCH_POLICIES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}",
         },
     }
 
@@ -2650,6 +2808,13 @@ class DcnmIntf:
         # Bindings whose required withdrawal cannot be completed. Collected during the
         # comparison pass and raised ONCE by main(), before anything is sent.
         self.withdrawal_blocked = []
+        # Native PVLAN: refusals collected during comparison/preflight and raised once by
+        # main() before any write; per-target pre/post state for the pre-deploy gate.
+        self.pvlan_blocked = []
+        self.pvlan_targets = {}
+        self.pvlan_networks = None
+        self.pvlan_policies = {}
+        self.pvlan_attempts = []
         self.changed_dict = [
             {
                 "merged": [],
@@ -2848,6 +3013,7 @@ class DcnmIntf:
                 "eth_monitor": "int_monitor_ethernet",
                 "eth_epl_routed": "epl_routed_intf",
                 "eth_dot1q": "int_dot1q_tunnel_host",
+                "eth_pvlan": "int_pvlan_host",
                 "vpc_trunk": "int_vpc_trunk_host",
                 "vpc_access": "int_vpc_access_host",
                 "vpc_dot1q": "int_vpc_dot1q_tunnel",
@@ -3297,6 +3463,15 @@ class DcnmIntf:
                                         if k.startswith("vpc_")
                                     )),
                                 )
+                            )
+
+                        if (
+                            pol_ind_str == "eth_pvlan"
+                            and pol_ind_str not in self.pol_types[self.dcnm_version]
+                        ):
+                            self.module.fail_json(
+                                msg="Interface {0}: mode 'pvlan' requires NDFC 12 (int_pvlan_host); "
+                                "it is not supported on this controller. No change was sent.".format(ifname)
                             )
 
                         c[ck]["ifname"] = ifname
@@ -4263,6 +4438,41 @@ class DcnmIntf:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_dot1q_tunnel_host
             )
+        if "pvlan" == cfg[0]["profile"]["mode"]:
+            # RAW input is validated before any coercion or default: presence, types, VLAN
+            # bounds, duplicates and mode compatibility. The spec below then carries NO
+            # defaults, so an omitted field stays None and reconciliation sees it as omitted.
+            pvlan_errors = pvlan_validate_raw_profile(cfg[0]["profile"])
+            if pvlan_errors:
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, {1}. "
+                    "No change was sent.".format(cfg[0]["name"], "; ".join(pvlan_errors))
+                )
+            eth_prof_spec_pvlan = dict(
+                mode=dict(required=True, type="str"),
+                pvlan_mode=dict(required=True, type="str"),
+                pvlan_association=dict(type="list", elements="dict"),
+                pvlan_mapping=dict(type="list", elements="dict"),
+                native_vlan=dict(type="str"),
+                allowed_vlans=dict(type="str"),
+                description=dict(type="str"),
+                admin_state=dict(type="bool"),
+                bpdu_guard=dict(type="str"),
+                port_type_fast=dict(type="bool"),
+                mtu=dict(type="str"),
+                speed=dict(type="str"),
+                enable_cdp=dict(type="bool"),
+                orphan_port=dict(type="bool"),
+                duplex=dict(type="str"),
+                enable_pfc=dict(type="bool"),
+                enable_qos=dict(type="bool"),
+                qos_policy=dict(type="str"),
+                queuing_policy=dict(type="str"),
+                cmds=dict(type="list", elements="str"),
+            )
+            self.dcnm_intf_validate_interface_input(
+                cfg, eth_spec, eth_prof_spec_pvlan
+            )
 
         fec_value = cfg[0]["profile"].get("fec")
         if fec_value is not None:
@@ -5197,6 +5407,30 @@ class DcnmIntf:
         # validate_list_of_dicts materializes an omitted optional FEC value as
         # None. NDFC stores that default as "auto", so serializing None causes
         # a perpetual None-versus-auto diff on subsequent runs.
+        if delem[profile]["mode"] == "pvlan":
+            # Builder output is the payload for an interface with no PVLAN HAVE: every value
+            # comes from the explicit input or the int_pvlan_host template default. The
+            # comparison pass replaces it with the reconciled full set whenever HAVE exists.
+            raw = dict(
+                (k, v) for k, v in delem[profile].items()
+                if k in PVLAN_PROFILE_KEYS and v is not None
+            )
+            try:
+                built = pvlan_reconcile("replaced", raw, ifname, None, None)
+            except PvlanError as exc:
+                self.module.fail_json(
+                    msg="Interface {0}: {1}. No change was sent.".format(ifname, exc)
+                )
+            intf["interfaces"][0]["nvPairs"] = built["nv"]
+            gie_add, gie_err = gie_contribute_nvpairs(
+                intf["policy"], delem[profile], getattr(self, "ndfc_version", None),
+                getattr(self, "patch_version", None)
+            )
+            if gie_err:
+                self.module.fail_json(msg=gie_err)
+            intf["interfaces"][0]["nvPairs"].update(gie_add)
+            return
+
         fec_value = delem[profile].get("fec")
         if fec_value is None:
             fec_value = "auto"
@@ -6680,6 +6914,582 @@ class DcnmIntf:
                 nv_keys.append(nvpair)
             changed_nv[nvpair] = wire
 
+    # ================================================================ native Ethernet PVLAN
+    def dcnm_intf_pvlan_block(self, name, sno, reason):
+        """Collect a refusal; main() raises all of them once, before any write."""
+        self.pvlan_blocked.append({"interface": name, "serial": sno, "reason": reason})
+
+    def dcnm_intf_pvlan_member_policies(self):
+        return set(self.pol_pc_member_types[self.dcnm_version].values())
+
+    def dcnm_intf_pvlan_read_policies(self, sno):
+        """Legacy policy list of a switch, read once per invocation; None when not authoritative."""
+        if sno not in self.pvlan_policies:
+            resp = dcnm_send(self.module, "GET", self.paths["PVLAN_SWITCH_POLICIES"].format(self._dcnm_intf_query_serial(sno)))
+            data = resp.get("DATA") if isinstance(resp, dict) and resp.get("RETURN_CODE") == 200 else None
+            ok = isinstance(data, list) and all(isinstance(p, dict) for p in data)
+            self.pvlan_policies[sno] = data if ok else None
+        return self.pvlan_policies[sno]
+
+    def dcnm_intf_pvlan_check_ownership(self, name, sno, detail_policy, detail_nv=None):
+        """Reason the target is not a standalone, directly owned physical Ethernet, or None.
+
+        Two legacy authorities must agree with each other and with the detail read, and each must
+        be complete:
+          * interface summary (interface/detail): exactly one entry, physical Ethernet, and the
+            policy it reports (pvlan_summary_policy) KNOWN: `underlayPolicies` a list holding
+            exactly one object with string templateName/policyId/source/entityName/entityType/
+            serialNumber for this interface. The MEASURED summary has no top-level `policy`; one,
+            when present, must agree. templateName == the detail policy and source '' (direct);
+            null, a missing key or source, another container, several entries, a contradiction or
+            a non-empty source are refusals;
+          * policy listing (control/policies/switches): exactly one non-deleted policy for the
+            interface, of entityType INTERFACE, templateName == the detail policy, source '' and
+            the same policyId as the summary. A second live policy -- the measured attachment
+            shape is a Config_Profile entry with source OVERLAY -- means the port is owned by a
+            network attachment;
+          * the detail intent, when it carries POLICY_ID, names that same policyId.
+        Missing or malformed evidence is never read as direct ownership."""
+        authority = self._dcnm_intf_authority_key(sno)
+        if authority not in self.have_all_cached_snos or authority in self.have_all_failed_snos:
+            self.dcnm_intf_get_have_all_with_sno(sno)
+        if authority not in self.have_all_cached_snos or authority in self.have_all_failed_snos:
+            return "the interface summary could not be read authoritatively"
+        entries = [
+            h for h in self.have_all
+            if str(h.get("ifName", "")).lower() == name.lower()
+            and self._dcnm_intf_authority_key(h.get("serialNo", "")) == authority
+        ]
+        if len(entries) != 1:
+            return "the interface summary holds {0} entries for this interface".format(len(entries))
+        entry = entries[0]
+        if entry.get("ifType") != "INTERFACE_ETHERNET" or str(entry.get("isPhysical")).lower() != "true":
+            return "it is not a standalone physical Ethernet interface"
+        state, summary = pvlan_summary_policy(entry, name)
+        if state == PVLAN_SUMMARY_ABSENT:
+            return "the interface summary lists no underlay policy, so ownership is unknown"
+        if state != PVLAN_SUMMARY_KNOWN:
+            return summary
+        template = summary["templateName"]
+        if template in self.dcnm_intf_pvlan_member_policies():
+            return "it is a port-channel or vPC member ({0})".format(template)
+        if template != detail_policy:
+            return "the summary policy {0!r} disagrees with the detail policy {1!r}".format(template, detail_policy)
+        if summary["source"]:
+            return "its policy is owned by another resource (source {0})".format(summary["source"])
+        if isinstance(detail_nv, dict) and "POLICY_ID" in detail_nv and detail_nv["POLICY_ID"] != summary["policyId"]:
+            return "the detail POLICY_ID {0!r} disagrees with the summary policy id {1!r}".format(detail_nv["POLICY_ID"], summary["policyId"])
+        policies = self.dcnm_intf_pvlan_read_policies(sno)
+        if policies is None:
+            return "the switch policy list could not be read authoritatively"
+        live = [p for p in policies if str(p.get("entityName", "")).lower() == name.lower() and p.get("deleted") is not True
+                and str(p.get("deleted", "")).lower() != "true"]
+        if len(live) != 1:
+            kinds = sorted("{0}/{1}".format(p.get("templateName"), p.get("source")) for p in live)
+            return "the switch policy list holds {0} live policies for this interface ({1})".format(len(live), ", ".join(kinds))
+        policy = live[0]
+        if not (isinstance(policy.get("templateName"), str) and isinstance(policy.get("source"), str) and "deleted" in policy):
+            return "the switch policy entry for this interface is malformed"
+        if str(policy.get("entityType", "")).upper() != "INTERFACE" or policy["source"] != "" or policy["templateName"] != detail_policy:
+            return "the switch policy for this interface is {0}/{1} from source {2!r}, not a direct {3}".format(
+                policy.get("entityType"), policy["templateName"], policy["source"], detail_policy)
+        if policy.get("policyId") != summary["policyId"]:
+            return "the switch policy id {0!r} disagrees with the summary policy id {1!r}".format(policy.get("policyId"), summary["policyId"])
+        return None
+
+    def dcnm_intf_pvlan_compare(self, state, want, match_have, name, sno, fabric, deploy):
+        """Reconcile one int_pvlan_host WANT against authoritative HAVE (all states).
+
+        Replaces the generic per-nvPair comparison for this parent: the reconciled FULL set is
+        what is sent, and the reported diff is computed from that same set."""
+        if not match_have:
+            self.dcnm_intf_require_detail_authority(name, sno)
+            self.dcnm_intf_pvlan_block(
+                name, sno,
+                "the controller holds no policy for this physical interface; a physical port "
+                "is never created through globalInterface",
+            )
+            return
+        if len(match_have) != 1:
+            self.dcnm_intf_pvlan_block(name, sno, "current state is ambiguous ({0} entries)".format(len(match_have)))
+            return
+        have = match_have[0]
+        intfs = have.get("interfaces") or []
+        have_nv = intfs[0].get("nvPairs") if intfs and isinstance(intfs[0], dict) else None
+        if not isinstance(have_nv, dict):
+            self.dcnm_intf_pvlan_block(name, sno, "the controller returned no nvPairs for the interface")
+            return
+        owner = self.dcnm_intf_pvlan_check_ownership(name, sno, have.get("policy"), have_nv)
+        if owner:
+            self.dcnm_intf_pvlan_block(name, sno, owner)
+            return
+        match_pb = [
+            pb for pb in self.pb_input
+            if name.lower() == pb["ifname"].lower() and sno == pb["sno"] and fabric == pb["fabric"]
+        ]
+        if len(match_pb) != 1:
+            self.dcnm_intf_pvlan_block(name, sno, "the playbook names this interface {0} times".format(len(match_pb)))
+            return
+        raw = dict((k, v) for k, v in match_pb[0].items() if k in PVLAN_PROFILE_KEYS)
+        try:
+            result = pvlan_reconcile(state, raw, name, have.get("policy"), have_nv)
+        except PvlanError as exc:
+            self.dcnm_intf_pvlan_block(name, sno, str(exc))
+            return
+        if result["blocked"]:
+            for reason in result["blocked"]:
+                self.dcnm_intf_pvlan_block(name, sno, reason)
+            return
+        self.pvlan_targets[(sno, name.lower())] = {
+            "name": name,
+            "sno": sno,
+            "pre": (have.get("policy"), copy.deepcopy(have_nv)),
+            "post": (PVLAN_POLICY, copy.deepcopy(result["nv"])),
+            "new_secondaries": result["new_secondaries"],
+            "update": result["update"],
+        }
+        want["interfaces"][0]["nvPairs"] = result["nv"]
+        intf_changed = False
+        if result["update"]:
+            changed_dict = copy.deepcopy(want)
+            changed_dict.pop("skipResourceCheck", None)
+            changed_dict["interfaces"][0].pop("interfaceType", None)
+            changed_dict["interfaces"][0].pop("fabricName", None)
+            changed_dict["interfaces"][0]["nvPairs"] = copy.deepcopy(result["changed"])
+            want.pop("interfaceType", None)
+            self.dcnm_intf_merge_intf_info(want, self.diff_replace)
+            self.changed_dict[0][state].append(changed_dict)
+            intf_changed = True
+        if str(deploy).lower() == "true":
+            if intf_changed:
+                match_intf, rc = [], True
+            else:
+                match_intf, rc = self.dcnm_intf_can_be_added(want)
+            if rc:
+                delem = {"serialNumber": sno, "ifName": name, "fabricName": self.fabric}
+                self.diff_deploy.append(delem)
+                self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
+                if match_intf != []:
+                    self.changed_dict[0]["debugs"].append(
+                        {"Name": name, "SNO": sno, "DeployStatus": match_intf["complianceStatus"]}
+                    )
+
+    PVLAN_PHYSICAL_ETHERNET_NAME = re.compile(r"^ethernet[0-9]+(/[0-9]+){1,2}$", re.IGNORECASE)
+
+    def dcnm_intf_pvlan_pre_state(self, name, sno):
+        """Current controller state of one interface: ("known", policy, nvPairs or None),
+        ("absent", None, None) or ("unknown", reason, None).
+
+        ONE resolution rule, whatever the origin of the detail (self.have, the detail cache of
+        this invocation, or a new bulk read). The two legacy authorities are always combined for
+        a physical Ethernet target: the detail policy and the interface summary, classified by
+        pvlan_summary_policy and read at most once per switch (cached). int_pvlan_host named by
+        either one makes the interface a PVLAN target or, when the other authority disagrees,
+        "unknown"; the caller refuses "unknown" before any write and never reads it as "not
+        PVLAN". Disagreements between two non-PVLAN policies stay outside this check.
+        Not targets, without reads: a vPC/AA-FEX pair identity or a name that is not a physical
+        Ethernet port. Not targets after the detail is resolved: a summary entry whose ifType/
+        isPhysical is not a physical Ethernet when NO authority names int_pvlan_host (E6: a PVLAN
+        detail against such a summary is "unknown", never excluded). A consistent non-PVLAN summary stays authoritative
+        when the detail is unavailable; an unreadable summary leaves a present non-PVLAN or an
+        authoritatively absent detail as the only evidence. nvPairs only for int_pvlan_host."""
+        if "~" in str(sno) or not self.PVLAN_PHYSICAL_ETHERNET_NAME.match(str(name)):
+            # int_pvlan_host exists only on a standalone physical Ethernet port: a vPC/AA-FEX pair
+            # identity, a port-channel, loopback, SVI or sub-interface is never a PVLAN target.
+            return PVLAN_SUMMARY_KNOWN, None, None
+        authority = self._dcnm_intf_authority_key(sno)
+        cache_key = (authority, name.lower())
+
+        def detail_now():
+            """("present", entry) | ("absent", None) | ("unread", None) | ("failed", None)."""
+            for h in self.have:
+                intf = (h.get("interfaces") or [{}])[0]
+                if str(intf.get("ifName", "")).lower() == name.lower() and intf.get("serialNumber") == sno:
+                    return "present", h
+            cached = self.intf_detail_cache.get(cache_key)
+            if isinstance(cached, dict):
+                return "present", cached
+            if cache_key in self.intf_detail_authoritative_absent_keys or (
+                authority in self.intf_detail_cached_snos and not self.dcnm_intf_detail_unavailable(name, sno)
+            ):
+                return "absent", None
+            if self.dcnm_intf_detail_unavailable(name, sno):
+                return "failed", None
+            return "unread", None
+
+        def known(entry):
+            policy = entry.get("policy")
+            nv = (entry.get("interfaces") or [{}])[0].get("nvPairs") if policy == PVLAN_POLICY else None
+            return PVLAN_SUMMARY_KNOWN, policy, nv
+
+        # ---- the detail authority already held by this invocation (no read here)
+        origin, detail = detail_now()
+        present_other = origin == "present" and detail.get("policy") != PVLAN_POLICY
+
+        # ---- the summary authority, at most one read per switch and never retried after a
+        # failure. A present non-PVLAN detail is always contrasted with it; an authoritatively
+        # absent detail (a creation) is contrasted with it when this invocation already holds it.
+        loaded = authority in self.have_all_cached_snos and authority not in self.have_all_failed_snos
+        failed = authority in self.have_all_failed_snos
+        if not loaded and not failed and origin in ("unread", "failed") or (present_other and not loaded and not failed):
+            self.dcnm_intf_get_have_all_with_sno(sno)
+            loaded = authority in self.have_all_cached_snos and authority not in self.have_all_failed_snos
+            failed = not loaded
+        entries = [
+            h for h in self.have_all
+            if str(h.get("ifName", "")).lower() == name.lower() and self._dcnm_intf_authority_key(h.get("serialNo", "")) == authority
+        ] if loaded else []
+        if len(entries) > 1:
+            return PVLAN_SUMMARY_UNKNOWN, "the interface summary holds {0} entries for this interface".format(len(entries)), None
+        state, summary, mentions_pvlan, not_physical, type_text = None, None, False, False, None
+        if entries:
+            entry = entries[0]
+            state, summary = pvlan_summary_policy(entry, name)
+            mentions_pvlan = pvlan_summary_mentions_policy(entry, PVLAN_POLICY)
+            not_physical = not (entry.get("ifType") == "INTERFACE_ETHERNET" and str(entry.get("isPhysical")).lower() == "true")
+            type_text = "ifType {0!r}, isPhysical {1!r}".format(entry.get("ifType"), entry.get("isPhysical"))
+            # E6 (E5-R1-01): the summary's type fields no longer exclude the port HERE. They are judged
+            # below, after the detail is resolved, so that they can never hide a known PVLAN detail.
+
+        # ---- the detail, read once per switch when this invocation does not hold it yet
+        if origin == "unread":
+            self.dcnm_intf_bulk_fetch_intf_info(sno)
+            if self.dcnm_intf_detail_unavailable(name, sno):
+                origin = "failed"
+            else:
+                found = self.dcnm_intf_get_intf_info(name, sno, "INTERFACE_ETHERNET")
+                origin, detail = ("present", found) if isinstance(found, dict) else ("absent", None)
+        detail_policy = detail.get("policy") if origin == "present" else None
+
+        # ---- one decision, the same whatever the origin of the detail
+        if detail_policy == PVLAN_POLICY:
+            if not_physical:
+                reason = "the detail holds int_pvlan_host but the interface summary describes {0}, not a physical Ethernet".format(type_text)
+                return PVLAN_SUMMARY_UNKNOWN, reason, None
+            return known(detail)  # a PVLAN target: the ownership check judges the summary
+        if not_physical and not mentions_pvlan:
+            # int_pvlan_host exists only on a standalone physical Ethernet and no authority names it:
+            # the entry's own type fields exclude the port, whatever its (possibly unreadable) policy fields.
+            if state == PVLAN_SUMMARY_KNOWN:
+                return PVLAN_SUMMARY_KNOWN, summary["templateName"], None
+            return (PVLAN_SUMMARY_ABSENT, None, None) if state == PVLAN_SUMMARY_ABSENT else (PVLAN_SUMMARY_KNOWN, None, None)
+        if mentions_pvlan:
+            if origin == "failed":
+                return PVLAN_SUMMARY_UNKNOWN, "the interface summary reports int_pvlan_host and the interface detail could not be read", None
+            return PVLAN_SUMMARY_UNKNOWN, "the interface summary names int_pvlan_host but the detail holds {0!r}".format(detail_policy), None
+        if origin == "present":
+            return known(detail)
+        if origin == "absent":
+            if state == PVLAN_SUMMARY_UNKNOWN:
+                return PVLAN_SUMMARY_UNKNOWN, "{0} and the interface detail holds no policy".format(summary), None
+            if state == PVLAN_SUMMARY_KNOWN:  # two non-PVLAN readings: outside this check
+                return PVLAN_SUMMARY_KNOWN, summary["templateName"], None
+            # Absence demonstrated by the detail; no authority names int_pvlan_host (an unread or
+            # unreadable summary names nothing).
+            return PVLAN_SUMMARY_ABSENT, None, None
+        if state == PVLAN_SUMMARY_KNOWN:  # detail unavailable: the consistent non-PVLAN summary stands
+            return PVLAN_SUMMARY_KNOWN, summary["templateName"], None
+        if not loaded:
+            return PVLAN_SUMMARY_UNKNOWN, "the interface summary could not be read authoritatively and the interface detail could not be read", None
+        if state is None:
+            return PVLAN_SUMMARY_UNKNOWN, "the interface is not in the interface summary and the interface detail could not be read", None
+        reason = summary if state == PVLAN_SUMMARY_UNKNOWN else "the interface summary reports no underlay policy"
+        return PVLAN_SUMMARY_UNKNOWN, "{0} and the interface detail could not be read".format(reason), None
+
+    def dcnm_intf_pvlan_register_other_targets(self):
+        """Resets/conversions/redeploys of an interface whose CURRENT policy is int_pvlan_host,
+        requested through a non-PVLAN payload (deleted, overridden, mode change, redeploy)."""
+        planned = []
+        for payload in self.diff_replace:
+            for intf in payload.get("interfaces", []):
+                planned.append((intf, payload.get("policy")))
+        deploys = list(self.diff_deploy)
+        for group in self.diff_delete_deploy:
+            deploys.extend(group or [])
+        for intf, policy in planned + [(d, None) for d in deploys]:
+            name, sno = intf.get("ifName", ""), intf.get("serialNumber", "")
+            key = (sno, name.lower())
+            if key in self.pvlan_targets:
+                continue
+            state, current, current_nv = self.dcnm_intf_pvlan_pre_state(name, sno)
+            if state == PVLAN_SUMMARY_UNKNOWN:
+                self.dcnm_intf_pvlan_block(
+                    name, sno, "its current policy is unknown ({0}), so a reset, conversion or redeploy of an "
+                    "int_pvlan_host port cannot be excluded".format(current))
+                continue
+            if state == PVLAN_SUMMARY_ABSENT or current != PVLAN_POLICY:
+                continue
+            pre = (current, current_nv)
+            if not isinstance(pre[1], dict):
+                self.dcnm_intf_pvlan_block(name, sno, "the current int_pvlan_host state could not be read")
+                continue
+            owner = self.dcnm_intf_pvlan_check_ownership(name, sno, pre[0], pre[1])
+            if owner:
+                self.dcnm_intf_pvlan_block(name, sno, owner)
+                continue
+            if policy is None:
+                post = (pre[0], copy.deepcopy(pre[1]))
+            else:
+                post = (policy, copy.deepcopy(intf.get("nvPairs") or {}))
+            self.pvlan_targets[key] = {
+                "name": name, "sno": sno, "pre": (pre[0], copy.deepcopy(pre[1])), "post": post,
+                "new_secondaries": [], "update": policy is not None,
+            }
+
+    def dcnm_intf_pvlan_read_networks(self):
+        """Legacy fabric network list, read once; None when not authoritative."""
+        if self.pvlan_networks is None:
+            resp = dcnm_send(self.module, "GET", self.paths["PVLAN_FABRIC_NETWORKS"].format(self.fabric))
+            ok = isinstance(resp, dict) and resp.get("RETURN_CODE") == 200 and isinstance(resp.get("DATA"), list)
+            self.pvlan_networks = resp["DATA"] if ok else False
+        return self.pvlan_networks or None
+
+    def dcnm_intf_pvlan_check_template(self, keys):
+        """Missing template declarations for the nvPairs to be written; None if unreadable."""
+        resp = dcnm_send(self.module, "GET", self.paths["PVLAN_TEMPLATE"])
+        data = resp.get("DATA") if isinstance(resp, dict) and resp.get("RETURN_CODE") == 200 else None
+        content = data.get("content") if isinstance(data, dict) else None
+        if not isinstance(content, str) or not content:
+            return None
+        declared = pvlan_template_declared_names(content)
+        return sorted(k for k in keys if k not in declared)
+
+    def dcnm_intf_pvlan_preflight(self):
+        """Whole-invocation PVLAN gate: runs after every diff is built and before the first
+        request that could write intent or deploy, in normal and check mode alike."""
+        self.dcnm_intf_pvlan_register_other_targets()
+        if self.pvlan_targets and self.dcnm_version != 12:
+            self.dcnm_intf_pvlan_block("*", "*", "native PVLAN requires NDFC 12")
+        for target in self.pvlan_targets.values():
+            if not target["new_secondaries"]:
+                continue
+            networks = self.dcnm_intf_pvlan_read_networks()
+            if networks is None:
+                self.dcnm_intf_pvlan_block(
+                    target["name"], target["sno"],
+                    "fabric networks could not be read, so the secondary VLAN type of a new "
+                    "trunk secondary association cannot be established",
+                )
+                continue
+            for _primary, secondary in target["new_secondaries"]:
+                kind, reason = pvlan_classify_secondary(networks, secondary)
+                if kind == "community":
+                    self.dcnm_intf_pvlan_block(
+                        target["name"], target["sno"],
+                        "secondary VLAN {0} is a community VLAN; trunk secondary takes an "
+                        "isolated secondary".format(secondary),
+                    )
+                elif kind != "isolated":
+                    self.dcnm_intf_pvlan_block(target["name"], target["sno"], reason)
+        for target in self.pvlan_targets.values():
+            if not target["update"]:
+                continue
+            try:
+                modeled = pvlan_render(*target["post"]).modeled
+            except PvlanError:
+                modeled = False
+            if not modeled:
+                # Known before any write: the destination's CLI cannot be validated, so its
+                # deploy would be refused AFTER the intent changed. Refuse now instead.
+                self.dcnm_intf_pvlan_block(
+                    target["name"], target["sno"],
+                    "the destination {0} configuration is not covered by the CLI model (for example a "
+                    "non-default speed, storm-control levels, NetFlow or an AI/ML QoS fallback), so its "
+                    "deployment could not be validated".format(target["post"][0]),
+                )
+        for target in self.pvlan_targets.values():
+            if target["update"] and target["pre"][0] not in PVLAN_VOCABULARY_POLICIES:
+                # Known before any write: the commands of the current policy are outside the CLI
+                # vocabulary, so the gate could never authorize their withdrawal.
+                self.dcnm_intf_pvlan_block(
+                    target["name"], target["sno"],
+                    "the current policy {0} is not covered by the CLI model, so the commands a conversion "
+                    "from it withdraws could not be validated".format(target["pre"][0]),
+                )
+        writes = [t for t in self.pvlan_targets.values() if t["update"] and t["post"][0] == PVLAN_POLICY]
+        if writes and not self.pvlan_blocked:
+            keys = set()
+            for t in writes:
+                keys.update(t["post"][1].keys())
+            missing = self.dcnm_intf_pvlan_check_template(keys)
+            if missing is None:
+                self.dcnm_intf_pvlan_block("*", "*", "the int_pvlan_host template could not be read")
+            elif missing:
+                self.dcnm_intf_pvlan_block(
+                    "*", "*", "the installed int_pvlan_host template does not declare: {0}".format(", ".join(missing))
+                )
+        if any(t["update"] for t in self.pvlan_targets.values()) and not self.pvlan_blocked:
+            if self.module.check_mode:
+                # The only capability probe (dcnm_get_bulk_api_support) is a POST; check mode sends
+                # none, and no read-only source of this capability is established. Decided last, so
+                # check mode still reports every read-only refusal above.
+                self.dcnm_intf_pvlan_block(
+                    "*", "*", "native PVLAN writes need the controller's bulk interface update API, and that "
+                    "capability could not be verified in check mode: its only probe is a POST request, which "
+                    "check mode does not send. Run without check mode to have it verified before any write")
+            elif not self.has_bulk_api:
+                # Same prerequisite the sender asserts, refused before any write.
+                self.dcnm_intf_pvlan_block(
+                    "*", "*", "native PVLAN writes need the controller's bulk interface update API, which is not available")
+        if self.pvlan_blocked:
+            lines = ["  {0} on {1}: {2}".format(b["interface"], b["serial"], b["reason"]) for b in self.pvlan_blocked]
+            self.module.fail_json(
+                msg="Native PVLAN preflight refused the invocation:\n" + "\n".join(lines)
+                + "\nNo configuration or deployment request was sent.",
+                **self.result
+            )
+
+    def dcnm_intf_pvlan_target_map(self):
+        """PVLAN targets of this run; empty for objects built without __init__ (unit tests
+        that drive a single sender method), so every non-PVLAN path behaves as before."""
+        return getattr(self, "pvlan_targets", None) or {}
+
+    def dcnm_intf_pvlan_items(self, items):
+        targets = self.dcnm_intf_pvlan_target_map()
+        return [
+            it for it in items or []
+            if (it.get("serialNumber"), str(it.get("ifName", "")).lower()) in targets
+        ]
+
+    def dcnm_intf_pvlan_deploy_gate(self, items, site, intent_changed):
+        """Immediately before a deploy attempt: one legacy forced recompute per serial, then one
+        decision per PVLAN target from THAT fresh entry (pvlan_assess_target): the device's
+        runningConfig, the controller's expectedConfig and the pending block.
+
+        Returns the items still to deploy: PVLAN targets whose verified convergence makes the
+        attempt redundant are dropped; every other item (including non-PVLAN members of the batch)
+        is kept in order. Any refusal, outside-target or global pending stops the whole batch with
+        nothing sent. Every call -- primary, resend, status retry -- recomputes again."""
+        pv = self.dcnm_intf_pvlan_items(items)
+        if not pv:
+            return list(items or [])
+        batch = {}
+        for it in items:
+            batch.setdefault(it.get("serialNumber"), set()).add(str(it.get("ifName", "")).lower())
+        problems, converged = [], set()
+        for sno in sorted({it["serialNumber"] for it in pv}):
+            resp = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, sno))
+            record = {"site": site, "serial": sno, "targets": {}}
+            try:
+                entry = pvlan_preview_entry(resp, sno)
+                blocks, global_lines = pvlan_split_blocks(entry["pendingConfig"])
+                record["status"] = entry["status"]
+                if global_lines:
+                    problems.append("{0}: pending carries commands outside interface scope".format(sno))
+                outside = sorted(set(blocks) - batch.get(sno, set()))
+                if outside:
+                    problems.append("{0}: pending exists for interfaces outside this deploy batch: {1}".format(
+                        sno, ", ".join(outside)))
+                for it in pv:
+                    if it["serialNumber"] != sno:
+                        continue
+                    target = self.pvlan_targets[(sno, str(it["ifName"]).lower())]
+                    try:
+                        decision, found = pvlan_assess_target(
+                            blocks.get(target["name"].lower(), []), entry, target["name"], pvlan_render(*target["post"]),
+                            pvlan_transition_vocabulary(target["pre"], target["post"]))
+                    except PvlanError as exc:
+                        decision, found = "refuse", [str(exc)]
+                    record["targets"][target["name"]] = decision
+                    if decision == "converged":
+                        converged.add((sno, target["name"].lower()))
+                    problems.extend("{0} on {1}: {2}".format(target["name"], sno, f) for f in found)
+            except PvlanError as exc:
+                problems.append(str(exc))
+            self.result.setdefault("pvlan_gate", []).append(record)
+        if problems:
+            self.dcnm_intf_pvlan_fail(
+                "Native PVLAN pre-deploy gate ({0}) refused the deployment:\n  {1}\n".format(site, "\n  ".join(problems))
+                + "No deployment request was sent for this batch.", intent_changed)
+        return [it for it in items if (it.get("serialNumber"), str(it.get("ifName", "")).lower()) not in converged]
+
+    def dcnm_intf_pvlan_fail(self, message, intent_changed):
+        """Fail with the intent and attempt history of this invocation; nothing is rolled back."""
+        parts = [message]
+        if intent_changed:
+            parts.append("Intent for these targets was ALREADY changed on the controller and is not rolled back: {0}.".format(
+                ", ".join(sorted("{0} on {1}".format(t["name"], t["sno"]) for t in self.pvlan_targets.values() if t["update"]))))
+        if self.pvlan_attempts:
+            parts.append("Deployment attempts in this invocation: {0}.".format("; ".join(
+                "{0} {1}: {2}".format(a["site"], ",".join(a["targets"]) or "-", a["outcome"]) for a in self.pvlan_attempts)))
+        self.result["pvlan_attempts"] = list(self.pvlan_attempts)
+        self.module.fail_json(msg=" ".join(parts), **self.result)
+
+    def dcnm_intf_pvlan_deploy_attempt(self, items, site, resp, retain):
+        """Judge the ORIGINAL response of one deploy attempt that carried PVLAN targets.
+
+        The response is retained in result["response"] before judging. An explicit failure or an
+        unrecognised body ends the invocation here: no later read and no further automatic
+        deploy can turn it into success. Returns True for a documented benign notice, which the
+        caller must corroborate with a fresh readback."""
+        pv = self.dcnm_intf_pvlan_items(items)
+        if not pv:
+            return False
+        problems, benign = pvlan_deploy_outcome(resp, pv)
+        if retain or problems:
+            # retain=False: the site appends this same response itself on its success path.
+            self.result["response"].append(copy.deepcopy(resp))
+        self.pvlan_attempts.append({
+            "site": site,
+            "targets": sorted("{0}@{1}".format(it["ifName"], it["serialNumber"]) for it in pv),
+            "return_code": resp.get("RETURN_CODE") if isinstance(resp, dict) else None,
+            "outcome": "; ".join(problems) if problems else ("benign notice" if benign else "accepted"),
+        })
+        if problems:
+            self.dcnm_intf_pvlan_fail(
+                "Native PVLAN deployment attempt ({0}) failed or is indeterminate:\n  {1}\n".format(site, "\n  ".join(problems))
+                + "No further deployment was sent.", True)
+        return benign
+
+    def dcnm_intf_pvlan_verify_after_deploy(self, items):
+        """Bounded, non-mutating convergence and intent readback for deployed PVLAN targets."""
+        pv = self.dcnm_intf_pvlan_items(items)
+        for it in pv:
+            target = self.pvlan_targets[(it["serialNumber"], str(it["ifName"]).lower())]
+            sno, name = target["sno"], target["name"]
+            status = None
+            for attempt in range(6):
+                if self.dcnm_intf_get_have_all_with_sno(sno):
+                    entry = [h for h in self.have_all if str(h.get("ifName", "")).lower() == name.lower()
+                             and h.get("serialNo") == sno]
+                    status = entry[0].get("complianceStatus") if len(entry) == 1 else None
+                    if status == "In-Sync":
+                        break
+                if attempt < 5:
+                    time.sleep(5)
+            if status != "In-Sync":
+                self.module.fail_json(
+                    msg="Interface {0} on {1} was deployed but did not reach In-Sync (last status {2}). "
+                    "No further deployment was sent.".format(name, sno, status), **self.result
+                )
+            self.dcnm_intf_bulk_fetch_intf_info(sno, refresh=True)
+            detail = self.dcnm_intf_get_intf_info(name, sno, "INTERFACE_ETHERNET")
+            post_policy, post_nv = target["post"]
+            if not isinstance(detail, dict) or detail.get("policy") != post_policy:
+                self.module.fail_json(
+                    msg="Interface {0} on {1}: the post-deploy readback does not hold policy {2}.".format(
+                        name, sno, post_policy), **self.result)
+            if post_policy != PVLAN_POLICY:
+                continue
+            have_nv = (detail.get("interfaces") or [{}])[0].get("nvPairs") or {}
+            mismatch = []
+            try:
+                if have_nv.get("PVLAN_MODE") != post_nv.get("PVLAN_MODE"):
+                    mismatch.append("PVLAN_MODE")
+                for key in ("ASSOCIATION_LIST", "MAPPING_LIST"):
+                    if pvlan_pairs_from_wire(have_nv.get(key, ""), key) != pvlan_pairs_from_wire(post_nv.get(key, ""), key):
+                        mismatch.append(key)
+            except PvlanError as exc:
+                mismatch.append(str(exc))
+            if not pvlan_native_equal(have_nv.get("PVLAN_NATIVE_VLAN", ""), post_nv.get("PVLAN_NATIVE_VLAN", "")):
+                mismatch.append("PVLAN_NATIVE_VLAN")
+            if not pvlan_allowed_equal(have_nv.get("PVLAN_ALLOWED_VLANS", ""), post_nv.get("PVLAN_ALLOWED_VLANS", "")):
+                mismatch.append("PVLAN_ALLOWED_VLANS")
+            if mismatch:
+                self.module.fail_json(
+                    msg="Interface {0} on {1}: post-deploy intent readback differs in {2}.".format(
+                        name, sno, ", ".join(mismatch)), **self.result)
+
     def dcnm_intf_can_be_added(self, want):
 
         name = want["interfaces"][0]["ifName"]
@@ -6784,6 +7594,26 @@ class DcnmIntf:
         # found in self.want and if found will replace the member interfaces in self.want
         # with the correct policy and properties that can be managed. After that we process
         # the new self.want as usual.
+        # A PVLAN WANT on a port-channel/vPC member must be refused BEFORE the member rewrite
+        # below, which would otherwise silently turn it into the member policy.
+        pvlan_skip = set()
+        for want in self.want:
+            if want.get("policy") != PVLAN_POLICY:
+                continue
+            member_policies = self.dcnm_intf_pvlan_member_policies()
+            w_name = want["interfaces"][0]["ifName"]
+            w_sno = want["interfaces"][0]["serialNumber"]
+            for h in self.have:
+                h_intf = (h.get("interfaces") or [{}])[0]
+                if (
+                    str(h_intf.get("ifName", "")).lower() == w_name.lower()
+                    and h_intf.get("serialNumber") == w_sno
+                    and h.get("policy") in member_policies
+                ):
+                    self.dcnm_intf_pvlan_block(
+                        w_name, w_sno, "it is a port-channel or vPC member ({0})".format(h.get("policy")))
+                    pvlan_skip.add(id(want))
+
         have_member = {}
         msg = "Member Policy Types: "
         msg += f"{self.pol_pc_member_types[self.dcnm_version]}"
@@ -6878,6 +7708,11 @@ class DcnmIntf:
                         and (sno == d["interfaces"][0]["serialNumber"])
                     )
                 ]
+            if id(want) in pvlan_skip:
+                continue
+            if want.get("policy") == PVLAN_POLICY:
+                self.dcnm_intf_pvlan_compare(state, want, match_have, name, sno, fabric, deploy)
+                continue
             if not match_have:
                 self.dcnm_intf_require_detail_authority(name, sno)
                 changed_dict = copy.deepcopy(want)
@@ -9144,16 +9979,26 @@ class DcnmIntf:
                         break
 
                     if retries == 10 or retries == 20:
-                        json_payload = json.dumps(
-                            {
-                                "ifName": name,
-                                "serialNumber": sno,
-                                "fabricName": self.fabric,
-                            }
+                        # PVLAN: fresh authority before EVERY retry; a verified convergence
+                        # drops the target and no retry is sent. Non-PVLAN items pass through.
+                        retry_items = self.dcnm_intf_pvlan_deploy_gate(
+                            [{"ifName": name, "serialNumber": sno, "fabricName": self.fabric}],
+                            "deployment_status_retry", True,
                         )
-                        resp = dcnm_send(
-                            self.module, "POST", path, json_payload
-                        )
+                        if retry_items:
+                            json_payload = json.dumps(
+                                {
+                                    "ifName": name,
+                                    "serialNumber": sno,
+                                    "fabricName": self.fabric,
+                                }
+                            )
+                            resp = dcnm_send(
+                                self.module, "POST", path, json_payload
+                            )
+                            self.dcnm_intf_pvlan_deploy_attempt(
+                                retry_items, "deployment_status_retry", resp, True
+                            )
 
                     time.sleep(5)
                     self.have_all = []
@@ -9257,6 +10102,15 @@ class DcnmIntf:
 
         path = self.paths["IF_MARK_DELETE"]
 
+        # Native PVLAN writes need the bulk modify path and its per-item outcomes. Checked
+        # before the FIRST request of this method so nothing is half-sent.
+        if any(t["update"] for t in self.dcnm_intf_pvlan_target_map().values()) and not self.has_bulk_api:
+            self.module.fail_json(
+                msg="Native PVLAN requires the controller's bulk interface update API. "
+                "No configuration or deployment request was sent.",
+                **self.result
+            )
+
         # First send deletes and then try create and update. This is because during override, the overriding
         # config may conflict with existing configuration.
 
@@ -9327,9 +10181,12 @@ class DcnmIntf:
                 flat_delete_deploy.extend(delem)
 
         if flat_delete_deploy:
+            flat_delete_deploy = self.dcnm_intf_pvlan_deploy_gate(flat_delete_deploy, "delete_deploy", bool(delete))
+        if flat_delete_deploy:
             json_payload = json.dumps(flat_delete_deploy)
 
             resp = dcnm_send(self.module, "POST", path, json_payload)
+            self.dcnm_intf_pvlan_deploy_attempt(flat_delete_deploy, "delete_deploy", resp, False)
 
             if resp.get("RETURN_CODE") != 200:
                 if resp["DATA"]:
@@ -9410,6 +10267,20 @@ class DcnmIntf:
                         self.module.fail_json(
                             msg=self.dcnm_intf_format_batch_error(resp, failed_items)
                         )
+                    # PVLAN targets additionally need a SUCCESS item each; a missing or
+                    # unknown outcome is indeterminate and must not reach a deploy.
+                    pvlan_updates = sorted(
+                        (t["sno"], t["name"]) for t in self.dcnm_intf_pvlan_target_map().values() if t["update"]
+                    )
+                    if pvlan_updates:
+                        outcome = pvlan_modify_outcome_problems(resp, pvlan_updates)
+                        if outcome:
+                            self.module.fail_json(
+                                msg="Native PVLAN update outcome is indeterminate:\n  {0}\n"
+                                "Intent may have changed on the controller; it is not rolled back. "
+                                "No deployment request was sent.".format("\n  ".join(outcome)),
+                                **self.result
+                            )
                     replace = True
             else:
                 # Individual update API for versions 11 and 12
@@ -9467,11 +10338,16 @@ class DcnmIntf:
         resp = None
 
         path = self.paths["GLOBAL_IF_DEPLOY"]
+        deploy_items = []
         if self.diff_deploy:
-
-            json_payload = json.dumps(self.diff_deploy)
+            deploy_items = self.dcnm_intf_pvlan_deploy_gate(
+                self.diff_deploy, "deploy", bool(replace or create or delete)
+            )
+        if deploy_items:
+            json_payload = json.dumps(deploy_items)
 
             resp = dcnm_send(self.module, "POST", path, json_payload)
+            self.dcnm_intf_pvlan_deploy_attempt(deploy_items, "deploy", resp, False)
 
             if (resp.get("MESSAGE") != "OK") and (
                 resp.get("RETURN_CODE") != 200
@@ -9503,12 +10379,16 @@ class DcnmIntf:
             # is skipped because the caller does not require deployment
             # verification anyway.
 
-            resp = dcnm_send(self.module, "POST", path, json_payload)
+            resend_items = self.dcnm_intf_pvlan_deploy_gate(self.diff_deploy, "check_deploy_resend", True)
+            if resend_items:
+                resp = dcnm_send(self.module, "POST", path, json.dumps(resend_items))
+                self.dcnm_intf_pvlan_deploy_attempt(resend_items, "check_deploy_resend", resp, True)
 
             resp = None
 
         if self.diff_deploy:
             self.dcnm_intf_check_deployment_status(self.diff_deploy)
+            self.dcnm_intf_pvlan_verify_after_deploy(self.diff_deploy)
 
         # In overridden and deleted states, if no delete or create is happening and we have
         # only replace, then check the return message for deploy. If it says
@@ -9718,7 +10598,13 @@ class DcnmIntf:
             # not very intuitive. To handle this scenario, we allow playbooks to include individual vlans and translate
             # them here appropriately.
 
-            if cfg.get("profile", None) is not None:
+            # Native PVLAN keeps the RAW allowed_vlans: it is validated before any rewrite and
+            # sent in the measured int_pvlan_host form ("2301", not "2301-2301").
+            if cfg.get("profile", None) is not None and not (
+                cfg.get("type") == "eth"
+                and isinstance(cfg["profile"], dict)
+                and cfg["profile"].get("mode") == "pvlan"
+            ):
                 if (
                     (
                         cfg["profile"].get("peer1_allowed_vlans", None)
@@ -9850,6 +10736,11 @@ def main():
     # The message names the public field and the parent and NEVER the value: a binding
     # may carry key material, and a refusal is still a result with invocation.module_args
     # attached to it.
+    # Native PVLAN preflight: ownership, defect, secondary-type and template authority for every
+    # PVLAN target, raised once and before anything is sent (check mode included).
+    if module.params["state"] != "query":
+        dcnm_intf.dcnm_intf_pvlan_preflight()
+
     if dcnm_intf.withdrawal_blocked:
         unsupported = sorted(
             {
