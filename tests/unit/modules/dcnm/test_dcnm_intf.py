@@ -19,6 +19,7 @@ __metaclass__ = type
 
 import copy
 import json
+import re
 from unittest.mock import Mock, patch
 
 # from units.compat.mock import patch
@@ -3745,6 +3746,10 @@ class TestDcnmIntfModule(TestDcnmModule):
 
     def load_mgmt_fixtures(self):
 
+        if getattr(self, "mgmt_router", None) is not None:
+            self.run_dcnm_send.side_effect = self.mgmt_router
+            return
+
         if "_mgmt_merged_new" in self._testMethodName:
 
             playbook_have_all_data = self.have_all_payloads_data.get(
@@ -3793,34 +3798,6 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_succ_resp,
             ]
 
-        if "_mgmt_replaced_existing" in self._testMethodName:
-
-            playbook_mgmt_intf1 = self.payloads_data.get(
-                "mgmt_merged_payloads_1"
-            )
-            playbook_have_all_data = self.have_all_payloads_data.get(
-                "payloads"
-            )
-            playbook_deployed_data = self.have_all_payloads_data.get(
-                "deployed_payloads"
-            )
-            mgmt_bulk_sal = self.build_bulk_payload(playbook_mgmt_intf1)
-
-            self.run_dcnm_send.side_effect = [
-                self.mock_monitor_false_resp,
-                mgmt_bulk_sal,
-                playbook_have_all_data,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                playbook_deployed_data,
-            ]
-
         if "_mgmt_deleted_existing" in self._testMethodName:
 
             playbook_mgmt_intf1 = self.payloads_data.get(
@@ -3851,26 +3828,6 @@ class TestDcnmIntfModule(TestDcnmModule):
             self.run_dcnm_send.side_effect = [
                 playbook_mgmt_query,
                 playbook_mgmt_query,
-            ]
-
-        if "_mgmt_preserve" in self._testMethodName:
-
-            playbook_mgmt_bst = self.payloads_data.get("mgmt_bst_payloads")
-            playbook_have_all_data = self.have_all_payloads_data.get(
-                "payloads"
-            )
-            mgmt_bulk_sal = self.build_bulk_payload(playbook_mgmt_bst)
-
-            self.run_dcnm_send.side_effect = [
-                self.mock_monitor_false_resp,
-                mgmt_bulk_sal,
-                playbook_have_all_data,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
-                self.playbook_mock_succ_resp,
             ]
 
     # -------------------------- END-FIXTURES --------------------------
@@ -5988,6 +5945,93 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
+    def set_mgmt_router(
+        self, have_payloads, policies=None, recreate_on_put=False, put_resp=None
+    ):
+        """Route dcnm_send by path, modelling a controller that stores 'int_mgmt' policies."""
+
+        policies = {p["policyId"]: copy.deepcopy(p) for p in (policies or [])}
+        have_all = self.have_all_payloads_data.get("payloads")
+
+        def route(module, method, path, data=None, *args, **kwargs):
+            ok = {"RETURN_CODE": 200, "MESSAGE": "OK"}
+            if "accessmode" in path:
+                return self.mock_monitor_false_resp
+            if "/interface/detail" in path:
+                return have_all
+            if "/interface?serialNumber=" in path:
+                sno = re.search(r"serialNumber=([^&]+)", path).group(1)
+                return self.build_bulk_payload(
+                    *[
+                        copy.deepcopy(p)
+                        for p in have_payloads
+                        if p["DATA"][0]["interfaces"][0]["serialNumber"] == sno
+                    ]
+                )
+            if "/control/policies/switches/" in path:
+                sno = path.rsplit("/", 1)[1]
+                return dict(
+                    ok,
+                    DATA=[
+                        copy.deepcopy(p)
+                        for p in policies.values()
+                        if p["serialNumber"] == sno
+                    ],
+                )
+            if "/control/policies/" in path:
+                policy_id = path.split("/control/policies/")[1].split("/")[0]
+                if method == "PUT":
+                    if put_resp is not None:
+                        return put_resp
+                    updated = json.loads(data)[0]
+                    if recreate_on_put:
+                        updated["priority"] = 500
+                    policies[policy_id] = updated
+                    return dict(ok, DATA={})
+                if policy_id in policies:
+                    return dict(ok, DATA=copy.deepcopy(policies[policy_id]))
+                return {"RETURN_CODE": 404, "MESSAGE": "Not Found", "DATA": {}}
+            return self.playbook_mock_succ_resp
+
+        self.mgmt_router = route
+
+    def mgmt_calls(self, method, fragment):
+
+        return [
+            call
+            for call in self.run_dcnm_send.call_args_list
+            if len(call.args) > 2
+            and call.args[1] == method
+            and fragment in call.args[2]
+        ]
+
+    def mgmt_policy_put_bodies(self, policy_id="POLICY-2020"):
+
+        return [
+            json.loads(call.args[3])[0]
+            for call in self.mgmt_calls(
+                "PUT", "/control/policies/{0}/bulk".format(policy_id)
+            )
+        ]
+
+    def assert_no_mgmt_interface_api_writes(self):
+
+        for method in ("PUT", "POST"):
+            for call in self.mgmt_calls(method, "/rest/interface"):
+                self.fail("unexpected interface API write: {0}".format(call))
+
+    def assert_no_deploy(self):
+
+        self.assertEqual(self.mgmt_calls("POST", "/globalInterface/deploy"), [])
+
+    def mgmt_bst_have(self):
+
+        return self.payloads_data.get("mgmt_bst_payloads")
+
+    def mgmt_policy(self):
+
+        return self.payloads_data.get("mgmt_policy_2020")
+
     def test_dcnm_intf_mgmt_get_if_name(self):
 
         dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
@@ -6046,36 +6090,6 @@ class TestDcnmIntfModule(TestDcnmModule):
         # The int_mgmt template defines neither of these
         self.assertNotIn("SPEED", intf["nvPairs"])
         self.assertNotIn("skipResourceCheck", payload)
-
-    def test_dcnm_intf_mgmt_payload_no_cmds(self):
-
-        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
-        dcnm_intf.int_types = {"mgmt": "INTERFACE_MGMT"}
-        dcnm_intf.pol_types = {12: {"mgmt_mgmt": "int_mgmt"}}
-        dcnm_intf.dcnm_version = 12
-        dcnm_intf.fabric = "test_fabric"
-        dcnm_intf.ip_sn = {"192.168.1.108": "SAL1819SAN8"}
-
-        delem = {
-            "name": "mgmt0",
-            "type": "mgmt",
-            "deploy": True,
-            "profile": {
-                "mode": "mgmt",
-                "admin_state": False,
-                "enable_cdp": False,
-                "description": "",
-                "cmds": None,
-            },
-        }
-
-        payload = dcnm_intf.dcnm_get_intf_payload(delem, "192.168.1.108")
-        nv_pairs = payload["interfaces"][0]["nvPairs"]
-
-        self.assertEqual(nv_pairs["CONF"], "")
-        self.assertEqual(nv_pairs["DESC"], "")
-        self.assertEqual(nv_pairs["ADMIN_STATE"], "false")
-        self.assertEqual(nv_pairs["CDP_ENABLE"], "false")
 
     def test_dcnm_intf_mgmt_extract_if_name(self):
 
@@ -6140,38 +6154,258 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertEqual(len(result["diff"][0]["replaced"]), 0)
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
 
-    def test_dcnm_intf_mgmt_replaced_existing(self):
+    def run_mgmt(self, state, failed=False, changed=True, check_mode=False):
 
-        # Use Version 12 For This Test Case
-        self.run_dcnm_version_supported.side_effect = [12]
+        args = dict(state=state, fabric="test_fabric", config=self.playbook_config)
+        if check_mode:
+            args["_ansible_check_mode"] = True
+        set_module_args(args)
+        return self.execute_module(changed=changed, failed=failed)
+
+    def test_dcnm_intf_mgmt_replaced_conf_change_fails(self):
 
         self.load_mgmt_playbook_data("mgmt_replaced_config")
-
-        set_module_args(
-            dict(
-                state="replaced",
-                fabric="test_fabric",
-                config=self.playbook_config,
-            )
+        self.set_mgmt_router(
+            [self.payloads_data.get("mgmt_merged_payloads_1")], [self.mgmt_policy()]
         )
-        result = self.execute_module(changed=True, failed=False)
+
+        result = self.run_mgmt("replaced", failed=True)
+
+        self.assertIn("Refusing to change the freeform configuration", result["msg"])
+        self.assertIn("allow_conf_change", result["msg"])
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_mgmt_replaced_conf_change_allowed(self):
+
+        self.load_mgmt_playbook_data("mgmt_replaced_allowed_config")
+        # No POLICY_ID in 'have', so the policy must be looked up per switch
+        self.set_mgmt_router(
+            [self.payloads_data.get("mgmt_merged_payloads_1")], [self.mgmt_policy()]
+        )
+
+        result = self.run_mgmt("replaced")
 
         self.assertEqual(len(result["diff"][0]["replaced"]), 1)
+        self.assertTrue(
+            self.mgmt_calls("GET", "/control/policies/switches/SAL1819SAN8")
+        )
 
-        changed_objs = ["CONF", "DESC", "ADMIN_STATE", "CDP_ENABLE"]
+        bodies = self.mgmt_policy_put_bodies()
+        self.assertEqual(len(bodies), 1)
+        self.assertEqual(bodies[0]["policyId"], "POLICY-2020")
+        self.assertEqual(bodies[0]["priority"], 900)
+        nv_pairs = bodies[0]["nvPairs"]
+        self.assertEqual(nv_pairs["CONF"], "ip address 192.168.1.208/24")
+        self.assertEqual(nv_pairs["ADMIN_STATE"], "false")
+        self.assertEqual(nv_pairs["CDP_ENABLE"], "false")
+        self.assertEqual(nv_pairs["DESC"], "out of band management - replaced")
+        self.assert_no_mgmt_interface_api_writes()
 
-        for d in result["diff"][0]["replaced"]:
-            for intf in d["interfaces"]:
-                self.assertEqual(intf["ifName"], "Mgmt0")
-                if_keys = list(intf["nvPairs"].keys())
-                self.assertEqual(
-                    (set(changed_objs).issubset(set(if_keys))), True
-                )
-                self.assertEqual(
-                    intf["nvPairs"]["CONF"], "ip address 192.168.1.208/24"
-                )
-                self.assertEqual(intf["nvPairs"]["ADMIN_STATE"], "false")
-                self.assertEqual(intf["nvPairs"]["CDP_ENABLE"], "false")
+        # The policy must be updated and verified before it is deployed
+        calls = self.run_dcnm_send.call_args_list
+        put_index = calls.index(self.mgmt_calls("PUT", "/control/policies/")[0])
+        deploy_index = calls.index(
+            self.mgmt_calls("POST", "/globalInterface/deploy")[0]
+        )
+        self.assertLess(put_index, deploy_index)
+
+    def test_dcnm_intf_mgmt_replaced_no_cmds_preserves_conf(self):
+
+        self.load_mgmt_playbook_data("mgmt_no_cmds_config")
+        self.set_mgmt_router([self.mgmt_bst_have()], [self.mgmt_policy()])
+
+        result = self.run_mgmt("replaced")
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 1)
+        bodies = self.mgmt_policy_put_bodies()
+        self.assertEqual(len(bodies), 1)
+        nv_pairs = bodies[0]["nvPairs"]
+        self.assertEqual(nv_pairs["CONF"], "  ip address 192.168.1.108/24")
+        self.assertEqual(nv_pairs["DESC"], "Managed by Ansible")
+        self.assertEqual(nv_pairs["CDP_ENABLE"], "true")
+        self.assertEqual(bodies[0]["priority"], 900)
+        self.assert_no_mgmt_interface_api_writes()
+
+    def test_dcnm_intf_mgmt_overridden_no_cmds_preserves_conf(self):
+
+        self.load_mgmt_playbook_data("mgmt_no_cmds_config")
+        self.set_mgmt_router([self.mgmt_bst_have()], [self.mgmt_policy()])
+
+        result = self.run_mgmt("overridden")
+
+        self.assertEqual(len(result["diff"][0]["overridden"]), 1)
+        bodies = self.mgmt_policy_put_bodies()
+        self.assertEqual(len(bodies), 1)
+        self.assertEqual(
+            bodies[0]["nvPairs"]["CONF"], "  ip address 192.168.1.108/24"
+        )
+        self.assertEqual(bodies[0]["priority"], 900)
+
+    def test_dcnm_intf_mgmt_merged_empty_cmds_preserves_conf(self):
+
+        self.load_mgmt_playbook_data("mgmt_empty_cmds_config")
+        self.set_mgmt_router([self.mgmt_bst_have()], [self.mgmt_policy()])
+
+        self.run_mgmt("merged")
+
+        bodies = self.mgmt_policy_put_bodies()
+        self.assertEqual(len(bodies), 1)
+        self.assertEqual(
+            bodies[0]["nvPairs"]["CONF"], "  ip address 192.168.1.108/24"
+        )
+
+    def test_dcnm_intf_mgmt_replaced_empty_cmds_fails(self):
+
+        self.load_mgmt_playbook_data("mgmt_empty_cmds_config")
+        self.set_mgmt_router([self.mgmt_bst_have()], [self.mgmt_policy()])
+
+        result = self.run_mgmt("replaced", failed=True)
+
+        self.assertIn("Refusing to change the freeform configuration", result["msg"])
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_mgmt_overridden_empty_cmds_fails(self):
+
+        self.load_mgmt_playbook_data("mgmt_empty_cmds_config")
+        self.set_mgmt_router([self.mgmt_bst_have()], [self.mgmt_policy()])
+
+        result = self.run_mgmt("overridden", failed=True)
+
+        self.assertIn("Refusing to change the freeform configuration", result["msg"])
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_mgmt_replaced_empty_cmds_allowed(self):
+
+        self.load_mgmt_playbook_data("mgmt_empty_cmds_allowed_config")
+        self.set_mgmt_router([self.mgmt_bst_have()], [self.mgmt_policy()])
+
+        self.run_mgmt("replaced")
+
+        bodies = self.mgmt_policy_put_bodies()
+        self.assertEqual(len(bodies), 1)
+        self.assertEqual(bodies[0]["nvPairs"]["CONF"], "")
+
+    def test_dcnm_intf_mgmt_check_mode_no_calls(self):
+
+        self.load_mgmt_playbook_data("mgmt_no_cmds_config")
+        self.set_mgmt_router([self.mgmt_bst_have()], [self.mgmt_policy()])
+
+        result = self.run_mgmt("replaced", check_mode=True)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 1)
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_mgmt_replaced_idempotent(self):
+
+        self.load_mgmt_playbook_data("mgmt_no_cmds_config")
+        have = copy.deepcopy(self.mgmt_bst_have())
+        have["DATA"][0]["interfaces"][0]["nvPairs"]["DESC"] = "Managed by Ansible"
+        self.set_mgmt_router([have], [self.mgmt_policy()])
+
+        result = self.run_mgmt("replaced", changed=False)
+
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assert_no_mutating_dcnm_calls()
+
+    def test_dcnm_intf_mgmt_multiple_switches(self):
+
+        self.load_mgmt_playbook_data("mgmt_multi_switch_config")
+        have_fox = copy.deepcopy(self.mgmt_bst_have())
+        intf_fox = have_fox["DATA"][0]["interfaces"][0]
+        intf_fox["serialNumber"] = "FOX1821H035"
+        intf_fox["nvPairs"]["POLICY_ID"] = "POLICY-2021"
+        intf_fox["nvPairs"]["PRIORITY"] = "500"
+        policy_fox = copy.deepcopy(self.mgmt_policy())
+        policy_fox.update(
+            {"id": 2021, "policyId": "POLICY-2021", "serialNumber": "FOX1821H035"}
+        )
+        policy_fox["priority"] = 500
+        policy_fox["nvPairs"]["POLICY_ID"] = "POLICY-2021"
+        policy_fox["nvPairs"]["PRIORITY"] = "500"
+        self.set_mgmt_router(
+            [self.mgmt_bst_have(), have_fox], [self.mgmt_policy(), policy_fox]
+        )
+
+        self.run_mgmt("replaced")
+
+        sal = self.mgmt_policy_put_bodies("POLICY-2020")
+        fox = self.mgmt_policy_put_bodies("POLICY-2021")
+        self.assertEqual(len(sal), 1)
+        self.assertEqual(len(fox), 1)
+        self.assertEqual(sal[0]["priority"], 900)
+        self.assertEqual(fox[0]["priority"], 500)
+
+        deploys = self.mgmt_calls("POST", "/globalInterface/deploy")
+        self.assertEqual(len(deploys), 1)
+        self.assertEqual(
+            sorted(d["serialNumber"] for d in json.loads(deploys[0].args[3])),
+            ["FOX1821H035", "SAL1819SAN8"],
+        )
+
+    def test_dcnm_intf_mgmt_policy_priority_drift_fails(self):
+
+        self.load_mgmt_playbook_data("mgmt_no_cmds_config")
+        self.playbook_config[0]["deploy"] = "True"
+        self.set_mgmt_router(
+            [self.mgmt_bst_have()], [self.mgmt_policy()], recreate_on_put=True
+        )
+
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface.time.sleep"
+        ):
+            result = self.run_mgmt("replaced", failed=True)
+
+        self.assertIn("Unable to confirm the update", result["msg"])
+        self.assertIn("900", result["msg"])
+        self.assert_no_deploy()
+
+    def test_dcnm_intf_mgmt_policy_update_failure(self):
+
+        self.load_mgmt_playbook_data("mgmt_no_cmds_config")
+        self.playbook_config[0]["deploy"] = "True"
+        self.set_mgmt_router(
+            [self.mgmt_bst_have()],
+            [self.mgmt_policy()],
+            put_resp={
+                "RETURN_CODE": 500,
+                "MESSAGE": "Internal Server Error",
+                "DATA": {},
+            },
+        )
+
+        result = self.run_mgmt("replaced", failed=True)
+
+        self.assertIn("Failed to update the 'int_mgmt' policy", result["msg"])
+        self.assert_no_deploy()
+
+    def test_dcnm_intf_mgmt_policy_update_failure_list(self):
+
+        self.load_mgmt_playbook_data("mgmt_no_cmds_config")
+        self.playbook_config[0]["deploy"] = "True"
+        self.set_mgmt_router(
+            [self.mgmt_bst_have()],
+            [self.mgmt_policy()],
+            put_resp={
+                "RETURN_CODE": 200,
+                "MESSAGE": "OK",
+                "DATA": {"failureList": [{"message": "update rejected"}]},
+            },
+        )
+
+        result = self.run_mgmt("replaced", failed=True)
+
+        self.assertIn("Failed to update the 'int_mgmt' policy", result["msg"])
+        self.assert_no_deploy()
+
+    def test_dcnm_intf_mgmt_policy_not_found(self):
+
+        self.load_mgmt_playbook_data("mgmt_replaced_allowed_config")
+        self.set_mgmt_router([self.payloads_data.get("mgmt_merged_payloads_1")])
+
+        result = self.run_mgmt("replaced", failed=True)
+
+        self.assertIn("Unable to find the 'int_mgmt' policy", result["msg"])
+        self.assert_no_mutating_dcnm_calls()
 
     def test_dcnm_intf_mgmt_deleted_existing(self):
 
@@ -6232,46 +6466,29 @@ class TestDcnmIntfModule(TestDcnmModule):
 
     def test_dcnm_intf_mgmt_preserve_unmanaged_nvpairs(self):
 
-        # Use Version 12 For This Test Case
-        self.run_dcnm_version_supported.side_effect = [12]
-
         self.load_mgmt_playbook_data("mgmt_preserve_config")
+        self.set_mgmt_router([self.mgmt_bst_have()], [self.mgmt_policy()])
 
-        set_module_args(
-            dict(
-                state="merged",
-                fabric="test_fabric",
-                config=self.playbook_config,
-            )
-        )
-        result = self.execute_module(changed=True, failed=False)
+        self.run_mgmt("merged")
 
-        # Locate the payload actually sent to the controller. Unchanged keys
-        # are pruned from the reported diff, so inspect the request body.
-        sent = [
-            call.args[3]
-            for call in self.run_dcnm_send.call_args_list
-            if len(call.args) > 3 and call.args[1] in ("PUT", "POST")
-        ]
-        self.assertTrue(sent, "no create/update request was sent")
+        # Existing policies are updated in place, never through the interface API
+        self.assert_no_mgmt_interface_api_writes()
+        bodies = self.mgmt_policy_put_bodies()
+        self.assertEqual(len(bodies), 1)
 
-        payload = json.loads(sent[0])
-        nv_pairs = payload["interfaces"][0]["nvPairs"]
+        policy = bodies[0]
+        self.assertEqual(policy["policyId"], "POLICY-2020")
+        self.assertEqual(policy["priority"], 900)
+        self.assertEqual(policy["templateName"], "int_mgmt")
 
-        # Bootstrap flag and policy metadata must survive the update
+        nv_pairs = policy["nvPairs"]
         self.assertEqual(nv_pairs.get("BST"), "true")
-        self.assertEqual(nv_pairs.get("PRIORITY"), "900")
-        self.assertEqual(nv_pairs.get("POLICY_ID"), "POLICY-2020")
-
-        # The controller's existing name casing must be preserved
         self.assertEqual(nv_pairs.get("INTF_NAME"), "mgmt0")
-        self.assertEqual(payload["interfaces"][0]["ifName"], "mgmt0")
-
-        # The requested change must still be applied
         self.assertEqual(nv_pairs.get("DESC"), "updated description")
+        self.assertEqual(nv_pairs.get("CONF"), "  ip address 192.168.1.108/24")
 
-        # The management address must be carried through unchanged
-        self.assertIn("192.168.1.108/24", nv_pairs.get("CONF"))
+        # Readback verification happens after the update
+        self.assertTrue(self.mgmt_calls("GET", "/control/policies/POLICY-2020"))
 
     def test_dcnm_intf_mgmt_unsupported_on_dcnm_11(self):
 

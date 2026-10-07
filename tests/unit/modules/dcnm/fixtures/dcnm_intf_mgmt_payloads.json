@@ -80,5 +80,30 @@
         ],
         "RETURN_CODE": 200,
         "METHOD": "GET"
+    },
+    "mgmt_policy_2020": {
+        "id": 2020,
+        "policyId": "POLICY-2020",
+        "description": "",
+        "serialNumber": "SAL1819SAN8",
+        "entityType": "INTERFACE",
+        "entityName": "mgmt0",
+        "templateName": "int_mgmt",
+        "templateContentType": "PYTHON",
+        "source": "",
+        "priority": 900,
+        "status": "NA",
+        "deleted": false,
+        "nvPairs": {
+            "ADMIN_STATE": "true",
+            "BST": "true",
+            "CDP_ENABLE": "true",
+            "CONF": "  ip address 192.168.1.108/24",
+            "DESC": "original description",
+            "INTF_NAME": "mgmt0",
+            "POLICY_DESC": "",
+            "POLICY_ID": "POLICY-2020",
+            "PRIORITY": "900"
+        }
     }
 }

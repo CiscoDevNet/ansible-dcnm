@@ -150,5 +150,89 @@
             "name": "mgmt0",
             "deploy": "True"
         }
+    ],
+    "mgmt_replaced_allowed_config": [
+        {
+            "switch": [
+                "192.168.1.108"
+            ],
+            "profile": {
+                "mode": "mgmt",
+                "admin_state": false,
+                "enable_cdp": false,
+                "description": "out of band management - replaced",
+                "allow_conf_change": true,
+                "cmds": [
+                    "ip address 192.168.1.208/24"
+                ]
+            },
+            "type": "mgmt",
+            "name": "mgmt0",
+            "deploy": "True"
+        }
+    ],
+    "mgmt_no_cmds_config": [
+        {
+            "switch": [
+                "192.168.1.108"
+            ],
+            "profile": {
+                "mode": "mgmt",
+                "enable_cdp": true,
+                "description": "Managed by Ansible"
+            },
+            "type": "mgmt",
+            "name": "mgmt0",
+            "deploy": "False"
+        }
+    ],
+    "mgmt_empty_cmds_config": [
+        {
+            "switch": [
+                "192.168.1.108"
+            ],
+            "profile": {
+                "mode": "mgmt",
+                "enable_cdp": true,
+                "description": "Managed by Ansible",
+                "cmds": []
+            },
+            "type": "mgmt",
+            "name": "mgmt0",
+            "deploy": "False"
+        }
+    ],
+    "mgmt_empty_cmds_allowed_config": [
+        {
+            "switch": [
+                "192.168.1.108"
+            ],
+            "profile": {
+                "mode": "mgmt",
+                "enable_cdp": true,
+                "description": "Managed by Ansible",
+                "allow_conf_change": true,
+                "cmds": []
+            },
+            "type": "mgmt",
+            "name": "mgmt0",
+            "deploy": "False"
+        }
+    ],
+    "mgmt_multi_switch_config": [
+        {
+            "switch": [
+                "192.168.1.108",
+                "192.168.1.109"
+            ],
+            "profile": {
+                "mode": "mgmt",
+                "enable_cdp": true,
+                "description": "Managed by Ansible"
+            },
+            "type": "mgmt",
+            "name": "mgmt0",
+            "deploy": "True"
+        }
     ]
 }

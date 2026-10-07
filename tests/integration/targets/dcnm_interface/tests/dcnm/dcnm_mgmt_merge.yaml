@@ -134,6 +134,105 @@
       loop: '{{ result.diff[0]["replaced"] }}'
 
     ##############################################
+    ##     POLICY ID, PRIORITY AND CONF         ##
+    ##############################################
+
+    - name: Query management interface to find its policy
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ test_data_common.fabric }}"
+        state: query
+        config:
+          - name: mgmt0
+            switch:
+              - "{{ test_data_common.mgmt_switch }}"
+      register: result
+
+    - name: Record the management policy ID
+      ansible.builtin.set_fact:
+        mgmt_policy_id: '{{ result.diff[0]["query"][0]["interfaces"][0]["nvPairs"]["POLICY_ID"] }}'
+
+    - name: Get the management policy before the update
+      cisco.dcnm.dcnm_rest:
+        method: GET
+        path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{{ mgmt_policy_id }}"
+      register: policy_before
+
+    - name: Replace management interface metadata without cmds
+      cisco.dcnm.dcnm_interface: &mgmt_replace_no_cmds
+        check_deploy: false
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced
+        config:
+          - name: mgmt0
+            type: mgmt
+            switch:
+              - "{{ test_data_common.mgmt_switch }}"
+            deploy: false
+            profile:
+              mode: mgmt
+              admin_state: true
+              enable_cdp: true
+              description: "dcnm_interface test - no cmds"
+      register: result
+
+    - name: Get the management policy after the update
+      cisco.dcnm.dcnm_rest:
+        method: GET
+        path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{{ mgmt_policy_id }}"
+      register: policy_after
+
+    - name: ASSERT - Verify policy ID, priority and CONF are preserved
+      ansible.builtin.assert:
+        that:
+          - "result.changed == true"
+          - 'result.diff[0]["replaced"] | length == 1'
+          - "policy_after.response.DATA.policyId == mgmt_policy_id"
+          - "policy_after.response.DATA.priority == policy_before.response.DATA.priority"
+          - 'policy_after.response.DATA.nvPairs.DESC == "dcnm_interface test - no cmds"'
+          - "(test_data_common.mgmt_conf | trim) in policy_after.response.DATA.nvPairs.CONF"
+        fail_msg: "Management policy was not preserved - before {{ policy_before.response.DATA }} after {{ policy_after.response.DATA }}"
+        success_msg: "Management policy ID, priority and CONF were preserved"
+
+    - name: Replace management interface metadata without cmds - Idempotence
+      cisco.dcnm.dcnm_interface: *mgmt_replace_no_cmds
+      register: result
+
+    - name: ASSERT - Verify replace without cmds is idempotent
+      ansible.builtin.assert:
+        that:
+          - "result.changed == false"
+          - 'result.diff[0]["replaced"] | length == 0'
+        fail_msg: "Replace without cmds is not idempotent - {{ result }}"
+        success_msg: "Replace without cmds is idempotent"
+
+    - name: Clear management interface CONF without allow_conf_change
+      cisco.dcnm.dcnm_interface:
+        check_deploy: false
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced
+        config:
+          - name: mgmt0
+            type: mgmt
+            switch:
+              - "{{ test_data_common.mgmt_switch }}"
+            deploy: false
+            profile:
+              mode: mgmt
+              description: "dcnm_interface test - no cmds"
+              enable_cdp: true
+              cmds: []
+      ignore_errors: true
+      register: result
+
+    - name: ASSERT - Verify clearing CONF is refused
+      ansible.builtin.assert:
+        that:
+          - "result.failed == true"
+          - '"Refusing to change the freeform configuration" in result.msg'
+        fail_msg: "Clearing management CONF was not refused - {{ result }}"
+        success_msg: "Clearing management CONF was refused"
+
+    ##############################################
     ##             INVALID PARAMS               ##
     ##############################################
 
