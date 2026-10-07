@@ -95,10 +95,10 @@ options:
         required: true
       type:
         description:
-        - Interface type. Example, pc, vpc, sub_int, lo, eth, svi
+        - Interface type. Example, pc, vpc, sub_int, lo, eth, svi, mgmt
         type: str
         required: true
-        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex', 'breakout']
+        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex', 'mgmt', 'breakout']
       deploy:
         description:
         - Flag indicating if the configuration must be pushed to the switch. If not included
@@ -970,6 +970,62 @@ options:
             - Name of netflow monitor. This parameter is required if "enable_netflow" is True.
             type: str
             default: ""
+      profile_mgmt:
+        description:
+        - Though the key shown here is 'profile_mgmt' the actual key to be used in playbook
+          is 'profile'. The key 'profile_mgmt' is used here to logically segregate the interface
+          objects applicable for this profile
+        - Object profile which must be included for management interface configurations.
+        - Management interfaces are physical interfaces which always exist on the switch. They
+          can be created and modified but they cannot be deleted. They are also never defaulted
+          or removed during 'deleted' and 'overridden' states.
+        - This profile requires NDFC/DCNM 12 or above, since it uses the 'int_mgmt' policy.
+        - Existing management interfaces are updated through the policy API so that the
+          'int_mgmt' policy keeps its policy ID and priority.
+        suboptions:
+          mode:
+            description:
+            - Interface mode
+            choices: ['mgmt']
+            type: str
+            required: true
+          cmds:
+            description:
+            - Commands to be included in the configuration under this interface
+            - The 'int_mgmt' policy has no dedicated IP address parameter. The management IP
+              address must be configured here as a freeform command.
+            - "Example, 'ip address 192.168.1.11/24'"
+            - If omitted, the existing freeform configuration of the management interface is
+              preserved in all states, including 'replaced' and 'overridden'.
+            - Changing the existing freeform configuration of a management interface, including
+              setting it to an empty list, requires 'allow_conf_change' to be true.
+            type: list
+            elements: str
+          allow_conf_change:
+            description:
+            - Allow the existing freeform configuration (CONF) of the management interface to
+              be changed or cleared.
+            - WARNING - CONF carries the address the controller uses to reach the switch.
+              Changing it can make the switch unreachable from the controller. Only enable this
+              as part of a coordinated change of the switch management address in the
+              controller inventory.
+            type: bool
+            default: false
+          description:
+            description:
+            - Description of the interface
+            type: str
+            default: ""
+          admin_state:
+            description:
+            - Administrative state of the interface
+            type: bool
+            default: true
+          enable_cdp:
+            description:
+            - Flag to enable CDP on the interface
+            type: bool
+            default: false
       profile_breakout:
         description:
         - Though the key shown here is 'profile_breakout' the actual key to be used in playbook
@@ -1846,6 +1902,58 @@ EXAMPLES = """
         switch:
           - "{{ ansible_switch1 }}"
 
+# MANAGEMENT INTERFACES
+
+- name: Configure management interface
+  cisco.dcnm.dcnm_interface:
+    fabric: GEN7-EVPN-FABRIC-01
+    state: merged
+    config:
+      - name: mgmt0
+        type: mgmt
+        switch:
+          - "192.172.1.1"
+        deploy: true
+        profile:
+          mode: mgmt
+          admin_state: true
+          enable_cdp: true
+          description: "out of band management"
+          cmds:                           # Freeform config, used to set the management IP address
+            - ip address 192.168.1.11/24
+
+- name: Replace management interface metadata, keeping the existing management address
+  cisco.dcnm.dcnm_interface:
+    fabric: GEN7-EVPN-FABRIC-01
+    state: replaced
+    config:
+      - name: mgmt0
+        type: mgmt
+        switch:
+          - "192.172.1.1"
+        deploy: true
+        profile:
+          mode: mgmt
+          admin_state: true
+          enable_cdp: false
+          description: "out of band management - replaced"
+
+- name: Change management interface freeform configuration (coordinated address change only)
+  cisco.dcnm.dcnm_interface:
+    fabric: GEN7-EVPN-FABRIC-01
+    state: replaced
+    config:
+      - name: mgmt0
+        type: mgmt
+        switch:
+          - "192.172.1.1"
+        deploy: true
+        profile:
+          mode: mgmt
+          allow_conf_change: true         # Required to change or clear existing freeform config
+          cmds:
+            - ip address 192.168.1.12/24
+
 # QUERY
 
 - name: Query interface details
@@ -1868,6 +1976,9 @@ EXAMPLES = """
         switch:
           - "192.172.1.1"
       - name: vpc750
+        switch:
+          - "192.172.1.1"
+      - name: mgmt0
         switch:
           - "192.172.1.1"
 """
@@ -1935,6 +2046,9 @@ class DcnmIntf:
             "IF_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/markdelete",
             "FABRIC_ACCESS_MODE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/accessmode",
             "BREAKOUT": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/breakout",
+            "POLICY_WITH_POLICY_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}",
+            "POLICY_BULK_UPDATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}/bulk",
+            "POLICY_WITH_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}",
         },
     }
 
@@ -1976,8 +2090,15 @@ class DcnmIntf:
         self.have_all_list = []
         self.diff_create = []
         self.diff_replace = []
-        self.diff_delete = [[], [], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
+        self.diff_replace_mgmt_policy = []
+        self.mgmt_policy_nv_keys = (
+            "DESC",
+            "CONF",
+            "ADMIN_STATE",
+            "CDP_ENABLE",
+        )
+        self.diff_delete = [[], [], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], [], []]
         self.want_breakout = []
         self.have_breakout = []
         self.diff_create_breakout = []
@@ -2187,6 +2308,7 @@ class DcnmIntf:
                 "svi_vlan_admin_state": "int_vlan_admin_state",
                 "st_fex_port_channel_st": "int_port_channel_fex",
                 "aa_fex_port_channel_aa": "int_port_channel_aa_fex",
+                "mgmt_mgmt": "int_mgmt",
                 "breakout": "breakout_interface",
             },
         }
@@ -2224,6 +2346,7 @@ class DcnmIntf:
             "svi": "INTERFACE_VLAN",
             "st_fex": "STRAIGHT_TROUGH_FEX",
             "aa_fex": "AA_FEX",
+            "mgmt": "INTERFACE_MGMT",
             "breakout": "BREAKOUT",
         }
 
@@ -2238,6 +2361,7 @@ class DcnmIntf:
             "STRAIGHT_TROUGH_FEX": 6,
             "AA_FEX": 7,
             "BREAKOUT": 8,
+            "INTERFACE_MGMT": 9,
         }
 
         msg = "ENTERED DcnmIntf: "
@@ -2371,6 +2495,9 @@ class DcnmIntf:
         if "aa_fex" == if_type:
             port_id = re.findall(r"\d+", name)
             return ("vPC" + str(port_id[0]), port_id[0])
+        if "mgmt" == if_type:
+            port_id = re.findall(r"\d+", name)
+            return ("Mgmt" + str(port_id[0]), port_id[0])
         if "breakout" == if_type:
             port_id = re.findall(r"\d+\/\d+", name)
             return ("Ethernet" + str(port_id[0]), port_id[0])
@@ -2592,9 +2719,18 @@ class DcnmIntf:
                         )
 
                         c[ck]["ifname"] = ifname
-                        c[ck]["policy"] = self.pol_types[self.dcnm_version][
-                            pol_ind_str
-                        ]
+                        c[ck]["policy"] = self.pol_types[
+                            self.dcnm_version
+                        ].get(pol_ind_str)
+                        if c[ck]["policy"] is None:
+                            self.module.fail_json(
+                                msg="Invalid parameters in playbook: while processing interface "
+                                + ifname
+                                + ", interface type '{0}' with mode '{1}' is not supported on "
+                                "this controller version".format(
+                                    cfg["type"], cfg["profile"]["mode"]
+                                )
+                            )
                         self.dcnm_intf_expand_storm_control_intent(c[ck])
                         self.pb_input.append(c[ck])
 
@@ -3209,6 +3345,27 @@ class DcnmIntf:
 
         self.dcnm_intf_validate_interface_input(cfg, fex_spec, fex_prof_spec)
 
+    def dcnm_intf_validate_mgmt_interface_input(self, cfg):
+
+        mgmt_spec = dict(
+            name=dict(required=True, type="str"),
+            switch=dict(required=True, type="list", elements="str"),
+            type=dict(required=True, type="str"),
+            deploy=dict(type="str", default=True),
+            profile=dict(required=True, type="dict"),
+        )
+
+        mgmt_prof_spec = dict(
+            mode=dict(required=True, type="str"),
+            description=dict(type="str", default=""),
+            cmds=dict(type="list", elements="str"),
+            admin_state=dict(type="bool", default=True),
+            enable_cdp=dict(type="bool", default=False),
+            allow_conf_change=dict(type="bool", default=False),
+        )
+
+        self.dcnm_intf_validate_interface_input(cfg, mgmt_spec, mgmt_prof_spec)
+
     def dcnm_intf_validate_breakout_interface_input(self, cfg):
         breakout_spec = dict(
             name=dict(required=True, type="str"),
@@ -3305,6 +3462,8 @@ class DcnmIntf:
                     self.dcnm_intf_validate_st_fex_interface_input(cfg)
                 if item["type"] == "aa_fex":
                     self.dcnm_intf_validate_aa_fex_interface_input(cfg)
+                if item["type"] == "mgmt":
+                    self.dcnm_intf_validate_mgmt_interface_input(cfg)
                 if item["type"] == "breakout":
                     self.dcnm_intf_validate_breakout_interface_input(cfg)
             cfg.remove(citem)
@@ -4297,6 +4456,30 @@ class DcnmIntf:
                 str(delem[profile].get("speed", ""))
             )
 
+    def dcnm_intf_get_mgmt_payload(self, delem, intf, profile):
+
+        ifname, port_id = self.dcnm_intf_get_if_name(
+            delem["name"], delem["type"]
+        )
+        intf["interfaces"][0].update({"ifName": ifname})
+
+        intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+        intf["interfaces"][0]["nvPairs"]["DESC"] = delem[profile][
+            "description"
+        ]
+        if delem[profile]["cmds"] is None:
+            intf["interfaces"][0]["nvPairs"]["CONF"] = ""
+        else:
+            intf["interfaces"][0]["nvPairs"]["CONF"] = "\n".join(
+                delem[profile]["cmds"]
+            )
+        intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
+            delem[profile]["admin_state"]
+        ).lower()
+        intf["interfaces"][0]["nvPairs"]["CDP_ENABLE"] = str(
+            delem[profile]["enable_cdp"]
+        ).lower()
+
     # New Interfaces
     def dcnm_get_intf_payload(self, delem, sw):
 
@@ -4401,6 +4584,14 @@ class DcnmIntf:
 
         if "aa_fex" == delem["type"]:
             self.dcnm_intf_get_aa_fex_payload(delem, intf, "profile")
+
+        if "mgmt" == delem["type"]:
+            self.dcnm_intf_get_mgmt_payload(delem, intf, "profile")
+
+            # The int_mgmt template has no SPEED parameter and management
+            # interfaces are not resource managed by the controller.
+            intf["interfaces"][0]["nvPairs"].pop("SPEED", None)
+            intf.pop("skipResourceCheck", None)
 
         return intf
 
@@ -4661,6 +4852,12 @@ class DcnmIntf:
                 e2 = ie2
 
         return e1, e2
+
+    @staticmethod
+    def dcnm_intf_mgmt_conf_lines(conf):
+        return sorted(
+            line.strip() for line in str(conf).splitlines() if line.strip()
+        )
 
     def dcnm_intf_merge_want_and_have(self, key, wvalue, hvalue):
 
@@ -4990,6 +5187,10 @@ class DcnmIntf:
 
             delem = {}
             action = ""
+            mgmt_policy_update = False
+            mgmt_policy_id = None
+            mgmt_have_conf = ""
+            mgmt_allow_conf_change = False
             name = want["interfaces"][0]["ifName"]
             sno = want["interfaces"][0]["serialNumber"]
             fabric = want["interfaces"][0]["fabricName"]
@@ -5070,9 +5271,95 @@ class DcnmIntf:
                             # the serial number should be unique across all fabrics
                             if_keys.remove("fabricName")
                             changed_dict[k][0].pop("fabricName")
+
+                            # 'int_mgmt' policies on bootstrap provisioned switches carry nvPairs
+                            # such as BST which are not template parameters and are not modelled by
+                            # this module. Carry them over from 'have' so that the controller does
+                            # not drop them, and keep the controller's existing name casing.
+                            preserved_mgmt_keys = set()
+                            if want.get("interfaceType") == "INTERFACE_MGMT" and d[k]:
+                                have_intf = d[k][0]
+                                have_nv = have_intf.get("nvPairs", {})
+                                mgmt_policy_update = True
+                                mgmt_policy_id = have_nv.get("POLICY_ID")
+                                mgmt_have_conf = have_nv.get("CONF") or ""
+                                mgmt_allow_conf_change = bool(
+                                    match_pb
+                                    and check_type_bool(
+                                        match_pb[0].get("allow_conf_change", False)
+                                    )
+                                )
+
+                                for hk, hv in have_nv.items():
+                                    # Controller-owned policy metadata, never sent back.
+                                    if hk in ("PRIORITY", "POLICY_ID"):
+                                        continue
+                                    if hk not in want[k][0]["nvPairs"]:
+                                        want[k][0]["nvPairs"][hk] = hv
+                                        preserved_mgmt_keys.add(hk)
+
+                                have_intf_name = have_nv.get("INTF_NAME")
+                                want_intf_name = want[k][0]["nvPairs"].get("INTF_NAME")
+                                if (
+                                    have_intf_name
+                                    and want_intf_name
+                                    and str(have_intf_name).lower()
+                                    == str(want_intf_name).lower()
+                                ):
+                                    want[k][0]["nvPairs"]["INTF_NAME"] = have_intf_name
+
+                                have_if_name = have_intf.get("ifName")
+                                want_if_name = want[k][0].get("ifName")
+                                if (
+                                    have_if_name
+                                    and want_if_name
+                                    and str(have_if_name).lower()
+                                    == str(want_if_name).lower()
+                                ):
+                                    want[k][0]["ifName"] = have_if_name
+
+                                have_conf = have_nv.get("CONF")
+                                want_conf = want[k][0]["nvPairs"].get("CONF")
+
+                                # CONF carries the address the controller uses to reach the
+                                # switch, so an omitted 'cmds' must never clear it.
+                                if have_conf is not None and (
+                                    "cmds" not in pb_keys
+                                    or (state == "merged" and not want_conf)
+                                ):
+                                    want[k][0]["nvPairs"]["CONF"] = have_conf
+                                    want_conf = have_conf
+
+                                # The controller indents stored freeform config. Keep its
+                                # exact text when the intent has not actually changed, so
+                                # the management address is never rewritten needlessly.
+                                if (
+                                    have_conf is not None
+                                    and want_conf is not None
+                                    and self.dcnm_intf_compare_elements(
+                                        name,
+                                        sno,
+                                        fabric,
+                                        want_conf,
+                                        have_conf,
+                                        "CONF",
+                                        "replaced",
+                                    )
+                                    == "dont_add"
+                                ):
+                                    want[k][0]["nvPairs"]["CONF"] = have_conf
+
                             for ik in if_keys:
                                 if ik == "nvPairs":
                                     nv_keys = list(want[k][0][ik].keys())
+
+                                    # Values carried over verbatim from 'have' are
+                                    # unchanged by definition and are absent from
+                                    # changed_dict, so skip comparing them.
+                                    for pk in preserved_mgmt_keys:
+                                        if pk in nv_keys:
+                                            nv_keys.remove(pk)
+
                                     # List of keys to check and potentially remove from nv_keys
                                     # Some keys are not present in the first GET and must be removed
                                     keys_to_check = [
@@ -5217,6 +5504,24 @@ class DcnmIntf:
                                         # Keys and values match. Remove from changed_dict
                                         if ik != "ifName":
                                             changed_dict[k][0].pop(ik)
+
+                            if mgmt_policy_update and not mgmt_allow_conf_change:
+                                final_conf = want[k][0]["nvPairs"].get("CONF") or ""
+                                if self.dcnm_intf_mgmt_conf_lines(
+                                    final_conf
+                                ) != self.dcnm_intf_mgmt_conf_lines(mgmt_have_conf):
+                                    self.module.fail_json(
+                                        msg=(
+                                            "Refusing to change the freeform configuration (CONF) of "
+                                            "management interface '{0}' on switch '{1}'. CONF carries "
+                                            "the address the controller uses to reach the switch and "
+                                            "changing it can make the switch unreachable. Current CONF: "
+                                            "'{2}', requested CONF: '{3}'. Omit 'cmds' to keep the "
+                                            "current configuration, or set 'allow_conf_change: true' "
+                                            "under 'profile' after planning a coordinated change of the "
+                                            "switch management address in the controller inventory."
+                                        ).format(name, sno, mgmt_have_conf, final_conf)
+                                    )
                         else:
                             res = self.dcnm_intf_compare_elements(
                                 name, sno, fabric, want[k], d[k], k, state
@@ -5247,6 +5552,22 @@ class DcnmIntf:
                     continue
                 self.dcnm_intf_merge_intf_info(want, self.diff_create)
                 # Add the changed_dict to self.changed_dict
+                self.changed_dict[0][state].append(changed_dict)
+                intf_changed = True
+            elif action == "update" and mgmt_policy_update:
+                # The interface API recreates 'int_mgmt' at priority 500, so update the policy in place.
+                self.diff_replace_mgmt_policy.append(
+                    {
+                        "serialNumber": sno,
+                        "ifName": name,
+                        "policyId": mgmt_policy_id,
+                        "nvPairs": {
+                            nk: want["interfaces"][0]["nvPairs"][nk]
+                            for nk in self.mgmt_policy_nv_keys
+                            if nk in want["interfaces"][0]["nvPairs"]
+                        },
+                    }
+                )
                 self.changed_dict[0][state].append(changed_dict)
                 intf_changed = True
             elif action == "update":
@@ -5290,8 +5611,8 @@ class DcnmIntf:
     def dcnm_intf_get_diff_replaced(self):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -5309,7 +5630,7 @@ class DcnmIntf:
     def dcnm_intf_get_diff_merge(self):
 
         self.diff_create = []
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -6024,8 +6345,8 @@ class DcnmIntf:
 
         deploy = False
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -6495,8 +6816,8 @@ class DcnmIntf:
     def dcnm_intf_get_diff_deleted(self):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
         self.deferred_delete_member_defaults = []
@@ -6592,6 +6913,17 @@ class DcnmIntf:
                         if intf["serialNumber"] not in processed:
                             processed.append(intf["serialNumber"])
                         else:
+                            continue
+
+                        # Management interfaces are physical interfaces that
+                        # always exist on the switch and cannot be removed.
+                        if if_type == "INTERFACE_MGMT":
+                            self.changed_dict[0]["skipped"].append(
+                                {
+                                    "Name": if_name,
+                                    "Reason": "Management interfaces cannot be deleted",
+                                }
+                            )
                             continue
 
                         # Ethernet interfaces cannot be deleted
@@ -6820,6 +7152,11 @@ class DcnmIntf:
         elif cfg["name"][0:4].lower() == "vlan":
             if_name, port_id = self.dcnm_intf_get_if_name(cfg["name"], "svi")
             if_type = "INTERFACE_VLAN"
+        elif cfg["name"][0:4].lower() == "mgmt" or (
+            cfg["name"][0:10].lower() == "management"
+        ):
+            if_name, port_id = self.dcnm_intf_get_if_name(cfg["name"], "mgmt")
+            if_type = "INTERFACE_MGMT"
         else:
             if_name = ""
             if_type = ""
@@ -7022,6 +7359,121 @@ class DcnmIntf:
                     }
                 )
 
+    def dcnm_intf_get_mgmt_policy(self, policy_id):
+
+        path = self.paths["POLICY_WITH_POLICY_ID"].format(policy_id)
+        resp = dcnm_send(self.module, "GET", path)
+
+        if (
+            resp
+            and resp.get("RETURN_CODE") == 200
+            and isinstance(resp.get("DATA"), dict)
+            and resp["DATA"]
+            and not resp["DATA"].get("deleted", False)
+        ):
+            return resp["DATA"]
+        return None
+
+    def dcnm_intf_find_mgmt_policy_id(self, sno, if_name):
+
+        path = self.paths["POLICY_WITH_SNO"].format(sno)
+        resp = dcnm_send(self.module, "GET", path)
+
+        if resp and resp.get("RETURN_CODE") == 200 and isinstance(
+            resp.get("DATA"), list
+        ):
+            for policy in resp["DATA"]:
+                if (
+                    policy.get("templateName") == "int_mgmt"
+                    and str(policy.get("entityName", "")).lower()
+                    == if_name.lower()
+                    and not policy.get("deleted", False)
+                ):
+                    return policy.get("policyId")
+        return None
+
+    def dcnm_intf_mgmt_policy_matches(self, policy, policy_id, priority, nv_pairs):
+
+        if policy.get("policyId") != policy_id:
+            return False
+        if str(policy.get("priority")) != str(priority):
+            return False
+
+        policy_nv = policy.get("nvPairs") or {}
+        for key, value in nv_pairs.items():
+            if key == "CONF":
+                if self.dcnm_intf_mgmt_conf_lines(
+                    policy_nv.get(key) or ""
+                ) != self.dcnm_intf_mgmt_conf_lines(value):
+                    return False
+            elif str(policy_nv.get(key)).lower() != str(value).lower():
+                return False
+        return True
+
+    def dcnm_intf_update_mgmt_policies(self):
+        """Update existing 'int_mgmt' policies in place, verifying ID and priority before any deploy."""
+
+        for item in self.diff_replace_mgmt_policy:
+            policy_id = item["policyId"] or self.dcnm_intf_find_mgmt_policy_id(
+                item["serialNumber"], item["ifName"]
+            )
+            # The ID comes from the controller and is used to build request paths.
+            if policy_id and re.match(r"^[A-Za-z0-9_-]+$", str(policy_id)):
+                policy = self.dcnm_intf_get_mgmt_policy(policy_id)
+            else:
+                policy = None
+            if policy is None:
+                self.module.fail_json(
+                    msg="Unable to find a valid 'int_mgmt' policy for management interface "
+                    "'{0}' on switch '{1}'. No changes were made to this interface.".format(
+                        item["ifName"], item["serialNumber"]
+                    ),
+                    response=self.result["response"],
+                )
+
+            priority = policy.get("priority")
+            policy["nvPairs"] = dict(policy.get("nvPairs") or {}, **item["nvPairs"])
+
+            path = self.paths["POLICY_BULK_UPDATE"].format(policy_id)
+            resp = dcnm_send(self.module, "PUT", path, json.dumps([policy]))
+            self.result["response"].append(resp)
+
+            data = resp.get("DATA") if resp else None
+            failures = data.get("failureList") if isinstance(data, dict) else None
+            if not resp or resp.get("RETURN_CODE") != 200 or failures:
+                self.module.fail_json(
+                    msg="Failed to update the 'int_mgmt' policy '{0}' for management "
+                    "interface '{1}' on switch '{2}'.".format(
+                        policy_id, item["ifName"], item["serialNumber"]
+                    ),
+                    response=resp,
+                    diff=self.changed_dict,
+                )
+
+            # The controller may not reflect the update immediately.
+            readback = None
+            for attempt in range(5):
+                readback = self.dcnm_intf_get_mgmt_policy(policy_id)
+                if readback is not None and self.dcnm_intf_mgmt_policy_matches(
+                    readback, policy_id, priority, item["nvPairs"]
+                ):
+                    break
+                readback = None
+                if attempt < 4:
+                    time.sleep(1)
+
+            if readback is None:
+                self.module.fail_json(
+                    msg="Unable to confirm the update of 'int_mgmt' policy '{0}' for "
+                    "management interface '{1}' on switch '{2}' with priority '{3}'. "
+                    "The interface has not been deployed; review the policy on the "
+                    "controller before retrying.".format(
+                        policy_id, item["ifName"], item["serialNumber"], priority
+                    ),
+                    response=self.result["response"],
+                    diff=self.changed_dict,
+                )
+
     def dcnm_intf_send_message_to_dcnm(self):
 
         resp = None
@@ -7183,6 +7635,10 @@ class DcnmIntf:
                         self.module.fail_json(msg=resp)
                     else:
                         replace = True
+
+        if self.diff_replace_mgmt_policy:
+            self.dcnm_intf_update_mgmt_policies()
+            replace = True
 
         resp = None
 
@@ -7591,6 +8047,7 @@ def main():
     if (
         dcnm_intf.diff_create
         or dcnm_intf.diff_replace
+        or dcnm_intf.diff_replace_mgmt_policy
         or dcnm_intf.diff_deploy
         or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_PORT_CHANNEL"]]
         or dcnm_intf.diff_delete[dcnm_intf.int_index["INTERFACE_VPC"]]
