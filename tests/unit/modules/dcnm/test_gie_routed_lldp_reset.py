@@ -58,6 +58,7 @@ from .gie_withdrawal_harness import (  # noqa: F401  (fixtures come with the har
     ACCESS,
     ROUTED,
     SUPPORTED,
+    SUPPORTED_PATCH,
     base_for,
     build_have,
     diff_nvpairs,
@@ -122,8 +123,10 @@ def test_the_reset_is_registered_as_the_string_false(key, nvpair, _c, _cw):
 @pytest.mark.parametrize("key,_nv,_c,_cw", DIRECTIONS)
 def test_the_engine_resets_a_configured_value_and_leaves_a_default_alone(key, _nv, _c, _cw):
     """``have == declared default`` is nothing to withdraw; anything else is the reset."""
-    assert gie_withdrawal_action(ROUTED, key, "true", SUPPORTED) == (GIE_WITHDRAW_RESET, RESET)
-    assert gie_withdrawal_action(ROUTED, key, RESET, SUPPORTED) == (GIE_WITHDRAW_NONE, None)
+    assert gie_withdrawal_action(ROUTED, key, "true", SUPPORTED, SUPPORTED_PATCH) == (
+        GIE_WITHDRAW_RESET, RESET)
+    assert gie_withdrawal_action(ROUTED, key, RESET, SUPPORTED, SUPPORTED_PATCH) == (
+        GIE_WITHDRAW_NONE, None)
 
 
 # --------------------------------------------------------------- independence, both directions
@@ -255,7 +258,7 @@ def test_a_sister_binding_on_the_same_parent_still_refuses(key):
     assert binding is not None, "{0}::{1} is not registered".format(ROUTED, key)
     assert binding.get("reset_wire") is None, (
         "{0}::{1} gained a reset this lot never measured".format(ROUTED, key))
-    action, wire = gie_withdrawal_action(ROUTED, key, "true", SUPPORTED)
+    action, wire = gie_withdrawal_action(ROUTED, key, "true", SUPPORTED, SUPPORTED_PATCH)
     assert action not in (GIE_WITHDRAW_RESET, GIE_WITHDRAW_NONE), (
         "{0}::{1} now answers {2!r} for a configured value with no registered reset"
         .format(ROUTED, key, action))

@@ -28,7 +28,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_invalid_parent_key, gie_nvpair_keymap, gie_carry_forward_bindings,
     gie_validate_binding_value,
     GieBindingError,
+    GIE_ENABLED_PATCH_VERSIONS,
 )
+
+# PR725-PATCH-VERSION-001: declared explicitly for every positive engine-level fixture below.
+PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
 TRUNK = "int_trunk_host"
 ACCESS = "int_access_host"
@@ -718,7 +722,9 @@ def test_binding_value_accepts_exact_native_enum(value):
 
 @pytest.mark.parametrize("val", ["on", "off"])
 def test_flowcontrol_explicit_contributes_native_string(val):
-    add, err = gie_contribute_nvpairs(TRUNK, {"mode": "trunk", "flowcontrol_receive": val}, "12.6.0.267")
+    add, err = gie_contribute_nvpairs(
+        TRUNK, {"mode": "trunk", "flowcontrol_receive": val}, "12.6.0.267", PATCH
+    )
     assert err is None
     assert add == {"flowcontrolReceive": val}
     assert isinstance(add["flowcontrolReceive"], str)
@@ -731,7 +737,9 @@ def test_flowcontrol_omitted_contributes_nothing():
 
 def test_flowcontrol_present_on_both_parents():
     for p, m in [(TRUNK, "trunk"), (ACCESS, "access")]:
-        add, err = gie_contribute_nvpairs(p, {"mode": m, "flowcontrol_receive": "on"}, "12.6.0.267")
+        add, err = gie_contribute_nvpairs(
+            p, {"mode": m, "flowcontrol_receive": "on"}, "12.6.0.267", PATCH
+        )
         assert err is None and add == {"flowcontrolReceive": "on"}
 
 
@@ -745,7 +753,7 @@ def test_flowcontrol_below_or_bad_version_fails_closed(ver):
 
 @pytest.mark.parametrize("ver", ["12.6.0.267", "12.6.0.300", "12.7.0.1", "13.0.0.0"])
 def test_flowcontrol_at_or_above_floor_ok(ver):
-    add, err = gie_contribute_nvpairs(TRUNK, {"flowcontrol_receive": "off"}, ver)
+    add, err = gie_contribute_nvpairs(TRUNK, {"flowcontrol_receive": "off"}, ver, PATCH)
     assert err is None and add == {"flowcontrolReceive": "off"}
 
 
@@ -863,12 +871,12 @@ def test_extend_spec_flowcontrol_enum_maps_to_str():
 
 def test_contribute_preserves_native_types_no_stringification():
     # enum -> native str; boolean -> native bool (not the "True"/"true" string)
-    a1, err1 = gie_contribute_nvpairs(TRUNK, {"flowcontrol_receive": "on"}, "12.6.0.267")
+    a1, err1 = gie_contribute_nvpairs(TRUNK, {"flowcontrol_receive": "on"}, "12.6.0.267", PATCH)
     assert a1["flowcontrolReceive"] == "on" and isinstance(a1["flowcontrolReceive"], str)
     # The native-value case used to be the loopback child_pti binding, the only mechanism that
     # left a value unserialized. With child_pti retired every binding is passthrough, so the
     # wire form is now universal -- which is the property worth asserting.
-    a2, err2 = gie_contribute_nvpairs(ROUTED, {"enable_ospf": True}, "12.6.0.267")
+    a2, err2 = gie_contribute_nvpairs(ROUTED, {"enable_ospf": True}, "12.6.0.267", PATCH)
     assert a2["ospf"] == "true" and isinstance(a2["ospf"], str)
 
 
@@ -1231,9 +1239,10 @@ def _intf_trunk():
                             "fabricName": "test_fabric", "nvPairs": {"SPEED": "Auto"}}]}
 
 
-def _intf_obj(ndfc_version):
+def _intf_obj(ndfc_version, patch_version=PATCH):
     m = object.__new__(dcnm_interface.DcnmIntf)
     m.ndfc_version = ndfc_version
+    m.patch_version = patch_version
     return m
 
 
@@ -1282,7 +1291,8 @@ def _compare_obj(state, parent, want_flow=_OMITTED, have_flow=_OMITTED,
                  want_description="same", have_description="same",
                  have_parent=None):
     module = mock.Mock()
-    module.params = {"fabric": "FAB1", "config": [], "state": state}
+    module.params = {"fabric": "FAB1", "config": [], "state": state,
+                     "patch_version": PATCH}
     module.check_mode = False
     with mock.patch.object(
         dcnm_interface, "dcnm_version_supported",
@@ -1667,7 +1677,7 @@ def test_flowcontrol_send_binding_shape(parent, mode):
 @pytest.mark.parametrize("value", ["on", "off"])
 def test_flowcontrol_send_transports_a_wrapped_playbook_value(parent, value):
     wrapped = _SubStr(value)
-    add, err = gie_contribute_nvpairs(parent, {"flowcontrol_send": wrapped}, "12.6.0.267")
+    add, err = gie_contribute_nvpairs(parent, {"flowcontrol_send": wrapped}, "12.6.0.267", PATCH)
     assert err is None
     assert add == {"flowcontrolSend": value}
 
@@ -1768,7 +1778,7 @@ def test_spanning_tree_no_stays_a_string_not_a_boolean(parent):
 @pytest.mark.parametrize("value", ["no", "network", "normal"])
 def test_spanning_tree_transports_a_wrapped_playbook_value(parent, value):
     add, err = gie_contribute_nvpairs(
-        parent, {"spanning_tree_port_type": _SubStr(value)}, "12.6.0.267"
+        parent, {"spanning_tree_port_type": _SubStr(value)}, "12.6.0.267", PATCH
     )
     assert err is None
     assert add == {"spanningTreePortType": value}
@@ -1806,7 +1816,7 @@ def test_spanning_tree_mutual_exclusion_is_not_expressed_in_the_registry():
         assert resolve_binding(parent, "port_type_fast") is None
         # transported without inspecting any other field
         add, err = gie_contribute_nvpairs(
-            parent, {"spanning_tree_port_type": _SubStr("network")}, "12.6.0.267"
+            parent, {"spanning_tree_port_type": _SubStr("network")}, "12.6.0.267", PATCH
         )
         assert err is None and add == {"spanningTreePortType": "network"}
 

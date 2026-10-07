@@ -50,6 +50,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_contribute_nvpairs,
     gie_validate_binding_value,
     resolve_binding,
+    GIE_ENABLED_PATCH_VERSIONS,
 )
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
@@ -57,6 +58,9 @@ TRUNK = "int_trunk_host"
 ACCESS = "int_access_host"
 LOOPBACK = "int_fabric_loopback_11_1"
 VERSION = "12.6.0.267"
+# PR725-PATCH-VERSION-001: every positive fixture below declares the approved caller patch
+# explicitly, read from the engine's own policy so this file cannot drift from it.
+PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
 _OMITTED = object()
 
@@ -183,7 +187,7 @@ def test_boolean_passthrough_is_emitted_as_its_wire_form(
     parent, profile_key, nvpair, value, wire
 ):
     """The exact defect: a native bool in nvPairs never matches the controller's string."""
-    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION)
+    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION, PATCH)
     assert err is None
     assert add[nvpair] == wire
     assert isinstance(add[nvpair], str)
@@ -207,7 +211,7 @@ def test_string_and_enum_passthrough_are_untouched(parent, key, value):
     Serializing a str is a no-op, but that has to be proven rather than assumed -- a change
     that silently lowercased ACL_FILTER would corrupt a case-sensitive ACL name.
     """
-    add, err = gie_contribute_nvpairs(parent, {key: value}, VERSION)
+    add, err = gie_contribute_nvpairs(parent, {key: value}, VERSION, PATCH)
     assert err is None
     assert list(add.values()) == [value]
     assert add[list(add)[0]] is value or add[list(add)[0]] == value
@@ -215,14 +219,14 @@ def test_string_and_enum_passthrough_are_untouched(parent, key, value):
 
 def test_acl_filter_case_is_preserved_exactly():
     """Named explicitly because lowercasing is the plausible way to get this wrong."""
-    add, err = gie_contribute_nvpairs(TRUNK, {"acl_filter": "MiXeD-Case_ACL"}, VERSION)
+    add, err = gie_contribute_nvpairs(TRUNK, {"acl_filter": "MiXeD-Case_ACL"}, VERSION, PATCH)
     assert err is None
     assert add["aclFilter"] == "MiXeD-Case_ACL"
 
 
 def test_omitted_boolean_still_contributes_nothing():
     """Serialization must not resurrect the explicit-only contract."""
-    add, err = gie_contribute_nvpairs(TRUNK, {"description": "x"}, VERSION)
+    add, err = gie_contribute_nvpairs(TRUNK, {"description": "x"}, VERSION, PATCH)
     assert err is None
     assert "lldpTransmit" not in add
 
@@ -241,7 +245,7 @@ def test_omitted_boolean_still_contributes_nothing():
 
 def _engine_nvpairs(parent, profile_key, value):
     """The nvPairs the module would build for this profile, via the real engine call."""
-    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION)
+    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION, PATCH)
     assert err is None, err
     return add
 
@@ -274,7 +278,8 @@ def _compare_obj(state, parent, profile_key, nvpair, want=_OMITTED, have=_OMITTE
     `have` is the raw string the controller returns.
     """
     module = mock.Mock()
-    module.params = {"fabric": "FAB1", "config": [], "state": state}
+    module.params = {"fabric": "FAB1", "config": [], "state": state,
+                     "patch_version": PATCH}
     module.check_mode = False
     with mock.patch.object(
         dcnm_interface, "dcnm_version_supported", return_value=(12, "12.6.0.267")
@@ -457,7 +462,7 @@ def test_an_empty_string_is_not_accepted_as_operator_input_for_a_boolean():
 def test_an_unsupported_boolean_refuses_before_emitting(parent, profile_key, nvpair, value):
     """A boolean identity the installed SMU build does not declare refuses the contribution
     for BOTH values and emits nothing -- neither the SMU name nor the pre-SMU one."""
-    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION)
+    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION, PATCH)
     assert add is None, "{0}::{1} produced a payload".format(parent, profile_key)
     assert err and "not supported by the interface templates installed" in err, err
     assert nvpair not in (add or {})

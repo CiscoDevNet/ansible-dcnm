@@ -36,7 +36,9 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine
 
-from .gie_withdrawal_harness import SUPPORTED, base_for, build_have, run, split_calls
+from .gie_withdrawal_harness import (
+    SUPPORTED, SUPPORTED_PATCH, base_for, build_have, run, split_calls,
+)
 
 # Hand-transcribed neutral value per enum wire key.
 REVIEWED_NEUTRAL = {
@@ -72,7 +74,8 @@ def test_the_declared_default_is_serialized_in_the_wire_vocabulary(parent, profi
 def test_a_have_at_the_declared_neutral_is_already_withdrawn(parent, profile_key, nvpair):
     """No reset exists for these rows, so a HAVE already neutral must be a no-op -- not an
     unclassifiable value, and not an invented reset."""
-    action, wire = engine.gie_withdrawal_action(parent, profile_key, REVIEWED_NEUTRAL[nvpair], SUPPORTED)
+    action, wire = engine.gie_withdrawal_action(
+        parent, profile_key, REVIEWED_NEUTRAL[nvpair], SUPPORTED, SUPPORTED_PATCH)
     assert action == engine.GIE_WITHDRAW_NONE, (action, wire)
 
 
@@ -87,7 +90,8 @@ def test_the_pre_smu_spelling_is_not_silently_accepted_as_neutral(parent, profil
     build never returns `no_change`, so seeing it is an unrecognised value and is refused --
     not quietly treated as already-withdrawn.
     """
-    action, _wire = engine.gie_withdrawal_action(parent, profile_key, "no_change", SUPPORTED)
+    action, _wire = engine.gie_withdrawal_action(
+        parent, profile_key, "no_change", SUPPORTED, SUPPORTED_PATCH)
     # THE GUARANTEE, invariant and the whole reason this case exists: the pre-SMU spelling is
     # NEVER read as already-withdrawn.
     assert action != engine.GIE_WITHDRAW_NONE, (
@@ -138,7 +142,9 @@ def test_main_omitting_a_neutral_field_writes_nothing(state, check_mode):
     [("no_change", "noChange"), ("passive", "passive"), ("no_passive", "noPassive")],
 )
 def test_an_explicit_public_value_still_encodes_to_its_reviewed_wire_value(public, wire):
-    add, err = engine.gie_contribute_nvpairs("int_routed_host", {"enable_ospf": True, "ospf_passive_mode": public}, SUPPORTED)
+    add, err = engine.gie_contribute_nvpairs(
+        "int_routed_host", {"enable_ospf": True, "ospf_passive_mode": public},
+        SUPPORTED, SUPPORTED_PATCH)
     assert err is None, err
     assert add["ospfPassiveMode"] == wire, add
 
@@ -147,7 +153,8 @@ def test_an_unknown_value_does_not_become_neutral():
     """The fix must not turn anything it does not recognise into the neutral default."""
     with pytest.raises(engine.GieBindingError):
         engine.gie_validate_binding_value("int_routed_host", "ospf_passive_mode", "bogus")
-    action, _wire = engine.gie_withdrawal_action("int_routed_host", "ospf_passive_mode", "somethingElse", SUPPORTED)
+    action, _wire = engine.gie_withdrawal_action(
+        "int_routed_host", "ospf_passive_mode", "somethingElse", SUPPORTED, SUPPORTED_PATCH)
     assert action != engine.GIE_WITHDRAW_NONE, "an unknown value was read as neutral"
 
 
@@ -194,7 +201,7 @@ def test_a_configured_enum_without_a_measured_reset_still_fails_closed_when_omit
             d = binding["default_template"]
             configured = "0" if str(d) != "0" else "7"
         action, _wire = engine.gie_withdrawal_action(
-            parent, profile_key, configured, SUPPORTED)
+            parent, profile_key, configured, SUPPORTED, SUPPORTED_PATCH)
         assert action == engine.GIE_WITHDRAW_UNSUPPORTED, (
             "%s::%s has no reset, so HAVE=%r must fail closed, got %r"
             % (parent, profile_key, configured, action))

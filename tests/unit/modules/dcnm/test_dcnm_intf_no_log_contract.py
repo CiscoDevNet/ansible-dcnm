@@ -149,8 +149,11 @@ from ansible.module_utils.common.text.converters import to_bytes  # noqa: E402
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface  # noqa: E402
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (  # noqa: E402
-    gie_contribute_nvpairs, gie_extend_prof_spec,
+    gie_contribute_nvpairs, gie_extend_prof_spec, GIE_ENABLED_PATCH_VERSIONS,
 )
+
+# PR725-PATCH-VERSION-001: declared explicitly for this file's one direct engine call.
+_PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
 SECRET = "S3CR3T-WP98-NEVER-PRINT-ME"
 
@@ -423,7 +426,7 @@ def test_registering_a_secret_does_not_change_what_is_sent():
     """
     profile = {"mode": "routed", "ipv4_addr": "10.3.0.1", "enable_ospf": True,
                "enable_ospf_auth": True, "ospf_auth_key": AUTH_SECRET}
-    nvpairs = gie_contribute_nvpairs("int_routed_host", profile, "12.6.0.267")[0]
+    nvpairs = gie_contribute_nvpairs("int_routed_host", profile, "12.6.0.267", _PATCH)[0]
     assert nvpairs["OSPF_AUTH_KEY"] == AUTH_SECRET, (
         "the nvPair must carry the real key: the controller cannot use a scrubbed one"
     )

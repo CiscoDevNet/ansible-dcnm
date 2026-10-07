@@ -36,6 +36,10 @@ from unittest.mock import patch
 
 from ansible.module_utils import basic
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
+    GIE_ENABLED_PATCH_VERSIONS,
+)
+
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import (
     AnsibleExitJson,
     AnsibleFailJson,
@@ -108,6 +112,14 @@ VPC_MEMBER = "Ethernet1/51"
 
 SUPPORTED = "12.6.0.267"
 BELOW = "12.6.0.266"
+
+# The one approved caller patch for this candidate, read from the engine's own policy so the
+# fixture can never drift from it. Every pre-existing positive fixture in this harness declares
+# this explicitly through `run_configs`'s default below -- PR725-PATCH-VERSION-001 requires
+# "test fixtures must declare enabled context" rather than relying on an implicit default.
+SUPPORTED_PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
+# An unapproved-but-plausible SMU build, used by negative patch-gate fixtures.
+UNSUPPORTED_PATCH = "4.3.1.0175006010"
 
 # EVERY registered reset identity on the ethernet host parents -- 17 on access/trunk plus
 # the two routed redirect rows, not the original five. Each entry is
@@ -996,6 +1008,14 @@ BASE_VPC_DOT1Q = dict(BASE_VPC_ACCESS, mode="dot1q", peer1_pcid=13, peer2_pcid=1
 # boundary must fail closed on it, so it cannot share a default with "unspecified".
 _UNSET = object()
 
+# A THIRD state for `patch_version` alone: "the key is absent from module args entirely",
+# distinct from both `_UNSET` ("this harness call did not override the default") and an
+# explicit `None` ("the playbook wrote patch_version: null"). Ansible resolves both of the
+# latter to the same `module.params["patch_version"]`, but PV02 requires a dedicated
+# missing-key fixture, not just a None value, so this sentinel drives `set_module_args`
+# to omit the key rather than set it.
+PATCH_KEY_OMITTED = object()
+
 # The subinterface base. Built from `sub_prof_spec`, NOT copied from an ethernet base: there
 # is no `fec` here (the subif spec does not declare it), no `enable_ospf`, and deliberately NO
 # IP -- an offline real-main probe confirmed the object is creatable with none, and the live
@@ -1184,11 +1204,20 @@ def _transport(calls, have):
 
 
 def run_configs(configs, state, have=None, deploy=True, check_mode=False,
-                allow_failed=True, ndfc_version=_UNSET, extra_patch=None):
+                allow_failed=True, ndfc_version=_UNSET, extra_patch=None,
+                patch_version=_UNSET):
     """Drive real `main()` over one or more interface configs.
 
     Returns (result, calls). `calls` is every intercepted REST call, in order, so the
     caller can separate reads from updates and deploys.
+
+    `patch_version` defaults to the one approved caller patch (`SUPPORTED_PATCH`): every
+    pre-existing fixture that drives a registered binding through this harness therefore
+    declares enabled context automatically, per PR725-PATCH-VERSION-001's requirement that
+    "test fixtures must declare enabled context" without having to edit each of them by
+    hand. A caller exercising the patch gate itself overrides this explicitly -- with
+    `None`, an unapproved string, or `PATCH_KEY_OMITTED` to drop the key from module args
+    entirely, simulating a playbook that never wrote the argument at all.
     """
     calls = []
     result = None
@@ -1207,6 +1236,12 @@ def run_configs(configs, state, have=None, deploy=True, check_mode=False,
         test.run_send.side_effect = _transport(calls, have)
         args = {"state": state, "fabric": FABRIC, "deploy": deploy,
                 "config": copy.deepcopy(configs)}
+        if patch_version is PATCH_KEY_OMITTED:
+            pass
+        elif patch_version is _UNSET:
+            args["patch_version"] = SUPPORTED_PATCH
+        else:
+            args["patch_version"] = patch_version
         if check_mode:
             args["_ansible_check_mode"] = True
         set_module_args(args)
@@ -1237,13 +1272,16 @@ def run(profile, state, have=None, parent=None, **kw):
     return run_configs([conf], state, have, **kw)
 
 
-def emit_real_result(configs, state, have=None, check_mode=False, extra_patch=None):
+def emit_real_result(configs, state, have=None, check_mode=False, extra_patch=None,
+                     patch_version=_UNSET):
     """Run real `main()` and return the BYTES Ansible would actually print.
 
     The only thing restored is Ansible's own result formatting. Everything external stays
     mocked exactly as `run_configs` mocks it. Without this, `exit_json`/`fail_json` are
     netcommon doubles that raise instead of serialising: `_return_formatted` never runs,
     there is no `invocation` block, and a redaction assertion observes nothing.
+
+    `patch_version` defaults to `SUPPORTED_PATCH`, for the same reason `run_configs` does.
     """
     calls = []
     have = copy.deepcopy(have or [])
@@ -1254,6 +1292,12 @@ def emit_real_result(configs, state, have=None, check_mode=False, extra_patch=No
         test.run_send.side_effect = _transport(calls, have)
         args = {"state": state, "fabric": FABRIC, "deploy": True,
                 "config": copy.deepcopy(configs)}
+        if patch_version is PATCH_KEY_OMITTED:
+            pass
+        elif patch_version is _UNSET:
+            args["patch_version"] = SUPPORTED_PATCH
+        else:
+            args["patch_version"] = patch_version
         if check_mode:
             args["_ansible_check_mode"] = True
         set_module_args(args)

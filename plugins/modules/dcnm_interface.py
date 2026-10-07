@@ -72,6 +72,50 @@ options:
     elements: str
     choices: ["pc", "vpc", "sub_int", "lo", "eth", "svi", "st_fex", "aa_fex", "breakout"]
     default: []
+  patch_version:
+    description:
+    - Declares the installed Nexus Dashboard/NDFC patch context so the module can trust the
+      installed interface templates to carry the registered profile fields the generic
+      binding registry manages (for example C(acl_filter), C(flowcontrol_receive),
+      C(ospf_cost), C(disable_lldp_transmit)/C(disable_lldp_receive) and the other registered
+      fields documented per interface profile).
+    - This is a capability declaration the caller makes; it is never sent to the controller,
+      never part of the interface payload, and never part of the computed diff.
+    - "The only value this module currently accepts is the exact string
+      C(4.3.1.0175006011). No other string is treated as equivalent: a shorter prefix such
+      as C(4.3.1), a numerically adjacent SMU build, or a newer Nexus Dashboard release
+      (including ND>=4.4.1, accepted by a different module's ACL-focused capability check)
+      are all rejected the same as an omitted value. There is no partial match and no
+      numeric 'newer therefore acceptable' comparison."
+    - This is a SECOND, independent requirement on top of each registered field's existing
+      minimum NDFC version. Meeting the per-field NDFC floor does not substitute for an
+      approved patch, and an approved patch does not bypass a field's NDFC floor or its
+      C(smu_unsupported) exclusion when one exists; both conditions must hold together
+      before a registered field is configurable.
+    - There is no enabling default anywhere in the module. When this is omitted, null,
+      empty, or not the exact approved value, the module rejects the ENTIRE invocation
+      before any configuration or deployment request is sent, as soon as any config entry
+      sets a registered field explicitly -- including a native/legacy-only entry earlier in
+      the same task list, per the normal invocation-wide preflight this module already
+      applies to its other validation failures.
+    - When a registered field is merely OMITTED (not set) while this capability is
+      disabled, the module does not reset, clear, or otherwise change that field. For an
+      interface RETAINED under C(replaced) or C(overridden) (same parent, same identity,
+      not newly created and not explicitly removed), its existing controller value is
+      carried forward unchanged in the full replacement payload, exactly as it would be if
+      the field were not part of this registry at all. This preservation scope is
+      specifically the retained-same-parent carry-forward; it does not change whole-object
+      deletion (C(state=deleted) or an explicit removal under C(overridden)) or an
+      interface's transition to a different parent template, both of which keep their
+      existing, independent contracts.
+    - "Existing playbooks that already set a registered field (see the list above) must add
+      this argument -- directly on the task, or once via C(module_defaults) for
+      C(cisco.dcnm.dcnm_interface) -- to keep working under this module version. A playbook
+      that only uses native/legacy fields needs no change."
+    - The module performs no automatic patch discovery and applies no environment-based
+      fallback; the caller is the sole source of this value.
+    type: str
+    required: false
   config:
     description:
     - A dictionary of interface operations
@@ -1601,6 +1645,12 @@ EXAMPLES = """
   cisco.dcnm.dcnm_interface:
     fabric: mmudigon-fabric
     state: merged
+    # Required because the profile below sets disable_lldp_transmit/disable_lldp_receive,
+    # both registered generic-binding-registry fields. Without the exact approved patch
+    # context, the module rejects this whole task before any configuration/deployment call
+    # -- there is no product default that enables these fields. See the patch_version
+    # option documentation for the version/floor/migration contract.
+    patch_version: "4.3.1.0175006011"
     config:
       - name: vpc760                      # should be of the form vpc<port-id>
         type: vpc
@@ -1620,8 +1670,8 @@ EXAMPLES = """
           peer2_access_vlan: 3790         # dot1q-tunnel VLAN on peer 2
           peer1_description: "dot1q-tunnel vPC peer1"
           peer2_description: "dot1q-tunnel vPC peer2"
-          disable_lldp_transmit: true     # registered generic fields of this parent
-          disable_lldp_receive: true
+          disable_lldp_transmit: true     # registered generic fields of this parent --
+          disable_lldp_receive: true      # require patch_version above (see note)
 
 - name: Replace vPC interfaces
   cisco.dcnm.dcnm_interface:
@@ -2538,6 +2588,10 @@ class DcnmIntf:
         self.module = module
         self.params = module.params
         self.fabric = module.params["fabric"]
+        # Caller-declared ND patch context for the generic binding registry (GIE). Read once
+        # here and passed to the engine unchanged; never sent to the controller, never part
+        # of the interface diff. See GIE_ENABLED_PATCH_VERSIONS in gie_engine.py.
+        self.patch_version = module.params.get("patch_version")
         self.config = copy.deepcopy(module.params.get("config"))
         # Before anything can fail, before dispatch by type, and regardless of whether any check
         # will accept or refuse the field. See SECRET_PROFILE_KEYS.
@@ -4733,7 +4787,8 @@ class DcnmIntf:
         # parent (explicit-only, passthrough version fail-closed). Same generic path the eth
         # parents use; no per-feature transport code.
         gie_add, gie_err = gie_contribute_nvpairs(
-            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None),
+            getattr(self, "patch_version", None)
         )
         if gie_err:
             self.module.fail_json(msg=gie_err)
@@ -4965,7 +5020,8 @@ class DcnmIntf:
         # These bindings are shared across the pair, not per-peer; the nvPairs carry one
         # GUARD_MODE, not PEER1_/PEER2_ variants.
         gie_add, gie_err = gie_contribute_nvpairs(
-            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None),
+            getattr(self, "patch_version", None)
         )
         if gie_err:
             self.module.fail_json(msg=gie_err)
@@ -5026,7 +5082,8 @@ class DcnmIntf:
         # Thin engine: contribute registered generic parent nvPairs for this subinterface
         # parent (explicit-only, version fail-closed), mirroring the eth path exactly.
         gie_add, gie_err = gie_contribute_nvpairs(
-            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None),
+            getattr(self, "patch_version", None)
         )
         if gie_err:
             self.module.fail_json(msg=gie_err)
@@ -5121,7 +5178,8 @@ class DcnmIntf:
         # Placed at the very end so it runs for BOTH modes: the mode-specific blocks above return
         # nothing and simply fall through to here.
         gie_add, gie_err = gie_contribute_nvpairs(
-            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None),
+            getattr(self, "patch_version", None)
         )
         if gie_err:
             self.module.fail_json(msg=gie_err)
@@ -5305,7 +5363,8 @@ class DcnmIntf:
         # (explicit-only, passthrough version fail-closed). OSPF-MD is not registered for an eth
         # parent; it is engine-transported on the loopback path with its capability compat hook.
         gie_add, gie_err = gie_contribute_nvpairs(
-            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None),
+            getattr(self, "patch_version", None)
         )
         if gie_err:
             self.module.fail_json(msg=gie_err)
@@ -5634,7 +5693,8 @@ class DcnmIntf:
         # (explicit-only, version fail-closed). Deliberately OUTSIDE the mode branch above:
         # the registered keys apply to the parent, not to one SVI mode.
         gie_add, gie_err = gie_contribute_nvpairs(
-            intf["policy"], delem[profile], getattr(self, "ndfc_version", None)
+            intf["policy"], delem[profile], getattr(self, "ndfc_version", None),
+            getattr(self, "patch_version", None)
         )
         if gie_err:
             self.module.fail_json(msg=gie_err)
@@ -6970,6 +7030,7 @@ class DcnmIntf:
                                                 _w_key,
                                                 _w_have,
                                                 getattr(self, "ndfc_version", None),
+                                                getattr(self, "patch_version", None),
                                             )
                                             # GIE_WITHDRAW_INAPPLICABLE falls through to
                                             # nothing, deliberately. The controller cannot
@@ -9702,6 +9763,11 @@ def main():
             default=[],
         ),
         check_deploy=dict(type="bool", default=False),
+        # No default: see GIE_ENABLED_PATCH_VERSIONS in gie_engine.py for the one-location
+        # capability policy this declares against. Omitted/None is the fail-closed input a
+        # caller who does not supply it gets; there is no enabling fallback here or anywhere
+        # else in the module/engine.
+        patch_version=dict(required=False, type="str", default=None),
     )
 
     module = AnsibleModule(

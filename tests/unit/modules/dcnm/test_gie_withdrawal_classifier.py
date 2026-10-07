@@ -28,6 +28,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     GIE_WITHDRAW_UNSUPPORTED,
     GIE_WITHDRAW_UNCLASSIFIED,
     GIE_WITHDRAW_INAPPLICABLE,
+    GIE_ENABLED_PATCH_VERSIONS,
 )
 
 ACCESS = "int_access_host"
@@ -35,6 +36,11 @@ ROUTED = "int_routed_host"
 SUBIF = "int_subif"
 SVI = "int_vlan"
 OK = "12.6.0.267"
+# PR725-PATCH-VERSION-001: this file tests the NDFC-version boundary of the withdrawal
+# classifier, which is independent of the (new, additional) patch boundary. Every case below
+# declares the approved patch explicitly so a result is attributable to the version alone;
+# the patch boundary itself is exercised in test_gie_patch_version_gate.py.
+OK_PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
 
 # ------------------------------------------------------------------ version boundary
@@ -43,7 +49,7 @@ OK = "12.6.0.267"
 def test_classifier_refuses_an_inapplicable_binding(version):
     """The gate mutation 3b targets. Below min_ndfc_version, or on a version we cannot
     parse, the answer is INAPPLICABLE -- never a reset, never a refusal."""
-    action, wire = gie_withdrawal_action(ACCESS, "acl_filter", "ACL-PILOT", version)
+    action, wire = gie_withdrawal_action(ACCESS, "acl_filter", "ACL-PILOT", version, OK_PATCH)
     assert action == GIE_WITHDRAW_INAPPLICABLE, (
         "a binding the controller cannot carry was classified %r; emitting a reset here "
         "transports what an explicit key is refused, and refusing here rejects a run over "
@@ -54,7 +60,7 @@ def test_classifier_refuses_an_inapplicable_binding(version):
 @pytest.mark.parametrize("version", [OK, "12.6.0.268", "12.7.0.1", "13.0.0.0"],
                          ids=["equal", "patch_above", "minor_above", "major_above"])
 def test_classifier_reconciles_once_the_version_supports_it(version):
-    action, wire = gie_withdrawal_action(ACCESS, "acl_filter", "ACL-PILOT", version)
+    action, wire = gie_withdrawal_action(ACCESS, "acl_filter", "ACL-PILOT", version, OK_PATCH)
     assert (action, wire) == (GIE_WITHDRAW_RESET, "")
 
 
@@ -62,15 +68,16 @@ def test_applicability_helper_agrees_with_the_classifier():
     """Two entry points, one boundary. A caller that selects with the helper and then
     classifies must never see the two disagree."""
     for version in ("12.6.0.266", OK, "nonsense", None):
-        applicable = gie_binding_applicable(ACCESS, "acl_filter", version)
-        action, _reset = gie_withdrawal_action(ACCESS, "acl_filter", "ACL-PILOT", version)
+        applicable = gie_binding_applicable(ACCESS, "acl_filter", version, OK_PATCH)
+        action, _reset = gie_withdrawal_action(
+            ACCESS, "acl_filter", "ACL-PILOT", version, OK_PATCH)
         assert applicable == (action != GIE_WITHDRAW_INAPPLICABLE), version
 
 
 # ------------------------------------------------------------------ HAVE encodings
 @pytest.mark.parametrize("have", ["false", False], ids=["wire_string", "native_bool"])
 def test_both_accepted_encodings_of_the_declared_default_mean_the_same_state(have):
-    action, _reset = gie_withdrawal_action(ACCESS, "disable_lldp_receive", have, OK)
+    action, _reset = gie_withdrawal_action(ACCESS, "disable_lldp_receive", have, OK, OK_PATCH)
     assert action == GIE_WITHDRAW_NONE, (
         "encoding %r of the declared default classified as %r; the HAVE validator accepts "
         "both spellings and they describe one controller state" % (have, action))
@@ -87,13 +94,13 @@ def test_both_encodings_of_a_non_default_also_agree(have):
     unsupported-but-applicable row -- a declared default, no established reset -- so the
     guarantee moves rather than weakening.
     """
-    action, _reset = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", have, OK)
+    action, _reset = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", have, OK, OK_PATCH)
     assert action == GIE_WITHDRAW_UNSUPPORTED
 
 
 @pytest.mark.parametrize("have", ["true", True], ids=["wire_string", "native_bool"])
 def test_both_encodings_reach_the_same_reset(have):
-    action, wire = gie_withdrawal_action(ACCESS, "disable_lldp_transmit", have, OK)
+    action, wire = gie_withdrawal_action(ACCESS, "disable_lldp_transmit", have, OK, OK_PATCH)
     assert (action, wire) == (GIE_WITHDRAW_RESET, "false")
 
 
@@ -106,8 +113,10 @@ def test_normalisation_does_not_turn_an_empty_string_into_a_false():
     """
     # REHOMED to int_routed_host for the same reason as above: the access row now has a
     # reset, and this case needs one that does not.
-    empty, _empty_reset = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", "", OK)
-    false_wire, _false_reset = gie_withdrawal_action(ROUTED, "eigrp_ipv4_passive", "false", OK)
+    empty, _empty_reset = gie_withdrawal_action(
+        ROUTED, "eigrp_ipv4_passive", "", OK, OK_PATCH)
+    false_wire, _false_reset = gie_withdrawal_action(
+        ROUTED, "eigrp_ipv4_passive", "false", OK, OK_PATCH)
     assert false_wire == GIE_WITHDRAW_NONE
     assert empty != GIE_WITHDRAW_RESET, (
         "an empty HAVE produced a reset; absence is not a configured value")
@@ -125,14 +134,14 @@ def test_an_integer_zero_is_not_an_empty_value():
     # `int_vlan` still carries four (the HSRP integers). The harness asserts loudly when a parent
     # runs out, which is how this was caught.
     key = an_unclassifiable_key(SVI, "integer")
-    zero, _zero_reset = gie_withdrawal_action(SVI, key, 0, OK)
-    empty, _empty_reset = gie_withdrawal_action(SVI, key, "", OK)
+    zero, _zero_reset = gie_withdrawal_action(SVI, key, 0, OK, OK_PATCH)
+    empty, _empty_reset = gie_withdrawal_action(SVI, key, "", OK, OK_PATCH)
     assert zero == GIE_WITHDRAW_UNCLASSIFIED, (
         "a real integer value was treated as absence (%s)" % key)
     assert empty == GIE_WITHDRAW_UNCLASSIFIED
     # They classify the same here only because this row has neither metadata; the point is
     # that "0" and "" took different routes to get there, not that they are interchangeable.
-    assert gie_withdrawal_action(SVI, key, "0", OK)[0] == zero
+    assert gie_withdrawal_action(SVI, key, "0", OK, OK_PATCH)[0] == zero
 
 
 # ------------------------------------------------------------------ the decision table
@@ -163,6 +172,6 @@ def test_an_integer_zero_is_not_an_empty_value():
         "enum_needs_reset", "at_declared_default", "differs_no_reset",
         "no_metadata", "not_on_this_parent"])
 def test_the_decision_table_row_by_row(parent, key, have, expected):
-    action, wire = gie_withdrawal_action(parent, key, have, OK)
+    action, wire = gie_withdrawal_action(parent, key, have, OK, OK_PATCH)
     assert action == expected, "%s::%s with HAVE %r" % (parent, key, have)
     assert (wire is not None) == (action == GIE_WITHDRAW_RESET)

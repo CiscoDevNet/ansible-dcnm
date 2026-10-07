@@ -73,11 +73,15 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     GIE_WITHDRAW_NONE,
     GIE_WITHDRAW_RESET,
     gie_withdrawal_action,
+    GIE_ENABLED_PATCH_VERSIONS,
 )
 
 VPC_ACCESS = "int_vpc_access_host"
 VPC_TRUNK = "int_vpc_trunk_host"
 SUPPORTED = "12.6.0.267"
+# PR725-PATCH-VERSION-001: declared explicitly so these pre-existing reset fixtures keep
+# exercising the NDFC-version boundary alone, not the (new, additional) patch boundary.
+PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
 # (parent, profile_key, parent_nvpair, type, reset_wire, a value evidenced as NON-reset)
 #
@@ -166,7 +170,8 @@ def test_the_engine_withdraws_a_configured_value(parent, key, _nv, _t, reset, ap
     ``applied`` is the value the live positive stage really sent, not a placeholder, so this asserts
     the decision the engine makes for the state the lab was really in.
     """
-    assert gie_withdrawal_action(parent, key, applied, SUPPORTED) == (GIE_WITHDRAW_RESET, reset)
+    assert gie_withdrawal_action(parent, key, applied, SUPPORTED, PATCH) == (
+        GIE_WITHDRAW_RESET, reset)
 
 
 @pytest.mark.parametrize("parent,key,_nv,_t,reset,_applied", CASOS)
@@ -178,7 +183,8 @@ def test_the_engine_withdraws_nothing_when_the_value_already_is_the_reset(
     which would turn every converged rerun into a write. This is the assertion that makes the rerun
     idempotent rather than merely quiet.
     """
-    assert gie_withdrawal_action(parent, key, reset, SUPPORTED) == (GIE_WITHDRAW_NONE, None)
+    assert gie_withdrawal_action(parent, key, reset, SUPPORTED, PATCH) == (
+        GIE_WITHDRAW_NONE, None)
 
 
 @pytest.mark.parametrize("parent,key,_nv,_t,reset,applied", CASOS)
@@ -192,7 +198,7 @@ def test_the_reset_is_refused_below_the_minimum_version(parent, key, _nv, _t, re
     """
     b = resolve_binding(parent, key)
     assert b["min_ndfc_version"] == SUPPORTED
-    accion, valor = gie_withdrawal_action(parent, key, applied, "12.6.0.266")
+    accion, valor = gie_withdrawal_action(parent, key, applied, "12.6.0.266", PATCH)
     assert (accion, valor) != (GIE_WITHDRAW_RESET, reset), (
         "{0}::{1} withdrew on a controller below its declared floor".format(parent, key))
 

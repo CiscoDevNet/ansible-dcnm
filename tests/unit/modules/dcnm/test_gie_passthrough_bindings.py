@@ -33,6 +33,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_nvpair_keymap,
     gie_validate_binding_value,
     gie_version_supported,
+    GIE_ENABLED_PATCH_VERSIONS,
 )
 
 TRUNK = "int_trunk_host"
@@ -44,6 +45,7 @@ PC_DOT1Q = "int_port_channel_dot1q_tunnel_host"
 
 SUPPORTED = "12.6.0.267"
 BELOW = "12.6.0.266"
+PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]  # PR725-PATCH-VERSION-001
 UNSUPPORTED_VERSIONS = (BELOW, "12.5.9.999", None, "", "not.a.version", "12.x.0.267")
 
 GUARD_VALUES = ("root", "none", "loop", "no")
@@ -317,7 +319,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
 # ------------------------------------------------------------------ positive transport
 @pytest.mark.parametrize("parent,pk,nvpair,value", NINE)
 def test_supported_version_transports_the_wire_value(parent, pk, nvpair, value):
-    add, err = gie_contribute_nvpairs(parent, {pk: value}, SUPPORTED)
+    add, err = gie_contribute_nvpairs(parent, {pk: value}, SUPPORTED, PATCH)
     assert err is None
     assert add == {nvpair: _wire(value)}
     # Every passthrough nvPair leaves the engine as a string, whatever the registered type.
@@ -327,7 +329,7 @@ def test_supported_version_transports_the_wire_value(parent, pk, nvpair, value):
 def test_every_guard_mode_choice_transports():
     for parent in (TRUNK, PC_TRUNK):
         for value in GUARD_VALUES:
-            add, err = gie_contribute_nvpairs(parent, {"guard_mode": value}, SUPPORTED)
+            add, err = gie_contribute_nvpairs(parent, {"guard_mode": value}, SUPPORTED, PATCH)
             assert err is None and add == {"GUARD_MODE": value}
             # Exact type, not isinstance: a str subclass such as AnsibleUnicode would pass an
         # isinstance check while still being the wrong thing on the wire.
@@ -337,7 +339,7 @@ def test_every_guard_mode_choice_transports():
 def test_disable_lldp_transports_both_booleans():
     for parent in (ACCESS, TRUNK):
         for value, wire in ((True, "true"), (False, "false")):
-            add, err = gie_contribute_nvpairs(parent, {"disable_lldp_transmit": value}, SUPPORTED)
+            add, err = gie_contribute_nvpairs(parent, {"disable_lldp_transmit": value}, SUPPORTED, PATCH)
             assert err is None and add == {"lldpTransmit": wire}
             # Lowercase JSON spelling, which is what the template DSL tests against --
             # not Python's str(True) == "True".
@@ -347,7 +349,7 @@ def test_disable_lldp_transports_both_booleans():
 def test_acl_filter_accepts_boundary_lengths():
     for parent in (ACCESS, TRUNK, PC_ACCESS, PC_TRUNK, PC_DOT1Q):
         for value in ("A", "A" * 64):
-            add, err = gie_contribute_nvpairs(parent, {"acl_filter": value}, SUPPORTED)
+            add, err = gie_contribute_nvpairs(parent, {"acl_filter": value}, SUPPORTED, PATCH)
             assert err is None and add == {"aclFilter": value}
 
 
@@ -357,6 +359,7 @@ def test_multiple_new_keys_on_one_parent_contribute_together():
         {"guard_mode": "root", "disable_lldp_transmit": True, "acl_filter": "ACL_X",
          "flowcontrol_receive": "on"},
         SUPPORTED,
+        PATCH,
     )
     assert err is None
     assert add == {
@@ -370,13 +373,13 @@ def test_multiple_new_keys_on_one_parent_contribute_together():
 # ------------------------------------------------------------------ omission
 @pytest.mark.parametrize("parent,pk,nvpair,value", NINE)
 def test_omission_contributes_nothing(parent, pk, nvpair, value):
-    add, err = gie_contribute_nvpairs(parent, {}, SUPPORTED)
+    add, err = gie_contribute_nvpairs(parent, {}, SUPPORTED, PATCH)
     assert err is None and add == {}
 
 
 @pytest.mark.parametrize("parent,pk,nvpair,value", NINE)
 def test_omission_is_not_default_false_or_empty_string(parent, pk, nvpair, value):
-    add, err = gie_contribute_nvpairs(parent, {"unrelated": "x"}, SUPPORTED)
+    add, err = gie_contribute_nvpairs(parent, {"unrelated": "x"}, SUPPORTED, PATCH)
     assert err is None
     assert nvpair not in add
     assert add.get(nvpair) is not False
@@ -468,7 +471,7 @@ def test_errors_never_echo_the_rejected_value():
 
 def test_invalid_explicit_value_fails_before_any_nvpair_is_produced():
     with pytest.raises(GieBindingError):
-        gie_contribute_nvpairs(TRUNK, {"guard_mode": "bogus"}, SUPPORTED)
+        gie_contribute_nvpairs(TRUNK, {"guard_mode": "bogus"}, SUPPORTED, PATCH)
 
 
 # ------------------------------------------------------------------ wrong parent
@@ -519,7 +522,7 @@ def test_unknown_legacy_field_is_still_left_alone():
 def test_unsupported_unknown_or_malformed_version_fails_before_write(
     parent, pk, nvpair, value, version
 ):
-    add, err = gie_contribute_nvpairs(parent, {pk: value}, version)
+    add, err = gie_contribute_nvpairs(parent, {pk: value}, version, PATCH)
     assert add is None, f"{pk}@{version!r} must not produce a payload"
     assert err and "No change was sent." in err
 
@@ -534,7 +537,7 @@ def test_four_segment_comparison_still_enforces_the_build_number():
 def test_new_bindings_never_withhold_like_ospf_md():
     """The OSPF-MD compat exception must NOT be generalized to the new bindings."""
     for parent, pk, nvpair, value in NINE:
-        add, err = gie_contribute_nvpairs(parent, {pk: value}, BELOW)
+        add, err = gie_contribute_nvpairs(parent, {pk: value}, BELOW, PATCH)
         assert add is None and err, f"{pk} must fail closed, not withhold"
 
 
@@ -813,8 +816,8 @@ def test_same_value_produces_the_same_payload():
     (test_reapplying_the_same_boolean_is_idempotent), and it drives the real comparison.
     """
     for parent, pk, nvpair, value in NINE:
-        first, err1 = gie_contribute_nvpairs(parent, {pk: value}, SUPPORTED)
-        second, err2 = gie_contribute_nvpairs(parent, {pk: value}, SUPPORTED)
+        first, err1 = gie_contribute_nvpairs(parent, {pk: value}, SUPPORTED, PATCH)
+        second, err2 = gie_contribute_nvpairs(parent, {pk: value}, SUPPORTED, PATCH)
         assert err1 is None and err2 is None
         assert first == second == {nvpair: _wire(value)}
 
@@ -831,11 +834,11 @@ def test_a15_flowcontrol_contract_is_unchanged():
         assert b["min_ndfc_version"] == SUPPORTED
         for value in ("on", "off"):
             add, err = gie_contribute_nvpairs(
-                parent, {"flowcontrol_receive": value}, SUPPORTED
+                parent, {"flowcontrol_receive": value}, SUPPORTED, PATCH
             )
             assert err is None and add == {"flowcontrolReceive": value}
         add, err = gie_contribute_nvpairs(
-            parent, {"flowcontrol_receive": "on"}, BELOW
+            parent, {"flowcontrol_receive": "on"}, BELOW, PATCH
         )
         assert add is None and err, "FLOWCONTROL must still fail closed"
 

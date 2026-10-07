@@ -38,8 +38,8 @@ __metaclass__ = type
 
 import pytest
 
-from .gie_withdrawal_harness import (SVI, base_for, build_have, cfg, run_configs,
-                                     writes)
+from .gie_withdrawal_harness import (SVI, SUPPORTED_PATCH, base_for, build_have, cfg,
+                                     run_configs, writes)
 
 PARENT = SVI
 KEY = "private_vlan_mapping"
@@ -126,7 +126,7 @@ def test_the_clear_is_the_registered_reset_wire():
     from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
         gie_withdrawal_action)
     action, wire = gie_withdrawal_action(
-        PARENT, KEY, {NVPAIR: TWO}, "12.6.0.267")
+        PARENT, KEY, {NVPAIR: TWO}, "12.6.0.267", SUPPORTED_PATCH)
     assert (action, wire) == ("reset", "")
 
 
@@ -221,11 +221,11 @@ def test_the_reset_does_not_inherit_to_another_parent():
     from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
         gie_withdrawal_action)
     assert gie_withdrawal_action(
-        PARENT, KEY, {NVPAIR: TWO}, "12.6.0.267") == ("reset", "")
+        PARENT, KEY, {NVPAIR: TWO}, "12.6.0.267", SUPPORTED_PATCH) == ("reset", "")
     for parent in ("int_routed_host", "int_subif", "int_loopback",
                    "int_trunk_host", "int_access_host"):
         assert gie_withdrawal_action(
-            parent, KEY, {NVPAIR: TWO}, "12.6.0.267") == ("none", None), parent
+            parent, KEY, {NVPAIR: TWO}, "12.6.0.267", SUPPORTED_PATCH) == ("none", None), parent
 
 
 def test_registering_this_reset_left_the_sibling_svi_bindings_alone():
