@@ -5946,7 +5946,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
     def set_mgmt_router(
-        self, have_payloads, policies=None, recreate_on_put=False, put_resp=None
+        self,
+        have_payloads,
+        policies=None,
+        recreate_on_put=False,
+        put_resp=None,
+        new_id_on_put=None,
     ):
         """Route dcnm_send by path, modelling a controller that stores 'int_mgmt' policies."""
 
@@ -5986,6 +5991,9 @@ class TestDcnmIntfModule(TestDcnmModule):
                     updated = json.loads(data)[0]
                     if recreate_on_put:
                         updated["priority"] = 500
+                    if new_id_on_put:
+                        del policies[policy_id]
+                        policy_id = updated["policyId"] = new_id_on_put
                     policies[policy_id] = updated
                     return dict(ok, DATA={})
                 if policy_id in policies:
@@ -6359,6 +6367,39 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertIn("900", result["msg"])
         self.assert_no_deploy()
 
+    def test_dcnm_intf_mgmt_policy_recreated_with_new_id_fails(self):
+
+        self.load_mgmt_playbook_data("mgmt_no_cmds_config")
+        self.playbook_config[0]["deploy"] = "True"
+        self.set_mgmt_router(
+            [self.mgmt_bst_have()],
+            [self.mgmt_policy()],
+            recreate_on_put=True,
+            new_id_on_put="POLICY-9999",
+        )
+
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface.time.sleep"
+        ):
+            result = self.run_mgmt("replaced", failed=True)
+
+        self.assertIn("Unable to confirm the update", result["msg"])
+        self.assertIn("POLICY-2020", result["msg"])
+        self.assert_no_deploy()
+
+    def test_dcnm_intf_mgmt_policy_invalid_id_rejected(self):
+
+        self.load_mgmt_playbook_data("mgmt_no_cmds_config")
+        have = copy.deepcopy(self.mgmt_bst_have())
+        have["DATA"][0]["interfaces"][0]["nvPairs"]["POLICY_ID"] = "../POLICY-2020"
+        self.set_mgmt_router([have], [self.mgmt_policy()])
+
+        result = self.run_mgmt("replaced", failed=True)
+
+        self.assertIn("Unable to find a valid 'int_mgmt' policy", result["msg"])
+        self.assertEqual(self.mgmt_calls("GET", "/control/policies/.."), [])
+        self.assert_no_mutating_dcnm_calls()
+
     def test_dcnm_intf_mgmt_policy_update_failure(self):
 
         self.load_mgmt_playbook_data("mgmt_no_cmds_config")
@@ -6404,7 +6445,7 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         result = self.run_mgmt("replaced", failed=True)
 
-        self.assertIn("Unable to find the 'int_mgmt' policy", result["msg"])
+        self.assertIn("Unable to find a valid 'int_mgmt' policy", result["msg"])
         self.assert_no_mutating_dcnm_calls()
 
     def test_dcnm_intf_mgmt_deleted_existing(self):

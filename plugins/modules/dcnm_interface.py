@@ -7305,8 +7305,10 @@ class DcnmIntf:
                     return policy.get("policyId")
         return None
 
-    def dcnm_intf_mgmt_policy_matches(self, policy, priority, nv_pairs):
+    def dcnm_intf_mgmt_policy_matches(self, policy, policy_id, priority, nv_pairs):
 
+        if policy.get("policyId") != policy_id:
+            return False
         if str(policy.get("priority")) != str(priority):
             return False
 
@@ -7328,10 +7330,14 @@ class DcnmIntf:
             policy_id = item["policyId"] or self.dcnm_intf_find_mgmt_policy_id(
                 item["serialNumber"], item["ifName"]
             )
-            policy = self.dcnm_intf_get_mgmt_policy(policy_id) if policy_id else None
+            # The ID comes from the controller and is used to build request paths.
+            if policy_id and re.match(r"^[A-Za-z0-9_-]+$", str(policy_id)):
+                policy = self.dcnm_intf_get_mgmt_policy(policy_id)
+            else:
+                policy = None
             if policy is None:
                 self.module.fail_json(
-                    msg="Unable to find the 'int_mgmt' policy for management interface "
+                    msg="Unable to find a valid 'int_mgmt' policy for management interface "
                     "'{0}' on switch '{1}'. No changes were made to this interface.".format(
                         item["ifName"], item["serialNumber"]
                     ),
@@ -7339,7 +7345,7 @@ class DcnmIntf:
                 )
 
             priority = policy.get("priority")
-            policy.setdefault("nvPairs", {}).update(item["nvPairs"])
+            policy["nvPairs"] = dict(policy.get("nvPairs") or {}, **item["nvPairs"])
 
             path = self.paths["POLICY_BULK_UPDATE"].format(policy_id)
             resp = dcnm_send(self.module, "PUT", path, json.dumps([policy]))
@@ -7362,7 +7368,7 @@ class DcnmIntf:
             for attempt in range(5):
                 readback = self.dcnm_intf_get_mgmt_policy(policy_id)
                 if readback is not None and self.dcnm_intf_mgmt_policy_matches(
-                    readback, priority, item["nvPairs"]
+                    readback, policy_id, priority, item["nvPairs"]
                 ):
                     break
                 readback = None
