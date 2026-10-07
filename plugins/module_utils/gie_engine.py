@@ -36,6 +36,29 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 GIE_MECH_PASSTHROUGH = "passthrough"
 GIE_MECH_CHILD_PTI = "child_pti"
 
+# --------------------------------------------------------------------- patch_version policy
+# The caller-supplied `patch_version` top-level module argument declares the installed ND
+# patch context. It is NOT sent to NDFC and is NOT part of the interface diff: it only gates
+# whether THIS candidate trusts the installed templates to carry the registered nvPairs the
+# 234-row registry assumes. It is independent of, and additional to, each binding's existing
+# `min_ndfc_version` floor -- an approved patch never bypasses that floor, and meeting the
+# floor never substitutes for an approved patch.
+#
+# Exact-string policy, kept in this ONE place, so a future approved patch is added here and
+# nowhere else. Do not trim, prefix-match, or treat another SMU/ND build as numerically
+# "newer": PR730's network ACL gate also accepts ND>=4.4.1, and that range is not approved
+# interface evidence -- it is deliberately NOT adopted here.
+GIE_ENABLED_PATCH_VERSIONS = frozenset({"4.3.1.0175006011"})
+
+
+def gie_patch_supported(patch_version):
+    """True only for the exact approved patch string. Fail closed for anything else --
+    None, "", a numeric look-alike, or an unapproved SMU/ND release -- with no trimming or
+    prefix match. A caller is expected to pass the value unchanged from its own argument;
+    this is the only place that value is compared against policy."""
+    return isinstance(patch_version, str) and patch_version in GIE_ENABLED_PATCH_VERSIONS
+
+
 # (parent_template, parent_nvpair) pairs WITHHELD rather than failed when the controller is
 # below their minimum version. Withholding drops a key the operator explicitly set, so it is
 # only ever correct when some other layer reconciles that key -- and nothing does any more. The
@@ -515,19 +538,24 @@ def gie_declared_default_wire(binding):
     return gie_wire_value(binding, _to_nvpair_wire(binding["default_template"]))
 
 
-def gie_binding_applicable(parent_template, profile_key, ndfc_version):
-    """True when the binding exists on this parent AND the controller version can carry it.
+def gie_binding_applicable(parent_template, profile_key, ndfc_version, patch_version=None):
+    """True when the binding exists on this parent AND the controller version can carry it
+    AND the caller's patch_version is approved.
 
     The SAME applicability contract explicit contribution enforces at
     ``gie_contribute_nvpairs``: a binding below ``min_ndfc_version`` is not transportable,
-    and an unknown or malformed version fails closed (``gie_version_supported`` returns
-    False). Callers use this to SELECT before classifying, so an inapplicable row is
-    skipped outright -- neither reset nor rejected.
+    an unknown or malformed version fails closed (``gie_version_supported`` returns False),
+    and -- since PR725-PATCH-VERSION-001 -- an unapproved ``patch_version`` fails closed the
+    same way (``gie_patch_supported`` returns False; the default ``None`` is "no caller
+    context", not an enabling value). Callers use this to SELECT before classifying, so an
+    inapplicable row is skipped outright -- neither reset nor rejected.
     """
     binding = resolve_binding(parent_template, profile_key)
     if binding is None:
         return False
-    return gie_version_supported(ndfc_version, binding["min_ndfc_version"])
+    return gie_version_supported(
+        ndfc_version, binding["min_ndfc_version"]
+    ) and gie_patch_supported(patch_version)
 
 
 def _have_comparison_wire(have_value):
@@ -553,7 +581,8 @@ def _have_comparison_wire(have_value):
     return _to_nvpair_wire(have_value)
 
 
-def gie_withdrawal_action(parent_template, profile_key, have_value, ndfc_version):
+def gie_withdrawal_action(parent_template, profile_key, have_value, ndfc_version,
+                          patch_version=None):
     """Classify an omitted binding whose nvPair IS present in authoritative HAVE.
 
     Returns (action, wire_value). `wire_value` is meaningful only for GIE_WITHDRAW_RESET.
@@ -563,6 +592,13 @@ def gie_withdrawal_action(parent_template, profile_key, have_value, ndfc_version
     argument used to be possible and that is precisely how the boundary was bypassed --
     an explicit clear was refused below ``min_ndfc_version`` while omitting the same field
     sent the clear anyway.
+
+    ``patch_version`` joins the SAME boundary, additively (PR725-PATCH-VERSION-001): an
+    unapproved or absent patch (the ``None`` default) makes the binding INAPPLICABLE exactly
+    as an unsupported NDFC version does, never a refusal. This is deliberate and is what
+    PRESERVES an authoritative HAVE value while the capability is disabled: the caller falls
+    through to the generic same-parent carry-forward instead of this function inventing a
+    reset or blocking the invocation over a field the operator never touched.
 
     The caller has already established, and this function does NOT re-check: that the key
     was omitted by the operator, that the nvPair is present in an authoritative HAVE, and
@@ -574,10 +610,15 @@ def gie_withdrawal_action(parent_template, profile_key, have_value, ndfc_version
         # Not applicable to this parent. Not this step's business.
         return GIE_WITHDRAW_NONE, None
 
-    if not gie_version_supported(ndfc_version, binding["min_ndfc_version"]):
-        # The controller cannot carry this nvPair at all. Emitting a reset here would
-        # transport what an explicit key is refused, and failing here would reject a run
-        # over a field this controller never had. Neither: it is not in scope.
+    if not (
+        gie_version_supported(ndfc_version, binding["min_ndfc_version"])
+        and gie_patch_supported(patch_version)
+    ):
+        # The controller cannot carry this nvPair at all -- either because its own version
+        # floor is not met, or because the caller's patch context is not approved. Emitting
+        # a reset here would transport what an explicit key is refused, and failing here
+        # would reject a run over a field this controller (or this capability context)
+        # never had. Neither: it is not in scope.
         return GIE_WITHDRAW_INAPPLICABLE, None
 
     have_wire = _have_comparison_wire(have_value)
@@ -778,7 +819,7 @@ def gie_public_value(binding, value):
     return value
 
 
-def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version):
+def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version, patch_version=None):
     """Compute the parent nvPairs the engine contributes for one interface, keyed by the
     registered binding mechanism. Returns (nvpairs_dict, error_message).
 
@@ -794,6 +835,17 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version):
     A supported version transports the parent nvPair for every mechanism. An explicit key on an
     unsupported, unknown or malformed version fails closed, unless the binding is listed in
     GIE_VERSION_WITHHOLD_BINDINGS -- which is empty.
+
+    ``patch_version`` (PR725-PATCH-VERSION-001) is a SECOND, independent requirement: an
+    explicit registered key also needs the caller's declared patch to be approved
+    (``gie_patch_supported``), regardless of the NDFC version. It is checked AFTER type/value
+    validation and BEFORE the NDFC-version check, so a value that fails validation is still
+    reported for that reason, and a patch rejection is never masked by a version message for a
+    binding that would have failed the version check anyway. There is no enabling default: the
+    ``None`` a caller gets by omitting the argument is fail-closed, the same as an unapproved
+    string. This never applies to OMISSION -- an omitted key never reaches this loop at all,
+    so a disabled/absent patch cannot reset or invent a value for a field the operator did not
+    name; see ``gie_withdrawal_action`` for the omission side of this same boundary.
     """
     add = {}
     for pk in sorted(registered_profile_keys(parent_template)):
@@ -811,6 +863,15 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version):
                 "controller; no change was sent.".format(pk)
             )
         gie_validate_binding_value(parent_template, pk, profile_dict[pk])
+        if not gie_patch_supported(patch_version):
+            # Independent of the NDFC-version floor below: an explicit registered field needs
+            # BOTH an approved patch and a supported controller version. The value itself is
+            # never echoed -- only the public field name -- because a binding may carry a
+            # secret (see gie_describe_value_type's reasoning for the same omission).
+            return None, (
+                "'{0}' requires an approved caller-supplied patch_version for this "
+                "interface capability; no change was sent.".format(pk)
+            )
         supported = gie_version_supported(ndfc_version, b["min_ndfc_version"])
         if not supported:
             if (parent_template, b["parent_nvpair"]) in GIE_VERSION_WITHHOLD_BINDINGS:

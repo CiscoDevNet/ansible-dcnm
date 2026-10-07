@@ -47,11 +47,14 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_carry_forward_bindings,
     gie_guarded_keys,
     gie_validate_binding_value,
+    GIE_ENABLED_PATCH_VERSIONS,
 )
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
 PARENT = "int_routed_host"
 NDFC_VERSION = "12.6.0.267"
+# PR725-PATCH-VERSION-001: declared explicitly for this file's one engine-driving instance.
+PATCH_VERSION = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
 # profile_key -> (nvPair, type, declared default, declared range)
 # Read from the installed template, sha b9b50077cf49f8cb -- not from the Excel or the ledger.
@@ -109,6 +112,7 @@ def _instance(profile):
     obj.intf_info = []
     obj.dcnm_version = 12
     obj.ndfc_version = NDFC_VERSION
+    obj.patch_version = PATCH_VERSION
     obj.module = mock.Mock()
     obj.config = [{"name": "eth1/5", "type": "eth", "switch": ["10.1.1.1"],
                    "profile": dict(profile)}]

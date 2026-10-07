@@ -55,6 +55,7 @@ from .gie_withdrawal_harness import (
     GROUPED_ONLY_NO_PER_ROW_FIXTURE,
     HSRP_CTX,
     SVI,
+    SUPPORTED_PATCH,
     base_for,
     build_have,
     cfg_for,
@@ -100,20 +101,23 @@ def test_the_row_declares_the_measured_reset_as_a_string(key, nvpair, reset, _ap
 
 @pytest.mark.parametrize("key,_nv,reset,applied", ROWS, ids=IDS)
 def test_the_engine_withdraws_the_applied_value(key, _nv, reset, applied):
-    assert gie_withdrawal_action(SVI, key, str(applied), SUPPORTED) == (GIE_WITHDRAW_RESET, reset)
+    assert gie_withdrawal_action(SVI, key, str(applied), SUPPORTED, SUPPORTED_PATCH) == (
+        GIE_WITHDRAW_RESET, reset)
 
 
 @pytest.mark.parametrize("key,_nv,reset,_applied", ROWS, ids=IDS)
 def test_nothing_is_withdrawn_when_the_value_already_is_the_reset(key, _nv, reset, _applied):
     """NEGATIVE CONTROL: without it an engine that always emitted the reset would pass the case
     above and turn every converged rerun into a write."""
-    assert gie_withdrawal_action(SVI, key, reset, SUPPORTED) == (GIE_WITHDRAW_NONE, None)
+    assert gie_withdrawal_action(SVI, key, reset, SUPPORTED, SUPPORTED_PATCH) == (
+        GIE_WITHDRAW_NONE, None)
 
 
 @pytest.mark.parametrize("key,_nv,reset,applied", ROWS, ids=IDS)
 def test_the_reset_is_refused_below_the_minimum_version(key, _nv, reset, applied):
     assert resolve_binding(SVI, key)["min_ndfc_version"] == SUPPORTED
-    assert gie_withdrawal_action(SVI, key, str(applied), "12.6.0.266") != (GIE_WITHDRAW_RESET, reset)
+    assert gie_withdrawal_action(SVI, key, str(applied), "12.6.0.266", SUPPORTED_PATCH) != (
+        GIE_WITHDRAW_RESET, reset)
 
 
 def test_the_threshold_pair_is_declared_grouped_only_and_the_delay_is_not():

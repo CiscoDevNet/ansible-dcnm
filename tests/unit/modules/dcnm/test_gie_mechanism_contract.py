@@ -92,6 +92,9 @@ SAMPLE_VALUE = {
 }
 
 NDFC_VERSION = "12.6.0.267"
+# PR725-PATCH-VERSION-001: declared explicitly, read from the engine's own policy, for every
+# positive fixture in this file.
+PATCH_VERSION = sorted(gie_engine.GIE_ENABLED_PATCH_VERSIONS)[0]
 
 
 def _key(binding):
@@ -297,7 +300,8 @@ def test_a_generic_binding_reaches_the_payload_in_wire_form(key):
     binding = next(b for b in BINDING_TABLE if _key(b) == key)
     value = _sample_for(binding)
     nvpairs, error = gie_contribute_nvpairs(
-        binding["parent_template"], {binding["profile_key"]: value}, NDFC_VERSION
+        binding["parent_template"], {binding["profile_key"]: value}, NDFC_VERSION,
+        PATCH_VERSION
     )
     assert error is None, "{0}: {1}".format(key, error)
     assert binding["parent_nvpair"] in nvpairs, "{0}: the nvPair was not emitted".format(key)
@@ -443,6 +447,9 @@ def _config_obj(config):
     # The builder passes this straight to gie_contribute_nvpairs; leaving it unset makes the
     # engine fail closed on an unknown version, which would look like a binding problem.
     obj.ndfc_version = NDFC_VERSION
+    # Same reasoning, PR725-PATCH-VERSION-001: leaving this unset makes the engine fail closed
+    # on a missing patch, which would look like a binding problem rather than a fixture gap.
+    obj.patch_version = PATCH_VERSION
     obj.module = mock.Mock()
     obj.module.fail_json.side_effect = _ValidatorRejected
     return obj
@@ -558,6 +565,7 @@ def test_an_unsupported_identity_refuses_before_emitting_anything(key):
         binding["parent_template"],
         {binding["profile_key"]: _sample_for(binding)},
         NDFC_VERSION,
+        PATCH_VERSION,
     )
     assert nvpairs is None, "{0}: an unsupported identity produced a payload".format(key)
     assert error and "not supported by the interface templates installed" in error, error

@@ -56,6 +56,7 @@ from .gie_withdrawal_harness import (
     OSPF_CTX,
     ROUTED,
     SUPPORTED,
+    SUPPORTED_PATCH,
     base_for,
     build_have,
     cfg,
@@ -140,7 +141,7 @@ def test_merged_preserves_the_other_variant(key, nvpair, applied):
 def test_a_value_already_neutral_needs_no_reset(key, nvpair, variants):
     """`noChange` in HAVE is the withdrawn state. Sending a reset for it would claim a
     change that is not needed; the classifier must say NONE."""
-    action, wire = gie_withdrawal_action(ROUTED, key, RESET, SUPPORTED)
+    action, wire = gie_withdrawal_action(ROUTED, key, RESET, SUPPORTED, SUPPORTED_PATCH)
     assert (action, wire) == (GIE_WITHDRAW_NONE, None), (
         "a neutral HAVE must classify as NONE, got %r" % ((action, wire),))
 
@@ -149,7 +150,7 @@ def test_a_value_already_neutral_needs_no_reset(key, nvpair, variants):
 def test_a_configured_value_classifies_as_reset(key, nvpair, variants):
     """The complement of the case above, for both non-neutral values."""
     for public, wire_value in variants.items():
-        action, wire = gie_withdrawal_action(ROUTED, key, wire_value, SUPPORTED)
+        action, wire = gie_withdrawal_action(ROUTED, key, wire_value, SUPPORTED, SUPPORTED_PATCH)
         assert (action, wire) == (GIE_WITHDRAW_RESET, RESET), (
             "HAVE=%r (public %r) must classify as RESET/%r, got %r"
             % (wire_value, public, RESET, (action, wire)))
@@ -272,12 +273,13 @@ def test_a_sibling_routed_enum_without_a_reset_still_rejects():
     key, default = b["profile_key"], b["default_template"]
     # A CONFIGURED value, i.e. anything that is not the declared default.
     configured = "0" if default != "0" else "7"
-    action, wire = gie_withdrawal_action(ROUTED, key, configured, SUPPORTED)
+    action, wire = gie_withdrawal_action(ROUTED, key, configured, SUPPORTED, SUPPORTED_PATCH)
     assert (action, wire) == (GIE_WITHDRAW_UNSUPPORTED, None), (
         "%s: a configured value with no registered reset must stay UNSUPPORTED, got %r"
         % (key, (action, wire)))
     # And its own declared default is still NONE, for the same reason as the registered rows.
-    assert gie_withdrawal_action(ROUTED, key, default, SUPPORTED) == (GIE_WITHDRAW_NONE, None), (
+    assert gie_withdrawal_action(ROUTED, key, default, SUPPORTED, SUPPORTED_PATCH) == (
+        GIE_WITHDRAW_NONE, None), (
         "%s: its own declared default %r must classify NONE" % (key, default))
 
 

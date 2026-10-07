@@ -29,6 +29,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_invalid_parent_key,
     gie_validate_binding_value,
     GieBindingError,
+    GIE_ENABLED_PATCH_VERSIONS,
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
     resolve_binding,
@@ -36,6 +37,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 
 PARENTS = ["int_routed_host", "int_subif", "int_vlan"]
 NDFC = "12.6.0.267"
+# PR725-PATCH-VERSION-001: declared explicitly for this file's one engine entry point, _emit.
+PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
 KEY_A = "3DES-KEY-ALPHA"
 KEY_B = "3DES-KEY-BRAVO"
@@ -59,7 +62,7 @@ AUTH_NVPAIRS = {
 
 
 def _emit(parent, profile):
-    nvpairs, error = gie_contribute_nvpairs(parent, profile, NDFC)
+    nvpairs, error = gie_contribute_nvpairs(parent, profile, NDFC, PATCH)
     assert error is None, error
     return nvpairs
 

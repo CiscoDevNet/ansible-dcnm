@@ -27,6 +27,9 @@ __metaclass__ = type
 from unittest.mock import patch
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
+from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
+    GIE_ENABLED_PATCH_VERSIONS,
+)
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
 TRUNK = "int_trunk_host"
@@ -37,6 +40,10 @@ PC_DOT1Q = "int_port_channel_dot1q_tunnel_host"
 
 SUPPORTED = "12.6.0.267"
 BELOW = "12.6.0.266"
+# PR725-PATCH-VERSION-001: run_config() below declares this explicitly for every caller in
+# this file, so every pre-existing fixture here keeps exercising the NDFC-version boundary
+# it was written for, unaffected by the new, additional patch boundary.
+SUPPORTED_PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
 
 class A161Base(TestDcnmModule):
@@ -111,11 +118,13 @@ class A161Base(TestDcnmModule):
         ] + [ok] * 30
 
     # ---- assertions -------------------------------------------------------
-    def run_config(self, key, state="merged", changed=False, failed=False):
-        set_module_args(
-            dict(state=state, fabric="test_fabric",
-                 config=self.config_data.get(key))
-        )
+    def run_config(self, key, state="merged", changed=False, failed=False,
+                   patch_version=SUPPORTED_PATCH):
+        args = dict(state=state, fabric="test_fabric",
+                    config=self.config_data.get(key))
+        if patch_version is not None:
+            args["patch_version"] = patch_version
+        set_module_args(args)
         return self.execute_module(changed=changed, failed=failed)
 
     def assert_no_mutating_calls(self):
@@ -469,6 +478,7 @@ class TestBindingBelowMinimumVersionFailsClosed(A161Base):
                 state="merged",
                 fabric="test_fabric",
                 config=self.config_data.get("eth_trunk_disable_lldp_true"),
+                patch_version=SUPPORTED_PATCH,
             )
         )
         result = self.execute_module(changed=False, failed=True)
