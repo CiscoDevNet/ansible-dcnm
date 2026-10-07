@@ -1,0 +1,42 @@
+---
+# Verify all seeded baseline objects before running PR impact analysis.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Query seeded VRFs
+      cisco.dcnm.dcnm_vrf:
+        fabric: "{{ fabric_name }}"
+        state: query
+      register: vrf_query
+
+    - name: Query seeded networks
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ fabric_name }}"
+        state: query
+      register: network_query
+
+    - name: Query seeded VLANs
+      cisco.dcnm.dcnm_vlan:
+        fabric: "{{ fabric_name }}"
+        state: query
+      register: vlan_query
+
+    - name: Query seeded vPC pairs
+      cisco.dcnm.dcnm_vpc_pair:
+        src_fabric: "{{ fabric_name }}"
+        state: query
+      register: vpc_query
+
+    - name: Show baseline verification snapshot
+      ansible.builtin.debug:
+        msg:
+          - "VRFs: {{ (vrf_query.response | default([])) | length }}"
+          - "Networks: {{ (network_query.response | default([])) | length }}"
+          - "VLANs: {{ (vlan_query.response | default([])) | length }}"
+          - "vPC pairs: {{ (vpc_query.response | default([])) | length }}"

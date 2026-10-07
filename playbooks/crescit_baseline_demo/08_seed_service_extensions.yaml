@@ -1,0 +1,29 @@
+---
+# Seed service extension networks to represent real brownfield dependency chains.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+    deploy_changes: false
+    leaf1: 192.168.10.211
+
+  tasks:
+    - name: Seed shared services extension network
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - net_name: PROD_NET_SvcMesh
+            vrf_name: PROD_VRF_Shared
+            net_id: 30230
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3230
+            gw_ip_subnet: "10.123.30.1/24"
+            attach:
+              - ip_address: "{{ leaf1 }}"
+                ports: []
+        deploy: "{{ deploy_changes }}"

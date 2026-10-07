@@ -1,0 +1,58 @@
+---
+# Seed baseline L2/L3 network segments mapped to explicit VRFs.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+    deploy_changes: false
+    leaf1: 192.168.10.211
+    leaf2: 192.168.10.212
+
+  tasks:
+    - name: Seed baseline networks for application tiers
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ fabric_name }}"
+        state: merged
+        config:
+          - net_name: PROD_NET_AppFrontend
+            vrf_name: PROD_VRF_App
+            net_id: 30310
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3310
+            gw_ip_subnet: "10.131.10.1/24"
+            attach:
+              - ip_address: "{{ leaf1 }}"
+                ports: []
+              - ip_address: "{{ leaf2 }}"
+                ports: []
+
+          - net_name: PROD_NET_AppBackend
+            vrf_name: PROD_VRF_App
+            net_id: 30311
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3311
+            gw_ip_subnet: "10.131.20.1/24"
+            attach:
+              - ip_address: "{{ leaf1 }}"
+                ports: []
+              - ip_address: "{{ leaf2 }}"
+                ports: []
+
+          - net_name: PROD_NET_Transit
+            vrf_name: PROD_VRF_Transit
+            net_id: 30410
+            net_template: Default_Network_Universal
+            net_extension_template: Default_Network_Extension_Universal
+            vlan_id: 3410
+            gw_ip_subnet: "10.141.10.1/24"
+            attach:
+              - ip_address: "{{ leaf1 }}"
+                ports: []
+              - ip_address: "{{ leaf2 }}"
+                ports: []
+        deploy: "{{ deploy_changes }}"
