@@ -81,19 +81,20 @@ options:
       fields documented per interface profile).
     - This is a capability declaration the caller makes; it is never sent to the controller,
       never part of the interface payload, and never part of the computed diff.
-    - "The only value this module currently accepts is the exact string
-      C(4.3.1.0175006011). No other string is treated as equivalent: a shorter prefix such
-      as C(4.3.1), a numerically adjacent SMU build, or a newer Nexus Dashboard release
-      (including ND>=4.4.1, accepted by a different module's ACL-focused capability check)
-      are all rejected the same as an omitted value. There is no partial match and no
-      numeric 'newer therefore acceptable' comparison."
+    - Accepts the exact SMU string C(4.3.1.0175006011) or a numeric Nexus Dashboard
+      release C(4.4.1) or later, matching the version policy of C(dcnm_network).
+      ND release strings require at least three dot-separated numeric components;
+      additional build components must also be numeric. The first three components are
+      compared numerically. No whitespace or suffixes are accepted. For example,
+      C(4.4.1.10) and C(4.10.0) are supported, while C(4.4.0), C(4.4),
+      C(4.4.1-rc1) and adjacent unapproved C(4.3.1) SMU builds are rejected.
     - This is a SECOND, independent requirement on top of each registered field's existing
-      minimum NDFC version. Meeting the per-field NDFC floor does not substitute for an
-      approved patch, and an approved patch does not bypass a field's NDFC floor or its
+      minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
+      supported patch/ND release, and that release does not bypass a field's NDFC floor or its
       C(smu_unsupported) exclusion when one exists; both conditions must hold together
       before a registered field is configurable.
     - There is no enabling default anywhere in the module. When this is omitted, null,
-      empty, or not the exact approved value, the module rejects the ENTIRE invocation
+      empty, malformed, or unsupported, the module rejects the ENTIRE invocation
       before any configuration or deployment request is sent, as soon as any config entry
       sets a registered field explicitly -- including a native/legacy-only entry earlier in
       the same task list, per the normal invocation-wide preflight this module already
@@ -1810,7 +1811,7 @@ EXAMPLES = """
     fabric: mmudigon-fabric
     state: merged
     # Required because the profile below sets disable_lldp_transmit/disable_lldp_receive,
-    # both registered generic-binding-registry fields. Without the exact approved patch
+    # both registered generic-binding-registry fields. Without a supported patch/ND release
     # context, the module rejects this whole task before any configuration/deployment call
     # -- there is no product default that enables these fields. See the patch_version
     # option documentation for the version/floor/migration contract.

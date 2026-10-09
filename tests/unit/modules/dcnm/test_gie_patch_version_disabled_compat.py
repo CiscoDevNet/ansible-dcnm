@@ -263,7 +263,7 @@ def test_smu_unsupported_identity_still_rejects_for_its_own_reason_patch_disable
     smu_rows = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
     assert len(smu_rows) == 1
     binding = smu_rows[0]
-    for patch_value, label in [(None, "disabled"), ("4.3.1.0175006011", "approved")]:
+    for patch_value, label in [(None, "disabled"), ("4.3.1.0175006011", "approved"), ("4.4.1", "nd_release")]:
         add, err = gie_contribute_nvpairs(
             binding["parent_template"], {binding["profile_key"]: True}, SUPPORTED_NDFC,
             patch_value,

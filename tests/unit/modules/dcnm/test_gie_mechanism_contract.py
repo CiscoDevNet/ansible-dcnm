@@ -289,7 +289,8 @@ def test_a_generic_binding_is_rejected_on_a_parent_that_does_not_support_it(key)
 # BEHAVIOUR — 2. the correct parent carries the intent through to the nvPair
 # =====================================================================================
 @pytest.mark.parametrize("key", SUPPORTED_KEYS)
-def test_a_generic_binding_reaches_the_payload_in_wire_form(key):
+@pytest.mark.parametrize("patch_version", [PATCH_VERSION, "4.4.1"])
+def test_a_generic_binding_reaches_the_payload_in_wire_form(key, patch_version):
     """ENGINE-level: gie_contribute_nvpairs, not the module's validator/builder pair.
 
     Placement is not enough: the value has to survive to an nvPair, in NDFC's encoding.
@@ -301,7 +302,7 @@ def test_a_generic_binding_reaches_the_payload_in_wire_form(key):
     value = _sample_for(binding)
     nvpairs, error = gie_contribute_nvpairs(
         binding["parent_template"], {binding["profile_key"]: value}, NDFC_VERSION,
-        PATCH_VERSION
+        patch_version
     )
     assert error is None, "{0}: {1}".format(key, error)
     assert binding["parent_nvpair"] in nvpairs, "{0}: the nvPair was not emitted".format(key)

@@ -63,9 +63,7 @@ from .gie_withdrawal_harness import (
 )
 
 # PV02's required coverage: missing (key fully absent), null, empty, malformed, and named
-# unapproved SMU/ND builds that must never be treated as equivalent to the approved one --
-# no trimming, no prefix match, no numeric "newer" comparison, and PR730's ND>=4.4.1 range
-# is deliberately not adopted for this registry.
+# unapproved SMU/ND builds below the ND>=4.4.1 release floor. No trimming or prefix match.
 UNAPPROVED_EXPLICIT = [
     pytest.param(PATCH_KEY_OMITTED, id="missing_key"),
     pytest.param(None, id="null"),
@@ -74,7 +72,8 @@ UNAPPROVED_EXPLICIT = [
     pytest.param("4.3.1.0175006010", id="unapproved_6010_one_below"),
     pytest.param("4.3.1.0175006012", id="unapproved_6012_one_above"),
     pytest.param("4.3.1", id="truncated_4.3.1"),
-    pytest.param("4.4.1", id="pr730_range_not_adopted"),
+    pytest.param("4.4.0.9999999999", id="below_nd_release_floor"),
+    pytest.param("4.4.1-rc1", id="non_numeric_suffix"),
 ]
 
 
@@ -330,19 +329,70 @@ class TestPV09InventoryInvariants:
         )
 
 
-# ============================================================================= policy shape
-class TestPatchPolicyIsExactStringNotRange:
-    """gie_patch_supported itself: exact-match only, no trimming, no numeric ordering."""
+# ============================================================================= ND release support
+class TestNdReleaseCapability:
+    """Exercise the new ND gate through main(), including payload and omission semantics."""
 
-    def test_only_the_one_approved_string_is_supported(self):
+    @pytest.mark.parametrize("patch_version", ["4.4.1", "4.4.1.10", "4.4.2", "4.10.0", "5.0.0"])
+    def test_explicit_field_matches_approved_smu_payload(self, patch_version):
+        conf = [cfg(IF_A, dict(base_for(TRUNK), guard_mode="root"))]
+        control, control_calls = run_configs(conf, "merged", patch_version=SUPPORTED_PATCH)
+        result, calls = run_configs(conf, "merged", patch_version=patch_version)
+        assert not control.get("failed"), control.get("msg")
+        assert not result.get("failed"), result.get("msg")
+        assert writes(calls) == writes(control_calls)
+        assert request_nvpairs(calls)[0]["GUARD_MODE"] == "root"
+        assert diff_nvpairs(result) == diff_nvpairs(control)
+
+    @pytest.mark.parametrize("state, expected", [
+        ("merged", "root"), ("replaced", "no"), ("overridden", "no"),
+    ])
+    def test_omission_preserves_or_resets_as_the_state_requires(self, state, expected):
+        have = build_have(TRUNK, "guard_mode", "root")
+        want = dict(base_for(TRUNK), description="nd441-unrelated-change")
+        result, calls = run_configs(
+            [cfg(IF_A, want)], state, have=have, patch_version="4.4.1")
+        assert not result.get("failed"), result.get("msg")
+        assert [nv["GUARD_MODE"] for nv in request_nvpairs(calls)] == [expected]
+
+    def test_already_correct_value_writes_nothing(self):
+        have = build_have(TRUNK, "guard_mode", "root")
+        result, calls = run_configs(
+            [cfg(IF_A, dict(base_for(TRUNK), guard_mode="root"))], "merged",
+            have=have, patch_version="4.4.1")
+        assert not result.get("failed"), result.get("msg")
+        assert not result["changed"]
+        assert writes(calls) == []
+
+    @pytest.mark.parametrize("ndfc_version", ["12.6.0.266", None, "bad-version"])
+    def test_nd_release_never_bypasses_the_ndfc_floor(self, ndfc_version):
+        result, calls = run_configs(
+            [cfg(IF_A, dict(base_for(TRUNK), guard_mode="root"))], "merged",
+            patch_version="4.4.1", ndfc_version=ndfc_version)
+        assert result.get("failed")
+        assert "NDFC" in result["msg"]
+        assert writes(calls) == []
+
+
+# ============================================================================= policy shape
+class TestPatchPolicyApprovedSmuOrNdRelease:
+    """Keep the exact SMU exception and compare numeric ND releases as PR730 does."""
+
+    def test_only_the_one_smu_is_allowlisted(self):
         assert GIE_ENABLED_PATCH_VERSIONS == frozenset({"4.3.1.0175006011"})
 
     @pytest.mark.parametrize("value", [
-        None, "", "4.3.1", "4.3.1.0175006010", "4.3.1.0175006012", "4.4.1", "5.0.0.0",
-        " 4.3.1.0175006011", "4.3.1.0175006011 ", 4, True,
+        None, "", "4.3.1", "4.3.1.0175006010", "4.3.1.0175006012", "4.3.99",
+        "4.4", "4.4.0", "4.4.0.9999999999", "4.4.1-rc1", "4.4.1.", "4.4.1.bad",
+        "4.4.1.2.bad", "5.-1.0", " 4.4.1", "4.4.1 ", "not-a-version", "4.4.\u00b2",
+        " 4.3.1.0175006011", "4.3.1.0175006011 ", 4, True, [], {},
     ])
-    def test_everything_else_is_unsupported(self, value):
+    def test_missing_malformed_and_below_floor_are_unsupported(self, value):
         assert gie_patch_supported(value) is False
 
     def test_the_exact_approved_string_is_supported(self):
         assert gie_patch_supported("4.3.1.0175006011") is True
+
+    @pytest.mark.parametrize("value", ["4.4.1", "4.4.1.0", "4.4.2", "4.10.0", "5.0.0.0"])
+    def test_numeric_nd_release_is_supported(self, value):
+        assert gie_patch_supported(value) is True

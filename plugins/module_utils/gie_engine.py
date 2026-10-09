@@ -41,22 +41,35 @@ GIE_MECH_CHILD_PTI = "child_pti"
 # patch context. It is NOT sent to NDFC and is NOT part of the interface diff: it only gates
 # whether THIS candidate trusts the installed templates to carry the registered nvPairs the
 # 234-row registry assumes. It is independent of, and additional to, each binding's existing
-# `min_ndfc_version` floor -- an approved patch never bypasses that floor, and meeting the
-# floor never substitutes for an approved patch.
+# `min_ndfc_version` floor -- a supported patch/ND release never bypasses that floor, and
+# meeting the floor never substitutes for this capability declaration.
 #
-# Exact-string policy, kept in this ONE place, so a future approved patch is added here and
-# nowhere else. Do not trim, prefix-match, or treat another SMU/ND build as numerically
-# "newer": PR730's network ACL gate also accepts ND>=4.4.1, and that range is not approved
-# interface evidence -- it is deliberately NOT adopted here.
+# Match dcnm_network's PR730 version policy: exact approved SMU, or numeric ND >=4.4.1.
+# Below that ND floor, adjacent SMU builds remain unsupported. No trimming or suffixes.
 GIE_ENABLED_PATCH_VERSIONS = frozenset({"4.3.1.0175006011"})
+GIE_MIN_ND_VERSION = (4, 4, 1)
 
 
 def gie_patch_supported(patch_version):
-    """True only for the exact approved patch string. Fail closed for anything else --
-    None, "", a numeric look-alike, or an unapproved SMU/ND release -- with no trimming or
-    prefix match. A caller is expected to pass the value unchanged from its own argument;
-    this is the only place that value is compared against policy."""
-    return isinstance(patch_version, str) and patch_version in GIE_ENABLED_PATCH_VERSIONS
+    """Accept the approved SMU or a numeric ND release at/above the release floor.
+
+    Require at least three numeric components; additional build components must also be
+    numeric. Compare the first three as integers, just as dcnm_network does. The caller
+    passes the value unchanged; missing or malformed context never enables the registry.
+    """
+    if not isinstance(patch_version, str):
+        return False
+    if patch_version in GIE_ENABLED_PATCH_VERSIONS:
+        return True
+    version_parts = patch_version.split(".")
+    if len(version_parts) < 3 or any(not part.isdigit() for part in version_parts):
+        return False
+    try:
+        current_version = tuple(int(part) for part in version_parts[:3])
+    except ValueError:
+        # Some Unicode digits pass isdigit() but are not valid integer components.
+        return False
+    return current_version >= GIE_MIN_ND_VERSION
 
 
 # (parent_template, parent_nvpair) pairs WITHHELD rather than failed when the controller is
@@ -865,12 +878,12 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version, patch_ve
         gie_validate_binding_value(parent_template, pk, profile_dict[pk])
         if not gie_patch_supported(patch_version):
             # Independent of the NDFC-version floor below: an explicit registered field needs
-            # BOTH an approved patch and a supported controller version. The value itself is
+            # BOTH a supported patch/ND release and a supported controller version. The value itself is
             # never echoed -- only the public field name -- because a binding may carry a
             # secret (see gie_describe_value_type's reasoning for the same omission).
             return None, (
-                "'{0}' requires an approved caller-supplied patch_version for this "
-                "interface capability; no change was sent.".format(pk)
+                "'{0}' requires caller-supplied patch_version 4.3.1.0175006011 or numeric "
+                "ND >= 4.4.1 for this interface capability; no change was sent.".format(pk)
             )
         supported = gie_version_supported(ndfc_version, b["min_ndfc_version"])
         if not supported:

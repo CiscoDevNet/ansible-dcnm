@@ -42,6 +42,7 @@ APPROVED = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 PATCH_VALUES = [
     pytest.param(None, id="omitted"),
     pytest.param(APPROVED, id="approved"),
+    pytest.param("4.4.1", id="nd_release"),
     pytest.param("4.3.1.0175006010", id="unapproved"),
 ]
 
