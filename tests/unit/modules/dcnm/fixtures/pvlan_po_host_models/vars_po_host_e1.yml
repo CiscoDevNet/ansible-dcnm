@@ -1,0 +1,8 @@
+# NOT RUN. PLACEHOLDERS ONLY. No real resource is selected or reserved by this file; the operator
+# assigns dedicated resources and records them (with a backup) BEFORE any live use. Candidates for
+# the VLANs (2210 primary / 2212 isolated) are ALPHA's proposal for the Ethernet case and are NOT
+# validated by this delivery; they are literal in the models so argument types do not depend on templating.
+po_fabric: "<FABRIC>"
+po_switch: "<SWITCH_MANAGEMENT_IP>"
+po_name: "<PORT_CHANNEL_NAME, for example po10, a number that is free on the switch>"
+po_member: "<DEDICATED_PHYSICAL_PORT, for example Ethernet1/x: existing, administratively shutdown, free of another Po/overlay/freeform>"

@@ -1,0 +1,1410 @@
+{
+ "_comment": "PO G6: MEASURED fixture of Alpha3's EXP-1 (placeholder-sw-2 Ethernet1/8 / port-channel504, NX-OS 10.5(5), NDFC 12.6.0.267), read-only",
+ "branches": {
+  "A": {
+   "create_preview": {
+    "expectedConfig_stanzas": [
+     "interface ethernet1/8",
+     "  channel-group 504 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301",
+     "interface port-channel504",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "pendingConfig": [
+     "interface ethernet1/8",
+     "  no spanning-tree port type edge",
+     "interface port-channel504",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal",
+     "interface ethernet1/8",
+     "  channel-group 504 force mode active",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "runningConfig_stanzas": [
+     "interface ethernet1/8",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge"
+    ],
+    "status": "Out-of-Sync"
+   },
+   "deploy_answer": {
+    "data": {
+     "message": "Interface deployed successfully",
+     "value": [
+      {
+       "IfName": "Port-channel504",
+       "serialNumber": "SAL0000PO02"
+      }
+     ]
+    },
+    "http": 200,
+    "reason": "OK",
+    "received_utc": "2026-10-08T11:39:22Z"
+   },
+   "member_before": {
+    "fabric": {
+     "ENABLE_PVLAN": "true",
+     "HOST_INTF_ADMIN_STATE": "false"
+    },
+    "intent": {
+     "Ethernet1/8": {
+      "http": 200,
+      "nvPairs": {
+       "ACCESS_VLAN": "",
+       "ADMIN_STATE": "false",
+       "BANDWIDTH": "",
+       "BPDUFILTER_ENABLED": "no",
+       "BPDUGUARD_ENABLED": "no",
+       "CDP_ENABLE": "true",
+       "CONF": "",
+       "DEBOUNCE_LINKUP_TIMER": "",
+       "DEBOUNCE_TIMER": "100",
+       "DESC": "",
+       "ENABLE_ERRDISABLE_ACL": "true",
+       "ENABLE_MONITOR": "false",
+       "ENABLE_NETFLOW": "false",
+       "ENABLE_ORPHAN_PORT": "false",
+       "ENABLE_PFC": "false",
+       "ENABLE_QOS": "false",
+       "ENABLE_STORM_CONTROL": "false",
+       "FABRIC_NAME": "test_fabric",
+       "FEC": "auto",
+       "INHERIT_BW": "",
+       "INTF_NAME": "Ethernet1/8",
+       "LINK_TYPE": "auto",
+       "MARK_DELETED": "false",
+       "MTU": "jumbo",
+       "NEGOTIATE_AUTO": "true",
+       "NETFLOW_MONITOR": "",
+       "NETFLOW_SAMPLER": "",
+       "POLICY_DESC": "",
+       "POLICY_ID": "POLICY-207230",
+       "PORTTYPE_FAST_ENABLED": "true",
+       "PORT_DUPLEX_MODE": "auto",
+       "PRIORITY": "500",
+       "PTP": "false",
+       "QOS_POLICY": "",
+       "QUEUING_POLICY": "",
+       "SERIAL_NUMBER": "SAL0000PO02",
+       "SPEED": "Auto",
+       "STORM_CONTROL_ACTION": "no",
+       "STORM_CONTROL_BCAST_LEVEL_PERCENT": "",
+       "STORM_CONTROL_BCAST_LEVEL_PPS": "",
+       "STORM_CONTROL_MCAST_LEVEL_PERCENT": "",
+       "STORM_CONTROL_MCAST_LEVEL_PPS": "",
+       "STORM_CONTROL_UCAST_LEVEL_PERCENT": "",
+       "STORM_CONTROL_UCAST_LEVEL_PPS": "",
+       "aclFilter": "",
+       "flowcontrolReceive": "off",
+       "flowcontrolSend": "off",
+       "lldpReceive": "false",
+       "lldpTransmit": "false",
+       "qosStatsSuppressed": "false",
+       "queuingStats": "false",
+       "spanningTreePortType": "no"
+      },
+      "policy": "int_access_host"
+     },
+     "port-channel504": {
+      "entries": 0,
+      "http": 200
+     }
+    },
+    "policies": [
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-207230",
+      "priority": 500,
+      "source": "",
+      "templateName": "int_access_host"
+     }
+    ],
+    "preview_fresh": {
+     "http": 200,
+     "pending": [],
+     "pending_lines": 0,
+     "status": "In-Sync"
+    },
+    "running_stanzas": {
+     "Ethernet1/8": {
+      "count": 1,
+      "lines": [
+       "shutdown",
+       "spanning-tree port type edge",
+       "mtu 9216"
+      ]
+     },
+     "port-channel504": {
+      "count": 0,
+      "lines": []
+     }
+    },
+    "summary": {
+     "Ethernet1/8": {
+      "adminStatus": 2,
+      "channelId": -1,
+      "complianceStatus": "In-Sync",
+      "ifType": "INTERFACE_ETHERNET",
+      "operStatus": null,
+      "overlayNetwork": [],
+      "portChannelMemberList": null,
+      "underlayPolicies": [
+       {
+        "autoGenerated": true,
+        "entityName": "Ethernet1/8",
+        "entityType": "INTERFACE",
+        "id": 207230,
+        "isAutoGenerated": true,
+        "lastModified": 1791459502660,
+        "policyId": "POLICY-207230",
+        "policyTag": null,
+        "serialNumber": "SAL0000PO02",
+        "source": "",
+        "status": "NA",
+        "templateName": "int_access_host"
+       }
+      ]
+     }
+    }
+   },
+   "post": {
+    "fabric": {
+     "ENABLE_PVLAN": "true",
+     "HOST_INTF_ADMIN_STATE": "false"
+    },
+    "intent": {
+     "Ethernet1/8": {
+      "http": 200,
+      "nvPairs": {
+       "ADMIN_STATE": "false",
+       "CDP_ENABLE": "true",
+       "CONF": "",
+       "DESC": "",
+       "INTF_NAME": "Ethernet1/8",
+       "INTF_PTP": "false",
+       "LACP_PORT_PRIO": "32768",
+       "LACP_RATE": "normal",
+       "PC_MODE": "active",
+       "POLICY_DESC": "",
+       "POLICY_ID": "POLICY-207270",
+       "PO_ID": "port-channel504",
+       "PRIORITY": "510",
+       "PTP": "false",
+       "PVLAN_MODE": "trunk secondary",
+       "SERIAL_NUMBER": "SAL0000PO02",
+       "lldpReceive": "false",
+       "lldpTransmit": "false"
+      },
+      "policy": "int_port_channel_pvlan_member"
+     },
+     "port-channel504": {
+      "http": 200,
+      "nvPairs": {
+       "ADMIN_STATE": "false",
+       "ASSOCIATION_LIST": "{\"ASSOCIATION_LIST\":[{\"P_VLAN\":\"2210\",\"S_VLAN\":\"2212\"}]}",
+       "BPDUGUARD_ENABLED": "true",
+       "CDP_ENABLE": "true",
+       "CONF": "",
+       "COPY_DESC": "false",
+       "DESC": "",
+       "DISABLE_LACP_SUSPEND": "false",
+       "ENABLE_ORPHAN_PORT": "false",
+       "FABRIC_NAME": "test_fabric",
+       "INTF_NAME": "port-channel504",
+       "LACP_PORT_PRIO": "32768",
+       "LACP_RATE": "normal",
+       "MAPPING_LIST": "",
+       "MEMBER_INTERFACES": "e1/8",
+       "MTU": "jumbo",
+       "PC_MODE": "active",
+       "POLICY_DESC": "",
+       "POLICY_ID": "POLICY-207240",
+       "PORTTYPE_FAST_ENABLED": "true",
+       "PORT_DUPLEX_MODE": "auto",
+       "PO_ID": "port-channel504",
+       "PRIORITY": "500",
+       "PTP": "false",
+       "PVLAN_ALLOWED_VLANS": "2301",
+       "PVLAN_MODE": "trunk secondary",
+       "PVLAN_NATIVE_VLAN": "2301",
+       "QUEUING_POLICY": "",
+       "SERIAL_NUMBER": "SAL0000PO02",
+       "SPEED": "Auto",
+       "lldpReceive": "false",
+       "lldpTransmit": "false",
+       "queuingStats": "false",
+       "spanningTreePortType": "no"
+      },
+      "policy": "int_port_channel_pvlan_host"
+     }
+    },
+    "policies": [
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-207270",
+      "priority": 510,
+      "source": "port-channel504",
+      "templateName": "int_port_channel_pvlan_member"
+     },
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-207280",
+      "priority": 512,
+      "source": "port-channel504",
+      "templateName": "int_eth"
+     },
+     {
+      "deleted": false,
+      "entityName": "port-channel504",
+      "policyId": "POLICY-207240",
+      "priority": 500,
+      "source": "",
+      "templateName": "int_port_channel_pvlan_host"
+     }
+    ],
+    "preview_fresh": {
+     "http": 200,
+     "pending": [],
+     "pending_lines": 0,
+     "status": "In-Sync"
+    },
+    "running_stanzas": {
+     "Ethernet1/8": {
+      "count": 1,
+      "lines": [
+       "shutdown",
+       "switchport mode private-vlan trunk secondary",
+       "switchport private-vlan trunk native vlan 2301",
+       "switchport private-vlan trunk allowed vlan 2301",
+       "switchport private-vlan association trunk 2210 2212",
+       "mtu 9216",
+       "channel-group 504 mode active"
+      ]
+     },
+     "port-channel504": {
+      "count": 1,
+      "lines": [
+       "shutdown",
+       "switchport mode private-vlan trunk secondary",
+       "switchport private-vlan trunk native vlan 2301",
+       "switchport private-vlan trunk allowed vlan 2301",
+       "switchport private-vlan association trunk 2210 2212",
+       "spanning-tree port type edge trunk",
+       "spanning-tree bpduguard enable",
+       "mtu 9216"
+      ]
+     }
+    },
+    "summary": {
+     "Ethernet1/8": {
+      "adminStatus": 2,
+      "channelId": -1,
+      "complianceStatus": "In-Sync",
+      "ifType": "INTERFACE_ETHERNET",
+      "operStatus": null,
+      "overlayNetwork": [],
+      "portChannelMemberList": null,
+      "underlayPolicies": [
+       {
+        "autoGenerated": true,
+        "entityName": "Ethernet1/8",
+        "entityType": "INTERFACE",
+        "id": 207270,
+        "isAutoGenerated": true,
+        "lastModified": 1791459534287,
+        "policyId": "POLICY-207270",
+        "policyTag": null,
+        "serialNumber": "SAL0000PO02",
+        "source": "port-channel504",
+        "status": "NA",
+        "templateName": "int_port_channel_pvlan_member"
+       }
+      ]
+     },
+     "Port-channel504": {
+      "adminStatus": 0,
+      "channelId": -1,
+      "complianceStatus": "In-Sync",
+      "ifType": "INTERFACE_PORT_CHANNEL",
+      "operStatus": null,
+      "overlayNetwork": [],
+      "portChannelMemberList": null,
+      "underlayPolicies": [
+       {
+        "autoGenerated": true,
+        "entityName": "port-channel504",
+        "entityType": "INTERFACE",
+        "id": 207240,
+        "isAutoGenerated": true,
+        "lastModified": 1791459532605,
+        "policyId": "POLICY-207240",
+        "policyTag": null,
+        "serialNumber": "SAL0000PO02",
+        "source": "",
+        "status": "NA",
+        "templateName": "int_port_channel_pvlan_host"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "R": {
+   "create_preview": {
+    "expectedConfig_stanzas": [
+     "interface ethernet1/8",
+     "  channel-group 504 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301",
+     "interface port-channel504",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "pendingConfig": [
+     "interface port-channel504",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal",
+     "interface ethernet1/8",
+     "  channel-group 504 force mode active",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "runningConfig_stanzas": [
+     "interface ethernet1/8",
+     "  mtu 9216",
+     "  no switchport"
+    ],
+    "status": "Out-of-Sync"
+   },
+   "deploy_answer": {
+    "data": {
+     "message": "Interface deployed successfully",
+     "value": [
+      {
+       "IfName": "Port-channel504",
+       "serialNumber": "SAL0000PO02"
+      }
+     ]
+    },
+    "http": 200,
+    "reason": "OK",
+    "received_utc": "2026-10-08T11:36:19Z"
+   },
+   "member_before": {
+    "fabric": {
+     "ENABLE_PVLAN": "true",
+     "HOST_INTF_ADMIN_STATE": "false"
+    },
+    "intent": {
+     "Ethernet1/8": {
+      "http": 200,
+      "nvPairs": {
+       "ADMIN_STATE": "false",
+       "CONF": "",
+       "DESC": "",
+       "DISABLE_IP_REDIRECTS": "false",
+       "ENABLE_NETFLOW": "false",
+       "ENABLE_PFC": "false",
+       "ENABLE_PIM_SPARSE": "false",
+       "ENABLE_QOS": "false",
+       "FABRIC_NAME": "test_fabric",
+       "FEC": "auto",
+       "INTF_NAME": "Ethernet1/8",
+       "INTF_VRF": "default",
+       "IP": "",
+       "IPv6": "",
+       "IPv6_PREFIX": "",
+       "MARK_DELETED": "false",
+       "MTU": "9216",
+       "NETFLOW_MONITOR": "",
+       "NETFLOW_SAMPLER": "",
+       "OSPF_AREA_ID": "0.0.0.0",
+       "OSPF_AUTH_KEY": "",
+       "OSPF_AUTH_KEY_ID": "1",
+       "PIM_DR_PRIORITY": "1",
+       "POLICY_DESC": "",
+       "POLICY_ID": "POLICY-207100",
+       "PREFIX": "",
+       "PRIORITY": "500",
+       "PTP": "false",
+       "QOS_POLICY": "",
+       "QUEUING_POLICY": "",
+       "ROUTING_TAG": "",
+       "SPEED": "Auto",
+       "arpTimeout": "",
+       "bfdEcho": "false",
+       "dampening": "false",
+       "dampeningHalfLife": "",
+       "dampeningMaxSuppress": "",
+       "dampeningRestart": "false",
+       "dampeningRestartPenalty": "",
+       "dampeningReuse": "",
+       "dampeningSuppress": "",
+       "dhcpServers": "",
+       "eigrpBfd": "false",
+       "eigrpBfdDisable": "false",
+       "eigrpIpv4DistributeListDirection": "out",
+       "eigrpIpv4DistributeListPrefixList": "",
+       "eigrpIpv4Passive": "false",
+       "eigrpIpv6DistributeListDirection": "out",
+       "eigrpIpv6DistributeListPrefixList": "",
+       "eigrpIpv6Routing": "false",
+       "eigrpNoIpv4Passive": "false",
+       "eigrpNoIpv6Passive": "false",
+       "eigrpProcessTag": "",
+       "eigrpRouting": "false",
+       "eigrpShutdown": "false",
+       "ipv4AclIn": "",
+       "ipv4Redirects": "",
+       "ipv6LinkLocal": "",
+       "ipv6NdSuppressRa": "false",
+       "ipv6Redirects": "",
+       "lldpReceive": "false",
+       "lldpTransmit": "false",
+       "macsecFallbackKeyChainName": "",
+       "macsecInterfacePolicy": "false",
+       "macsecKeyChainName": "",
+       "macsecPolicyName": "",
+       "ospf": "false",
+       "ospfAuthentication": "false",
+       "ospfAuthenticationKey": "",
+       "ospfAuthenticationKeyType": "3",
+       "ospfBfdMode": "noChange",
+       "ospfCost": "",
+       "ospfDeadInterval": "",
+       "ospfHelloInterval": "",
+       "ospfMtuIgnore": "false",
+       "ospfNetworkType": "noChange",
+       "ospfPassiveMode": "noChange",
+       "ospfPriority": "",
+       "ospfShutdown": "false",
+       "ospfTag": "",
+       "ospfTransmitDelay": "",
+       "pimBfdInstance": "false",
+       "qosStatsSuppressed": "false",
+       "queuingStats": "false"
+      },
+      "policy": "int_routed_host"
+     },
+     "port-channel504": {
+      "entries": 0,
+      "http": 200
+     }
+    },
+    "policies": [
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-207100",
+      "priority": 500,
+      "source": "",
+      "templateName": "int_routed_host"
+     },
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-207140",
+      "priority": 450,
+      "source": "Ethernet1/8",
+      "templateName": "routed_interface"
+     },
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-207150",
+      "priority": 452,
+      "source": "Ethernet1/8",
+      "templateName": "interface_mtu"
+     },
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-207160",
+      "priority": 458,
+      "source": "Ethernet1/8",
+      "templateName": "shut_interface"
+     }
+    ],
+    "preview_fresh": {
+     "http": 200,
+     "pending": [],
+     "pending_lines": 0,
+     "status": "In-Sync"
+    },
+    "running_stanzas": {
+     "Ethernet1/8": {
+      "count": 1,
+      "lines": [
+       "no switchport",
+       "mtu 9216"
+      ]
+     },
+     "port-channel504": {
+      "count": 0,
+      "lines": []
+     }
+    },
+    "summary": {
+     "Ethernet1/8": {
+      "adminStatus": 2,
+      "channelId": -1,
+      "complianceStatus": "In-Sync",
+      "ifType": "INTERFACE_ETHERNET",
+      "operStatus": null,
+      "overlayNetwork": [],
+      "portChannelMemberList": null,
+      "underlayPolicies": [
+       {
+        "autoGenerated": true,
+        "entityName": "Ethernet1/8",
+        "entityType": "INTERFACE",
+        "id": 207100,
+        "isAutoGenerated": true,
+        "lastModified": 1791459316502,
+        "policyId": "POLICY-207100",
+        "policyTag": null,
+        "serialNumber": "SAL0000PO02",
+        "source": "",
+        "status": "NA",
+        "templateName": "int_routed_host"
+       }
+      ]
+     }
+    }
+   },
+   "post": {
+    "fabric": {
+     "ENABLE_PVLAN": "true",
+     "HOST_INTF_ADMIN_STATE": "false"
+    },
+    "intent": {
+     "Ethernet1/8": {
+      "http": 200,
+      "nvPairs": {
+       "ADMIN_STATE": "false",
+       "CDP_ENABLE": "true",
+       "CONF": "",
+       "DESC": "",
+       "INTF_NAME": "Ethernet1/8",
+       "INTF_PTP": "false",
+       "LACP_PORT_PRIO": "32768",
+       "LACP_RATE": "normal",
+       "PC_MODE": "active",
+       "POLICY_DESC": "",
+       "POLICY_ID": "POLICY-207200",
+       "PO_ID": "port-channel504",
+       "PRIORITY": "510",
+       "PTP": "false",
+       "PVLAN_MODE": "trunk secondary",
+       "SERIAL_NUMBER": "SAL0000PO02",
+       "lldpReceive": "false",
+       "lldpTransmit": "false"
+      },
+      "policy": "int_port_channel_pvlan_member"
+     },
+     "port-channel504": {
+      "http": 200,
+      "nvPairs": {
+       "ADMIN_STATE": "false",
+       "ASSOCIATION_LIST": "{\"ASSOCIATION_LIST\":[{\"P_VLAN\":\"2210\",\"S_VLAN\":\"2212\"}]}",
+       "BPDUGUARD_ENABLED": "true",
+       "CDP_ENABLE": "true",
+       "CONF": "",
+       "COPY_DESC": "false",
+       "DESC": "",
+       "DISABLE_LACP_SUSPEND": "false",
+       "ENABLE_ORPHAN_PORT": "false",
+       "FABRIC_NAME": "test_fabric",
+       "INTF_NAME": "port-channel504",
+       "LACP_PORT_PRIO": "32768",
+       "LACP_RATE": "normal",
+       "MAPPING_LIST": "",
+       "MEMBER_INTERFACES": "e1/8",
+       "MTU": "jumbo",
+       "PC_MODE": "active",
+       "POLICY_DESC": "",
+       "POLICY_ID": "POLICY-207170",
+       "PORTTYPE_FAST_ENABLED": "true",
+       "PORT_DUPLEX_MODE": "auto",
+       "PO_ID": "port-channel504",
+       "PRIORITY": "500",
+       "PTP": "false",
+       "PVLAN_ALLOWED_VLANS": "2301",
+       "PVLAN_MODE": "trunk secondary",
+       "PVLAN_NATIVE_VLAN": "2301",
+       "QUEUING_POLICY": "",
+       "SERIAL_NUMBER": "SAL0000PO02",
+       "SPEED": "Auto",
+       "lldpReceive": "false",
+       "lldpTransmit": "false",
+       "queuingStats": "false",
+       "spanningTreePortType": "no"
+      },
+      "policy": "int_port_channel_pvlan_host"
+     }
+    },
+    "policies": [
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-207200",
+      "priority": 510,
+      "source": "port-channel504",
+      "templateName": "int_port_channel_pvlan_member"
+     },
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-207210",
+      "priority": 512,
+      "source": "port-channel504",
+      "templateName": "int_eth"
+     },
+     {
+      "deleted": false,
+      "entityName": "port-channel504",
+      "policyId": "POLICY-207170",
+      "priority": 500,
+      "source": "",
+      "templateName": "int_port_channel_pvlan_host"
+     }
+    ],
+    "preview_fresh": {
+     "http": 200,
+     "pending": [],
+     "pending_lines": 0,
+     "status": "In-Sync"
+    },
+    "running_stanzas": {
+     "Ethernet1/8": {
+      "count": 1,
+      "lines": [
+       "shutdown",
+       "switchport mode private-vlan trunk secondary",
+       "switchport private-vlan trunk native vlan 2301",
+       "switchport private-vlan trunk allowed vlan 2301",
+       "switchport private-vlan association trunk 2210 2212",
+       "mtu 9216",
+       "channel-group 504 mode active"
+      ]
+     },
+     "port-channel504": {
+      "count": 1,
+      "lines": [
+       "shutdown",
+       "switchport mode private-vlan trunk secondary",
+       "switchport private-vlan trunk native vlan 2301",
+       "switchport private-vlan trunk allowed vlan 2301",
+       "switchport private-vlan association trunk 2210 2212",
+       "spanning-tree port type edge trunk",
+       "spanning-tree bpduguard enable",
+       "mtu 9216"
+      ]
+     }
+    },
+    "summary": {
+     "Ethernet1/8": {
+      "adminStatus": 2,
+      "channelId": -1,
+      "complianceStatus": "In-Sync",
+      "ifType": "INTERFACE_ETHERNET",
+      "operStatus": null,
+      "overlayNetwork": [],
+      "portChannelMemberList": null,
+      "underlayPolicies": [
+       {
+        "autoGenerated": true,
+        "entityName": "Ethernet1/8",
+        "entityType": "INTERFACE",
+        "id": 207200,
+        "isAutoGenerated": true,
+        "lastModified": 1791459350032,
+        "policyId": "POLICY-207200",
+        "policyTag": null,
+        "serialNumber": "SAL0000PO02",
+        "source": "port-channel504",
+        "status": "NA",
+        "templateName": "int_port_channel_pvlan_member"
+       }
+      ]
+     },
+     "Port-channel504": {
+      "adminStatus": 0,
+      "channelId": -1,
+      "complianceStatus": "In-Sync",
+      "ifType": "INTERFACE_PORT_CHANNEL",
+      "operStatus": null,
+      "overlayNetwork": [],
+      "portChannelMemberList": null,
+      "underlayPolicies": [
+       {
+        "autoGenerated": true,
+        "entityName": "port-channel504",
+        "entityType": "INTERFACE",
+        "id": 207170,
+        "isAutoGenerated": true,
+        "lastModified": 1791459348297,
+        "policyId": "POLICY-207170",
+        "policyTag": null,
+        "serialNumber": "SAL0000PO02",
+        "source": "",
+        "status": "NA",
+        "templateName": "int_port_channel_pvlan_host"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "T": {
+   "create_preview": {
+    "expectedConfig_stanzas": [
+     "interface ethernet1/8",
+     "  channel-group 504 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301",
+     "interface port-channel504",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "pendingConfig": [
+     "interface ethernet1/8",
+     "  no spanning-tree port type edge trunk",
+     "interface port-channel504",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal",
+     "interface ethernet1/8",
+     "  channel-group 504 force mode active",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "runningConfig_stanzas": [
+     "interface ethernet1/8",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "status": "Out-of-Sync"
+   },
+   "deploy_answer": {
+    "data": [
+     {
+      "column": 0,
+      "entity": "placeholder-sw-2:Ethernet1/8",
+      "impact": null,
+      "line": 0,
+      "message": "CLI command '  channel-group 504 force mode active' failed with following error:Delivery failed with message: ERROR:PVLAN TRUNK SEC config present please remove pvlan config on port-channel interface or interface eth1/8",
+      "recommendation": null,
+      "reportItemType": "ERROR",
+      "trigger": null
+     }
+    ],
+    "http": 500,
+    "reason": "Internal Server Error",
+    "received_utc": "2026-10-08T11:27:33Z"
+   },
+   "member_before": {
+    "fabric": {
+     "ENABLE_PVLAN": "true",
+     "HOST_INTF_ADMIN_STATE": "false"
+    },
+    "intent": {
+     "Ethernet1/8": {
+      "http": 200,
+      "nvPairs": {
+       "ADMIN_STATE": "false",
+       "ALLOWED_VLANS": "none",
+       "BANDWIDTH": "",
+       "BPDUFILTER_ENABLED": "no",
+       "BPDUGUARD_ENABLED": "no",
+       "CDP_ENABLE": "true",
+       "CONF": "",
+       "DEBOUNCE_LINKUP_TIMER": "",
+       "DEBOUNCE_TIMER": "100",
+       "DESC": "",
+       "ENABLE_ERRDISABLE_ACL": "true",
+       "ENABLE_MONITOR": "false",
+       "ENABLE_NETFLOW": "false",
+       "ENABLE_ORPHAN_PORT": "false",
+       "ENABLE_PFC": "false",
+       "ENABLE_QOS": "false",
+       "ENABLE_STORM_CONTROL": "false",
+       "FABRIC_NAME": "test_fabric",
+       "FEC": "auto",
+       "GUARD_MODE": "no",
+       "INHERIT_BW": "",
+       "INTF_NAME": "Ethernet1/8",
+       "LINK_TYPE": "auto",
+       "MARK_DELETED": "false",
+       "MTU": "jumbo",
+       "NATIVE_VLAN": "",
+       "NEGOTIATE_AUTO": "true",
+       "NETFLOW_MONITOR": "",
+       "NETFLOW_SAMPLER": "",
+       "POLICY_DESC": "",
+       "POLICY_ID": "POLICY-206430",
+       "PORTTYPE_FAST_ENABLED": "true",
+       "PORT_DUPLEX_MODE": "auto",
+       "PRIORITY": "500",
+       "PTP": "false",
+       "QOS_POLICY": "",
+       "QUEUING_POLICY": "",
+       "SERIAL_NUMBER": "SAL0000PO02",
+       "SPEED": "Auto",
+       "STORM_CONTROL_ACTION": "no",
+       "STORM_CONTROL_BCAST_LEVEL_PERCENT": "",
+       "STORM_CONTROL_BCAST_LEVEL_PPS": "",
+       "STORM_CONTROL_MCAST_LEVEL_PERCENT": "",
+       "STORM_CONTROL_MCAST_LEVEL_PPS": "",
+       "STORM_CONTROL_UCAST_LEVEL_PERCENT": "",
+       "STORM_CONTROL_UCAST_LEVEL_PPS": "",
+       "aclFilter": "",
+       "enableVlanMapping": "false",
+       "flowcontrolReceive": "off",
+       "flowcontrolSend": "off",
+       "lldpReceive": "false",
+       "lldpTransmit": "false",
+       "qosStatsSuppressed": "false",
+       "queuingStats": "false",
+       "spanningTreePortType": "no",
+       "vlanMappingEntries": ""
+      },
+      "policy": "int_trunk_host"
+     },
+     "port-channel504": {
+      "entries": 0,
+      "http": 200
+     }
+    },
+    "policies": [
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-206430",
+      "priority": 500,
+      "source": "",
+      "templateName": "int_trunk_host"
+     }
+    ],
+    "preview_fresh": {
+     "http": 200,
+     "pending": [],
+     "pending_lines": 0,
+     "status": "In-Sync"
+    },
+    "running_stanzas": {
+     "Ethernet1/8": {
+      "count": 1,
+      "lines": [
+       "shutdown",
+       "switchport mode trunk",
+       "switchport trunk allowed vlan none",
+       "spanning-tree port type edge trunk",
+       "mtu 9216"
+      ]
+     },
+     "port-channel504": {
+      "count": 0,
+      "lines": []
+     }
+    },
+    "summary": {
+     "Ethernet1/8": {
+      "adminStatus": 2,
+      "channelId": -1,
+      "complianceStatus": "In-Sync",
+      "ifType": "INTERFACE_ETHERNET",
+      "operStatus": null,
+      "overlayNetwork": [],
+      "portChannelMemberList": null,
+      "underlayPolicies": [
+       {
+        "autoGenerated": true,
+        "entityName": "Ethernet1/8",
+        "entityType": "INTERFACE",
+        "id": 206430,
+        "isAutoGenerated": true,
+        "lastModified": 1791431157719,
+        "policyId": "POLICY-206430",
+        "policyTag": null,
+        "serialNumber": "SAL0000PO02",
+        "source": "",
+        "status": "NA",
+        "templateName": "int_trunk_host"
+       }
+      ]
+     }
+    }
+   },
+   "post": {
+    "fabric": {
+     "ENABLE_PVLAN": "true",
+     "HOST_INTF_ADMIN_STATE": "false"
+    },
+    "intent": {
+     "Ethernet1/8": {
+      "http": 200,
+      "nvPairs": {
+       "ADMIN_STATE": "false",
+       "CDP_ENABLE": "true",
+       "CONF": "",
+       "DESC": "",
+       "INTF_NAME": "Ethernet1/8",
+       "INTF_PTP": "false",
+       "LACP_PORT_PRIO": "32768",
+       "LACP_RATE": "normal",
+       "PC_MODE": "active",
+       "POLICY_DESC": "",
+       "POLICY_ID": "POLICY-207070",
+       "PO_ID": "port-channel504",
+       "PRIORITY": "510",
+       "PTP": "false",
+       "PVLAN_MODE": "trunk secondary",
+       "SERIAL_NUMBER": "SAL0000PO02",
+       "lldpReceive": "false",
+       "lldpTransmit": "false"
+      },
+      "policy": "int_port_channel_pvlan_member"
+     },
+     "port-channel504": {
+      "http": 200,
+      "nvPairs": {
+       "ADMIN_STATE": "false",
+       "ASSOCIATION_LIST": "{\"ASSOCIATION_LIST\":[{\"P_VLAN\":\"2210\",\"S_VLAN\":\"2212\"}]}",
+       "BPDUGUARD_ENABLED": "true",
+       "CDP_ENABLE": "true",
+       "CONF": "",
+       "COPY_DESC": "false",
+       "DESC": "",
+       "DISABLE_LACP_SUSPEND": "false",
+       "ENABLE_ORPHAN_PORT": "false",
+       "FABRIC_NAME": "test_fabric",
+       "INTF_NAME": "port-channel504",
+       "LACP_PORT_PRIO": "32768",
+       "LACP_RATE": "normal",
+       "MAPPING_LIST": "",
+       "MEMBER_INTERFACES": "e1/8",
+       "MTU": "jumbo",
+       "PC_MODE": "active",
+       "POLICY_DESC": "",
+       "POLICY_ID": "POLICY-207040",
+       "PORTTYPE_FAST_ENABLED": "true",
+       "PORT_DUPLEX_MODE": "auto",
+       "PO_ID": "port-channel504",
+       "PRIORITY": "500",
+       "PTP": "false",
+       "PVLAN_ALLOWED_VLANS": "2301",
+       "PVLAN_MODE": "trunk secondary",
+       "PVLAN_NATIVE_VLAN": "2301",
+       "QUEUING_POLICY": "",
+       "SERIAL_NUMBER": "SAL0000PO02",
+       "SPEED": "Auto",
+       "lldpReceive": "false",
+       "lldpTransmit": "false",
+       "queuingStats": "false",
+       "spanningTreePortType": "no"
+      },
+      "policy": "int_port_channel_pvlan_host"
+     }
+    },
+    "policies": [
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-207070",
+      "priority": 510,
+      "source": "port-channel504",
+      "templateName": "int_port_channel_pvlan_member"
+     },
+     {
+      "deleted": false,
+      "entityName": "Ethernet1/8",
+      "policyId": "POLICY-207080",
+      "priority": 512,
+      "source": "port-channel504",
+      "templateName": "int_eth"
+     },
+     {
+      "deleted": false,
+      "entityName": "port-channel504",
+      "policyId": "POLICY-207040",
+      "priority": 500,
+      "source": "",
+      "templateName": "int_port_channel_pvlan_host"
+     }
+    ],
+    "preview_fresh": {
+     "http": 200,
+     "pending": [
+      "interface ethernet1/8",
+      "  channel-group 504 force mode active",
+      "  shutdown",
+      "configure terminal"
+     ],
+     "pending_lines": 4,
+     "status": "Out-of-Sync"
+    },
+    "running_stanzas": {
+     "Ethernet1/8": {
+      "count": 1,
+      "lines": [
+       "shutdown",
+       "switchport mode trunk",
+       "switchport trunk allowed vlan none",
+       "mtu 9216"
+      ]
+     },
+     "port-channel504": {
+      "count": 1,
+      "lines": [
+       "shutdown",
+       "switchport mode private-vlan trunk secondary",
+       "switchport private-vlan trunk native vlan 2301",
+       "switchport private-vlan trunk allowed vlan 2301",
+       "switchport private-vlan association trunk 2210 2212",
+       "spanning-tree port type edge trunk",
+       "spanning-tree bpduguard enable",
+       "mtu 9216"
+      ]
+     }
+    },
+    "summary": {
+     "Ethernet1/8": {
+      "adminStatus": 2,
+      "channelId": -1,
+      "complianceStatus": "Failed",
+      "ifType": "INTERFACE_ETHERNET",
+      "operStatus": null,
+      "overlayNetwork": [],
+      "portChannelMemberList": null,
+      "underlayPolicies": [
+       {
+        "autoGenerated": true,
+        "entityName": "Ethernet1/8",
+        "entityType": "INTERFACE",
+        "id": 207070,
+        "isAutoGenerated": true,
+        "lastModified": 1791458839182,
+        "policyId": "POLICY-207070",
+        "policyTag": null,
+        "serialNumber": "SAL0000PO02",
+        "source": "port-channel504",
+        "status": "NA",
+        "templateName": "int_port_channel_pvlan_member"
+       }
+      ]
+     },
+     "Port-channel504": {
+      "adminStatus": 0,
+      "channelId": -1,
+      "complianceStatus": "Success",
+      "ifType": "INTERFACE_PORT_CHANNEL",
+      "operStatus": null,
+      "overlayNetwork": [],
+      "portChannelMemberList": null,
+      "underlayPolicies": [
+       {
+        "autoGenerated": true,
+        "entityName": "port-channel504",
+        "entityType": "INTERFACE",
+        "id": 207040,
+        "isAutoGenerated": true,
+        "lastModified": 1791458837454,
+        "policyId": "POLICY-207040",
+        "policyTag": null,
+        "serialNumber": "SAL0000PO02",
+        "source": "",
+        "status": "NA",
+        "templateName": "int_port_channel_pvlan_host"
+       }
+      ]
+     }
+    }
+   }
+  }
+ },
+ "g5_tsr_refusal_msg": "Native PVLAN preflight refused the invocation:\n  Port-channel504 on SAL0000PO02: it is not an existing physical interface known to the controller (preprovisioning is not implemented)\n  port-channel504 on SAL0000PO02: it holds int_port_channel_pvlan_host; a reset, conversion, deletion or redeploy of a PVLAN port-channel or its member outside the port-channel request is not implemented\nNo configuration or deployment request was sent.",
+ "manage_created_po_T_clean0": {
+  "fabric": {
+   "ENABLE_PVLAN": "true",
+   "HOST_INTF_ADMIN_STATE": "false"
+  },
+  "intent": {
+   "Ethernet1/8": {
+    "http": 200,
+    "nvPairs": {
+     "ADMIN_STATE": "false",
+     "CDP_ENABLE": "true",
+     "CONF": "",
+     "DESC": "",
+     "INTF_NAME": "Ethernet1/8",
+     "INTF_PTP": "false",
+     "LACP_PORT_PRIO": "32768",
+     "LACP_RATE": "normal",
+     "PC_MODE": "active",
+     "POLICY_DESC": "",
+     "POLICY_ID": "POLICY-207070",
+     "PO_ID": "port-channel504",
+     "PRIORITY": "510",
+     "PTP": "false",
+     "PVLAN_MODE": "trunk secondary",
+     "SERIAL_NUMBER": "SAL0000PO02",
+     "lldpReceive": "false",
+     "lldpTransmit": "false"
+    },
+    "policy": "int_port_channel_pvlan_member"
+   },
+   "port-channel504": {
+    "http": 200,
+    "nvPairs": {
+     "ADMIN_STATE": "false",
+     "ASSOCIATION_LIST": "{\"ASSOCIATION_LIST\":[{\"P_VLAN\":\"2210\",\"S_VLAN\":\"2212\"}]}",
+     "BPDUGUARD_ENABLED": "true",
+     "CDP_ENABLE": "true",
+     "CONF": "",
+     "COPY_DESC": "false",
+     "DESC": "",
+     "DISABLE_LACP_SUSPEND": "false",
+     "ENABLE_ORPHAN_PORT": "false",
+     "FABRIC_NAME": "test_fabric",
+     "INTF_NAME": "port-channel504",
+     "LACP_PORT_PRIO": "32768",
+     "LACP_RATE": "normal",
+     "MAPPING_LIST": "",
+     "MEMBER_INTERFACES": "e1/8",
+     "MTU": "jumbo",
+     "PC_MODE": "active",
+     "POLICY_DESC": "",
+     "POLICY_ID": "POLICY-207040",
+     "PORTTYPE_FAST_ENABLED": "true",
+     "PORT_DUPLEX_MODE": "auto",
+     "PO_ID": "port-channel504",
+     "PRIORITY": "500",
+     "PTP": "false",
+     "PVLAN_ALLOWED_VLANS": "2301",
+     "PVLAN_MODE": "trunk secondary",
+     "PVLAN_NATIVE_VLAN": "2301",
+     "QUEUING_POLICY": "",
+     "SERIAL_NUMBER": "SAL0000PO02",
+     "SPEED": "Auto",
+     "lldpReceive": "false",
+     "lldpTransmit": "false",
+     "queuingStats": "false",
+     "spanningTreePortType": "no"
+    },
+    "policy": "int_port_channel_pvlan_host"
+   }
+  },
+  "policies": [
+   {
+    "deleted": false,
+    "entityName": "Ethernet1/8",
+    "policyId": "POLICY-207070",
+    "priority": 510,
+    "source": "port-channel504",
+    "templateName": "int_port_channel_pvlan_member"
+   },
+   {
+    "deleted": false,
+    "entityName": "Ethernet1/8",
+    "policyId": "POLICY-207080",
+    "priority": 512,
+    "source": "port-channel504",
+    "templateName": "int_eth"
+   },
+   {
+    "deleted": false,
+    "entityName": "port-channel504",
+    "policyId": "POLICY-207040",
+    "priority": 500,
+    "source": "",
+    "templateName": "int_port_channel_pvlan_host"
+   }
+  ],
+  "preview_fresh": {
+   "http": 200,
+   "pending": [
+    "interface ethernet1/8",
+    "  channel-group 504 force mode active",
+    "  shutdown",
+    "configure terminal"
+   ],
+   "pending_lines": 4,
+   "status": "Out-of-Sync"
+  },
+  "running_stanzas": {
+   "Ethernet1/8": {
+    "count": 1,
+    "lines": [
+     "shutdown",
+     "switchport mode trunk",
+     "switchport trunk allowed vlan none",
+     "mtu 9216"
+    ]
+   },
+   "port-channel504": {
+    "count": 1,
+    "lines": [
+     "shutdown",
+     "switchport mode private-vlan trunk secondary",
+     "switchport private-vlan trunk native vlan 2301",
+     "switchport private-vlan trunk allowed vlan 2301",
+     "switchport private-vlan association trunk 2210 2212",
+     "spanning-tree port type edge trunk",
+     "spanning-tree bpduguard enable",
+     "mtu 9216"
+    ]
+   }
+  },
+  "summary": {
+   "Ethernet1/8": {
+    "adminStatus": 2,
+    "channelId": -1,
+    "complianceStatus": "Out-of-Sync",
+    "ifType": "INTERFACE_ETHERNET",
+    "operStatus": null,
+    "overlayNetwork": [],
+    "portChannelMemberList": null,
+    "underlayPolicies": [
+     {
+      "autoGenerated": true,
+      "entityName": "Ethernet1/8",
+      "entityType": "INTERFACE",
+      "id": 207070,
+      "isAutoGenerated": true,
+      "lastModified": 1791458839182,
+      "policyId": "POLICY-207070",
+      "policyTag": null,
+      "serialNumber": "SAL0000PO02",
+      "source": "port-channel504",
+      "status": "NA",
+      "templateName": "int_port_channel_pvlan_member"
+     }
+    ]
+   },
+   "Port-channel504": {
+    "adminStatus": 2,
+    "channelId": -1,
+    "complianceStatus": "In-Sync",
+    "ifType": "INTERFACE_PORT_CHANNEL",
+    "operStatus": null,
+    "overlayNetwork": [],
+    "portChannelMemberList": null,
+    "underlayPolicies": [
+     {
+      "autoGenerated": true,
+      "entityName": "port-channel504",
+      "entityType": "INTERFACE",
+      "id": 207040,
+      "isAutoGenerated": true,
+      "lastModified": 1791458837454,
+      "policyId": "POLICY-207040",
+      "policyTag": null,
+      "serialNumber": "SAL0000PO02",
+      "source": "",
+      "status": "NA",
+      "templateName": "int_port_channel_pvlan_host"
+     }
+    ]
+   }
+  }
+ },
+ "member": "Ethernet1/8",
+ "port_channel": "port-channel504",
+ "provenance": {
+  "A": {
+   "branch-A/calls/002-preview.response.json": "9fb190b6ae8f6fded90747140d6be7c4c99d4cc1f908e0fd2bc7ef9d524d69fc",
+   "branch-A/calls/003-deploy.response.json": "9431f930c2604080f19b342027fc9af41aeca09e557af21e227ad0e8be393a39",
+   "branch-A/state/EXP-A-member-20261008T113832Z/STATE.json": "43f37e3764834b9357bd0d9510d429c821fb371f6833a0217d01b34b6d5e483e",
+   "branch-A/state/EXP-A-post-20261008T113922Z/STATE.json": "1258c114c57c2a9be18367ea66359b6f6a6becd234fb836f07f04cce6b2f74e1"
+  },
+  "R": {
+   "branch-R/calls/002-preview.response.json": "0149e9faab5002bb75f89ed4553c1effb9d1525fd718f15b1003f604edc79ec2",
+   "branch-R/calls/003-deploy.response.json": "94031ea87f07b591b79ffdedb9be807572900518764a09b98d20dc8982051651",
+   "branch-R/state/EXP-R-member-20261008T113526Z/STATE.json": "9e53579b844f9bf2a625bfb39473a80aa1c14456feea41fec471db8b10c0c2c0",
+   "branch-R/state/EXP-R-post-20261008T113619Z/STATE.json": "43b99b87df625a23160a18eae5aa910e2159e67d269da503cc47d58285e2e48d"
+  },
+  "T": {
+   "branch-T/calls/002-preview.response.json": "97075c1279035eaa9ded11c0409fe20d3141345be040181912abd473dc044a94",
+   "branch-T/calls/003-deploy.response.json": "f865b3b9851c6ae78f7c4e452ab35c667d3467e5b6112d0b5edfb61d731614d7",
+   "branch-T/state/EXP-T-post-20261008T112733Z/STATE.json": "174131b6f5ca7e6f85daa8bdcf45e9fd812772b5f68d29841788a47a166649c7",
+   "branch-T/state/EXP-T-pre-20261008T112659Z/STATE.json": "43f14de650210168f347a2db4575e10cdd03b7234ce8d85d02903f0ebda52474"
+  },
+  "T_clean0": {
+   "branch-T/state/EXP-T-clean0-20261008T112801Z/STATE.json": "5d13028a4764efdfbdca16fbe19023cdda6651b077bdfb39ac4a4ff68a797bda"
+  },
+  "T_tsr": {
+   "branch-T/run/module-TSR/TSR-RESULT.json": "d9637ee32bf6761fb5a657e66e459c406ff15a1ec519fa626ecb6d082614eab7"
+  }
+ },
+ "serial": "SAL0000PO02"
+}
