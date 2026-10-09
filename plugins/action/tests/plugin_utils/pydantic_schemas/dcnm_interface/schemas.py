@@ -71,6 +71,7 @@ def expand_interface_name(name):
 class DcnmInterfaceQuerySchema(BaseModel):
     class NvPairs(BaseModel):
         ACCESS_VLAN: Optional[str] = None
+        aclFilter: Optional[str] = None
         ADMIN_STATE: Optional[str] = None
         ALLOWED_VLANS: Optional[str] = None
         BPDUGUARD_ENABLED: Optional[str] = None
@@ -80,16 +81,20 @@ class DcnmInterfaceQuerySchema(BaseModel):
         DESC: Optional[str] = None
         DISABLE_IP_REDIRECTS: Optional[str] = None
         DISABLE_LACP_SUSPEND: Optional[str] = None
+        DISABLE_LLDP: Optional[str] = None
         ENABLE_LACP_VPC_CONV: Optional[str] = None
         ENABLE_MIRROR_CONFIG: Optional[str] = None
         ENABLE_MONITOR: Optional[str] = None
         ENABLE_NETFLOW: Optional[str] = None
         ENABLE_ORPHAN_PORT: Optional[str] = None
+        ENABLE_OSPF_AUTH_MESSAGE_DIGEST: Optional[str] = None
         ENABLE_PFC: Optional[str] = None
         ENABLE_PIM_SPARSE: Optional[str] = None
         ENABLE_QOS: Optional[str] = None
         ENABLE_STORM_CONTROL: Optional[str] = None
         FABRIC_NAME: Optional[str] = None
+        flowcontrolReceive: Optional[str] = None
+        GUARD_MODE: Optional[str] = None
         INTF_NAME: Optional[str] = None
         INTF_VRF: Optional[str] = None
         IP: Optional[str] = None
@@ -200,6 +205,27 @@ class DcnmInterfaceQuerySchema(BaseModel):
             if v is not None:
                 return v.lower()
             return v
+
+        @field_validator('ENABLE_OSPF_AUTH_MESSAGE_DIGEST', mode='before')
+        @classmethod
+        def normalize_ospf_auth_message_digest(cls, v):
+            """
+            Normalize ENABLE_OSPF_AUTH_MESSAGE_DIGEST before string validation.
+
+            NDFC returns this nvPair as a native JSON boolean on some builds and
+            as the strings "true"/"false" on others. Raw query responses are
+            parsed through this model, so a native boolean must be coerced here
+            or validation rejects it before any assertion can run.
+
+            Absence stays None: it means the interface predates the parameter,
+            which is a different fact from an explicit false and must not be
+            rewritten into one here.
+            """
+            if v is None:
+                return v
+            if isinstance(v, bool):
+                return "true" if v else "false"
+            return str(v).strip().lower()
 
         @field_validator('STORM_CONTROL_ACTION')
         @classmethod
@@ -332,6 +358,29 @@ class DcnmInterfaceQuerySchema(BaseModel):
         # response.interfaces.nvPairs
         interface_nvpairs_fields = {
             "admin_state": "ADMIN_STATE",
+            # Fabric loopback only. The generic bool->str conversion below already
+            # produces the "true"/"false" strings NDFC echoes back.
+            "enable_ospf_auth_message_digest": "ENABLE_OSPF_AUTH_MESSAGE_DIGEST",
+            "flowcontrol_receive": "flowcontrolReceive",
+            "flowcontrol_send": "flowcontrolSend",
+            "spanning_tree_port_type": "spanningTreePortType",
+            # Simple passthrough bindings. The generic bool->str conversion below
+            # produces the "true"/"false" strings NDFC echoes back for these.
+            "guard_mode": "GUARD_MODE",
+            # DISABLE_LLDP was removed by the 14sep2026 template batch and split into two
+            # independent fields, so transmit and receive can be turned off separately.
+            # The SMU templates renamed both to camelCase without changing meaning: the
+            # declarations still read DisplayName "Disable LLDP transmit"/"receive" with
+            # defaultValue=false, so "true" still means disabled.
+            "disable_lldp_transmit": "lldpTransmit",
+            "disable_lldp_receive": "lldpReceive",
+            "acl_filter": "aclFilter",
+            # QoS statistics slice. Both are the " no-stats" suffix of the service-policy
+            # line their dependency emits, never a CLI line of their own.
+            # Same: qosStatsSuppressed and queuingStats keep the negative sense the
+            # bodies show -- noStats = " no-stats" if <field> == "true" else "".
+            "disable_qos_stats": "qosStatsSuppressed",
+            "disable_queuing_stats": "queuingStats",
             "speed": "SPEED",
             "description": "DESC",
             "copy_description": "COPY_DESC",

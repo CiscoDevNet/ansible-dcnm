@@ -31,12 +31,12 @@ Parameters
 
     <table  border=0 cellpadding=0 class="documentation-table">
         <tr>
-            <th colspan="3">Parameter</th>
+            <th colspan="4">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
             <th width="100%">Comments</th>
         </tr>
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>check_deploy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -55,7 +55,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>config</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -73,7 +73,7 @@ Parameters
             </tr>
                                 <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>deploy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -93,7 +93,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -110,7 +110,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_aa_fex</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -128,7 +128,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>admin_state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -149,7 +149,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -167,7 +167,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_netflow</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -188,7 +188,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mode</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -209,7 +209,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mtu</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -230,7 +230,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>netflow_monitor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -248,7 +248,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer1_cmds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -267,7 +267,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer1_members</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -286,7 +286,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer1_po_description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -304,7 +304,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer2_cmds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -323,7 +323,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer2_members</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -342,7 +342,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer2_po_description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -360,7 +360,7 @@ Parameters
 
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_breakout</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -378,7 +378,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>map</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -405,7 +405,7 @@ Parameters
 
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_eth</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -423,7 +423,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>access_vlan</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -441,7 +441,24 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>acl_filter</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the ACL filter applied to the interface. This option is applicable only when mode is trunk or access. Between 1 and 64 characters. Explicit-only, no default; when omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>admin_state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -462,7 +479,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>allowed_vlans</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -484,7 +501,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>bpdu_guard</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -506,7 +523,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>cmds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -525,7 +542,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -543,7 +560,96 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>disable_lldp_receive</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Disable LLDP receive on the interface. See disable_lldp_transmit; setting one without the other emits a single CLI line. Explicit-only, no default; when omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>disable_lldp_transmit</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Disable LLDP transmit on the interface. Replaces the earlier disable_lldp, which acted on both directions at once; the two directions are now independent. Explicit-only, no default; when omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>disable_qos_stats</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Disable statistics for the attached QoS policy. This option is applicable only when mode is trunk or access.</div>
+                        <div>Does NOT produce a configuration line of its own. It appends &#x27; no-stats&#x27; to the &#x27;service-policy type qos input&#x27; line that &#x27;enable_qos&#x27; and &#x27;qos_policy&#x27; produce. With no QoS policy in effect the value is stored on the controller and changes nothing on the device.</div>
+                        <div>Requires &#x27;enable_qos&#x27; to be true AND a QoS policy name to resolve, either from &#x27;qos_policy&#x27; or from the fabric AI/ML QoS setting.</div>
+                        <div>Explicit-only, no default. When omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>disable_queuing_stats</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Disable statistics for the attached output queuing policy. This option is applicable only when mode is trunk or access.</div>
+                        <div>Does NOT produce a configuration line of its own. It appends &#x27; no-stats&#x27; to the &#x27;service-policy type queuing output&#x27; line that &#x27;queuing_policy&#x27; produces. With &#x27;queuing_policy&#x27; empty the value is stored on the controller and changes nothing on the device.</div>
+                        <div>Explicit-only, no default. When omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>duplex</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -565,7 +671,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_cdp</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -586,7 +692,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_monitor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -607,7 +713,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_pfc</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -628,7 +734,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_qos</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -649,7 +755,74 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>flowcontrol_receive</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>on</li>
+                                    <li>off</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>State of IEEE 802.3x pause-frame reception. This option is applicable only when mode is trunk or access.</div>
+                        <div>Explicit-only, no default. When omitted the current controller value is left untouched; set &#x27;off&#x27; to remove the CLI.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>flowcontrol_send</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>on</li>
+                                    <li>off</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>State of IEEE 802.3x pause-frame transmission. This option is applicable only when mode is trunk or access.</div>
+                        <div>Explicit-only, no default. When omitted the current controller value is left untouched; set &#x27;off&#x27; to remove the CLI.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>guard_mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>root</li>
+                                    <li>none</li>
+                                    <li>loop</li>
+                                    <li>no</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Spanning-tree guard mode. This option is applicable only when mode is trunk. Explicit-only, no default; when omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>int_vrf</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -667,7 +840,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv4_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -685,7 +858,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv4_mask_len</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -704,7 +877,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv6_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -722,7 +895,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv6_mask_len</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -741,7 +914,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mode</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -758,17 +931,19 @@ Parameters
                                     <li>monitor</li>
                                     <li>epl_routed</li>
                                     <li>dot1q</li>
+                                    <li>pvlan</li>
                         </ul>
                 </td>
                 <td>
                         <div>Interface mode</div>
                         <div>When ethernet interface is a PortChannel or vPC member, mode is ignored. The only properties that can be managed for PortChannel or vPC member interfaces are &#x27;admin_state&#x27;, &#x27;description&#x27; and &#x27;cmds&#x27;. All other properties are ignored.</div>
+                        <div>Mode &#x27;pvlan&#x27; selects the NDFC 12 policy &#x27;int_pvlan_host&#x27; on a standalone physical Ethernet interface; see &#x27;pvlan_mode&#x27;. It is refused on a PortChannel or vPC member and on an interface owned by a network attachment.</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mtu</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -787,7 +962,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>native_vlan</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -805,7 +980,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>orphan_port</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -826,7 +1001,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>port_type_fast</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -847,7 +1022,153 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_association</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Primary/secondary VLAN associations for &#x27;pvlan_mode&#x27; &#x27;host&#x27; (at most one) and &#x27;trunk secondary&#x27; (one secondary per primary). A new &#x27;trunk secondary&#x27; association requires the fabric network of the secondary VLAN to be isolated.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
                 <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>primary_vlan</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Primary VLAN ID (1-4094).</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>secondary_vlan</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Secondary VLAN ID (1-4094).</div>
+                </td>
+            </tr>
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_mapping</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Promiscuous mappings for &#x27;pvlan_mode&#x27; &#x27;promiscuous&#x27; (one primary) and &#x27;trunk promiscuous&#x27;. Ranges are expanded and sent as one row per pair.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>primary_vlan</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Primary VLAN ID (1-4094).</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>secondary_vlans</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Secondary VLAN IDs as a string, for example &quot;2211&quot; or &quot;2211-2212,2214&quot;.</div>
+                </td>
+            </tr>
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>host</li>
+                                    <li>promiscuous</li>
+                                    <li>trunk promiscuous</li>
+                                    <li>trunk secondary</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Private VLAN port mode. Required, and only valid, when &#x27;mode&#x27; is &#x27;pvlan&#x27;.</div>
+                        <div>With &#x27;mode&#x27; &#x27;pvlan&#x27; no field has a module default. State &#x27;merged&#x27; keeps every omitted field at its current controller value; &#x27;replaced&#x27; and a retained &#x27;overridden&#x27; interface clear omitted lists and &#x27;native_vlan&#x27;/&#x27;allowed_vlans&#x27; and return omitted companion fields to the int_pvlan_host template defaults.</div>
+                        <div>Changing the submode of an existing PVLAN port requires &#x27;replaced&#x27; or &#x27;overridden&#x27;; &#x27;merged&#x27; refuses it.</div>
+                        <div>In mode &#x27;pvlan&#x27; the supported companion fields are &#x27;description&#x27;, &#x27;admin_state&#x27;, &#x27;bpdu_guard&#x27;, &#x27;port_type_fast&#x27;, &#x27;mtu&#x27;, &#x27;speed&#x27;, &#x27;enable_cdp&#x27;, &#x27;orphan_port&#x27;, &#x27;duplex&#x27;, &#x27;enable_pfc&#x27;, &#x27;enable_qos&#x27;, &#x27;qos_policy&#x27;, &#x27;queuing_policy&#x27; and &#x27;cmds&#x27;. Any other field is refused. &#x27;cmds&#x27; must not carry private-vlan or switchport lines. &#x27;native_vlan&#x27; (&#x27;&#x27; or one VLAN) and &#x27;allowed_vlans&#x27; (&#x27;&#x27;, &#x27;none&#x27; or VLAN ranges; &#x27;all&#x27; is refused) apply to the two trunk submodes only.</div>
+                        <div>Before every deployment attempt (including the check_deploy resend and the deployment-status retries) the module recomputes the switch pending configuration through the legacy config-preview API. Using that answer&#x27;s device running configuration and the controller&#x27;s expected configuration, it deploys only the remaining work when every pending command for the interface leads from the device state to the intended state; it skips the attempt for an interface whose device state is already verified as the intended state. When a check fails after the intent was written, the intent change is reported and is not rolled back.</div>
+                        <div>Every deployment response is judged on its original body; a failed or unrecognised response fails the task even if a later read reports In-Sync, and no further deployment is sent.</div>
+                        <div>The interface must be a standalone physical Ethernet with exactly one direct policy, both in the interface summary and in the switch policy list; a network attachment, port-channel membership or incomplete ownership data is refused.</div>
+                        <div>The CLI coverage of the current and destination configurations is verified before any write, also in check mode. The bulk interface update capability is verified before any write in normal mode only; its sole probe is a POST request, so in check mode a native PVLAN invocation that would change intent is refused with &quot;could not be verified in check mode&quot;, and nothing is sent.</div>
+                        <div>Removal authority comes from the requested transition, not from the device. A pending command may withdraw only a line the int_pvlan_host (or, for a reset or conversion, int_trunk_host) template renders, or a &#x27;cmds&#x27; line of the current or requested intent. A device command outside that set is never withdrawn by the deployment, and one inside a field these policies own but that cannot be interpreted blocks the deployment.</div>
+                        <div>Removing a secondary VLAN from a &#x27;promiscuous&#x27; mapping that keeps other secondaries is refused before any write, because the controller generates an invalid removal command for that transition. Clear the mapping or use &#x27;trunk promiscuous&#x27;.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>qos_policy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -865,7 +1186,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>queuing_policy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -883,7 +1204,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>route_tag</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -901,7 +1222,32 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>spanning_tree_port_type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>network</li>
+                                    <li>normal</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Spanning-tree port type. This option is applicable only when mode is trunk or access.</div>
+                        <div>Requires &#x27;port_type_fast&#x27; to be false. The parent template rejects &#x27;network&#x27; or &#x27;normal&#x27; while port type fast is enabled, and port type fast defaults to true, so both must be sent together.</div>
+                        <div>A value of &#x27;no&#x27; does not mean &quot;no configuration&quot;. It defers to the port-type-fast behaviour, and the resulting CLI differs per mode - &#x27;spanning-tree port type edge trunk&#x27; on a trunk interface, and &#x27;spanning-tree port type edge&#x27; on an access one. Both were observed on a live switch.</div>
+                        <div>Explicit-only, no default. When omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>speed</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -919,7 +1265,7 @@ Parameters
 
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_lo</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -937,7 +1283,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>admin_state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -958,7 +1304,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>cmds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -977,7 +1323,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -995,7 +1341,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>int_vrf</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1013,7 +1359,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv4_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1031,7 +1377,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv6_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1049,7 +1395,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mode</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1076,7 +1422,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>route_tag</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1094,7 +1440,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>secondary_ipv4_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1112,7 +1458,7 @@ Parameters
 
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_pc</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1130,7 +1476,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>access_vlan</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1148,7 +1494,24 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>acl_filter</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the ACL filter applied to the port-channel. This option is applicable only when mode is trunk, access or dot1q. Between 1 and 64 characters. Explicit-only, no default; when omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>admin_state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1169,7 +1532,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>cmds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1188,7 +1551,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>copy_description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1209,7 +1572,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1227,7 +1590,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>disable_lacp_suspend_individual</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1248,7 +1611,53 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>disable_qos_stats</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Disable statistics for the attached QoS policy. This option is applicable only when mode is trunk, access or dot1q.</div>
+                        <div>Does NOT produce a configuration line of its own. It appends &#x27; no-stats&#x27; to the &#x27;service-policy type qos input&#x27; line that &#x27;enable_qos&#x27; and &#x27;qos_policy&#x27; produce. With no QoS policy in effect the value is stored on the controller and changes nothing on the device.</div>
+                        <div>Explicit-only, no default. When omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>disable_queuing_stats</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Disable statistics for the attached output queuing policy. This option is applicable only when mode is trunk, access or dot1q.</div>
+                        <div>Does NOT produce a configuration line of its own. It appends &#x27; no-stats&#x27; to the &#x27;service-policy type queuing output&#x27; line that &#x27;queuing_policy&#x27; produces. With &#x27;queuing_policy&#x27; empty the value is stored on the controller and changes nothing on the device.</div>
+                        <div>Explicit-only, no default. When omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>duplex</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1270,7 +1679,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_cdp</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1291,7 +1700,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_monitor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1312,7 +1721,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_pfc</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1333,7 +1742,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_qos</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1354,7 +1763,30 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>guard_mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>root</li>
+                                    <li>none</li>
+                                    <li>loop</li>
+                                    <li>no</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Spanning-tree guard mode. This option is applicable only when mode is trunk. Explicit-only, no default; when omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>int_vrf</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1372,7 +1804,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv4_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1390,7 +1822,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv4_mask_len</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1409,7 +1841,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>lacp_port_priority</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1427,7 +1859,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>lacp_rate</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1448,7 +1880,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>members</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1467,7 +1899,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mode</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1483,16 +1915,18 @@ Parameters
                                     <li>l3</li>
                                     <li>dot1q</li>
                                     <li>monitor</li>
+                                    <li>pvlan</li>
                         </ul>
                 </td>
                 <td>
                         <div>Interface mode</div>
+                        <div>Mode &#x27;pvlan&#x27; selects the NDFC 12 policy &#x27;int_port_channel_pvlan_host&#x27; for a regular port-channel with exactly ONE physical member. Supported - creation in the four PVLAN modes, update of the PVLAN lists (&#x27;merged&#x27; adds to the current list, &#x27;replaced&#x27; states the complete model) and of &#x27;pc_mode&#x27;, &#x27;description&#x27;, &#x27;admin_state&#x27;, &#x27;native_vlan&#x27; and &#x27;allowed_vlans&#x27; without changing &#x27;pvlan_mode&#x27; or the member, and the identical repetition. Refused before any change is sent - a second member, member changes, ranges, vPC, a &#x27;pvlan_mode&#x27; change, &#x27;overridden&#x27;, and removing secondaries from a &#x27;promiscuous&#x27; mapping that keeps others (protection kept from the measured Ethernet defect). Fields for this mode are &#x27;pvlan_mode&#x27;, &#x27;pvlan_association&#x27; (host, trunk secondary), &#x27;pvlan_mapping&#x27; (promiscuous, trunk promiscuous), &#x27;native_vlan&#x27; and &#x27;allowed_vlans&#x27; (trunk modes), &#x27;members&#x27;, &#x27;pc_mode&#x27;, &#x27;description&#x27; and &#x27;admin_state&#x27;. The member is managed by the parent; &#x27;members&#x27; may be omitted in &#x27;merged&#x27; updates. For &#x27;trunk secondary&#x27; the member must ALREADY be prepared as a neutral, administratively down access (int_access_host) or routed (int_routed_host) port; a member in switchport mode trunk is refused (known incident - NX-OS rejects the join) and the module never converts a member. &#x27;state=deleted&#x27; removes the port-channel and releases its member administratively down before the deployment.</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>native_vlan</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1510,7 +1944,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>orphan_port</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1531,7 +1965,66 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_association</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Primary/secondary VLAN associations for <code>pvlan_mode</code> <code>host</code> (exactly one) and <code>trunk secondary</code> (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlan</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_mapping</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Promiscuous mappings for <code>pvlan_mode</code> <code>promiscuous</code> (a single primary VLAN) and <code>trunk promiscuous</code>, as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlans</code> (a VLAN list string).</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>host</li>
+                                    <li>promiscuous</li>
+                                    <li>trunk promiscuous</li>
+                                    <li>trunk secondary</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Private VLAN mode. Required, and only valid, when &#x27;mode&#x27; is &#x27;pvlan&#x27;. It cannot be changed on an existing port-channel.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>qos_policy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1549,7 +2042,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>queuing_policy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1567,7 +2060,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>route_tag</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1582,10 +2075,35 @@ Parameters
                         <div>Route tag associated with the interface IP. This object is applicable only if the &#x27;mode&#x27; is &#x27;l3&#x27;</div>
                 </td>
             </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>spanning_tree_port_type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>network</li>
+                                    <li>normal</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Spanning-tree port type. This option is applicable only when mode is trunk, access or dot1q.</div>
+                        <div>Requires &#x27;port_type_fast&#x27; to be false. The parent template rejects &#x27;network&#x27; or &#x27;normal&#x27; while port type fast is enabled, and port type fast defaults to true, so both must be sent together.</div>
+                        <div>A value of &#x27;no&#x27; does not mean &quot;no configuration&quot;. It defers to the port-type-fast behaviour.</div>
+                        <div>Explicit-only, no default. When omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
 
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_st_fex</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1603,7 +2121,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>admin_state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1624,7 +2142,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>cmds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1643,7 +2161,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1661,7 +2179,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_netflow</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1682,7 +2200,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>members</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1701,7 +2219,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mode</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1722,7 +2240,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mtu</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1743,7 +2261,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>netflow_monitor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1761,7 +2279,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>po_description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1779,7 +2297,7 @@ Parameters
 
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_subint</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1797,7 +2315,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>admin_state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1818,7 +2336,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>cmds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1837,7 +2355,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1855,7 +2373,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>int_vrf</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1873,7 +2391,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv4_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1891,7 +2409,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv4_mask_len</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1910,7 +2428,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv6_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1928,7 +2446,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv6_mask_len</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1947,7 +2465,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mode</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1968,7 +2486,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mtu</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -1987,7 +2505,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>route_tag</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2005,7 +2523,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vlan</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2024,7 +2542,7 @@ Parameters
 
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_svi</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2042,7 +2560,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>admin_state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2064,7 +2582,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>adv_subnet_in_underlay</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2085,7 +2603,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>cmds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2104,7 +2622,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2122,7 +2640,26 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_relay_src_intf</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>Source interface for DHCP relay. Valid interfaces are Ethernet, port-channel or loopback.</div>
+                        <div>Independent of the DHCP server addresses; it can be set on its own.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_server_addr1</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2140,7 +2677,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_server_addr2</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2158,7 +2695,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_server_addr3</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2176,7 +2713,25 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_server_addr4</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>DHCP relay server address.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>disable_ip_redirects</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2197,7 +2752,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_hsrp</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2218,7 +2773,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_netflow</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2239,7 +2794,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>hsrp_group</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2257,7 +2812,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>hsrp_priority</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2275,7 +2830,47 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>hsrp_secondary_vips</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Secondary IPv4 virtual addresses of the existing HSRP group. At most 16 entries.</div>
+                        <div>Same merged, replaced and overridden behavior as <em>secondary_gws</em>, identified by address. The HSRP group and its primary virtual address are not changed.</div>
+                        <div>The controller requires HSRP enabled with a primary IPv4 virtual address, and each entry in the subnet of the SVI primary address.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
                 <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>hsrp_secondary_vip</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>IPv4 address, for example 192.0.2.123.</div>
+                </td>
+            </tr>
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>hsrp_version</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2296,7 +2891,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>hsrp_vip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2314,7 +2909,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>hsrp_vmac</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2332,7 +2927,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>int_vrf</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2350,7 +2945,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv4_addr</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2368,7 +2963,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ipv4_mask_len</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2386,7 +2981,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mode</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2407,7 +3002,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mtu</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2425,7 +3020,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>netflow_monitor</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2443,7 +3038,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>preempt</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2464,7 +3059,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>route_tag</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2482,7 +3077,49 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>secondary_gws</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Secondary IPv4 addresses of the SVI, each with its prefix length. At most 16 entries.</div>
+                        <div>Entries are identified by address. Order is not significant.</div>
+                        <div>With <em>state=merged</em>, an omitted key or an empty list leaves the current entries unchanged, and a non-empty list is added to them; an address that already exists takes the prefix length given here.</div>
+                        <div>With <em>state=replaced</em> and for an interface kept by <em>state=overridden</em>, the list is the complete set; omitting the key or giving an empty list removes every entry.</div>
+                        <div>Requires a primary IPv4 address on the SVI.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
                 <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>gateway_ip_address</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>IPv4 address and prefix length, for example 192.0.2.254/24. Host bits are kept.</div>
+                </td>
+            </tr>
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_dhcp1</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2500,7 +3137,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_dhcp2</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2518,7 +3155,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vrf_dhcp3</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2533,10 +3170,28 @@ Parameters
                         <div>VRF to reach DHCP server. This parameter is required if &quot;dhcp_server_addr3&quot; is included.</div>
                 </td>
             </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>vrf_dhcp4</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                <td>
+                        <div>VRF to reach DHCP server. This parameter is required if &quot;dhcp_server_addr4&quot; is included.</div>
+                </td>
+            </tr>
 
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_vpc</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2554,7 +3209,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>admin_state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2575,7 +3230,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>bpdu_guard</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2597,7 +3252,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>copy_description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2618,7 +3273,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>disable_lacp_suspend_individual</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2639,7 +3294,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_lacp_vpc_convergence</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2660,7 +3315,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_qos</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2681,7 +3336,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>lacp_port_priority</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2699,7 +3354,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>lacp_rate</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2720,7 +3375,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mode</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2733,16 +3388,20 @@ Parameters
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>trunk</li>
                                     <li>access</li>
+                                    <li>dot1q</li>
+                                    <li>pvlan</li>
                         </ul>
                 </td>
                 <td>
                         <div>Interface mode</div>
+                        <div><code>dot1q</code> selects the dot1q-tunnel vPC template (<code>int_vpc_dot1q_tunnel</code>) and requires NDFC 12. It takes the same options as <code>access</code>, plus the LACP options.</div>
+                        <div><code>pvlan</code> selects the NDFC 12 policy <code>int_vpc_pvlan_host</code> for a vPC with exactly ONE physical member per peer, in any of its four <code>pvlan_mode</code> values. Supported - creation, identical repetition, an update that reaches BOTH peers (the list of the mode, &#x27;pc_mode&#x27;, the description of both peers, or the PVLAN native/allowed VLANs of both peers) and <code>state=deleted</code> of the vPC, all with <code>deploy</code> true when a deployment is wanted. Refused before any change is sent - a <code>pvlan_mode</code> change, a field the mode does not take, a second member, a member or PCID change, a PCID different from the vPC id (both <code>peer1_pcid</code> and <code>peer2_pcid</code> are REQUIRED and must equal it), an empty list, removing secondaries from a <code>promiscuous</code> mapping that keeps others (protection kept from the measured Ethernet defect), freeform commands, an update that reaches only one peer, a change of <code>admin_state</code> of an existing vPC, <code>overridden</code>, check mode for a creation or a deletion and NDFC 11. For <code>trunk secondary</code> each member must ALREADY be prepared as a neutral, administratively down access (<code>int_access_host</code>) or routed (<code>int_routed_host</code>) port on BOTH peers; a member in switchport mode trunk is refused (known incident - NX-OS rejects the join) and the module never converts a member. <code>peer1_*</code> belong to the first switch of <code>switch</code> and <code>peer2_*</code> to the second; both switches must be the two switches of the vPC pair. The members are managed by the parent. Both peers are validated before anything is deployed and the vPC is reported successful only when EVERY peer is. The deletion is verified on both peers against the explicit contract (a direct <code>int_trunk_host</code>, shut, no freeform commands) without rewriting any member.</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mtu</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2763,7 +3422,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>pc_mode</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2785,7 +3444,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer1_access_vlan</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2797,13 +3456,13 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>Vlan for the interface of first peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;access&#x27;</div>
+                        <div>Vlan for the interface of first peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;access&#x27; or &#x27;dot1q&#x27;. For &#x27;dot1q&#x27; it is the dot1q-tunnel VLAN of that peer.</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer1_allowed_vlans</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2819,13 +3478,13 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Vlans that are allowed on this interface of first peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;</div>
+                        <div>Vlans that are allowed on this interface of first peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;, or &#x27;pvlan&#x27; with <code>pvlan_mode</code> <code>trunk promiscuous</code> or <code>trunk secondary</code> (PVLAN trunk allowed VLANs of that peer; <code>all</code> is refused there, no default - omitted keeps the current value in <code>merged</code>).</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer1_cmds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2844,7 +3503,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer1_description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2862,7 +3521,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer1_members</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2881,7 +3540,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer1_native_vlan</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2893,13 +3552,13 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>Vlan used as native vlan of first peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;</div>
+                        <div>Vlan used as native vlan of first peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;, or &#x27;pvlan&#x27; with <code>pvlan_mode</code> <code>trunk promiscuous</code> or <code>trunk secondary</code> (&#x27;&#x27; or one VLAN; PVLAN trunk native VLAN of that peer).</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer1_pcid</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2918,7 +3577,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer2_access_vlan</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2930,13 +3589,13 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>Vlan for the interface of second peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;access&#x27;</div>
+                        <div>Vlan for the interface of second peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;access&#x27; or &#x27;dot1q&#x27;. For &#x27;dot1q&#x27; it is the dot1q-tunnel VLAN of that peer.</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer2_allowed_vlans</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2952,13 +3611,13 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Vlans that are allowed on this interface of second peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;</div>
+                        <div>Vlans that are allowed on this interface of second peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;, or &#x27;pvlan&#x27; with <code>pvlan_mode</code> <code>trunk promiscuous</code> or <code>trunk secondary</code> (as <code>peer1_allowed_vlans</code>).</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer2_cmds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2977,7 +3636,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer2_description</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -2995,7 +3654,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer2_members</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3014,7 +3673,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer2_native_vlan</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3026,13 +3685,13 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>Vlan used as native vlan of second peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;</div>
+                        <div>Vlan used as native vlan of second peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;, or &#x27;pvlan&#x27; with <code>pvlan_mode</code> <code>trunk promiscuous</code> or <code>trunk secondary</code> (as <code>peer1_native_vlan</code>).</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>peer2_pcid</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3051,7 +3710,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>port_type_fast</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3072,7 +3731,66 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_association</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Primary/secondary VLAN associations for <code>pvlan_mode</code> <code>host</code> (exactly one) and <code>trunk secondary</code> (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlan</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_mapping</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Promiscuous mappings for <code>pvlan_mode</code> <code>promiscuous</code> (a single primary VLAN) and <code>trunk promiscuous</code>, as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlans</code> (a VLAN list string).</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>host</li>
+                                    <li>promiscuous</li>
+                                    <li>trunk promiscuous</li>
+                                    <li>trunk secondary</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Private VLAN mode. Required, and only valid, when &#x27;mode&#x27; is &#x27;pvlan&#x27;. It cannot be changed on an existing vPC.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>qos_policy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3090,7 +3808,7 @@ Parameters
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>queuing_policy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3108,7 +3826,7 @@ Parameters
 
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>switch</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3126,7 +3844,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>type</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3154,7 +3872,7 @@ Parameters
             </tr>
 
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>deploy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3176,7 +3894,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>fabric</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3192,7 +3910,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>override_intf_types</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3220,7 +3938,29 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="3">
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>patch_version</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Declares the installed Nexus Dashboard/NDFC patch context so the module can trust the installed interface templates to carry the registered profile fields the generic binding registry manages (for example <code>acl_filter</code>, <code>flowcontrol_receive</code>, <code>ospf_cost</code>, <code>disable_lldp_transmit</code>/<code>disable_lldp_receive</code> and the other registered fields documented per interface profile).</div>
+                        <div>This is a capability declaration the caller makes; it is never sent to the controller, never part of the interface payload, and never part of the computed diff.</div>
+                        <div>Accepts the exact SMU string <code>4.3.1.0175006011</code> or a numeric Nexus Dashboard release <code>4.4.1</code> or later, matching the version policy of <code>dcnm_network</code>. ND release strings require at least three dot-separated numeric components; additional build components must also be numeric. The first three components are compared numerically. No whitespace or suffixes are accepted. For example, <code>4.4.1.10</code> and <code>4.10.0</code> are supported, while <code>4.4.0</code>, <code>4.4</code>, <code>4.4.1-rc1</code> and adjacent unapproved <code>4.3.1</code> SMU builds are rejected.</div>
+                        <div>This is a SECOND, independent requirement on top of each registered field&#x27;s existing minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a supported patch/ND release, and that release does not bypass a field&#x27;s NDFC floor or its <code>smu_unsupported</code> exclusion when one exists; both conditions must hold together before a registered field is configurable.</div>
+                        <div>There is no enabling default anywhere in the module. When this is omitted, null, empty, malformed, or unsupported, the module rejects the ENTIRE invocation before any configuration or deployment request is sent, as soon as any config entry sets a registered field explicitly -- including a native/legacy-only entry earlier in the same task list, per the normal invocation-wide preflight this module already applies to its other validation failures.</div>
+                        <div>When a registered field is merely OMITTED (not set) while this capability is disabled, the module does not reset, clear, or otherwise change that field. For an interface RETAINED under <code>replaced</code> or <code>overridden</code> (same parent, same identity, not newly created and not explicitly removed), its existing controller value is carried forward unchanged in the full replacement payload, exactly as it would be if the field were not part of this registry at all. This preservation scope is specifically the retained-same-parent carry-forward; it does not change whole-object deletion (<code>state=deleted</code> or an explicit removal under <code>overridden</code>) or an interface&#x27;s transition to a different parent template, both of which keep their existing, independent contracts.</div>
+                        <div>Existing playbooks that already set a registered field (see the list above) must add this argument -- directly on the task, or once via <code>module_defaults</code> for <code>cisco.dcnm.dcnm_interface</code> -- to keep working under this module version. A playbook that only uses native/legacy fields needs no change.</div>
+                        <div>The module performs no automatic patch discovery and applies no environment-based fallback; the caller is the sole source of this value.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -3675,6 +4415,38 @@ Examples
               peer2_description: "VPC acting as trunk peer2"
 
 
+    - name: Create a dot1q-tunnel vPC
+      cisco.dcnm.dcnm_interface:
+        fabric: mmudigon-fabric
+        state: merged
+        # Required because the profile below sets disable_lldp_transmit/disable_lldp_receive,
+        # both registered generic-binding-registry fields. Without a supported patch/ND release
+        # context, the module rejects this whole task before any configuration/deployment call
+        # -- there is no product default that enables these fields. See the patch_version
+        # option documentation for the version/floor/migration contract.
+        patch_version: "4.3.1.0175006011"
+        config:
+          - name: vpc760                      # should be of the form vpc<port-id>
+            type: vpc
+            switch:                           # both switches of the vPC pair
+              - "192.172.1.1"
+              - "192.172.1.2"
+            deploy: true
+            profile:
+              mode: dot1q                     # dot1q-tunnel vPC (int_vpc_dot1q_tunnel), NDFC 12
+              peer1_pcid: 760
+              peer2_pcid: 760
+              peer1_members:
+                - e1/27
+              peer2_members:
+                - e1/27
+              peer1_access_vlan: 3790         # dot1q-tunnel VLAN on peer 1
+              peer2_access_vlan: 3790         # dot1q-tunnel VLAN on peer 2
+              peer1_description: "dot1q-tunnel vPC peer1"
+              peer2_description: "dot1q-tunnel vPC peer2"
+              disable_lldp_transmit: true     # registered generic fields of this parent --
+              disable_lldp_receive: true      # require patch_version above (see note)
+
     - name: Replace vPC interfaces
       cisco.dcnm.dcnm_interface:
         fabric: mmudigon-fabric
@@ -3769,7 +4541,7 @@ Examples
             deploy: true                                # choose from [true, false]
             profile:
               int_vrf: blue                             # optional, Interface VRF name, default is "default"
-              ipv4_addr: 192.168.2.1                    # optional, Interfae IP, default is ""
+              ipv4_addr: 192.0.2.1                      # optional, Interfae IP, default is ""
               ipv4_mask_len: 24                         # optional, IP mask length, default is ""
               mtu: 9216                                 # optional, MTU default is ""
               route_tag: 1001                           # optional, Routing TAG, default is ""
@@ -3778,7 +4550,7 @@ Examples
                 - no shutdown
               admin_state: true                         # Flag to enable/disable Vlan interaface
               enable_hsrp: true                         # optional, flag to enable/disable HSRP on the interface, default is "false"
-              hsrp_vip: 192.168.2.100                   # optional, Virtual IP address for HSRP, default is ""
+              hsrp_vip: 192.0.2.100                     # optional, Virtual IP address for HSRP, default is ""
               hsrp_group: 10                            # optional, HSRP group, default is ""
               hsrp_priority: 5                          # optional, HSRP priority, default is ""
               hsrp_vmac: 0000.0101.ac0a                 # optional, HSRP virtual MAC, default is ""
@@ -3788,6 +4560,9 @@ Examples
               vrf_dhcp2: blue                           # optional, VRF to reach DHCP server. default is ""
               dhcp_server_addr3: 192.200.1.3            # optional, DHCP relay server address, default is ""
               vrf_dhcp3: blue                           # optional, VRF to reach DHCP server. default is ""
+              dhcp_server_addr4: 192.200.1.4            # optional, DHCP relay server address, default is ""
+              vrf_dhcp4: blue                           # optional, VRF to reach DHCP server. default is ""
+              dhcp_relay_src_intf: loopback0            # optional, source interface for DHCP relay, default is ""
               adv_subnet_in_underlay: true              # optional, flag to enable/disable advertisements of subnets into underlay, default is "false"
               enable_netflow: false                     # optional, flag to enable netflow, default is "false"
               netflow_monitor: svi1001                  # optional, name of netflow monitor, default is ""
@@ -3795,6 +4570,12 @@ Examples
               preempt: true                             # optional, flag to enable/disable overthrow of low priority active routers, optional is "false"
               mode: vlan                                # choose from [vlan, vlan_admin_state], default is "vlan"
               description: Switched vlan interface 1001 # optional, Interface description, default is ""
+              secondary_gws:                            # optional, secondary IPv4 addresses (max 16)
+                - gateway_ip_address: 198.51.100.1/24
+                - gateway_ip_address: 203.0.113.1/24
+              hsrp_secondary_vips:                      # optional, secondary HSRP virtual addresses (max 16)
+                - hsrp_secondary_vip: 192.0.2.101
+                - hsrp_secondary_vip: 192.0.2.102
 
     - name: Replace SVI interface
       cisco.dcnm.dcnm_interface:
@@ -3828,6 +4609,9 @@ Examples
               vrf_dhcp2: green                                # optional, VRF to reach DHCP server. default is ""
               dhcp_server_addr3: 193.200.1.3                  # optional, DHCP relay server address, default is ""
               vrf_dhcp3: green                                # optional, VRF to reach DHCP server. default is ""
+              dhcp_server_addr4: 193.200.1.4                  # optional, DHCP relay server address, default is ""
+              vrf_dhcp4: green                                # optional, VRF to reach DHCP server. default is ""
+              dhcp_relay_src_intf: loopback0                  # optional, source interface for DHCP relay, default is ""
               adv_subnet_in_underlay: false                   # optional, flag to enable/disable advertisements of subnets into underlay, default is "false"
               enable_netflow: false                           # optional, flag to enable netflow, default is "false"
               netflow_monitor: svi1002                        # optional, name of netflow monitor, default is ""
@@ -4063,6 +4847,202 @@ Examples
             mode: dot1q
             access_vlan: 41
             description: "ETH 1/12 Dot1q Tunnel"
+
+    # Private VLAN (int_pvlan_host, NDFC 12)
+
+    - name: Configure a trunk promiscuous PVLAN port
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: merged
+        config:
+          - name: eth1/7
+            type: eth
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: trunk promiscuous
+              admin_state: false
+              pvlan_mapping:
+                - primary_vlan: 2210
+                  secondary_vlans: "2211-2212"
+              native_vlan: "2301"
+              allowed_vlans: "2301"
+
+    - name: Make a PVLAN host port exactly one association (replaced clears omitted fields)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: replaced
+        config:
+          - name: eth1/8
+            type: eth
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: host
+              pvlan_association:
+                - primary_vlan: 2210
+                  secondary_vlan: 2212
+
+    # Private VLAN on a regular port-channel (int_port_channel_pvlan_host, NDFC 12; exactly one member)
+
+    - name: Create a port-channel in PVLAN host mode with one administratively down member
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: replaced
+        config:
+          - name: po10
+            type: pc
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: host
+              members:
+                - Ethernet1/7
+              pc_mode: active
+              admin_state: false
+              pvlan_association:
+                - primary_vlan: 2210
+                  secondary_vlan: 2212
+
+    - name: Delete that port-channel (its member is released administratively down)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: deleted
+        config:
+          - name: po10
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+
+    # Private VLAN on a vPC (int_vpc_pvlan_host, NDFC 12; one member per peer, PCID equal to the vPC id)
+
+    - name: Create a vPC in PVLAN host mode (peer1_* belong to the first switch, peer2_* to the second)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: merged
+        config:
+          - name: vpc10
+            type: vpc
+            switch:
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: host
+              peer1_members:
+                - Ethernet1/7
+              peer2_members:
+                - Ethernet1/8
+              peer1_pcid: 10
+              peer2_pcid: 10
+              admin_state: false
+              pvlan_association:
+                - primary_vlan: 2210
+                  secondary_vlan: 2212
+
+    - name: Create a vPC in PVLAN promiscuous mode (a single primary VLAN)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: merged
+        config:
+          - name: vpc11
+            type: vpc
+            switch:
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: promiscuous
+              peer1_members:
+                - Ethernet1/9
+              peer2_members:
+                - Ethernet1/9
+              peer1_pcid: 11
+              peer2_pcid: 11
+              admin_state: false
+              pvlan_mapping:
+                - primary_vlan: 2210
+                  secondary_vlans: "2211-2212"
+
+    - name: Create a vPC in PVLAN trunk promiscuous mode with per-peer native/allowed VLANs
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: merged
+        config:
+          - name: vpc12
+            type: vpc
+            switch:
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: trunk promiscuous
+              peer1_members:
+                - Ethernet1/10
+              peer2_members:
+                - Ethernet1/10
+              peer1_pcid: 12
+              peer2_pcid: 12
+              admin_state: false
+              pvlan_mapping:
+                - primary_vlan: 2210
+                  secondary_vlans: "2211-2212"
+                - primary_vlan: 2410
+                  secondary_vlans: "2412"
+              peer1_native_vlan: "2301"
+              peer2_native_vlan: "2301"
+              peer1_allowed_vlans: "2301"
+              peer2_allowed_vlans: "2301"
+
+    - name: Create a vPC in PVLAN trunk secondary mode (both members must ALREADY be prepared as access or routed ports, admin down)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: merged
+        config:
+          - name: vpc13
+            type: vpc
+            switch:
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: trunk secondary
+              peer1_members:
+                - Ethernet1/11
+              peer2_members:
+                - Ethernet1/11
+              peer1_pcid: 13
+              peer2_pcid: 13
+              admin_state: false
+              pvlan_association:
+                - primary_vlan: 2210
+                  secondary_vlan: 2212
+              peer1_native_vlan: "2301"
+              peer2_native_vlan: "2301"
+              peer1_allowed_vlans: "2301"
+              peer2_allowed_vlans: "2301"
+
+    - name: Delete that vPC (both peers are verified; the controller releases the members admin-up and the module sets them admin-down before the deploy)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: deleted
+        config:
+          - name: vpc10
+            type: vpc
+            switch:
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            deploy: true
 
     # Breakout interfaces
 
