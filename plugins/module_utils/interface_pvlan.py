@@ -613,17 +613,95 @@ _NAMESPACES = {
 VOCABULARY_POLICIES = tuple(sorted(_GRAMMAR))
 
 
+# PO-HOST-E1-OFFLINE: grammars of the regular port-channel host policy and of its PVLAN member
+# policy. Kept in their OWN tables so the Ethernet tables, VOCABULARY_POLICIES and
+# DEFAULT_VOCABULARY above stay byte-for-byte what E6 defined: no Ethernet decision can change.
+PO_HOST_POLICY = "int_port_channel_pvlan_host"
+PO_MEMBER_POLICY = "int_port_channel_pvlan_member"
+
+_PO_LIST_GRAMMAR = (
+    r"switchport private-vlan trunk native vlan [0-9]+",
+    r"switchport private-vlan trunk allowed vlan [0-9,\-]+",
+    r"switchport private-vlan host-association [0-9]+ [0-9,\-]+",
+    r"switchport private-vlan mapping [0-9]+ [0-9,\-]+",
+    r"switchport private-vlan mapping trunk [0-9]+ [0-9,\-]+",
+    r"switchport private-vlan association trunk [0-9]+ [0-9,\-]+",
+)
+_PO_GRAMMAR = {
+    PO_HOST_POLICY: _COMPANION_GRAMMAR
+    + (
+        r"switchport",
+        r"switchport mode private-vlan (host|promiscuous|trunk promiscuous|trunk secondary)",
+        r"spanning-tree port type \S+( trunk)?",
+        r"no lacp suspend-individual",
+        r"speed \S+",
+        r"no negotiate auto",
+    )
+    + _PO_LIST_GRAMMAR,
+    # The member's own template lines + the parent's 'Inherited Commands' int_eth child on the member (HOST:507-560).
+    PO_MEMBER_POLICY: (
+        r"switchport",
+        r"switchport mode private-vlan (host|promiscuous|trunk promiscuous|trunk secondary)",
+        # G3 (H1, NDFC 12.6.0.267, controller preview MEASURED; H1 was never deployed): the pending carries the COMMAND
+        # `channel-group N force mode M` and the controller's expected holds `channel-group N mode M`. That the device keeps
+        # the same no-force form is the NX-OS convention, NOT observed on the switch: live acceptance must check it.
+        r"channel-group [0-9]+ force( mode (active|passive))?",
+        r"channel-group [0-9]+( mode (active|passive))?",
+        r"description .+",
+        r"no cdp enable",
+        r"no lldp (transmit|receive)",
+        r"lacp port-priority [0-9]+",
+        r"lacp rate \S+",
+        r"(no )?shutdown",
+        r"mtu [0-9]+",
+        r"speed \S+",
+        r"no negotiate auto",
+        r"duplex \S+",
+    )
+    + _PO_LIST_GRAMMAR,
+}
+_PO_NAMESPACES = {
+    PO_HOST_POLICY: _COMPANION_NAMESPACES + ("lacp", "negotiate"),
+    PO_MEMBER_POLICY: ("switchport", "channel-group", "description", "cdp", "lldp", "lacp", "shutdown", "mtu", "speed",
+                       "negotiate", "duplex"),
+}
+PO_VOCABULARY_POLICIES = tuple(sorted(_PO_GRAMMAR))
+# VPC-HOST-E1-OFFLINE: the vPC child policy keeps its OWN tables, filled in the vPC section below, so PO_VOCABULARY_POLICIES and
+# every Po/Ethernet decision stay what they were.
+_VPC_GRAMMAR = {}
+_VPC_NAMESPACES = {}
+
+# G6 (TS prepared member, EXP-1 MEASURED on one Ethernet member, NX-OS 10.5(5), NDFC 12.6.0.267): the ONLY device lines a member
+# PREPARED as access or routed may hold when it joins a trunk secondary port-channel. Access (int_access_host): `shutdown`,
+# `spanning-tree port type edge`, `mtu 9216`; routed (int_routed_host): `no switchport`, `mtu 9216` (shutdown is the L3 default
+# and is NOT shown). Their field namespaces include switchport/ip/ipv6/vrf so any other line there is uninterpretable (refused).
+# Own table: VOCABULARY_POLICIES, PO_VOCABULARY_POLICIES and DEFAULT_VOCABULARY stay byte-for-byte what G5 defined.
+PO_ACCESS_BASELINE_POLICY = "int_access_host"
+PO_ROUTED_BASELINE_POLICY = "int_routed_host"
+_PO_BASELINE_GRAMMAR = {
+    PO_ACCESS_BASELINE_POLICY: (r"(no )?shutdown", r"spanning-tree port type edge", r"mtu [0-9]+"),
+    PO_ROUTED_BASELINE_POLICY: (r"(no )?shutdown", r"no switchport", r"mtu [0-9]+"),
+}
+_PO_BASELINE_NAMESPACES = {
+    PO_ACCESS_BASELINE_POLICY: ("switchport", "spanning-tree", "mtu", "shutdown", "ip", "ipv6", "vrf"),
+    PO_ROUTED_BASELINE_POLICY: ("switchport", "spanning-tree", "mtu", "shutdown", "ip", "ipv6", "vrf"),
+}
+
+
 class Vocabulary(object):
     """What one requested transition owns. owns(line): the operation may change/withdraw it.
     interferes(line): a line it does NOT own falls in a field namespace it does own, so the
     model cannot interpret the device state there."""
 
     def __init__(self, policies, freeform=()):
-        self.policies = tuple(sorted(set(p for p in policies if p in _GRAMMAR)))
-        grammar = [g for p in self.policies for g in _GRAMMAR[p]]
+        self.policies = tuple(sorted(set(
+            p for p in policies if p in _GRAMMAR or p in _PO_GRAMMAR or p in _PO_BASELINE_GRAMMAR or p in _VPC_GRAMMAR)))
+        grammar = [g for p in self.policies for g in (_GRAMMAR.get(p) or _PO_GRAMMAR.get(p) or _PO_BASELINE_GRAMMAR.get(p) or _VPC_GRAMMAR[p])]
         self._grammar = re.compile("^(?:%s)$" % "|".join(grammar)) if grammar else None
         self.freeform = frozenset(freeform)
-        self._prefixes = tuple(sorted(set(n for p in self.policies for n in _NAMESPACES[p])))
+        self._prefixes = tuple(sorted(set(
+            n for p in self.policies for n in (
+                _NAMESPACES.get(p) or _PO_NAMESPACES.get(p) or _PO_BASELINE_NAMESPACES.get(p) or _VPC_NAMESPACES[p]))))
 
     def owns(self, line):
         return line in self.freeform or bool(self._grammar and self._grammar.match(line))
@@ -680,6 +758,12 @@ def render(policy, nv):
         return Model(s, mode, pairs, True)
     if policy == TRUNK_HOST_POLICY:
         return _render_trunk_host(nv)
+    if policy == PO_HOST_POLICY:
+        return _render_po_host(nv)
+    if policy == PO_MEMBER_POLICY:
+        return _render_po_member(nv)
+    if policy == VPC_PO_POLICY:
+        return _render_vpc_po(nv)
     return Model((), None, (), False)
 
 
@@ -1157,7 +1241,7 @@ def _difference(a, b):
     }
 
 
-def assess_target(body, entry, name, desired, vocabulary=None):
+def assess_target(body, entry, name, desired, vocabulary=None, absent_ok=False, member_force=None, member_inherit=None):
     """Decision for one PVLAN target from ONE fresh preview entry.
 
     Authority, all from that entry: `runningConfig` (device), `expectedConfig` (controller
@@ -1174,7 +1258,11 @@ def assess_target(body, entry, name, desired, vocabulary=None):
         foreign device commands outside the owned namespaces are left untouched;
       * refuse when the block is empty but the device's owned state differs;
       * otherwise the remaining work is validated as the transition device -> intended state, in
-        which a foreign device command can never be withdrawn."""
+        which a foreign device command can never be withdrawn.
+    `member_force` (G3, port-channel member creation only) applies po_member_force_transition() first.
+    `member_inherit` (G5: the NAME of the port-channel of an existing member, given only when that port-channel's own pending
+    changes) reads the member's device state through po_member_inherited_state() against the port-channel's running stanza
+    in the same entry: an empty member pending is then a deploy carried by the parent, not a refusal."""
     if not desired.modeled:
         return "refuse", ["the intended state of %s is not modeled" % name]
     vocabulary = vocabulary or DEFAULT_VOCABULARY
@@ -1183,9 +1271,15 @@ def assess_target(body, entry, name, desired, vocabulary=None):
             return "refuse", ["the fresh preview carries no %s, so the device state of %s is unknown" % (key, name)]
     rc, running = interface_stanza(entry["runningConfig"], name)
     xc, expected = interface_stanza(entry["expectedConfig"], name)
-    if rc != 1 or xc != 1:
+    if absent_ok and rc == 0 and xc == 1:
+        # PO-HOST-E1-OFFLINE: an interface that is created by this very operation has no running
+        # stanza yet. That is accepted ONLY here, from a readable runningConfig list and exactly
+        # one expected stanza; a duplicated or missing expected stanza is still a refusal.
+        observed = Model((), None, (), True)
+    elif rc != 1 or xc != 1:
         return "refuse", ["the fresh preview holds %d running and %d expected stanzas for %s" % (rc, xc, name)]
-    observed = cli_model(running, vocabulary)
+    else:
+        observed = cli_model(running, vocabulary)
     controller = cli_model(expected, vocabulary)
     if controller.foreign:
         return "refuse", [
@@ -1200,10 +1294,18 @@ def assess_target(body, entry, name, desired, vocabulary=None):
             "the device holds command(s) %s on %s in fields this operation owns but cannot "
             "interpret, so the transition cannot be proven safe or converged" % (interfering, name)
         ]
+    inherited = False
+    if member_inherit:
+        prc, parent_running = interface_stanza(entry["runningConfig"], member_inherit)
+        parent_observed = cli_model(parent_running, vocabulary) if prc == 1 else None
+        observed, inherited = po_member_inherited_state(observed, desired, parent_observed)
     if not body:
         if same_state(observed, desired):
-            return "converged", []
+            return ("deploy" if inherited else "converged"), []
         return "refuse", ["the pending for %s is empty but the device differs from the intended state: %s" % (name, _difference(observed, desired))]
+    body, observed, problems = po_member_force_transition(body, observed, desired, member_force)
+    if problems:
+        return "refuse", problems
     problems = validate_transition(body, observed, desired)
     return ("refuse", problems) if problems else ("deploy", [])
 
@@ -1270,3 +1372,1480 @@ def summary_mentions_policy(entry, policy):
     under = entry.get("underlayPolicies")
     items = under if isinstance(under, list) else [under] if isinstance(under, dict) else []
     return any(isinstance(u, dict) and u.get("templateName") == policy for u in items)
+
+
+# ================================================================== regular port-channel, four PVLAN modes
+# PO-HOST-E1-OFFLINE -> PO G1. Everything below is derived from the
+# captured templates int_port_channel_pvlan_host / int_port_channel_pvlan_member (their template contract and
+# the port-channel validation contract) and from the helpers above; no value comes from a controller measurement of a
+# port-channel. Scope (anything else is refused before a write): ONE port-channel with exactly ONE physical member;
+# creation; update of the PVLAN lists/scalars without changing pvlan_mode or the member; identical repetition.
+PO_PROFILE_KEYS = frozenset((
+    "mode", "pvlan_mode", "pvlan_association", "pvlan_mapping", "native_vlan", "allowed_vlans",
+    "members", "pc_mode", "description", "admin_state",
+))
+PO_PC_MODES = ("on", "active", "passive")
+# Template declarations (host template, "##template variables"), in wire form.
+PO_TEMPLATE_DEFAULTS = (
+    ("PC_MODE", "active"),
+    ("BPDUGUARD_ENABLED", "true"),
+    ("PORTTYPE_FAST_ENABLED", "true"),
+    ("spanningTreePortType", "no"),
+    ("MTU", "jumbo"),
+    ("SPEED", "Auto"),
+    ("COPY_DESC", "false"),
+    ("CDP_ENABLE", "true"),
+    ("lldpTransmit", "false"),
+    ("lldpReceive", "false"),
+    ("ENABLE_ORPHAN_PORT", "false"),
+    ("PORT_DUPLEX_MODE", "auto"),
+    ("DISABLE_LACP_SUSPEND", "false"),
+    ("LACP_PORT_PRIO", 32768),  # declared `integer`: sent as an integer, not as a string (E2 decision, UNMEASURED)
+    ("LACP_RATE", "normal"),
+    ("QUEUING_POLICY", ""),
+    ("queuingStats", "false"),
+    ("ADMIN_STATE", "true"),
+)
+# PVLAN_NATIVE_VLAN is declared `integer` 1-4094 on BOTH the Ethernet and the port-channel template (G1-CORR-1 §2a).
+# Neutral value: the empty string (E2). A non-empty native VLAN is sent as a string of digits, the form MEASURED as
+# accepted for the integer-declared Ethernet field over the same legacy transport (E6 live). Whether the port-channel
+# create/modify path accepts it, and how it reads it back, is NOT measured: first measured by the trunk roles (G1 gate).
+PO_NATIVE_NEUTRAL = ""
+PO_NAME = re.compile(r"^port-channel[1-9][0-9]{0,3}$", re.IGNORECASE)
+PO_PHYSICAL_MEMBER = re.compile(r"^ethernet[0-9]+/[0-9]+$", re.IGNORECASE)
+# Every nvPair the host template declares (29, TEMPLATE_CONTRACT_G1 §2) plus the bookkeeping keys the controller adds.
+PO_KNOWN_HAVE_NVPAIRS = frozenset(
+    tuple(k for k, _d in PO_TEMPLATE_DEFAULTS)
+    + ("SERIAL_NUMBER", "PO_ID", "MEMBER_INTERFACES", "DESC", "CONF", "PTP", "PVLAN_MODE", ALLOWED_VLANS, NATIVE_VLAN,
+       MAPPING_LIST, ASSOCIATION_LIST, "INTF_NAME")
+    + BOOKKEEPING
+)
+_PO_SCALAR_KEYS = frozenset(k for k, _d in PO_TEMPLATE_DEFAULTS) | frozenset(("DESC", "CONF"))
+_PO_BOOL_KEYS = ("ADMIN_STATE", "BPDUGUARD_ENABLED", "PORTTYPE_FAST_ENABLED", "COPY_DESC", "CDP_ENABLE", "lldpTransmit",
+                 "lldpReceive", "ENABLE_ORPHAN_PORT", "DISABLE_LACP_SUSPEND", "queuingStats")
+
+
+def po_not_implemented(profile):
+    """Reasons a port-channel PVLAN request is outside the G1 delivery (empty = in scope).
+    Decided from the RAW profile, before any default or coercion and before any read. Requirements that depend on
+    the current state (a creation needs `members` and the active list) are decided by reconcile_po()."""
+    reasons = []
+    if not isinstance(profile, dict):
+        return ["profile must be a dictionary"]
+    unknown = sorted(k for k in profile if k not in PO_PROFILE_KEYS and k not in INJECTED_KEYS)
+    if unknown:
+        reasons.append(
+            "field(s) not implemented for a port-channel in mode 'pvlan': %s" % ", ".join(unknown))
+    for key in sorted(k for k in profile if k in PO_PROFILE_KEYS):
+        if profile[key] is None:
+            reasons.append("%s must not be null" % key)
+    mode = profile.get("pvlan_mode")
+    if "pvlan_mode" not in profile:
+        reasons.append("pvlan_mode is required for mode 'pvlan'")
+        return reasons
+    if mode not in PVLAN_MODES:
+        reasons.append("pvlan_mode must be one of: %s" % ", ".join(PVLAN_MODES))
+        return reasons
+    if "members" in profile and profile["members"] is not None:
+        members = profile["members"]
+        if not isinstance(members, list) or len(members) != 1:
+            reasons.append(
+                "exactly one member is implemented for a port-channel in mode 'pvlan' (adding or removing "
+                "members is not)")
+        elif not isinstance(members[0], str) or not PO_PHYSICAL_MEMBER.match(members[0].strip()):
+            reasons.append("the member must be one physical Ethernet interface name, for example Ethernet1/9")
+    pairs = []
+    for field, allowed_modes in (("pvlan_association", ASSOCIATION_MODES), ("pvlan_mapping", MAPPING_MODES)):
+        if field not in profile or profile[field] is None:
+            continue
+        if mode not in allowed_modes:
+            reasons.append("%s is not valid for pvlan_mode '%s'" % (field, mode))
+            continue
+        try:
+            pairs = requested_pairs(field, profile[field])
+        except PvlanError as exc:
+            reasons.append(str(exc))
+    reasons += limit_errors(mode, pairs)
+    for key in ("native_vlan", "allowed_vlans"):
+        if key in profile and profile[key] is not None and mode not in TRUNK_MODES:
+            reasons.append("%s is valid only for pvlan_mode trunk promiscuous or trunk secondary" % key)
+    native = profile.get("native_vlan")
+    if native is not None:
+        if not isinstance(native, str):
+            reasons.append("native_vlan must be a string")
+        elif native != "" and (not re.match(r"^[1-9][0-9]{0,3}$", native) or not 1 <= int(native) <= 4094):
+            reasons.append("native_vlan must be '' or one VLAN ID 1-4094")
+    allowed = profile.get("allowed_vlans")
+    if allowed is not None:
+        if not isinstance(allowed, str):
+            reasons.append("allowed_vlans must be a string")
+        elif allowed.strip().lower() == "all":
+            reasons.append("allowed_vlans 'all' is refused by int_port_channel_pvlan_host; give explicit ranges")
+        elif allowed not in ("", "none"):
+            try:
+                vlan_set(allowed, "allowed_vlans")
+            except PvlanError as exc:
+                reasons.append(str(exc))
+    pc_mode = profile.get("pc_mode")
+    if pc_mode is not None and pc_mode not in PO_PC_MODES:
+        reasons.append("pc_mode must be one of: %s" % ", ".join(PO_PC_MODES))
+    if "description" in profile and profile["description"] is not None:
+        desc = profile["description"]
+        if not isinstance(desc, str) or not 1 <= len(desc) <= 254 or "\n" in desc:
+            reasons.append("description must be a single-line string of 1-254 characters")
+    if "admin_state" in profile and profile["admin_state"] is not None and not isinstance(profile["admin_state"], bool):
+        reasons.append("admin_state must be a boolean")
+    return reasons
+
+
+def po_members(profile):
+    return [m.strip() for m in profile.get("members") or []]
+
+
+def _po_list_field(mode):
+    return "pvlan_association" if active_list_key(mode) == ASSOCIATION_LIST else "pvlan_mapping"
+
+
+def po_host_nvpairs(raw, ifname, members=None):
+    """The EXPLICIT payload of int_port_channel_pvlan_host (D2), for a creation or a `replaced` update. Every value is
+    the template's own declaration or the operator's input, in the template's declared type; nothing is copied from
+    another Po policy. `raw` has already passed po_not_implemented(). `members` (wire text) overrides raw members."""
+    mode = raw["pvlan_mode"]
+    nv = {"PO_ID": ifname, "MEMBER_INTERFACES": members if members is not None else ",".join(po_members(raw))}
+    for key, default in PO_TEMPLATE_DEFAULTS:
+        nv[key] = default
+    if raw.get("pc_mode") is not None:
+        nv["PC_MODE"] = raw["pc_mode"]
+    nv["DESC"] = raw["description"] if raw.get("description") is not None else ""
+    if raw.get("admin_state") is not None:
+        nv["ADMIN_STATE"] = "true" if raw["admin_state"] else "false"
+    nv["CONF"] = ""
+    nv["PVLAN_MODE"] = mode
+    trunk = mode in TRUNK_MODES
+    nv[ALLOWED_VLANS] = raw.get("allowed_vlans", "") if trunk else ""
+    nv[NATIVE_VLAN] = raw.get("native_vlan", PO_NATIVE_NEUTRAL) if trunk else PO_NATIVE_NEUTRAL
+    active = active_list_key(mode)
+    field = _po_list_field(mode)
+    pairs = requested_pairs(field, raw[field]) if raw.get(field) is not None else []
+    nv[MAPPING_LIST] = pairs_to_wire(MAPPING_LIST, pairs) if active == MAPPING_LIST and pairs else ""
+    nv[ASSOCIATION_LIST] = pairs_to_wire(ASSOCIATION_LIST, pairs) if active == ASSOCIATION_LIST and pairs else ""
+    return nv
+
+
+def _po_norm(key, value):
+    """Comparable form of one HAVE/WANT nvPair of the port-channel host policy."""
+    if value is None:
+        return None
+    text = str(value).strip()
+    if key in _PO_BOOL_KEYS:
+        return text.lower()
+    if key == "MEMBER_INTERFACES":
+        # G6 (EXP-1, MEASURED): a port-channel created through Manage stores its member as `e1/8`, the legacy path as
+        # `Ethernet1/8`. Both name the same port; a token that is not one explicit port stays as written (never equal to a port).
+        return tuple(sorted(po_member_canonical(m) or m.strip().lower() for m in text.split(",") if m.strip()))
+    if key == "PO_ID":
+        return text.lower()
+    return text
+
+
+def _po_same(key, have_value, want_value):
+    if key in (MAPPING_LIST, ASSOCIATION_LIST):
+        return pairs_from_wire(have_value or "", key) == pairs_from_wire(want_value or "", key)
+    if key == NATIVE_VLAN:
+        return native_equal(have_value or "", want_value or "")
+    if key == ALLOWED_VLANS:
+        return allowed_equal(have_value or "", want_value or "")
+    return _po_norm(key, have_value) == _po_norm(key, want_value)
+
+
+_PO_ABSENT_DEFAULT = dict(list(PO_TEMPLATE_DEFAULTS) + [
+    ("DESC", ""), ("CONF", ""), (ALLOWED_VLANS, ""), (NATIVE_VLAN, ""), (MAPPING_LIST, ""), (ASSOCIATION_LIST, "")])
+
+
+def reconcile_po(state, raw, ifname, have_policy, have_nv):
+    """Decision for ONE port-channel host WANT against its HAVE:
+    {nv, update, creates, changed, blocked, new_secondaries, members}.
+
+      * HAVE absent (have_policy None) -> creation with the explicit payload (members and the active list required);
+      * HAVE is this policy, same pvlan_mode, same single member -> update:
+          - `merged`: every omitted field keeps its HAVE value; the active list is the UNION of HAVE and request;
+          - `replaced`: the explicit payload (omitted fields = template declarations), members kept from HAVE;
+        equality (normalized) is a no-op returning the HAVE nvPairs untouched;
+      * a change of pvlan_mode or of the member set, another policy, unclassifiable HAVE fields -> refused.
+    The promiscuous partial-removal guard of the Ethernet path applies unchanged: on a port-channel its controller
+    behaviour is NOT measured, so the protection is kept rather than assumed unnecessary (contract)."""
+    out = {"nv": None, "update": False, "creates": False, "changed": {}, "blocked": [], "new_secondaries": [], "members": None}
+    mode = raw["pvlan_mode"]
+    field = _po_list_field(mode)
+    active = active_list_key(mode)
+    if have_policy is None:
+        if not po_members(raw):
+            out["blocked"].append("members is required to create a port-channel: exactly one existing physical member")
+        if raw.get(field) is None or not requested_pairs(field, raw[field]):
+            out["blocked"].append("%s is required to create a port-channel in pvlan_mode %s" % (field, mode))
+        if out["blocked"]:
+            return out
+        nv = po_host_nvpairs(raw, ifname)
+        out.update(nv=nv, creates=True, changed=dict(nv), members=nv["MEMBER_INTERFACES"])
+        if mode == MODE_TRUNK_SECONDARY:
+            out["new_secondaries"] = sorted(pairs_from_wire(nv[ASSOCIATION_LIST], ASSOCIATION_LIST))
+        return out
+    if have_policy != PO_HOST_POLICY:
+        out["blocked"].append(
+            "the port-channel already holds policy %s; converting it to int_port_channel_pvlan_host is not "
+            "implemented" % have_policy)
+        return out
+    if not isinstance(have_nv, dict):
+        out["blocked"].append("the controller returned no nvPairs for the existing port-channel")
+        return out
+    have_mode = have_nv.get("PVLAN_MODE")
+    if have_mode not in PVLAN_MODES:
+        out["blocked"].append("current PVLAN_MODE %r is not a known int_port_channel_pvlan_host mode" % (have_mode,))
+        return out
+    if have_mode != mode:
+        out["blocked"].append(
+            "changing pvlan_mode of an existing port-channel (%r -> %r) is not implemented" % (have_mode, mode))
+    lost = sorted(k for k in have_nv if k not in PO_KNOWN_HAVE_NVPAIRS and have_nv[k] not in ("", None))
+    if lost:
+        out["blocked"].append(
+            "the port-channel holds nvPair(s) this module cannot classify and a full-set update could clear: %s"
+            % ", ".join(lost))
+    have_members = _po_norm("MEMBER_INTERFACES", have_nv.get("MEMBER_INTERFACES", ""))
+    if len(have_members) != 1:
+        out["blocked"].append("the existing port-channel has %d members; exactly one is implemented" % len(have_members))
+    if "members" in raw and raw["members"] is not None and _po_norm("MEMBER_INTERFACES", ",".join(po_members(raw))) != have_members:
+        out["blocked"].append(
+            "changing the members of an existing PVLAN port-channel is not implemented (requested %s, current %s)"
+            % (", ".join(po_members(raw)), ", ".join(have_members)))
+    if out["blocked"]:
+        return out
+    members_text = have_nv.get("MEMBER_INTERFACES", "")
+    merged = state == "merged"
+    current = pairs_from_wire(have_nv.get(active, "") or "", active)
+    requested = requested_pairs(field, raw[field]) if raw.get(field) is not None else None
+    desired_pairs = sorted(set(current) | set(requested or [])) if merged else sorted(set(requested or []))
+    out["blocked"] += limit_errors(mode, desired_pairs)
+    if promiscuous_partial_removal(have_mode, mode, current, desired_pairs):
+        out["blocked"].append(
+            "removing secondary VLAN(s) %s from a promiscuous mapping that keeps other secondaries is blocked "
+            "(protection kept from the measured Ethernet defect; its behaviour on a port-channel is NOT measured). "
+            "Remove the whole port-channel instead" % ", ".join("%d/%d" % p for p in sorted(set(current) - set(desired_pairs))))
+    if out["blocked"]:
+        return out
+    if merged:
+        nv = dict((k, v) for k, v in have_nv.items() if k in PO_KNOWN_HAVE_NVPAIRS and k not in BOOKKEEPING)
+        for key, default in PO_TEMPLATE_DEFAULTS:
+            nv.setdefault(key, default)
+        nv.setdefault("DESC", "")
+        nv.setdefault("CONF", "")
+        if raw.get("pc_mode") is not None:
+            nv["PC_MODE"] = raw["pc_mode"]
+        if raw.get("description") is not None:
+            nv["DESC"] = raw["description"]
+        if raw.get("admin_state") is not None:
+            nv["ADMIN_STATE"] = "true" if raw["admin_state"] else "false"
+        if mode in TRUNK_MODES:
+            if raw.get("native_vlan") is not None:
+                nv[NATIVE_VLAN] = raw["native_vlan"]
+            if raw.get("allowed_vlans") is not None:
+                nv[ALLOWED_VLANS] = raw["allowed_vlans"]
+        nv.setdefault(NATIVE_VLAN, PO_NATIVE_NEUTRAL)
+        nv.setdefault(ALLOWED_VLANS, "")
+        nv["PO_ID"] = have_nv.get("PO_ID", ifname)
+        nv["MEMBER_INTERFACES"] = members_text
+        nv["PVLAN_MODE"] = mode
+    else:
+        nv = po_host_nvpairs(raw, have_nv.get("PO_ID", ifname), members=members_text)
+        if "PTP" in have_nv and str(have_nv["PTP"]).strip().lower() in ("true", "false"):
+            nv["PTP"] = have_nv["PTP"]
+    inactive = MAPPING_LIST if active == ASSOCIATION_LIST else ASSOCIATION_LIST
+    nv[active] = pairs_to_wire(active, desired_pairs) if desired_pairs else ""
+    nv[inactive] = ""
+    # Keep HAVE's exact representation where the value is the same: no spurious change, no type flip.
+    changed = {}
+    for key in sorted(nv):
+        if key in have_nv:
+            try:
+                same = _po_same(key, have_nv[key], nv[key])
+            except PvlanError as exc:
+                out["blocked"].append(str(exc))
+                continue
+            if same:
+                nv[key] = have_nv[key]
+            else:
+                changed[key] = nv[key]
+        elif not _po_same(key, _PO_ABSENT_DEFAULT.get(key, ""), nv[key]):
+            changed[key] = nv[key]
+    if out["blocked"]:
+        return out
+    if not changed:
+        out.update(nv=copy_nv(have_nv), members=members_text)
+        return out
+    if mode == MODE_TRUNK_SECONDARY:
+        out["new_secondaries"] = sorted(set(desired_pairs) - set(current))
+    out.update(nv=nv, update=True, changed=changed, members=members_text)
+    return out
+
+
+def copy_nv(nv):
+    return json.loads(json.dumps(nv))
+
+
+def po_inherited_lines(po_nv):
+    """The CONF of the 'Inherited Commands' int_eth child policy the host template creates on EVERY member
+    (HOST:507-526,555-560 [SRC]): the resolved MTU when not the switch default, then the PVLAN native/allowed/list lines.
+    Speed/negotiate/duplex lines depend on device capability (Util.*) and are not modeled: _po_scalars_ok refuses them."""
+    lines = []
+    if _flag(po_nv, "MTU", "jumbo") == "jumbo":
+        lines.append("mtu 9216")
+    mode = po_nv.get("PVLAN_MODE")
+    native = _text(po_nv, NATIVE_VLAN)
+    if mode in TRUNK_MODES and native and native != "1":
+        lines.append("switchport private-vlan trunk native vlan %s" % native)
+    allowed = _text(po_nv, ALLOWED_VLANS)
+    if mode in TRUNK_MODES and allowed:
+        lines.append("switchport private-vlan trunk allowed vlan %s" % allowed)
+    return lines
+
+
+def po_member_nvpairs(po_nv, current_nv, current_is_member=False):
+    """nvPairs the host template hands to the member (HOST:536-553): DESC and ADMIN_STATE are INHERITED from the
+    member's current policy (HOST:388-408, 530-533); CONF too, but only when that policy is already the PVLAN member
+    (HOST:396-400), else "". The rest comes from the parent. `__PARENT` (never sent: the module never writes a member)
+    carries the parent nvPairs the member's rendered CLI depends on (inherited lines and list pairs)."""
+    return {
+        "PO_ID": po_nv["PO_ID"], "PC_MODE": po_nv["PC_MODE"], "PVLAN_MODE": po_nv["PVLAN_MODE"],
+        "CDP_ENABLE": po_nv["CDP_ENABLE"], "lldpTransmit": po_nv["lldpTransmit"],
+        "lldpReceive": po_nv["lldpReceive"], "LACP_PORT_PRIO": po_nv["LACP_PORT_PRIO"],
+        "LACP_RATE": po_nv["LACP_RATE"],
+        "DESC": po_nv["DESC"] if str(po_nv.get("COPY_DESC", "false")).lower() == "true" else ((current_nv or {}).get("DESC") or ""),
+        "CONF": ((current_nv or {}).get("CONF") or "") if current_is_member else "",
+        "ADMIN_STATE": str((current_nv or {}).get("ADMIN_STATE", "true")).strip().lower(),
+        "__PARENT": copy_nv(po_nv),
+    }
+
+
+# The state a member must reach when ITS PVLAN port-channel is deleted: the default int_trunk_host
+# (`switchport mode trunk / allowed vlan none / edge trunk / mtu 9216`) and SHUTDOWN. G4: the controller does NOT release it
+# that way by itself -- MEASURED (HR, NDFC 12.6.0.267): after the mark-delete the member became a new int_trunk_host with
+# ADMIN_STATE "true" although FAB1 HOST_INTF_ADMIN_STATE is "false" and the member was down. The module therefore sets
+# ADMIN_STATE "false" explicitly before any deploy (po_released_member_payload); the pre-deploy gate still requires the
+# controller's expected member configuration to be exactly this model.
+PO_RELEASED_MEMBER_NV = {
+    "MTU": "jumbo", "SPEED": "Auto", "BPDUGUARD_ENABLED": "no", "PORTTYPE_FAST_ENABLED": "true",
+    "ALLOWED_VLANS": "none", "NATIVE_VLAN": "", "ADMIN_STATE": "false", "DESC": "", "CONF": "",
+}
+
+
+# G4: controller metadata of an interface policy read back with its nvPairs. Classified (BOOKKEEPING, also used by the
+# measured E6 update path, which sends HAVE minus these keys): never sent back, and a readback may change, add or drop them.
+PO_RELEASE_METADATA = frozenset(BOOKKEEPING)
+
+
+# G4-R1: the ONLY mark-delete answer accepted as a confirmed deletion of one PVLAN port-channel. MEASURED (HR, NDFC
+# 12.6.0.267, recorded wire log): RETURN_CODE 200, MESSAGE "OK", DATA {"message": "Interface deleted successfully",
+# "value": [{"interfaceType": "INTERFACE_PORT_CHANNEL", "serialNumber": <serial>, "IfName": <Port-channelN>}]}.
+PO_MARKDELETE_MESSAGE = "Interface deleted successfully"
+
+
+def po_markdelete_outcome_problems(resp, serial, ifname):
+    """Why ONE mark-delete answer does not confirm the deletion of `ifname` on `serial` (empty = confirmed). Any other
+    shape -- an HTTP error, a non-OK message, a list or empty DATA, a missing or foreign `value` item -- is an
+    UNVERIFIED outcome: the deletion may or may not have been applied."""
+    if not isinstance(resp, dict):
+        return ["the mark-delete answer is not a response object"]
+    problems = []
+    if resp.get("RETURN_CODE") != 200 or resp.get("MESSAGE") != "OK":
+        problems.append("the mark-delete answered %s %s" % (resp.get("RETURN_CODE"), resp.get("MESSAGE")))
+    data = resp.get("DATA")
+    if not isinstance(data, dict):
+        return problems + ["the mark-delete answer carries no outcome object (DATA %s)" % type(data).__name__]
+    if data.get("message") != PO_MARKDELETE_MESSAGE:
+        problems.append("the mark-delete message is %r" % (data.get("message"),))
+    value = data.get("value")
+    items = value if isinstance(value, list) else []
+    named = [i for i in items if isinstance(i, dict) and str(i.get("serialNumber", "")).casefold() == str(serial).casefold()
+             and str(i.get("IfName", i.get("ifName", ""))).lower() == str(ifname).lower()]
+    if len(items) != 1 or len(named) != 1:
+        problems.append("the mark-delete outcome names %d item(s), %d for %s" % (len(items), len(named), ifname))
+    return problems
+
+
+# G5 (live host finding F-HR-deployed, G4R1 run, NDFC 12.6.0.267, MEASURED): after the mark-delete of a DEPLOYED
+# port-channel the controller keeps listing it until the deploy -- interface summary entry with markDeleted true,
+# complianceStatus "NA" and ONE underlay policy `interface_delete` (entity and source = the port-channel); the policy list
+# holds that policy with deleted true; the port-channel's own detail answers an empty list. The released member is already
+# a standalone int_trunk_host (ADMIN_STATE "true") and the pending carries `no interface port-channelN`. A port-channel that
+# was never deployed disappears at once (HR of G2). Only this measured form counts as "deleted, awaiting the deploy".
+PO_DELETE_PENDING_POLICY = "interface_delete"
+
+
+# E5 (L1-E4 live F2, MEASURED for the child port-channel of a deleted vPC, NDFC 12.6.0.267): the same marked-for-deletion form, but the
+# `interface_delete` policy's source is the PARENT vPC (`vpc10`), not the port-channel. `parent` states who must own the marked policy:
+# omitted for a regular Po (source == the port-channel, unchanged), the expected vPC name for the child of a vPC. A source naming any
+# other parent -- or the port-channel itself for a vPC child -- is refused; any other template is refused as before.
+def po_marked_deleted_problem(entry, ifname, parent=None):
+    """None when the interface summary `entry` listing `ifname` is the measured "marked for deletion" form; else why not."""
+    if not isinstance(entry, dict):
+        return "the interface summary entry is not an object"
+    if entry.get("markDeleted") is not True and str(entry.get("markDeleted", "")).strip().lower() != "true":
+        return "it is listed and not marked for deletion"
+    state, value = summary_policy(entry, ifname)
+    if state != SUMMARY_KNOWN:
+        return "it is marked for deletion but its policy is unreadable: %s" % (value,)
+    owner = str(ifname if parent is None else parent).lower()
+    if value["templateName"] != PO_DELETE_PENDING_POLICY or value["source"].lower() != owner:
+        return "it is marked for deletion but holds %s (source %r), not the controller's %s owned by %r" % (
+            value["templateName"], value["source"], PO_DELETE_PENDING_POLICY, owner)
+    return None
+
+
+def po_released_member_payload(nv, ifname, serial, fabric):
+    """The ONE legacy interface/modify payload of the G4 member release: the released int_trunk_host with ALL its current
+    writable nvPairs (the fresh read, minus PO_RELEASE_METADATA) and only ADMIN_STATE changed to "false". Never the
+    generic seven-key default payload; never a stale copy."""
+    out = dict((k, v) for k, v in nv.items() if k not in PO_RELEASE_METADATA)
+    out["ADMIN_STATE"] = "false"
+    intf = {"interfaceType": "INTERFACE_ETHERNET", "serialNumber": serial, "ifName": ifname, "fabricName": fabric, "nvPairs": out}
+    return {"policy": TRUNK_HOST_POLICY, "interfaces": [intf]}
+
+
+def po_released_member_readback_problems(before, after):
+    """Differences between the released member's writable nvPairs before the G4 modify and its fresh readback. Only
+    ADMIN_STATE may change (and must now be "false"); a writable key that disappears, changes value or appears is a
+    problem; PO_RELEASE_METADATA is the only tolerated difference."""
+    if not isinstance(after, dict):
+        return ["the member readback carries no nvPairs"]
+    problems = []
+    if str(after.get("ADMIN_STATE", "")).strip().lower() != "false":
+        problems.append("ADMIN_STATE reads back %r, not 'false'" % (after.get("ADMIN_STATE"),))
+    keys = (set(before) | set(after)) - PO_RELEASE_METADATA - {"ADMIN_STATE"}
+    for key in sorted(keys):
+        if key not in after:
+            problems.append("writable nvPair %s was lost" % key)
+        elif key not in before:
+            problems.append("writable nvPair %s appeared (%r)" % (key, after[key]))
+        elif str(after[key]) != str(before[key]):
+            problems.append("writable nvPair %s changed %r -> %r" % (key, before[key], after[key]))
+    return problems
+
+
+# G6: nvPairs of a PREPARED access/routed member that would render configuration; each must hold its neutral value (the values
+# MEASURED on the EXP-1 prepared members). Anything else is configuration this contract does not model: refused before any write.
+_PO_PREPARED_NEUTRAL = {
+    PO_ACCESS_BASELINE_POLICY: (("ACCESS_VLAN", ("",)), ("QOS_POLICY", ("",)), ("QUEUING_POLICY", ("",)), ("ENABLE_NETFLOW", ("false",)),
+                                ("ENABLE_PFC", ("false",)), ("ENABLE_QOS", ("false",)), ("ENABLE_STORM_CONTROL", ("false",)),
+                                ("ENABLE_MONITOR", ("false",)), ("ENABLE_ORPHAN_PORT", ("false",)), ("aclFilter", ("",))),
+    PO_ROUTED_BASELINE_POLICY: (("IP", ("",)), ("PREFIX", ("",)), ("IPv6", ("",)), ("IPv6_PREFIX", ("",)), ("INTF_VRF", ("", "default")),
+                                ("ROUTING_TAG", ("",)), ("dhcpServers", ("",)), ("ipv4AclIn", ("",)), ("QOS_POLICY", ("",)),
+                                ("QUEUING_POLICY", ("",)), ("ENABLE_NETFLOW", ("false",)), ("ENABLE_PFC", ("false",)),
+                                ("ENABLE_QOS", ("false",)), ("ENABLE_PIM_SPARSE", ("false",)), ("ospf", ("false",)),
+                                ("eigrpRouting", ("false",)), ("bfdEcho", ("false",)), ("dampening", ("false",)),
+                                ("macsecInterfacePolicy", ("false",))),
+}
+PO_PREPARED_BASELINES = frozenset(_PO_PREPARED_NEUTRAL)
+# The live child policies the controller keeps on a member prepared as routed, each with the member itself as source (MEASURED,
+# EXP-1 branch R: routed_interface 450, interface_mtu 452, shut_interface 458); they disappeared when the port-channel was created.
+PO_ROUTED_SELF_CHILDREN = frozenset(("routed_interface", "interface_mtu", "shut_interface"))
+PO_TS_TRUNK_MEMBER_INCIDENT = (
+    "a member in switchport mode trunk (%s) cannot join a trunk secondary port-channel: NX-OS rejects `channel-group N force` "
+    "with 'PVLAN TRUNK SEC config present' (measured on NX-OS 10.5(5): deploy 500, partial). Known "
+    "incident pending engineering; prepare the member explicitly as access (%s) or routed (%s) before the creation, the module "
+    "does not convert it" % (TRUNK_HOST_POLICY, PO_ACCESS_BASELINE_POLICY, PO_ROUTED_BASELINE_POLICY))
+
+
+def po_member_baseline_problems(baseline_policy, baseline_nv, mode=None):
+    """Reasons an existing Ethernet policy cannot be the baseline of a PVLAN member in this
+    delivery. The member template would turn the port ADMIN-UP when it inherits no `false`.
+    G6: for pvlan_mode trunk secondary ONLY, a member explicitly PREPARED as access or routed is admitted (EXP-1 measured), with
+    its rendering nvPairs neutral; a trunk member is refused as the known incident. The other modes keep the trunk-only contract."""
+    if mode == MODE_TRUNK_SECONDARY:
+        if baseline_policy == TRUNK_HOST_POLICY:
+            return [PO_TS_TRUNK_MEMBER_INCIDENT]
+        if baseline_policy not in PO_PREPARED_BASELINES:
+            return ["the member's current policy %r is not covered for trunk secondary (only a prepared %s or %s is)"
+                    % (baseline_policy, PO_ACCESS_BASELINE_POLICY, PO_ROUTED_BASELINE_POLICY)]
+    elif baseline_policy != TRUNK_HOST_POLICY:
+        return ["the member's current policy %r is not covered (only %s is)" % (baseline_policy, TRUNK_HOST_POLICY)]
+    if not isinstance(baseline_nv, dict):
+        return ["the member's current policy has no readable nvPairs"]
+    problems = []
+    for key, neutral in _PO_PREPARED_NEUTRAL.get(baseline_policy, ()):
+        if str(baseline_nv.get(key, "") if baseline_nv.get(key) is not None else "").strip() not in neutral:
+            problems.append("the prepared member carries %s=%r, configuration this contract does not model" % (key, baseline_nv.get(key)))
+    if str(baseline_nv.get("ADMIN_STATE", "")).strip().lower() != "false":
+        problems.append(
+            "the member is not administratively down (ADMIN_STATE %r); the PVLAN member template inherits "
+            "the member's state and would leave or bring it up" % (baseline_nv.get("ADMIN_STATE"),))
+    if str(baseline_nv.get("CONF", "") or "").strip():
+        problems.append("the member carries freeform CONF, which the member template would drop")
+    return problems
+
+
+def _po_scalars_ok(nv):
+    """True when `nv` holds only values the G1 delivery models (everything else is refused)."""
+    mode = nv.get("PVLAN_MODE")
+    trunk = mode in TRUNK_MODES
+    return (
+        _text(nv, "SPEED") in ("", "Auto")
+        and _flag(nv, "MTU", "jumbo") in ("jumbo", "default")
+        and _text(nv, "spanningTreePortType") in ("", "no")
+        and _flag(nv, "BPDUGUARD_ENABLED", "true") in ("true", "false", "no")
+        and _flag(nv, "ENABLE_ORPHAN_PORT", "false") == "false"
+        and _flag(nv, "DISABLE_LACP_SUSPEND", "false") == "false"
+        and _text(nv, "PORT_DUPLEX_MODE") in ("", "auto")
+        and not _text(nv, "QUEUING_POLICY")
+        and not _text(nv, "CONF")
+        and (trunk or not _text(nv, ALLOWED_VLANS))
+        and (trunk or _text(nv, NATIVE_VLAN) == PO_NATIVE_NEUTRAL)
+    )
+
+
+def _po_pairs(nv, mode):
+    return pairs_from_wire(nv.get(active_list_key(mode), "") or "", active_list_key(mode))
+
+
+def _render_po_host(nv):
+    """Interface body of int_port_channel_pvlan_host.add() (HOST:416-505) for the four modes. Unmodeled values make
+    the Model unmodeled, which refuses the deploy."""
+    mode = nv.get("PVLAN_MODE")
+    if mode not in PVLAN_MODES or not _po_scalars_ok(nv):
+        return Model((), None, (), False)
+    s = {"switchport", "switchport mode private-vlan %s" % mode}
+    native = _text(nv, NATIVE_VLAN)
+    if mode in TRUNK_MODES and native and native != "1":
+        s.add("switchport private-vlan trunk native vlan %s" % native)
+    allowed = _text(nv, ALLOWED_VLANS)
+    if mode in TRUNK_MODES and allowed:
+        s.add("switchport private-vlan trunk allowed vlan %s" % allowed)
+    if _flag(nv, "MTU", "jumbo") == "jumbo":
+        s.add("mtu 9216")
+    bpdu = _flag(nv, "BPDUGUARD_ENABLED", "true")
+    if bpdu == "true":
+        s.add("spanning-tree bpduguard enable")
+    elif bpdu == "false":
+        s.add("spanning-tree bpduguard disable")
+    if _flag(nv, "PORTTYPE_FAST_ENABLED", "true") == "true":
+        s.add("spanning-tree port type edge trunk")
+    if _text(nv, "DESC"):
+        s.add("description %s" % _text(nv, "DESC"))
+    s.add("no shutdown" if _flag(nv, "ADMIN_STATE", "true") == "true" else "shutdown")
+    try:
+        pairs = _po_pairs(nv, mode)
+    except PvlanError:
+        return Model((), None, (), False)
+    return Model(s, mode, pairs, True)
+
+
+# G3: the controller's view of `channel-group N force mode M` on a physical member, MEASURED in the H1 PREVIEW (host,
+# NDFC 12.6.0.267, the H1 measured fixture): the member pending held only
+# `no spanning-tree port type edge trunk`, `channel-group 502 force mode active` and `shutdown`, while the controller's
+# expected member configuration became `channel-group 502 mode active`, `mtu 9216`, `shutdown`, `switchport`,
+# `switchport mode private-vlan host`, `switchport private-vlan host-association 2210 2212`. So, in the controller's model,
+# the PVLAN mode and list lines arrive with `force` and the member's own trunk switchport lines go away with it.
+# H1 was never deployed: what the SWITCH ends up with after that pending is NOT observed (NX-OS `force` semantics is
+# the expectation); live acceptance must compare the device's running configuration. Only the measured preview effect
+# is modeled, and only for the modes measured (other modes: temporary refusal, not a statement about device support).
+PO_FORCE_MEASURED_MODES = frozenset((MODE_HOST,))
+# G5 (NEXT_MODES, design decision): the same effect is applied to the
+# other three modes as an explicit INFERENCE, NOT a measurement: none of them has a controller preview or a switch
+# observation of a member joining through `force`. It rests on (a) the measured host preview above, (b) the captured
+# templates -- the parent's 'Inherited Commands' int_eth child renders on every member the same parent-owned lines in
+# all four modes (mode, list pairs and, for the trunk modes, PVLAN native/allowed; HOST:428-462,507-560) -- and (c) the
+# controller expected member those templates produce. The live gate still compares the controller's expected member
+# with the intent and validates the rest of the pending; the first live case of each mode measures the real form.
+PO_FORCE_INFERRED_MODES = frozenset((MODE_PROMISCUOUS, MODE_TRUNK_PROMISCUOUS, MODE_TRUNK_SECONDARY))
+# The member lines the force carries FROM THE PARENT, besides the mode line and the list pairs (G5: inferred for the
+# trunk modes; the host form has none). Everything else on the member is KEPT from the member's current state and must
+# be changed, if at all, by an explicit line of the pending.
+_PO_FORCE_PARENT_LINE = re.compile(r"^switchport private-vlan trunk (native|allowed) vlan [0-9,\-]+$")
+
+
+def po_member_channel_group(po_number, pc_mode):
+    """The PERSISTED channel-group line of a member (what running/expected hold)."""
+    return "channel-group %s" % po_number if pc_mode == "on" else "channel-group %s mode %s" % (po_number, pc_mode)
+
+
+def po_member_force_command(po_number, pc_mode):
+    """The channel-group COMMAND the controller pushes when a physical interface joins the port-channel."""
+    return "channel-group %s force" % po_number if pc_mode == "on" else "channel-group %s force mode %s" % (po_number, pc_mode)
+
+
+def po_force_basis(mode):
+    """'measured' (host), 'inferred' (G5: the other three PVLAN modes) or None (not a PVLAN mode)."""
+    if mode in PO_FORCE_MEASURED_MODES:
+        return "measured"
+    if mode in PO_FORCE_INFERRED_MODES:
+        return "inferred"
+    return None
+
+
+def po_force_unmeasured(mode):
+    """Reason a member CREATION in `mode` is outside the modeled contract (measured or inferred), or None."""
+    if po_force_basis(mode):
+        return None
+    return ("the member transition through 'channel-group force' is modeled only for the PVLAN modes %s; %r is not one, "
+            "so the creation is refused before any write" % (", ".join(PVLAN_MODES), mode))
+
+
+def _trunk_switchport_line(line):
+    return line == "switchport mode trunk" or line.startswith("switchport trunk ")
+
+
+def po_member_force_transition(body, pre, post, member_force):
+    """(body, pre, problems) for a member JOINING its port-channel from a standalone trunk port.
+
+    `member_force` = {"po_number", "pc_mode", "mode"} of THIS port-channel. When the pending holds exactly once the
+    force command for this port-channel number and pc_mode, that line is taken out of the body and `pre` becomes the
+    state the command produces (MEASURED for host, INFERRED for the other modes: see PO_FORCE_*_MODES):
+      * FROM THE PARENT: the persisted channel-group line, `switchport` + the PVLAN mode line, the list pairs and, for
+        the trunk modes, the PVLAN trunk native/allowed lines (_PO_FORCE_PARENT_LINE). They are read from the intended
+        member model, whose only source for them is the parent (_render_po_member / po_inherited_lines);
+      * FROM THE MEMBER: every other line of its current state (mtu, shutdown, description, spanning-tree, ...), minus
+        the trunk switchport lines, `no switchport` (G6: routed, EXP-1 measured) and any previous PVLAN line, which the force
+        replaces. A member prepared as access/routed (`baseline`) may hold only its measured lines.
+    The rest of the pending is then validated against that state by the unchanged validate_transition(): a member line
+    that must change still needs its own pending line. Any other channel-group line stays in the body (and is refused
+    there); a force command in a mode outside the model is a problem."""
+    if not member_force:
+        return body, pre, []
+    command = po_member_force_command(member_force["po_number"], member_force["pc_mode"])
+    hits = [line for line in body if line == command]
+    if not hits:
+        return body, pre, []
+    if len(hits) > 1:
+        return body, pre, ["the pending carries %r %d times" % (command, len(hits))]
+    problem = po_force_unmeasured(member_force["mode"])
+    if problem:
+        return body, pre, [problem]
+    if post.list_kind != member_force["mode"]:
+        return body, pre, ["the member's intended PVLAN mode %r is not the port-channel's %r" % (post.list_kind, member_force["mode"])]
+    baseline = member_force.get("baseline")
+    if baseline in PO_PREPARED_BASELINES and pre.foreign:
+        return body, pre, ["the prepared member holds command(s) outside its measured baseline: %s" % sorted(pre.foreign)]
+    scalars = set(line for line in pre.scalars if not _trunk_switchport_line(line) and not line.startswith("switchport mode private-vlan ")
+                  and not line.startswith("switchport private-vlan ") and line != "no switchport")
+    if baseline == PO_ROUTED_BASELINE_POLICY:
+        # G6 (EXP-1 branch R, MEASURED): a routed port is down by the L3 default without a `shutdown` line (adminStatus 2, ADMIN_STATE
+        # false), so cli_model's restored `no shutdown` is not its state; the admin line must then come from the pending itself.
+        scalars.discard("no shutdown")
+    scalars |= {"switchport", "switchport mode private-vlan %s" % member_force["mode"],
+                po_member_channel_group(member_force["po_number"], member_force["pc_mode"])}
+    scalars |= set(line for line in post.scalars if _PO_FORCE_PARENT_LINE.match(line))
+    forced = Model(scalars, post.list_kind, post.pairs, pre.modeled, pre.foreign)
+    return [line for line in body if line != command], forced, []
+
+
+def po_member_force_withdrawal(body, po_number, pc_mode):
+    """(body, problems) of a member LEAVING its deleted port-channel. G5 (live host finding F-HR-deployed, MEASURED): the
+    controller withdraws the membership with the COMMAND form, `no channel-group N force mode M`, while the device and the
+    controller's model hold the persisted `channel-group N mode M`. That one line, for this port-channel number and pc_mode
+    and at most once, is read as the withdrawal of the persisted line; anything else is left to the unchanged validation."""
+    command = "no " + po_member_force_command(po_number, pc_mode)
+    hits = [line for line in body if line == command]
+    if len(hits) > 1:
+        return body, ["the pending carries %r %d times" % (command, len(hits))]
+    persisted = "no " + po_member_channel_group(po_number, pc_mode)
+    return [persisted if line == command else line for line in body], []
+
+
+def po_member_inherited_state(observed, desired, parent_observed):
+    """(state, inherited) for an EXISTING member whose port-channel's own pending changes the parent-owned lines.
+    G5 (live host finding F-H4, MEASURED on H4, host, NDFC 12.6.0.267): after a host-association update the pending held
+    ONLY the port-channel block (withdraw the old pair + the full stanza with the new one), the controller's expected member
+    held the new pair, the member's running the old one and the member pending NOTHING: NX-OS inherits the port-channel's
+    PVLAN configuration on the member (observed on the device at H1 creation; after an update deploy it is the same NX-OS
+    rule, NOT yet observed). So the member's device state is read with the parent-owned part -- list pairs and, for the
+    trunk modes (INFERRED), PVLAN native/allowed -- replaced by the intended one; every other member line stays as observed.
+    No substitution when the PVLAN mode differs (a mode change is never inherited here), nor when the member's device
+    parent-owned part is not already the port-channel's own (`parent_observed`, its running stanza): a member that diverged
+    from its port-channel is not assumed to follow it."""
+    if not (observed.modeled and desired.modeled and parent_observed is not None and parent_observed.modeled):
+        return observed, False
+    if not observed.list_kind == desired.list_kind == parent_observed.list_kind:
+        return observed, False
+    own = set(line for line in observed.scalars if _PO_FORCE_PARENT_LINE.match(line))
+    if observed.pairs != parent_observed.pairs or own != set(line for line in parent_observed.scalars if _PO_FORCE_PARENT_LINE.match(line)):
+        return observed, False
+    scalars = set(line for line in observed.scalars if not _PO_FORCE_PARENT_LINE.match(line))
+    scalars |= set(line for line in desired.scalars if _PO_FORCE_PARENT_LINE.match(line))
+    state = Model(scalars, desired.list_kind, desired.pairs, observed.modeled, observed.foreign)
+    return state, not same_state(state, observed)
+
+
+def _render_po_member(nv):
+    """Member interface body = int_port_channel_pvlan_member.add() (MEMBER:109-205) + the parent's 'Inherited
+    Commands' int_eth child (po_inherited_lines) + the parent's list pairs, which that child also renders on the
+    member (HOST:428-462 append them to pvlan_inheritedCmds) [SRC]. `ptp`/`ttag` lines depend on device capability
+    and are NOT modeled: a pending that carries them is refused, never waved through."""
+    m = re.match(r"^port-channel([0-9]+)$", _text(nv, "PO_ID").lower())
+    mode = nv.get("PVLAN_MODE")
+    parent = nv.get("__PARENT")
+    if not m or mode not in PVLAN_MODES or not isinstance(parent, dict) or parent.get("PVLAN_MODE") != mode:
+        return Model((), None, (), False)
+    if _text(nv, "CONF") or _flag(nv, "CDP_ENABLE", "true") != "true" or _flag(nv, "lldpTransmit", "false") != "false" \
+            or _flag(nv, "lldpReceive", "false") != "false" or _text(nv, "LACP_PORT_PRIO") != "32768" \
+            or _text(nv, "LACP_RATE") != "normal" or not _po_scalars_ok(parent):
+        return Model((), None, (), False)
+    pc_mode = _text(nv, "PC_MODE")
+    if pc_mode not in PO_PC_MODES:
+        return Model((), None, (), False)
+    s = {"switchport", "switchport mode private-vlan %s" % mode}
+    s.add(po_member_channel_group(m.group(1), pc_mode))
+    if _text(nv, "DESC"):
+        s.add("description %s" % _text(nv, "DESC"))
+    s.add("no shutdown" if _flag(nv, "ADMIN_STATE", "true") == "true" else "shutdown")
+    s.update(po_inherited_lines(parent))
+    try:
+        pairs = _po_pairs(parent, mode)
+    except PvlanError:
+        return Model((), None, (), False)
+    return Model(s, mode, pairs, True)
+
+
+# ------------------------------------------------------------------ PO-HOST-E2-CONFLICTS: requested-set membership identity
+# One explicit port per token, in the forms the existing module path already accepts and normalises for Ethernet names
+# (dcnm_intf_get_if_name keeps the digits of `Ethernet1/7`, `eth1/7`, `e1/7`). Anything else -- a range such as
+# `Ethernet1/5-8`, a port-channel, free text -- is NOT resolved here: the caller refuses it when it could hide a conflict.
+_MEMBER_PORT = re.compile(r"^(?:ethernet|eth|e)?\s*([0-9]+/[0-9]+(?:/[0-9]+)?)$", re.IGNORECASE)
+
+
+def po_member_canonical(token):
+    """`ethernetX/Y` (lower case) for one explicit physical port token in any accepted spelling (`Ethernet1/8`, `eth1/8`,
+    `e1/8`), else None. Comparison only: outbound payloads keep the controller's own spelling."""
+    found = _MEMBER_PORT.match(str(token or "").strip())
+    return "ethernet" + found.group(1) if found else None
+
+
+def normalize_member_list(text):
+    """(set of canonical lower-case port names, [tokens that could not be resolved]) from a comma/newline separated member
+    list (MEMBER_INTERFACES / PEER*_MEMBER_INTERFACES wire text). Pure: no read, no transport."""
+    names, unresolved = set(), []
+    for raw in re.split(r"[\n,]", "" if text is None else str(text)):
+        port = raw.strip()
+        if not port:
+            continue
+        found = _MEMBER_PORT.match(port)
+        if found:
+            names.add("ethernet" + found.group(1))
+        else:
+            unresolved.append(port)
+    return names, unresolved
+
+
+# ================================================================== VPC-HOST-E1-OFFLINE: vPC PVLAN host (int_vpc_pvlan_host)
+# Everything below is pure (no read, no transport) and ADDITIVE: no Ethernet or port-channel table, function
+# or decision above changes. Contract sources, labelled so a fixture is never mistaken for a measurement:
+#   [SRC]  the installed templates captured 2026-10-07 (int_vpc_pvlan_host / int_vpc_pvlan_po / int_port_channel_pvlan_member;
+#          provenance limited: installed templates captured, NOT a confirmed factory SMU). HOST n / POVPC n cite their bodies.
+#   [INF]  inferred from those bodies (for example that the child policies are written when the parent intent is saved).
+#   [UNK]  not known until the first live case (L1): the summary/policy-list shape of the vPC itself, the 207/deploy bodies of
+#          a vPC, the release of the members after a vPC delete.
+VPC_HOST_POLICY = "int_vpc_pvlan_host"
+VPC_PO_POLICY = "int_vpc_pvlan_po"
+VPC_NAME = re.compile(r"^vpc([1-9][0-9]{0,3})$", re.IGNORECASE)
+VPC_PROFILE_KEYS = frozenset((
+    "mode", "pvlan_mode", "pvlan_association", "peer1_members", "peer2_members", "peer1_pcid", "peer2_pcid", "pc_mode",
+    "peer1_description", "peer2_description", "admin_state",
+    # VPC-MODES-E1: the other three submodes of the same parent template (HOST 192-229 [SRC]): the mapping list of the promiscuous
+    # modes and, for the trunk modes only (IsShow PVLAN_MODE!=promiscuous && !=host), the PER-PEER PVLAN native/allowed VLANs.
+    "pvlan_mapping", "peer1_allowed_vlans", "peer2_allowed_vlans", "peer1_native_vlan", "peer2_native_vlan",
+))
+# VPC-MODES-E1: public per-peer fields -> the parent nvPair suffix they set on the controller's n-th serial.
+VPC_PEER_TRUNK_FIELDS = (("native_vlan", "PVLAN_NATIVE_VLAN"), ("allowed_vlans", "PVLAN_ALLOWED_VLANS"))
+# Top-level declarations of the parent (HOST variables, 42 declared = 39 here + SERIAL_NUMBER, INTF_NAME, PTP which the
+# controller owns), in wire form. Sent EXPLICITLY on create and on every update so that no omission can mean "keep" in one
+# route and "reset" in the other.
+VPC_TEMPLATE_DEFAULTS = (
+    ("PC_MODE", "active"),
+    ("BPDUGUARD_ENABLED", "true"),
+    ("PORTTYPE_FAST_ENABLED", "true"),
+    ("spanningTreePortType", "no"),
+    ("MTU", "jumbo"),
+    ("SPEED", "Auto"),
+    ("COPY_DESC", "false"),
+    ("CDP_ENABLE", "true"),
+    ("lldpTransmit", "false"),
+    ("lldpReceive", "false"),
+    ("PORT_DUPLEX_MODE", "auto"),
+    ("DISABLE_LACP_SUSPEND", "false"),
+    ("ENABLE_LACP_VPC_CONV", "false"),
+    ("LACP_PORT_PRIO", 32768),  # declared `integer`; the measured vPC trunk payload also sends an integer
+    ("LACP_RATE", "normal"),
+    ("ADMIN_STATE", "true"),
+    ("ENABLE_PFC", "false"),
+    ("ENABLE_QOS", "false"),
+    ("QOS_POLICY", ""),
+    ("qosStatsSuppressed", "false"),
+    ("QUEUING_POLICY", ""),
+    ("queuingStats", "false"),
+    ("aclFilter", ""),
+    ("ENABLE_MIRROR_CONFIG", "false"),  # declared and unused by the body (HOST variables)
+)
+_VPC_PEER_KEYS = ("PEER1_PCID", "PEER2_PCID", "PEER1_MEMBER_INTERFACES", "PEER2_MEMBER_INTERFACES", "PEER1_PO_DESC",
+                  "PEER2_PO_DESC", "PEER1_PO_CONF", "PEER2_PO_CONF", "PEER1_PVLAN_ALLOWED_VLANS", "PEER2_PVLAN_ALLOWED_VLANS",
+                  "PEER1_PVLAN_NATIVE_VLAN", "PEER2_PVLAN_NATIVE_VLAN")
+VPC_KNOWN_HAVE_NVPAIRS = frozenset(
+    tuple(k for k, _d in VPC_TEMPLATE_DEFAULTS) + _VPC_PEER_KEYS
+    + ("SERIAL_NUMBER", "INTF_NAME", "PTP", "PVLAN_MODE", MAPPING_LIST, ASSOCIATION_LIST, "PRIMARY_INTF") + BOOKKEEPING)
+# E5 (L1-E4 live F1, MEASURED): a created vPC parent carries `createVpc` = "true" in its nvPairs. It is NOT a field of the installed
+# int_vpc_pvlan_host template (no variable, no use in its body; VPC-TEMPLATE-READ) and the collection's own dcnm_interface schema lists it as
+# an optional controller string; the vPC access host captures show it too ("false"). It is classified as READ-ONLY controller metadata:
+# only the exact boolean spellings are accepted (any other value stays unclassifiable and blocks), it is never written by the module on
+# create, and an update echoes the controller's own value unchanged (never dropped, never overridden). Nothing else is waived.
+VPC_CONTROLLER_METADATA = {"createVpc": ("true", "false")}
+_VPC_BOOL_KEYS = _PO_BOOL_KEYS + ("ENABLE_LACP_VPC_CONV", "ENABLE_PFC", "ENABLE_QOS", "qosStatsSuppressed", "ENABLE_MIRROR_CONFIG")
+_VPC_ABSENT_DEFAULT = dict(list(VPC_TEMPLATE_DEFAULTS) + [
+    ("PEER1_PO_DESC", ""), ("PEER2_PO_DESC", ""), ("PEER1_PO_CONF", ""), ("PEER2_PO_CONF", ""),
+    ("PEER1_PVLAN_ALLOWED_VLANS", ""), ("PEER2_PVLAN_ALLOWED_VLANS", ""), ("PEER1_PVLAN_NATIVE_VLAN", ""),
+    ("PEER2_PVLAN_NATIVE_VLAN", ""), (MAPPING_LIST, ""), (ASSOCIATION_LIST, "")])
+
+# The child Po body (POVPC 59-170) is the regular Po host body plus `vpc <id>`; its tables are separate from the Po ones.
+_VPC_GRAMMAR[VPC_PO_POLICY] = _PO_GRAMMAR[PO_HOST_POLICY] + (r"vpc [0-9]+",)
+_VPC_NAMESPACES[VPC_PO_POLICY] = _PO_NAMESPACES[PO_HOST_POLICY] + ("vpc",)
+VPC_VOCABULARY_POLICIES = tuple(sorted(_VPC_GRAMMAR))
+
+
+def vpc_id(ifname):
+    """Digits of a vPC interface name ('vPC10' -> '10'), or None."""
+    m = VPC_NAME.match(str(ifname or "").strip())
+    return m.group(1) if m else None
+
+
+def vpc_not_implemented(profile, ifname):
+    """Reasons a vPC PVLAN request is outside the delivery (empty = in scope). Decided from the RAW profile, before any default or
+    coercion and before any read. VPC-MODES-E1: the four PVLAN submodes of int_vpc_pvlan_host; per submode only the fields its template
+    shows (association: host/trunk secondary; mapping: promiscuous/trunk promiscuous; per-peer native/allowed: the trunk modes) and the
+    template's own list limits. Still deferred: more or fewer than one member per peer, a PCID different from the vPC id, an empty list,
+    freeform commands, member/mode changes."""
+    if not isinstance(profile, dict):
+        return ["profile must be a dictionary"]
+    reasons = []
+    unknown = sorted(k for k in profile if k not in VPC_PROFILE_KEYS and k not in INJECTED_KEYS)
+    if unknown:
+        reasons.append("field(s) not implemented for a vPC in mode 'pvlan': %s" % ", ".join(unknown))
+    for key in sorted(k for k in profile if k in VPC_PROFILE_KEYS):
+        if profile[key] is None:
+            reasons.append("%s must not be null" % key)
+    vid = vpc_id(ifname)
+    if vid is None:
+        reasons.append("the vPC name must be vPC<1-9999>, for example vPC10")
+    mode = profile.get("pvlan_mode")
+    if "pvlan_mode" not in profile:
+        reasons.append("pvlan_mode is required for mode 'pvlan'")
+        return reasons
+    if mode not in PVLAN_MODES:
+        reasons.append("pvlan_mode must be one of: %s" % ", ".join(PVLAN_MODES))
+        return reasons
+    for peer in ("peer1", "peer2"):
+        key = peer + "_members"
+        if key in profile and profile[key] is not None:
+            members = profile[key]
+            if not isinstance(members, list) or len(members) != 1:
+                reasons.append("%s: exactly one member per peer is implemented for a vPC in mode 'pvlan'" % key)
+            elif not isinstance(members[0], str) or not PO_PHYSICAL_MEMBER.match(members[0].strip()):
+                reasons.append("%s must be one physical Ethernet interface name, for example Ethernet1/9" % key)
+        pcid = peer + "_pcid"
+        if pcid not in profile or profile.get(pcid) is None:
+            reasons.append("%s is required and must equal the vPC id (a different port-channel number is not implemented)" % pcid)
+        elif isinstance(profile[pcid], bool) or not isinstance(profile[pcid], int) or (vid is not None and str(profile[pcid]) != vid):
+            reasons.append("%s must equal the vPC id %s (a different port-channel number is not implemented)" % (pcid, vid))
+        desc = peer + "_description"
+        if desc in profile and profile[desc] is not None:
+            value = profile[desc]
+            if not isinstance(value, str) or not 1 <= len(value) <= 254 or "\n" in value:
+                reasons.append("%s must be a single-line string of 1-254 characters" % desc)
+        reasons += _vpc_peer_trunk_errors(profile, peer, mode)
+    for field, allowed_modes in (("pvlan_association", ASSOCIATION_MODES), ("pvlan_mapping", MAPPING_MODES)):
+        value = profile.get(field)
+        if value is None:
+            continue
+        if mode not in allowed_modes:
+            reasons.append("%s is not valid for pvlan_mode '%s'" % (field, mode))
+            continue
+        if not isinstance(value, list) or not value:
+            reasons.append("an empty %s is not implemented for a vPC" % field)
+            continue
+        try:
+            pairs = requested_pairs(field, value)
+            reasons += limit_errors(mode, pairs)
+        except PvlanError as exc:
+            reasons.append(str(exc))
+    pc_mode = profile.get("pc_mode")
+    if pc_mode is not None and pc_mode not in PO_PC_MODES:
+        reasons.append("pc_mode must be one of: %s" % ", ".join(PO_PC_MODES))
+    if "admin_state" in profile and profile["admin_state"] is not None and not isinstance(profile["admin_state"], bool):
+        reasons.append("admin_state must be a boolean")
+    return reasons
+
+
+def _vpc_peer_trunk_errors(profile, peer, mode):
+    """VPC-MODES-E1: errors of the per-peer PVLAN native/allowed fields of one peer (raw profile). Same value rules as the regular
+    port-channel (po_not_implemented) and the template's own refusal of 'all' (HOST 318-320 [SRC]); valid only for the trunk modes."""
+    reasons = []
+    for suffix, _nv in VPC_PEER_TRUNK_FIELDS:
+        key = "%s_%s" % (peer, suffix)
+        value = profile.get(key)
+        if value is None:
+            continue
+        if mode not in TRUNK_MODES:
+            reasons.append("%s is valid only for pvlan_mode trunk promiscuous or trunk secondary" % key)
+            continue
+        if not isinstance(value, str):
+            reasons.append("%s must be a string" % key)
+        elif suffix == "native_vlan":
+            if value != "" and (not re.match(r"^[1-9][0-9]{0,3}$", value) or not 1 <= int(value) <= 4094):
+                reasons.append("%s must be '' or one VLAN ID 1-4094" % key)
+        elif value.strip().lower() == "all":
+            reasons.append("%s 'all' is refused by int_vpc_pvlan_host; give explicit ranges" % key)
+        elif value not in ("", "none"):
+            try:
+                vlan_set(value, key)
+            except PvlanError as exc:
+                reasons.append(str(exc))
+    return reasons
+
+
+def vpc_pair_view(raw, combined, playbook_serials):
+    """The two legs of a vPC in the controller's pair order, each bound to ITS serial. `peer1_*` of the playbook belong to
+    `switch[0]` (the module's existing vPC contract), which may be the controller's second serial. Raises PvlanError when the
+    playbook switches are not exactly the two serials of the pair. Returns [{serial, index, playbook_peer, member, pcid, desc}]."""
+    parts = str(combined or "").split("~")
+    if len(parts) != 2 or not all(parts):
+        raise PvlanError("the vPC pair identity %r is not <serial1>~<serial2>" % (combined,))
+    serials = list(playbook_serials or [])
+    if len(serials) != 2 or sorted(serials) != sorted(parts):
+        raise PvlanError("the playbook switches %s are not the two switches of the vPC pair %s" % (serials, combined))
+    legs = []
+    for index, serial in enumerate(parts):
+        peer = serials.index(serial) + 1
+        members = raw.get("peer%d_members" % peer)
+        legs.append({
+            "serial": serial, "index": index, "playbook_peer": peer,
+            "member": members[0].strip() if isinstance(members, list) and members else None,
+            "pcid": raw.get("peer%d_pcid" % peer),
+            "desc": raw.get("peer%d_description" % peer),
+            # VPC-MODES-E1: per-peer PVLAN trunk native/allowed of THIS serial (None = omitted).
+            "native": raw.get("peer%d_native_vlan" % peer),
+            "allowed": raw.get("peer%d_allowed_vlans" % peer),
+        })
+    return legs
+
+
+def vpc_po_name(pcid):
+    """The per-peer port-channel the parent template names (HOST 267-271): lower-case, from the PCID."""
+    return "port-channel%s" % pcid
+
+
+def vpc_host_nvpairs(raw, ifname, legs, members=None):
+    """The EXPLICIT payload of int_vpc_pvlan_host for a creation or a `replaced` update: the template's declarations and the
+    operator's input, in the declared (or measured vPC-trunk) types; nothing copied from another policy. `raw` has passed
+    vpc_not_implemented(); `legs` is vpc_pair_view(). PEERn_* belong to the controller's n-th serial."""
+    nv = {}
+    for key, default in VPC_TEMPLATE_DEFAULTS:
+        nv[key] = default
+    if raw.get("pc_mode") is not None:
+        nv["PC_MODE"] = raw["pc_mode"]
+    if raw.get("admin_state") is not None:
+        nv["ADMIN_STATE"] = "true" if raw["admin_state"] else "false"
+    mode = raw.get("pvlan_mode", MODE_HOST)
+    trunk = mode in TRUNK_MODES
+    nv["PVLAN_MODE"] = mode
+    for leg in legs:
+        n = leg["index"] + 1
+        member = (members[leg["index"]] if members is not None else leg["member"]) or ""
+        nv["PEER%d_PCID" % n] = str(leg["pcid"])  # declared integer; the measured vPC trunk payload sends it as a string
+        nv["PEER%d_MEMBER_INTERFACES" % n] = member
+        nv["PEER%d_PO_DESC" % n] = leg["desc"] if leg["desc"] is not None else ""
+        nv["PEER%d_PO_CONF" % n] = ""
+        # VPC-MODES-E1: per-peer native/allowed only in the trunk modes; a native VLAN is sent as a string of digits (the form measured
+        # accepted for the integer-declared regular Po field, TP1/TS1 live); neutral '' otherwise.
+        nv["PEER%d_PVLAN_ALLOWED_VLANS" % n] = (leg.get("allowed") or "") if trunk else ""
+        nv["PEER%d_PVLAN_NATIVE_VLAN" % n] = (leg.get("native") or PO_NATIVE_NEUTRAL) if trunk else PO_NATIVE_NEUTRAL
+    field = _po_list_field(mode)
+    active = active_list_key(mode)
+    pairs = requested_pairs(field, raw[field]) if raw.get(field) is not None else []
+    nv[MAPPING_LIST] = pairs_to_wire(MAPPING_LIST, pairs) if active == MAPPING_LIST and pairs else ""
+    nv[ASSOCIATION_LIST] = pairs_to_wire(ASSOCIATION_LIST, pairs) if active == ASSOCIATION_LIST and pairs else ""
+    return nv
+
+
+def _vpc_norm(key, value):
+    if value is None:
+        return None
+    text = str(value).strip()
+    if key in _VPC_BOOL_KEYS:
+        return text.lower()
+    if key in ("PEER1_MEMBER_INTERFACES", "PEER2_MEMBER_INTERFACES"):
+        # E4: the same port in any accepted spelling (`Ethernet1/8`, `e1/8`) compares equal, as for the regular port-channel (G6, EXP-1).
+        return tuple(sorted(po_member_canonical(m) or m.strip().lower() for m in text.split(",") if m.strip()))
+    if key in ("PEER1_PCID", "PEER2_PCID", "LACP_PORT_PRIO"):
+        return text
+    return text
+
+
+def _vpc_same(key, have_value, want_value):
+    if key in (MAPPING_LIST, ASSOCIATION_LIST, NATIVE_VLAN, ALLOWED_VLANS):
+        return _po_same(key, have_value, want_value)
+    if key in ("PEER1_PVLAN_NATIVE_VLAN", "PEER2_PVLAN_NATIVE_VLAN"):
+        return native_equal(have_value or "", want_value or "")
+    if key in ("PEER1_PVLAN_ALLOWED_VLANS", "PEER2_PVLAN_ALLOWED_VLANS"):
+        return allowed_equal(have_value or "", want_value or "")
+    return _vpc_norm(key, have_value) == _vpc_norm(key, want_value)
+
+
+def _vpc_ask_legs(changed):
+    """Legs (controller order, 0/1) a change of these nvPairs reaches. A per-peer description reaches only that peer; every
+    shared field (association, admin state, PC mode) reaches both."""
+    legs = set()
+    for key in changed:
+        if key in ("PEER1_PO_DESC", "PEER1_PVLAN_NATIVE_VLAN", "PEER1_PVLAN_ALLOWED_VLANS"):
+            legs.add(0)
+        elif key in ("PEER2_PO_DESC", "PEER2_PVLAN_NATIVE_VLAN", "PEER2_PVLAN_ALLOWED_VLANS"):
+            legs.add(1)
+        else:
+            legs.update((0, 1))
+    return sorted(legs)
+
+
+def reconcile_vpc(state, raw, ifname, legs, have_policy, have_nv):
+    """Decision for ONE vPC PVLAN WANT against its HAVE: {nv, update, creates, changed, blocked, members, ask_legs, new_secondaries}.
+
+      * HAVE absent -> creation with the explicit payload (one member per peer and the submode's list are required);
+      * HAVE is this policy, the SAME submode, one explicit member per peer, PCID = vPC id, no stored CONF -> update. `merged` keeps
+        every omitted field from HAVE (the active list is the union); `replaced` states the complete model (members and PCIDs from
+        HAVE). An equal request is a no-op;
+      * another policy, a submode/member/PCID change, stored CONF, unclassifiable HAVE fields, the promiscuous partial removal (the
+        protection kept from the measured Ethernet defect), or a change that reaches ONE peer only (the unilateral update of a vPC is
+        NOT implemented: its modify behaviour is unmeasured) -> blocked.
+    VPC-MODES-E1: submodes promiscuous / trunk promiscuous (MAPPING_LIST) and trunk secondary (ASSOCIATION_LIST) next to host, with the
+    per-peer PVLAN native/allowed of the trunk modes. `new_secondaries` (trunk secondary) are typed by the caller before any write."""
+    out = {"nv": None, "update": False, "creates": False, "changed": {}, "blocked": [], "members": None, "ask_legs": [],
+           "new_secondaries": []}
+    vid = vpc_id(ifname)
+    mode = raw.get("pvlan_mode", MODE_HOST)
+    field = _po_list_field(mode)
+    active = active_list_key(mode)
+    if have_policy is None:
+        if any(leg["member"] is None for leg in legs):
+            out["blocked"].append("peer1_members and peer2_members are required to create a vPC: exactly one existing physical member per peer")
+        if not raw.get(field):
+            out["blocked"].append("%s is required to create a vPC in pvlan_mode %s" % (field, mode))
+        if out["blocked"]:
+            return out
+        nv = vpc_host_nvpairs(raw, ifname, legs)
+        out.update(nv=nv, creates=True, changed=dict(nv), members=[nv["PEER1_MEMBER_INTERFACES"], nv["PEER2_MEMBER_INTERFACES"]],
+                   ask_legs=[0, 1])
+        if mode == MODE_TRUNK_SECONDARY:
+            out["new_secondaries"] = sorted(pairs_from_wire(nv[ASSOCIATION_LIST], ASSOCIATION_LIST))
+        return out
+    if have_policy != VPC_HOST_POLICY:
+        out["blocked"].append("the vPC already holds policy %s; converting it to int_vpc_pvlan_host is not implemented" % have_policy)
+        return out
+    if not isinstance(have_nv, dict):
+        out["blocked"].append("the controller returned no nvPairs for the existing vPC")
+        return out
+    have_mode = have_nv.get("PVLAN_MODE")
+    if have_mode not in PVLAN_MODES:
+        out["blocked"].append("current PVLAN_MODE %r is not a known int_vpc_pvlan_host mode" % (have_mode,))
+    elif have_mode != mode:
+        out["blocked"].append("changing pvlan_mode of an existing vPC (%r -> %r) is not implemented" % (have_mode, mode))
+    lost = sorted(k for k in have_nv if k not in VPC_KNOWN_HAVE_NVPAIRS and have_nv[k] not in ("", None)
+                  and not (k in VPC_CONTROLLER_METADATA and str(have_nv[k]).strip().lower() in VPC_CONTROLLER_METADATA[k]))
+    if lost:
+        out["blocked"].append("the vPC holds nvPair(s) this module cannot classify and a full-set update could clear: %s" % ", ".join(lost))
+    have_members = []
+    for n in (1, 2):
+        names, unresolved = normalize_member_list(have_nv.get("PEER%d_MEMBER_INTERFACES" % n))
+        if unresolved or len(names) != 1:
+            out["blocked"].append("the existing vPC has %d member entr(ies) on peer %d; exactly one explicit member per peer is implemented"
+                                  % (len(names) + len(unresolved), n))
+        have_members.append(sorted(names)[0] if len(names) == 1 else None)
+        if str(have_nv.get("PEER%d_PCID" % n, "")).strip() != (vid or ""):
+            out["blocked"].append("PEER%d_PCID %r differs from the vPC id %s; a different port-channel number is not implemented"
+                                  % (n, have_nv.get("PEER%d_PCID" % n), vid))
+        if str(have_nv.get("PEER%d_PO_CONF" % n, "") or "").strip():
+            out["blocked"].append("the vPC stores freeform commands on peer %d (PEER%d_PO_CONF); they are not implemented, and "
+                                  "the template would run its freeform checks on add and delete" % (n, n))
+    for leg in legs:
+        have_member = have_members[leg["index"]]
+        if leg["member"] is not None and have_member is not None and (po_member_canonical(leg["member"]) or leg["member"].lower()) != have_member:
+            out["blocked"].append("changing the member of an existing vPC is not implemented (peer %d: requested %s, current %s)"
+                                  % (leg["index"] + 1, leg["member"], have_member))
+    if out["blocked"]:
+        return out
+    # peerN_* of the playbook are bound to the serial that owns them; the controller-order nvPairs come from the legs.
+    merged = state == "merged"
+    current = pairs_from_wire(have_nv.get(active, "") or "", active)
+    requested = requested_pairs(field, raw[field]) if raw.get(field) is not None else None
+    desired = sorted(set(current) | set(requested or [])) if merged else sorted(set(requested or []))
+    out["blocked"] += limit_errors(mode, desired)
+    if not desired:
+        # the host text of E5 is kept byte-for-byte; the promiscuous modes name their mapping
+        out["blocked"].append("an empty %s is not implemented for a vPC" % ("association" if field == "pvlan_association" else "mapping"))
+    if promiscuous_partial_removal(have_mode, mode, current, desired):
+        out["blocked"].append(
+            "removing secondary VLAN(s) %s from a promiscuous mapping that keeps other secondaries is blocked (protection kept from the "
+            "measured Ethernet defect; its behaviour on a vPC is NOT measured). Remove the whole vPC instead"
+            % ", ".join("%d/%d" % p for p in sorted(set(current) - set(desired))))
+    if out["blocked"]:
+        return out
+    members = [have_nv.get("PEER1_MEMBER_INTERFACES", ""), have_nv.get("PEER2_MEMBER_INTERFACES", "")]
+    if merged:
+        nv = dict((k, v) for k, v in have_nv.items() if (k in VPC_KNOWN_HAVE_NVPAIRS or k in VPC_CONTROLLER_METADATA) and k not in BOOKKEEPING)
+        for key, default in VPC_TEMPLATE_DEFAULTS:
+            nv.setdefault(key, default)
+        for key in _VPC_PEER_KEYS:
+            nv.setdefault(key, _VPC_ABSENT_DEFAULT.get(key, ""))
+        if raw.get("pc_mode") is not None:
+            nv["PC_MODE"] = raw["pc_mode"]
+        if raw.get("admin_state") is not None:
+            nv["ADMIN_STATE"] = "true" if raw["admin_state"] else "false"
+        for leg in legs:
+            if leg["desc"] is not None:
+                nv["PEER%d_PO_DESC" % (leg["index"] + 1)] = leg["desc"]
+            if mode in TRUNK_MODES:
+                if leg.get("native") is not None:
+                    nv["PEER%d_PVLAN_NATIVE_VLAN" % (leg["index"] + 1)] = leg["native"]
+                if leg.get("allowed") is not None:
+                    nv["PEER%d_PVLAN_ALLOWED_VLANS" % (leg["index"] + 1)] = leg["allowed"]
+        nv["PVLAN_MODE"] = mode
+    else:
+        nv = vpc_host_nvpairs(raw, ifname, legs, members=members)
+        for key in VPC_CONTROLLER_METADATA:
+            if key in have_nv and have_nv[key] not in ("", None):
+                nv[key] = have_nv[key]
+        if "PTP" in have_nv and str(have_nv["PTP"]).strip().lower() in ("true", "false"):
+            nv["PTP"] = have_nv["PTP"]
+    inactive = MAPPING_LIST if active == ASSOCIATION_LIST else ASSOCIATION_LIST
+    nv[active] = pairs_to_wire(active, desired) if desired else ""
+    nv[inactive] = ""
+    changed = {}
+    for key in sorted(nv):
+        if key in have_nv:
+            try:
+                same = _vpc_same(key, have_nv[key], nv[key])
+            except PvlanError as exc:
+                out["blocked"].append(str(exc))
+                continue
+            if same:
+                nv[key] = have_nv[key]
+            else:
+                changed[key] = nv[key]
+        elif not _vpc_same(key, _VPC_ABSENT_DEFAULT.get(key, ""), nv[key]):
+            changed[key] = nv[key]
+    if out["blocked"]:
+        return out
+    if not changed:
+        out.update(nv=copy_nv(have_nv), members=members)
+        return out
+    ask = _vpc_ask_legs(changed)
+    if len(ask) == 1:
+        out["blocked"].append(
+            "this request changes only peer %d of the vPC (%s); an update that reaches one peer only is not implemented "
+            "(its modify behaviour is not measured). Change both peers or none" % (ask[0] + 1, ", ".join(sorted(changed))))
+        return out
+    if mode == MODE_TRUNK_SECONDARY:
+        out["new_secondaries"] = sorted(set(desired) - set(current))
+    out.update(nv=nv, update=True, changed=changed, members=members, ask_legs=ask)
+    return out
+
+
+def vpc_leg_po_nv(parent_nv, index, vpc_name):
+    """nvPairs the parent hands to the child int_vpc_pvlan_po of leg `index` (HOST 604-662 [SRC]); PRIMARY_INTF = the vPC name."""
+    n = index + 1
+    pcid = str(parent_nv.get("PEER%d_PCID" % n, "")).strip()
+    return {
+        "PO_ID": vpc_po_name(pcid), "PRIMARY_INTF": vpc_name,
+        "BPDUGUARD_ENABLED": parent_nv.get("BPDUGUARD_ENABLED", "true"),
+        "PORTTYPE_FAST_ENABLED": parent_nv.get("PORTTYPE_FAST_ENABLED", "true"),
+        "spanningTreePortType": parent_nv.get("spanningTreePortType", "no"),
+        "MTU": parent_nv.get("MTU", "jumbo"), "SPEED": parent_nv.get("SPEED", "Auto"),
+        "PVLAN_ALLOWED_VLANS": parent_nv.get("PEER%d_PVLAN_ALLOWED_VLANS" % n, "") or "",
+        "PVLAN_NATIVE_VLAN": parent_nv.get("PEER%d_PVLAN_NATIVE_VLAN" % n, "") or "",
+        "DESC": parent_nv.get("PEER%d_PO_DESC" % n, "") or "",
+        "PORT_DUPLEX_MODE": parent_nv.get("PORT_DUPLEX_MODE", "auto"),
+        "DISABLE_LACP_SUSPEND": parent_nv.get("DISABLE_LACP_SUSPEND", "false"),
+        "ENABLE_LACP_VPC_CONV": parent_nv.get("ENABLE_LACP_VPC_CONV", "false"),
+        "CONF": parent_nv.get("PEER%d_PO_CONF" % n, "") or "",
+        "PVLAN_MODE": parent_nv.get("PVLAN_MODE", MODE_HOST),
+        MAPPING_LIST: parent_nv.get(MAPPING_LIST, "") or "", ASSOCIATION_LIST: parent_nv.get(ASSOCIATION_LIST, "") or "",
+        "ADMIN_STATE": parent_nv.get("ADMIN_STATE", "true"), "ENABLE_PFC": parent_nv.get("ENABLE_PFC", "false"),
+        "ENABLE_QOS": parent_nv.get("ENABLE_QOS", "false"), "QOS_POLICY": parent_nv.get("QOS_POLICY", "") or "",
+        "qosStatsSuppressed": parent_nv.get("qosStatsSuppressed", "false"), "queuingStats": parent_nv.get("queuingStats", "false"),
+        "QUEUING_POLICY": parent_nv.get("QUEUING_POLICY", "") or "", "aclFilter": parent_nv.get("aclFilter", "") or "",
+    }
+
+
+def vpc_leg_member_nv(parent_nv, index, vpc_name, current_nv, current_is_member=False):
+    """nvPairs the parent hands to the member of leg `index` (HOST 727-760 [SRC]) with the same DESC/CONF/ADMIN_STATE
+    inheritance as the regular port-channel member (po_member_nvpairs); `__PARENT` is the child Po's nvPairs plus the
+    parent-level fields the member's CLI depends on. Never written by the module."""
+    like = dict(vpc_leg_po_nv(parent_nv, index, vpc_name))
+    like.update({
+        "PC_MODE": parent_nv.get("PC_MODE", "active"), "CDP_ENABLE": parent_nv.get("CDP_ENABLE", "true"),
+        "lldpTransmit": parent_nv.get("lldpTransmit", "false"), "lldpReceive": parent_nv.get("lldpReceive", "false"),
+        "LACP_PORT_PRIO": parent_nv.get("LACP_PORT_PRIO", 32768), "LACP_RATE": parent_nv.get("LACP_RATE", "normal"),
+        "COPY_DESC": parent_nv.get("COPY_DESC", "false"),
+    })
+    nv = po_member_nvpairs(like, current_nv, current_is_member=current_is_member)
+    nv["PRIMARY_INTF"] = vpc_name
+    return nv
+
+
+def _render_vpc_po(nv):
+    """Interface body of int_vpc_pvlan_po.add() (POVPC 59-170) for host mode: the regular port-channel PVLAN host body plus
+    `vpc <id>` (PRIMARY_INTF). Values the model does not cover make the Model unmodeled, which refuses the deploy."""
+    m = re.match(r"^vpc([0-9]+)$", _text(nv, "PRIMARY_INTF").lower())
+    if not m or nv.get("PVLAN_MODE") not in PVLAN_MODES:  # VPC-MODES-E1: the four submodes (POVPC 217-252 [SRC] = the regular Po body)
+        return Model((), None, (), False)
+    if (_flag(nv, "ENABLE_LACP_VPC_CONV", "false") != "false" or _flag(nv, "ENABLE_PFC", "false") != "false"
+            or _flag(nv, "ENABLE_QOS", "false") != "false" or _text(nv, "aclFilter")):
+        return Model((), None, (), False)
+    base = _render_po_host(nv)
+    if not base.modeled:
+        return base
+    scalars = set(base.scalars)
+    scalars.add("vpc %s" % m.group(1))
+    return Model(scalars, base.list_kind, base.pairs, True)
+
+
+def vpc_leg_models(parent_nv, index, vpc_name, member_nv, current_is_member):
+    """((child policy, nv), (member policy, nv)) of one leg for a given parent nvPairs: the inputs of render()."""
+    po_nv = vpc_leg_po_nv(parent_nv, index, vpc_name)
+    return ((VPC_PO_POLICY, po_nv),
+            (PO_MEMBER_POLICY, vpc_leg_member_nv(parent_nv, index, vpc_name, member_nv, current_is_member)))
+
+
+def vpc_leg_cli_changes(pre_models, post_models):
+    """True when the CLI model of the child Po or of the member differs between two states of one leg (render() of each side)."""
+    for pre, post in zip(pre_models, post_models):
+        a, b = render(*pre), render(*post)
+        if not (a.modeled and b.modeled):
+            return True
+        if not same_state(a, b):
+            return True
+    return False
+
+
+def vpc_combine(mode, decisions, expected=None):
+    """The decision for a whole vPC from the per-leg decisions ("deploy"/"converged"/"refuse"), never from one leg.
+    Returns (decision, problems). `mode`:
+      create  every leg must be "deploy": a leg already converged is a state this request does not explain;
+      update  each leg must show exactly what the models predict (`expected`, per leg, from the PREVIOUS and NEW models), so a
+              leg that legitimately has no CLI change may stay converged while the other deploys;
+      repeat  no change was requested: both legs "converged" (deployed) or both "deploy" (intent saved, not applied); a mix is a
+              pre-existing partial state;
+      delete  every leg must be "deploy" (the deletion is completed by the deploy; never converged)."""
+    if len(decisions) != 2:
+        return "refuse", ["the vPC needs exactly two leg decisions, got %d" % len(decisions)]
+    bad = [i for i, d in enumerate(decisions) if d not in ("deploy", "converged")]
+    if bad:
+        return "refuse", ["peer %d: the gate did not accept the leg (%s)" % (i + 1, decisions[i]) for i in bad]
+    if mode in ("create", "delete"):
+        off = [i for i, d in enumerate(decisions) if d != "deploy"]
+        if off:
+            return "refuse", ["peer %d is already converged, which this %s request does not explain; nothing is deployed" % (i + 1, mode) for i in off]
+        return "deploy", []
+    if mode == "update":
+        if expected is None or len(expected) != 2:
+            return "refuse", ["no expected result per peer was derived from the previous and new models"]
+        off = [i for i in (0, 1) if decisions[i] != expected[i]]
+        if off:
+            return "refuse", ["peer %d shows %s but this update predicts %s; the difference is not explained by the request"
+                              % (i + 1, decisions[i], expected[i]) for i in off]
+        return ("deploy" if "deploy" in decisions else "converged"), []
+    if mode == "repeat":
+        if decisions[0] != decisions[1]:
+            return "refuse", ["pre-existing partial state: peer 1 is %s and peer 2 is %s" % (decisions[0], decisions[1])]
+        return decisions[0], []
+    return "refuse", ["unknown vPC gate mode %r" % (mode,)]
+
+
+def vpc_response_class(resp, sno, name):
+    """Class of the answer to the vPC parent CREATE: "accepted" | "failed" | "unknown". Never a verdict on the vPC.
+      * HTTP 200 "OK": the contract the module already applies to every create (generic path);
+      * HTTP 207 "Multi-Status": accepted ONLY when every item is SUCCESS and a SUCCESS item names the parent in one of the two
+        entity forms the shared helper admits (`serial~name`, `serial:name`, with the pair serial) -- PROVISIONAL, from the Po
+        precedent, not measured for a vPC; an item per child is NOT required;
+      * a 207 with an ERROR item is "failed"; any other shape (unknown item type, missing parent, no list) is "unknown".
+    "accepted" only says the controller took the request: both legs are still gated and read back."""
+    if not isinstance(resp, dict):
+        return "unknown"
+    if resp.get("RETURN_CODE") == 200 and resp.get("MESSAGE") == "OK":
+        return "accepted"
+    if resp.get("RETURN_CODE") != 207 or resp.get("MESSAGE") != "Multi-Status":
+        return "failed"
+    data = resp.get("DATA")
+    if not isinstance(data, list) or not all(isinstance(i, dict) for i in data) or not data:
+        return "unknown"
+    types = {str(i.get("reportItemType", "")).upper() for i in data}
+    if "ERROR" in types:
+        return "failed"
+    if types != {"SUCCESS"}:
+        return "unknown"
+    return "accepted" if not modify_outcome_problems(resp, [(sno, name)]) else "unknown"
+
+
+def vpc_leg_residue(policies, vpc_name, po_name, member, member_detail_nv):
+    """Reasons a leg is NOT clean after a vPC deletion (empty = clean). `policies` is the leg's fresh live-policy list.
+    The released member legitimately keeps ONE direct int_trunk_host policy (its baseline): that is NOT residue. Residue is
+    any live policy that is a vPC child (source = the vPC), names the removed vPC or Po as its entity, is not the single
+    direct baseline of the member, or still holds the PVLAN member policy. No history is needed: the baseline is the explicit
+    contract (direct int_trunk_host, source empty, administratively down, no freeform CONF)."""
+    vname, pname, mname = str(vpc_name).lower(), str(po_name).lower(), str(member).lower()
+    live = [p for p in policies if p.get("deleted") is not True and str(p.get("deleted", "")).lower() != "true"]
+    reasons = []
+    own = []
+    for p in live:
+        entity, template, source = str(p.get("entityName", "")).lower(), p.get("templateName"), str(p.get("source", "")).lower()
+        tag = "%s/%s/%s" % (p.get("entityName"), template, p.get("source"))
+        if source == vname:
+            reasons.append("a policy owned by the removed vPC is still live: %s" % tag)
+        elif entity in (pname, vname):
+            reasons.append("a policy for the removed %s is still live: %s" % ("port-channel" if entity == pname else "vPC", tag))
+        elif entity == mname:
+            own.append(p)
+        elif source == pname:
+            reasons.append("a policy claimed by the removed port-channel is still live: %s" % tag)
+    baseline = [p for p in own if p.get("templateName") == TRUNK_HOST_POLICY and str(p.get("source", "")) == ""
+                and str(p.get("entityType", "")).upper() == "INTERFACE"]
+    if len(own) != 1 or len(baseline) != 1:
+        reasons.append("the member does not hold exactly one direct %s policy (%s)" % (
+            TRUNK_HOST_POLICY, ", ".join(sorted("%s/%s" % (p.get("templateName"), p.get("source")) for p in own)) or "none"))
+    if isinstance(member_detail_nv, dict):
+        if str(member_detail_nv.get("ADMIN_STATE", "")).strip().lower() != "false":
+            reasons.append("the released member is not administratively down")
+        if str(member_detail_nv.get("CONF", "") or "").strip():
+            reasons.append("the released member carries freeform CONF")
+    return reasons
+
+
+def vpc_child_differences(child_nv, expected_po_nv):
+    """Keys on which a stored child Po intent differs from the child the parent's intent implies (a leg that does not follow its
+    parent is an incoherent, partial state). Compared only on what decides the CLI of the leg; unreadable values count as
+    differences. Pure."""
+    if not isinstance(child_nv, dict):
+        return ["nvPairs"]
+    diffs = []
+    try:
+        for key in ("PVLAN_MODE", "ADMIN_STATE", "DESC", "BPDUGUARD_ENABLED", "PORTTYPE_FAST_ENABLED", "MTU"):
+            if _po_norm(key, child_nv.get(key, "")) != _po_norm(key, expected_po_nv.get(key, "")):
+                diffs.append(key)
+        # VPC-MODES-E1: both lists and the per-peer PVLAN native/allowed decide the CLI of the leg in the other submodes.
+        for key in (ASSOCIATION_LIST, MAPPING_LIST):
+            if pairs_from_wire(child_nv.get(key, "") or "", key) != pairs_from_wire(expected_po_nv.get(key, "") or "", key):
+                diffs.append(key)
+        if not native_equal(child_nv.get(NATIVE_VLAN, "") or "", expected_po_nv.get(NATIVE_VLAN, "") or ""):
+            diffs.append(NATIVE_VLAN)
+        if not allowed_equal(child_nv.get(ALLOWED_VLANS, "") or "", expected_po_nv.get(ALLOWED_VLANS, "") or ""):
+            diffs.append(ALLOWED_VLANS)
+    except PvlanError:
+        diffs.append("list")
+    for key in ("PO_ID", "PRIMARY_INTF"):
+        if key in child_nv and str(child_nv.get(key, "")).strip().lower() != str(expected_po_nv.get(key, "")).strip().lower():
+            diffs.append(key)
+    return diffs
+
+
+vpc_same = _vpc_same  # public name for the module's post-deploy readback
+
+
+def vpc_transition_problems(pre, post):
+    """Problems of the IDEAL pending of the transition between two Models of one interface (any list kind): every added line, the
+    withdrawal of every removed line, every added or removed pair. The pre-deploy gate validates a real pending with the same rules; when
+    even the ideal pending cannot satisfy them, the transition could only be refused AFTER the intent was written, so the caller refuses
+    it BEFORE (known limit of the shared validator: `shutdown` <-> `no shutdown` is one line that adds and withdraws at once)."""
+    if not (pre.modeled and post.modeled):
+        return ["the transition is not modeled"]
+    body = sorted(post.scalars - pre.scalars) + ["no " + line for line in sorted(pre.scalars - post.scalars)]
+    # VPC-MODES-E1: the list line of each submode (the same keywords the templates render, POVPC 229-252 [SRC]).
+    fmt = _VPC_LIST_FORMAT.get(post.list_kind)
+    if pre.list_kind == post.list_kind and fmt:
+        body += [fmt % p for p in sorted(post.pairs - pre.pairs)]
+        body += ["no " + fmt % p for p in sorted(pre.pairs - post.pairs)]
+    return validate_transition(body, pre, post)
+
+
+_VPC_LIST_FORMAT = {
+    MODE_HOST: "switchport private-vlan host-association %d %d",
+    MODE_PROMISCUOUS: "switchport private-vlan mapping %d %d",
+    MODE_TRUNK_PROMISCUOUS: "switchport private-vlan mapping trunk %d %d",
+    MODE_TRUNK_SECONDARY: "switchport private-vlan association trunk %d %d",
+}
+
+
+# ================================================================== VPC-HOST-E2-READBACK: member readback against the expected per-peer model
+# Fields that DETERMINE the CLI of a vPC member (int_port_channel_pvlan_member, MEMBER:109-205 [SRC]); PRIMARY_INTF, INTF_NAME, PTP and
+# INTF_PTP are metadata/identity, never compared as wire values (PRIMARY_INTF is only an identity check when present).
+VPC_MEMBER_KEYS = ("PO_ID", "PC_MODE", "PVLAN_MODE", "CDP_ENABLE", "lldpTransmit", "lldpReceive", "LACP_PORT_PRIO", "LACP_RATE", "DESC",
+                   "CONF", "ADMIN_STATE")
+_VPC_MEMBER_REQUIRED = ("PO_ID", "PC_MODE", "PVLAN_MODE", "ADMIN_STATE")
+_VPC_MEMBER_DEFAULT = {"CDP_ENABLE": "true", "lldpTransmit": "false", "lldpReceive": "false", "LACP_PORT_PRIO": "32768",
+                       "LACP_RATE": "normal", "DESC": "", "CONF": ""}
+_VPC_MEMBER_LOWER = ("PO_ID", "PC_MODE", "PVLAN_MODE", "CDP_ENABLE", "lldpTransmit", "lldpReceive", "ADMIN_STATE", "LACP_RATE")
+
+
+def _member_value(key, value):
+    if isinstance(value, bool):
+        value = "true" if value else "false"
+    if not isinstance(value, (str, int)):
+        return None
+    text = str(value).strip()
+    return text.lower() if key in _VPC_MEMBER_LOWER else text
+
+
+def vpc_member_differences(have_nv, expected_nv):
+    """Differences between the member's authoritative nvPairs and the member model EXPECTED for its peer (empty = same). `expected_nv` comes
+    from the frozen pre-state (po_member_nvpairs: DESC/CONF/ADMIN_STATE inherited from the member BEFORE the write), never from the state
+    being verified. A required field that is missing or malformed is a difference, not a success; an optional one that is missing takes the
+    template default. Types and case are normalised; wire metadata (PRIMARY_INTF aside) is ignored. Pure."""
+    if not isinstance(have_nv, dict):
+        return ["the member's nvPairs are unreadable"]
+    diffs = []
+    for key in VPC_MEMBER_KEYS:
+        raw = have_nv.get(key)
+        if raw is None:
+            if key in _VPC_MEMBER_REQUIRED:
+                diffs.append("%s is missing" % key)
+                continue
+            raw = _VPC_MEMBER_DEFAULT[key]
+        value = _member_value(key, raw)
+        if value is None:
+            diffs.append("%s is malformed (%s)" % (key, type(raw).__name__))
+            continue
+        wanted = _member_value(key, expected_nv.get(key, _VPC_MEMBER_DEFAULT.get(key, "")))
+        if value != wanted:
+            diffs.append("%s is %r, expected %r" % (key, value, wanted))
+    primary = have_nv.get("PRIMARY_INTF")
+    wanted_primary = expected_nv.get("PRIMARY_INTF")
+    if primary not in (None, "") and wanted_primary and str(primary).strip().lower() != str(wanted_primary).strip().lower():
+        diffs.append("PRIMARY_INTF is %r, expected %r" % (primary, wanted_primary))
+    return diffs
+
+
+def vpc_released_member_differences(have_nv, contract_nv):
+    """Differences between a RELEASED member (after a vPC deletion) and the explicit release contract stored in the leg (PO_RELEASED_MEMBER_NV,
+    a direct int_trunk_host, shut, no freeform commands). Judged on the CLI model of both sides (so every modeled field counts) plus the
+    contract's own fields by name; residual PVLAN/channel-group fields, an unmodelable member or unreadable nvPairs are differences. No history."""
+    if not isinstance(have_nv, dict):
+        return ["the released member's nvPairs are unreadable"]
+    diffs = []
+    for key in ("PO_ID", "PVLAN_MODE", "PC_MODE", "ASSOCIATION_LIST", "MAPPING_LIST"):
+        if str(have_nv.get(key, "") or "").strip() not in ("", '{"ASSOCIATION_LIST":[]}', '{"MAPPING_LIST":[]}'):
+            diffs.append("residual PVLAN/channel-group field %s=%r" % (key, have_nv.get(key)))
+    for key in sorted(contract_nv):
+        if key == "ALLOWED_VLANS":
+            same = allowed_equal(have_nv.get(key, "") or "", contract_nv[key] or "") if str(have_nv.get(key, "") or "").strip() else False
+        elif key == "NATIVE_VLAN":
+            same = native_equal(have_nv.get(key, "") or "", contract_nv[key] or "")
+        else:
+            same = str(have_nv.get(key, "") if have_nv.get(key) is not None else "").strip().lower() == str(contract_nv[key]).strip().lower()
+        if not same:
+            diffs.append("%s is %r, the release contract requires %r" % (key, have_nv.get(key), contract_nv[key]))
+    got, want = render(TRUNK_HOST_POLICY, have_nv), render(TRUNK_HOST_POLICY, contract_nv)
+    if not got.modeled:
+        diffs.append("the released member's configuration cannot be modeled (a required field is missing or outside the model)")
+    elif want.modeled and not same_state(got, want) and not diffs:
+        diffs.append("the released member's CLI model differs from the contract: %s" % (_difference(got, want),))
+    return diffs

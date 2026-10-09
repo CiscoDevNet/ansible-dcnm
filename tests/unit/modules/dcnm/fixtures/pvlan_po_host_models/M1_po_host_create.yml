@@ -1,0 +1,39 @@
+# M1 -- NOT RUN. NOT LIVE TESTED. Created by PO-HOST-E1-OFFLINE (generation immutable).
+# Offline status: the argspec, payload and pre-deploy gate exist and pass the focused offline tests; the
+# first live run is what measures the controller's behaviour for a port-channel.
+#
+# Future check chain (to be recorded by the live mandate, per step):
+#   model -> module args -> payload (POST globalInterface) -> parent intent + child intent
+#         -> config-preview (forceShowRun=true, `!Time:` freshness) -> device CLI (Po and member)
+#
+# Required BEFORE any live use (none of these is done here):
+#   1. source pin: dcnm_interface.py / interface_pvlan.py sha256 == the pins in the delivery manifest;
+#   2. model pin: this file's sha256 == the manifest;
+#   3. local validation: the focused test file passes in the pinned tree;
+#   4. DEDICATED resources assigned by the operator (see vars_po_host_e1.yml), the member ALREADY in
+#      administrative shutdown with an int_trunk_host baseline policy, free of another Po, overlay and
+#      freeform CONF (the member template would otherwise bring it up: its ADMIN_STATE is inherited);
+#   5. backup of the member's intent (GET interface by serial+name) and CLI (show running-config of the
+#      member) and proof that the port-channel does not exist;
+#   6. a concrete cleanup agreed in advance (state: deleted and manual alternative are NOT implemented here).
+- name: M1 PVLAN host port-channel, creation
+  hosts: ndfc
+  gather_facts: false
+  vars_files: [vars_po_host_e1.yml]
+  tasks:
+    - name: M1 create one port-channel in PVLAN host mode with ONE dedicated member (admin shutdown)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ po_fabric }}"
+        state: replaced
+        config:
+          - name: "{{ po_name }}"
+            type: pc
+            switch: ["{{ po_switch }}"]
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: host
+              members: ["{{ po_member }}"]
+              pc_mode: active
+              admin_state: false
+              pvlan_association: [{primary_vlan: 2210, secondary_vlan: 2212}]  # CANDIDATE pair, not validated
