@@ -1915,10 +1915,12 @@ Parameters
                                     <li>l3</li>
                                     <li>dot1q</li>
                                     <li>monitor</li>
+                                    <li>pvlan</li>
                         </ul>
                 </td>
                 <td>
                         <div>Interface mode</div>
+                        <div>Mode &#x27;pvlan&#x27; selects the NDFC 12 policy &#x27;int_port_channel_pvlan_host&#x27; for a regular port-channel with exactly ONE physical member. Supported - creation in the four PVLAN modes, update of the PVLAN lists (&#x27;merged&#x27; adds to the current list, &#x27;replaced&#x27; states the complete model) and of &#x27;pc_mode&#x27;, &#x27;description&#x27;, &#x27;admin_state&#x27;, &#x27;native_vlan&#x27; and &#x27;allowed_vlans&#x27; without changing &#x27;pvlan_mode&#x27; or the member, and the identical repetition. Refused before any change is sent - a second member, member changes, ranges, vPC, a &#x27;pvlan_mode&#x27; change, &#x27;overridden&#x27;, and removing secondaries from a &#x27;promiscuous&#x27; mapping that keeps others (protection kept from the measured Ethernet defect). Fields for this mode are &#x27;pvlan_mode&#x27;, &#x27;pvlan_association&#x27; (host, trunk secondary), &#x27;pvlan_mapping&#x27; (promiscuous, trunk promiscuous), &#x27;native_vlan&#x27; and &#x27;allowed_vlans&#x27; (trunk modes), &#x27;members&#x27;, &#x27;pc_mode&#x27;, &#x27;description&#x27; and &#x27;admin_state&#x27;. The member is managed by the parent; &#x27;members&#x27; may be omitted in &#x27;merged&#x27; updates. For &#x27;trunk secondary&#x27; the member must ALREADY be prepared as a neutral, administratively down access (int_access_host) or routed (int_routed_host) port; a member in switchport mode trunk is refused (known incident - NX-OS rejects the join) and the module never converts a member. &#x27;state=deleted&#x27; removes the port-channel and releases its member administratively down before the deployment.</div>
                 </td>
             </tr>
             <tr>
@@ -1958,6 +1960,65 @@ Parameters
                 </td>
                 <td>
                         <div>interface orphan port behavior when switch is in vPC</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_association</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Primary/secondary VLAN associations for <code>pvlan_mode</code> <code>host</code> (exactly one) and <code>trunk secondary</code> (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlan</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_mapping</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Promiscuous mappings for <code>pvlan_mode</code> <code>promiscuous</code> (a single primary VLAN) and <code>trunk promiscuous</code>, as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlans</code> (a VLAN list string).</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>host</li>
+                                    <li>promiscuous</li>
+                                    <li>trunk promiscuous</li>
+                                    <li>trunk secondary</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Private VLAN mode. Required, and only valid, when &#x27;mode&#x27; is &#x27;pvlan&#x27;. It cannot be changed on an existing port-channel.</div>
                 </td>
             </tr>
             <tr>
@@ -3328,11 +3389,13 @@ Parameters
                                     <li>trunk</li>
                                     <li>access</li>
                                     <li>dot1q</li>
+                                    <li>pvlan</li>
                         </ul>
                 </td>
                 <td>
                         <div>Interface mode</div>
                         <div><code>dot1q</code> selects the dot1q-tunnel vPC template (<code>int_vpc_dot1q_tunnel</code>) and requires NDFC 12. It takes the same options as <code>access</code>, plus the LACP options.</div>
+                        <div><code>pvlan</code> selects the NDFC 12 policy <code>int_vpc_pvlan_host</code> for a vPC with exactly ONE physical member per peer, in any of its four <code>pvlan_mode</code> values. Supported - creation, identical repetition, an update that reaches BOTH peers (the list of the mode, &#x27;pc_mode&#x27;, the description of both peers, or the PVLAN native/allowed VLANs of both peers) and <code>state=deleted</code> of the vPC, all with <code>deploy</code> true when a deployment is wanted. Refused before any change is sent - a <code>pvlan_mode</code> change, a field the mode does not take, a second member, a member or PCID change, a PCID different from the vPC id (both <code>peer1_pcid</code> and <code>peer2_pcid</code> are REQUIRED and must equal it), an empty list, removing secondaries from a <code>promiscuous</code> mapping that keeps others (protection kept from the measured Ethernet defect), freeform commands, an update that reaches only one peer, a change of <code>admin_state</code> of an existing vPC, <code>overridden</code>, check mode for a creation or a deletion and NDFC 11. For <code>trunk secondary</code> each member must ALREADY be prepared as a neutral, administratively down access (<code>int_access_host</code>) or routed (<code>int_routed_host</code>) port on BOTH peers; a member in switchport mode trunk is refused (known incident - NX-OS rejects the join) and the module never converts a member. <code>peer1_*</code> belong to the first switch of <code>switch</code> and <code>peer2_*</code> to the second; both switches must be the two switches of the vPC pair. The members are managed by the parent. Both peers are validated before anything is deployed and the vPC is reported successful only when EVERY peer is. The deletion is verified on both peers against the explicit contract (a direct <code>int_trunk_host</code>, shut, no freeform commands) without rewriting any member.</div>
                 </td>
             </tr>
             <tr>
@@ -3415,7 +3478,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Vlans that are allowed on this interface of first peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;</div>
+                        <div>Vlans that are allowed on this interface of first peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;, or &#x27;pvlan&#x27; with <code>pvlan_mode</code> <code>trunk promiscuous</code> or <code>trunk secondary</code> (PVLAN trunk allowed VLANs of that peer; <code>all</code> is refused there, no default - omitted keeps the current value in <code>merged</code>).</div>
                 </td>
             </tr>
             <tr>
@@ -3489,7 +3552,7 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>Vlan used as native vlan of first peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;</div>
+                        <div>Vlan used as native vlan of first peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;, or &#x27;pvlan&#x27; with <code>pvlan_mode</code> <code>trunk promiscuous</code> or <code>trunk secondary</code> (&#x27;&#x27; or one VLAN; PVLAN trunk native VLAN of that peer).</div>
                 </td>
             </tr>
             <tr>
@@ -3548,7 +3611,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Vlans that are allowed on this interface of second peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;</div>
+                        <div>Vlans that are allowed on this interface of second peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;, or &#x27;pvlan&#x27; with <code>pvlan_mode</code> <code>trunk promiscuous</code> or <code>trunk secondary</code> (as <code>peer1_allowed_vlans</code>).</div>
                 </td>
             </tr>
             <tr>
@@ -3622,7 +3685,7 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>Vlan used as native vlan of second peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;</div>
+                        <div>Vlan used as native vlan of second peer. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;, or &#x27;pvlan&#x27; with <code>pvlan_mode</code> <code>trunk promiscuous</code> or <code>trunk secondary</code> (as <code>peer1_native_vlan</code>).</div>
                 </td>
             </tr>
             <tr>
@@ -3663,6 +3726,65 @@ Parameters
                 </td>
                 <td>
                         <div>Spanning-tree edge port behavior</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_association</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Primary/secondary VLAN associations for <code>pvlan_mode</code> <code>host</code> (exactly one) and <code>trunk secondary</code> (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlan</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_mapping</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Promiscuous mappings for <code>pvlan_mode</code> <code>promiscuous</code> (a single primary VLAN) and <code>trunk promiscuous</code>, as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlans</code> (a VLAN list string).</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_mode</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>host</li>
+                                    <li>promiscuous</li>
+                                    <li>trunk promiscuous</li>
+                                    <li>trunk secondary</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Private VLAN mode. Required, and only valid, when &#x27;mode&#x27; is &#x27;pvlan&#x27;. It cannot be changed on an existing vPC.</div>
                 </td>
             </tr>
             <tr>
@@ -4764,6 +4886,163 @@ Examples
               pvlan_association:
                 - primary_vlan: 2210
                   secondary_vlan: 2212
+
+    # Private VLAN on a regular port-channel (int_port_channel_pvlan_host, NDFC 12; exactly one member)
+
+    - name: Create a port-channel in PVLAN host mode with one administratively down member
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: replaced
+        config:
+          - name: po10
+            type: pc
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: host
+              members:
+                - Ethernet1/7
+              pc_mode: active
+              admin_state: false
+              pvlan_association:
+                - primary_vlan: 2210
+                  secondary_vlan: 2212
+
+    - name: Delete that port-channel (its member is released administratively down)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: deleted
+        config:
+          - name: po10
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+
+    # Private VLAN on a vPC (int_vpc_pvlan_host, NDFC 12; one member per peer, PCID equal to the vPC id)
+
+    - name: Create a vPC in PVLAN host mode (peer1_* belong to the first switch, peer2_* to the second)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: merged
+        config:
+          - name: vpc10
+            type: vpc
+            switch:
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: host
+              peer1_members:
+                - Ethernet1/7
+              peer2_members:
+                - Ethernet1/8
+              peer1_pcid: 10
+              peer2_pcid: 10
+              admin_state: false
+              pvlan_association:
+                - primary_vlan: 2210
+                  secondary_vlan: 2212
+
+    - name: Create a vPC in PVLAN promiscuous mode (a single primary VLAN)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: merged
+        config:
+          - name: vpc11
+            type: vpc
+            switch:
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: promiscuous
+              peer1_members:
+                - Ethernet1/9
+              peer2_members:
+                - Ethernet1/9
+              peer1_pcid: 11
+              peer2_pcid: 11
+              admin_state: false
+              pvlan_mapping:
+                - primary_vlan: 2210
+                  secondary_vlans: "2211-2212"
+
+    - name: Create a vPC in PVLAN trunk promiscuous mode with per-peer native/allowed VLANs
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: merged
+        config:
+          - name: vpc12
+            type: vpc
+            switch:
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: trunk promiscuous
+              peer1_members:
+                - Ethernet1/10
+              peer2_members:
+                - Ethernet1/10
+              peer1_pcid: 12
+              peer2_pcid: 12
+              admin_state: false
+              pvlan_mapping:
+                - primary_vlan: 2210
+                  secondary_vlans: "2211-2212"
+                - primary_vlan: 2410
+                  secondary_vlans: "2412"
+              peer1_native_vlan: "2301"
+              peer2_native_vlan: "2301"
+              peer1_allowed_vlans: "2301"
+              peer2_allowed_vlans: "2301"
+
+    - name: Create a vPC in PVLAN trunk secondary mode (both members must ALREADY be prepared as access or routed ports, admin down)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: merged
+        config:
+          - name: vpc13
+            type: vpc
+            switch:
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: trunk secondary
+              peer1_members:
+                - Ethernet1/11
+              peer2_members:
+                - Ethernet1/11
+              peer1_pcid: 13
+              peer2_pcid: 13
+              admin_state: false
+              pvlan_association:
+                - primary_vlan: 2210
+                  secondary_vlan: 2212
+              peer1_native_vlan: "2301"
+              peer2_native_vlan: "2301"
+              peer1_allowed_vlans: "2301"
+              peer2_allowed_vlans: "2301"
+
+    - name: Delete that vPC (both peers are verified; the controller releases the members admin-up and the module sets them admin-down before the deploy)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: deleted
+        config:
+          - name: vpc10
+            type: vpc
+            switch:
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            deploy: true
 
     # Breakout interfaces
 
