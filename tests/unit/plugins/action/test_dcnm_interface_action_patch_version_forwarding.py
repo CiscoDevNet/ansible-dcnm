@@ -14,6 +14,8 @@ __metaclass__ = type
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from ansible_collections.cisco.dcnm.plugins.action import dcnm_interface as action_module
 
 
@@ -21,13 +23,14 @@ def _bare_action_module():
     return object.__new__(action_module.ActionModule)
 
 
-def test_patch_version_survives_action_preprocessing_unchanged():
+@pytest.mark.parametrize("patch_version", ["4.3.1.0175006011", "4.4.1"])
+def test_patch_version_survives_action_preprocessing_unchanged(patch_version):
     am = _bare_action_module()
     am._task = MagicMock()
     am._task.args = {
         "fabric": "FAB1",
         "state": "merged",
-        "patch_version": "4.3.1.0175006011",
+        "patch_version": patch_version,
         "config": [
             {"name": "eth1/1", "type": "eth", "switch": ["10.0.0.1"],
              "profile": {"mode": "access"}}
@@ -42,7 +45,7 @@ def test_patch_version_survives_action_preprocessing_unchanged():
     with patch.object(action_module.ActionNetworkModule, "run", fake_super_run):
         result = am.run(task_vars={})
 
-    assert captured["args"]["patch_version"] == "4.3.1.0175006011", (
+    assert captured["args"]["patch_version"] == patch_version, (
         "the action plugin must forward the exact caller-supplied value, unmodified")
     assert result == {"changed": False}
 
