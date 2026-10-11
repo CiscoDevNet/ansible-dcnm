@@ -215,6 +215,9 @@ class FabricUpdateCommon(FabricCommon):
 
             # Remove keys that cause errors on ND 4.x during fabric update
             self._remove_nd4x_problematic_keys(full_payload)
+            # Normalize only inherited MSD state; explicit user input must still be validated by NDFC.
+            if payload.get("FABRIC_TYPE") == "VXLAN_EVPN_MSD" and "ENABLE_DSVNI" not in payload and full_payload.get("ENABLE_DSVNI") == "":
+                full_payload["ENABLE_DSVNI"] = "false"
             self._fabric_changes_payload[fabric_name] = full_payload
 
         msg = f"{self.class_name}.{method_name}: "
