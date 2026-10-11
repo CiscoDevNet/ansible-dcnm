@@ -24,8 +24,8 @@ from typing import Any, Literal
 from ..common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import EpBootflashFiles
 from ..common.conversion import ConversionUtils
 from ..common.rest_send_v2 import RestSend
-from ..common.results import Results
-from ..common.switch_details import SwitchDetails
+from ..common.results_v2 import Results
+from ..common.switch_details_v2 import SwitchDetails
 
 
 class BootflashFiles:
@@ -136,7 +136,6 @@ class BootflashFiles:
         self._supervisor: str = ""
         self._switch_details: SwitchDetails = SwitchDetails()
         self._switch_details.results = Results()
-        self._switch_details.rest_send = RestSend({})
         self._target: dict[str, str] = {}
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -166,7 +165,7 @@ class BootflashFiles:
             raise ValueError(f"{msg}")
 
         if self.switch_details_refreshed is False:
-            self.switch_details.rest_send = self.rest_send
+            self.switch_details.rest_send = self._rest_send
             self.switch_details.refresh()
             self.switch_details_refreshed = True
 
@@ -259,7 +258,6 @@ class BootflashFiles:
         -   rest_send is not properly initialized.
         -   switch_details is not properly initialized.
         """
-        # pylint: disable=no-member
         method_name: str = inspect.stack()[0][3]
 
         def raise_exception(property_name: str) -> None:
@@ -281,16 +279,12 @@ class BootflashFiles:
         -   ``ValueError`` if:
                 -   Mandatory parameters are not set.
 
-        ### Notes
-        -   pylint: disable=no-member is needed due to the results property
-            being dynamically created by the @Properties.add_results decorator.
         """
-        # pylint: disable=no-member
         self.validate_commit_parameters()
 
-        self.results.action = self.action
-        self.results.check_mode = self.rest_send.check_mode
-        self.results.state = self.rest_send.state
+        self._results.action = self.action
+        self._results.check_mode = self._rest_send.check_mode
+        self._results.state = self._rest_send.state
 
         self.delete_files()
 
@@ -302,23 +296,22 @@ class BootflashFiles:
         ### Raises
         None
         """
-        # pylint: disable=no-member
         if self.payload["deleteFiles"]:
-            self.rest_send.path = self.ep_bootflash_files.path
-            self.rest_send.verb = self.ep_bootflash_files.verb
-            self.rest_send.payload = self.payload
-            self.rest_send.commit()
-            self.results.response_current = copy.deepcopy(self.rest_send.response_current)
-            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self._rest_send.path = self.ep_bootflash_files.path
+            self._rest_send.verb = self.ep_bootflash_files.verb
+            self._rest_send.payload = self.payload
+            self._rest_send.commit()
+            self._results.response_current = copy.deepcopy(self._rest_send.response_current)
+            self._results.result_current = copy.deepcopy(self._rest_send.result_current)
         else:
-            self.results.result_current = {"success": True, "changed": False}
-            self.results.response_current = {
+            self._results.result_current = {"success": True, "changed": False}
+            self._results.response_current = {
                 "MESSAGE": "No files to delete.",
                 "RETURN_CODE": 200,
             }
 
-        self.results.diff_current = copy.deepcopy(self.diff)
-        self.results.register_task_result()
+        self._results.diff_current = copy.deepcopy(self.diff)
+        self._results.register_task_result()
 
     def validate_prerequisites_for_add_file(self) -> None:
         """
@@ -647,11 +640,6 @@ class BootflashFiles:
 
         Set an instance of the RestSend class.
         """
-        method_name: str = inspect.stack()[0][3]
-        if not self._rest_send.params:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "RestSend.params must be set before accessing."
-            raise ValueError(msg)
         return self._rest_send
 
     @rest_send.setter
@@ -669,6 +657,10 @@ class BootflashFiles:
             raise TypeError(msg) from error
         if _class_have != _class_need:
             raise TypeError(msg)
+        if not value.params:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "RestSend.params must be set."
+            raise ValueError(msg)
         self._rest_send = value
 
     @property
