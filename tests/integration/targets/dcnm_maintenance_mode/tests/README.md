@@ -37,12 +37,12 @@ Replace nxos_username and nxos_password with those used in your local setup.
     # testcase: 07_merged_maintenance_mode_deploy_wait_switch_level
     # testcase: 08_merged_normal_mode_deploy_wait_switch_level
     # testcase: 09_merged_maintenance_mode_no_deploy
-    fabric_name_1: VXLAN_EVPN_Fabric
-    fabric_type_1: VXLAN_EVPN
+    fabric_name_00: VXLAN_EVPN
+    fabric_type_00: VXLAN_EVPN
     fabric_name_2: VXLAN_EVPN_MSD_Fabric
     fabric_type_2: VXLAN_EVPN_MSD
-    fabric_name_3: LAN_CLASSIC_Fabric
-    fabric_type_3: LAN_CLASSIC
+    fabric_name_10: LAN_CLASSIC
+    fabric_type_10: LAN_CLASSIC
     fabric_name_4: IPFM_Fabric
     fabric_type_4: IPFM
     leaf_1: 192.168.1.2
