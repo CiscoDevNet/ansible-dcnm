@@ -31,13 +31,15 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from typing import Any, Generator
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender
@@ -83,8 +85,8 @@ def test_image_validate_00000(image_validate) -> None:
     assert instance.check_interval == 10
     assert instance.check_timeout == 1800
     assert instance.non_disruptive is False
-    assert instance.rest_send is None
-    assert instance.results is None
+    assert instance._rest_send.class_name == "RestSend"
+    assert instance._results.class_name == "Results"
     assert instance.serial_numbers is None
 
 
@@ -138,7 +140,7 @@ def test_image_validate_00200(image_validate) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -205,7 +207,7 @@ def test_image_validate_00300(image_validate) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -267,7 +269,7 @@ def test_image_validate_00400(image_validate) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -328,7 +330,7 @@ def test_image_validate_00410(image_validate) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -398,7 +400,7 @@ def test_image_validate_00420(image_validate) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -470,7 +472,7 @@ def test_image_validate_00500(image_validate) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -534,7 +536,7 @@ def test_image_validate_00510(image_validate) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -719,7 +721,7 @@ def test_image_validate_00900(image_validate, serial_numbers_is_set, expected) -
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
         yield responses_ep_issu(key)
         yield responses_ep_issu(key)
@@ -775,8 +777,8 @@ def test_image_validate_00920(image_validate) -> None:
     response properties, and return without doing anything else.
     """
 
-    def responses():
-        yield None
+    def responses() -> Generator[dict[str, str], Any, Any]:
+        yield {}
 
     gen_responses = ResponseGenerator(responses())
 
@@ -843,7 +845,7 @@ def test_image_validate_00930(image_validate) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageValidate().prune_serial_numbers
         yield responses_ep_issu(key)
         # ImageValidate().validate_serial_numbers
@@ -906,7 +908,7 @@ def test_image_validate_00940(image_validate) -> None:
     key_a = f"{method_name}a"
     key_b = f"{method_name}b"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         # ImageValidate.prune_serial_numbers()
         yield responses_ep_issu(key_a)
         # ImageValidate.validate_serial_numbers()

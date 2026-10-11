@@ -30,11 +30,13 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from typing import Any, Generator
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender
@@ -96,7 +98,7 @@ def test_switch_issu_details_by_serial_number_00100(
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -137,7 +139,7 @@ def test_switch_issu_details_by_serial_number_00110(
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -232,7 +234,7 @@ def test_switch_issu_details_by_serial_number_00120(
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -273,7 +275,7 @@ def test_switch_issu_details_by_serial_number_00130(
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -313,7 +315,7 @@ def test_switch_issu_details_by_serial_number_00140(
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -353,7 +355,7 @@ def test_switch_issu_details_by_serial_number_00150(
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -408,7 +410,7 @@ def test_switch_issu_details_by_serial_number_00200(
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -457,7 +459,7 @@ def test_switch_issu_details_by_serial_number_00210(
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
+    def responses() -> Generator[dict[str, str], Any, Any]:
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
