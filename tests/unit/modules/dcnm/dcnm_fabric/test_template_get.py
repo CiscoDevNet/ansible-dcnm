@@ -32,17 +32,16 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, responses_template_get,
-    template_get_fixture)
+    MockAnsibleModule,
+    does_not_raise,
+    responses_template_get,
+    template_get_fixture,
+)
 
 
 def test_template_get_00000(template_get) -> None:

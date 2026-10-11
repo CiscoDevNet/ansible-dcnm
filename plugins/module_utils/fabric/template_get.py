@@ -22,8 +22,7 @@ import copy
 import inspect
 import logging
 
-from ..common.api.v1.configtemplate.rest.config.templates.templates import \
-    EpTemplate
+from ..common.api.v1.configtemplate.rest.config.templates.templates import EpTemplate
 from ..common.exceptions import ControllerResponseError
 from ..common.properties import Properties
 
