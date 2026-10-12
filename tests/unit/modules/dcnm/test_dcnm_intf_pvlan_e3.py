@@ -253,7 +253,7 @@ class TestE302OtherUnownedCommands:
         assert status == "exit", res
         assert len(deploys(c)) == 1
 
-    @pytest.mark.parametrize("line", ("speed 1000", "switchport access vlan 10", "spanning-tree cost 4"))
+    @pytest.mark.parametrize("line", ("switchport access vlan 10", "spanning-tree cost 4"))
     def test_unowned_command_in_an_owned_field_blocks_proof(self, line):
         # The device state of a field the operation owns cannot be interpreted: neither a deploy
         # nor convergence is declared, even with the measured, otherwise valid pending.
@@ -261,6 +261,14 @@ class TestE302OtherUnownedCommands:
         c.previews = [with_device_line(measured_preview("G6-M0b"), line, negate=False)]
         status, res = run(c, [pvlan_item(**ADD_2212)])
         assert status == "fail" and "cannot be proven safe or converged" in res["msg"] and deploys(c) == []
+
+    def test_a_device_speed_line_is_owned_and_its_withdrawal_must_be_in_the_pending(self):
+        # RC1: `speed <n>` is a line int_pvlan_host renders, so the operation owns it. On a device whose intent is Auto, the measured
+        # pending that does not withdraw it is still refused before any deploy, now with the precise reason.
+        c = ctrl()
+        c.previews = [with_device_line(measured_preview("G6-M0b"), "speed 1000", negate=False)]
+        status, res = run(c, [pvlan_item(**ADD_2212)])
+        assert status == "fail" and "withdrawal of 'speed 1000' is absent from the pending" in res["msg"] and deploys(c) == []
 
 
 # ===================================================================================== E3-03

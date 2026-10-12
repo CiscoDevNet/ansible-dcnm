@@ -51,9 +51,10 @@ def _request_log(c):
     return [(m, p, json.loads(b) if isinstance(b, str) else b) for m, p, b in c.calls]
 
 
-def test_int_pvlan_host_has_no_registered_binding():
-    """Precondition for everything below: PVLAN fields are native, not registry bindings."""
-    assert registered_profile_keys(PVLAN) == set()
+def test_int_pvlan_host_registers_only_the_two_c1_lldp_companions():
+    """Precondition for everything below: the PVLAN core fields stay native. PLAN-2 C1 registers exactly the two LLDP companions
+    of int_pvlan_host (A0 REGISTRY_BINDING rows); every native PVLAN field below still owes nothing to the patch gate."""
+    assert registered_profile_keys(PVLAN) == {"disable_lldp_transmit", "disable_lldp_receive"}
 
 
 def test_every_engine_contribution_call_receives_the_callers_patch_version():
@@ -66,7 +67,8 @@ def test_every_engine_contribution_call_receives_the_callers_patch_version():
         n for n in ast.walk(tree)
         if isinstance(n, ast.Call) and getattr(n.func, "id", None) == "gie_contribute_nvpairs"
     ]
-    assert len(calls) == 7, len(calls)
+    # PLAN-2 C1: + the port-channel and vPC PVLAN builders (7 -> 9).
+    assert len(calls) == 9, len(calls)
     for call in calls:
         assert len(call.args) == 4, ast.get_source_segment(open(dcnm_interface.__file__).read(), call)
         fourth = call.args[3]
@@ -131,14 +133,15 @@ def test_trunk_to_pvlan_transition_never_carries_registered_trunk_values(patch_v
     assert c.order() == ["MODIFY", "PREVIEW", "DEPLOY"]
 
 
-@pytest.mark.parametrize("patch_version", PATCH_VALUES)
-def test_registered_key_on_a_pvlan_profile_is_refused_regardless_of_patch(patch_version):
-    """An approved patch never makes another parent's registered field valid on int_pvlan_host:
-    the existing parent guard rejects it before any write, with or without the patch."""
+@pytest.mark.parametrize("patch_version", [p for p in PATCH_VALUES if p.id in ("omitted", "unapproved")])
+def test_registered_key_on_a_pvlan_profile_needs_an_approved_patch(patch_version):
+    """PLAN-2 C1: disable_lldp_transmit is a registered int_pvlan_host companion now. Without an approved patch_version the
+    explicit field is refused with the engine's patch message before any write or preview (the native siblings of the same
+    item included). The approved/ND 4.4.1 side is covered by test_dcnm_intf_pvlan_companions_c1.py."""
     c = ctrl()
     c.previews = [measured_preview("G6-M0b")]
     item = pvlan_item(disable_lldp_transmit=True, **copy.deepcopy(ADD_2212))
     status, res = run(c, [item], patch_version=patch_version)
     assert status == "fail"
-    assert "disable_lldp_transmit" in res["msg"] and "mode 'pvlan'" in res["msg"]
+    assert "'disable_lldp_transmit' requires caller-supplied patch_version" in res["msg"]
     assert c.mutating() == [] and c.requests(mark=PREVIEW_MARK) == []

@@ -110,7 +110,10 @@ UNION_RESET_TOTAL = 74
 # PR725-VPC-DOT1Q-001 c2 adds the six int_vpc_dot1q_tunnel rows, registered only after their
 # explicit neutrals were measured on both peers of the pair. 200 + 6 = 206.
 # PR725-PVLAN2222 adds int_vlan::privateVlanMapping. 206 + 1 = 207.
-CANDIDATE_RESET_TOTAL = 207
+# PR725-PVLAN-COMPANIONS-001 (PLAN-2 C1) adds the eleven PVLAN companion rows (PVLANC1_ADDITIONS). Their resets are the
+# siblings' forms, INFERRED for the PVLAN parents and NOT measured live: registered, not accepted. 207 + 11 = 218.
+# IQ1 (PR725 ingress QoS) adds int_vpc_pvlan_host::qosStatsSuppressed (IQ1_ADDITIONS), reset inferred: 218 + 1 = 219.
+CANDIDATE_RESET_TOTAL = 219
 
 # The additions this candidate is allowed to carry, and nothing else: ALPHA's
 # four `int_routed_host` and four `int_subif` rows, plus BETA's two
@@ -493,17 +496,40 @@ PVLAN1_ADDITIONS = (
 )
 PVLAN1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in PVLAN1_ADDITIONS)
 
+# PR725-PVLAN-COMPANIONS-001 (PLAN-2 C1): the A0-PVLAN-1 REGISTRY_BINDING rows of the three PVLAN parents. Same public keys and
+# reset forms as the sibling host parents; on these parents the resets are INFERRED (no PVLAN campaign measured them).
+PVLANC1_ADDITIONS = tuple(
+    (parent, nv, key, reset)
+    for parent, rows in (
+        ("int_pvlan_host", (("lldpReceive", "disable_lldp_receive", "false"), ("lldpTransmit", "disable_lldp_transmit", "false"))),
+        ("int_port_channel_pvlan_host", (("lldpReceive", "disable_lldp_receive", "false"),
+                                         ("lldpTransmit", "disable_lldp_transmit", "false"),
+                                         ("queuingStats", "disable_queuing_stats", "false"),
+                                         ("spanningTreePortType", "spanning_tree_port_type", "no"))),
+        ("int_vpc_pvlan_host", (("aclFilter", "acl_filter", ""), ("lldpReceive", "disable_lldp_receive", "false"),
+                                ("lldpTransmit", "disable_lldp_transmit", "false"),
+                                ("queuingStats", "disable_queuing_stats", "false"),
+                                ("spanningTreePortType", "spanning_tree_port_type", "no"))),
+    )
+    for nv, key, reset in rows
+)
+PVLANC1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in PVLANC1_ADDITIONS)
+
+# IQ1: the vPC PVLAN qosStatsSuppressed row, the sibling vPC parents' key and reset form (INFERRED on the PVLAN parent).
+IQ1_ADDITIONS = (("int_vpc_pvlan_host", "qosStatsSuppressed", "disable_qos_stats", "false"),)
+IQ1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in IQ1_ADDITIONS)
+
 # Every addition this checkout carries over the published 74, by lot. The dampening lot is
 # included in the SET arithmetic -- it is registered, so it must be accounted for -- while its
 # controller-only evidence status is recorded above and asserted in its own grouped test.
 ALL_ADDITIONS = (CANDIDATE_ADDITIONS + EIGRP_ADDITIONS + MACSEC_ADDITIONS
                  + DAMPENING_EXPERIMENTAL_ADDITIONS + PIMACL_ADDITIONS
                  + VPC13_ADDITIONS + HSRP3_ADDITIONS + VPC_DOT1Q6_ADDITIONS
-                 + PVLAN1_ADDITIONS)
+                 + PVLAN1_ADDITIONS + PVLANC1_ADDITIONS + IQ1_ADDITIONS)
 ALL_ADDED_IDENTITIES = (CANDIDATE_IDENTITIES | EIGRP_IDENTITIES | MACSEC_IDENTITIES
                         | DAMPENING_EXPERIMENTAL_IDENTITIES | PIMACL_IDENTITIES
                         | VPC13_IDENTITIES | HSRP3_IDENTITIES | VPC_DOT1Q6_IDENTITIES
-                        | PVLAN1_IDENTITIES)
+                        | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES)
 
 
 def _rows():
@@ -591,9 +617,13 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     assert VPC_DOT1Q6_IDENTITIES <= registered
     assert len(PVLAN1_IDENTITIES) == len(PVLAN1_ADDITIONS) == 1
     assert PVLAN1_IDENTITIES <= registered
+    assert len(PVLANC1_IDENTITIES) == len(PVLANC1_ADDITIONS) == 11
+    assert PVLANC1_IDENTITIES <= registered
+    assert len(IQ1_IDENTITIES) == len(IQ1_ADDITIONS) == 1
+    assert IQ1_IDENTITIES <= registered
     groups = (CANDIDATE_IDENTITIES, EIGRP_IDENTITIES, MACSEC_IDENTITIES,
               DAMPENING_EXPERIMENTAL_IDENTITIES, PIMACL_IDENTITIES, VPC13_IDENTITIES,
-              HSRP3_IDENTITIES, VPC_DOT1Q6_IDENTITIES, PVLAN1_IDENTITIES)
+              HSRP3_IDENTITIES, VPC_DOT1Q6_IDENTITIES, PVLAN1_IDENTITIES, PVLANC1_IDENTITIES, IQ1_IDENTITIES)
     for pos, group in enumerate(groups):
         for prior in groups[:pos]:
             assert not group & prior, "two source lots overlap"
@@ -655,8 +685,10 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     # + 3 PR725-HSRP5 int_vlan rows (HSRP3_ADDITIONS) = 126, and 74 + 126 = 200.
     # + 6 PR725-VPC-DOT1Q-001 int_vpc_dot1q_tunnel rows (VPC_DOT1Q6_ADDITIONS) = 132, 74 + 132 = 206.
     # + 1 PR725-PVLAN2222 int_vlan row (PVLAN1_ADDITIONS) = 133, and 74 + 133 = 207.
-    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 == len(ALL_ADDITIONS), (
-        "the lots together declare %d additions over %d distinct identities; expected 133"
+    # + 11 PLAN-2 C1 PVLAN companion rows (PVLANC1_ADDITIONS, inferred resets) = 144, and 74 + 144 = 218.
+    # + 1 IQ1 vPC PVLAN qosStatsSuppressed row (IQ1_ADDITIONS, inferred reset) = 145, and 74 + 145 = 219.
+    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 == len(ALL_ADDITIONS), (
+        "the lots together declare %d additions over %d distinct identities; expected 145"
         % (len(ALL_ADDITIONS), len(ALL_ADDED_IDENTITIES)))
 
     # NEGATIVE CONTROL: the withheld EIGRP identities must still carry NO reset. Without
@@ -755,7 +787,10 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
               ("vPC", set(VPC13_IDENTITIES), 13),
               ("HSRP/IPv4", set(HSRP3_IDENTITIES), 3),
               ("vPC dot1q-tunnel", set(VPC_DOT1Q6_IDENTITIES), 6),
-              ("PVLAN mapping", set(PVLAN1_IDENTITIES), 1))
+              ("PVLAN mapping", set(PVLAN1_IDENTITIES), 1),
+              # registered with INFERRED resets (not measured on a PVLAN parent): named so it is never read as accepted
+              ("PVLAN companions C1/inferred", set(PVLANC1_IDENTITIES), 11),
+              ("vPC PVLAN ingress QoS IQ1/inferred", set(IQ1_IDENTITIES), 1))
     for name, group, expected in groups:
         assert len(group) == expected, (
             "%s declares %d identities, expected %d" % (name, len(group), expected))
@@ -766,17 +801,17 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
              | OSPF_ALL_P3B | OSPF_ALL_P5 | BFD_ECHO | BFD_INTERVAL
              | EIGRP_IDENTITIES | MACSEC_IDENTITIES | DAMPENING_EXPERIMENTAL_IDENTITIES
              | PIMACL_IDENTITIES | VPC13_IDENTITIES | HSRP3_IDENTITIES
-             | VPC_DOT1Q6_IDENTITIES | PVLAN1_IDENTITIES)
+             | VPC_DOT1Q6_IDENTITIES | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES)
     assert union == set(ALL_ADDED_IDENTITIES), (
         "the named campaign groups are not exactly the declared additions.\n"
         "  in a group but not declared: %s\n  declared but in no group: %s"
         % (sorted(union - set(ALL_ADDED_IDENTITIES)),
            sorted(set(ALL_ADDED_IDENTITIES) - union)))
-    assert len(union) == 133, (
+    assert len(union) == 145, (
         "the named groups cover %d identities; the delta over the published 74 is "
         "14 base88 + 30 OSPF-ALL + 10 BFD-ALL + 35 EIGRP + 4 MACsec + 7 dampening "
-        "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 + 6 vPC dot1q-tunnel + 1 PVLAN "
-        "= 133, and 74 + 133 = 207"
+        "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 + 6 vPC dot1q-tunnel + 1 PVLAN + 11 PVLAN companions + 1 IQ1 "
+        "= 145, and 74 + 145 = 219"
         % len(union))
 
 
@@ -992,6 +1027,10 @@ def test_the_four_share_one_parent_and_did_not_spread_to_its_unmeasured_siblings
     }
     expected = {(p, key): "false" for p in lldp_parents
                 for key in ("disable_lldp_receive", "disable_lldp_transmit")}
+    # PLAN-2 C1: the three PVLAN parents carry the same LLDP reset, INFERRED from the measured siblings above and NOT measured
+    # on a PVLAN parent. Declared separately so the measured set above keeps its meaning and the closure still holds.
+    expected.update({(p, key): "false" for p in ("int_pvlan_host", "int_port_channel_pvlan_host", "int_vpc_pvlan_host")
+                     for key in ("disable_lldp_receive", "disable_lldp_transmit")})
     expected.update({(p, "ospf_network_type"): "noChange" for p in
                      ("int_loopback", "int_routed_host", "int_subif", "int_vlan")})
     expected.update({(p, "ospf_passive_mode"): "noChange" for p in

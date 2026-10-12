@@ -130,6 +130,27 @@ COMMITTED_BINDINGS = {
     ("int_vpc_dot1q_tunnel", "lldpTransmit"): "disable_lldp_transmit",
     ("int_vpc_dot1q_tunnel", "lldpReceive"): "disable_lldp_receive",
 
+    # The three PVLAN parents (PR725-PVLAN-COMPANIONS-001, C1): the same public keys, types and
+    # reset forms as the sibling host parents above, read from the INSTALLED PVLAN templates. The
+    # PVLAN helper keeps the PVLAN core and the CLI model of the child/member these values reach;
+    # the registry owns their explicit value (patch_version gate) and their withdrawal. The resets
+    # are inferred from the siblings, NOT measured on a PVLAN parent. See
+    # registry_slice_c1_pvlan_companions.yaml.
+    ("int_pvlan_host", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_pvlan_host", "lldpReceive"): "disable_lldp_receive",
+    ("int_port_channel_pvlan_host", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_port_channel_pvlan_host", "lldpReceive"): "disable_lldp_receive",
+    ("int_port_channel_pvlan_host", "spanningTreePortType"): "spanning_tree_port_type",
+    ("int_port_channel_pvlan_host", "queuingStats"): "disable_queuing_stats",
+    ("int_vpc_pvlan_host", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_vpc_pvlan_host", "lldpReceive"): "disable_lldp_receive",
+    ("int_vpc_pvlan_host", "spanningTreePortType"): "spanning_tree_port_type",
+    ("int_vpc_pvlan_host", "queuingStats"): "disable_queuing_stats",
+    ("int_vpc_pvlan_host", "aclFilter"): "acl_filter",
+    # PR725 ingress QoS (IQ1): qosStatsSuppressed of the vPC PVLAN parent, the sibling vPC parents' public key and reset form
+    # (inferred, NOT measured on a PVLAN parent). See registry_slice_iq1_vpc_pvlan_qos_stats.yaml.
+    ("int_vpc_pvlan_host", "qosStatsSuppressed"): "disable_qos_stats",
+
     # int_routed_host -- the first non-switchport parent after the fabric loopback.
     #
     # Four of these six delegate to a child template (interface_lldp_disable,

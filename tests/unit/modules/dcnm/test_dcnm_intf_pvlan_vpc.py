@@ -139,11 +139,11 @@ def test_a_vpc_trunk_item_still_takes_the_unchanged_generic_path():
         # VPC-MODES-E1: a promiscuous creation needs its mapping; trunk secondary from the harness trunk member is the known incident.
         ({"pvlan_mode": "promiscuous", "pvlan_association": None}, "pvlan_mapping is required"),
         ({"pvlan_mode": "trunk secondary"}, "Known incident pending engineering"),
-        ({"peer2_members": [M2, "Ethernet1/9"]}, "exactly one member per peer"),
+        ({"peer2_members": [M2, "e1/8"]}, "duplicate physical"),
         ({"peer1_pcid": 11}, "must equal the vPC id"),
         ({"peer1_pcid": None}, "must not be null"),
         ({"pvlan_association": []}, "empty pvlan_association"),
-        ({"peer1_cmds": ["no shutdown"]}, "not implemented for a vPC"),
+        ({"peer1_cmds": ["no shutdown"]}, "owned by a structured field"),  # RC1: freeform rule
         ({"native_vlan": "5"}, "not implemented for a vPC"),
     ],
 )
@@ -695,7 +695,8 @@ def test_an_uncertain_update_answer_never_reaches_a_gate_or_a_deploy(resp):
 def test_mode_member_and_pcid_changes_of_an_existing_vpc_are_refused():
     promiscuous = vpc_item(pvlan_mode="promiscuous", pvlan_mapping=[{"primary_vlan": PRIMARY, "secondary_vlans": str(SECONDARY)}])
     promiscuous["profile"].pop("pvlan_association")
-    for item, needle in ((vpc_item(peer2_members=["Ethernet1/9"]), "changing the member"), (promiscuous, "changing pvlan_mode of an existing vPC")):
+    # MM-B: the member case moved to test_dcnm_intf_pvlan_member_updates.py (a member change follows the regular rule now)
+    for item, needle in ((promiscuous, "changing pvlan_mode of an existing vPC"),):
         ctrl = created_ctrl()
         converged_previews(ctrl)
         status, result = run_vpc(ctrl, [item])
@@ -787,7 +788,7 @@ def _policy_list2_unreadable(c):
         (_conf_on_peer2, "freeform commands on peer 2"),
         (_mode_not_host, "not in a known pvlan_mode"),
         (_pcid_differs, "differs from the vPC id"),
-        (_two_members_on_peer1, "exactly one explicit member per peer"),
+        (_two_members_on_peer1, "child port-channel or member could not be read"),
         (_member2_up, "not administratively down"),
         (_member2_not_ours, "not the member of port-channel10"),
         (_child2_missing, "partial state"),
@@ -865,13 +866,14 @@ def test_residue_only_on_the_second_peer_stops_the_release_before_the_deploy_and
     status, result = run_vpc(ctrl, [vpc_del_item()], state="deleted")
     assert status == "fail" and "member release failed while proving the released member before any member write (peer 2)" in result["msg"], result.get("msg")
     assert "live policies still reference the vPC or its child port-channel" in result["msg"]
-    # the observable partial state: peer 1's member WAS released and corrected (confirmed), peer 2's was not touched, nothing deployed
-    assert "legacy interface/modify of %s on peer 1 ADMIN_STATE false (per-item SUCCESS)" % M1 in result["msg"]
-    assert ctrl.deploys() == [] and len(ctrl.markdeletes()) == 1
-    release_only(ctrl, count=1)
-    assert ctrl.nodes[SN1][M1]["nvPairs"]["ADMIN_STATE"] == "false" and ctrl.nodes[SN2][M2]["nvPairs"]["ADMIN_STATE"] == "true"
+    # C1-R5 G4: BOTH members are proved before the first member modify, so peer 2's residue stops the run with NO member write on either
+    # peer (the mark-delete stays confirmed: never "zero writes" globally), every member write pending, nothing deployed
+    assert "on peer 1 ADMIN_STATE false" not in result["msg"] and "Member writes per serial: %s=pending, %s=pending" % (SN1, SN2) in result["msg"]
+    assert ctrl.modifies() == [] and ctrl.deploys() == [] and len(ctrl.markdeletes()) == 1
+    assert ctrl.nodes[SN1][M1]["nvPairs"]["ADMIN_STATE"] == "true" and ctrl.nodes[SN2][M2]["nvPairs"]["ADMIN_STATE"] == "true"
     record = result["pvlan_vpc_release"][-1]
-    assert record["peer"] == 2 and record["uncertain_writes"] == [] and len(record["confirmed_writes"]) == 2
+    assert record["peer"] == 2 and record["uncertain_writes"] == [] and len(record["confirmed_writes"]) == 1
+    assert record["member_writes"] == {SN1: "pending", SN2: "pending"}
 
 
 class LateResidue(VpcController):

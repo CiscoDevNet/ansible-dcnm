@@ -52,8 +52,19 @@ def _log(c):
     return [(m, p, json.loads(b) if isinstance(b, str) else b) for m, p, b in c.calls]
 
 
-def test_port_channel_and_vpc_pvlan_policies_have_no_registered_binding():
-    for policy in (P.PO_HOST_POLICY, P.PO_MEMBER_POLICY, P.VPC_HOST_POLICY, P.VPC_PO_POLICY):
+def test_port_channel_and_vpc_pvlan_policies_register_only_the_c1_companions():
+    """PLAN-2 C1: the parents register exactly their A0 REGISTRY_BINDING companions; the member and the vPC child register
+    nothing (they are written by the parent template). A run that sets none of them is unchanged by the patch value (below)."""
+    assert registered_profile_keys(P.PO_HOST_POLICY) == {"disable_lldp_transmit", "disable_lldp_receive", "spanning_tree_port_type", "disable_queuing_stats"}
+    assert registered_profile_keys(P.VPC_HOST_POLICY) == {
+        "disable_lldp_transmit",
+        "disable_lldp_receive",
+        "spanning_tree_port_type",
+        "disable_queuing_stats",
+        "acl_filter",
+        "disable_qos_stats",  # IQ1
+    }
+    for policy in (P.PO_MEMBER_POLICY, P.VPC_PO_POLICY):
         assert registered_profile_keys(policy) == set(), policy
 
 

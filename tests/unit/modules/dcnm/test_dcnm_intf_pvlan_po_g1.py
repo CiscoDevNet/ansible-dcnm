@@ -346,7 +346,8 @@ def test_p4_partial_removal_from_promiscuous_is_refused_before_any_write_as_prot
 
 
 def test_trunk_promiscuous_partial_removal_is_not_blocked():
-    raw = {"pvlan_mode": "trunk promiscuous", "pvlan_mapping": [{"primary_vlan": 2210, "secondary_vlans": "2212"}]}
+    # MM-B: `replaced` states the exact membership (regular rule); the members are listed explicitly
+    raw = {"pvlan_mode": "trunk promiscuous", "pvlan_mapping": [{"primary_vlan": 2210, "secondary_vlans": "2212"}], "members": [IF7]}
     have = P.po_host_nvpairs(dict(raw, members=[IF7], pvlan_mapping=[{"primary_vlan": 2210, "secondary_vlans": "2211-2212"}]), PO)
     out = P.reconcile_po("replaced", raw, PO, PO_HOST, have)
     assert out["blocked"] == [] and out["update"] and list(out["changed"]) == ["MAPPING_LIST"]
@@ -357,13 +358,20 @@ def test_trunk_promiscuous_partial_removal_is_not_blocked():
     "raw, needle",
     [
         ({"pvlan_mode": "host", "pvlan_association": [{"primary_vlan": 2210, "secondary_vlan": 2212}]}, "changing pvlan_mode"),
-        ({"pvlan_mode": "promiscuous", "pvlan_mapping": MAP_2212, "members": [IF8]}, "changing the members"),
     ],
 )
 def test_mode_and_member_changes_of_an_existing_port_channel_are_refused(raw, needle):
     have = P.po_host_nvpairs({"pvlan_mode": "promiscuous", "members": [IF7], "pvlan_mapping": MAP_2212}, PO)
     out = P.reconcile_po("merged", raw, PO, PO_HOST, have)
     assert out["blocked"] and needle in out["blocked"][0] and not out["update"]
+
+
+def test_a_member_change_of_an_existing_port_channel_follows_the_regular_merged_rule():
+    """MM-B (contract change): the member case of the test above was a refusal until MM-B; `merged` is now the union (regular rule)."""
+    have = P.po_host_nvpairs({"pvlan_mode": "promiscuous", "members": [IF7], "pvlan_mapping": MAP_2212}, PO)
+    out = P.reconcile_po("merged", {"pvlan_mode": "promiscuous", "pvlan_mapping": MAP_2212, "members": [IF8]}, PO, PO_HOST, have)
+    assert out["blocked"] == [] and out["update"] and out["added"] == [IF8.lower()] and out["removed"] == []
+    assert P.normalize_member_list(out["nv"]["MEMBER_INTERFACES"])[0] == {IF7.lower(), IF8.lower()}
 
 
 def test_unclassifiable_have_field_blocks_a_full_set_update():
@@ -577,7 +585,7 @@ def test_h3_merged_description_only_preserves_the_association_and_the_member():
 
 def test_h4_replaced_host_association_swap_is_a_full_set_update():
     have = P.po_host_nvpairs({"pvlan_mode": "host", "members": [IF7], "pvlan_association": [{"primary_vlan": 2210, "secondary_vlan": 2212}]}, PO)
-    raw = {"pvlan_mode": "host", "pvlan_association": [{"primary_vlan": 2410, "secondary_vlan": 2412}]}
+    raw = {"pvlan_mode": "host", "pvlan_association": [{"primary_vlan": 2410, "secondary_vlan": 2412}], "members": [IF7]}  # MM-B: explicit
     out = P.reconcile_po("replaced", raw, PO, PO_HOST, have)
     assert out["blocked"] == [] and out["update"] and list(out["changed"]) == ["ASSOCIATION_LIST"]
     assert P.pairs_from_wire(out["nv"]["ASSOCIATION_LIST"], "ASSOCIATION_LIST") == [(2410, 2412)]

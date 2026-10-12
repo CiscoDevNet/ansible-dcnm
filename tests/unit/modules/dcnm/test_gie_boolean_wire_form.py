@@ -89,6 +89,17 @@ BOOL_UNSUPPORTED = [t for t in BOOL_PASSTHROUGH if (t[0], t[1]) in _UNSUPPORTED]
 BOOL_UNSUPPORTED_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, nvpair in BOOL_UNSUPPORTED]
 assert BOOL_SUPPORTED and BOOL_UNSUPPORTED, "the partition must cover both sides"
 
+# PLAN-2 C1: the three PVLAN parents register booleans too, but they never reach the generic comparator these sweeps drive
+# (dcnm_intf_compare_want_and_have on a bare payload): their builders and dcnm_intf_pvlan_*_compare reconcile the FULL PVLAN set
+# (lists, members, peers) and call the same engine functions for the companions. Driving them here would test a route the module
+# never takes. The same wire-form / idempotency / merged-preservation / withdrawal contract is asserted for them through the real
+# main() in test_dcnm_intf_pvlan_companions_c1.py. They stay in BOOL_PASSTHROUGH (the inventory) and in the engine-only sweep.
+PVLAN_ROUTED_PARENTS = frozenset(("int_pvlan_host", "int_port_channel_pvlan_host", "int_vpc_pvlan_host"))
+BOOL_GENERIC = [t for t in BOOL_SUPPORTED if t[0] not in PVLAN_ROUTED_PARENTS]
+BOOL_GENERIC_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, nvpair in BOOL_GENERIC]
+# IQ1 adds int_vpc_pvlan_host::disable_qos_stats: nine.
+assert len(BOOL_SUPPORTED) - len(BOOL_GENERIC) == 9, "exactly the nine PVLAN companion booleans take the PVLAN route"
+
 
 def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     """Guard the guard: an empty parametrize list turns every test below into a no-op.
@@ -174,7 +185,11 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 105 = 104 + enable_vpc_peer_link, the only boolean in batch 2.
     # 109 = 105 + the four int_vpc_dot1q_tunnel booleans (disable_lldp_transmit,
     # disable_lldp_receive, disable_qos_stats, disable_queuing_stats).
-    assert len(BOOL_PASSTHROUGH) == 109
+    # 117 = 109 + the eight PLAN-2 C1 PVLAN companion booleans: int_pvlan_host 2 (lldp x2),
+    # int_port_channel_pvlan_host 3 and int_vpc_pvlan_host 3 (lldp x2 + queuingStats each). spanning_tree_port_type (enum)
+    # and acl_filter (string) are the other three C1 rows. IQ1 registers the vPC PVLAN qosStatsSuppressed (disable_qos_stats,
+    # boolean): 117 + 1.
+    assert len(BOOL_PASSTHROUGH) == 118
 
 
 # ------------------------------------------------------- what the engine emits --
@@ -303,7 +318,7 @@ def _compare_obj(state, parent, profile_key, nvpair, want=_OMITTED, have=_OMITTE
     return obj
 
 
-@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_SUPPORTED, ids=BOOL_SUPPORTED_IDS)
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_GENERIC, ids=BOOL_GENERIC_IDS)
 @pytest.mark.parametrize(
     "playbook_value,controller_value",
     [(True, "true"), (False, "false")],
@@ -326,7 +341,7 @@ def test_reapplying_the_same_boolean_is_idempotent(
     assert obj.changed_dict[0]["merged"] == []
 
 
-@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_SUPPORTED, ids=BOOL_SUPPORTED_IDS)
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_GENERIC, ids=BOOL_GENERIC_IDS)
 @pytest.mark.parametrize("state", ["merged", "replaced", "overridden"])
 def test_a_real_boolean_change_is_still_detected(parent, profile_key, nvpair, state):
     """The opposite direction: the fix must not make the field unwritable.
@@ -342,7 +357,7 @@ def test_a_real_boolean_change_is_still_detected(parent, profile_key, nvpair, st
     assert reported == {nvpair: "true"}
 
 
-@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_SUPPORTED, ids=BOOL_SUPPORTED_IDS)
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_GENERIC, ids=BOOL_GENERIC_IDS)
 @pytest.mark.parametrize("state", ["replaced", "overridden"])
 def test_omitted_boolean_under_replaced_follows_the_withdrawal_contract(
     parent, profile_key, nvpair, state
@@ -395,7 +410,7 @@ def test_omitted_boolean_under_replaced_follows_the_withdrawal_contract(
             "in the diff is the defect this contract exists to remove")
 
 
-@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_SUPPORTED, ids=BOOL_SUPPORTED_IDS)
+@pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_GENERIC, ids=BOOL_GENERIC_IDS)
 def test_omitted_boolean_is_preserved_under_merged(parent, profile_key, nvpair):
     """The preserved historical control, now stated as its own test.
 

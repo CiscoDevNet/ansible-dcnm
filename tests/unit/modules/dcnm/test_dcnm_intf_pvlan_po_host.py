@@ -226,13 +226,15 @@ def test_existing_port_channel_with_another_policy_is_not_converted():
     # G1: promiscuous/trunk secondary are implemented; the lists must match the mode
     ({"pvlan_mode": "promiscuous"}, "pvlan_association is not valid for pvlan_mode 'promiscuous'"),
     ({"pvlan_mode": "bogus"}, "pvlan_mode must be one of"),
-    ({"members": [IF7, IF8]}, "exactly one member"),
-    ({"members": []}, "exactly one member"),
+    ({"members": [IF7, "e1/7"]}, "duplicate physical"),
+    ({"members": []}, "non-empty list"),
     ({"members": ["Port-channel5"]}, "physical Ethernet"),
     ({"pvlan_association": [{"primary_vlan": 2210, "secondary_vlan": 2211}, {"primary_vlan": 2220, "secondary_vlan": 2221}]}, "at most one association"),
     ({"pvlan_association": [{"primary_vlan": 2210, "secondary_vlan": 2210}]}, "itself"),
-    ({"speed": "10Gb"}, "not implemented"),
-    ({"cmds": ["no ip redirects"]}, "not implemented"),
+    # RC1: speed and cmds are modeled; a value outside the template enum and a freeform the controller would copy to the members
+    # are still refused before any request.
+    ({"speed": "7Gb"}, "speed must be one of"),
+    ({"cmds": ["switchport mode trunk"]}, "copies to every member"),
     ({"native_vlan": "10"}, "valid only for pvlan_mode trunk"),
     ({"pvlan_mapping": [{"primary_vlan": 2210, "secondary_vlans": "2211"}]}, "pvlan_mapping is not valid for pvlan_mode 'host'"),
     ({"pc_mode": "bogus"}, "pc_mode"),
@@ -532,11 +534,17 @@ def test_po_models_are_unmodeled_outside_the_first_delivery():
                             "pvlan_association": [{"primary_vlan": 2210, "secondary_vlan": 2212}]}, PO)
     assert P.render(PO_HOST, nv).modeled
     # G1: PVLAN_MODE promiscuous is modeled now; a non-trunk mode with a native VLAN still is not
-    for key, value in (("SPEED", "10Gb"), ("PVLAN_MODE", "bogus"), ("PVLAN_NATIVE_VLAN", "1"),
-                       ("QUEUING_POLICY", "q"), ("spanningTreePortType", "network")):
+    # PLAN-2 C1: a queuing policy is modeled now (HOST:495-498); spanning-tree port type network stays unmodeled while port type
+    # fast is true, because the template rejects that combination.
+    # RC1: a known speed is modeled (`speed 10000`); an unknown one and a freeform that fails the rule are not.
+    for key, value in (("SPEED", "7Gb"), ("PVLAN_MODE", "bogus"), ("PVLAN_NATIVE_VLAN", "1"),
+                       ("spanningTreePortType", "network"), ("CONF", "mtu 1500"), ("CONF", "  sub-command")):
         bad = dict(nv)
         bad[key] = value
         assert not P.render(PO_HOST, bad).modeled, key
+    good = dict(nv, QUEUING_POLICY="q")
+    assert "service-policy type queuing output q" in P.render(PO_HOST, good).scalars
+    assert "speed 10000" in P.render(PO_HOST, dict(nv, SPEED="10Gb")).scalars
 
 
 # ------------------------------------------------------------------ models M1/M2 (NOT RUN live)
