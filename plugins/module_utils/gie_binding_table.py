@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 3820250cc057c2d063943cbc23b7b7064c8eee76d5bd64e74e5b9da93fb4eea8
+# provenance_sha256 = b6f88798ccfccc7950f922ca4f3934ecab31d6732e0d80a6383248e2081ac9a5
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "3820250cc057c2d063943cbc23b7b7064c8eee76d5bd64e74e5b9da93fb4eea8"
+PROVENANCE_SHA256 = "b6f88798ccfccc7950f922ca4f3934ecab31d6732e0d80a6383248e2081ac9a5"
 
 BINDING_TABLE = (
     {
@@ -22,6 +22,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_access_host',
@@ -142,6 +143,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 15,
         'no_log': False,
+        'string_compare': 'case_irrelevant',
     },
     {
         'parent_template': 'int_loopback',
@@ -153,6 +155,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': True,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_loopback',
@@ -243,6 +246,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 20,
         'no_log': False,
+        'string_compare': 'unverified',
     },
     {
         'parent_template': 'int_loopback',
@@ -320,6 +324,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': True,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_loopback',
@@ -469,6 +474,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 20,
         'no_log': False,
+        'string_compare': 'unverified',
     },
     {
         'parent_template': 'int_loopback',
@@ -497,6 +503,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_port_channel_access_host',
@@ -575,6 +582,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_port_channel_dot1q_tunnel_host',
@@ -733,6 +741,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_port_channel_trunk_host',
@@ -851,6 +860,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 15,
         'no_log': False,
+        'string_compare': 'case_irrelevant',
     },
     {
         'parent_template': 'int_routed_host',
@@ -862,6 +872,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': True,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_routed_host',
@@ -1068,6 +1079,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 63,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_routed_host',
@@ -1107,6 +1119,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 63,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_routed_host',
@@ -1157,6 +1170,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 20,
         'no_log': False,
+        'string_compare': 'unverified',
     },
     {
         'parent_template': 'int_routed_host',
@@ -1197,6 +1211,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_routed_host',
@@ -1222,6 +1237,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 45,
         'no_log': False,
+        'string_compare': 'casefold',
     },
     {
         'parent_template': 'int_routed_host',
@@ -1287,6 +1303,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_routed_host',
@@ -1314,6 +1331,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_routed_host',
@@ -1328,6 +1346,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_routed_host',
@@ -1366,6 +1385,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': True,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_routed_host',
@@ -1519,6 +1539,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 20,
         'no_log': False,
+        'string_compare': 'unverified',
     },
     {
         'parent_template': 'int_routed_host',
@@ -1600,6 +1621,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 15,
         'no_log': False,
+        'string_compare': 'case_irrelevant',
     },
     {
         'parent_template': 'int_subif',
@@ -1611,6 +1633,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': True,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_subif',
@@ -1763,6 +1786,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 63,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_subif',
@@ -1802,6 +1826,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 63,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_subif',
@@ -1852,6 +1877,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 20,
         'no_log': False,
+        'string_compare': 'unverified',
     },
     {
         'parent_template': 'int_subif',
@@ -1903,6 +1929,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 45,
         'no_log': False,
+        'string_compare': 'casefold',
     },
     {
         'parent_template': 'int_subif',
@@ -1966,6 +1993,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': True,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_subif',
@@ -2129,6 +2157,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 20,
         'no_log': False,
+        'string_compare': 'unverified',
     },
     {
         'parent_template': 'int_subif',
@@ -2171,6 +2200,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_trunk_host',
@@ -2303,6 +2333,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 45,
         'no_log': False,
+        'string_compare': 'casefold',
     },
     {
         'parent_template': 'int_vlan',
@@ -2318,6 +2349,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 15,
         'no_log': False,
+        'string_compare': 'case_irrelevant',
     },
     {
         'parent_template': 'int_vlan',
@@ -2329,6 +2361,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': True,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_vlan',
@@ -2494,6 +2527,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 63,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_vlan',
@@ -2533,6 +2567,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 63,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_vlan',
@@ -2583,6 +2618,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 20,
         'no_log': False,
+        'string_compare': 'unverified',
     },
     {
         'parent_template': 'int_vlan',
@@ -2665,6 +2701,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_vlan',
@@ -2690,6 +2727,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'max_length': 45,
         'no_log': False,
+        'string_compare': 'casefold',
     },
     {
         'parent_template': 'int_vlan',
@@ -2753,6 +2791,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': True,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_vlan',
@@ -2920,6 +2959,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 20,
         'no_log': False,
+        'string_compare': 'unverified',
     },
     {
         'parent_template': 'int_vlan',
@@ -2948,6 +2988,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'case_irrelevant',
     },
     {
         'parent_template': 'int_vpc_access_host',
@@ -2962,6 +3003,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_vpc_access_host',
@@ -3039,6 +3081,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_vpc_dot1q_tunnel',
@@ -3119,6 +3162,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_vpc_pvlan_host',
@@ -3212,6 +3256,7 @@ BINDING_TABLE = (
         'min_length': 1,
         'max_length': 64,
         'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_vpc_trunk_host',
@@ -3367,6 +3412,18 @@ def resolve_binding(parent_template, profile_key):
 def resolve_by_nvpair(parent_template, parent_nvpair):
     """Exactly one binding for (parent_template, parent_nvpair), or None."""
     return _BINDING_BY_NVPAIR.get((parent_template, parent_nvpair))
+
+
+def string_compare(parent_template, parent_nvpair):
+    """Comparison category of a registered STRING binding, qualified by its parent template.
+
+    'exact' (secrets and case-sensitive names: the case is part of the value), 'casefold'
+    (case-insensitive by semantics, for example IPv6 text), 'case_irrelevant' (numeric or
+    dotted text) or 'unverified' (the case semantics are not established; the legacy
+    comparison is kept). None for an unregistered, ambiguous or non-string binding.
+    """
+    binding = _BINDING_BY_NVPAIR.get((parent_template, parent_nvpair))
+    return binding.get('string_compare') if binding else None
 
 
 def all_registered_profile_keys():

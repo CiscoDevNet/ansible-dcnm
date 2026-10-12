@@ -2758,6 +2758,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
     resolve_binding,
+    string_compare as gie_string_compare,
 )
 # Native standalone Ethernet PVLAN (int_pvlan_host). Pure helpers; transport stays here.
 from ansible_collections.cisco.dcnm.plugins.module_utils.interface_pvlan import (
@@ -7287,7 +7288,7 @@ class DcnmIntf:
         return comb_key
 
     def dcnm_intf_compare_elements(
-        self, name, sno, fabric, ie1, ie2, k, state
+        self, name, sno, fabric, ie1, ie2, k, state, exact_string=False
     ):
 
         # unicode encoded strings must be decoded to get proper strings which is required
@@ -7322,6 +7323,12 @@ class DcnmIntf:
             # Merging of aggregate objects (refer objects in key_translate at the top) should happen only for "merged" state.
             if state == "merged":
                 merge = True
+        elif exact_string:
+            # F1: a registered string whose case is part of the value (a secret, an ACL or other
+            # object name -- string_compare 'exact' in the registry). Lower-casing it made a
+            # case-only change compare equal, so the change was never sent.
+            t_e1 = e1
+            t_e2 = e2
         else:
             if isinstance(e1, str):
                 t_e1 = e1.lower()
@@ -10839,6 +10846,10 @@ class DcnmIntf:
                                             nv_keys.remove(key)
 
                                     for nk in nv_keys:
+                                        # F1: the registry says, per parent template, whether this
+                                        # nvPair's case is part of its value. Only 'exact' changes
+                                        # the comparison; every other key keeps the legacy one.
+                                        exact_nv = gie_string_compare(want.get("policy"), nk) == "exact"
                                         # HAVE may have an entry with a list # of interfaces. Check all the
                                         # interface entries for a match.  Even if one entry matches do not
                                         # add the interface
@@ -10851,6 +10862,7 @@ class DcnmIntf:
                                                 d[k][index][ik].get(nk),
                                                 nk,
                                                 state,
+                                                exact_string=exact_nv,
                                             )
                                             if res == "dont_add":
                                                 break
