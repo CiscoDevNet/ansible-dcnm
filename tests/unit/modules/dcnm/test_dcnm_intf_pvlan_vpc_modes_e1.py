@@ -578,3 +578,50 @@ def test_a_child_that_does_not_follow_its_parent_on_one_peer_is_a_partial_state_
     status, result = run_vpc(ctrl, [item(TP)], state="merged")
     assert status == "fail" and "does not follow the parent's intent" in result["msg"] and needle in result["msg"], result.get("msg")
     assert ctrl.writes() == [] and SN2 in result["msg"]
+
+
+# ================================================================== N06: one primary per secondary in the vPC's (shared) list
+N06 = "is associated with more than one primary VLAN"
+N06_BAD = {
+    TP: {"pvlan_mapping": [{"primary_vlan": 2210, "secondary_vlans": "2211-2212"}, {"primary_vlan": 2410, "secondary_vlans": "2212"}]},
+    TS: {"pvlan_association": [{"primary_vlan": 2210, "secondary_vlan": 2212}, {"primary_vlan": 2410, "secondary_vlan": 2212}]},
+}
+
+
+@pytest.mark.parametrize("mode", [TP, TS])
+def test_n06_creation_request_alone_is_refused_before_any_read_or_write(mode):
+    ctrl = baseline_ctrl(mode)
+    status, result = run_vpc(ctrl, [item(mode, **N06_BAD[mode])])
+    assert status == "fail" and N06 in result["msg"] and "secondary VLAN 2212" in result["msg"] and "(2210, 2410)" in result["msg"], result.get("msg")
+    assert ctrl.writes() == [] and ctrl.previews_asked() == []
+
+
+@pytest.mark.parametrize(
+    "mode, add, secondary",
+    [
+        (TP, {"pvlan_mapping": [{"primary_vlan": 2410, "secondary_vlans": "2211"}]}, 2211),
+        (TS, {"pvlan_association": [{"primary_vlan": 2410, "secondary_vlan": 2212}]}, 2212),
+    ],
+)
+def test_n06_merged_union_with_the_current_list_is_refused_before_any_write(mode, add, secondary):
+    ctrl = with_networks_2410(seeded_ctrl(mode))
+    converged_previews(ctrl, mode)  # the update's read-only preflight of each peer
+    upd = item(mode, **add)
+    for k in ("pvlan_mapping", "pvlan_association"):
+        if k not in add:
+            upd["profile"].pop(k, None)
+    status, result = run_vpc(ctrl, [upd], state="merged")
+    assert status == "fail" and N06 in result["msg"] and "secondary VLAN %d" % secondary in result["msg"], result.get("msg")
+    assert "(2210, 2410)" in result["msg"]
+    assert ctrl.writes() == []  # read-only preflight previews are allowed; no create, modify, markdelete or deploy
+
+
+def test_n06_distinct_primaries_reach_both_peers_with_the_same_pairs_and_are_not_a_conflict():
+    pairs = [(2210, 2211), (2210, 2212), (2410, 2412)]
+    ctrl = baseline_ctrl(TP)
+    create_previews(ctrl, TP, pairs)
+    mapping = [{"primary_vlan": 2210, "secondary_vlans": "2211-2212"}, {"primary_vlan": 2410, "secondary_vlans": "2412"}]
+    status, result = run_vpc(ctrl, [item(TP, pvlan_mapping=mapping)])
+    assert status == "exit" and N06 not in result.get("msg", ""), result.get("msg")
+    lists = [P.pairs_from_wire(ctrl.nodes[s]["port-channel10"]["nvPairs"]["MAPPING_LIST"], "MAPPING_LIST") for s in (SN1, SN2)]
+    assert lists == [pairs, pairs]  # the repeated pair on two peers is the same association, not a conflict
