@@ -2725,6 +2725,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         dcnm_net.module = Mock(params={"state": state})
         dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
         dcnm_net.want_create = want_create if want_create is not None else []
+        dcnm_net.want_create_names = {want["networkName"] for want in dcnm_net.want_create}
         return dcnm_net
 
     def test_dcnm_net_secgw_compat_g5_delete_update_create_params_never_mutates_or_fails(self):
@@ -2853,6 +2854,62 @@ class TestDcnmNetworkModule(TestDcnmModule):
             ):
                 dcnm_net.normalize_have_network(network)
             dcnm_net.module.fail_json.assert_called_once()
+
+    def test_dcnm_net_secgw_compat_g5_overridden_normalize_have_scale_uses_name_set(self):
+        """Overridden normalization at scale classifies each remote network via
+        want_create_names in O(1) and never rescans want_create."""
+
+        class NoScanList(list):
+            def __iter__(self):
+                raise AssertionError("normalize_have_network() must not scan want_create")
+
+        count = 3200
+        dcnm_net = self._build_secgw_delete_override_have_network(
+            state="overridden",
+            ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM,
+            want_create=[{"networkName": f"net-{i}"} for i in range(count)],
+        )
+        dcnm_net.want_create = NoScanList(dcnm_net.want_create)
+
+        malformed_value = json.dumps({"secondaryGWs": [{"gatewayIpAddress": "192.166.88.1/24"}], "futureField": "x"})
+        retained_template = self._build_secondary_ip_network_template()
+        omitted_template = self._build_secondary_ip_network_template(secondary_gw1="192.166.88.1/24")
+        omitted_template["secondaryGWs"] = malformed_value
+
+        for i in range(count):
+            retained = self._build_secondary_ip_update_payload(retained_template)
+            retained["networkName"] = f"net-{i}"
+            dcnm_net.normalize_have_network(retained)
+
+            omitted = self._build_secondary_ip_update_payload(omitted_template)
+            omitted["networkName"] = f"remote-only-{i}"
+            normalized = dcnm_net.normalize_have_network(omitted)
+            self.assertEqual(json.loads(normalized["networkTemplateConfig"]).get("secondaryGWs"), malformed_value)
+
+        dcnm_net.module.fail_json.assert_not_called()
+
+    def test_dcnm_net_secgw_compat_g5_overridden_rollback_refreshes_want_create_names(self):
+        """failure() rollback swaps want_create for have_create; the name set
+        must follow before get_have() re-normalizes the remote networks."""
+        dcnm_net = self._build_secgw_delete_override_have_network(
+            state="overridden",
+            ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM,
+            want_create=[{"networkName": "desired-net"}],
+        )
+        dcnm_net.have_create = [{"networkName": "remote-a"}, {"networkName": "remote-b"}]
+        dcnm_net.have_attach = []
+        dcnm_net.have_deploy = {}
+        dcnm_net.failed_to_rollback = False
+
+        names_seen_by_get_have = []
+        dcnm_net.get_have = Mock(side_effect=lambda: names_seen_by_get_have.append(set(dcnm_net.want_create_names)))
+        dcnm_net.get_diff_override = Mock()
+        dcnm_net.push_to_remote = Mock()
+
+        with self.assertRaises(RuntimeError):
+            dcnm_net.failure("boom")
+
+        self.assertEqual(names_seen_by_get_have, [{"remote-a", "remote-b"}])
 
     def test_dcnm_net_secgw_compat_g5_delete_real_flow_reaches_diff_delete_without_failure(self):
         """G5-DELETE (real flow): route a deleted-state config, plus a
