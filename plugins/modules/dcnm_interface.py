@@ -110,14 +110,17 @@ options:
       interface's transition to a different parent template, both of which keep their
       existing, independent contracts.
     - With this capability enabled, resetting a physical Ethernet port to its role default
-      (a port named under C(state=deleted), or a port C(overridden) leaves out) also withdraws
-      every registered field the port still holds, with that field's verified reset on the
-      default parent template. A field without a verified reset, a controller value that cannot
-      be classified, or a field the port's current policy holds but the default parent cannot
-      withdraw (the reset changes the policy) refuses the ENTIRE invocation before any request
-      is sent, naming the interface and the field, never its value. A port that is not reset
-      (still configured, or skipped by scope) is not affected. With the capability disabled
-      these fields are left unchanged, as before.
+      (a port named under C(state=deleted), or a port C(overridden) leaves out) also sends, for
+      each registered field the port still holds, that field's verified reset value on the
+      default parent template. The module verifies the request it sends, not that the
+      controller or the switch removes the configuration. A field without a verified reset, a
+      controller value that cannot be classified, or a field the port's current policy holds but
+      the default parent cannot withdraw (the reset changes the policy) refuses the ENTIRE
+      invocation before any request is sent, naming the interface and the field, never its
+      value; such a field needs a separate, verified clean-up. A port that is not reset (still
+      configured, or skipped by scope) is not affected, and a former port-channel member reset
+      after its port-channel is deleted is not covered. With the capability disabled these
+      fields are left unchanged, as before.
     - Registered string fields whose letter case is part of the value (authentication keys and
       ACL, prefix-list or MACsec key-chain and policy names) are compared case-sensitively, so
       a change of case alone is sent. IPv6 text, numeric fields, booleans and enumerations keep
@@ -2762,6 +2765,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_withdrawal_action,
     gie_binding_is_owned_elsewhere,
     GIE_READONLY_METADATA_NVPAIRS,
+    GIE_WITHDRAW_NONE,
     GIE_WITHDRAW_RESET,
     GIE_WITHDRAW_UNSUPPORTED,
     GIE_WITHDRAW_UNCLASSIFIED,
@@ -11094,9 +11098,12 @@ class DcnmIntf:
           * same parent, unsupported or unclassified: blocked, named;
           * policy change (HAVE parent != default parent): the source value is NOT assumed to
             disappear with the policy change (not measured). Only when the destination parent
-            registers the same nvPair and the value is already its neutral, or it has a verified
-            reset there, is the destination's own wire used; otherwise blocked as a transition.
-            A source-only nvPair is never written into a destination template.
+            registers the same nvPair and either has a verified reset for the value (its own wire
+            is used) or classifies it as already withdrawn (GIE_WITHDRAW_NONE -- the only proof of
+            neutrality; INAPPLICABLE is not one) does the reset proceed; otherwise blocked as a
+            transition, recording whether the SOURCE parent has a verified reset (the only case in
+            which clearing the field on the current policy first is a module remedy). A source-only
+            nvPair is never written into a destination template.
 
         Pure: returns (resets, blocked) and changes nothing. The caller applies them only where
         the reset is actually queued, so an interface that stays configured or is skipped by
@@ -11148,9 +11155,11 @@ class DcnmIntf:
                 if d_action == GIE_WITHDRAW_RESET:
                     resets[nvpair] = d_wire
                     continue
-                if d_action not in (GIE_WITHDRAW_UNSUPPORTED, GIE_WITHDRAW_UNCLASSIFIED):
-                    continue    # already the destination's neutral value
-            blocked.append(dict(entry, reason="transition"))
+                if d_action == GIE_WITHDRAW_NONE:
+                    continue    # proven: already the destination's neutral value
+                # UNSUPPORTED, UNCLASSIFIED and INAPPLICABLE prove nothing about the destination:
+                # an inapplicable destination binding cannot even carry the field.
+            blocked.append(dict(entry, reason="transition", source_reset=action == GIE_WITHDRAW_RESET))
         return resets, blocked
 
     def dcnm_intf_queue_default_registered_resets(self, uelem, resets, blocked):
@@ -13732,45 +13741,69 @@ def main():
                 if b["reason"] == "unreadable"
             }
         )
-        moved = sorted(
+        moved_clearable = sorted(
             {
                 (b["interface"], b["serial"], b["parent"], b["destination"], b["field"], b["nvpair"])
                 for b in dcnm_intf.default_reset_blocked
-                if b["reason"] == "transition"
+                if b["reason"] == "transition" and b.get("source_reset")
             }
+        )
+        moved_unverified = sorted(
+            {
+                (b["interface"], b["serial"], b["parent"], b["destination"], b["field"], b["nvpair"])
+                for b in dcnm_intf.default_reset_blocked
+                if b["reason"] == "transition" and not b.get("source_reset")
+            }
+        )
+        # R-F2-1: a remedy is offered only where the module has one. An explicit empty value is
+        # not a verified withdrawal (booleans and enums even reject it), so it is never promised.
+        no_withdrawal = (
+            " This module has no verified withdrawal for it; it must be cleaned up by a separate, "
+            "verified procedure before the reset is repeated."
         )
         parts = []
         if same:
             parts.append(
                 "Resetting these interfaces to their default policy in state '{0}' must withdraw a "
                 "registered field that holds a configured value, and no verified reset is established "
-                "for it on that parent: {1}.".format(
+                "for it on that parent: {1}.{2}".format(
                     module.params["state"],
                     ", ".join("{3} ({4}) on {0} [{1}], parent {2}".format(*b) for b in same),
+                    no_withdrawal,
                 )
             )
         if unreadable:
             parts.append(
                 "Resetting these interfaces in state '{0}' must classify a registered field whose "
                 "controller value is not readable as its type, so the reset cannot be confirmed: "
-                "{1}.".format(
+                "{1}.{2}".format(
                     module.params["state"],
                     ", ".join("{3} ({4}) on {0} [{1}], parent {2}".format(*b) for b in unreadable),
+                    no_withdrawal,
                 )
             )
-        if moved:
-            parts.append(
-                "Resetting these interfaces in state '{0}' changes their policy, and the registered "
-                "field holds a configured value that the destination parent cannot withdraw; whether "
-                "the controller drops it with the policy change is not established: {1}.".format(
-                    module.params["state"],
-                    ", ".join("{4} ({5}) on {0} [{1}], {2} -> {3}".format(*b) for b in moved),
-                )
-            )
-        parts.append(
-            "No configuration or deployment request was sent. Clear the field explicitly on its "
-            "current policy first, then repeat the reset."
+        moved_head = (
+            "Resetting these interfaces in state '{0}' changes their policy, and the registered "
+            "field holds a configured value that the destination parent cannot withdraw; whether "
+            "the controller drops it with the policy change is not established: {1}."
         )
+        if moved_clearable:
+            parts.append(
+                (moved_head + " Its current policy has a verified reset: clear the field on that policy "
+                 "first, then repeat the reset.").format(
+                    module.params["state"],
+                    ", ".join("{4} ({5}) on {0} [{1}], {2} -> {3}".format(*b) for b in moved_clearable),
+                )
+            )
+        if moved_unverified:
+            parts.append(
+                (moved_head + "{2}").format(
+                    module.params["state"],
+                    ", ".join("{4} ({5}) on {0} [{1}], {2} -> {3}".format(*b) for b in moved_unverified),
+                    no_withdrawal,
+                )
+            )
+        parts.append("No configuration or deployment request was sent.")
         module.fail_json(msg=" ".join(parts), **dcnm_intf.result)
 
     dcnm_intf.result["diff"] = dcnm_intf.changed_dict

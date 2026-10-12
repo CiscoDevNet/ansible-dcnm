@@ -25,10 +25,12 @@ from unittest.mock import patch
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
+from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
 
 ACL = "SYNTHETIC-ACL"
+NO_WITHDRAWAL = "This module has no verified withdrawal for it; it must be cleaned up by a separate, verified procedure"
 STATES = ("deleted", "overridden")
 ROLES = {
     "leaf": dict(default=h.TRUNK, drift={"aclFilter": ACL, "flowcontrolReceive": "on"},
@@ -178,6 +180,8 @@ def test_registered_drift_without_a_reset_is_refused_before_any_write(state, nvp
     msg = result["msg"]
     assert reason in msg and "%s (%s) on %s [%s], parent int_routed_host" % (field, nvpair, h.IF_A, h.SERIAL) in msg
     assert "No configuration or deployment request was sent" in msg
+    # R-F2-1: no module remedy is promised; an explicit empty value is not a verified withdrawal
+    assert NO_WITHDRAWAL in msg and "clear the field on that policy" not in msg and "Clear the field explicitly" not in msg
     assert value not in msg
 
 
@@ -190,6 +194,9 @@ def test_policy_change_with_a_source_only_field_is_refused_and_never_injected(st
     result, calls = run(state, seed, "border")
     assert result.get("failed") and h.writes(calls) == [], result.get("msg")
     assert "acl_filter (aclFilter) on %s [%s], int_trunk_host -> int_routed_host" % (h.IF_A, h.SERIAL) in result["msg"]
+    # R-F2-1: the source parent (int_trunk_host) HAS a verified reset for aclFilter -> the remedy is offered
+    assert "Its current policy has a verified reset: clear the field on that policy first" in result["msg"]
+    assert NO_WITHDRAWAL not in result["msg"]
     assert ACL not in result["msg"]
 
 
@@ -246,3 +253,87 @@ def test_a_refused_secret_is_named_by_field_and_never_emitted():
     assert h.writes(calls) == []
     assert "ospf_auth_key (OSPF_AUTH_KEY) on %s" % h.IF_A in out
     assert key not in out
+
+
+# ------------------------------------------------------------------ R-F2-1: message per case, a remedy only where one exists
+@pytest.mark.parametrize("state", STATES)
+def test_policy_change_without_a_source_reset_offers_no_module_remedy(state):
+    """leaf: default int_trunk_host; HAVE is int_routed_host with an OSPF tag (no verified reset on the source,
+    not registered on the destination): refused, and no clear-on-current-policy advice."""
+    have = default_have("border")
+    have[0]["interfaces"][0]["nvPairs"]["ospfTag"] = "SYNTHETIC-TAG"
+    result, calls = run(state, have, "leaf")
+    assert result.get("failed") and h.writes(calls) == [], result.get("msg")
+    msg = result["msg"]
+    assert "ospf_tag (ospfTag) on %s [%s], int_routed_host -> int_trunk_host" % (h.IF_A, h.SERIAL) in msg
+    assert NO_WITHDRAWAL in msg and "clear the field on that policy" not in msg
+    assert "SYNTHETIC-TAG" not in msg
+
+
+@pytest.mark.parametrize("state", STATES)
+def test_unreadable_registered_value_is_refused_without_a_remedy(state):
+    have = default_have("border")
+    have[0]["interfaces"][0]["nvPairs"]["lldpReceive"] = "True"     # not a boolean wire spelling the validator accepts
+    result, calls = run(state, have, "border")
+    assert result.get("failed") and h.writes(calls) == [], result.get("msg")
+    msg = result["msg"]
+    assert "not readable as its type" in msg
+    assert "disable_lldp_receive (lldpReceive) on %s [%s], parent int_routed_host" % (h.IF_A, h.SERIAL) in msg
+    assert NO_WITHDRAWAL in msg
+
+
+# ------------------------------------------------------------------ R-F2-2: only GIE_WITHDRAW_NONE proves the destination neutral
+# Helper-level: the classifier is forced for the DESTINATION parent only, inside the test. Not reachable through main() today
+# (every Ethernet binding shares the 12.6.0.267 floor and the one patch gate); a future per-binding floor would make it so.
+def _helper():
+    intf = object.__new__(module.DcnmIntf)
+    intf.ndfc_version = h.SUPPORTED
+    intf.patch_version = h.SUPPORTED_PATCH
+    return intf
+
+
+def _payloads(value):
+    uelem = {"policy": h.ROUTED, "interfaces": [{"ifName": h.IF_A, "serialNumber": h.SERIAL, "nvPairs": {}}]}
+    have = {"policy": h.TRUNK, "interfaces": [{"ifName": h.IF_A, "serialNumber": h.SERIAL, "nvPairs": {"lldpReceive": value}}]}
+    return uelem, have
+
+
+def _force_destination(action):
+    real = module.gie_withdrawal_action
+
+    def fake(parent, key, value, ndfc_version, patch_version=None):
+        if parent == h.ROUTED:
+            return action, None
+        return real(parent, key, value, ndfc_version, patch_version)
+    return patch.object(module, "gie_withdrawal_action", fake)
+
+
+def test_destination_inapplicable_is_a_transition_refusal_not_a_neutral_value():
+    uelem, have = _payloads("true")
+    with _force_destination(engine.GIE_WITHDRAW_INAPPLICABLE):
+        resets, blocked = _helper().dcnm_intf_default_registered_resets(uelem, have)
+    assert resets == {}
+    assert [(b["reason"], b["nvpair"], b["parent"], b["destination"], b["source_reset"]) for b in blocked] == [
+        ("transition", "lldpReceive", h.TRUNK, h.ROUTED, True)]
+    assert uelem["interfaces"][0]["nvPairs"] == {}          # pure: nothing applied
+
+
+def test_destination_none_still_proves_neutrality():
+    uelem, have = _payloads("true")
+    with _force_destination(engine.GIE_WITHDRAW_NONE):
+        resets, blocked = _helper().dcnm_intf_default_registered_resets(uelem, have)
+    assert resets == {} and blocked == []
+
+
+def test_destination_verified_reset_is_still_used_unforced():
+    uelem, have = _payloads("true")
+    resets, blocked = _helper().dcnm_intf_default_registered_resets(uelem, have)
+    assert resets == {"lldpReceive": reset_wire(h.ROUTED, "lldpReceive")} and blocked == []
+
+
+@pytest.mark.parametrize("action", ["GIE_WITHDRAW_UNSUPPORTED", "GIE_WITHDRAW_UNCLASSIFIED"])
+def test_destination_unsupported_or_unclassified_still_refuses(action):
+    uelem, have = _payloads("true")
+    with _force_destination(getattr(engine, action)):
+        resets, blocked = _helper().dcnm_intf_default_registered_resets(uelem, have)
+    assert resets == {} and [b["reason"] for b in blocked] == ["transition"]
