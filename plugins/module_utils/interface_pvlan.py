@@ -1498,7 +1498,8 @@ def assess_target(body, entry, name, desired, vocabulary=None, absent_ok=False, 
     before the empty-pending decision.
     `member_speed_inherit` (SP1: the same parent context) applies po_member_speed_inherited_state(), the DIAG-measured `speed 1000`
     addition and withdrawal carried by the port-channel's own pending, before the empty-pending decision; never together with an MTU
-    inheritance (that combination is not measured)."""
+    inheritance (that combination is not measured). The same parameter also drives po_member_duplex_inherited_state() (a fixed `speed 1000`
+    that does not change, `duplex full` added or withdrawn); it never runs in the same transition as the MTU or the speed rules."""
     if not desired.modeled:
         return "refuse", ["the intended state of %s is not modeled" % name]
     vocabulary = vocabulary or DEFAULT_VOCABULARY
@@ -1540,9 +1541,14 @@ def assess_target(body, entry, name, desired, vocabulary=None, absent_ok=False, 
     if member_mtu_inherit:
         observed, mtu_inherited = po_member_mtu_inherited_state(entry, observed, desired, body, member_mtu_inherit)
         inherited = inherited or mtu_inherited
+    speed_inherited = False
     if member_speed_inherit and not mtu_inherited:
         observed, speed_inherited = po_member_speed_inherited_state(entry, observed, desired, body, member_speed_inherit)
         inherited = inherited or speed_inherited
+    if member_speed_inherit and not mtu_inherited and not speed_inherited:
+        # DUPLEX (G1/G2 measured): the same parent context, never in the same transition as an MTU or a speed inheritance
+        observed, duplex_inherited = po_member_duplex_inherited_state(entry, observed, desired, body, member_speed_inherit)
+        inherited = inherited or duplex_inherited
     if member_reassert:
         body, problems = po_member_force_reassertion(body, observed, desired, member_reassert)
         if problems:
@@ -1843,7 +1849,30 @@ def po_not_implemented(profile):
     return reasons
 
 
-def companion_state_problems(nv, raw):
+def _speed_duplex_token(nv, key, auto):
+    """Normalized SPEED / PORT_DUPLEX_MODE of an nvPairs dict; a missing, empty or null value is the template default (auto)."""
+    value = (nv or {}).get(key)
+    value = auto if value is None or str(value).strip() == "" else str(value).strip().lower()
+    return value
+
+
+def speed_duplex_combined_change(have_nv, nv):
+    """True when the transition HAVE -> final intent changes the SPEED and the PORT_DUPLEX_MODE of an EXISTING port-channel / vPC at once.
+    Restating an equal value is not a change. That combined transition is not measured (the inheritance rules cover a duplex change over a
+    fixed, unchanged speed 1000, or a speed change alone) and the gate would refuse it only AFTER the intent was written."""
+    if have_nv is None:
+        return False
+    return (_speed_duplex_token(have_nv, "SPEED", "auto") != _speed_duplex_token(nv, "SPEED", "auto")
+            and _speed_duplex_token(have_nv, "PORT_DUPLEX_MODE", "auto") != _speed_duplex_token(nv, "PORT_DUPLEX_MODE", "auto"))
+
+
+SPEED_DUPLEX_COMBINED_MESSAGE = (
+    "speed and duplex cannot change in the same request on an existing port-channel or vPC (that combined transition is not measured): "
+    "set the fixed speed first, in its own request, and then the duplex; to withdraw both, set duplex auto first and then speed Auto "
+    "(a creation may set both)")
+
+
+def companion_state_problems(nv, raw, have_nv=None):
     """Template rules that depend on the RESULTING parent state (PLAN-2 C1), checked before any write on every create/update:
       * HOST:345-350 / vPC HOST:300-305 / POVPC rule: a spanning-tree port type network|normal is REJECTED while port type fast is
         true (the template returns an error instead of a configuration);
@@ -1854,6 +1883,19 @@ def companion_state_problems(nv, raw):
     if stp not in ("", "no") and str(nv.get("PORTTYPE_FAST_ENABLED", "true")).strip().lower() == "true":
         problems.append("spanning_tree_port_type '%s' is rejected by the template while port_type_fast is true; set port_type_fast "
                         "false in the same request" % stp)
+    # F-A (T5-G2 measured on a port-channel: NX-OS rejects `duplex full` with speed Auto, "Duplex is not Compatible with Speed"): the FINAL
+    # intent (merged resolves an omitted speed from HAVE, so omitting speed is not Auto when HAVE is fixed) may not ask a duplex other
+    # than auto while the speed is Auto. A withdrawal towards auto, and a fixed speed, are untouched. Port-channel and vPC PVLAN only.
+    duplex_final = str(nv.get("PORT_DUPLEX_MODE", "auto") or "auto").strip().lower()
+    speed_final = str(nv.get("SPEED", "Auto") or "Auto").strip().lower()
+    if duplex_final != "auto" and speed_final == "auto":
+        problems.append("duplex '%s' needs a fixed speed: the device rejects it while the speed is Auto (the resulting intent has speed Auto); "
+                        "%s" % (duplex_final, "set the fixed speed first, in its own request, and then the duplex" if have_nv is not None
+                                else "a creation may set speed and duplex together, or keep duplex auto"))
+    # F2: an EXISTING port-channel / vPC whose SPEED and PORT_DUPLEX_MODE both change is refused before the write (the gate would refuse it
+    # after the intent was written). Judged on HAVE -> final intent: restating an equal value is no change; a withdrawal of duplex alone passes.
+    if speed_duplex_combined_change(have_nv, nv):
+        problems.append(SPEED_DUPLEX_COMBINED_MESSAGE)
     if raw.get("disable_queuing_stats") is True and not str(nv.get("QUEUING_POLICY", "") or "").strip():
         problems.append("disable_queuing_stats true only takes effect with a queuing_policy (the template appends ' no-stats' to "
                         "that line); set queuing_policy in the same request")
@@ -1927,7 +1969,7 @@ def _po_norm(key, value):
     if value is None:
         return None
     text = str(value).strip()
-    if key in _PO_BOOL_KEYS:
+    if key in _PO_BOOL_KEYS or key == "PORT_DUPLEX_MODE":
         return text.lower()
     if key == "MEMBER_INTERFACES":
         # G6 (EXP-1, MEASURED): a port-channel created through Manage stores its member as `e1/8`, the legacy path as
@@ -2102,7 +2144,7 @@ def reconcile_po(state, raw, ifname, have_policy, have_nv, ndfc_version=None, pa
             nv["PTP"] = have_nv["PTP"]
     reg_values, reg_blocked = registry_companions(state, PO_HOST_POLICY, raw, have_nv, ndfc_version, patch_version)
     nv.update(reg_values)
-    out["blocked"] += reg_blocked + companion_state_problems(nv, raw)
+    out["blocked"] += reg_blocked + companion_state_problems(nv, raw, have_nv)
     if out["blocked"]:
         return out
     inactive = MAPPING_LIST if active == ASSOCIATION_LIST else ASSOCIATION_LIST
@@ -2931,6 +2973,95 @@ def po_member_speed_inherited_state(entry, observed, desired, member_body, ctx):
     return Model(scalars, observed.list_kind, observed.pairs, observed.modeled, observed.foreign), True
 
 
+# DUPLEX (Alpha2 G1 on Po521 and G2 on vPC522, NEXT-A2-SD, MEASURED on NDFC 12.6.0.267 / N9K-C9300v 10.5(5), host mode, ONE member per Po / per leg,
+# admin down, border switches): with the speed already fixed at 1000 (parent and member, unchanged), `duplex full` on the port-channel (on each vPC
+# child) is accepted, the member inherits it, the controller pending holds ONLY the port-channel stanza (apply: its baseline lines, `speed 1000`
+# among them, plus `duplex full`; withdrawal: `no duplex full` alone) and the member's intent and expected carry the line; the withdrawal returns
+# parent and member to the baseline. NOT measured and therefore refused: `duplex half`, a speed + duplex change in one transition (refused
+# before the write on an existing Po / vPC, see speed_duplex_combined_change), any other speed, an MTU change with it, an up port, other
+# roles/platforms. More than one member per port-channel / leg: NOT refused by count - every member is judged on its own state (offline
+# tests with several members); the live measurement covers one member per Po / leg. With speed Auto the device rejects the combination
+# (T5-G2): see companion_state_problems.
+PO_DUPLEX_INHERITED_LINES = frozenset(("duplex full",))
+PO_DUPLEX_FIXED_SPEED_LINES = frozenset(("speed 1000",))
+_DUPLEX_LINE = re.compile(r"^duplex [a-z]+$")
+_DUPLEX_COMMAND_PREFIXES = ("duplex ", "no duplex")
+
+
+def _duplex_lines(scalars):
+    return set(line for line in scalars if _DUPLEX_LINE.match(line))
+
+
+def po_member_duplex_inherited_state(entry, observed, desired, member_body, ctx):
+    """(state, inherited) for an EXISTING member whose port-channel's DUPLEX goes auto -> full (addition) or full -> auto (withdrawal).
+
+    `ctx` is the parent context of po_member_speed_inherited_state() (regular-Po update gate, or the vPC leg gate for THIS leg's child Po on the
+    SAME serial: the parent running / pending read here is that leg's own stanza of that leg's own preview). Every condition is required;
+    otherwise the observed state is returned untouched and the ordinary validation applies (the same `parent_ok`, channel-group, PVLAN mode and
+    `shutdown` conditions as the speed rule):
+      * the member's own pending block carries no duplex / speed / negotiate command;
+      * no `no negotiate auto` anywhere;
+      * the speed is FIXED AND UNCHANGED: member and parent, observed and intended, hold exactly `speed 1000`;
+      * the parent's pending carries no speed command other than that line once (the stanza's baseline re-emitted on apply) and exactly one
+        duplex command: `duplex full` (addition: the member holds none, intends exactly it; parent running none, intended exactly it) or
+        `no duplex full` (withdrawal: the member holds exactly it, intends none; parent running exactly it, intended none).
+    Only `duplex full` is substituted in the member's observed state. The post-deploy verification is unchanged: a member that does not show
+    the inherited state is a failure, never a corrective write. The rule is evaluated PER MEMBER; it adds no limit on the number of members."""
+    if not ctx or not ctx.get("parent_ok"):
+        return observed, False
+    if not (observed.modeled and desired.modeled):
+        return observed, False
+    if any(l.startswith(_DUPLEX_COMMAND_PREFIXES + _SPEED_COMMAND_PREFIXES) for l in member_body):
+        return observed, False
+    if NEGOTIATE_CAPABILITY_LINE in observed.scalars or NEGOTIATE_CAPABILITY_LINE in desired.scalars:
+        return observed, False
+    persisted = po_member_channel_group(ctx["po_number"], ctx["pc_mode"])
+    if persisted not in observed.scalars or persisted not in desired.scalars:
+        return observed, False
+    if observed.list_kind not in PVLAN_MODES or not observed.list_kind == desired.list_kind:
+        return observed, False
+    if "shutdown" not in observed.scalars or "shutdown" not in desired.scalars:
+        return observed, False
+    if _speed_lines(observed.scalars) != PO_DUPLEX_FIXED_SPEED_LINES or _speed_lines(desired.scalars) != PO_DUPLEX_FIXED_SPEED_LINES:
+        return observed, False
+    member_obs, member_des = _duplex_lines(observed.scalars), _duplex_lines(desired.scalars)
+    if not member_obs and len(member_des) == 1 and member_des <= PO_DUPLEX_INHERITED_LINES:
+        direction, line = "add", next(iter(member_des))
+    elif not member_des and len(member_obs) == 1 and member_obs <= PO_DUPLEX_INHERITED_LINES:
+        direction, line = "withdraw", next(iter(member_obs))
+    else:
+        return observed, False
+    parent_body, parent_desired = ctx.get("parent_body") or [], ctx.get("parent_desired")
+    if parent_desired is None or not parent_desired.modeled or NEGOTIATE_CAPABILITY_LINE in parent_desired.scalars:
+        return observed, False
+    if _speed_lines(parent_desired.scalars) != PO_DUPLEX_FIXED_SPEED_LINES:
+        return observed, False
+    parent_speed_cmds = [l for l in parent_body if l.startswith(_SPEED_COMMAND_PREFIXES)]
+    if parent_speed_cmds not in ([], sorted(PO_DUPLEX_FIXED_SPEED_LINES)):
+        return observed, False
+    parent_cmds = [l for l in parent_body if l.startswith(_DUPLEX_COMMAND_PREFIXES)]
+    if direction == "add" and (parent_cmds != [line] or _duplex_lines(parent_desired.scalars) != {line}):
+        return observed, False
+    if direction == "withdraw" and (parent_cmds != ["no " + line] or _duplex_lines(parent_desired.scalars)):
+        return observed, False
+    prc, parent_running = interface_stanza(entry.get("runningConfig") or [], ctx["parent"])
+    if prc != 1:
+        return observed, False
+    parent_observed = cli_model(parent_running, ctx.get("parent_vocabulary") or DEFAULT_VOCABULARY)
+    if not parent_observed.modeled or NEGOTIATE_CAPABILITY_LINE in parent_observed.scalars:
+        return observed, False
+    if _speed_lines(parent_observed.scalars) != PO_DUPLEX_FIXED_SPEED_LINES:
+        return observed, False
+    if _duplex_lines(parent_observed.scalars) != (set() if direction == "add" else {line}):
+        return observed, False
+    if not parent_observed.list_kind == parent_desired.list_kind == observed.list_kind:
+        return observed, False
+    if "shutdown" not in parent_observed.scalars or "shutdown" not in parent_desired.scalars:
+        return observed, False
+    scalars = observed.scalars | {line} if direction == "add" else observed.scalars - {line}
+    return Model(scalars, observed.list_kind, observed.pairs, observed.modeled, observed.foreign), True
+
+
 def member_lacp_rate_problems(member, pre_nv, post_nv, pre_is_member):
     """PLAN-2 C1 precondition from the member template (MEMBER:193-195, comment on the `shutdown` branch): "Cannot set/unset lacp
     rate if port is not admin down in port-channel". A request whose resulting member LACP rate differs from the current one is
@@ -3312,7 +3443,7 @@ def _vpc_norm(key, value):
     if value is None:
         return None
     text = str(value).strip()
-    if key in _VPC_BOOL_KEYS:
+    if key in _VPC_BOOL_KEYS or key == "PORT_DUPLEX_MODE":
         return text.lower()
     if key in ("PEER1_MEMBER_INTERFACES", "PEER2_MEMBER_INTERFACES"):
         # E4: the same port in any accepted spelling (`Ethernet1/8`, `e1/8`) compares equal, as for the regular port-channel (G6, EXP-1).
@@ -3489,7 +3620,7 @@ def reconcile_vpc(state, raw, ifname, legs, have_policy, have_nv, ndfc_version=N
             nv["PTP"] = have_nv["PTP"]
     reg_values, reg_blocked = registry_companions(state, VPC_HOST_POLICY, raw, have_nv, ndfc_version, patch_version)
     nv.update(reg_values)
-    out["blocked"] += reg_blocked + companion_state_problems(nv, raw)
+    out["blocked"] += reg_blocked + companion_state_problems(nv, raw, have_nv)
     if out["blocked"]:
         return out
     inactive = MAPPING_LIST if active == ASSOCIATION_LIST else ASSOCIATION_LIST
