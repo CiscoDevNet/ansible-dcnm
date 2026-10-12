@@ -86,6 +86,29 @@ PROFILE_KEYS = frozenset(("mode", "pvlan_mode", "pvlan_association", "pvlan_mapp
 INJECTED_KEYS = frozenset(("fabric", "sno", "ifname", "policy"))
 
 SPEED_VALUES = ("Auto", "10Mb", "100Mb", "1Gb", "2.5Gb", "5Gb", "10Gb", "25Gb", "40Gb", "50Gb", "100Gb", "200Gb", "400Gb", "800Gb")
+# Input parity with the regular access/trunk profiles of this module: bpdu_guard takes a real boolean or the strings
+# true/false/no in any letter case, speed takes any letter case of an exact SPEED_VALUES entry. Both are sent in the template's own
+# spelling; "no" stays a third state and is never read as a boolean. Nothing else is accepted (no whitespace, no numbers, no aliases).
+BPDU_VALUES = ("true", "false", "no")
+_SPEED_BY_LOWER = dict((value.lower(), value) for value in SPEED_VALUES)
+
+
+def canonical_native(kind, value):
+    """The canonical wire value of a `bpdu` or `speed` companion, or None when `value` is not an accepted spelling.
+    Any other kind is returned unchanged (its own validation applies)."""
+    if kind == "bpdu":
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if isinstance(value, str) and value.lower() in BPDU_VALUES:
+            return value.lower()
+        return None
+    if kind == "speed":
+        if isinstance(value, str):
+            return _SPEED_BY_LOWER.get(value.lower())
+        return None
+    return value
+
+
 # RC1 (speed): the `speed <n>` keyword each template enum value renders through Util.mapEnumToSwitchSpeed (controller code, NOT captured).
 # MEASURED for 1Gb only (regular int_trunk_host, NDFC 12.6.0.267: SPEED "1Gb" -> `speed 1000` in the controller's configuration); the
 # other values follow the NX-OS convention of the speed in Mb/s (INFERRED). Auto renders no speed line (SPEED_STR_SWITCH_DEFAULT).
@@ -255,13 +278,13 @@ def native_companion_errors(profile, table):
         value = profile[key]
         if kind == "bool" and not isinstance(value, bool):
             errors.append("%s must be a boolean" % key)
-        elif kind == "bpdu" and value not in ("true", "false", "no"):
-            errors.append("bpdu_guard must be 'true', 'false' or 'no'")
+        elif kind == "bpdu" and canonical_native(kind, value) is None:
+            errors.append("bpdu_guard must be true, false or 'no' (a boolean, or one of these strings in any letter case)")
         elif kind == "mtu" and value not in ("jumbo", "default"):
             errors.append("mtu must be 'jumbo' or 'default'")
         elif kind == "duplex" and value not in ("auto", "full", "half"):
             errors.append("duplex must be 'auto', 'full' or 'half'")
-        elif kind == "speed" and value not in SPEED_VALUES:
+        elif kind == "speed" and canonical_native(kind, value) is None:
             # RC1: the template's own enum (validValues); whether the switch supports the value is decided by the controller
             # (interface_utility.isPortSpeedSupported) when it builds the intent.
             errors.append("speed must be one of: %s" % ", ".join(SPEED_VALUES))
@@ -280,11 +303,14 @@ def native_companion_errors(profile, table):
 
 def native_companion_wire(kind, value):
     """Wire form of a NATIVE_EXTEND value, the same form the module already sends for the template defaults: booleans as the
-    strings "true"/"false", LACP_PORT_PRIO (declared integer) as an integer, everything else unchanged."""
+    strings "true"/"false", LACP_PORT_PRIO (declared integer) as an integer, bpdu_guard and speed in their canonical spelling
+    (canonical_native), everything else unchanged."""
     if kind == "bool":
         return "true" if value else "false"
     if kind == "lacp_prio":
         return int(value)
+    if kind in ("bpdu", "speed"):
+        return canonical_native(kind, value)
     return value
 
 
@@ -386,11 +412,11 @@ def _companion_errors(profile):
                 errors.append("%s must be a string" % key)
             elif key == "description" and len(value) > 254:
                 errors.append("description exceeds 254 characters")
-        elif kind == "bpdu" and value not in ("true", "false", "no"):
-            errors.append("bpdu_guard must be 'true', 'false' or 'no'")
+        elif kind == "bpdu" and canonical_native(kind, value) is None:
+            errors.append("bpdu_guard must be true, false or 'no' (a boolean, or one of these strings in any letter case)")
         elif kind == "mtu" and value not in ("jumbo", "default"):
             errors.append("mtu must be 'jumbo' or 'default'")
-        elif kind == "speed" and value not in SPEED_VALUES:
+        elif kind == "speed" and canonical_native(kind, value) is None:
             errors.append("speed must be one of: %s" % ", ".join(SPEED_VALUES))
         elif kind == "duplex" and value not in ("auto", "full", "half"):
             errors.append("duplex must be 'auto', 'full' or 'half'")
@@ -539,6 +565,8 @@ def companion_wire(key, value):
         return _bool_wire(value)
     if kind == "conf":
         return "\n".join(value)
+    if kind in ("bpdu", "speed"):
+        return canonical_native(kind, value)
     return value
 
 

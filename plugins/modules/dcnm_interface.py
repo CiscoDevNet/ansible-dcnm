@@ -205,7 +205,8 @@ options:
             - Companion fields of mode 'pvlan' on a port-channel (NOT LIVE TESTED). Native, no
               C(patch_version) needed - 'bpdu_guard', 'port_type_fast', 'mtu', 'copy_description',
               'enable_cdp', 'orphan_port', 'duplex', 'queuing_policy', 'disable_lacp_suspend_individual',
-              'lacp_port_priority' (1-65535) and 'lacp_rate' (normal, fast). Registered, so they need an
+              'lacp_port_priority' (1-65535) and 'lacp_rate' (normal, fast); 'bpdu_guard' takes a boolean or 'true', 'false',
+              'no' in any letter case and 'speed' any letter case of its values, both sent in the template's spelling. Registered, so they need an
               approved C(patch_version) and NDFC 12.6.0.267 or later - 'disable_lldp_transmit',
               'disable_lldp_receive', 'spanning_tree_port_type' and 'disable_queuing_stats'. 'merged'
               keeps an omitted field; 'replaced' returns an omitted native field to the template
@@ -582,6 +583,8 @@ options:
           bpdu_guard:
             description:
             - Spanning-tree bpduguard
+            - In mode 'pvlan' a boolean is also accepted, and the strings in any letter case; the value is sent as 'true', 'false' or
+              'no' ('no' is its own value, not false).
             type: str
             choices: ['true', 'false', 'no']
             default: 'true'
@@ -872,6 +875,8 @@ options:
           bpdu_guard:
             description:
             - Spanning-tree bpduguard
+            - In mode 'pvlan' a boolean is also accepted, and the strings in any letter case; the value is sent as 'true', 'false' or
+              'no' ('no' is its own value, not false).
             type: str
             choices: ['true', 'false', 'no']
             default: 'true'
@@ -926,6 +931,8 @@ options:
           speed:
             description:
             - Speed of the interface.
+            - In mode 'pvlan' it must be one of Auto, 10Mb, 100Mb, 1Gb, 2.5Gb, 5Gb, 10Gb, 25Gb, 40Gb, 50Gb, 100Gb, 200Gb, 400Gb or 800Gb,
+              in any letter case, and it is sent in that spelling.
             type: str
             default: Auto
           orphan_port:
