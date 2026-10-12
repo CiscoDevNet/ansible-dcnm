@@ -432,7 +432,9 @@ def requested_pairs(field, rows):
 
 def limit_errors(mode, pairs):
     """Template limits (T add()): host <= 1 row; promiscuous one primary; trunk secondary one
-    secondary per primary. Applied to raw input AND again after a merged union."""
+    secondary per primary. Applied to raw input AND again after a merged union.
+    N06: in every mode a secondary VLAN belongs to ONE primary within the interface's (or vPC's)
+    resulting list; the same pair twice is one pair (set), other interfaces are never consulted."""
     pairs = sorted(set(pairs))
     if mode == MODE_HOST and len(pairs) > 1:
         return ["pvlan_mode host allows at most one association"]
@@ -442,7 +444,14 @@ def limit_errors(mode, pairs):
         primaries = [p for p, _s in pairs]
         if len(primaries) != len(set(primaries)):
             return ["pvlan_mode trunk secondary allows one secondary VLAN per primary VLAN"]
-    return []
+    owners = {}
+    for p, s in pairs:
+        owners.setdefault(s, []).append(p)
+    return [
+        "pvlan_mode %s: secondary VLAN %d is associated with more than one primary VLAN (%s); a secondary VLAN belongs to "
+        "one primary VLAN" % (mode, s, ", ".join(str(p) for p in owners[s]))
+        for s in sorted(owners) if len(owners[s]) > 1
+    ]
 
 
 # ------------------------------------------------------------------ list wire form
