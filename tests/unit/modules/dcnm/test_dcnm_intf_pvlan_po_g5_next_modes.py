@@ -568,3 +568,75 @@ def test_main_deployed_deletion_with_a_foreign_membership_withdrawal_is_refused(
     ctrl = hr_ctrl([pv])
     status, result = hr_delete(ctrl)
     assert status == "fail" and "channel-group 503 force mode active" in result["msg"] and ctrl.deploys() == [], result.get("msg")
+
+
+# ------------------------------------------------------------------ N06: one primary per secondary, on the resulting list
+N06 = "is associated with more than one primary VLAN"
+
+
+@pytest.mark.parametrize(
+    "mode, pairs, expected",
+    [
+        ("trunk promiscuous", [(2210, 2212), (2410, 2212)], ["pvlan_mode trunk promiscuous: secondary VLAN 2212 is associated with more than one "
+                                                             "primary VLAN (2210, 2410); a secondary VLAN belongs to one primary VLAN"]),
+        ("trunk secondary", [(2410, 2212), (2210, 2212)], ["pvlan_mode trunk secondary: secondary VLAN 2212 is associated with more than one "
+                                                           "primary VLAN (2210, 2410); a secondary VLAN belongs to one primary VLAN"]),
+        ("trunk promiscuous", [(2210, 2211), (2210, 2212), (2410, 2412)], []),  # distinct primaries, distinct secondaries
+        ("trunk promiscuous", [(2210, 2212), (2210, 2212)], []),  # the same pair twice (a merged union) is one pair
+        ("trunk secondary", [(2210, 2212), (2210, 2211)], ["pvlan_mode trunk secondary allows one secondary VLAN per primary VLAN"]),  # unchanged
+        ("promiscuous", [(2210, 2212), (2410, 2212)], ["pvlan_mode promiscuous allows a single primary VLAN in its mapping"]),  # unchanged
+        ("host", [(2210, 2212), (2410, 2212)], ["pvlan_mode host allows at most one association"]),  # unchanged
+    ],
+)
+def test_n06_limit_errors_one_primary_per_secondary(mode, pairs, expected):
+    assert P.limit_errors(mode, pairs) == expected
+
+
+def test_n06_limit_errors_names_every_conflicting_secondary():
+    errs = P.limit_errors("trunk promiscuous", [(2210, 2211), (2410, 2211), (2510, 2211), (2210, 2212), (2410, 2212)])
+    assert [e.split(": ", 1)[1].split(" is ")[0] for e in errs] == ["secondary VLAN 2211", "secondary VLAN 2212"]
+    assert "(2210, 2410, 2510)" in errs[0] and "(2210, 2410)" in errs[1]
+
+
+@pytest.mark.parametrize(
+    "mode, field, bad",
+    [
+        ("trunk promiscuous", "pvlan_mapping", [{"primary_vlan": 2210, "secondary_vlans": "2211-2212"}, {"primary_vlan": 2410, "secondary_vlans": "2212"}]),
+        ("trunk secondary", "pvlan_association", [{"primary_vlan": 2210, "secondary_vlan": 2212}, {"primary_vlan": 2410, "secondary_vlan": 2212}]),
+    ],
+)
+def test_n06_creation_with_a_secondary_under_two_primaries_is_refused_before_any_write(mode, field, bad):
+    profile = copy.deepcopy(CASES[mode][0])
+    profile[field] = bad
+    ctrl = new_ctrl(mode)
+    status, result = run(ctrl, [item(mode, **profile)], state="replaced")
+    assert status == "fail" and N06 in result["msg"] and "secondary VLAN 2212" in result["msg"], result.get("msg")
+    assert ctrl.writes() == []
+
+
+N06_MERGED = {
+    "trunk promiscuous": ({"pvlan_mapping": [{"primary_vlan": 2410, "secondary_vlans": "2211"}]}, "secondary VLAN 2211", "(2210, 2410)"),
+    "trunk secondary": ({"pvlan_association": [{"primary_vlan": 2510, "secondary_vlan": 2412}]}, "secondary VLAN 2412", "(2410, 2510)"),
+}
+
+
+@pytest.mark.parametrize("mode", sorted(N06_MERGED))
+def test_n06_merged_union_with_the_current_list_is_refused_before_any_write(mode):
+    add, secondary, primaries = N06_MERGED[mode]
+    ctrl = existing(mode)
+    it = {"name": PO_ITEM_NAME, "type": "pc", "switch": [SWITCH_IP], "deploy": True, "profile": dict({"mode": "pvlan", "pvlan_mode": mode}, **add)}
+    status, result = run(ctrl, [it], state="merged")
+    assert status == "fail" and N06 in result["msg"] and secondary in result["msg"] and primaries in result["msg"], result.get("msg")
+    assert ctrl.writes() == [] and ctrl.bulk_bodies() == []
+
+
+def test_n06_replaced_states_its_own_list_and_is_not_refused_for_a_pair_it_replaces():
+    mode = "trunk promiscuous"
+    ctrl = existing(mode)  # current: 2210/2211, 2210/2212, 2410/2412
+    new = [{"primary_vlan": 2210, "secondary_vlans": "2211"}, {"primary_vlan": 2410, "secondary_vlans": "2212"}]
+    profile = dict(copy.deepcopy(CASES[mode][0]), pvlan_mapping=new)
+    status, result = run(ctrl, [dict(item(mode, **profile), deploy=False)], state="replaced")
+    assert N06 not in result.get("msg", ""), result.get("msg")
+    assert status == "exit", result.get("msg")
+    sent = ctrl.bulk_bodies()[0][0]["interfaces"][0]["nvPairs"]
+    assert P.pairs_from_wire(sent["MAPPING_LIST"], "MAPPING_LIST") == [(2210, 2211), (2410, 2212)]

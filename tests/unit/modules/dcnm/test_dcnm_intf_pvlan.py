@@ -529,3 +529,108 @@ class TestE08UnsafeCurrentStateRefused:
         status, res = run(c, [pvlan_item(pvlan_mode="trunk promiscuous", pvlan_mapping=mapping(2212))], bulk=False)
         assert status == "fail" and "bulk interface update API" in res["msg"]
         assert_no_writes(c)
+
+
+# ===================================================================================== N06
+N06 = "is associated with more than one primary VLAN"
+
+
+def wire(key, *pairs_):
+    return json.dumps({key: [{"P_VLAN": str(p), "S_VLAN": str(s)} for p, s in pairs_]}, separators=(",", ":"))
+
+
+class TestN06OneSecondaryOnePrimary(object):
+    """N06: a secondary VLAN may sit under ONE primary within an interface's resulting list. The check runs on the raw request and
+    again on the final merged intent; only modifying/deploy calls are asserted absent (merged reads its current state first)."""
+
+    def assert_n06(self, res, secondary=2212, primaries=(2210, 2410)):
+        assert N06 in res["msg"], res["msg"]
+        assert "secondary VLAN %d" % secondary in res["msg"]
+        assert "(%s)" % ", ".join(str(p) for p in primaries) in res["msg"]
+
+    @pytest.mark.parametrize("state", ["merged", "replaced"])
+    def test_raw_trunk_promiscuous_request_alone_is_refused(self, state):
+        c = ctrl(TPROM_A11)
+        bad = [{"primary_vlan": 2210, "secondary_vlans": "2212"}, {"primary_vlan": 2410, "secondary_vlans": "2212"}]
+        status, res = run(c, [pvlan_item(pvlan_mode="trunk promiscuous", pvlan_mapping=bad)], state=state)
+        assert status == "fail"
+        self.assert_n06(res)
+        assert_no_writes(c)
+
+    def test_raw_trunk_secondary_request_alone_is_refused(self):
+        c = ctrl(TSEC_A12)
+        status, res = run(c, [pvlan_item(pvlan_mode="trunk secondary", pvlan_association=assoc(2212) + assoc(2212, primary=2410))], state="replaced")
+        assert status == "fail"
+        self.assert_n06(res)
+        assert_no_writes(c)
+
+    def test_merged_union_with_the_current_mapping_is_refused(self):
+        c = ctrl(TPROM_BOTH)  # current 2210/2211 + 2210/2212
+        status, res = run(c, [pvlan_item(pvlan_mode="trunk promiscuous", pvlan_mapping=[{"primary_vlan": 2410, "secondary_vlans": "2212"}])])
+        assert status == "fail"
+        self.assert_n06(res)
+        assert "No configuration or deployment request was sent" in res["msg"]
+        assert_no_writes(c)
+
+    def test_merged_union_with_the_current_association_is_refused(self):
+        c = ctrl(TSEC_A12)  # current 2210/2212; the trunk secondary one-secondary-per-primary limit does not catch this one
+        status, res = run(c, [pvlan_item(pvlan_mode="trunk secondary", pvlan_association=assoc(2212, primary=2410))])
+        assert status == "fail"
+        self.assert_n06(res)
+        assert "one secondary VLAN per primary" not in res["msg"]
+        assert_no_writes(c)
+
+    def test_replaced_validates_its_resulting_list_not_a_union(self):
+        c = ctrl(TPROM_BOTH)
+        status, res = run(c, [pvlan_item(deploy=False, pvlan_mode="trunk promiscuous", pvlan_mapping=[{"primary_vlan": 2410, "secondary_vlans": "2212"}])],
+                          state="replaced")
+        assert status == "exit", res
+        assert pairs(c.sent_nv()[1], "MAPPING_LIST") == [(2410, 2212)]
+
+    def test_distinct_primaries_with_distinct_secondaries_stay_supported(self):
+        c = ctrl(TPROM_A11)
+        status, res = run(c, [pvlan_item(deploy=False, pvlan_mode="trunk promiscuous", pvlan_mapping=[{"primary_vlan": 2410, "secondary_vlans": "2412"}])])
+        assert status == "exit", res
+        assert pairs(c.sent_nv()[1], "MAPPING_LIST") == [(2210, 2211), (2410, 2412)]
+
+    def test_restating_a_current_pair_is_idempotent(self):
+        c = ctrl(TPROM_BOTH)
+        status, res = run(c, [pvlan_item(deploy=False, pvlan_mode="trunk promiscuous", pvlan_mapping=mapping(2212))])
+        assert status == "exit" and res["changed"] is False, res
+        assert c.mutating() == []
+
+    def test_a_pair_repeated_in_one_request_keeps_its_own_refusal(self):
+        c = ctrl(TPROM_A11)
+        status, res = run(c, [pvlan_item(pvlan_mode="trunk promiscuous", pvlan_mapping=mapping(2212) + mapping(2212))])
+        assert status == "fail" and "repeats a (primary, secondary) pair" in res["msg"] and N06 not in res["msg"]
+        assert_no_writes(c)
+
+    # ---- a current list that already holds the conflict (only possible from outside the module)
+    def conflicted(self):
+        nv = copy.deepcopy(TPROM_BOTH)
+        nv["MAPPING_LIST"] = wire("MAPPING_LIST", (2210, 2212), (2410, 2212))
+        return ctrl(nv)
+
+    def test_merged_update_of_another_field_is_refused_on_its_resulting_list(self):
+        c = self.conflicted()
+        status, res = run(c, [pvlan_item(deploy=False, pvlan_mode="trunk promiscuous", description="x")])
+        assert status == "fail"
+        self.assert_n06(res)
+        assert_no_writes(c)
+
+    def test_replaced_with_a_valid_list_corrects_it(self):
+        c = self.conflicted()
+        status, res = run(c, [pvlan_item(deploy=False, pvlan_mode="trunk promiscuous", pvlan_mapping=mapping(2212))], state="replaced")
+        assert status == "exit", res
+        assert pairs(c.sent_nv()[1], "MAPPING_LIST") == [(2210, 2212)]
+
+    @pytest.mark.parametrize("state", ["deleted", "query"])
+    def test_deleted_and_query_gain_no_association_blocker(self, state):
+        c = self.conflicted()
+        status, res = run(c, [{"name": IF7, "switch": ["10.0.0.1"]}], state=state)
+        assert N06 not in res.get("msg", ""), res.get("msg")
+        if state == "query":
+            assert status == "exit" and c.mutating() == [], res.get("msg")
+        else:
+            # the reset write is reached (no new pre-write blocker); its own deploy gate then asks for a preview this case does not give
+            assert c.order()[:1] == ["MODIFY"], c.order()

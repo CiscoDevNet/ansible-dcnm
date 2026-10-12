@@ -241,12 +241,16 @@ options:
             - Primary/secondary VLAN associations for C(pvlan_mode) C(host) (exactly one) and C(trunk secondary)
               (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with
               the keys C(primary_vlan) and C(secondary_vlan).
+            - A secondary VLAN belongs to one primary VLAN - the resulting list (after a C(merged) union with the current one)
+              that puts one secondary under two primaries is refused before any write.
             type: list
             elements: dict
           pvlan_mapping:
             description:
             - Promiscuous mappings for C(pvlan_mode) C(promiscuous) (a single primary VLAN) and C(trunk promiscuous),
               as a list of dictionaries with the keys C(primary_vlan) and C(secondary_vlans) (a VLAN list string).
+            - A secondary VLAN belongs to one primary VLAN - the resulting list (after a C(merged) union with the current one)
+              that puts one secondary under two primaries is refused before any write.
             type: list
             elements: dict
           members:
@@ -514,12 +518,16 @@ options:
             - Primary/secondary VLAN associations for C(pvlan_mode) C(host) (exactly one) and C(trunk secondary)
               (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with
               the keys C(primary_vlan) and C(secondary_vlan).
+            - A secondary VLAN belongs to one primary VLAN - the resulting list (after a C(merged) union with the current one)
+              that puts one secondary under two primaries is refused before any write.
             type: list
             elements: dict
           pvlan_mapping:
             description:
             - Promiscuous mappings for C(pvlan_mode) C(promiscuous) (a single primary VLAN) and C(trunk promiscuous),
               as a list of dictionaries with the keys C(primary_vlan) and C(secondary_vlans) (a VLAN list string).
+            - A secondary VLAN belongs to one primary VLAN - the resulting list (after a C(merged) union with the current one)
+              that puts one secondary under two primaries is refused before any write.
             type: list
             elements: dict
           peer1_pcid:
@@ -1120,6 +1128,8 @@ options:
             - Primary/secondary VLAN associations for 'pvlan_mode' 'host' (at most one) and
               'trunk secondary' (one secondary per primary). A new 'trunk secondary'
               association requires the fabric network of the secondary VLAN to be isolated.
+            - A secondary VLAN belongs to one primary VLAN - the resulting list (after a 'merged' union with the current one)
+              that puts one secondary under two primaries is refused before any write.
             type: list
             elements: dict
             suboptions:
@@ -1137,6 +1147,8 @@ options:
             description:
             - Promiscuous mappings for 'pvlan_mode' 'promiscuous' (one primary) and
               'trunk promiscuous'. Ranges are expanded and sent as one row per pair.
+            - A secondary VLAN belongs to one primary VLAN - the resulting list (after a 'merged' union with the current one)
+              that puts one secondary under two primaries is refused before any write.
             type: list
             elements: dict
             suboptions:

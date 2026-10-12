@@ -1035,6 +1035,7 @@ Parameters
                 </td>
                 <td>
                         <div>Primary/secondary VLAN associations for &#x27;pvlan_mode&#x27; &#x27;host&#x27; (at most one) and &#x27;trunk secondary&#x27; (one secondary per primary). A new &#x27;trunk secondary&#x27; association requires the fabric network of the secondary VLAN to be isolated.</div>
+                        <div>A secondary VLAN belongs to one primary VLAN - the resulting list (after a &#x27;merged&#x27; union with the current one) that puts one secondary under two primaries is refused before any write.</div>
                 </td>
             </tr>
                                 <tr>
@@ -1092,6 +1093,7 @@ Parameters
                 </td>
                 <td>
                         <div>Promiscuous mappings for &#x27;pvlan_mode&#x27; &#x27;promiscuous&#x27; (one primary) and &#x27;trunk promiscuous&#x27;. Ranges are expanded and sent as one row per pair.</div>
+                        <div>A secondary VLAN belongs to one primary VLAN - the resulting list (after a &#x27;merged&#x27; union with the current one) that puts one secondary under two primaries is refused before any write.</div>
                 </td>
             </tr>
                                 <tr>
@@ -1980,6 +1982,7 @@ Parameters
                 </td>
                 <td>
                         <div>Primary/secondary VLAN associations for <code>pvlan_mode</code> <code>host</code> (exactly one) and <code>trunk secondary</code> (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlan</code>.</div>
+                        <div>A secondary VLAN belongs to one primary VLAN - the resulting list (after a <code>merged</code> union with the current one) that puts one secondary under two primaries is refused before any write.</div>
                 </td>
             </tr>
             <tr>
@@ -1998,6 +2001,7 @@ Parameters
                 </td>
                 <td>
                         <div>Promiscuous mappings for <code>pvlan_mode</code> <code>promiscuous</code> (a single primary VLAN) and <code>trunk promiscuous</code>, as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlans</code> (a VLAN list string).</div>
+                        <div>A secondary VLAN belongs to one primary VLAN - the resulting list (after a <code>merged</code> union with the current one) that puts one secondary under two primaries is refused before any write.</div>
                 </td>
             </tr>
             <tr>
@@ -3747,6 +3751,7 @@ Parameters
                 </td>
                 <td>
                         <div>Primary/secondary VLAN associations for <code>pvlan_mode</code> <code>host</code> (exactly one) and <code>trunk secondary</code> (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlan</code>.</div>
+                        <div>A secondary VLAN belongs to one primary VLAN - the resulting list (after a <code>merged</code> union with the current one) that puts one secondary under two primaries is refused before any write.</div>
                 </td>
             </tr>
             <tr>
@@ -3765,6 +3770,7 @@ Parameters
                 </td>
                 <td>
                         <div>Promiscuous mappings for <code>pvlan_mode</code> <code>promiscuous</code> (a single primary VLAN) and <code>trunk promiscuous</code>, as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlans</code> (a VLAN list string).</div>
+                        <div>A secondary VLAN belongs to one primary VLAN - the resulting list (after a <code>merged</code> union with the current one) that puts one secondary under two primaries is refused before any write.</div>
                 </td>
             </tr>
             <tr>
