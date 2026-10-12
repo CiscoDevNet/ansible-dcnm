@@ -1110,6 +1110,7 @@ class DcnmNetwork:
         self.check_mode = False
         self.have_create = []
         self.want_create = []
+        self.want_create_names = set()
         self.diff_create = []
         self.diff_create_update = []
         # This variable is created specifically to hold all the create payloads which are missing a
@@ -2883,11 +2884,7 @@ class DcnmNetwork:
 
             skip_aggregate_validation = state in ("query", "deleted")
             if state == "overridden":
-                network_name = net.get("networkName")
-                has_desired_match = any(
-                    want.get("networkName") == network_name for want in getattr(self, "want_create", None) or []
-                )
-                skip_aggregate_validation = not has_desired_match
+                skip_aggregate_validation = net.get("networkName") not in self.want_create_names
 
             if not skip_aggregate_validation:
                 self.apply_secondary_gws_compat(t_conf, validate_remote=secondary_gws_key_present)
@@ -3406,6 +3403,7 @@ class DcnmNetwork:
             want_deploy.update({"networkNames": all_networks[:-1]})
 
         self.want_create = want_create
+        self.want_create_names = {net["networkName"] for net in want_create}
         self.want_attach = want_attach
         self.want_deploy = want_deploy
 
@@ -5953,6 +5951,7 @@ class DcnmNetwork:
         # whenever there is a failure in any of the APIs.
         # The idea would be to run overridden state with want=have and have=dcnm_state
         self.want_create = self.have_create
+        self.want_create_names = {net["networkName"] for net in self.want_create}
         self.want_attach = self.have_attach
         self.want_deploy = self.have_deploy
 
