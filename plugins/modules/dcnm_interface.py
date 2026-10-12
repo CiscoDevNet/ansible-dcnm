@@ -160,22 +160,73 @@ options:
             description:
             - Interface mode
             - Mode 'pvlan' selects the NDFC 12 policy 'int_port_channel_pvlan_host' for a regular
-              port-channel with exactly ONE physical member. Supported - creation in
+              port-channel with one or more explicit physical members. Supported - creation in
               the four PVLAN modes, update of the PVLAN lists ('merged' adds to the current list,
               'replaced' states the complete model) and of 'pc_mode', 'description', 'admin_state',
-              'native_vlan' and 'allowed_vlans' without changing 'pvlan_mode' or the member, and the
-              identical repetition. Refused before any change is sent - a second member, member
-              changes, ranges, vPC, a 'pvlan_mode' change, 'overridden', and removing secondaries
-              from a 'promiscuous' mapping that keeps others (protection kept from the measured
-              Ethernet defect). Fields for this mode are 'pvlan_mode', 'pvlan_association' (host,
+              'native_vlan' and 'allowed_vlans' without changing 'pvlan_mode', a change of the member
+              list, and the identical repetition. Refused before any change is sent - ranges, vPC, a
+              'pvlan_mode' change, 'overridden', and removing secondaries from a 'promiscuous' mapping
+              that keeps others (protection kept from the measured Ethernet defect). Fields for this mode are 'pvlan_mode', 'pvlan_association' (host,
               trunk secondary), 'pvlan_mapping' (promiscuous, trunk promiscuous), 'native_vlan' and
               'allowed_vlans' (trunk modes), 'members', 'pc_mode', 'description' and 'admin_state'.
-              The member is managed by the parent; 'members' may be omitted in 'merged' updates.
+              The members are managed by the parent and follow the regular port-channel rule - 'merged'
+              adds the listed members to the current ones ('members' may be omitted, and a subset never
+              removes a member); 'replaced' states the exact member list, which must be listed
+              explicitly (an omitted or empty list is refused, an empty member list is not supported).
+              An added member must qualify as for a creation. A removed member must be administratively
+              down and is released administratively down before the deployment, as in 'state=deleted';
+              removing members needs C(deploy) true, no check mode and a fabric host interface default
+              that is administratively down.
               For 'trunk secondary' the member must ALREADY be prepared as a neutral, administratively
               down access (int_access_host) or routed (int_routed_host) port; a member in switchport
               mode trunk is refused (known incident - NX-OS rejects the join) and the module never
               converts a member. 'state=deleted' removes the port-channel and releases its member
-              administratively down before the deployment.
+              administratively down before the deployment, on the policy the controller releases it
+              to (read afresh, never converted) - C(int_trunk_host), or C(int_routed_host) only in the
+              measured neutral form (no address, VRF, routing, QoS or freeform commands, MTU 9216,
+              speed Auto); any other release stops before the deployment.
+            - Companion fields of mode 'pvlan' on a port-channel (NOT LIVE TESTED). Native, no
+              C(patch_version) needed - 'bpdu_guard', 'port_type_fast', 'mtu', 'copy_description',
+              'enable_cdp', 'orphan_port', 'duplex', 'queuing_policy', 'disable_lacp_suspend_individual',
+              'lacp_port_priority' (1-65535) and 'lacp_rate' (normal, fast). Registered, so they need an
+              approved C(patch_version) and NDFC 12.6.0.267 or later - 'disable_lldp_transmit',
+              'disable_lldp_receive', 'spanning_tree_port_type' and 'disable_queuing_stats'. 'merged'
+              keeps an omitted field; 'replaced' returns an omitted native field to the template
+              default and withdraws an omitted registered field to its reset (inferred, not measured
+              on this policy), or keeps it when the patch context is not approved. CDP, LLDP and the
+              LACP priority/rate reach the member through the parent template; 'copy_description'
+              copies 'description' to the member. Refused before any write - 'spanning_tree_port_type'
+              network/normal while port type fast is true, 'disable_queuing_stats' true without a
+              resulting 'queuing_policy', and a 'lacp_rate' change while the member is
+              administratively up (template precondition; the module never changes a member's admin
+              state).
+            - Speed and freeform of mode 'pvlan' on a port-channel (NOT LIVE TESTED). 'speed' takes the
+              template values; it is rendered on the port-channel and inherited by every member, and
+              the controller checks that the switch supports it. The controller's pending carries the
+              speed on the port-channel only and NX-OS applies it to the member (MEASURED for 1Gb, one
+              member, host mode, administratively down - the addition and the return to Auto with
+              C(no speed 1000)); the module accepts that form only for C(speed 1000), the member
+              administratively down, its own persisted channel-group, the same mode on member and
+              port-channel, no C(no negotiate auto) and every other member line unchanged. Any other
+              speed or pending form is refused before the deployment (the intent change already written
+              is reported, not rolled back). Not measured and not checked - more than one member, a
+              mode other than host, another switch role or platform; they are accepted when the
+              controller's pending has the measured form, followed only by the usual post-deployment
+              compliance and intent readback. Freeform 'cmds' holds one top-level
+              command per entry. 'merged' keeps an omitted 'speed' or 'cmds' and adds the listed
+              commands to the current ones; 'replaced' returns an omitted 'speed' to Auto and states
+              the exact command list (an omitted or empty list clears it); a command repeated in one
+              request is kept once, in the order of its first appearance. A speed returning to Auto is
+              deployed only when the pending withdraws C(speed <n>) and, when the controller had added
+              it, C(no negotiate auto) (expected as C(negotiate auto); INFERRED, not measured - the
+              templates never render it); a different pending is refused before any deployment.
+              Refused before any write -
+              a command the controller copies to every member (starting with cts, duplex,
+              flowcontrol, load-interval, medium, mtu, no negotiate, port-type, priority-flow-control,
+              speed, storm-control or switchport), a command of a field a structured option owns
+              (private-vlan, channel-group, vpc, interface, mtu, speed, negotiate, duplex,
+              spanning-tree, description, cdp, lldp, lacp, shutdown, priority-flow-control,
+              service-policy, ip port access-group) and an indented sub-command.
             choices: ['trunk', 'access', 'l3', 'dot1q', 'monitor', 'pvlan']
             type: str
             required: true
@@ -337,7 +388,7 @@ options:
           spanning_tree_port_type:
             description:
             - Spanning-tree port type. This option is applicable only when mode
-              is trunk, access or dot1q.
+              is trunk, access, dot1q or pvlan.
             - Requires 'port_type_fast' to be false. The parent template rejects
               'network' or 'normal' while port type fast is enabled, and port type
               fast defaults to true, so both must be sent together.
@@ -362,7 +413,8 @@ options:
           disable_queuing_stats:
             description:
             - Disable statistics for the attached output queuing policy. This
-              option is applicable only when mode is trunk, access or dot1q.
+              option is applicable only when mode is trunk, access, dot1q or pvlan
+              (in mode pvlan, true requires a resulting 'queuing_policy').
             - Does NOT produce a configuration line of its own. It appends
               ' no-stats' to the 'service-policy type queuing output' line that
               'queuing_policy' produces. With 'queuing_policy' empty the value is
@@ -382,27 +434,73 @@ options:
             -  Interface mode
             - C(dot1q) selects the dot1q-tunnel vPC template (C(int_vpc_dot1q_tunnel)) and
               requires NDFC 12. It takes the same options as C(access), plus the LACP options.
-            - C(pvlan) selects the NDFC 12 policy C(int_vpc_pvlan_host) for a vPC with exactly ONE
-              physical member per peer, in any of its four C(pvlan_mode) values. Supported - creation,
+            - C(pvlan) selects the NDFC 12 policy C(int_vpc_pvlan_host) for a vPC with one or more
+              explicit physical members per peer, in any of its four C(pvlan_mode) values. Supported - creation,
               identical repetition, an update that reaches BOTH peers (the list of the mode, 'pc_mode',
-              the description of both peers, or the PVLAN native/allowed VLANs of both peers) and
-              C(state=deleted) of the vPC, all with C(deploy) true when a deployment is wanted. Refused
-              before any change is sent - a C(pvlan_mode) change, a field the mode does not take, a
-              second member, a member or PCID change, a PCID different from the vPC id (both
+              the description of both peers, or the PVLAN native/allowed VLANs of both peers), a change
+              of the members of one peer or both, and C(state=deleted) of the vPC, all with C(deploy)
+              true when a deployment is wanted. Refused before any change is sent - a C(pvlan_mode)
+              change, a field the mode does not take, a PCID change, a PCID different from the vPC id (both
               C(peer1_pcid) and C(peer2_pcid) are REQUIRED and must equal it), an empty list,
               removing secondaries from a C(promiscuous) mapping that keeps others (protection kept
-              from the measured Ethernet defect), freeform commands, an update that reaches only one
-              peer, a change of C(admin_state) of an existing vPC, C(overridden), check mode for a
+              from the measured Ethernet defect), any other update that reaches only
+              one peer, a change of C(admin_state) of an existing vPC, C(overridden), check mode for a
               creation or a deletion and NDFC 11. For C(trunk secondary) each member must ALREADY be
               prepared as a neutral, administratively down access (C(int_access_host)) or routed
               (C(int_routed_host)) port on BOTH peers; a member in switchport mode trunk is refused
               (known incident - NX-OS rejects the join) and the module never converts a member.
               C(peer1_*) belong to the first switch of C(switch) and C(peer2_*) to the second; both
               switches must be the two switches of the vPC pair. The members are managed by the
-              parent. Both peers are validated before anything is deployed and the vPC is reported
+              parent; per peer, C(peer1_members) and C(peer2_members) follow the regular port-channel
+              rule - C(merged) adds the listed members (an omitted list keeps the current members),
+              C(replaced) states the exact member list of each peer, which must be listed explicitly
+              (an omitted or empty list is refused). An added member must qualify as for a creation; a
+              removed member must be administratively down and is released administratively down on its
+              own switch before the deployment (needs C(deploy) true, no check mode and an
+              administratively down fabric host interface default). Both peers are validated before anything is deployed and the vPC is reported
               successful only when EVERY peer is. The deletion is verified on both peers against the
-              explicit contract (a direct C(int_trunk_host), shut, no freeform commands) without
-              rewriting any member.
+              explicit contract (each member a direct C(int_trunk_host), or C(int_routed_host) in the
+              measured neutral form, as the controller releases it; administratively down; no freeform
+              commands) without rewriting any member beyond setting a released member administratively
+              down on its own policy before the deployment.
+            - Companion fields of C(pvlan) on a vPC, shared by both peers (NOT LIVE TESTED). Native, no
+              C(patch_version) needed - C(bpdu_guard), C(port_type_fast), C(mtu), C(copy_description),
+              C(enable_cdp), C(duplex), C(enable_pfc), C(queuing_policy), C(disable_lacp_suspend_individual),
+              C(enable_lacp_vpc_convergence), C(lacp_port_priority), C(lacp_rate), C(enable_qos) and
+              C(qos_policy). Registered, so they need
+              an approved C(patch_version) and NDFC 12.6.0.267 or later - C(disable_lldp_transmit),
+              C(disable_lldp_receive), C(spanning_tree_port_type), C(disable_queuing_stats), C(acl_filter) and
+              C(disable_qos_stats).
+              The parent hands them to both child port-channels and both members; the same merged,
+              replaced and pre-write rules as the regular port-channel apply, on both peers.
+              C(speed) (shared by both peers) follows the port-channel rules and reaches both child
+              port-channels and every member; the inherited member speed is judged on each peer's own
+              serial and preview (MEASURED for 1Gb on both peers), and one peer that does not match
+              stops the whole vPC before any deployment. C(peer1_cmds) and C(peer2_cmds) set the freeform of each
+              peer's port-channel under the port-channel freeform rules; a change of the freeform of one
+              peer only is refused like any other update that reaches one peer (NOT LIVE TESTED).
+              Ingress QoS on a vPC in mode C(pvlan) (NOT LIVE TESTED) - C(enable_qos), C(qos_policy) and
+              C(disable_qos_stats) follow the regular vPC merged/replaced rule (C(merged) keeps an omitted
+              field, also a residual policy when it disables QoS; C(replaced) returns them to false / '' /
+              false, the last one only with an approved C(patch_version)), with two deliberate
+              differences, so this is not full parity with the regular vPC. First, a C(merged) request
+              that changes only C(qos_policy) keeps the C(enable_qos) state already stored and applies
+              the new policy; the regular vPC path currently sends an empty policy unless C(enable_qos)
+              is restated. Second, the checks are stricter than the regular ones and apply to the
+              RESULTING state of the vPC, not only to the fields of the request. Refused before any
+              write - C(qos_policy) with QoS disabled, C(enable_qos) true without a C(qos_policy) (the
+              template's fabric-dependent default, QOS_CLASSIFICATION on an AI/ML fabric, is not
+              modeled) and C(disable_qos_stats) true without an enabled policy. Because the state is
+              checked, an existing vPC whose stored intent is QoS enabled with an empty policy (for
+              example a fabric-dependent default set through the GUI) refuses even a C(merged) update
+              of another field; to proceed, give the correct C(qos_policy), or set C(enable_qos) false
+              when disabling QoS is the intent. The module makes neither correction by itself. Both child
+              port-channels are expected to carry C(service-policy type qos input <policy>[ no-stats]).
+              The int_vpc_pvlan_host / int_vpc_pvlan_po revision installed on the test ND does not hand
+              these values (nor C(queuing_policy) and C(enable_pfc)) to the children and renders a
+              C(type ENABLE_QOS) literal; on such a revision the deployment is refused before it is sent,
+              and the intent change already written is reported, not rolled back. A live run therefore
+              depends on verifying the installed template revision first.
             choices: ['trunk', 'access', 'dot1q', 'pvlan']
             type: str
             required: true
@@ -979,8 +1077,11 @@ options:
               'overridden'; 'merged' refuses it.
             - In mode 'pvlan' the supported companion fields are 'description', 'admin_state',
               'bpdu_guard', 'port_type_fast', 'mtu', 'speed', 'enable_cdp', 'orphan_port',
-              'duplex', 'enable_pfc', 'enable_qos', 'qos_policy', 'queuing_policy' and 'cmds'.
-              Any other field is refused. 'cmds' must not carry private-vlan or switchport
+              'duplex', 'enable_pfc', 'enable_qos', 'qos_policy', 'queuing_policy' and 'cmds', plus the
+              registered 'disable_lldp_transmit' and 'disable_lldp_receive' (NOT LIVE TESTED in this mode;
+              they need an approved C(patch_version)). Any other field is refused. An explicit LLDP value
+              always wins; an omitted one is kept by 'merged' and, on 'replaced', withdrawn to 'false'
+              (inferred) only with an approved C(patch_version), else kept. 'cmds' must not carry private-vlan or switchport
               lines. 'native_vlan' ('' or one VLAN) and 'allowed_vlans' ('', 'none' or VLAN
               ranges; 'all' is refused) apply to the two trunk submodes only.
             - Before every deployment attempt (including the check_deploy resend and the
@@ -2278,7 +2379,7 @@ EXAMPLES = """
             - primary_vlan: 2210
               secondary_vlan: 2212
 
-# Private VLAN on a regular port-channel (int_port_channel_pvlan_host, NDFC 12; exactly one member)
+# Private VLAN on a regular port-channel (int_port_channel_pvlan_host, NDFC 12; explicit physical member lists)
 
 - name: Create a port-channel in PVLAN host mode with one administratively down member
   cisco.dcnm.dcnm_interface:
@@ -2301,6 +2402,27 @@ EXAMPLES = """
             - primary_vlan: 2210
               secondary_vlan: 2212
 
+- name: Set companion controls of that port-channel (NOT LIVE TESTED; the LLDP and spanning-tree fields are registered)
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_fabric }}"
+    state: merged
+    patch_version: "4.3.1.0175006011"   # required by disable_lldp_transmit and spanning_tree_port_type only
+    config:
+      - name: po10
+        type: pc
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          mode: pvlan
+          pvlan_mode: host
+          enable_cdp: false                 # native: reaches the member as 'no cdp enable'
+          lacp_port_priority: 100           # native: member 'lacp port-priority 100'
+          queuing_policy: QUEUING_POLICY_1  # native: Po 'service-policy type queuing output ...'
+          disable_lldp_transmit: true       # registered: member 'no lldp transmit'
+          port_type_fast: false             # required with a spanning-tree port type other than 'no'
+          spanning_tree_port_type: network  # registered: Po 'spanning-tree port type network'
+
 - name: Delete that port-channel (its member is released administratively down)
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_fabric }}"
@@ -2311,7 +2433,7 @@ EXAMPLES = """
           - "{{ ansible_switch1 }}"
         deploy: true
 
-# Private VLAN on a vPC (int_vpc_pvlan_host, NDFC 12; one member per peer, PCID equal to the vPC id)
+# Private VLAN on a vPC (int_vpc_pvlan_host, NDFC 12; explicit members per peer, PCID equal to the vPC id)
 
 - name: Create a vPC in PVLAN host mode (peer1_* belong to the first switch, peer2_* to the second)
   cisco.dcnm.dcnm_interface:
@@ -2669,6 +2791,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.interface_pvlan import 
     PVLAN_MODES,
     PO_NAME as PVLAN_PO_NAME,
     PO_RELEASED_MEMBER_NV as PVLAN_PO_RELEASED_MEMBER_NV,
+    PO_RELEASE_METADATA as PVLAN_PO_RELEASE_METADATA,
     TRUNK_HOST_POLICY as PVLAN_TRUNK_HOST_POLICY,
     interface_stanza as pvlan_interface_stanza,
     po_not_implemented as pvlan_po_not_implemented,
@@ -2696,19 +2819,32 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.interface_pvlan import 
     vpc_leg_residue as pvlan_vpc_leg_residue,
     vpc_child_differences as pvlan_vpc_child_differences,
     vpc_same as pvlan_vpc_same,
+    po_intent_same as pvlan_po_intent_same,
     vpc_transition_problems as pvlan_vpc_transition_problems,
     vpc_member_differences as pvlan_vpc_member_differences,
     vpc_released_member_differences as pvlan_vpc_released_member_differences,
     po_force_unmeasured as pvlan_po_force_unmeasured,
-    po_released_member_payload as pvlan_po_released_member_payload,
     po_markdelete_outcome_problems as pvlan_po_markdelete_outcome_problems,
-    po_released_member_readback_problems as pvlan_po_released_member_readback_problems,
+    po_released_member_restoration_delta as pvlan_po_released_member_restoration_delta,
     po_marked_deleted_problem as pvlan_po_marked_deleted_problem,
     po_member_force_withdrawal as pvlan_po_member_force_withdrawal,
     po_member_canonical as pvlan_po_member_canonical,
     PO_PREPARED_BASELINES as PVLAN_PO_PREPARED_BASELINES,
     PO_ROUTED_BASELINE_POLICY as PVLAN_PO_ROUTED_BASELINE_POLICY,
     PO_ROUTED_SELF_CHILDREN as PVLAN_PO_ROUTED_SELF_CHILDREN,
+    PO_ROUTED_RELEASE_CHILDREN_UP as PVLAN_PO_ROUTED_RELEASE_CHILDREN_UP,
+    PO_ROUTED_RELEASE_CHILDREN_DOWN as PVLAN_PO_ROUTED_RELEASE_CHILDREN_DOWN,
+    RELEASED_MEMBER_POLICIES as PVLAN_RELEASED_MEMBER_POLICIES,
+    released_member_safety_problems as pvlan_released_member_safety_problems,
+    released_member_payload as pvlan_released_member_payload,
+    released_member_readback_problems as pvlan_released_member_readback_problems,
+    released_member_role_expectation as pvlan_released_member_role_expectation,
+    released_member_contract as pvlan_released_member_contract,
+    # PLAN-2 C1: companion controls of the PVLAN parents.
+    PO_NATIVE_COMPANIONS as PVLAN_PO_NATIVE_COMPANIONS,
+    VPC_NATIVE_COMPANIONS as PVLAN_VPC_NATIVE_COMPANIONS,
+    native_companion_spec as pvlan_native_companion_spec,
+    member_lacp_rate_problems as pvlan_member_lacp_rate_problems,
 )
 SECRET_PROFILE_KEYS = gie_no_log_profile_keys() | RETIRED_LOOPBACK_OSPF_AUTH_SECRETS
 
@@ -4006,6 +4142,13 @@ class DcnmIntf:
                 pc_mode=dict(type="str"),
                 description=dict(type="str"),
                 admin_state=dict(type="bool"),
+                # RC1: freeform of the port-channel; no default (omitted = kept by merged, cleared by replaced).
+                cmds=dict(type="list", elements="str"),
+            )
+            # PLAN-2 C1: native companions (no defaults) and the registry companions the caller set explicitly.
+            pc_prof_spec_pvlan.update(pvlan_native_companion_spec(PVLAN_PO_NATIVE_COMPANIONS))
+            gie_extend_prof_spec(
+                pc_prof_spec_pvlan, "int_port_channel_pvlan_host", config[0]["profile"]
             )
             self.dcnm_intf_validate_interface_input(
                 config, pc_spec, pc_prof_spec_pvlan
@@ -4163,6 +4306,14 @@ class DcnmIntf:
                 peer1_native_vlan=dict(type="str"),
                 peer2_native_vlan=dict(type="str"),
                 admin_state=dict(type="bool"),
+                # RC1: per-peer freeform; no default (omitted = kept by merged, cleared by replaced).
+                peer1_cmds=dict(type="list", elements="str"),
+                peer2_cmds=dict(type="list", elements="str"),
+            )
+            # PLAN-2 C1: shared native companions (no defaults) and the registry companions the caller set explicitly.
+            vpc_prof_spec_pvlan.update(pvlan_native_companion_spec(PVLAN_VPC_NATIVE_COMPANIONS))
+            gie_extend_prof_spec(
+                vpc_prof_spec_pvlan, "int_vpc_pvlan_host", cfg[0]["profile"]
             )
             self.dcnm_intf_validate_interface_input(cfg, vpc_spec, vpc_prof_spec_pvlan)
         if "trunk" == mode:
@@ -4841,6 +4992,8 @@ class DcnmIntf:
                 queuing_policy=dict(type="str"),
                 cmds=dict(type="list", elements="str"),
             )
+            # PLAN-2 C1: the registry companions of int_pvlan_host (disable_lldp_transmit/receive) the caller set explicitly.
+            gie_extend_prof_spec(eth_prof_spec_pvlan, "int_pvlan_host", cfg[0]["profile"])
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_pvlan
             )
@@ -5173,6 +5326,16 @@ class DcnmIntf:
                 if k in PO_PROFILE_KEYS and v is not None
             )
             intf["interfaces"][0]["nvPairs"] = pvlan_po_host_nvpairs(raw, ifname)
+            # PLAN-2 C1: the registry companions of int_port_channel_pvlan_host go through the engine like every other
+            # registered parent. An explicit one without an approved patch_version (or below the NDFC floor) refuses
+            # the WHOLE batch here, while payloads are built, before any read-modify-write.
+            gie_add, gie_err = gie_contribute_nvpairs(
+                intf["policy"], delem[profile], getattr(self, "ndfc_version", None),
+                getattr(self, "patch_version", None)
+            )
+            if gie_err:
+                self.module.fail_json(msg=gie_err)
+            intf["interfaces"][0]["nvPairs"].update(gie_add)
             return
 
         if delem[profile]["mode"] == "trunk":
@@ -5405,6 +5568,15 @@ class DcnmIntf:
             except PvlanError as exc:
                 self.module.fail_json(msg="vPC {0}: {1}. No change was sent.".format(ifname, exc))
             intf["interfaces"][0]["nvPairs"] = pvlan_vpc_host_nvpairs(raw, ifname, legs)
+            # PLAN-2 C1: the registry companions of int_vpc_pvlan_host (shared by both peers) go through the engine; an
+            # explicit one the caller's context cannot carry refuses the whole batch here, before any write.
+            gie_add, gie_err = gie_contribute_nvpairs(
+                intf["policy"], delem[profile], getattr(self, "ndfc_version", None),
+                getattr(self, "patch_version", None)
+            )
+            if gie_err:
+                self.module.fail_json(msg=gie_err)
+            intf["interfaces"][0]["nvPairs"].update(gie_add)
             return
 
         # Dynamic Peer Mapping: Determine the actual ND PEER1/PEER2 assignment
@@ -5810,7 +5982,11 @@ class DcnmIntf:
                 if k in PVLAN_PROFILE_KEYS and v is not None
             )
             try:
-                built = pvlan_reconcile("replaced", raw, ifname, None, None)
+                built = pvlan_reconcile(
+                    "replaced", raw, ifname, None, None,
+                    ndfc_version=getattr(self, "ndfc_version", None),
+                    patch_version=getattr(self, "patch_version", None),
+                )
             except PvlanError as exc:
                 self.module.fail_json(
                     msg="Interface {0}: {1}. No change was sent.".format(ifname, exc)
@@ -7431,7 +7607,9 @@ class DcnmIntf:
             return
         raw = dict((k, v) for k, v in match_pb[0].items() if k in PVLAN_PROFILE_KEYS)
         try:
-            result = pvlan_reconcile(state, raw, name, have.get("policy"), have_nv)
+            result = pvlan_reconcile(
+                state, raw, name, have.get("policy"), have_nv,
+                ndfc_version=getattr(self, "ndfc_version", None), patch_version=getattr(self, "patch_version", None))
         except PvlanError as exc:
             self.dcnm_intf_pvlan_block(name, sno, str(exc))
             return
@@ -7567,7 +7745,9 @@ class DcnmIntf:
                 self.dcnm_intf_pvlan_block(name, sno, owner)
                 return "done"
         try:
-            result = pvlan_reconcile_po(state, raw, name, have_policy, have_nv)
+            result = pvlan_reconcile_po(
+                state, raw, name, have_policy, have_nv,
+                ndfc_version=getattr(self, "ndfc_version", None), patch_version=getattr(self, "patch_version", None))
         except PvlanError as exc:
             self.dcnm_intf_pvlan_block(name, sno, str(exc))
             return "done"
@@ -7585,15 +7765,19 @@ class DcnmIntf:
         member_refused = False
         claimed = self.__dict__.setdefault("pvlan_po_claimed", {})
         # G1: the member set comes from the reconciled result (raw for a creation, HAVE for an update in which
-        # `members` may be omitted); the reconciliation already refused any change of the member set.
-        member_names = [self.dcnm_intf_pvlan_po_member_ifname(m.strip(), sno) for m in str(result.get("members") or "").split(",") if m.strip()]
+        # `members` may be omitted). MM-B: an update may now ADD members (they join exactly as in a creation) and REMOVE members (they are
+        # released after the parent's modify and BEFORE the deploy, through the same release contract as a deletion).
+        added = set(result.get("added") or [])
+        member_names = [self.dcnm_intf_pvlan_po_member_ifname(m, sno)
+                        for m in sorted(pvlan_normalize_member_list(result.get("members"))[0])]
         for member in member_names:
             problems, m_policy, m_nv = self.dcnm_intf_pvlan_po_member_context(member, sno)
+            joins = creates or pvlan_po_member_canonical(member) in added
             # A conflict known BEFORE any write: two port-channels of this playbook cannot share a member.
             claim_key = (sno, member.lower())
             if claimed.setdefault(claim_key, name.lower()) != name.lower():
                 problems.append("the playbook also assigns it to port-channel {0}".format(claimed[claim_key]))
-            if not problems and creates:
+            if not problems and joins:
                 if m_policy == PO_MEMBER_POLICY or m_policy in self.dcnm_intf_pvlan_member_policies():
                     problems.append("it is already a port-channel member ({0})".format(m_policy))
                 else:
@@ -7607,6 +7791,12 @@ class DcnmIntf:
             elif not problems:
                 if m_policy != PO_MEMBER_POLICY or str((m_nv or {}).get("PO_ID", "")).lower() != name.lower():
                     problems.append("it is not the member of this port-channel in the controller's intent ({0})".format(m_policy))
+            # The host template rewrites every member on each write (HOST:411,529-560): the intended member is
+            # always derived from the intended parent; an existing member keeps its own DESC/ADMIN_STATE/CONF.
+            post_member_nv = pvlan_po_member_nvpairs(result["nv"], m_nv, current_is_member=not joins)
+            if not problems:
+                # PLAN-2 C1: the member template's own precondition for a LACP rate change (admin down); never forced.
+                problems += pvlan_member_lacp_rate_problems(member, m_nv, post_member_nv, not joins)
             if problems:
                 for reason in problems:
                     self.dcnm_intf_pvlan_block(member, sno, reason)
@@ -7615,17 +7805,22 @@ class DcnmIntf:
             members.append({
                 "name": member,
                 "pre": (m_policy, copy.deepcopy(m_nv)),
-                # The host template rewrites every member on each write (HOST:411,529-560): the intended member is
-                # always derived from the intended parent; an existing member keeps its own DESC/ADMIN_STATE/CONF.
-                "post": (PO_MEMBER_POLICY, pvlan_po_member_nvpairs(result["nv"], m_nv, current_is_member=not creates)),
+                "post": (PO_MEMBER_POLICY, post_member_nv),
+                "joining": joins and not creates,
             })
+        removed = []
+        if result.get("removed"):
+            removed, reasons = self.dcnm_intf_pvlan_po_register_removed(name, sno, result["removed"], deploy)
+            for member, reason in reasons:
+                self.dcnm_intf_pvlan_block(member, sno, reason)
+            member_refused = member_refused or bool(reasons)
         if member_refused:
             return "done"
         self.pvlan_targets[(sno, name.lower())] = {
             "name": name, "sno": sno, "kind": "po", "creates": creates, "update": result["update"],
             "pre": (have_policy, copy.deepcopy(have_nv)) if have_policy else (None, None),
             "post": (PO_HOST_POLICY, copy.deepcopy(result["nv"])),
-            "new_secondaries": result["new_secondaries"], "members": members,
+            "new_secondaries": result["new_secondaries"], "members": members, "removed": removed,
         }
         want["interfaces"][0]["nvPairs"] = result["nv"]
         if creates:
@@ -7656,6 +7851,51 @@ class DcnmIntf:
                     self.changed_dict[0]["debugs"].append(
                         {"Name": name, "SNO": sno, "DeployStatus": match_intf["complianceStatus"]})
         return "done"
+
+    def dcnm_intf_pvlan_po_register_removed(self, name, sno, removed, deploy):
+        """MM-B: preconditions of the members an UPDATE removes from an existing PVLAN port-channel, checked before any write (the same as a
+        deletion's members, dcnm_intf_pvlan_po_register_deletes): each is this port-channel's int_port_channel_pvlan_member, administratively
+        down, whose live policies are exactly the port-channel's; the fabric's host default is down; the bulk update API exists; the update
+        is deployed and not in check mode (the release is validated by the pre-deploy gate). Returns ([entries], [(member, reason)]); an entry
+        carries the predicted release (int_trunk_host, the template model) until the fresh release replaces it after the parent's modify."""
+        entries, reasons = [], []
+        names = [self.dcnm_intf_pvlan_po_member_ifname(m, sno) for m in sorted(removed)]
+        common = []
+        if self.module.check_mode:
+            common.append("removing a member from a PVLAN port-channel is refused in check mode: the pre-deploy gate needs the update to exist")
+        if str(deploy).lower() != "true":
+            common.append("removing a member from a PVLAN port-channel without deploy is not implemented: the release of the member could not be "
+                          "validated")
+        if self.dcnm_intf_get_host_intf_admin_state() is not False:
+            common.append("the fabric's host interface default is not administratively down (HOST_INTF_ADMIN_STATE is not false, or unreadable): "
+                          "releasing the member to a standalone shutdown port is the only supported contract")
+        if not self.module.check_mode and not self.has_bulk_api:
+            common.append("the controller's bulk interface update API is not available: the released member's administrative state could not be "
+                          "corrected before the deploy")
+        for member in names:
+            problems = list(common)
+            m_problems, m_policy, m_nv = self.dcnm_intf_pvlan_po_member_context(member, sno)
+            problems += m_problems
+            if not m_problems:
+                if m_policy != PO_MEMBER_POLICY or str((m_nv or {}).get("PO_ID", "")).lower() != str(name).lower():
+                    problems.append("member {0} is not the member of this port-channel in the controller's intent ({1})".format(member, m_policy))
+                elif str((m_nv or {}).get("ADMIN_STATE", "")).strip().lower() != "false":
+                    problems.append("member {0} is not administratively down; releasing it is not implemented".format(member))
+                else:
+                    claims = self.dcnm_intf_pvlan_po_member_claims(member, sno, name)
+                    if claims:
+                        problems.append(claims)
+            if problems:
+                reasons += [(member, "removing it from {0}: {1}".format(name, x)) for x in problems]
+                continue
+            entries.append({"name": member, "pre": (PO_MEMBER_POLICY, copy.deepcopy(m_nv)),
+                            "post": (PVLAN_TRUNK_HOST_POLICY, dict(PVLAN_PO_RELEASED_MEMBER_NV))})
+        if entries and not reasons:
+            # Never the generic deferred default for a removed member: the release corrects the member itself before the deploy.
+            gone = set((sno, e["name"].lower()) for e in entries)
+            self.deferred_delete_member_defaults = [
+                d for d in (self.deferred_delete_member_defaults or []) if (d.get("serialNumber"), str(d.get("ifName", "")).lower()) not in gone]
+        return entries, reasons
 
     def dcnm_intf_pvlan_po_summary_policy(self, name, sno):
         """Policy template an interface holds according to the interface SUMMARY, or None. Uses ONLY a
@@ -7754,25 +7994,62 @@ class DcnmIntf:
         po_number = re.match(r"^port-channel([0-9]+)$", str(target["name"]).lower())
         po_nv = target["post"][1] or {}
         joining = {"po_number": po_number.group(1), "pc_mode": str(po_nv.get("PC_MODE", "")),
-                   "mode": po_nv.get("PVLAN_MODE")} if po_number and target.get("creates") else None
+                   "mode": po_nv.get("PVLAN_MODE")} if po_number else None
         # G6: a member PREPARED as access/routed joins through the same force (EXP-1 measured for trunk secondary); `baseline` lets
-        # the transition apply the prepared member's measured specifics.
+        # the transition apply the prepared member's measured specifics. MM-B: a member ADDED by an update joins exactly the same way
+        # (the force form is MEASURED for a creation; for an added member of an existing port-channel it is INFERRED).
         parts += [(m["name"], m["pre"], m["post"], False,
-                   dict(joining, baseline=m["pre"][0]) if joining and m["pre"][0] in (PVLAN_TRUNK_HOST_POLICY,) + tuple(PVLAN_PO_PREPARED_BASELINES)
+                   dict(joining, baseline=m["pre"][0])
+                   if joining and (target.get("creates") or m.get("joining"))
+                   and m["pre"][0] in (PVLAN_TRUNK_HOST_POLICY,) + tuple(PVLAN_PO_PREPARED_BASELINES)
                    else None)
                   for m in target["members"]]
         # G5 (live host finding F-H4, MEASURED on H4): an EXISTING member inherits the parent's PVLAN changes on the device,
         # with no member pending; that is accepted only when the port-channel's own pending carries changes this same gate
         # validates (po_member_inherited_state()).
         parent_changes = bool(blocks.get(str(target["name"]).lower())) and not target.get("creates")
+        # C1-R2 (T2-LIVE-G1 F-T2-1, MEASURED): an EXISTING member of an updated port-channel may be re-emitted with
+        # `channel-group N force mode M` for this same port-channel; po_member_force_reassertion() decides, without assuming any
+        # device effect of the command.
+        reassert = {"po_number": po_number.group(1), "pc_mode": str(po_nv.get("PC_MODE", ""))} if po_number and not target.get("creates") else None
+        # C1-R3 (M-G1 M1, MEASURED): the member's `mtu 9216` withdrawal may be carried by the parent's own `no mtu 9216`
+        # (po_member_mtu_inherited_state); the parent's decision is known before its members are assessed (parts[0] is the parent).
+        mtu_ctx = None
         decisions, problems = [], []
         for pname, pre, post, absent_ok, member_force in parts:
+            existing_member = pre[0] == PO_MEMBER_POLICY and pname != target["name"]
             decision, found = pvlan_assess_target(
                 blocks.get(pname.lower(), []), entry, pname, pvlan_render(*post),
                 pvlan_transition_vocabulary(pre, post), absent_ok=absent_ok, member_force=member_force,
-                member_inherit=target["name"] if parent_changes and pre[0] == PO_MEMBER_POLICY else None)
+                member_inherit=target["name"] if parent_changes and pre[0] == PO_MEMBER_POLICY else None,
+                member_reassert=reassert if existing_member else None,
+                member_mtu_inherit=mtu_ctx if existing_member else None,
+                # SP1 (DIAG-measured): the member's `speed 1000` addition / withdrawal carried by THIS port-channel's own pending
+                member_speed_inherit=mtu_ctx if existing_member else None)
+            if pname == target["name"] and reassert:
+                mtu_ctx = dict(reassert, parent=target["name"], parent_desired=pvlan_render(*post),
+                               parent_vocabulary=pvlan_transition_vocabulary(pre, post),
+                               parent_body=blocks.get(pname.lower(), []), parent_ok=decision == "deploy" and not found)
             decisions.append(decision)
             problems.extend("{0}: {1}".format(pname, f) for f in found)
+        # MM-B: a member REMOVED by the update is assessed like a deleted port-channel's member: the FRESH release modeled after the
+        # parent's modify (never the prediction), its membership withdrawn with the force command form when deployed (G5 MEASURED for a
+        # deletion, INFERRED for a removal) and the rest of its pending taken to the released state.
+        for m in target.get("removed") or []:
+            if not m.get("released"):
+                decisions.append("refuse")
+                problems.append("{0}: the removed member was not released before the deploy".format(m["name"]))
+                continue
+            body = blocks.get(m["name"].lower(), [])
+            if po_number:
+                body, found = pvlan_po_member_force_withdrawal(body, po_number.group(1), str(po_nv.get("PC_MODE", "")))
+                if found:
+                    decisions.append("refuse")
+                    problems.extend("{0}: {1}".format(m["name"], f) for f in found)
+                    continue
+            decision, found = pvlan_assess_target(body, entry, m["name"], pvlan_render(*m["post"]), pvlan_transition_vocabulary(m["pre"], m["post"]))
+            decisions.append(decision)
+            problems.extend("{0}: {1}".format(m["name"], f) for f in found)
         if "refuse" in decisions:
             return "refuse", problems
         if all(d == "converged" for d in decisions):
@@ -7784,7 +8061,7 @@ class DcnmIntf:
         port-channel path (interface/markdelete + globalInterface/deploy, MEASURED for a regular trunk Po in
         an earlier state-withdrawal measurement). Registered here, before the E2 guard that refuses any other route to a PVLAN
         port-channel, only when every precondition holds; otherwise the deletion is refused before any write:
-          * one live direct int_port_channel_pvlan_host owner (two authorities), exactly ONE explicit member;
+          * one live direct int_port_channel_pvlan_host owner (two authorities), one or more explicit physical members;
           * the member holds int_port_channel_pvlan_member of THIS port-channel and is administratively down, and its only
             other live policy can be the parent's 'Inherited Commands' int_eth child (both with the port-channel as
             source, as measured on H1); anything else on the member is refused;
@@ -7833,14 +8110,12 @@ class DcnmIntf:
                 if not self.module.check_mode and not self.has_bulk_api:
                     problems.append("the controller's bulk interface update API is not available: the released member's "
                                     "administrative state could not be corrected before the deploy")
-                tokens = [t.strip() for t in str(po_nv.get("MEMBER_INTERFACES", "") or "").split(",") if t.strip()]
-                _names, unresolved = pvlan_normalize_member_list(po_nv.get("MEMBER_INTERFACES"))
+                names, unresolved = pvlan_normalize_member_list(po_nv.get("MEMBER_INTERFACES"))
                 members = []
-                if unresolved or len(tokens) != 1:
-                    problems.append("the port-channel has {0} member entr(ies){1}; exactly one explicit member is "
-                                    "implemented".format(len(tokens), " (unresolved: %s)" % ", ".join(unresolved) if unresolved else ""))
-                else:
-                    tokens[0] = self.dcnm_intf_pvlan_po_member_ifname(tokens[0], sno)
+                if unresolved or not names:
+                    problems.append("the port-channel needs a readable, non-empty list of explicit physical members")
+                for token in sorted(names) if not unresolved else []:
+                    tokens = [self.dcnm_intf_pvlan_po_member_ifname(token, sno)]
                     m_problems, m_policy, m_nv = self.dcnm_intf_pvlan_po_member_context(tokens[0], sno)
                     problems += m_problems
                     if not m_problems:
@@ -7904,9 +8179,11 @@ class DcnmIntf:
         self.module.fail_json(
             msg="PVLAN port-channel {0} on {1}: member release failed {2}: {3}. Confirmed writes: {4}. Writes with an "
             "UNVERIFIED outcome: {5}. No deployment request was sent: the controller keeps the port-channel's pending "
-            "deletion{6}. Nothing is retried or rolled back; recovery is the scoped manual procedure.".format(
+            "{6}{7}. Nothing is retried or rolled back; recovery is the scoped manual procedure.".format(
                 target["name"], target["sno"], phase, "; ".join(problems), ", ".join(confirmed) or "none",
                 ", ".join(uncertain) or "none",
+                "membership update (the member removed from the port-channel is not deployed)" if target.get("release_context") == "update"
+                else "deletion",
                 "" if admin_state is None else " and the released member with ADMIN_STATE {0!r}".format(admin_state)),
             **self.result)
 
@@ -7957,47 +8234,68 @@ class DcnmIntf:
             target["markdelete"] = "confirmed"
         return True
 
-    def dcnm_intf_pvlan_po_released_member(self, target):
-        """(problems, nvPairs) of the released member from FRESH reads (cached authority dropped first): the
+    def dcnm_intf_pvlan_po_released_member(self, target, normalized=False):
+        """(problems, policy, nvPairs) of the released member from FRESH reads (cached authority dropped first): the
         port-channel is absent -- or, G5 (live host finding F-HR-deployed, MEASURED for a DEPLOYED port-channel), listed
         ONLY in the controller's "marked for deletion" form awaiting the deploy (po_marked_deleted_problem) -- no live policy
         names it (entity or source), and the frozen member is a standalone physical Ethernet with exactly one live direct
-        int_trunk_host (summary, detail and policy list agree)."""
+        released-member policy -- int_trunk_host or, MM-A (Q56), int_routed_host (summary, detail and policy list agree)."""
         sno, name, member = target["sno"], target["name"], target["frozen"]["member"]
         self.dcnm_intf_invalidate_serial_authority(sno)
         self.pvlan_policies.pop(sno, None)
         if not self.dcnm_intf_get_have_all_with_sno(sno):
-            return ["the interface summary could not be read authoritatively"], None
+            return ["the interface summary could not be read authoritatively"], None, None
         authority = self._dcnm_intf_authority_key(sno)
         listed = [h for h in self.have_all if str(h.get("ifName", "")).lower() == name.lower()
                   and self._dcnm_intf_authority_key(h.get("serialNo", "")) == authority]
         if len(listed) > 1:
-            return ["the port-channel is still listed {0} times".format(len(listed))], None
+            return ["the port-channel is still listed {0} times".format(len(listed))], None, None
         if listed:
             marked = pvlan_po_marked_deleted_problem(listed[0], name)
             if marked:
-                return ["the port-channel is still listed: {0}".format(marked)], None
+                return ["the port-channel is still listed: {0}".format(marked)], None, None
         policies = self.dcnm_intf_pvlan_read_policies(sno)
         if policies is None:
-            return ["the switch policy list could not be read authoritatively"], None
+            return ["the switch policy list could not be read authoritatively"], None, None
         claims = sorted("{0}/{1}/{2}".format(p.get("entityName"), p.get("templateName"), p.get("source")) for p in policies
                         if p.get("deleted") is not True and str(p.get("deleted", "")).lower() != "true"
                         and name.lower() in (str(p.get("entityName", "")).lower(), str(p.get("source", "")).lower()))
         if claims:
-            return ["live policies still reference the port-channel: {0}".format(claims)], None
+            return ["live policies still reference the port-channel: {0}".format(claims)], None, None
+        return self.dcnm_intf_pvlan_released_member_detail(member, sno, normalized)
+
+    def dcnm_intf_pvlan_released_member_detail(self, member, sno, normalized=False):
+        """MM-A, shared by the Po and vPC release: (problems, policy, nvPairs) of a released member from a FRESH detail read. The template must
+        be a released-member policy (int_trunk_host or int_routed_host, Q56 MEASURED), read from the controller -- never inferred from the
+        switch role and never converted. Ownership: the member is a sole direct owner of that template; for int_routed_host the member's OWN
+        children (source == the member) are set aside by phase: before ADMIN_STATE is normalized and while it reads "true", the measured
+        up set (routed_interface, interface_mtu, no_shut_interface); otherwise -- an already-down release, or the readback after the modify
+        (`normalized`) -- only the down set, so a surviving no_shut_interface refuses. int_trunk_host keeps its contract (no child set aside)."""
         self.dcnm_intf_bulk_fetch_intf_info(sno, refresh=True)
         if self.dcnm_intf_detail_unavailable(member, sno):
-            return ["the member's detail could not be read authoritatively"], None
+            return ["the member's detail could not be read authoritatively"], None, None
         detail = self.dcnm_intf_get_intf_info(member, sno, "INTERFACE_ETHERNET")
         if not isinstance(detail, dict):
-            return ["the member is no longer a known physical interface"], None
+            return ["the member is no longer a known physical interface"], None, None
         nv = (detail.get("interfaces") or [{}])[0].get("nvPairs")
-        if detail.get("policy") != PVLAN_TRUNK_HOST_POLICY or not isinstance(nv, dict):
-            return ["the released member holds {0!r}, not a readable {1}".format(detail.get("policy"), PVLAN_TRUNK_HOST_POLICY)], None
-        owner = self.dcnm_intf_pvlan_check_ownership(member, sno, PVLAN_TRUNK_HOST_POLICY, nv)
+        policy = detail.get("policy")
+        if policy not in PVLAN_RELEASED_MEMBER_POLICIES or not isinstance(nv, dict):
+            return ["the released member holds {0!r}, not a readable {1}".format(
+                policy, " or ".join(PVLAN_RELEASED_MEMBER_POLICIES))], None, None
+        children = frozenset()
+        if policy == PVLAN_PO_ROUTED_BASELINE_POLICY:
+            up = not normalized and str(nv.get("ADMIN_STATE", "")).strip().lower() == "true"
+            children = PVLAN_PO_ROUTED_RELEASE_CHILDREN_UP if up else PVLAN_PO_ROUTED_RELEASE_CHILDREN_DOWN
+        owner = self.dcnm_intf_pvlan_check_ownership(member, sno, policy, nv, self_children=children)
         if owner:
-            return ["the released member is not a sole direct {0}: {1}".format(PVLAN_TRUNK_HOST_POLICY, owner)], None
-        return [], copy.deepcopy(nv)
+            return ["the released member is not a sole direct {0}: {1}".format(policy, owner)], None, None
+        return [], policy, copy.deepcopy(nv)
+
+    def dcnm_intf_pvlan_released_role_expectation(self, sno, policy):
+        """Diagnostic only: the release the module's default-by-role rule predicts for this switch and whether the fresh read matches it."""
+        role = (getattr(self, "sno_to_switch_role", None) or {}).get(sno)
+        expected = pvlan_released_member_role_expectation(role)
+        return {"switch_role": role, "role_expectation": expected, "matches_role_expectation": None if expected is None else expected == policy}
 
     def dcnm_intf_pvlan_po_release_members(self):
         """G4 (architect decision B), run after the accepted mark-delete and BEFORE any deploy. MEASURED (HR, NDFC
@@ -8007,21 +8305,104 @@ class DcnmIntf:
         ADMIN_STATE "false" (po_released_member_payload); require a SUCCESS item naming the member and no ERROR; read
         back afresh (same ownership proof) and require every writable value unchanged and ADMIN_STATE "false". Any
         problem stops the run before the deploy. The legacy modify of a released int_trunk_host is NOT live-measured
-        (the measured operator fix was a GUI save)."""
-        for target in [t for t in self.dcnm_intf_pvlan_target_map().values() if t.get("deletes") and t.get("kind") == "po"]:
-            sno, member = target["sno"], target["frozen"]["member"]
-            completed = ["mark-delete of {0} (confirmed by its measured outcome)".format(target["name"])]
-            problems, nv = self.dcnm_intf_pvlan_po_released_member(target)
+        (the measured operator fix was a GUI save).
+        MM-A (Q56): the released template is the one READ (int_trunk_host or int_routed_host); policy and nvPairs travel together into the
+        payload (same policy, ADMIN_STATE only), the safety check, the readback (same template, own down children only) and the release
+        model. Every member of every target is proven and validated before the first member write."""
+        targets = []
+        for parent in self.dcnm_intf_pvlan_target_map().values():
+            if not parent.get("deletes") or parent.get("kind") != "po":
+                continue
+            for member in parent["members"]:
+                frozen = dict(parent["frozen"], member=member["name"], member_policy_id=member["pre"][1].get("POLICY_ID"))
+                targets.append(dict(parent, frozen=frozen, members=[member]))
+        self.dcnm_intf_pvlan_po_normalize_releases(
+            targets, self.dcnm_intf_pvlan_po_released_member, "mark-delete of {0} (confirmed by its measured outcome)")
+
+    def dcnm_intf_pvlan_po_release_removed(self):
+        """MM-B: after the CONFIRMED modify of an existing PVLAN port-channel that removed members, and BEFORE any deploy, each removed
+        member is released through the same contract as a deleted port-channel's member (dcnm_intf_pvlan_po_normalize_releases): proven
+        afresh (the port-channel no longer lists or claims it, and it holds a sole direct int_trunk_host or int_routed_host), set
+        administratively down on its own policy when needed, read back, modeled. INFERRED: that the controller releases a member removed
+        by a modify the way it releases a deleted port-channel's member (MEASURED only for the deletion)."""
+        targets = []
+        for parent in self.dcnm_intf_pvlan_target_map().values():
+            if parent.get("kind") != "po" or not parent.get("removed"):
+                continue
+            for member in parent["removed"]:
+                frozen = {"parent": parent["name"], "serial": parent["sno"], "member": member["name"],
+                          "member_policy_id": member["pre"][1].get("POLICY_ID")}
+                targets.append(dict(parent, frozen=frozen, members=[member], release_context="update"))
+        if targets:
+            self.dcnm_intf_pvlan_po_normalize_releases(
+                targets, self.dcnm_intf_pvlan_po_removed_member, "membership update of {0} (per-item SUCCESS)")
+
+    def dcnm_intf_pvlan_po_removed_member(self, target, normalized=False):
+        """MM-B: (problems, policy, nvPairs) of a member REMOVED from an existing port-channel, from FRESH reads: the port-channel's fresh
+        intent no longer lists it, no live policy of the member is the port-channel's (its int_port_channel_pvlan_member or a child whose
+        source is the port-channel), and it is a released member (dcnm_intf_pvlan_released_member_detail)."""
+        sno, name, member = target["sno"], target["name"], target["frozen"]["member"]
+        self.dcnm_intf_invalidate_serial_authority(sno)
+        self.pvlan_policies.pop(sno, None)
+        if not self.dcnm_intf_get_have_all_with_sno(sno):
+            return ["the interface summary could not be read authoritatively"], None, None
+        policies = self.dcnm_intf_pvlan_read_policies(sno)
+        if policies is None:
+            return ["the switch policy list could not be read authoritatively"], None, None
+        claims = sorted("{0}/{1}".format(p.get("templateName"), p.get("source")) for p in policies
+                        if p.get("deleted") is not True and str(p.get("deleted", "")).lower() != "true"
+                        and str(p.get("entityName", "")).lower() == member.lower()
+                        and (p.get("templateName") == PO_MEMBER_POLICY or str(p.get("source", "")).lower() == name.lower()))
+        if claims:
+            return ["the removed member is still claimed by the port-channel: {0}".format(claims)], None, None
+        self.dcnm_intf_bulk_fetch_intf_info(sno, refresh=True)
+        if self.dcnm_intf_detail_unavailable(name, sno):
+            return ["the port-channel's detail could not be read authoritatively"], None, None
+        po = self.dcnm_intf_get_intf_info(name, sno, "INTERFACE_PORT_CHANNEL")
+        po_nv = (po.get("interfaces") or [{}])[0].get("nvPairs") if isinstance(po, dict) else None
+        if not isinstance(po_nv, dict):
+            return ["the port-channel's fresh intent is unreadable"], None, None
+        if pvlan_po_member_canonical(member) in pvlan_normalize_member_list(po_nv.get("MEMBER_INTERFACES"))[0]:
+            return ["the port-channel still lists the removed member"], None, None
+        return self.dcnm_intf_pvlan_released_member_detail(member, sno, normalized)
+
+    def dcnm_intf_pvlan_po_normalize_releases(self, targets, prove, first_write, fail=None, record_key="pvlan_po_release"):
+        """The member-release sequence shared by a deletion (prove = released_member) and an update's removed members (prove = removed_member):
+        every member is proven and validated before the FIRST member write, then each member still up gets ONE legacy modify on its own
+        policy (ADMIN_STATE only), per-item outcome, readback and release model. `first_write` names the confirmed parent write. `fail` and
+        `record_key` let the vPC removal reuse it with its own per-peer diagnostics (default: the port-channel ones)."""
+        fail = fail or self.dcnm_intf_pvlan_po_release_fail
+        plan = []
+        for target in targets:
+            problems, policy, nv = prove(target)
+            if not problems:
+                if str(nv.get("ADMIN_STATE", "")).strip().lower() == "false":
+                    fresh = dict((k, v) for k, v in nv.items() if k not in PVLAN_PO_RELEASE_METADATA)
+                    problems = ["the released member (already administratively down) is not a safe standalone port: {0}".format(x)
+                                for x in pvlan_released_member_safety_problems(policy, fresh)]
+                else:
+                    proposed = pvlan_released_member_payload(policy, nv, target["frozen"]["member"], target["sno"], self.fabric)
+                    # MM-A: the diagnostic context MM1 dropped when it moved this check before any member write (C1-R6 reported it after
+                    # the modify, from the release model); same wording as the vPC path.
+                    problems = ["the member payload would not be a safe standalone port: {0}".format(x)
+                                for x in pvlan_released_member_safety_problems(policy, proposed["interfaces"][0]["nvPairs"])]
             if problems:
-                self.dcnm_intf_pvlan_po_release_fail(target, "while proving the released member before any member write",
-                                                     problems, completed)
-            record = {"port_channel": target["name"], "serial": sno, "member": member,
+                fail(target, "while proving the released member before any member write",
+                     problems, [first_write.format(target["name"])])
+            plan.append((target, policy, nv))
+        completed_by_parent = {}
+        for target, policy, nv in plan:
+            sno, member = target["sno"], target["frozen"]["member"]
+            completed = completed_by_parent.setdefault((sno, target["name"]), [first_write.format(target["name"])])
+            record = {"port_channel": target["name"], "serial": sno, "member": member, "released_policy": policy,
                       "released_admin_state": nv.get("ADMIN_STATE"), "released_policy_id": nv.get("POLICY_ID")}
+            record.update(self.dcnm_intf_pvlan_released_role_expectation(sno, policy))
             if str(nv.get("ADMIN_STATE", "")).strip().lower() == "false":
                 record["member_modify"] = "not needed (already administratively down)"
-                self.result.setdefault("pvlan_po_release", []).append(record)
+                self.dcnm_intf_pvlan_po_release_model(target, policy, nv, record, completed, fail)
+                self.result.setdefault(record_key, []).append(record)
                 continue
-            payload = pvlan_po_released_member_payload(nv, member, sno, self.fabric)
+            payload = pvlan_released_member_payload(policy, nv, member, sno, self.fabric)
             modify = "legacy interface/modify of {0} ADMIN_STATE false".format(member)
             try:
                 resp = dcnm_send(self.module, "POST", self.paths["UPDATE_INTERFACE_BULK"], json.dumps([payload]))
@@ -8035,23 +8416,53 @@ class DcnmIntf:
                 outcome += ["ERROR item: {0}".format(i.get("message")) for i in self.dcnm_intf_collect_batch_errors(resp)]
                 outcome += pvlan_modify_outcome_problems(resp, [(sno, member)])
             if outcome:
-                self.dcnm_intf_pvlan_po_release_fail(target, "at the member modify (outcome not verified)", outcome, completed,
-                                                     uncertain=[modify], admin_state="unknown")
+                fail(target, "at the member modify (outcome not verified)", outcome, completed,
+                     uncertain=[modify], admin_state="unknown")
             completed.append(modify + " (per-item SUCCESS)")
-            problems, after = self.dcnm_intf_pvlan_po_released_member(target)
+            problems, after_policy, after = prove(target, normalized=True)
             if not problems:
-                problems = pvlan_po_released_member_readback_problems(nv, after)
+                problems = pvlan_released_member_readback_problems(policy, nv, after_policy, after)
             if problems:
-                self.dcnm_intf_pvlan_po_release_fail(target, "at the member readback", problems, completed,
-                                                     admin_state=(after or {}).get("ADMIN_STATE", "unknown"))
+                fail(target, "at the member readback", problems, completed,
+                     admin_state=(after or {}).get("ADMIN_STATE", "unknown"))
             record.update(member_modify="ADMIN_STATE true -> false, {0} writable nvPairs preserved".format(
                 len(payload["interfaces"][0]["nvPairs"])), readback_policy_id=after.get("POLICY_ID"))
-            self.result.setdefault("pvlan_po_release", []).append(record)
+            self.dcnm_intf_pvlan_po_release_model(target, after_policy, after, record, completed, fail)
+            self.result.setdefault(record_key, []).append(record)
+
+    def dcnm_intf_pvlan_po_release_model(self, target, policy, fresh_nv, record, completed, fail=None):
+        """C1-R2 (T2-LIVE-G1 F-T2-2, MEASURED: the controller released the member with MTU "default" taken from a port-channel intent,
+        not the template's jumbo). The released member's FRESH writable nvPairs (the readback after the G4 modify, or the release
+        itself when no modify was needed) must be a safe standalone port (po_released_member_safety_problems: admin down, no VLAN, no
+        freeform), otherwise the run stops before the deploy. When safe, they become the member's intended state for the pre-deploy
+        gate (controller expected == their render; pending must take the device there) and for nothing else: no field is rewritten.
+        Differences from the template release model are reported as `restoration_delta` (restoring the user's baseline is a separate
+        operation)."""
+        fail = fail or self.dcnm_intf_pvlan_po_release_fail
+        released = dict((k, v) for k, v in (fresh_nv or {}).items() if k not in PVLAN_PO_RELEASE_METADATA)
+        problems = pvlan_released_member_safety_problems(policy, released)
+        if problems:
+            fail(
+                target, "the released member is not a safe standalone port", problems, completed,
+                admin_state=released.get("ADMIN_STATE", "unknown"))
+        members = [m for m in target["members"] if m["name"].lower() == str(target["frozen"]["member"]).lower()]
+        if len(members) != 1:
+            fail(target, "while modeling the released member", [
+                "the deletion target holds {0} entries for member {1}".format(len(members), target["frozen"]["member"])], completed)
+        members[0]["post"] = (policy, released)
+        members[0]["released"] = True
+        if target.get("release_context"):
+            record["release_context"] = target["release_context"]
+        record["release_model"] = "fresh controller release, {0} ({1} writable nvPairs)".format(policy, len(released))
+        # the template release model is the int_trunk_host one; a routed release has no template model to restore to here
+        record["restoration_delta"] = pvlan_po_released_member_restoration_delta(released) if policy == PVLAN_TRUNK_HOST_POLICY else {}
 
     def dcnm_intf_pvlan_po_delete_assess(self, blocks, entry, target):
         """Decision for a deleted PVLAN port-channel from ONE fresh preview entry: the controller's expected
         configuration holds no stanza for the port-channel, its pending block (if any) only withdraws, and every
-        member is assessed by the E6 rule as the transition to the released state (PO_RELEASED_MEMBER_NV)."""
+        member is assessed by the E6 rule as the transition to the released state: C1-R2, the FRESH safe release modeled by
+        dcnm_intf_pvlan_po_release_model() (the registration's PO_RELEASED_MEMBER_NV is only the prediction used before the
+        mark-delete)."""
         problems = []
         if not isinstance(entry.get("expectedConfig"), list):
             return "refuse", ["the fresh preview carries no expectedConfig, so the deletion cannot be validated"]
@@ -8087,7 +8498,8 @@ class DcnmIntf:
 
     def dcnm_intf_pvlan_po_verify_deleted(self):
         """Bounded, non-mutating readback after the deletion of PVLAN port-channels: the port-channel is gone from the
-        interface summary, each member holds int_trunk_host, administratively down and In-Sync, and no live policy names the
+        interface summary, each member holds its modeled released policy (int_trunk_host, or MM-A int_routed_host as a sole direct owner with
+        only its own down children), administratively down and In-Sync, and no live policy names the
         port-channel as its entity or source (no child claim). Nothing is rewritten
         to make it so; a difference fails the run with the observed state.
 
@@ -8118,7 +8530,22 @@ class DcnmIntf:
                                            str(nv.get("ADMIN_STATE", "")).strip().lower(),
                                            summ[0].get("complianceStatus") if len(summ) == 1 else None))
                         observed = "member state {0}".format(states) if states else "the deletion target names no member"
-                        if states and all(p == PVLAN_TRUNK_HOST_POLICY and a == "false" and c == "In-Sync" for _n, p, a, c in states):
+                        wanted = dict((m["name"].lower(), m["post"][0]) for m in target["members"])
+                        routed_owner = []
+                        if any(m["post"][0] == PVLAN_PO_ROUTED_BASELINE_POLICY for m in target["members"]):
+                            self.pvlan_policies.pop(sno, None)  # fresh policy list for the routed ownership proof
+                        for m in target["members"]:
+                            if m["post"][0] == PVLAN_PO_ROUTED_BASELINE_POLICY:
+                                d_ = self.dcnm_intf_get_intf_info(m["name"], sno, "INTERFACE_ETHERNET")
+                                why = self.dcnm_intf_pvlan_check_ownership(
+                                    m["name"], sno, PVLAN_PO_ROUTED_BASELINE_POLICY,
+                                    ((d_.get("interfaces") or [{}])[0].get("nvPairs") if isinstance(d_, dict) else None),
+                                    self_children=PVLAN_PO_ROUTED_RELEASE_CHILDREN_DOWN)
+                                if why:
+                                    routed_owner.append("{0}: {1}".format(m["name"], why))
+                        if routed_owner:
+                            observed = "released routed member ownership: {0}".format(routed_owner)
+                        elif states and all(p == wanted.get(n.lower()) and a == "false" and c == "In-Sync" for n, p, a, c in states):
                             # No child claim may survive: the host template creates the member's child policies
                             # (int_port_channel_pvlan_member and the int_eth "Inherited Commands") with the
                             # port-channel as their source (HOST:536-560). Fresh read, not the cached list.
@@ -8159,8 +8586,8 @@ class DcnmIntf:
         return not pvlan_modify_outcome_problems(resp, [(target["sno"], target["name"])])
 
     # ================================================================ VPC-HOST-E1-OFFLINE: vPC PVLAN host
-    # One vPC = ONE parent (int_vpc_pvlan_host, pair identity S1~S2) that the controller expands into one child port-channel and one
-    # member per peer. Every decision below is taken PER PEER from a fresh snapshot of THAT peer's serial (a read of the second peer
+    # One vPC = ONE parent (int_vpc_pvlan_host, pair identity S1~S2) that the controller expands into one child port-channel and its
+    # physical members per peer. Every decision below uses THAT peer's serial (a read of the second peer
     # invalidates part of the shared per-switch cache, so a leg is judged from its own copy), and the vPC is accepted only when
     # every expected leg is. Contract labels: [SRC] installed templates captured; [INF] inferred; [UNK] first live case.
     def dcnm_intf_pvlan_vpc_live(self, policies, entity=None, source=None):
@@ -8269,8 +8696,9 @@ class DcnmIntf:
             problems.append("the switch policy list holds {0} live policy(ies) for this absent vPC or port-channel".format(len(stray)))
         return problems
 
-    def dcnm_intf_pvlan_vpc_present_problems(self, snap, vpc_name, po_name, member, expected_po_nv, expected_member_nv=None):
-        """An existing vPC leg: the child Po and the member are the ones the parent's intent implies, owned by the vPC."""
+    def dcnm_intf_pvlan_vpc_present_problems(self, snap, vpc_name, po_name, member, expected_po_nv, expected_member_nv=None, member_check=True):
+        """An existing vPC leg: the child Po and the member are the ones the parent's intent implies, owned by the vPC. MM-B: for a member ADDED
+        by an update (`member_check` False) only the existing child Po is judged here; the joining port has its own baseline check."""
         if snap["problems"] or snap["po"] in ("unreadable", None) or snap["member"] in ("unreadable", None) or snap["policies"] is None:
             return ["its child port-channel or member could not be read authoritatively, or is absent (a parent without its child on one peer "
                     "is a partial state)"]
@@ -8288,6 +8716,8 @@ class DcnmIntf:
             problems.append("the switch policy list does not hold exactly one {0} policy of {1} for {2} ({3})".format(
                 VPC_PO_POLICY, vpc_name, po_name,
                 ", ".join(sorted("{0}/{1}".format(p.get("templateName"), p.get("source")) for p in live)) or "none"))
+        if not member_check:
+            return problems
         mdetail = snap["member"]
         mnv = self.dcnm_intf_pvlan_vpc_nv(mdetail)
         if mdetail.get("policy") != PO_MEMBER_POLICY or str((mnv or {}).get("PO_ID", "")).lower() != po_name.lower():
@@ -8344,6 +8774,79 @@ class DcnmIntf:
     def dcnm_intf_pvlan_vpc_legs(target):
         return target.get("legs") or []
 
+    def dcnm_intf_pvlan_vpc_register_removed(self, name, sno, legs, result, have_nv, deploy):
+        """MM-B: the members an UPDATE removes from one peer (or both) of an existing vPC, checked before any write: each is that peer's
+        int_port_channel_pvlan_member of the child port-channel, administratively down, whose live policies are exactly the vPC's (its
+        member policy and inherited commands, source = the vPC); plus the deletion's global preconditions (fabric host default down, bulk
+        API, deployed, not check mode). Returns ([removed legs], [(label, serial, reason)]). A removed leg carries its pre models (it is an
+        existing, converged leg for the prior gate) and the predicted release until the fresh release replaces it after the modify."""
+        entries, problems = [], []
+        removed = result.get("removed") or {}
+        if not removed:
+            return entries, problems
+        common = []
+        if self.module.check_mode:
+            common.append("removing a vPC member is refused in check mode: the pre-deploy gate needs the update to exist")
+        if str(deploy).lower() != "true":
+            common.append("removing a vPC member without deploy is not implemented: the release of the member could not be validated")
+        if self.dcnm_intf_get_host_intf_admin_state() is not False:
+            common.append("the fabric's host interface default is not administratively down (HOST_INTF_ADMIN_STATE is not false, or unreadable): "
+                          "releasing the member to a standalone shutdown port is the only supported contract")
+        if not self.module.check_mode and not self.has_bulk_api:
+            common.append("the controller's bulk interface update API is not available: the released member's administrative state could not be "
+                          "corrected before the deploy")
+        for index, members in sorted(removed.items()):
+            peer_legs = [leg for leg in legs if leg["index"] == index]
+            if not peer_legs:
+                problems.append((name, sno, "peer {0} keeps no member after the update; an empty member list is not implemented".format(index + 1)))
+                continue
+            serial = peer_legs[0]["serial"]
+            pcid = str(have_nv.get("PEER%d_PCID" % (index + 1), "")).strip()
+            po_name = pvlan_vpc_po_name(pcid)
+            for token in members:
+                member = self.dcnm_intf_pvlan_po_member_ifname(token, serial)
+                snap = self.dcnm_intf_pvlan_vpc_read_leg(serial, name, po_name, member)
+                reasons = list(common)
+                mdetail, mnv = snap["member"], self.dcnm_intf_pvlan_vpc_nv(snap["member"])
+                if snap["problems"] or mdetail in ("unreadable", None) or snap["policies"] is None:
+                    reasons.append("its current state could not be read authoritatively")
+                elif mdetail.get("policy") != PO_MEMBER_POLICY or str((mnv or {}).get("PO_ID", "")).lower() != po_name.lower():
+                    reasons.append("it is not the member of {0} in the controller's intent ({1})".format(po_name, mdetail.get("policy")))
+                elif str((mnv or {}).get("ADMIN_STATE", "")).strip().lower() != "false":
+                    reasons.append("it is not administratively down; releasing it is not implemented")
+                else:
+                    mlive = self.dcnm_intf_pvlan_vpc_live(snap["policies"], entity=member)
+                    owned = [x for x in mlive if x.get("templateName") == PO_MEMBER_POLICY and str(x.get("source", "")).lower() == name.lower()]
+                    extra = [x for x in mlive if x not in owned
+                             and not (x.get("templateName") == "int_eth" and str(x.get("source", "")).lower() == name.lower())]
+                    if len(owned) != 1 or extra:
+                        reasons.append("its live policies are not exactly those of {0}: {1}".format(
+                            name, ", ".join(sorted("{0}/{1}".format(x.get("templateName"), x.get("source")) for x in mlive)) or "none"))
+                if reasons:
+                    problems += [(member, serial, "removing it from {0}: {1}".format(name, r)) for r in reasons]
+                    continue
+                po_pre, mem_pre = pvlan_vpc_leg_models(have_nv, index, name, mnv, True)
+                entries.append({"index": index, "serial": serial, "member": member, "name": member, "po_name": po_name, "pcid": pcid,
+                                "pc_mode": str(have_nv.get("PC_MODE", "active")), "pre_po": po_pre, "pre_member": mem_pre,
+                                "pre": mem_pre, "post": (PVLAN_TRUNK_HOST_POLICY, dict(PVLAN_PO_RELEASED_MEMBER_NV)),
+                                "policy_id": (mnv or {}).get("POLICY_ID")})
+        return entries, problems
+
+    def dcnm_intf_pvlan_vpc_removed_decision(self, rleg, entry, blocks):
+        """MM-B: (decision, problems) of a member REMOVED from one peer, from that peer's fresh preview: the FRESH release (never the
+        prediction), its membership withdrawn with the force command form (G5, MEASURED for a regular Po deletion; INFERRED here) and the rest of
+        its pending taken to the released state. The child port-channel stays (it is judged with the peer's remaining members)."""
+        if not rleg.get("released"):
+            return "refuse", ["{0}: the removed member was not released before the deploy".format(rleg["member"])]
+        body = blocks.get(rleg["member"].lower(), [])
+        body, withdrawn = pvlan_po_member_force_withdrawal(body, rleg["pcid"], rleg["pc_mode"])
+        if withdrawn:
+            return "refuse", ["{0}: {1}".format(rleg["member"], f) for f in withdrawn]
+        decision, found = pvlan_assess_target(body, entry, rleg["member"], pvlan_render(*rleg["post"]),
+                                              pvlan_transition_vocabulary(rleg["pre"], rleg["post"]))
+        problems = ["{0}: {1}".format(rleg["member"], f) for f in found]
+        return ("refuse", problems) if problems or decision == "refuse" else ("deploy", [])
+
     def dcnm_intf_pvlan_vpc_compare(self, state, want, match_have, name, sno, fabric, deploy):
         """Reconcile one int_vpc_pvlan_host WANT (first delivery: VPC-HOST-E1-OFFLINE). Returns "create" when the generic creation
         path must continue and "done" when this method handled the entry or refused it. Both peers are read and judged before
@@ -8371,7 +8874,9 @@ class DcnmIntf:
         else:
             self.dcnm_intf_require_detail_authority(name, sno)
         try:
-            result = pvlan_reconcile_vpc(state, raw, name, legs, have_policy, have_nv)
+            result = pvlan_reconcile_vpc(
+                state, raw, name, legs, have_policy, have_nv,
+                ndfc_version=getattr(self, "ndfc_version", None), patch_version=getattr(self, "patch_version", None))
         except PvlanError as exc:
             self.dcnm_intf_pvlan_block(name, sno, str(exc))
             return "done"
@@ -8382,14 +8887,20 @@ class DcnmIntf:
         creates, new_nv = result["creates"], result["nv"]
         # E4 (G6, EXP-1): the controller's own spelling of each member (a Manage-created member is listed as `e1/8`); an explicit port
         # resolves through the peer's bulk detail, anything else is returned unchanged and refused as before.
-        members = [self.dcnm_intf_pvlan_po_member_ifname(m.strip(), leg["serial"]) for leg, m in zip(legs, result["members"])]
+        # Keep one existing member model per physical port. The peer index and serial
+        # stay attached to every record; payload generation still uses the two parent lists.
+        legs = [dict(leg, member=self.dcnm_intf_pvlan_po_member_ifname(m, leg["serial"]),
+                     added=pvlan_po_member_canonical(m) in (result.get("added") or {}).get(leg["index"], []))
+                for leg, text in zip(legs, result["members"])
+                for m in sorted(pvlan_normalize_member_list(text)[0])]
+        members = [leg["member"] for leg in legs]
         claimed = self.__dict__.setdefault("pvlan_po_claimed", {})
         snaps, problems = [], []
         for leg, member in zip(legs, members):
             leg["po_name"] = pvlan_vpc_po_name(str(new_nv.get("PEER%d_PCID" % (leg["index"] + 1), "")).strip())
             leg["pcid"] = str(new_nv.get("PEER%d_PCID" % (leg["index"] + 1), "")).strip()
             leg["pc_mode"] = str(new_nv.get("PC_MODE", "active"))
-            leg["joining"] = bool(creates)
+            leg["joining"] = bool(creates) or bool(leg.get("added"))
             leg["member"] = member
             snaps.append(self.dcnm_intf_pvlan_vpc_read_leg(leg["serial"], name, leg["po_name"], member))
             claim_key = (leg["serial"], member.lower())
@@ -8407,9 +8918,20 @@ class DcnmIntf:
             problems += [(name, sno, m) for m in self.dcnm_intf_pvlan_vpc_parent_problems(name, snaps, have_policy, have_nv)]
             for leg, snap in zip(legs, snaps):
                 expected = pvlan_vpc_leg_po_nv(have_nv, leg["index"], name)
+                if leg["joining"]:
+                    # MM-B: an ADDED member joins the existing child Po exactly as in a creation (baseline, ownership, submode rules)
+                    problems += [(name, snap["serial"], m) for m in
+                                 self.dcnm_intf_pvlan_vpc_present_problems(snap, name, leg["po_name"], leg["member"], expected, member_check=False)]
+                    problems += [(leg["member"], snap["serial"], m) for m in
+                                 self.dcnm_intf_pvlan_vpc_member_baseline(snap, leg["member"], new_nv.get("PVLAN_MODE"))]
+                    continue
                 expected_member = pvlan_vpc_leg_models(have_nv, leg["index"], name, self.dcnm_intf_pvlan_vpc_nv(snap["member"]), True)[1][1]
                 problems += [(name, snap["serial"], m) for m in
                              self.dcnm_intf_pvlan_vpc_present_problems(snap, name, leg["po_name"], leg["member"], expected, expected_member)]
+            removed_legs, removed_problems = self.dcnm_intf_pvlan_vpc_register_removed(name, sno, legs, result, have_nv, deploy)
+            problems += removed_problems
+        if creates:
+            removed_legs = []
         if problems:
             for label, serial, reason in problems:
                 self.dcnm_intf_pvlan_block(label, serial, reason)
@@ -8420,18 +8942,32 @@ class DcnmIntf:
             if creates:
                 leg["pre_po"] = (None, None)
                 leg["pre_member"] = (snap["member"].get("policy"), copy.deepcopy(member_nv))
+            elif leg["joining"]:
+                # MM-B: the child Po exists (its model from HAVE); the port joins from its own baseline policy
+                leg["pre_po"] = pvlan_vpc_leg_models(have_nv, idx, name, member_nv, False)[0]
+                leg["pre_member"] = (snap["member"].get("policy"), copy.deepcopy(member_nv))
             else:
                 po_pre, mem_pre = pvlan_vpc_leg_models(have_nv, idx, name, member_nv, True)
                 leg["pre_po"], leg["pre_member"] = po_pre, mem_pre
-            po_post, mem_post = pvlan_vpc_leg_models(new_nv, idx, name, member_nv, not creates)
+            po_post, mem_post = pvlan_vpc_leg_models(new_nv, idx, name, member_nv, not leg["joining"])
             leg["post_po"], leg["post_member"] = po_post, mem_post
-            leg["expect"] = "deploy" if creates or pvlan_vpc_leg_cli_changes(
+            leg["expect"] = "deploy" if leg["joining"] or pvlan_vpc_leg_cli_changes(
                 (leg["pre_po"], leg["pre_member"]), (po_post, mem_post)) else "converged"
+        # PLAN-2 C1: the member template's own precondition for a LACP rate change (member admin down), on BOTH peers; never forced.
+        lacp_problems = [(leg["member"], leg["serial"], m) for leg in legs for m in pvlan_member_lacp_rate_problems(
+            leg["member"], leg["pre_member"][1], leg["post_member"][1], not leg["joining"])]
+        if lacp_problems:
+            for label, serial, reason in lacp_problems:
+                self.dcnm_intf_pvlan_block(label, serial, reason)
+            return "done"
         if result["update"]:
             # An update whose IDEAL pending the pre-deploy gate could not validate would be refused AFTER the intent changed: refuse it now.
             blocked_before = len(self.pvlan_blocked)
             for leg in legs:
-                for label, pre_pair, post_pair in ((leg["po_name"], leg["pre_po"], leg["post_po"]), (leg["member"], leg["pre_member"], leg["post_member"])):
+                pairs = [(leg["po_name"], leg["pre_po"], leg["post_po"])]
+                if not leg["joining"]:  # MM-B: a joining member is validated by the force transition, as in a creation
+                    pairs.append((leg["member"], leg["pre_member"], leg["post_member"]))
+                for label, pre_pair, post_pair in pairs:
                     pre_model, post_model = pvlan_render(*pre_pair), pvlan_render(*post_pair)
                     if pre_model.modeled and post_model.modeled and (pre_model.scalars, pre_model.pairs) != (post_model.scalars, post_model.pairs):
                         for reason in pvlan_vpc_transition_problems(pre_model, post_model):
@@ -8444,7 +8980,7 @@ class DcnmIntf:
             "name": name, "sno": sno, "kind": "vpc", "creates": creates, "update": result["update"], "deletes": False,
             "pre": (have_policy, copy.deepcopy(have_nv)) if have_policy else (None, None),
             "post": (VPC_HOST_POLICY, copy.deepcopy(new_nv)), "new_secondaries": result.get("new_secondaries") or [], "members": [],
-            "legs": legs, "prior": None,
+            "legs": legs, "prior": None, "removed_legs": [] if creates else removed_legs,
         }
         self.pvlan_targets[(sno, name.lower())] = target
         want["interfaces"][0]["nvPairs"] = new_nv
@@ -8516,19 +9052,35 @@ class DcnmIntf:
         # on H4 for a regular Po; INFERRED for a vPC member). Both apply only to the member part of the SAME peer's preview.
         member_force = None
         member_inherit = None
+        member_reassert = None
+        mtu_ctx = None
         if which == "post":
             # VPC-MODES-E1: the submode of the member is its child Po's (the parent's) mode; a member PREPARED as access/routed (trunk secondary
             # only, admitted by the baseline check) joins through the same force with its measured baseline specifics (G6).
             if leg.get("joining") and leg["pre_member"][0] in (PVLAN_TRUNK_HOST_POLICY,) + tuple(sorted(PVLAN_PO_PREPARED_BASELINES)):
                 member_force = {"po_number": leg["pcid"], "pc_mode": leg["pc_mode"], "mode": leg["post_po"][1].get("PVLAN_MODE", "host"),
                                 "baseline": leg["pre_member"][0]}
-            elif not leg.get("joining") and leg["pre_member"][0] == PO_MEMBER_POLICY and blocks.get(leg["po_name"].lower()):
-                member_inherit = leg["po_name"]
+            elif not leg.get("joining") and leg["pre_member"][0] == PO_MEMBER_POLICY:
+                # C1-R5 G1 (regular-Po measurement M2 reused; MEASURED on a vPC in T3-G1 for host: S1/S4 per peer): an EXISTING member of THIS leg may be
+                # re-emitted with `channel-group <pcid> force mode <pc_mode>`; po_member_force_reassertion() decides with THIS leg's pcid/mode.
+                member_reassert = {"po_number": leg["pcid"], "pc_mode": leg["pc_mode"]}
+                if blocks.get(leg["po_name"].lower()):
+                    member_inherit = leg["po_name"]
         for pname, pre, post, absent_ok in parts:
             is_member = pname == leg["member"]
             decision, found = pvlan_assess_target(
                 blocks.get(pname.lower(), []), entry, pname, pvlan_render(*post), pvlan_transition_vocabulary(pre, post), absent_ok=absent_ok,
-                member_force=member_force if is_member else None, member_inherit=member_inherit if is_member else None)
+                member_force=member_force if is_member else None, member_inherit=member_inherit if is_member else None,
+                member_reassert=member_reassert if is_member else None, member_mtu_inherit=mtu_ctx if is_member else None,
+                # SP1 (DIAG-measured on both peers): the member's `speed 1000` carried by THIS leg's child Po (same serial, same preview)
+                member_speed_inherit=mtu_ctx if is_member else None)
+            if not is_member and member_reassert is not None:
+                # C1-R5 G2 (regular-Po M1/MR rules reused; MEASURED on a vPC in T3-G1 for host, both directions): the member's MTU line
+                # may be carried by THIS leg's child Po
+                # (same peer, same preview entry), judged first (parts[0]); the other peer never supplies the proof.
+                mtu_ctx = dict(member_reassert, parent=leg["po_name"], parent_desired=pvlan_render(*post),
+                               parent_vocabulary=pvlan_transition_vocabulary(pre, post), parent_body=blocks.get(pname.lower(), []),
+                               parent_ok=decision == "deploy" and not found)
             decisions.append(decision)
             problems.extend("{0}: {1}".format(pname, f) for f in found)
         if "refuse" in decisions:
@@ -8540,13 +9092,19 @@ class DcnmIntf:
         evaluated), then ONE combined decision (vpc_combine). `which`: "pre" (the current state, no write yet), "post" (the intent just
         written/updated) or "delete". A leg that is fine never makes the vPC fine."""
         legs = self.dcnm_intf_pvlan_vpc_legs(target)
+        # MM-B: the members an update removes are judged too: as existing legs in the prior gate, as releases in the post gate.
+        removed = list(target.get("removed_legs") or []) if which in ("pre", "post") else []
+        legs = legs + removed
         batch = {}
         for it in items or []:
             batch.setdefault(it.get("serialNumber"), set()).add(str(it.get("ifName", "")).lower())
         problems, decisions = [], []
+        previews = {}
         for leg in legs:
             sno = leg["serial"]
-            resp = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, sno))
+            if sno not in previews:
+                previews[sno] = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, sno))
+            resp = previews[sno]
             record = {"site": site, "serial": sno, "peer": leg["index"] + 1, "vpc": target["name"], "targets": {}}
             try:
                 entry = pvlan_preview_entry(resp, sno)
@@ -8555,12 +9113,17 @@ class DcnmIntf:
                 withdrawn = set(["no interface " + leg["po_name"].lower()]) if which == "delete" else set()
                 if [line for line in global_lines if line.lower() not in withdrawn]:
                     problems.append("peer {0} ({1}): pending carries commands outside interface scope".format(leg["index"] + 1, sno))
-                allowed = set(batch.get(sno, set())) | set([leg["po_name"].lower(), leg["member"].lower()])
+                allowed = set(batch.get(sno, set())) | set(
+                    name.lower() for peer_leg in legs if peer_leg["serial"] == sno
+                    for name in (peer_leg["po_name"], peer_leg["member"]))
                 outside = sorted(set(blocks) - allowed)
                 if outside:
                     problems.append("peer {0} ({1}): pending exists for interfaces outside this deploy batch: {2}".format(
                         leg["index"] + 1, sno, ", ".join(outside)))
-                decision, found = self.dcnm_intf_pvlan_vpc_leg_decision(leg, entry, blocks, which)
+                if which == "post" and any(leg is r for r in removed):
+                    decision, found = self.dcnm_intf_pvlan_vpc_removed_decision(leg, entry, blocks)
+                else:
+                    decision, found = self.dcnm_intf_pvlan_vpc_leg_decision(leg, entry, blocks, which)
             except PvlanError as exc:
                 decision, found = "refuse", [str(exc)]
             record["targets"][target["name"]] = decision
@@ -8575,8 +9138,27 @@ class DcnmIntf:
             mode = "create"
         else:
             mode = "update"
-        expected = [leg.get("expect") for leg in legs] if mode == "update" else None
-        decision, found = pvlan_vpc_combine(mode, decisions, expected)
+        expected = [("deploy" if any(leg is r for r in removed) else leg.get("expect")) for leg in legs] if mode == "update" else None
+        # Judge each member before combining the two peer outcomes. Never let a
+        # good last member overwrite a bad first one on the same switch.
+        per_peer, per_peer_expected = [], []
+        for index in (0, 1):
+            positions = [i for i, leg in enumerate(legs) if leg["index"] == index]
+            values = [decisions[i] for i in positions]
+            if not values or "refuse" in values:
+                per_peer.append("refuse")
+            elif mode == "repeat" and len(set(values)) != 1:
+                per_peer.append("refuse")
+                problems.append("peer {0}: members have inconsistent pre-existing deployment states".format(index + 1))
+            elif mode in ("create", "delete") and len(set(values)) != 1:
+                per_peer.append("refuse")
+            else:
+                per_peer.append("deploy" if "deploy" in values else "converged")
+            if expected is not None:
+                if any(decisions[i] != expected[i] for i in positions):
+                    problems.append("peer {0}: a member does not match its expected deployment state".format(index + 1))
+                per_peer_expected.append("deploy" if any(expected[i] == "deploy" for i in positions) else "converged")
+        decision, found = pvlan_vpc_combine(mode, per_peer, per_peer_expected if expected is not None else None)
         problems.extend(found)
         if problems and decision != "refuse":
             decision = "refuse"
@@ -8606,14 +9188,14 @@ class DcnmIntf:
                 for label, key in (("child", "po"), ("member", "member")):
                     entries = snap["summary"][key]
                     states.append((label, entries[0].get("complianceStatus") if len(entries) == 1 else None))
-                observed[leg["serial"]] = (snap, states)
+                observed[(leg["serial"], leg["member"].lower())] = (snap, states)
             if all(status == "In-Sync" for _s, states in observed.values() for _l, status in states) and not any(s["problems"] for s, _x in observed.values()):
                 break
             if attempt < 5:
                 time.sleep(5)
         table = []
         for leg in legs:
-            snap, states = observed[leg["serial"]]
+            snap, states = observed[(leg["serial"], leg["member"].lower())]
             table.extend("peer {0} ({1}): {2}".format(leg["index"] + 1, leg["serial"], p) for p in snap["problems"])
             table.extend("peer {0} ({1}): {2} is {3}, not In-Sync".format(leg["index"] + 1, leg["serial"], label, status)
                          for label, status in states if status != "In-Sync")
@@ -8638,7 +9220,7 @@ class DcnmIntf:
             except PvlanError as exc:
                 mismatch.append(str(exc))
         for leg in legs:
-            snap, _states = observed[leg["serial"]]
+            snap, _states = observed[(leg["serial"], leg["member"].lower())]
             expected = pvlan_vpc_leg_po_nv(post_nv, leg["index"], name)
             mismatch.extend("peer {0} ({1}): {2}".format(leg["index"] + 1, leg["serial"], p) for p in
                             self.dcnm_intf_pvlan_vpc_present_problems(snap, name, leg["po_name"], leg["member"], expected, leg["post_member"][1]))
@@ -8646,13 +9228,15 @@ class DcnmIntf:
             self.module.fail_json(
                 msg="vPC {0} was deployed and In-Sync but the post-deploy intent readback differs: {1}.".format(name, "; ".join(mismatch)),
                 **self.result)
+        if target.get("removed_legs"):
+            self.dcnm_intf_pvlan_vpc_verify_removed(target)
 
     def dcnm_intf_pvlan_vpc_register_deletes(self):
         """VPC-HOST-E1-OFFLINE: deletion of an EXISTING PVLAN vPC named in a `deleted` invocation, through the generic vPC path
         (interface/markdelete + globalInterface/deploy). Registered only when EVERY precondition holds, decided from the CURRENT state
         of BOTH peers (no history from the run that created it, no hidden file): otherwise the deletion is refused before any write:
           * the parent is a direct int_vpc_pvlan_host, mode host, PCID = vPC id on both peers, no stored PEERn_PO_CONF;
-          * each peer holds its child Po and exactly ONE member, which holds int_port_channel_pvlan_member of THAT Po and is shut;
+          * each peer holds its child Po and one or more members, each of which holds int_port_channel_pvlan_member of THAT Po and is shut;
           * deploy is requested, not check mode, and the fabric releases host interfaces administratively down.
         The release is verified against the explicit contract (a direct int_trunk_host, shut, no CONF, the documented model), never
         against a configuration this run did not read. E5: the mark-delete releases each member ADMIN_STATE "true" (MEASURED, L1-E4 live), so the
@@ -8691,9 +9275,8 @@ class DcnmIntf:
                 legs = []
                 for n in (1, 2):
                     names, unresolved = pvlan_normalize_member_list(nv.get("PEER%d_MEMBER_INTERFACES" % n))
-                    if unresolved or len(names) != 1:
-                        problems.append("peer {0} has {1} member entr(ies); exactly one explicit member per peer is implemented".format(
-                            n, len(names) + len(unresolved)))
+                    if unresolved or not names:
+                        problems.append("peer {0} needs a readable, non-empty list of explicit physical members".format(n))
                         continue
                     if str(nv.get("PEER%d_PCID" % n, "")).strip() != (vid or ""):
                         problems.append("PEER{0}_PCID {1!r} differs from the vPC id {2}; not implemented".format(n, nv.get("PEER%d_PCID" % n), vid))
@@ -8702,10 +9285,11 @@ class DcnmIntf:
                         problems.append("the vPC stores freeform commands on peer {0} (PEER{0}_PO_CONF); the template would run its freeform "
                                         "delete check, which is not implemented".format(n))
                         continue
-                    member = [t.strip() for t in str(nv.get("PEER%d_MEMBER_INTERFACES" % n)).split(",") if t.strip()][0]
-                    legs.append({"serial": serials[n - 1], "index": n - 1, "member": self.dcnm_intf_pvlan_po_member_ifname(member, serials[n - 1]),
-                                 "po_name": pvlan_vpc_po_name(vid), "pcid": str(vid), "pc_mode": str(nv.get("PC_MODE", "active"))})
-                if problems or len(legs) != 2:
+                    for member in sorted(names):
+                        legs.append({"serial": serials[n - 1], "index": n - 1,
+                                     "member": self.dcnm_intf_pvlan_po_member_ifname(member, serials[n - 1]),
+                                     "po_name": pvlan_vpc_po_name(vid), "pcid": str(vid), "pc_mode": str(nv.get("PC_MODE", "active"))})
+                if problems or set(leg["index"] for leg in legs) != {0, 1}:
                     for reason in problems:
                         self.dcnm_intf_pvlan_block(name, sno, reason)
                     continue
@@ -8745,17 +9329,24 @@ class DcnmIntf:
     # mirrored for a vPC, per peer. Each extrapolation is an INFERENCE pending L1: the vPC mark-delete answer, the "marked for deletion"
     # listing of the children, and that the controller releases a vPC member the way it releases a regular-Po member (int_trunk_host with
     # ADMIN_STATE "true"). An unknown outcome stops the run BEFORE any deploy with the writes confirmed and the writes unverified, per peer.
-    def dcnm_intf_pvlan_vpc_release_fail(self, target, phase, problems, confirmed, uncertain=None, peer=None):
+    def dcnm_intf_pvlan_vpc_release_fail(self, target, phase, problems, confirmed, uncertain=None, peer=None, per_serial=None, context=None):
+        """C1-R5 G4: `per_serial` = {serial: member write state} -- "confirmed" (per-item SUCCESS), "uncertain" (outcome not verified),
+        "pending" (not sent), "not needed" (already down). The two member writes are NOT atomic, and the mark-delete may already have changed
+        the controller's intent, so a failure never claims "zero writes"."""
         uncertain = uncertain or []
         self.result.setdefault("pvlan_vpc_release", []).append(
             {"vpc": target["name"], "serial": target["sno"], "phase": phase, "peer": peer, "problems": problems,
-             "confirmed_writes": confirmed, "uncertain_writes": uncertain})
+             "confirmed_writes": confirmed, "uncertain_writes": uncertain, "member_writes": dict(per_serial or {})})
         self.module.fail_json(
             msg="PVLAN vPC {0} on {1}: member release failed {2}{3}: {4}. Confirmed writes: {5}. Writes with an UNVERIFIED outcome: {6}. "
-            "No deployment request was sent: the controller keeps the pending deletion of the vPC and of the members already released. "
+            "Member writes per serial: {7}. "
+            "No deployment request was sent: the controller keeps the pending {8}. "
             "Nothing is retried or rolled back on any peer; recovery is a human decision after reading BOTH peers.".format(
                 target["name"], target["sno"], phase, "" if peer is None else " (peer {0})".format(peer), "; ".join(problems),
-                ", ".join(confirmed) or "none", ", ".join(uncertain) or "none"),
+                ", ".join(confirmed) or "none", ", ".join(uncertain) or "none",
+                ", ".join("{0}={1}".format(k, v) for k, v in (per_serial or {}).items()) or "none",
+                "membership update of the vPC (the removed member is not deployed)" if context == "update"
+                else "deletion of the vPC and of the members already released"),
             **self.result)
 
     def dcnm_intf_pvlan_vpc_markdeletes(self):
@@ -8798,72 +9389,119 @@ class DcnmIntf:
             target["markdelete"] = "confirmed"
         return True
 
-    def dcnm_intf_pvlan_vpc_released_member(self, target, leg):
-        """(problems, nvPairs) of ONE peer's released member from FRESH reads: the child port-channel is absent -- or listed ONLY in the
+    def dcnm_intf_pvlan_vpc_released_member(self, target, leg, normalized=False):
+        """(problems, policy, nvPairs) of ONE peer's released member from FRESH reads: the child port-channel is absent -- or listed ONLY in the
         controller's "marked for deletion" form awaiting the deploy (po_marked_deleted_problem; MEASURED for a deployed regular Po and, in E5,
         for the child of a vPC, whose `interface_delete` policy is owned by the vPC itself) --,
         no live policy names the child port-channel or the vPC (entity or source), and the member is a
-        standalone physical Ethernet with exactly one live direct int_trunk_host (summary, detail and policy list agree)."""
+        standalone physical Ethernet with exactly one live direct released-member policy -- int_trunk_host or, MM-A (Q56 extrapolated to the
+        vPC child, INFERRED), int_routed_host (dcnm_intf_pvlan_released_member_detail; summary, detail and policy list agree)."""
         sno, po, member, vpc = leg["serial"], leg["po_name"], leg["member"], target["name"]
         self.dcnm_intf_invalidate_serial_authority(sno)
         self.pvlan_policies.pop(sno, None)
         if not self.dcnm_intf_get_have_all_with_sno(sno):
-            return ["the interface summary could not be read authoritatively"], None
+            return ["the interface summary could not be read authoritatively"], None, None
         authority = self._dcnm_intf_authority_key(sno)
         listed = [h for h in self.have_all if str(h.get("ifName", "")).lower() == po.lower()
                   and self._dcnm_intf_authority_key(h.get("serialNo", "")) == authority]
         if len(listed) > 1:
-            return ["the child port-channel is still listed {0} times".format(len(listed))], None
+            return ["the child port-channel is still listed {0} times".format(len(listed))], None, None
         if listed:
             # E5 (L1-E4 live F2): the policy of a vPC child is owned by the vPC itself
             marked = pvlan_po_marked_deleted_problem(listed[0], po, parent=vpc)
             if marked:
-                return ["the child port-channel is still listed: {0}".format(marked)], None
+                return ["the child port-channel is still listed: {0}".format(marked)], None, None
         policies = self.dcnm_intf_pvlan_read_policies(sno)
         if policies is None:
-            return ["the switch policy list could not be read authoritatively"], None
+            return ["the switch policy list could not be read authoritatively"], None, None
         claims = sorted("{0}/{1}/{2}".format(p.get("entityName"), p.get("templateName"), p.get("source")) for p in policies
                         if p.get("deleted") is not True and str(p.get("deleted", "")).lower() != "true"
                         and (str(p.get("entityName", "")).lower() in (po.lower(), vpc.lower())
                              or str(p.get("source", "")).lower() in (po.lower(), vpc.lower())))
         if claims:
-            return ["live policies still reference the vPC or its child port-channel: {0}".format(claims)], None
-        self.dcnm_intf_bulk_fetch_intf_info(sno, refresh=True)
-        if self.dcnm_intf_detail_unavailable(member, sno):
-            return ["the member's detail could not be read authoritatively"], None
-        detail = self.dcnm_intf_get_intf_info(member, sno, "INTERFACE_ETHERNET")
-        if not isinstance(detail, dict):
-            return ["the member is no longer a known physical interface"], None
-        nv = self.dcnm_intf_pvlan_vpc_nv(detail)
-        if detail.get("policy") != PVLAN_TRUNK_HOST_POLICY or nv is None:
-            return ["the released member holds {0!r}, not a readable {1}".format(detail.get("policy"), PVLAN_TRUNK_HOST_POLICY)], None
-        owner = self.dcnm_intf_pvlan_check_ownership(member, sno, PVLAN_TRUNK_HOST_POLICY, nv)
-        if owner:
-            return ["the released member is not a sole direct {0}: {1}".format(PVLAN_TRUNK_HOST_POLICY, owner)], None
-        return [], copy.deepcopy(nv)
+            return ["live policies still reference the vPC or its child port-channel: {0}".format(claims)], None, None
+        return self.dcnm_intf_pvlan_released_member_detail(member, sno, normalized)
+
+    def dcnm_intf_pvlan_vpc_release_removed(self):
+        """MM-B: after the CONFIRMED modify of an existing vPC that removed members (one peer or both), and BEFORE any deploy, each removed
+        member is released through the shared release sequence (dcnm_intf_pvlan_po_normalize_releases) on ITS serial: proven afresh (no live
+        policy of the vPC claims it and it holds a sole direct int_trunk_host or int_routed_host), set down on its own policy when needed, read
+        back, modeled. INFERRED: that a member removed by a vPC modify is released like a deleted vPC's member."""
+        for target in [t for t in self.dcnm_intf_pvlan_target_map().values() if t.get("kind") == "vpc" and t.get("removed_legs")]:
+            targets = [{"name": target["name"], "sno": r["serial"], "frozen": {"member": r["member"], "member_policy_id": r.get("policy_id")},
+                        "members": [r], "release_context": "update", "vpc_target": target, "peer": r["index"] + 1}
+                       for r in target["removed_legs"]]
+
+            def fail(t, phase, problems, confirmed, uncertain=None, admin_state=None):
+                self.dcnm_intf_pvlan_vpc_release_fail(t["vpc_target"], "{0} (removed member {1})".format(phase, t["frozen"]["member"]), problems,
+                                                      confirmed, uncertain, peer=t["peer"], context="update")
+            self.dcnm_intf_pvlan_po_normalize_releases(targets, self.dcnm_intf_pvlan_vpc_removed_member,
+                                                       "membership update of {0} (per-item SUCCESS)", fail=fail, record_key="pvlan_vpc_release")
+
+    def dcnm_intf_pvlan_vpc_removed_member(self, target, normalized=False):
+        """MM-B: (problems, policy, nvPairs) of a member REMOVED from one peer of a vPC, from FRESH reads of that peer: no live policy of the
+        member is the vPC's (its member policy or a child whose source is the vPC), and it is a released member."""
+        sno, vpc, member = target["sno"], target["name"], target["frozen"]["member"]
+        self.dcnm_intf_invalidate_serial_authority(sno)
+        self.pvlan_policies.pop(sno, None)
+        if not self.dcnm_intf_get_have_all_with_sno(sno):
+            return ["the interface summary could not be read authoritatively"], None, None
+        policies = self.dcnm_intf_pvlan_read_policies(sno)
+        if policies is None:
+            return ["the switch policy list could not be read authoritatively"], None, None
+        claims = sorted("{0}/{1}".format(p.get("templateName"), p.get("source")) for p in self.dcnm_intf_pvlan_vpc_live(policies, entity=member)
+                        if p.get("templateName") == PO_MEMBER_POLICY or str(p.get("source", "")).lower() == vpc.lower())
+        if claims:
+            return ["the removed member is still claimed by the vPC: {0}".format(claims)], None, None
+        return self.dcnm_intf_pvlan_released_member_detail(member, sno, normalized)
 
     def dcnm_intf_pvlan_vpc_release_members(self):
-        """After the confirmed mark-delete and BEFORE any deploy, PER PEER in the controller's pair order: prove the released member afresh and,
-        when its ADMIN_STATE is not already "false" (MEASURED for a regular Po: the controller releases it ADMIN_STATE "true"; INFERRED for a
-        vPC member), send ONE legacy interface/modify with the member's complete writable nvPairs and only ADMIN_STATE "false", require a
-        per-item SUCCESS naming the member and no ERROR, and read it back (every other writable value unchanged). The first problem on any
-        peer stops the run before the deploy, naming what each peer did and what stays pending. This is the same step the regular Po runs; it
-        is NOT a repair of a partial state (it never runs on a peer after another peer failed)."""
+        """After the confirmed mark-delete and BEFORE any deploy, in three phases (C1-R5 G3/G4), per peer in the controller's pair order:
+          A. prove BOTH released members afresh (ownership, state) and validate BOTH: the proposed ADMIN_STATE "false" payload of a member
+             still up, the fresh writable nvPairs of a member already down (C1-R6 F1) -- no member write yet; a problem on any peer stops the
+             run with every member write still pending;
+          B. for each member whose ADMIN_STATE is not already "false" (MEASURED for a regular Po and, in L1-E4, for a vPC member), ONE legacy
+             interface/modify with its complete writable nvPairs and only ADMIN_STATE "false", sequentially: per-item SUCCESS naming the
+             member and no ERROR, then its readback (every other writable value unchanged). The two writes are NOT atomic: a failure after a
+             confirmed first write stops with the state of each serial (confirmed / uncertain / pending);
+          C. the FRESH release of EACH member (its readback, or its proof read when no write was needed) must be a safe standalone port; it
+             becomes that leg's post_member for the pre-deploy gate and verify_deleted, and its distance to the template model is recorded as
+             `restoration_delta` (jumbo is never imposed; restoring the baseline is a separate operation).
+        Any problem stops the run before the deploy. This is NOT a repair of a partial state."""
         for target in [t for t in self.dcnm_intf_pvlan_target_map().values() if t.get("deletes") and t.get("kind") == "vpc"]:
             completed = ["mark-delete of {0} (confirmed by its answer)".format(target["name"])]
-            for leg in target["legs"]:
+            legs = target["legs"]
+            write_keys = {(leg["serial"], leg["member"]):
+                          (leg["serial"] if sum(l["serial"] == leg["serial"] for l in legs) == 1
+                           else leg["serial"] + ":" + leg["member"]) for leg in legs}
+            writes = dict((key, "pending") for key in write_keys.values())
+            plan = []
+            for leg in legs:  # phase A
                 peer, sno, member = leg["index"] + 1, leg["serial"], leg["member"]
-                problems, nv = self.dcnm_intf_pvlan_vpc_released_member(target, leg)
+                problems, policy, nv = self.dcnm_intf_pvlan_vpc_released_member(target, leg)
+                payload = None
+                if not problems and str(nv.get("ADMIN_STATE", "")).strip().lower() != "false":
+                    payload = pvlan_released_member_payload(policy, nv, member, sno, self.fabric)
+                    problems = ["the member payload would not be a safe standalone port: {0}".format(p)
+                                for p in pvlan_released_member_safety_problems(policy, payload["interfaces"][0]["nvPairs"])]
+                elif not problems:
+                    # C1-R6 F1: a member released already administratively down is judged here too (its fresh writable nvPairs), so an
+                    # unsafe peer stops the run BEFORE any member write on either peer; nothing of its intent is rewritten.
+                    fresh = dict((k, v) for k, v in nv.items() if k not in PVLAN_PO_RELEASE_METADATA)
+                    problems = ["the released member (already administratively down) is not a safe standalone port: {0}".format(p)
+                                for p in pvlan_released_member_safety_problems(policy, fresh)]
                 if problems:
                     self.dcnm_intf_pvlan_vpc_release_fail(target, "while proving the released member before any member write", problems,
-                                                          completed, peer=peer)
-                record = {"vpc": target["name"], "peer": peer, "serial": sno, "member": member,
-                          "released_admin_state": nv.get("ADMIN_STATE"), "released_policy_id": nv.get("POLICY_ID")}
-                if str(nv.get("ADMIN_STATE", "")).strip().lower() == "false":
-                    record["member_modify"] = "not needed (already administratively down)"
-                    self.result.setdefault("pvlan_vpc_release", []).append(record)
+                                                          completed, peer=peer, per_serial=writes)
+                if payload is None:
+                    writes[write_keys[(sno, leg["member"])]] = "not needed"
+                plan.append((leg, policy, nv, payload))
+            fresh = []
+            for leg, policy, nv, payload in plan:  # phase B
+                peer, sno, member = leg["index"] + 1, leg["serial"], leg["member"]
+                if payload is None:
+                    fresh.append((leg, policy, nv, "not needed (already administratively down)"))
                     continue
-                payload = pvlan_po_released_member_payload(nv, member, sno, self.fabric)
                 modify = "legacy interface/modify of {0} on peer {1} ADMIN_STATE false".format(member, peer)
                 try:
                     resp = dcnm_send(self.module, "POST", self.paths["UPDATE_INTERFACE_BULK"], json.dumps([payload]))
@@ -8877,17 +9515,38 @@ class DcnmIntf:
                     outcome += ["ERROR item: {0}".format(i.get("message")) for i in self.dcnm_intf_collect_batch_errors(resp)]
                     outcome += pvlan_modify_outcome_problems(resp, [(sno, member)])
                 if outcome:
+                    writes[write_keys[(sno, leg["member"])]] = "uncertain"
                     self.dcnm_intf_pvlan_vpc_release_fail(target, "at the member modify (outcome not verified)", outcome, completed,
-                                                          uncertain=[modify], peer=peer)
+                                                          uncertain=[modify], peer=peer, per_serial=writes)
+                writes[write_keys[(sno, leg["member"])]] = "confirmed"
                 completed.append(modify + " (per-item SUCCESS)")
-                problems, after = self.dcnm_intf_pvlan_vpc_released_member(target, leg)
+                problems, after_policy, after = self.dcnm_intf_pvlan_vpc_released_member(target, leg, normalized=True)
                 if not problems:
-                    problems = pvlan_po_released_member_readback_problems(nv, after)
+                    problems = pvlan_released_member_readback_problems(policy, nv, after_policy, after)
                 if problems:
-                    self.dcnm_intf_pvlan_vpc_release_fail(target, "at the member readback", problems, completed, peer=peer)
-                record.update(member_modify="ADMIN_STATE true -> false, {0} writable nvPairs preserved".format(
-                    len(payload["interfaces"][0]["nvPairs"])), readback_policy_id=after.get("POLICY_ID"))
-                self.result.setdefault("pvlan_vpc_release", []).append(record)
+                    self.dcnm_intf_pvlan_vpc_release_fail(target, "at the member readback", problems, completed, peer=peer, per_serial=writes)
+                fresh.append((leg, after_policy, after, "ADMIN_STATE true -> false, {0} writable nvPairs preserved".format(
+                    len(payload["interfaces"][0]["nvPairs"]))))
+            records = []
+            for (leg, policy, nv, _payload), (_leg, after_policy, after, modified) in zip(plan, fresh):  # phase C
+                peer, sno = leg["index"] + 1, leg["serial"]
+                released = dict((k, v) for k, v in (after or {}).items() if k not in PVLAN_PO_RELEASE_METADATA)
+                problems = pvlan_released_member_safety_problems(after_policy, released)
+                if problems:
+                    self.dcnm_intf_pvlan_vpc_release_fail(target, "the released member is not a safe standalone port", problems, completed,
+                                                          peer=peer, per_serial=writes)
+                leg["post_member"] = (after_policy, released)
+                # verify_deleted keeps judging the contract's own keys (unchanged strength for trunk), now with the values of THIS fresh release
+                leg["release_contract"] = pvlan_released_member_contract(after_policy, released)
+                record = {"vpc": target["name"], "peer": peer, "serial": sno, "member": leg["member"], "released_policy": after_policy,
+                          "released_admin_state": nv.get("ADMIN_STATE"), "released_policy_id": nv.get("POLICY_ID"),
+                          "member_modify": modified, "member_write": writes[write_keys[(sno, leg["member"])]],
+                          "readback_policy_id": (after or {}).get("POLICY_ID"),
+                          "release_model": "fresh controller release, {0} ({1} writable nvPairs)".format(after_policy, len(released)),
+                          "restoration_delta": pvlan_po_released_member_restoration_delta(released) if after_policy == PVLAN_TRUNK_HOST_POLICY else {}}
+                record.update(self.dcnm_intf_pvlan_released_role_expectation(sno, after_policy))
+                records.append(record)
+            self.result.setdefault("pvlan_vpc_release", []).extend(records)
 
     def dcnm_intf_pvlan_vpc_verify_deleted(self):
         """Bounded, non-mutating readback after the deletion of a PVLAN vPC, PER PEER, with an EXPLICIT verification state that starts
@@ -8896,7 +9555,10 @@ class DcnmIntf:
         A clean peer does not make the vPC clean. Nothing is rewritten to make it so."""
         for target in [t for t in self.dcnm_intf_pvlan_target_map().values() if t.get("kind") == "vpc" and t.get("deletes")]:
             name, sno, legs = target["name"], target["sno"], self.dcnm_intf_pvlan_vpc_legs(target)
-            verification = {"state": "unverified", "parent": "not read", "peers": dict((leg["serial"], "not read") for leg in legs)}
+            member_keys = {(leg["serial"], leg["member"]):
+                           (leg["serial"] if sum(l["serial"] == leg["serial"] for l in legs) == 1
+                            else leg["serial"] + ":" + leg["member"]) for leg in legs}
+            verification = {"state": "unverified", "parent": "not read", "peers": dict((k, "not read") for k in member_keys.values())}
             self.result.setdefault("pvlan_verification", {})[name] = verification
             problems = ["no verification was attempted"]
             for attempt in range(6):
@@ -8921,19 +9583,22 @@ class DcnmIntf:
                         if snap["summary"]["vpc"]:
                             leg_problems.append("the interface summary still lists {0}".format(name))
                         mdetail = snap["member"]
-                        if not isinstance(mdetail, dict) or mdetail.get("policy") != PVLAN_TRUNK_HOST_POLICY:
+                        released_policy = leg["post_member"][0]
+                        if not isinstance(mdetail, dict) or mdetail.get("policy") != released_policy:
                             leg_problems.append("the member {0} does not hold {1} ({2})".format(
-                                leg["member"], PVLAN_TRUNK_HOST_POLICY, mdetail.get("policy") if isinstance(mdetail, dict) else mdetail))
+                                leg["member"], released_policy, mdetail.get("policy") if isinstance(mdetail, dict) else mdetail))
                         entries = snap["summary"]["member"]
                         if len(entries) != 1 or entries[0].get("complianceStatus") != "In-Sync":
                             leg_problems.append("the member {0} is not In-Sync in the interface summary".format(leg["member"]))
                         leg_problems += pvlan_vpc_leg_residue(
-                            snap["policies"], name, leg["po_name"], leg["member"], self.dcnm_intf_pvlan_vpc_nv(mdetail))
-                        if isinstance(mdetail, dict) and mdetail.get("policy") == PVLAN_TRUNK_HOST_POLICY:
+                            snap["policies"], name, leg["po_name"], leg["member"], self.dcnm_intf_pvlan_vpc_nv(mdetail),
+                            baseline_policy=released_policy,
+                            self_children=PVLAN_PO_ROUTED_RELEASE_CHILDREN_DOWN if released_policy == PVLAN_PO_ROUTED_BASELINE_POLICY else frozenset())
+                        if isinstance(mdetail, dict) and mdetail.get("policy") == released_policy:
                             # VPC-HOST-E2-READBACK: the COMPLETE released member against the explicit contract recorded in the leg
                             leg_problems += ["member {0}: {1}".format(leg["member"], d) for d in pvlan_vpc_released_member_differences(
-                                self.dcnm_intf_pvlan_vpc_nv(mdetail), leg["post_member"][1])]
-                    verification["peers"][leg["serial"]] = "verified" if not leg_problems else "; ".join(leg_problems)
+                                self.dcnm_intf_pvlan_vpc_nv(mdetail), leg.get("release_contract", leg["post_member"][1]), released_policy)]
+                    verification["peers"][member_keys[(leg["serial"], leg["member"])]] = "verified" if not leg_problems else "; ".join(leg_problems)
                     problems.extend("peer {0} ({1}): {2}".format(leg["index"] + 1, leg["serial"], p) for p in leg_problems)
                 if not problems and verification["parent"] == "absent" and all(v == "verified" for v in verification["peers"].values()):
                     verification["state"] = "verified"
@@ -9342,6 +10007,8 @@ class DcnmIntf:
                     tgt = self.pvlan_targets.get((it["serialNumber"], str(it["ifName"]).lower()))
                     if it["serialNumber"] == sno and tgt and tgt.get("kind") == "po":
                         allowed.update(m["name"].lower() for m in tgt["members"])
+                        # MM-B: a member REMOVED by the update is part of this batch (its withdrawal and release are assessed below)
+                        allowed.update(m["name"].lower() for m in tgt.get("removed") or [])
                 outside = sorted(set(blocks) - allowed)
                 if outside:
                     problems.append("{0}: pending exists for interfaces outside this deploy batch: {1}".format(
@@ -9471,15 +10138,21 @@ class DcnmIntf:
                         mismatch.append("PVLAN_ALLOWED_VLANS")
                     if str(po_nv.get("ADMIN_STATE", "")).strip().lower() != str(post_nv.get("ADMIN_STATE", "")).strip().lower():
                         mismatch.append("ADMIN_STATE")
+                    # RC2 (L2): the speed and the freeform of the port-channel, as the vPC readback compares them on each child.
+                    for key in ("SPEED", "CONF"):
+                        if not pvlan_po_intent_same(key, po_nv, post_nv):
+                            mismatch.append(key)
                 except PvlanError as exc:
                     mismatch.append(str(exc))
-                if sorted(m.strip().lower() for m in str(po_nv.get("MEMBER_INTERFACES", "")).split(",") if m.strip()) != sorted(
-                        m.strip().lower() for m in str(post_nv.get("MEMBER_INTERFACES", "")).split(",") if m.strip()):
+                # MM-B: identity by canonical port (a controller spelling such as `e1/8` names the same member)
+                if pvlan_normalize_member_list(po_nv.get("MEMBER_INTERFACES")) != pvlan_normalize_member_list(post_nv.get("MEMBER_INTERFACES")):
                     mismatch.append("MEMBER_INTERFACES")
                 if mismatch:
                     self.module.fail_json(
                         msg="Interface {0} on {1}: post-deploy intent readback differs in {2}.".format(
                             name, sno, ", ".join(mismatch)), **self.result)
+                if target.get("removed"):
+                    self.dcnm_intf_pvlan_po_verify_removed(target)
                 continue
             if post_policy != PVLAN_POLICY:
                 continue
@@ -9501,6 +10174,62 @@ class DcnmIntf:
                 self.module.fail_json(
                     msg="Interface {0} on {1}: post-deploy intent readback differs in {2}.".format(
                         name, sno, ", ".join(mismatch)), **self.result)
+
+    def dcnm_intf_pvlan_vpc_verify_removed(self, target):
+        """MM-B: the members removed from a vPC, after the deploy, verified on THEIR serials like a port-channel's removed members."""
+        by_serial = {}
+        for r in target.get("removed_legs") or []:
+            by_serial.setdefault(r["serial"], []).append({"name": r["member"], "post": r["post"]})
+        for serial, removed in sorted(by_serial.items()):
+            self.dcnm_intf_pvlan_po_verify_removed({"sno": serial, "name": target["name"], "removed": removed}, owner_label="vPC")
+
+    def dcnm_intf_pvlan_po_verify_removed(self, target, owner_label="port-channel"):
+        """MM-B: bounded, non-mutating readback of the members an update removed, after the deploy: each holds its modeled released policy,
+        administratively down and In-Sync, no live policy of the member is the port-channel's, and a routed release is a sole direct owner with
+        only its own down children. A read that fails is an observation, never a success; nothing is rewritten."""
+        sno, name = target["sno"], target["name"]
+        observed = "no readback was attempted"
+        for attempt in range(6):
+            self.dcnm_intf_invalidate_serial_authority(sno)
+            self.pvlan_policies.pop(sno, None)
+            problems = []
+            if not self.dcnm_intf_get_have_all_with_sno(sno):
+                problems.append("the interface summary could not be read authoritatively")
+            else:
+                self.dcnm_intf_bulk_fetch_intf_info(sno, refresh=True)
+                policies = self.dcnm_intf_pvlan_read_policies(sno)
+                if policies is None:
+                    problems.append("the switch policy list could not be read authoritatively")
+                for m in target["removed"]:
+                    want = m["post"][0]
+                    detail = self.dcnm_intf_get_intf_info(m["name"], sno, "INTERFACE_ETHERNET")
+                    nv = ((detail.get("interfaces") or [{}])[0].get("nvPairs") or {}) if isinstance(detail, dict) else {}
+                    summ = [h for h in self.have_all if h.get("serialNo") == sno and str(h.get("ifName", "")).lower() == m["name"].lower()]
+                    if not isinstance(detail, dict) or detail.get("policy") != want:
+                        problems.append("{0} holds {1!r}, not {2}".format(m["name"], detail.get("policy") if isinstance(detail, dict) else None, want))
+                    elif str(nv.get("ADMIN_STATE", "")).strip().lower() != "false":
+                        problems.append("{0} is not administratively down".format(m["name"]))
+                    if len(summ) != 1 or summ[0].get("complianceStatus") != "In-Sync":
+                        problems.append("{0} is not In-Sync in the interface summary".format(m["name"]))
+                    if policies is not None:
+                        claims = sorted("{0}/{1}".format(p.get("templateName"), p.get("source")) for p in policies
+                                        if p.get("deleted") is not True and str(p.get("deleted", "")).lower() != "true"
+                                        and str(p.get("entityName", "")).lower() == m["name"].lower()
+                                        and (p.get("templateName") == PO_MEMBER_POLICY or str(p.get("source", "")).lower() == name.lower()))
+                        if claims:
+                            problems.append("{0} is still claimed by the {1}: {2}".format(m["name"], owner_label, claims))
+                    if want == PVLAN_PO_ROUTED_BASELINE_POLICY and isinstance(detail, dict) and detail.get("policy") == want:
+                        why = self.dcnm_intf_pvlan_check_ownership(m["name"], sno, want, nv, self_children=PVLAN_PO_ROUTED_RELEASE_CHILDREN_DOWN)
+                        if why:
+                            problems.append("{0}: {1}".format(m["name"], why))
+            if not problems:
+                return
+            observed = "; ".join(problems)
+            if attempt < 5:
+                time.sleep(5)
+        self.module.fail_json(
+            msg="PVLAN {0} {1} on {2}: the member(s) removed by the update could not be verified as released after 6 readback attempts: "
+            "{3}. Nothing else was sent; no member was rewritten.".format(owner_label, name, sno, observed), **self.result)
 
     def dcnm_intf_can_be_added(self, want):
 
@@ -12364,6 +13093,12 @@ class DcnmIntf:
                         replace = True
 
         resp = None
+
+        # MM-B: members REMOVED from an existing PVLAN port-channel/vPC by the confirmed modify are released (admin down on their own policy)
+        # BEFORE any deploy, through the deletion's release contract; any problem stops the run here with no deploy.
+        if replace:
+            self.dcnm_intf_pvlan_po_release_removed()
+            self.dcnm_intf_pvlan_vpc_release_removed()
 
         # Delete Breakout interface
         if len(self.diff_delete_breakout) > 0:

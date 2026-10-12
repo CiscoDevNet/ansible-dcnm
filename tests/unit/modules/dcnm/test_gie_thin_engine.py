@@ -437,6 +437,23 @@ BATCH2_ROWS = {
 
 # The vPC dot1q-tunnel parent (PR725-VPC-DOT1Q-001): the six keys int_vpc_access_host also
 # registers, read from the installed int_vpc_dot1q_tunnel. Registered without a reset.
+# PLAN-2 C1 (PR725-PVLAN-COMPANIONS-001): the A0-PVLAN-1 REGISTRY_BINDING rows of the three PVLAN parents.
+PVLAN_C1_ROWS = {
+    ("int_pvlan_host", "lldpTransmit", "disable_lldp_transmit"),
+    ("int_pvlan_host", "lldpReceive", "disable_lldp_receive"),
+    ("int_port_channel_pvlan_host", "lldpTransmit", "disable_lldp_transmit"),
+    ("int_port_channel_pvlan_host", "lldpReceive", "disable_lldp_receive"),
+    ("int_port_channel_pvlan_host", "spanningTreePortType", "spanning_tree_port_type"),
+    ("int_port_channel_pvlan_host", "queuingStats", "disable_queuing_stats"),
+    ("int_vpc_pvlan_host", "lldpTransmit", "disable_lldp_transmit"),
+    ("int_vpc_pvlan_host", "lldpReceive", "disable_lldp_receive"),
+    ("int_vpc_pvlan_host", "spanningTreePortType", "spanning_tree_port_type"),
+    ("int_vpc_pvlan_host", "queuingStats", "disable_queuing_stats"),
+    ("int_vpc_pvlan_host", "aclFilter", "acl_filter"),
+}
+# IQ1 (PR725 ingress QoS) adds int_vpc_pvlan_host::qosStatsSuppressed (disable_qos_stats, inferred reset).
+IQ1_ROWS = {("int_vpc_pvlan_host", "qosStatsSuppressed", "disable_qos_stats")}
+
 VPC_DOT1Q_ROWS = {
     ("int_vpc_dot1q_tunnel", nvpair, key)
     for nvpair, key in (
@@ -458,14 +475,14 @@ def test_package_provenance_and_size():
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
-        | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS
+        | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
-    # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS).
-    assert len(BINDING_TABLE) == len(actual_keys) == 234
+    # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS); 245 = 234 + the eleven PVLAN_C1_ROWS; 246 = 245 + IQ1_ROWS.
+    assert len(BINDING_TABLE) == len(actual_keys) == 246
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -497,6 +514,8 @@ def test_package_provenance_and_size():
     assert len(MACSEC_ROWS) == 4
     assert len(BATCH2_ROWS) == 3
     assert len(VPC_DOT1Q_ROWS) == 6
+    assert len(PVLAN_C1_ROWS) == 11
+    assert len(IQ1_ROWS) == 1
     expected_provenance = hashlib.sha256(
         json.dumps(BINDING_TABLE, sort_keys=True, default=list).encode()
     ).hexdigest()
@@ -538,7 +557,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 234   # 228 + six int_vpc_dot1q_tunnel rows
+    assert len(rows) == 246   # 228 + six int_vpc_dot1q_tunnel rows + eleven PLAN-2 C1 PVLAN companion rows + one IQ1 row
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():

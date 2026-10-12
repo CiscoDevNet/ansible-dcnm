@@ -48,14 +48,14 @@ def legs_of(r=None, order=(SN1, SN2)):
         (lambda r: r.update(pvlan_mode="trunk secondary", pvlan_mapping=[{"primary_vlan": 1, "secondary_vlans": "2"}]),
          "pvlan_mapping is not valid for pvlan_mode 'trunk secondary'"),
         (lambda r: r.update(pvlan_mode="bogus"), "pvlan_mode must be one of"),
-        (lambda r: r.update(peer1_members=[M1, "Ethernet1/9"]), "exactly one member per peer"),
-        (lambda r: r.update(peer2_members=[]), "exactly one member per peer"),
-        (lambda r: r.update(peer1_members=["Port-channel5"]), "one physical Ethernet"),
+        (lambda r: r.update(peer1_members=[M1, "e1/7"]), "duplicate physical"),
+        (lambda r: r.update(peer2_members=[]), "non-empty list"),
+        (lambda r: r.update(peer1_members=["Port-channel5"]), "physical Ethernet"),
         (lambda r: r.update(peer1_pcid=11), "must equal the vPC id"),
         (lambda r: r.update(peer2_pcid=True), "must equal the vPC id"),
         (lambda r: r.pop("peer2_pcid"), "peer2_pcid is required"),
         (lambda r: r.update(pvlan_association=[]), "empty pvlan_association"),
-        (lambda r: r.update(peer1_cmds=["x"]), "not implemented for a vPC"),
+        (lambda r: r.update(peer1_cmds=["switchport mode trunk"]), "copies to every member"),  # RC1: freeform rule
         (lambda r: r.update(pvlan_mapping=[{"primary_vlan": 1, "secondary_vlans": "2"}]), "pvlan_mapping is not valid for pvlan_mode 'host'"),
         (lambda r: r.update(native_vlan="5"), "not implemented for a vPC"),
         (lambda r: r.update(pc_mode="bogus"), "pc_mode must be one of"),
@@ -228,8 +228,8 @@ def test_a_change_reaching_one_peer_only_is_refused_not_applied():
         ({"PVLAN_MODE": "trunk promiscuous"}, "changing pvlan_mode of an existing vPC"),
         ({"PEER2_PCID": "11"}, "differs from the vPC id"),
         ({"PEER2_PO_CONF": "mtu 1500"}, "freeform commands on peer 2"),
-        ({"PEER1_MEMBER_INTERFACES": "Ethernet1/7,Ethernet1/9"}, "one explicit member per peer"),
-        ({"PEER2_MEMBER_INTERFACES": ""}, "one explicit member per peer"),
+        ({"PEER1_MEMBER_INTERFACES": "Ethernet1/7,unknown"}, "readable, non-empty list"),
+        ({"PEER2_MEMBER_INTERFACES": ""}, "readable, non-empty list"),
         ({"MYSTERY_FIELD": "x"}, "cannot classify"),
     ],
 )
@@ -239,9 +239,12 @@ def test_existing_vpc_outside_the_contract_is_refused(have_over, needle):
 
 
 def test_member_change_and_policy_conversion_are_refused():
+    # MM-B (contract change): a member change of an existing vPC is no longer refused; it follows the regular merged rule (union) on the
+    # peer that names it, and may reach that peer only. The policy conversion stays refused.
     r = raw(peer2_members=["Ethernet1/9"])
     out = P.reconcile_vpc("merged", r, VPC, legs_of(r), P.VPC_HOST_POLICY, have_of())
-    assert any("changing the member" in x for x in out["blocked"])
+    assert out["blocked"] == [] and out["update"] and out["removed"] == {}
+    assert sum(len(v) for v in out["added"].values()) == 1 and set(out["changed"]) <= {"PEER1_MEMBER_INTERFACES", "PEER2_MEMBER_INTERFACES"}
     out = P.reconcile_vpc("merged", raw(), VPC, legs_of(), "int_vpc_trunk_host", have_of())
     assert any("converting it" in x for x in out["blocked"])
 
@@ -265,13 +268,11 @@ def test_the_child_po_model_is_the_regular_po_body_plus_the_vpc_line():
 @pytest.mark.parametrize(
     "over",
     [
+        # PLAN-2 C1: QoS (DEF-PVLAN-05) and a speed other than Auto stay outside the model; so does a spanning-tree port type
+        # the template itself rejects while port type fast is true. PFC, the port ACL, vPC convergence, queuing and duplex are
+        # modeled now: see test_c1_companions_reach_the_child_model_with_the_template_lines.
         {"ENABLE_QOS": "true"},
-        {"ENABLE_PFC": "true"},
-        {"aclFilter": "acl1"},
-        {"ENABLE_LACP_VPC_CONV": "true"},
-        {"SPEED": "10Gb"},
-        {"QUEUING_POLICY": "q"},
-        {"PORT_DUPLEX_MODE": "full"},
+        {"SPEED": "7Gb"},  # RC1: a known speed is modeled; an unknown one is not
         {"spanningTreePortType": "network"},
     ],
 )
@@ -279,6 +280,29 @@ def test_values_outside_the_model_make_the_child_unmodeled(over):
     nv = have_of(**over)
     po = P.vpc_leg_po_nv(nv, 0, VPC)
     assert not P.render(P.VPC_PO_POLICY, po).modeled
+
+
+@pytest.mark.parametrize(
+    "over,lines",
+    [
+        ({"ENABLE_PFC": "true"}, {"priority-flow-control mode on", "priority-flow-control watch-dog-interval on"}),
+        ({"aclFilter": "acl1"}, {"ip port access-group acl1 in"}),
+        ({"ENABLE_LACP_VPC_CONV": "true"}, {"lacp vpc-convergence"}),
+        ({"QUEUING_POLICY": "q"}, {"service-policy type queuing output q"}),
+        ({"QUEUING_POLICY": "q", "queuingStats": "true"}, {"service-policy type queuing output q no-stats"}),
+        ({"PORT_DUPLEX_MODE": "full"}, {"duplex full"}),
+        ({"DISABLE_LACP_SUSPEND": "true"}, {"no lacp suspend-individual"}),
+        ({"spanningTreePortType": "network", "PORTTYPE_FAST_ENABLED": "false"}, {"spanning-tree port type network"}),
+    ],
+)
+def test_c1_companions_reach_the_child_model_with_the_template_lines(over, lines):
+    """PLAN-2 C1: the parent value reaches BOTH children (vpc_leg_po_nv) and the child renders the installed POVPC line."""
+    base = P.render(P.VPC_PO_POLICY, P.vpc_leg_po_nv(have_of(), 0, VPC))
+    for index in (0, 1):
+        got = P.render(P.VPC_PO_POLICY, P.vpc_leg_po_nv(have_of(**over), index, VPC))
+        assert got.modeled
+        assert lines <= got.scalars
+        assert not lines & base.scalars
 
 
 def test_cli_change_is_derived_from_the_previous_and_new_models_not_from_the_nvpair_diff():

@@ -42,11 +42,16 @@ BUILDERS = {
         # int_routed_host rides the same builder: the eth payload path serves every eth mode,
         # and gie_contribute_nvpairs sits at method level there, not inside a mode branch.
         "int_routed_host",
+        # PLAN-2 C1: the PVLAN branch builds its set in interface_pvlan (no hand-written nvPair here) and then calls the
+        # engine. Its own omission contract (merged keeps HAVE, replaced follows the withdrawal classifier) is pinned
+        # through the real main() in test_dcnm_intf_pvlan_companions_c1.py.
+        "int_pvlan_host",
     ),
     "dcnm_intf_get_pc_payload": (
         "int_port_channel_access_host",
         "int_port_channel_trunk_host",
         "int_port_channel_dot1q_tunnel_host",
+        "int_port_channel_pvlan_host",   # PLAN-2 C1, same note as int_pvlan_host
     ),
     "dcnm_intf_get_vpc_payload": (
         "int_vpc_trunk_host",
@@ -54,6 +59,7 @@ BUILDERS = {
         # dot1q-tunnel shares the vPC builder: the base nvPairs come from the access branch and
         # gie_contribute_nvpairs sits at method level, after every mode branch.
         "int_vpc_dot1q_tunnel",
+        "int_vpc_pvlan_host",   # PLAN-2 C1, same note as int_pvlan_host
     ),
     # The two parents wired for the OSPF work. Neither had an engine hook before; both got the
     # same two calls as the eth path -- gie_extend_prof_spec in the validator and

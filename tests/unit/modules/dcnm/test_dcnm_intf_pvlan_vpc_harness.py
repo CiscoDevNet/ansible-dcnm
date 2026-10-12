@@ -100,6 +100,11 @@ class VpcController(FakeController):
         self.summary_extra = {SN1: [], SN2: []}  # entries listed by the interface summary of a peer and by nothing else
         self.compliance_by = {}  # (serial, ifName) -> status
         self.markdeleted = False
+        # IQ1: False = the CORRECTED parent (qosPolicy/queuingPolicy locals: the reference int_vpc_trunk_host and every Engineering
+        # set) hands ENABLE_QOS/QOS_POLICY/ENABLE_PFC/QUEUING_POLICY to both children. True = the revision INSTALLED on the test ND
+        # (MEASURED, Alpha2 S1): its UnboundLocalError resets those four to false/'' on every save, while queuingStats and
+        # qosStatsSuppressed (interfaceOptions) still follow the parent.
+        self.defective_qos_template = False
 
     # ---- seeding (explicit state, never produced by the code under test)
     def seed_baseline(self):
@@ -164,7 +169,7 @@ class VpcController(FakeController):
         """What the templates are PREDICTED to do on save (HOST 590-780): one child Po and one flipped member per peer."""
         for index, serial in enumerate((SN1, SN2)):
             n = index + 1
-            port = parent["PEER%d_MEMBER_INTERFACES" % n]
+            ports = parent["PEER%d_MEMBER_INTERFACES" % n].split(",")
             po = "port-channel" + parent["PEER%d_PCID" % n]
             self.nodes[serial][po] = {
                 "policy": VPC_PO,
@@ -183,29 +188,54 @@ class VpcController(FakeController):
                     "BPDUGUARD_ENABLED": parent["BPDUGUARD_ENABLED"],
                     "PORTTYPE_FAST_ENABLED": parent["PORTTYPE_FAST_ENABLED"],
                     "MTU": parent["MTU"],
-                    "CONF": "",
+                    # RC1: the child carries its peer's freeform (HOST 647/677 [SRC]: "CONF": peerNConf).
+                    "CONF": parent.get("PEER%d_PO_CONF" % n, ""),
                 },
             }
-            old = self.nodes[serial].get(port, {"nvPairs": {}})["nvPairs"]
-            self.nodes[serial][port] = {
-                "policy": PO_MEMBER,
-                "source": VPC,
-                "nvPairs": {
-                    "PO_ID": po,
-                    "PRIMARY_INTF": VPC,
-                    "PC_MODE": parent["PC_MODE"],
-                    "PVLAN_MODE": parent["PVLAN_MODE"],
-                    "CDP_ENABLE": "true",
-                    "lldpTransmit": "false",
-                    "lldpReceive": "false",
-                    "LACP_PORT_PRIO": "32768",
-                    "LACP_RATE": "normal",
-                    "DESC": old.get("DESC", ""),
-                    "CONF": "",
-                    "ADMIN_STATE": str(old.get("ADMIN_STATE", "false")).lower(),
-                    "INTF_NAME": port,
-                },
-            }
+            # PLAN-2 C1: the other parent fields the template hands to each child (HOST 636-688 [SRC]), with its defaults.
+            for key, default in (
+                ("spanningTreePortType", "no"),
+                ("SPEED", "Auto"),
+                ("PORT_DUPLEX_MODE", "auto"),
+                ("DISABLE_LACP_SUSPEND", "false"),
+                ("ENABLE_LACP_VPC_CONV", "false"),
+                ("ENABLE_PFC", "false"),
+                ("QUEUING_POLICY", ""),
+                ("queuingStats", "false"),
+                ("aclFilter", ""),
+                # IQ1: ingress QoS (HOST 652-657 / 682-687)
+                ("ENABLE_QOS", "false"),
+                ("qosStatsSuppressed", "false"),
+            ):
+                self.nodes[serial][po]["nvPairs"][key] = parent.get(key, default)
+            child = self.nodes[serial][po]["nvPairs"]
+            # IQ1: the corrected parent hands QOS_POLICY only with QoS enabled (qosPolicy; no AI/ML fabric in this harness)
+            child["QOS_POLICY"] = parent.get("QOS_POLICY", "") if str(parent.get("ENABLE_QOS", "false")).lower() == "true" else ""
+            if self.defective_qos_template:
+                child.update({"ENABLE_PFC": "false", "ENABLE_QOS": "false", "QOS_POLICY": "", "QUEUING_POLICY": ""})
+            for port in ports:
+                old = self.nodes[serial].get(port, {"nvPairs": {}})["nvPairs"]
+                self.nodes[serial][port] = {
+                    "policy": PO_MEMBER,
+                    "source": VPC,
+                    "nvPairs": {
+                        "PO_ID": po,
+                        "PRIMARY_INTF": VPC,
+                        "PC_MODE": parent["PC_MODE"],
+                        "PVLAN_MODE": parent["PVLAN_MODE"],
+                        # PLAN-2 C1: CDP, LLDP and LACP come from the parent (HOST 764-768 / 854-858 [SRC]); DESC is the peer's
+                        # PEERn_PO_DESC when COPY_DESC is true, else the member's own (HOST 750-752 [SRC]).
+                        "CDP_ENABLE": parent.get("CDP_ENABLE", "true"),
+                        "lldpTransmit": parent.get("lldpTransmit", "false"),
+                        "lldpReceive": parent.get("lldpReceive", "false"),
+                        "LACP_PORT_PRIO": str(parent.get("LACP_PORT_PRIO", "32768")),
+                        "LACP_RATE": parent.get("LACP_RATE", "normal"),
+                        "DESC": parent.get("PEER%d_PO_DESC" % n, "") if str(parent.get("COPY_DESC", "false")).lower() == "true" else old.get("DESC", ""),
+                        "CONF": "",
+                        "ADMIN_STATE": str(old.get("ADMIN_STATE", "false")).lower(),
+                        "INTF_NAME": port,
+                    },
+                }
 
     # ---- test helpers
     def writes(self):
@@ -304,12 +334,13 @@ class VpcController(FakeController):
                     for index, serial in enumerate((SN1, SN2)):
                         n = index + 1
                         po = "port-channel" + parent["nvPairs"]["PEER%d_PCID" % n]
-                        port = parent["nvPairs"]["PEER%d_MEMBER_INTERFACES" % n]
+                        ports = parent["nvPairs"]["PEER%d_MEMBER_INTERFACES" % n].split(",")
                         self.nodes[serial].pop(po, None)
                         if self.release_on_delete:
-                            nv = trunk_host_nv(port)
-                            nv["ADMIN_STATE"] = "true" if self.release_admin_up else "false"
-                            self.nodes[serial][port] = {"policy": TRUNK, "nvPairs": nv}
+                            for port in ports:
+                                nv = trunk_host_nv(port)
+                                nv["ADMIN_STATE"] = "true" if self.release_admin_up else "false"
+                                self.nodes[serial][port] = {"policy": TRUNK, "nvPairs": nv}
                         if self.children_marked_deleted:
                             self.summary_extra[serial].append(self._marked_deleted_entry(serial, po))
                             self.policies_extra[serial].append(

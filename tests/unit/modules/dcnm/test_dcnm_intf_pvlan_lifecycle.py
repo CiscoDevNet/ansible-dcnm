@@ -357,7 +357,9 @@ class TestE12CheckModeDeployFalseAndConvergence:
 
 
 # ===================================================================================== E13
-def test_e13_registry_rows_and_resets_are_unchanged_and_carry_no_pvlan_binding():
+def test_e13_registry_rows_and_resets_are_unchanged_except_the_c1_pvlan_companions():
+    """PLAN-2 C1 adds exactly the 11 PVLAN companion bindings (A0 REGISTRY_BINDING rows), each with a reset_wire inferred from
+    its sibling parents; nothing else in the table changed (234 -> 245 rows, 207 -> 218 resets)."""
     path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "plugins", "module_utils", "gie_binding_table.py")
     tree = ast.parse(open(path).read())
     rows = resets = pvlan = 0
@@ -369,7 +371,8 @@ def test_e13_registry_rows_and_resets_are_unchanged_and_carry_no_pvlan_binding()
                 resets += "reset_wire" in keys
                 parent = keys.get("parent_template")
                 pvlan += isinstance(parent, ast.Constant) and "pvlan" in parent.value
-    assert (rows, resets, pvlan) == (234, 207, 0)
+    # IQ1 adds the vPC PVLAN qosStatsSuppressed row (inferred reset): one more row, reset and PVLAN row.
+    assert (rows, resets, pvlan) == (234 + 11 + 1, 207 + 11 + 1, 11 + 1)
 
 
 # ===================================================================================== E14

@@ -232,8 +232,9 @@ def test_registering_this_reset_left_the_sibling_svi_bindings_alone():
     from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
         BINDING_TABLE)
     rows = {(r["parent_template"], r["parent_nvpair"]): r for r in BINDING_TABLE}
-    assert len(BINDING_TABLE) == 234
-    assert sum("reset_wire" in r for r in BINDING_TABLE) == 207
+    # + the eleven PLAN-2 C1 PVLAN companion rows (other parents, inferred resets): 234 -> 245, 207 -> 218; + one IQ1 row: 246, 219.
+    assert len(BINDING_TABLE) == 234 + 11 + 1
+    assert sum("reset_wire" in r for r in BINDING_TABLE) == 207 + 11 + 1
     # The four int_vlan identities that remain deliberately unregistered.
     for nv in ("HSRP_GROUPv6", "HSRP_VIPv6", "OSPF_AUTH_KEY", "ospfTag"):
         assert "reset_wire" not in rows[("int_vlan", nv)], nv
