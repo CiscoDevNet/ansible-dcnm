@@ -464,8 +464,9 @@ class ActionModule(ActionBase):
         1. Top-level fabric must not be a child (fabricParent is 'None')
         2. Child fabric configs must be members with correct parent relationship
         3. Child fabrics cannot contain 'attach' configurations (parent-only)
-        4. Child fabrics cannot contain 'deploy' flag (must inherit from parent)
-        5. Child fabric configurations must reference valid MSD member fabrics
+        4. Child fabrics cannot override 'ipv4_acl_in' (parent-only)
+        5. Child fabrics cannot contain 'deploy' flag (must inherit from parent)
+        6. Child fabric configurations must reference valid MSD member fabrics
 
         Configuration Processing:
         1. Split config into parent fabric config (without child_fabric_config) and
@@ -542,6 +543,16 @@ class ActionModule(ActionBase):
 
                 if not child_fabric_name:
                     return None, f"Child fabric config missing 'fabric' name in network '{net_config.get('net_name', 'unknown')}'"
+
+                # IPV4_ACL_IN is parent-level intent. ND propagates it to
+                # children, so accepting a child override would be ambiguous
+                # and could mutate the parent before the child fails.
+                if 'ipv4_acl_in' in child_config:
+                    return None, (
+                        f"Child fabric config for '{child_fabric_name}' in network "
+                        f"'{net_config.get('net_name', 'unknown')}' cannot contain 'ipv4_acl_in'. "
+                        "ipv4_acl_in cannot be overridden at the child fabric level; configure it on the parent network."
+                    )
 
                 # Check if attach configuration is present in child fabric config
                 if 'attach' in child_config:

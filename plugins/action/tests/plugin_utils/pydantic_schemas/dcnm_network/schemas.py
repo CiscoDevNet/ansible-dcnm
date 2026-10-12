@@ -84,6 +84,7 @@ class DcnmNetworkQuerySchema(BaseModel):
         gatewayIpV6Address: Optional[str] = None
         enableL3OnBorder: Optional[bool] = None
         loopbackId: Optional[CoercedStr] = None
+        inboundIpv4Acl: Optional[str] = None
 
     class Parent(BaseModel):
         fabric: Optional[str] = None
@@ -146,7 +147,8 @@ class DcnmNetworkQuerySchema(BaseModel):
             "secondary_ip_gw4": "secondaryGW4",
             "gw_ipv6_subnet": "gatewayIpV6Address",
             "l3gw_on_border": "enableL3OnBorder",
-            "dhcp_loopback_id": "loopbackId"
+            "dhcp_loopback_id": "loopbackId",
+            "ipv4_acl_in": "inboundIpv4Acl"
         }
         # response.attach
         network_attach_fields = {

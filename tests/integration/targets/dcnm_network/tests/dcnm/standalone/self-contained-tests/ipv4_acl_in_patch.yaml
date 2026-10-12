@@ -1,0 +1,143 @@
+---
+# IPV4_ACL_IN is available only on the required patched ND build. This test is
+# automatically enabled when selected by its exact testcase path. Wildcard
+# runs skip it unless dcnm_network_run_ipv4_acl_in_patch_test is set to true.
+
+- name: IPV4_ACL_IN_PATCH - Determine whether to run the patched-ND test
+  ansible.builtin.set_fact:
+    run_ipv4_acl_in_patch_test: >-
+      {{
+        (testcase == 'standalone/self-contained-tests/ipv4_acl_in_patch')
+        or (dcnm_network_run_ipv4_acl_in_patch_test | default(false) | bool)
+      }}
+
+- name: IPV4_ACL_IN_PATCH - Exercise create, query, update, and idempotency
+  when: run_ipv4_acl_in_patch_test | bool
+  block:
+    - name: IPV4_ACL_IN_PATCH - Test Entry Point - [dcnm_network]
+      ansible.builtin.debug:
+        msg:
+          - "----------------------------------------------------------------"
+          - "+     Executing IPv4 ACL inbound Tests - [dcnm_network]       +"
+          - "----------------------------------------------------------------"
+
+    - name: IPV4_ACL_IN_PATCH - Setup Internal TestCase Variables
+      ansible.builtin.set_fact:
+        test_data:
+          patch_version: "4.3.1.0175006011"
+          initial_template: "self-contained-tests/net1_ipv4_acl_in_conf.j2"
+          initial_file: "{{ role_path }}/files/ipv4_acl_in_conf.yaml"
+          changed_template: >-
+            self-contained-tests/net1_ipv4_acl_in_changed_conf.j2
+          changed_file: "{{ role_path }}/files/ipv4_acl_in_changed_conf.yaml"
+
+    - name: IPV4_ACL_IN_PATCH - Create initial Network Config File
+      ansible.builtin.template:
+        src: "{{ test_data.initial_template }}"
+        dest: "{{ test_data.initial_file }}"
+        mode: "0644"
+      delegate_to: localhost
+
+    - name: IPV4_ACL_IN_PATCH - Create changed Network Config File
+      ansible.builtin.template:
+        src: "{{ test_data.changed_template }}"
+        dest: "{{ test_data.changed_file }}"
+        mode: "0644"
+      delegate_to: localhost
+
+    - name: IPV4_ACL_IN_PATCH - Delete any existing networks
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ test_data_common.fabric }}"
+        patch_version: "{{ test_data.patch_version }}"
+        state: deleted
+
+    - name: IPV4_ACL_IN_PATCH - Load initial Network Config File
+      ansible.builtin.set_fact:
+        dcnm_network_ipv4_acl_in_conf: >-
+          {{ lookup('file', test_data.initial_file) | from_yaml }}
+      delegate_to: localhost
+
+    - name: IPV4_ACL_IN_PATCH - Create Network with IPv4 ACL inbound
+      cisco.dcnm.dcnm_network: &initial_conf
+        fabric: "{{ test_data_common.fabric }}"
+        patch_version: "{{ test_data.patch_version }}"
+        state: merged
+        config: "{{ dcnm_network_ipv4_acl_in_conf }}"
+      register: result
+
+    - name: IPV4_ACL_IN_PATCH - ASSERT - Initial create changed state
+      ansible.builtin.assert:
+        that:
+          - result.changed
+
+    - name: IPV4_ACL_IN_PATCH - Query Network after create
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ test_data_common.fabric }}"
+        patch_version: "{{ test_data.patch_version }}"
+        state: query
+      register: verify_result
+
+    - name: IPV4_ACL_IN_PATCH - VALIDITY CHECK - Verify initial ACL in NDFC
+      cisco.dcnm.tests.integration.ndfc_network_validate:
+        config_path: "{{ test_data.initial_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+    - name: IPV4_ACL_IN_PATCH - Initial config is idempotent
+      cisco.dcnm.dcnm_network: *initial_conf
+      register: result
+
+    - name: IPV4_ACL_IN_PATCH - ASSERT - Initial config did not change state
+      ansible.builtin.assert:
+        that:
+          - not result.changed
+
+    - name: IPV4_ACL_IN_PATCH - Load changed Network Config File
+      ansible.builtin.set_fact:
+        dcnm_network_ipv4_acl_in_changed_conf: >-
+          {{ lookup('file', test_data.changed_file) | from_yaml }}
+      delegate_to: localhost
+
+    - name: IPV4_ACL_IN_PATCH - Update IPv4 ACL inbound
+      cisco.dcnm.dcnm_network: &changed_conf
+        fabric: "{{ test_data_common.fabric }}"
+        patch_version: "{{ test_data.patch_version }}"
+        state: merged
+        config: "{{ dcnm_network_ipv4_acl_in_changed_conf }}"
+      register: result
+
+    - name: IPV4_ACL_IN_PATCH - ASSERT - ACL update changed state
+      ansible.builtin.assert:
+        that:
+          - result.changed
+
+    - name: IPV4_ACL_IN_PATCH - Query Network after update
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ test_data_common.fabric }}"
+        patch_version: "{{ test_data.patch_version }}"
+        state: query
+      register: verify_result
+
+    - name: IPV4_ACL_IN_PATCH - VALIDITY CHECK - Verify changed ACL in NDFC
+      cisco.dcnm.tests.integration.ndfc_network_validate:
+        config_path: "{{ test_data.changed_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+    - name: IPV4_ACL_IN_PATCH - Changed config is idempotent
+      cisco.dcnm.dcnm_network: *changed_conf
+      register: result
+
+    - name: IPV4_ACL_IN_PATCH - ASSERT - Changed config did not change state
+      ansible.builtin.assert:
+        that:
+          - not result.changed
+
+  always:
+    - name: IPV4_ACL_IN_PATCH - END - Clean up any existing networks
+      cisco.dcnm.dcnm_network:
+        fabric: "{{ test_data_common.fabric }}"
+        patch_version: "4.3.1.0175006011"
+        state: deleted
