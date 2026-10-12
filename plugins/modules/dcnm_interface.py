@@ -1267,17 +1267,22 @@ options:
           dhcp_server_addr4:
             description:
             - DHCP relay server address.
+            - An explicit empty string clears a configured address, also under C(merged), together with its C(vrf_dhcp4);
+              an omitted value is preserved under C(merged) and reset under C(replaced) and C(overridden) (NOT LIVE TESTED).
             type: str
             default: ""
           vrf_dhcp4:
             description:
             - VRF to reach DHCP server. This parameter is required if "dhcp_server_addr4" is included.
+            - It is cleared together with C(dhcp_server_addr4).
             type: str
             default: ""
           dhcp_relay_src_intf:
             description:
             - Source interface for DHCP relay. Valid interfaces are Ethernet, port-channel or loopback.
             - Independent of the DHCP server addresses; it can be set on its own.
+            - An explicit empty string clears a configured source interface, also under C(merged); an omitted value is preserved
+              under C(merged) and reset under C(replaced) and C(overridden) (NOT LIVE TESTED).
             type: str
             default: ""
           adv_subnet_in_underlay:
@@ -2883,6 +2888,14 @@ def json_pretty(msg):
 #     {"secondaryGws":[{"gatewayIpAddress":"192.0.2.254/24"}]}
 # and the empty string for "no entries". The installed template parses the text with
 # ast.literal_eval and accepts either the wrapper or a bare list; it caps each list at 16.
+# F3: the two int_vlan DHCP fields the builder emits only when non-empty (see dcnm_intf_get_svi_payload) and the vrf that hangs off server 4.
+# (profile key, nvPair). The authoritative "no value" of all three is the empty string: it is what NDFC returns for an SVI created without
+# them and what servers 1-3 already write on a reset.
+SVI_DHCP4_FIELDS = (
+    ("dhcp_server_addr4", "dhcpServerAddr4"),
+    ("vrf_dhcp4", "vrfDhcp4"),
+    ("dhcp_relay_src_intf", "DHCP_RELAY_SRC_INTF"),
+)
 SVI_ADDRESS_LIST_MAX = 16
 SVI_ADDRESS_LISTS = {
     "secondary_gws": {
@@ -7485,6 +7498,57 @@ class DcnmIntf:
             changed_nv[nvpair] = wire
 
     # ================================================================ native Ethernet PVLAN
+    def dcnm_intf_reconcile_svi_dhcp4(self, state, name, want_nv, have_entries, ik, nv_keys, changed_nv, pb_keys):
+        """F3: clear the int_vlan DHCP server 4, its VRF and the relay source interface, in place, before the generic comparison.
+
+        The builder emits these three nvPairs only when non-empty, because a controller whose GET omits them would otherwise make
+        the comparison read a missing HAVE key (KeyError in copy_and_add, or a perpetual update). That guard also dropped an
+        authored empty, so a clear never reached the request. Here, with HAVE known, the clear is written back as "" only when
+        there is something configured to clear:
+
+            HAVE value        missing / null / empty / blank   -> nothing to clear: no key, no write, no KeyError, no perpetual update
+                              non-empty string                 -> clear when the state asks for it
+            state asks        merged                           -> only an AUTHORED empty (key present in the playbook profile)
+                              replaced / retained overridden   -> authored empty OR omission (authoritative reset to "")
+            nonempty request  (the builder already emitted it) -> untouched: set/change stays with the generic comparison
+
+        vrfDhcp4 hangs off server 4 (template IsShow="dhcpServerAddr4!=null"): when server 4 is cleared here its VRF is cleared with it,
+        also under merged. That one is written directly (not through nv_keys) because the merged comparison would otherwise copy the old
+        VRF back from HAVE. Returns True when anything was written. Servers 1-3, the other VRFs and the HSRP fields are not touched.
+        """
+        have_nv = next((intf[ik] for intf in have_entries if isinstance(intf.get(ik), dict)), None)
+        if have_nv is None:
+            return False
+
+        def configured(nvpair):
+            value = have_nv.get(nvpair)
+            return isinstance(value, str) and value.strip() != ""
+
+        server_cleared = False
+        written = False
+        for profile_key, nvpair in SVI_DHCP4_FIELDS:
+            if profile_key == "vrf_dhcp4" or nvpair in want_nv:
+                continue
+            authored = profile_key in pb_keys
+            if state == "merged" and not authored:
+                continue  # merged: an omission preserves
+            if not configured(nvpair):
+                continue
+            want_nv[nvpair] = ""
+            changed_nv[nvpair] = ""
+            if nvpair not in nv_keys:
+                nv_keys.append(nvpair)
+            written = True
+            server_cleared = server_cleared or profile_key == "dhcp_server_addr4"
+        vrf_key = "vrfDhcp4"
+        if vrf_key not in want_nv and configured(vrf_key):
+            vrf_authored = "vrf_dhcp4" in pb_keys
+            if server_cleared or state in ("replaced", "overridden") or vrf_authored:
+                want_nv[vrf_key] = ""
+                changed_nv[vrf_key] = ""
+                written = True
+        return written
+
     def dcnm_intf_pvlan_block(self, name, sno, reason):
         """Collect a refusal; main() raises all of them once, before any write."""
         self.pvlan_blocked.append({"interface": name, "serial": sno, "reason": reason})
@@ -10791,6 +10855,17 @@ class DcnmIntf:
                                             nv_keys,
                                             changed_dict[k][0][ik],
                                         )
+                                        if self.dcnm_intf_reconcile_svi_dhcp4(
+                                            state,
+                                            name,
+                                            want[k][0][ik],
+                                            d[k],
+                                            ik,
+                                            nv_keys,
+                                            changed_dict[k][0][ik],
+                                            pb_keys,
+                                        ):
+                                            action = "update"
 
                                     # List of keys to check and potentially remove from nv_keys
                                     # Some keys are not present in the first GET and must be removed
