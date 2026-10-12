@@ -35,6 +35,13 @@ options:
     - Name of the target fabric for network operations
     type: str
     required: yes
+  patch_version:
+    description:
+    - ND software version used to enable version-gated features.
+    - For C(ipv4_acl_in), specify the applicable patched release or ND 4.4.1 or later.
+    - This is a control parameter and is not sent to the controller.
+    type: str
+    required: false
   _fabric_details:
     description:
     - INTERNAL PARAMETER - DO NOT USE
@@ -315,6 +322,15 @@ options:
         - Interface Vlan Netflow Monitor
         - Applicable only if 'Layer 2 Only' is not enabled. Provide monitor name defined in fabric setting for Layer 3 Record
         - Netflow configs are supported on NDFC only
+        type: str
+        required: false
+      ipv4_acl_in:
+        description:
+        - IPv4 access-list applied inbound on the SVI.
+        - The access-list name must contain 1 to 64 characters.
+        - Requires the top-level O(patch_version) option set to the applicable patched release or ND 4.4.1 or later.
+        - Supported on standalone and parent fabrics only. It cannot be overridden in O(config[].child_fabric_config).
+        - In C(state=merged), omitting this option preserves the value returned by the controller.
         type: str
         required: false
       vlan_nf_monitor:
@@ -621,6 +637,16 @@ EXAMPLES = """
           - ip_address: 192.168.1.225
             ports: [Ethernet1/18]
         deploy: true
+
+- name: Configure an inbound IPv4 ACL on a supported ND controller
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-fabric
+    patch_version: "{{ nd_patch_version }}"
+    state: merged
+    config:
+      - net_name: ansible-acl-net
+        vrf_name: Tenant-1
+        ipv4_acl_in: TENANT-1-IN
 
 # ---------------------------------------------------------------------------
 # STATE: REPLACED - Replace Network Configuration
@@ -1053,6 +1079,12 @@ from ..module_utils.common.log_v2 import Log
 class DcnmNetwork:
 
     BULK_GET_HAVE_NETWORK_THRESHOLD = 5
+    IPV4_ACL_IN_PATCH_VERSION = "4.3.1.0175006011"
+    IPV4_ACL_IN_MIN_ND_VERSION = (4, 4, 1)
+    # The template declares IPV4_ACL_IN, but the network REST API persists
+    # the effective value under inboundIpv4Acl.
+    IPV4_ACL_IN_TEMPLATE_KEY = "inboundIpv4Acl"
+    IPV4_ACL_IN_LEGACY_TEMPLATE_KEY = "IPV4_ACL_IN"
 
     dcnm_network_paths = {
         11: {
@@ -1095,6 +1127,7 @@ class DcnmNetwork:
 
         self.module = module
         self.params = module.params
+        self.patch_version = module.params.get("patch_version")
 
         msg = "self.params: "
         msg += f"{json.dumps(self.params, indent=4, sort_keys=True)}"
@@ -2081,6 +2114,7 @@ class DcnmNetwork:
         intvlan_nfmon_changed = False
         vlan_nfmon_changed = False
         xconnect_changed = False
+        ipv4_acl_in_changed = False
 
         if want.get("networkId") and want["networkId"] != have["networkId"]:
             self.module.fail_json(msg="networkId can not be updated on existing network: {0}".format(want["networkName"]))
@@ -2093,6 +2127,20 @@ class DcnmNetwork:
 
         json_to_dict_want = json.loads(want["networkTemplateConfig"])
         json_to_dict_have = json.loads(have["networkTemplateConfig"])
+
+        # A controller may return the patched field even when this invocation
+        # did not opt in to managing it. Preserve that value in unrelated
+        # standalone/parent updates instead of accidentally clearing it.
+        if (
+            not self._supports_ipv4_acl_in()
+            and self.fabric_type not in ["multisite_child", "multicluster_child"]
+            and self._has_ipv4_acl_in(json_to_dict_have)
+        ):
+            json_to_dict_want[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                json_to_dict_have
+            )
+            json_to_dict_want.pop(self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY, None)
+            want["networkTemplateConfig"] = json.dumps(json_to_dict_want)
 
         gw_ip_want = json_to_dict_want.get("gatewayIpAddress", "")
         gw_ip_have = json_to_dict_have.get("gatewayIpAddress", "")
@@ -2140,6 +2188,8 @@ class DcnmNetwork:
         vlan_nfen_have = json_to_dict_have.get("VLAN_NETFLOW_MONITOR", "")
         xconnect_want = str(json_to_dict_want.get("xconnect", "")).lower()
         xconnect_have = str(json_to_dict_have.get("xconnect", "")).lower()
+        ipv4_acl_in_want = self._get_ipv4_acl_in(json_to_dict_want)
+        ipv4_acl_in_have = self._get_ipv4_acl_in(json_to_dict_have)
 
         if vlanId_have != "":
             vlanId_have = int(vlanId_have)
@@ -2261,6 +2311,13 @@ class DcnmNetwork:
                 xconnect_diff = xconnect_have != xconnect_want
                 comparisons.append(xconnect_diff)
 
+            if (
+                self._supports_ipv4_acl_in()
+                and self.IPV4_ACL_IN_TEMPLATE_KEY not in skipped_template_keys
+            ):
+                ipv4_acl_in_diff = ipv4_acl_in_have != ipv4_acl_in_want
+                comparisons.append(ipv4_acl_in_diff)
+
             if any(comparisons):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
@@ -2316,6 +2373,9 @@ class DcnmNetwork:
                 if self._ndfc_version_gte("12.4.1"):
                     if xconnect_have != xconnect_want:
                         xconnect_changed = True
+                if self._supports_ipv4_acl_in():
+                    if ipv4_acl_in_have != ipv4_acl_in_want:
+                        ipv4_acl_in_changed = True
 
                 want.update({"networkId": have["networkId"]})
                 create = want
@@ -2429,6 +2489,13 @@ class DcnmNetwork:
                 xconnect_diff = xconnect_have != xconnect_want
                 comparisons.append(xconnect_diff)
 
+            if (
+                self._supports_ipv4_acl_in()
+                and self.IPV4_ACL_IN_TEMPLATE_KEY not in skipped_template_keys
+            ):
+                ipv4_acl_in_diff = ipv4_acl_in_have != ipv4_acl_in_want
+                comparisons.append(ipv4_acl_in_diff)
+
             if any(comparisons):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
@@ -2481,6 +2548,9 @@ class DcnmNetwork:
                 if self._ndfc_version_gte("12.4.1"):
                     if xconnect_have != xconnect_want:
                         xconnect_changed = True
+                if self._supports_ipv4_acl_in():
+                    if ipv4_acl_in_have != ipv4_acl_in_want:
+                        ipv4_acl_in_changed = True
 
                 want.update({"networkId": have["networkId"]})
                 create = want
@@ -2511,6 +2581,7 @@ class DcnmNetwork:
             intvlan_nfmon_changed,
             vlan_nfmon_changed,
             xconnect_changed,
+            ipv4_acl_in_changed,
         )
 
     def update_create_params(self, net):
@@ -2591,6 +2662,10 @@ class DcnmNetwork:
             xconnect = net.get("xconnect")
             template_conf.update(
                 xconnect=False if xconnect is None else xconnect
+            )
+        if self._supports_ipv4_acl_in():
+            template_conf[self.IPV4_ACL_IN_TEMPLATE_KEY] = (
+                net.get("ipv4_acl_in") or ""
             )
 
         if template_conf["vlanId"] is None:
@@ -2695,6 +2770,10 @@ class DcnmNetwork:
             t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
         if "xconnect" in json_to_dict:
             t_conf.update(xconnect=json_to_dict["xconnect"])
+        if self._has_ipv4_acl_in(json_to_dict):
+            t_conf[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                json_to_dict
+            )
 
         if self.fabric_type not in ["multisite_child", "multicluster_child"]:
             t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
@@ -3528,6 +3607,7 @@ class DcnmNetwork:
         intvlan_nfmon_changed = {}
         vlan_nfmon_changed = {}
         xconnect_changed = {}
+        ipv4_acl_in_changed = {}
 
         for want_c in self.want_create:
             found = False
@@ -3561,6 +3641,7 @@ class DcnmNetwork:
                         intvlan_nfmon_chg,
                         vlan_nfmon_chg,
                         xconnect_chg,
+                        ipv4_acl_in_chg,
                     ) = self.diff_for_create(want_c, have_c)
 
                     gw_changed.update({want_c["networkName"]: gw_chg})
@@ -3587,6 +3668,7 @@ class DcnmNetwork:
                     intvlan_nfmon_changed.update({want_c["networkName"]: intvlan_nfmon_chg})
                     vlan_nfmon_changed.update({want_c["networkName"]: vlan_nfmon_chg})
                     xconnect_changed.update({want_c["networkName"]: xconnect_chg})
+                    ipv4_acl_in_changed.update({want_c["networkName"]: ipv4_acl_in_chg})
                     if diff:
                         diff_create_update.append(diff)
                     break
@@ -3705,6 +3787,7 @@ class DcnmNetwork:
                             or intvlan_nfmon_changed.get(want_a["networkName"], False)
                             or vlan_nfmon_changed.get(want_a["networkName"], False)
                             or xconnect_changed.get(want_a["networkName"], False)
+                            or ipv4_acl_in_changed.get(want_a["networkName"], False)
                         ):
                             dep_net = want_a["networkName"]
 
@@ -4001,6 +4084,8 @@ class DcnmNetwork:
                 found_c.update({"vlan_nf_monitor": json_to_dict.get("VLAN_NETFLOW_MONITOR", "")})
             if "xconnect" in json_to_dict:
                 found_c.update({"xconnect": json_to_dict["xconnect"]})
+            if self._has_ipv4_acl_in(json_to_dict):
+                found_c.update({"ipv4_acl_in": self._get_ipv4_acl_in(json_to_dict)})
             found_c.update({"attach": []})
 
             del found_c["fabric"]
@@ -5089,6 +5174,10 @@ class DcnmNetwork:
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
                 if "xconnect" in json_to_dict:
                     t_conf.update(xconnect=json_to_dict["xconnect"])
+                if self._has_ipv4_acl_in(json_to_dict):
+                    t_conf[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                        json_to_dict
+                    )
 
                 if self.fabric_type not in ["multisite_child", "multicluster_child"]:
                     t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
@@ -5299,6 +5388,46 @@ class DcnmNetwork:
         except (ValueError, AttributeError):
             return False
 
+    def _supports_ipv4_acl_in_version(self):
+        """Return whether patch_version enables the SVI ACL field."""
+        patch_version = getattr(self, "patch_version", None)
+        if patch_version == self.IPV4_ACL_IN_PATCH_VERSION:
+            return True
+        if not isinstance(patch_version, str):
+            return False
+
+        version_parts = patch_version.split(".")
+        if len(version_parts) < 3 or any(
+            not part.isdigit() for part in version_parts
+        ):
+            return False
+        current_version = tuple(int(part) for part in version_parts[:3])
+        return current_version >= self.IPV4_ACL_IN_MIN_ND_VERSION
+
+    def _supports_ipv4_acl_in(self):
+        """Return whether this invocation may manage the SVI ACL field."""
+        return (
+            self._supports_ipv4_acl_in_version()
+            and getattr(self, "fabric_type", None) in [
+                "standalone",
+                "multisite_parent",
+                "multicluster_parent",
+            ]
+        )
+
+    def _has_ipv4_acl_in(self, template_config):
+        """Return whether a controller template contains the SVI ACL field."""
+        return (
+            self.IPV4_ACL_IN_TEMPLATE_KEY in template_config
+            or self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY in template_config
+        )
+
+    def _get_ipv4_acl_in(self, template_config):
+        """Return the controller SVI ACL value, preferring its canonical key."""
+        if self.IPV4_ACL_IN_TEMPLATE_KEY in template_config:
+            return template_config.get(self.IPV4_ACL_IN_TEMPLATE_KEY) or ""
+        return template_config.get(self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY) or ""
+
     def get_template_config_mapping(self):
         """
         Get mapping from network spec attributes to template config keys.
@@ -5338,6 +5467,8 @@ class DcnmNetwork:
         }
         if self._ndfc_version_gte("12.4.1"):
             mapping["xconnect"] = "xconnect"
+        if self._supports_ipv4_acl_in():
+            mapping["ipv4_acl_in"] = self.IPV4_ACL_IN_TEMPLATE_KEY
         return mapping
 
     def get_network_spec(self, fabric_type=None):
@@ -5402,6 +5533,7 @@ class DcnmNetwork:
                 secondary_ip_gw4=dict(type="ipv4", default=""),
                 route_target_both=dict(type="bool", default=False),
                 intfvlan_nf_monitor=dict(type="str"),
+                ipv4_acl_in=dict(type="str", length_min=1, length_max=64),
             )
 
             # Adjust deploy field for query state
@@ -5445,6 +5577,7 @@ class DcnmNetwork:
                 netflow_enable=dict(type="bool", default=False),
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
+                ipv4_acl_in=dict(type="str", length_min=1, length_max=64),
             )
             net_spec["xconnect"] = dict(type="bool")
             # Adjust deploy field for query state
@@ -5461,6 +5594,31 @@ class DcnmNetwork:
         self.log.debug(msg)
 
         """Parse the playbook values, validate to param specs."""
+
+        # Keep this check ahead of want/diff construction so an unsupported
+        # request cannot reach a controller mutation path.
+        if self.config:
+            for net in self.config:
+                if "ipv4_acl_in" not in net:
+                    continue
+                network_name = net.get("net_name", "unknown")
+                if self.fabric_type in ["multisite_child", "multicluster_child"]:
+                    self.module.fail_json(
+                        msg=(
+                            f"Network '{network_name}': ipv4_acl_in cannot be configured at the child fabric level; "
+                            "configure it on the parent network."
+                        )
+                    )
+                if not self._supports_ipv4_acl_in_version():
+                    supplied_patch = self.patch_version if self.patch_version is not None else "not provided"
+                    min_version = ".".join(str(part) for part in self.IPV4_ACL_IN_MIN_ND_VERSION)
+                    self.module.fail_json(
+                        msg=(
+                            f"Network '{network_name}': ipv4_acl_in requires patch_version "
+                            f"'{self.IPV4_ACL_IN_PATCH_VERSION}' or ND version '{min_version}' or later "
+                            f"(received: {supplied_patch})."
+                        )
+                    )
 
         # Make sure mutually exclusive dhcp properties are not set
         if self.config:
@@ -6014,6 +6172,19 @@ class DcnmNetwork:
             else:
                 json_to_dict_want["xconnect"] = False
 
+        # Preserve the controller-returned ACL for merged updates when the
+        # playbook omits it. This is intentionally independent of the patch
+        # gate so an ordinary update cannot erase intent created elsewhere.
+        if (
+            self.fabric_type not in ["multisite_child", "multicluster_child"]
+            and cfg.get("ipv4_acl_in", None) is None
+            and self._has_ipv4_acl_in(json_to_dict_have)
+        ):
+            json_to_dict_want[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                json_to_dict_have
+            )
+            json_to_dict_want.pop(self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY, None)
+
         want.update({"networkTemplateConfig": json.dumps(json_to_dict_want)})
 
     def update_want(self):
@@ -6079,6 +6250,7 @@ def main():
 
     element_spec = dict(
         fabric=dict(required=True, type="str"),
+        patch_version=dict(required=False, type="str"),
         _fabric_details=dict(
             required=False,
             type="dict",
