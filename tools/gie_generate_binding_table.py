@@ -756,6 +756,18 @@ def resolve_by_nvpair(parent_template, parent_nvpair):
     return _BINDING_BY_NVPAIR.get((parent_template, parent_nvpair))
 
 
+def string_compare(parent_template, parent_nvpair):
+    """Comparison category of a registered STRING binding, qualified by its parent template.
+
+    'exact' (secrets and case-sensitive names: the case is part of the value), 'casefold'
+    (case-insensitive by semantics, for example IPv6 text), 'case_irrelevant' (numeric or
+    dotted text) or 'unverified' (the case semantics are not established; the legacy
+    comparison is kept). None for an unregistered, ambiguous or non-string binding.
+    """
+    binding = _BINDING_BY_NVPAIR.get((parent_template, parent_nvpair))
+    return binding.get('string_compare') if binding else None
+
+
 def all_registered_profile_keys():
     """Every public profile key in the registry, across all parents. A fresh set."""
     return set(_ALL_PROFILE_KEYS)
@@ -797,7 +809,7 @@ rebuild_binding_indexes()
 FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interface_type",
           "applicable_mode", "type", "valid_values", "default_template", "reset_wire",
           "mechanism", "min_ndfc_version", "min_length", "max_length", "min_value",
-          "max_value", "no_log", "wire_values", "smu_unsupported"]
+          "max_value", "no_log", "wire_values", "smu_unsupported", "string_compare"]
 
 # `smu_unsupported` -- this identity has NO counterpart in the installed SMU build. The
 # row is KEPT so its history and provenance survive; the engine refuses explicit input for
@@ -827,6 +839,21 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
 #
 # Stored already in wire form so the comparison path performs no type inference at reconcile
 # time: `_to_nvpair_wire` semantics are applied once, here, by the author of the row.
+
+# `string_compare` -- how the module compares a WANT and a HAVE value of a `type: string`
+# binding, for the exact (parent_template, parent_nvpair) it is declared on. Required on every
+# committed string row, forbidden on any other type, so a new string binding cannot ship
+# without a decision. The legacy comparator lower-cases every scalar, which is right for some
+# strings and drops a real change for others (F1: a case-only change of a key or an ACL name
+# compared equal and was never sent):
+#   exact            the case is part of the value -- secrets and case-sensitive object names
+#                    (ACL, prefix-list, MACsec key-chain/policy). Compared byte for byte.
+#   casefold         case-insensitive by semantics (IPv6 address text). Legacy lower-casing.
+#   case_irrelevant  numeric or dotted text (area id, VLAN list); lower-casing is a no-op.
+#   unverified       the case semantics are NOT established (process tags). The legacy
+#                    comparison is kept on purpose and the gap is documented; a decision needs
+#                    device evidence, not a guess.
+STRING_COMPARE_VALUES = frozenset({"exact", "casefold", "case_irrelevant", "unverified"})
 
 # The registry spells the numeric bounds `min` and `max`; the runtime table spells them
 # `min_value` and `max_value`. The rename is deliberate: a substring test for "min" -- the
@@ -951,6 +978,19 @@ def _check_registry_schema(r, key):
                     key, sorted(wv), list(valid)
                 )
             )
+    if r["type"] == "string":
+        if r.get("string_compare") not in STRING_COMPARE_VALUES:
+            raise ValueError(
+                "binding {0!r} is a string binding with string_compare {1!r}; every committed "
+                "string binding declares one of {2}".format(
+                    key, r.get("string_compare"), sorted(STRING_COMPARE_VALUES)
+                )
+            )
+    elif "string_compare" in r:
+        raise ValueError(
+            "binding {0!r} declares string_compare on type {1!r}; it applies to string "
+            "bindings only".format(key, r["type"])
+        )
     if "smu_unsupported" in r and r["smu_unsupported"] is not True:
         raise ValueError(
             "binding {0!r} declares smu_unsupported {1!r}; the marker is the boolean True "
