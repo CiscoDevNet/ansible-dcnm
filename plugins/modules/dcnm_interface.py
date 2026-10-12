@@ -474,13 +474,18 @@ options:
               explicit physical members per peer, in any of its four C(pvlan_mode) values. Supported - creation,
               identical repetition, an update that reaches BOTH peers (the list of the mode, 'pc_mode',
               the description of both peers, or the PVLAN native/allowed VLANs of both peers), a change
+              of the description of ONE peer alone (C(peer1_description) or C(peer2_description), only while
+              C(copy_description) is false; the other peer keeps its value and is still checked to stay
+              unchanged; NOT LIVE TESTED), a change
               of the members of one peer or both, and C(state=deleted) of the vPC, all with C(deploy)
               true when a deployment is wanted. Refused before any change is sent - a C(pvlan_mode)
               change, a field the mode does not take, a PCID change, a PCID different from the vPC id (both
               C(peer1_pcid) and C(peer2_pcid) are REQUIRED and must equal it), an empty list,
               removing secondaries from a C(promiscuous) mapping that keeps others (protection kept
               from the measured Ethernet defect), any other update that reaches only
-              one peer, a change of C(admin_state) of an existing vPC, C(overridden), check mode for a
+              one peer (including a description change of one peer together with a member change of
+              that peer, a one-peer PVLAN native/allowed change and a one-peer freeform change), a change
+              of C(admin_state) of an existing vPC, C(overridden), check mode for a
               creation or a deletion and NDFC 11. For C(trunk secondary) each member must ALREADY be
               prepared as a neutral, administratively down access (C(int_access_host)) or routed
               (C(int_routed_host)) port on BOTH peers; a member in switchport mode trunk is refused

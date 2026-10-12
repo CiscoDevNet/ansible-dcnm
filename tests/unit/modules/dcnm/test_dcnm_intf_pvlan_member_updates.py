@@ -482,7 +482,8 @@ def test_vpc_replaced_without_a_peer_member_list_is_refused_before_any_write():
 
 def test_a_unilateral_change_that_is_not_membership_stays_refused():
     ctrl = vpc_seeded({V.SN1: [V.M1], V.SN2: [V.M2]})
-    status, result = V.run_vpc(ctrl, [V.vpc_item(peer1_description="only-peer-1")])
+    # A1: a one-peer description is supported now; the freeform of one peer is the still-refused example
+    status, result = V.run_vpc(ctrl, [V.vpc_item(peer1_cmds=["logging event port link-status"])])
     assert status == "fail" and "changes only peer 1" in result["msg"] and ctrl.writes() == [], result.get("msg")
 
 

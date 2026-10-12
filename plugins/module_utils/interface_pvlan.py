@@ -3684,7 +3684,16 @@ def reconcile_vpc(state, raw, ifname, legs, have_policy, have_nv, ndfc_version=N
         return out
     ask = _vpc_ask_legs(changed)
     membership_only = set(changed) <= set("PEER%d_MEMBER_INTERFACES" % (i + 1) for i in ask)
-    if len(ask) == 1 and not membership_only:
+    # A1: the description of ONE peer may change alone. PEERn_PO_DESC feeds only that peer's child port-channel (template HOST 643/673), so the
+    # other peer is neither touched nor mirrored; its convergence is still judged by the per-leg gate (`expect` = converged). With COPY_DESC
+    # true the parent copies that description to the MEMBERS of the peer, a path this increment does not model: refused before any write.
+    description_only = len(ask) == 1 and set(changed) == set(["PEER%d_PO_DESC" % (ask[0] + 1)])
+    if description_only and _vpc_norm("COPY_DESC", nv.get("COPY_DESC", "false")) == "true":
+        out["blocked"].append(
+            "a description change that reaches only peer %d is not implemented while copy_description is true: the controller would also copy "
+            "it to the members of that peer. Set copy_description to false, or change the description of both peers" % (ask[0] + 1))
+        return out
+    if len(ask) == 1 and not membership_only and not description_only:
         out["blocked"].append(
             "this request changes only peer %d of the vPC (%s); an update that reaches one peer only is not implemented "
             "(its modify behaviour is not measured). Change both peers or none" % (ask[0] + 1, ", ".join(sorted(changed))))
