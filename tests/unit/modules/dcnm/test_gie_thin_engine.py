@@ -612,6 +612,28 @@ def test_compiler_rejects_an_unknown_mechanism():
             generator.compile_rows(rows)
 
 
+def test_compiler_requires_a_string_compare_decision_on_every_string_binding():
+    """F1: a string binding cannot ship without saying whether its case is part of the value."""
+    generator = _load_generator()
+    for bad in (None, "", "lower", "EXACT"):
+        rows = _as_slice_rows(BINDING_TABLE)
+        row = next(r for r in rows if r["type"] == "string")
+        if bad is None:
+            row.pop("string_compare")
+        else:
+            row["string_compare"] = bad
+        with pytest.raises(ValueError, match="is a string binding with string_compare"):
+            generator.compile_rows(rows)
+
+
+def test_compiler_rejects_string_compare_on_a_non_string_binding():
+    generator = _load_generator()
+    rows = _as_slice_rows(BINDING_TABLE)
+    next(r for r in rows if r["type"] == "boolean")["string_compare"] = "exact"
+    with pytest.raises(ValueError, match="declares string_compare on type"):
+        generator.compile_rows(rows)
+
+
 def test_compiler_rejects_profile_key_mismatch():
     generator = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)

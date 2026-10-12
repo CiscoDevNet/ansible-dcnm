@@ -329,8 +329,10 @@ class TestPV09InventoryInvariants:
         # registry_slice_c1_pvlan_companions.yaml (was 13ccf6fb...); the generator, not a hand edit, produced it.
         # IQ1: regenerated from the same 33 slices + registry_slice_iq1_vpc_pvlan_qos_stats.yaml (was 6f7fb57e...; reproduced
         # byte-identical from the 33 slices before the addition).
+        # F1: regenerated from the same 34 slices with `string_compare` added to the 45 committed string rows (was
+        # 3820250c...; the unannotated slices reproduced it byte-identical, and the new generator rejects them).
         assert PROVENANCE_SHA256 == (
-            "3820250cc057c2d063943cbc23b7b7064c8eee76d5bd64e74e5b9da93fb4eea8"
+            "b6f88798ccfccc7950f922ca4f3934ecab31d6732e0d80a6383248e2081ac9a5"
         )
 
 
