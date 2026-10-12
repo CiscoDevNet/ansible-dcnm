@@ -365,6 +365,7 @@ PO_C1_PROFILE = dict(
     spanning_tree_port_type="network",
     orphan_port=True,
     duplex="full",
+    speed="1Gb",  # F-A: a duplex other than auto needs a fixed speed (the device rejects it with speed Auto)
     disable_lacp_suspend_individual=True,
     queuing_policy="C1-Q",
     disable_queuing_stats=True,
@@ -380,11 +381,12 @@ PO_C1_PO_LINES = [
     "description C1-PO",
     "vpc orphan-port suspend",
     "duplex full",
+    "speed 1000",
     "no lacp suspend-individual",
     "service-policy type queuing output C1-Q no-stats",
 ]
 PO_C1_PO_DROP = ("spanning-tree bpduguard enable", "spanning-tree port type edge trunk")
-PO_C1_MEMBER_LINES = ["description C1-PO", "no cdp enable", "no lldp transmit", "lacp port-priority 100", "duplex full"]
+PO_C1_MEMBER_LINES = ["description C1-PO", "no cdp enable", "no lldp transmit", "lacp port-priority 100", "duplex full", "speed 1000"]
 
 
 def po_create_preview(mode, lines, po_extra, po_drop, member_extra):
@@ -426,7 +428,7 @@ def test_po_creation_carries_every_companion_in_the_template_types_and_deploys(p
         "COPY_DESC": "true",
         "DESC": "C1-PO",
         "MTU": "jumbo",
-        "SPEED": "Auto",
+        "SPEED": "1Gb",
         "LACP_RATE": "normal",
         "ADMIN_STATE": "false",
         "PVLAN_MODE": mode,
@@ -518,26 +520,24 @@ def test_po_template_rules_on_the_resulting_state_refuse_before_any_write(profil
 def test_po_merged_po_companions_render_on_the_po_and_deploy(mode):
     c = existing(mode)
     lines = CASES[mode][1]
-    po_lines = ["spanning-tree port type normal", "duplex half", "service-policy type queuing output C1-Q"]
+    po_lines = ["spanning-tree port type normal", "service-policy type queuing output C1-Q"]  # duplex: see test_dcnm_intf_pvlan_duplex_inherited.py
     c.previews = [
         po_update_preview(
             mode,
             lines,
             po_extra=po_lines,
             po_drop=("spanning-tree port type edge trunk",),
-            member_extra=["duplex half"],
             pend_po=po_lines + ["no spanning-tree port type edge trunk"],
-            pend_member=["duplex half"],
         )
     ]
-    upd = po_update_item(mode, port_type_fast=False, spanning_tree_port_type="normal", duplex="half", queuing_policy="C1-Q")
+    upd = po_update_item(mode, port_type_fast=False, spanning_tree_port_type="normal", queuing_policy="C1-Q")
     status, res = run(c, [upd], state="merged", patch_version="4.4.1")
     assert status == "exit" and res["changed"] is True, res.get("msg")
     sent = c.bulk_bodies()[0][0]["interfaces"][0]["nvPairs"]
     assert (sent["PORTTYPE_FAST_ENABLED"], sent["spanningTreePortType"], sent["PORT_DUPLEX_MODE"], sent["QUEUING_POLICY"]) == (
         "false",
         "normal",
-        "half",
+        "auto",
         "C1-Q",
     )
     assert len(c.deploys()) == 1
@@ -682,16 +682,14 @@ VPC_CHILD_LINES = [
     "lacp vpc-convergence",
     "ip port access-group C1-ACL in",
     "service-policy type queuing output C1-Q no-stats",
-    "duplex full",
 ]
-VPC_MEMBER_LINES = ["no cdp enable", "no lldp transmit", "lacp port-priority 100", "duplex full"]
+VPC_MEMBER_LINES = ["no cdp enable", "no lldp transmit", "lacp port-priority 100"]  # duplex: see test_dcnm_intf_pvlan_duplex_inherited.py
 VPC_C1_PROFILE = dict(
     enable_pfc=True,
     enable_lacp_vpc_convergence=True,
     acl_filter="C1-ACL",
     queuing_policy="C1-Q",
     disable_queuing_stats=True,
-    duplex="full",
     enable_cdp=False,
     disable_lldp_transmit=True,
     lacp_port_priority=100,
@@ -713,7 +711,7 @@ def test_vpc_merged_companions_reach_both_children_and_both_members_and_keep_the
         "aclFilter": "C1-ACL",
         "QUEUING_POLICY": "C1-Q",
         "queuingStats": "true",
-        "PORT_DUPLEX_MODE": "full",
+        "PORT_DUPLEX_MODE": "auto",
         "CDP_ENABLE": "false",
         "lldpTransmit": "true",
         "LACP_PORT_PRIO": 100,
