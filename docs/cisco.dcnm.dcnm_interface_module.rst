@@ -2656,6 +2656,7 @@ Parameters
                 <td>
                         <div>Source interface for DHCP relay. Valid interfaces are Ethernet, port-channel or loopback.</div>
                         <div>Independent of the DHCP server addresses; it can be set on its own.</div>
+                        <div>An explicit empty string clears a configured source interface, also under <code>merged</code>; an omitted value is preserved under <code>merged</code> and reset under <code>replaced</code> and <code>overridden</code> (NOT LIVE TESTED).</div>
                 </td>
             </tr>
             <tr>
@@ -2728,6 +2729,7 @@ Parameters
                 </td>
                 <td>
                         <div>DHCP relay server address.</div>
+                        <div>An explicit empty string clears a configured address, also under <code>merged</code>, together with its <code>vrf_dhcp4</code>; an omitted value is preserved under <code>merged</code> and reset under <code>replaced</code> and <code>overridden</code> (NOT LIVE TESTED).</div>
                 </td>
             </tr>
             <tr>
@@ -3188,6 +3190,7 @@ Parameters
                 </td>
                 <td>
                         <div>VRF to reach DHCP server. This parameter is required if &quot;dhcp_server_addr4&quot; is included.</div>
+                        <div>It is cleared together with <code>dhcp_server_addr4</code>.</div>
                 </td>
             </tr>
 
