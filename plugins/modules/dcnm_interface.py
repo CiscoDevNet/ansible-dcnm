@@ -8906,6 +8906,7 @@ class DcnmIntf:
             claim_key = (leg["serial"], member.lower())
             if claimed.setdefault(claim_key, name.lower()) != name.lower():
                 problems.append((member, leg["serial"], "the playbook also assigns it to {0}".format(claimed[claim_key])))
+        removed_legs = []
         if creates:
             parent_known = [h for snap in snaps for h in snap["summary"]["vpc"]]
             if parent_known:
@@ -8930,8 +8931,6 @@ class DcnmIntf:
                              self.dcnm_intf_pvlan_vpc_present_problems(snap, name, leg["po_name"], leg["member"], expected, expected_member)]
             removed_legs, removed_problems = self.dcnm_intf_pvlan_vpc_register_removed(name, sno, legs, result, have_nv, deploy)
             problems += removed_problems
-        if creates:
-            removed_legs = []
         if problems:
             for label, serial, reason in problems:
                 self.dcnm_intf_pvlan_block(label, serial, reason)
