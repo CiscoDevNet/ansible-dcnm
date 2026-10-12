@@ -109,6 +109,20 @@ options:
       deletion (C(state=deleted) or an explicit removal under C(overridden)) or an
       interface's transition to a different parent template, both of which keep their
       existing, independent contracts.
+    - With this capability enabled, resetting a physical Ethernet port to its role default
+      (a port named under C(state=deleted), or a port C(overridden) leaves out) also withdraws
+      every registered field the port still holds, with that field's verified reset on the
+      default parent template. A field without a verified reset, a controller value that cannot
+      be classified, or a field the port's current policy holds but the default parent cannot
+      withdraw (the reset changes the policy) refuses the ENTIRE invocation before any request
+      is sent, naming the interface and the field, never its value. A port that is not reset
+      (still configured, or skipped by scope) is not affected. With the capability disabled
+      these fields are left unchanged, as before.
+    - Registered string fields whose letter case is part of the value (authentication keys and
+      ACL, prefix-list or MACsec key-chain and policy names) are compared case-sensitively, so
+      a change of case alone is sent. IPv6 text, numeric fields, booleans and enumerations keep
+      their case-insensitive comparison, and so do process tags, whose case semantics are not
+      established.
     - "Existing playbooks that already set a registered field (see the list above) must add
       this argument -- directly on the task, or once via C(module_defaults) for
       C(cisco.dcnm.dcnm_interface) -- to keep working under this module version. A playbook
@@ -2747,6 +2761,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_carry_forward_bindings,
     gie_withdrawal_action,
     gie_binding_is_owned_elsewhere,
+    GIE_READONLY_METADATA_NVPAIRS,
     GIE_WITHDRAW_RESET,
     GIE_WITHDRAW_UNSUPPORTED,
     GIE_WITHDRAW_UNCLASSIFIED,
@@ -2758,6 +2773,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
     resolve_binding,
+    resolve_by_nvpair as gie_resolve_by_nvpair,
     string_compare as gie_string_compare,
 )
 # Native standalone Ethernet PVLAN (int_pvlan_host). Pure helpers; transport stays here.
@@ -3230,6 +3246,9 @@ class DcnmIntf:
         # Bindings whose required withdrawal cannot be completed. Collected during the
         # comparison pass and raised ONCE by main(), before anything is sent.
         self.withdrawal_blocked = []
+        # F2: registered fields a reset-to-default (named deleted, overridden) must withdraw but
+        # cannot, one entry per interface and field. Raised ONCE by main(), before anything is sent.
+        self.default_reset_blocked = []
         # Native PVLAN: refusals collected during comparison/preflight and raised once by
         # main() before any write; per-target pre/post state for the pre-deploy gate.
         self.pvlan_blocked = []
@@ -11056,6 +11075,89 @@ class DcnmIntf:
 
         self.dcnm_intf_compare_want_and_have("merged")
 
+    def dcnm_intf_default_registered_resets(self, uelem, have):
+        """F2: the registered fields a reset of a physical port to its role default must withdraw.
+
+        `uelem` is the role default payload (dcnm_intf_get_default_eth_payload), `have` the
+        authoritative policy payload of the same interface. The legacy default comparison checks
+        legacy nvPairs only and the default payload carries no registered nvPair, so a port whose
+        only drift was a registered field (an ACL, flow control...) read as already default, and
+        a reset that was sent left the field in place.
+
+        For every nvPair of HAVE that is a registered binding of HAVE's own parent (not owned by
+        another path, not read-only metadata) and holds a value, the established classifier
+        decides, with the SAME capability and version boundary as the retained-interface
+        withdrawal:
+          * already withdrawn, or capability disabled (inapplicable): nothing -- the published
+            contract while the capability is off is unchanged;
+          * same parent, verified reset: that parent's own `reset_wire` is added to the payload;
+          * same parent, unsupported or unclassified: blocked, named;
+          * policy change (HAVE parent != default parent): the source value is NOT assumed to
+            disappear with the policy change (not measured). Only when the destination parent
+            registers the same nvPair and the value is already its neutral, or it has a verified
+            reset there, is the destination's own wire used; otherwise blocked as a transition.
+            A source-only nvPair is never written into a destination template.
+
+        Pure: returns (resets, blocked) and changes nothing. The caller applies them only where
+        the reset is actually queued, so an interface that stays configured or is skipped by
+        scope never produces a refusal. Values are never recorded (a binding may be a secret).
+        """
+        resets, blocked = {}, []
+        if not have or not uelem:
+            return resets, blocked
+        src = have.get("policy")
+        dst = uelem.get("policy")
+        have_intf = (have.get("interfaces") or [{}])[0]
+        have_nv = have_intf.get("nvPairs") or {}
+        ifname = have_intf.get("ifName") or uelem["interfaces"][0].get("ifName")
+        sno = have_intf.get("serialNumber") or uelem["interfaces"][0].get("serialNumber")
+        ndfc_version = getattr(self, "ndfc_version", None)
+        patch_version = getattr(self, "patch_version", None)
+        for nvpair in sorted(have_nv):
+            binding = gie_resolve_by_nvpair(src, nvpair)
+            if (
+                binding is None
+                or gie_binding_is_owned_elsewhere(src, nvpair)
+                or nvpair in GIE_READONLY_METADATA_NVPAIRS
+            ):
+                continue
+            value = have_nv[nvpair]
+            if value is None or value == "":
+                continue    # NDFC's encoding of "no value": nothing to withdraw, no reset invented
+            entry = {"interface": ifname, "serial": sno, "parent": src, "destination": dst,
+                     "field": binding["profile_key"], "nvpair": nvpair}
+            action, wire = gie_withdrawal_action(src, binding["profile_key"], value, ndfc_version, patch_version)
+            if action not in (GIE_WITHDRAW_RESET, GIE_WITHDRAW_UNSUPPORTED, GIE_WITHDRAW_UNCLASSIFIED):
+                continue
+            try:
+                # Readable as its type before a reset is decided -- failing closed, as the retained
+                # path does, but recorded instead of raised: this interface may not be reset at all.
+                gie_validate_binding_value(src, binding["profile_key"], value, value_source="have")
+            except GieBindingError:
+                blocked.append(dict(entry, reason="unreadable"))
+                continue
+            if src == dst:
+                if action == GIE_WITHDRAW_RESET:
+                    resets[nvpair] = wire
+                else:
+                    blocked.append(dict(entry, reason=action))
+                continue
+            dst_binding = gie_resolve_by_nvpair(dst, nvpair)
+            if dst_binding is not None and not gie_binding_is_owned_elsewhere(dst, nvpair):
+                d_action, d_wire = gie_withdrawal_action(dst, dst_binding["profile_key"], value, ndfc_version, patch_version)
+                if d_action == GIE_WITHDRAW_RESET:
+                    resets[nvpair] = d_wire
+                    continue
+                if d_action not in (GIE_WITHDRAW_UNSUPPORTED, GIE_WITHDRAW_UNCLASSIFIED):
+                    continue    # already the destination's neutral value
+            blocked.append(dict(entry, reason="transition"))
+        return resets, blocked
+
+    def dcnm_intf_queue_default_registered_resets(self, uelem, resets, blocked):
+        """Apply what dcnm_intf_default_registered_resets found, at the point the reset is queued."""
+        uelem["interfaces"][0]["nvPairs"].update(resets)
+        self.default_reset_blocked.extend(blocked)
+
     def dcnm_compare_default_payload(self, intf, have):
 
         if intf.get("policy") != have.get("policy"):
@@ -11970,8 +12072,11 @@ class DcnmIntf:
                     # these interfaces dont have any policies configured by default. In that case there is nothing to be done
                     continue
 
+                # F2: registered drift counts as drift; applied below only if the reset is queued.
+                reg_resets, reg_blocked = self.dcnm_intf_default_registered_resets(uelem, intf)
                 if (
-                    self.dcnm_compare_default_payload(uelem, intf)
+                    not (reg_resets or reg_blocked)
+                    and self.dcnm_compare_default_payload(uelem, intf)
                     == "DCNM_INTF_MATCH"
                 ):
                     # In case of breakout, check if parent interface is in cfg
@@ -12002,6 +12107,9 @@ class DcnmIntf:
                         # member of any port-channel. If so, do not default that
                         rc, intf = self.dcnm_intf_can_be_replaced(have)
                         if rc is True:
+                            self.dcnm_intf_queue_default_registered_resets(
+                                uelem, reg_resets, reg_blocked
+                            )
                             self.dcnm_intf_merge_intf_info(
                                 uelem, self.diff_replace
                             )
@@ -12241,6 +12349,13 @@ class DcnmIntf:
                 uelem = self.dcnm_intf_get_default_eth_payload(
                     intf["ifName"], sno, fabric
                 )
+                # F2: the deferred reset also withdraws the registered fields HAVE still holds.
+                self.dcnm_intf_queue_default_registered_resets(
+                    uelem,
+                    *self.dcnm_intf_default_registered_resets(
+                        uelem, self.dcnm_intf_get_intf_info(intf["ifName"], sno, intf["ifType"])
+                    )
+                )
 
                 self.dcnm_intf_merge_intf_info(uelem, self.diff_replace)
                 self.changed_dict[0]["replaced"].append(copy.deepcopy(uelem))
@@ -12425,9 +12540,15 @@ class DcnmIntf:
                                 # what is already present. If both are same, skip the interface. This is required specifically
                                 # for ethernet interfaces because they don't actually get deleted. they will only be defaulted.
                                 # So during idempotence, we may add the same interface again if we don't compare
+                                # F2: registered drift counts as drift; applied below only if the
+                                # reset is queued here (not for a deferred former member).
+                                reg_resets, reg_blocked = self.dcnm_intf_default_registered_resets(
+                                    uelem, intf_payload if intf_payload != [] else None
+                                )
                                 if intf_payload != []:
                                     if (
-                                        self.dcnm_compare_default_payload(
+                                        not (reg_resets or reg_blocked)
+                                        and self.dcnm_compare_default_payload(
                                             uelem, intf_payload
                                         )
                                         == "DCNM_INTF_MATCH"
@@ -12469,6 +12590,9 @@ class DcnmIntf:
                                                 iface,
                                             )
                                             continue
+                                        self.dcnm_intf_queue_default_registered_resets(
+                                            uelem, reg_resets, reg_blocked
+                                        )
                                         self.dcnm_intf_merge_intf_info(
                                             uelem, self.diff_replace
                                         )
@@ -13588,6 +13712,64 @@ def main():
         parts.append(
             "No configuration or deployment request was sent. Set the field explicitly "
             "to the value you want, or use state 'merged' to preserve it."
+        )
+        module.fail_json(msg=" ".join(parts), **dcnm_intf.result)
+
+    if dcnm_intf.default_reset_blocked:
+        # F2: a reset to the role default that cannot withdraw every registered field it must.
+        # Named per interface and field, never with the value; nothing has been sent.
+        same = sorted(
+            {
+                (b["interface"], b["serial"], b["parent"], b["field"], b["nvpair"])
+                for b in dcnm_intf.default_reset_blocked
+                if b["reason"] in (GIE_WITHDRAW_UNSUPPORTED, GIE_WITHDRAW_UNCLASSIFIED)
+            }
+        )
+        unreadable = sorted(
+            {
+                (b["interface"], b["serial"], b["parent"], b["field"], b["nvpair"])
+                for b in dcnm_intf.default_reset_blocked
+                if b["reason"] == "unreadable"
+            }
+        )
+        moved = sorted(
+            {
+                (b["interface"], b["serial"], b["parent"], b["destination"], b["field"], b["nvpair"])
+                for b in dcnm_intf.default_reset_blocked
+                if b["reason"] == "transition"
+            }
+        )
+        parts = []
+        if same:
+            parts.append(
+                "Resetting these interfaces to their default policy in state '{0}' must withdraw a "
+                "registered field that holds a configured value, and no verified reset is established "
+                "for it on that parent: {1}.".format(
+                    module.params["state"],
+                    ", ".join("{3} ({4}) on {0} [{1}], parent {2}".format(*b) for b in same),
+                )
+            )
+        if unreadable:
+            parts.append(
+                "Resetting these interfaces in state '{0}' must classify a registered field whose "
+                "controller value is not readable as its type, so the reset cannot be confirmed: "
+                "{1}.".format(
+                    module.params["state"],
+                    ", ".join("{3} ({4}) on {0} [{1}], parent {2}".format(*b) for b in unreadable),
+                )
+            )
+        if moved:
+            parts.append(
+                "Resetting these interfaces in state '{0}' changes their policy, and the registered "
+                "field holds a configured value that the destination parent cannot withdraw; whether "
+                "the controller drops it with the policy change is not established: {1}.".format(
+                    module.params["state"],
+                    ", ".join("{4} ({5}) on {0} [{1}], {2} -> {3}".format(*b) for b in moved),
+                )
+            )
+        parts.append(
+            "No configuration or deployment request was sent. Clear the field explicitly on its "
+            "current policy first, then repeat the reset."
         )
         module.fail_json(msg=" ".join(parts), **dcnm_intf.result)
 
