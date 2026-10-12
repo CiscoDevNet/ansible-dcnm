@@ -209,7 +209,21 @@ options:
               administratively down, its own persisted channel-group, the same mode on member and
               port-channel, no C(no negotiate auto) and every other member line unchanged. Any other
               speed or pending form is refused before the deployment (the intent change already written
-              is reported, not rolled back). Not measured and not checked - more than one member, a
+              is reported, not rolled back). The same holds for C(duplex) full (MEASURED for one member, host mode, administratively down, with
+              the speed fixed at 1000 and unchanged in that transition) - the controller's pending carries
+              C(duplex full) on the port-channel only and its withdrawal is C(no duplex full); a member that
+              follows is accepted, anything else is refused before the deployment. Not covered - C(duplex) half, a
+              duplex change together with a speed or MTU change, any other speed. On an existing port-channel or
+              vPC a request that changes the speed and the duplex at once (against the current intent, judged on
+              each vPC peer) is refused before any write - set the fixed speed first, in its own request, and then
+              the duplex; to withdraw both, set duplex auto first and then speed Auto (a creation may set both).
+              More than one member is not refused by count - each member is judged on its own state and is covered
+              by offline tests; the live measurement covers one member per port-channel or leg. A duplex other
+              than auto needs a resulting fixed speed (NX-OS rejects it with speed Auto) - the request is refused
+              before any write, judged on the resulting state ('merged' keeps an omitted speed); the return to
+              auto is never blocked. The post-deployment readback also compares the stored duplex (NOT LIVE TESTED
+              by the module).
+              Not measured and not checked - more than one member, a
               mode other than host, another switch role or platform; they are accepted when the
               controller's pending has the measured form, followed only by the usual post-deployment
               compliance and intent readback. Freeform 'cmds' holds one top-level
@@ -476,7 +490,10 @@ options:
               C(speed) (shared by both peers) follows the port-channel rules and reaches both child
               port-channels and every member; the inherited member speed is judged on each peer's own
               serial and preview (MEASURED for 1Gb on both peers), and one peer that does not match
-              stops the whole vPC before any deployment. C(peer1_cmds) and C(peer2_cmds) set the freeform of each
+              stops the whole vPC before any deployment. The same holds for C(duplex) full with a fixed speed 1000 unchanged (MEASURED on both peers, one
+              member per leg) - each leg is judged on its own serial and its own child port-channel, and a duplex
+              other than auto with a resulting speed Auto, or a speed and duplex change at once on either peer, is
+              refused before any write; the stored duplex of the parent and of each child is read back. C(peer1_cmds) and C(peer2_cmds) set the freeform of each
               peer's port-channel under the port-channel freeform rules; a change of the freeform of one
               peer only is refused like any other update that reaches one peer (NOT LIVE TESTED).
               Ingress QoS on a vPC in mode C(pvlan) (NOT LIVE TESTED) - C(enable_qos), C(qos_policy) and
@@ -2820,6 +2837,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.interface_pvlan import 
     vpc_child_differences as pvlan_vpc_child_differences,
     vpc_same as pvlan_vpc_same,
     po_intent_same as pvlan_po_intent_same,
+    speed_duplex_combined_change as pvlan_speed_duplex_combined_change,
+    SPEED_DUPLEX_COMBINED_MESSAGE as pvlan_speed_duplex_combined_message_text,
     vpc_transition_problems as pvlan_vpc_transition_problems,
     vpc_member_differences as pvlan_vpc_member_differences,
     vpc_released_member_differences as pvlan_vpc_released_member_differences,
@@ -8918,6 +8937,11 @@ class DcnmIntf:
         else:
             problems += [(name, sno, m) for m in self.dcnm_intf_pvlan_vpc_parent_problems(name, snaps, have_policy, have_nv)]
             for leg, snap in zip(legs, snaps):
+                # F2: the combined speed + duplex transition is judged on EACH peer's own child (a child that diverged from the parent
+                # may need it although the parent does not); any peer that needs it refuses the whole invocation before a write.
+                child_nv = self.dcnm_intf_pvlan_vpc_nv(snap["po"]) if isinstance(snap["po"], dict) else None
+                if child_nv is not None and pvlan_speed_duplex_combined_change(child_nv, new_nv):
+                    problems.append((name, snap["serial"], pvlan_speed_duplex_combined_message_text))
                 expected = pvlan_vpc_leg_po_nv(have_nv, leg["index"], name)
                 if leg["joining"]:
                     # MM-B: an ADDED member joins the existing child Po exactly as in a creation (baseline, ownership, submode rules)
@@ -9216,6 +9240,9 @@ class DcnmIntf:
                             "PEER1_PVLAN_NATIVE_VLAN", "PEER2_PVLAN_NATIVE_VLAN", "PEER1_PVLAN_ALLOWED_VLANS", "PEER2_PVLAN_ALLOWED_VLANS"):
                     if not pvlan_vpc_same(key, have_nv.get(key, ""), post_nv.get(key, "")):
                         mismatch.append("parent {0}".format(key))
+                # DUPLEX (F3): the shared duplex of the parent is read back too (an absent key is the template's `auto`; a null is a mismatch).
+                if not pvlan_vpc_same("PORT_DUPLEX_MODE", have_nv.get("PORT_DUPLEX_MODE", "auto"), post_nv.get("PORT_DUPLEX_MODE", "auto")):
+                    mismatch.append("parent PORT_DUPLEX_MODE")
             except PvlanError as exc:
                 mismatch.append(str(exc))
         for leg in legs:
@@ -10138,7 +10165,9 @@ class DcnmIntf:
                     if str(po_nv.get("ADMIN_STATE", "")).strip().lower() != str(post_nv.get("ADMIN_STATE", "")).strip().lower():
                         mismatch.append("ADMIN_STATE")
                     # RC2 (L2): the speed and the freeform of the port-channel, as the vPC readback compares them on each child.
-                    for key in ("SPEED", "CONF"):
+                    # DUPLEX (F3): the stored duplex is compared too, so a controller that answers `auto` to a `full` request is no PASS even
+                    # when the compliance says In-Sync. An absent key reads as the template's own `auto`; a null never equals a requested value.
+                    for key in ("SPEED", "PORT_DUPLEX_MODE", "CONF"):
                         if not pvlan_po_intent_same(key, po_nv, post_nv):
                             mismatch.append(key)
                 except PvlanError as exc:
