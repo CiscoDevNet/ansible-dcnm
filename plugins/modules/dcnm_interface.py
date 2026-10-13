@@ -1001,6 +1001,7 @@ options:
           cmds:
             description:
             - Commands to be included in the configuration under this interface
+            - In C(mode=pvlan) a text is also accepted, one command per line; a text with a comma is refused.
             type: list
             elements: str
             default: []
