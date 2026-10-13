@@ -245,7 +245,8 @@ options:
               mode other than host, another switch role or platform; they are accepted when the
               controller's pending has the measured form, followed only by the usual post-deployment
               compliance and intent readback. Freeform 'cmds' holds one top-level
-              command per entry. 'merged' keeps an omitted 'speed' or 'cmds' and adds the listed
+              command per entry; a text is also accepted, one command per line (also for C(peer1_cmds) and
+              C(peer2_cmds)); a text with a comma is refused. 'merged' keeps an omitted 'speed' or 'cmds' and adds the listed
               commands to the current ones; 'replaced' returns an omitted 'speed' to Auto and states
               the exact command list (an omitted or empty list clears it); a command repeated in one
               request is kept once, in the order of its first appearance. A speed returning to Auto is
