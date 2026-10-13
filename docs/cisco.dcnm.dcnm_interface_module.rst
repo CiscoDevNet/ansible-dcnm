@@ -2663,8 +2663,8 @@ Parameters
                 <td>
                         <div>Source interface for DHCP relay. Valid interfaces are Ethernet, port-channel or loopback.</div>
                         <div>Independent of the DHCP server addresses; it can be set on its own.</div>
-                        <div>An explicit empty string clears a configured source interface, also under <code>merged</code>; an omitted value is preserved under <code>merged</code> and reset under <code>replaced</code> and <code>overridden</code> (NOT LIVE TESTED).</div>
                         <div>The nvPair name depends on the installed <code>int_vlan</code> body and is selected by <code>patch_version</code> (legacy <code>DHCP_RELAY_SRC_INTF</code>, SMU body <code>dhcpRelaySourceInterface</code>).</div>
+                        <div>An explicit empty string clears a configured source interface, also under <code>merged</code>; an omitted value is preserved under <code>merged</code> and reset under <code>replaced</code> and <code>overridden</code> (NOT LIVE TESTED).</div>
                 </td>
             </tr>
             <tr>
