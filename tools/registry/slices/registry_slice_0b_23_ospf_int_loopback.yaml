@@ -1,0 +1,464 @@
+# WP98 — OSPF on int_loopback. The USER loopback, not the fabric one.
+#
+# WHICH LOOPBACK THIS IS, AND WHY IT MATTERS MORE THAN USUAL
+#   The module keeps two loopback parents apart: `"lo_lo": "int_loopback"` and
+#   `"lo_fabric": "int_fabric_loopback_11_1"` (dcnm_interface.py:2436-2437). This slice registers
+#   the FIRST. Measured on FAB1 on 2026-09-19: all thirteen fabric loopbacks -- loopback0 and
+#   loopback1 on every switch, carrying the underlay router-id and the VTEP -- use the fabric
+#   parent. ZERO interfaces use int_loopback.
+#
+#   That distinction is the whole basis of this slice existing. Retired slice 0b_10 registered
+#   OSPF authentication on int_fabric_loopback_11_1 and was withdrawn because authentication there
+#   is UNDERLAY authentication that fabricSettings owns: the interface value was an override a
+#   keychain fabric setting deletes outright. The architect ruled (Q1, 2026-09-19) that the
+#   retirement was a decision about OWNERSHIP, not about the word "loopback". A user loopback is
+#   not part of the underlay, fabricSettings has no claim on it, and its own template takes
+#   authentication from the interface fields. So the five auth rows below are in scope here while
+#   the same five stay retired there.
+#
+# THE TEMPLATE IS INSTALLED -- the note below is CORRECTED IN THIS G41 COPY ONLY
+#   G39's copy of this slice says the controller's int_loopback declares none of these fields and
+#   that an upload is required first. That was true when it was written and is NOT true now.
+#   Measured read-only on 2026-09-24 (G41 entry gate 1c, and identically in the G40 preflight):
+#   the INSTALLED body is 50042 bytes, sha256
+#   27cd9ce7e671b5f3b3accfe70b5c5e52933450db70bd7e52c67496ec2f870ca7, and it declares all six OSPF
+#   integer fields below as `integer` with IsShow="ENABLE_OSPF==true" and the bounds recorded on
+#   each row. No template upload was needed or performed.
+#   Evidence: <internal evidence record> and
+#   ledger/01-entry-gates.json. The G39 slice is left exactly as written; historical slices are
+#   not rewritten.
+#
+#   Preflight done before writing this: the batch body instantiates 37 child templates and all 37
+#   are already on the controller, so the upload carries none of the `templateDO is null` risk
+#   that blocked int_vlan for two days.
+#
+# THIS PARENT DIVERGES FROM ALL THREE OVERLAY PARENTS
+#   Authored per parent, never copied -- and here is the proof it had to be:
+#
+#     OSPF_ADVERTISE_SUBNET      boolean. Exists ONLY here. Advertising the loopback's subnet is
+#                                a loopback concept; no other parent has the field.
+#     OSPF_BFD                   boolean here, exactly as on int_subif. int_routed_host and
+#                                int_vlan model the same concept as the enum OSPF_BFD_MODE
+#                                (no_change/enable/disable).
+#     OSPF_PASSIVE_MODE          ABSENT. The three overlay parents all carry passive control in
+#                                some form; this template has none at all.
+#     OSPF_RETRANSMIT_INTERVAL   present, as on int_subif and int_vlan, absent on int_routed_host.
+#
+#   A slice copied from int_routed_host would have registered OSPF_PASSIVE_MODE, which this
+#   template does not declare, and missed OSPF_ADVERTISE_SUBNET and OSPF_RETRANSMIT_INTERVAL
+#   entirely. The first is the silent failure: the controller drops the key and the run succeeds.
+#
+# no_log
+#   OSPF_AUTH_KEY and OSPF_AUTHENTICATION_KEY carry key material and are marked. The key ID and
+#   the encryption-type selector are NOT, for the same reason as every other auth slice: Ansible
+#   scrubs by STRING MATCH, so marking an id would replace the bare digits "1" or "3" everywhere
+#   in every result, corrupting unrelated output while protecting nothing.
+#
+# THE REJECTION TURNS ITSELF OFF WHEN THIS LANDS
+#   dcnm_interface still refuses the three withdrawn auth keys, but the exemption is granted by
+#   the REGISTRY, not by the parent's name: a key passes only where resolve_binding finds a
+#   binding for it. Before this slice, int_loopback had none and the keys were refused. With it,
+#   they are accepted here and stay refused on the fabric parent -- no second edit, and no window
+#   in which the key is neither refused nor carried.
+
+bindings:
+  - parent_template: int_loopback
+    parent_nvpair: ospf
+    profile_key: enable_ospf
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfTag
+    profile_key: ospf_tag
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: string
+    string_compare: unverified
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: OSPF_AREA_ID
+    profile_key: ospf_area_id
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: string
+    string_compare: case_irrelevant
+    reset_wire: '0.0.0.0'
+    default_template: "0.0.0.0"
+    max_length: 15
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfAdvertiseSubnet
+    profile_key: ospf_advertise_subnet
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfCost
+    profile_key: ospf_cost
+    applicable_interface_type: lo
+    applicable_mode: lo
+    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
+    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_COST -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
+    # READBACK = STRING VACIO ("42" -> ""), no ausente ni null ni default materializado.
+    # Desaparecio `ip ospf cost 42` y SOBREVIVIERON `ip address 192.0.2.193/32` y
+    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
+    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfHelloInterval
+    profile_key: ospf_hello_interval
+    applicable_interface_type: lo
+    applicable_mode: lo
+    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
+    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_HELLO_INTERVAL -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
+    # READBACK = STRING VACIO ("11" -> ""), no ausente ni null ni default materializado.
+    # Desaparecio `ip ospf hello-interval 11` y SOBREVIVIERON `ip address 192.0.2.193/32` y
+    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
+    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfDeadInterval
+    profile_key: ospf_dead_interval
+    applicable_interface_type: lo
+    applicable_mode: lo
+    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
+    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_DEAD_INTERVAL -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
+    # READBACK = STRING VACIO ("44" -> ""), no ausente ni null ni default materializado.
+    # Desaparecio `ip ospf dead-interval 44` y SOBREVIVIERON `ip address 192.0.2.193/32` y
+    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
+    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfRetransmitInterval
+    profile_key: ospf_retransmit_interval
+    applicable_interface_type: lo
+    applicable_mode: lo
+    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
+    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_RETRANSMIT_INTERVAL -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
+    # READBACK = STRING VACIO ("9" -> ""), no ausente ni null ni default materializado.
+    # Desaparecio `ip ospf retransmit-interval 9` y SOBREVIVIERON `ip address 192.0.2.193/32` y
+    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
+    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfTransmitDelay
+    profile_key: ospf_transmit_delay
+    applicable_interface_type: lo
+    applicable_mode: lo
+    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
+    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_TRANSMIT_DELAY -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
+    # READBACK = STRING VACIO ("3" -> ""), no ausente ni null ni default materializado.
+    # Desaparecio `ip ospf transmit-delay 3` y SOBREVIVIERON `ip address 192.0.2.193/32` y
+    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
+    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 450
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfPriority
+    profile_key: ospf_priority
+    applicable_interface_type: lo
+    applicable_mode: lo
+    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
+    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_PRIORITY -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
+    # READBACK = STRING VACIO ("77" -> ""), no ausente ni null ni default materializado.
+    # Desaparecio `ip ospf priority 77` y SOBREVIVIERON `ip address 192.0.2.193/32` y
+    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
+    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfMtuIgnore
+    profile_key: ospf_mtu_ignore
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-beta
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfShutdown
+    profile_key: ospf_shutdown
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-beta
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfNetworkType
+    wire_values: {no_change: noChange, broadcast: broadcast, point_to_point: pointToPoint}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_network_type
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: ["no_change", "broadcast", "point_to_point"]
+    default_template: "no_change"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfBfd
+    profile_key: ospf_bfd
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfAuthentication
+    profile_key: enable_ospf_auth
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: OSPF_AUTH_KEY_ID
+    profile_key: ospf_auth_key_id
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: integer
+    reset_wire: '1'
+    default_template: 1
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: OSPF_AUTH_KEY
+    profile_key: ospf_auth_key
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: string
+    string_compare: exact
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfAuthenticationKeyType
+    profile_key: ospf_authentication_key_type
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: enum
+    valid_values: ["0", "3", "7"]
+    default_template: "3"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9
+
+  - parent_template: int_loopback
+    parent_nvpair: ospfAuthenticationKey
+    profile_key: ospf_authentication_key
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@264d187d71ee36f9

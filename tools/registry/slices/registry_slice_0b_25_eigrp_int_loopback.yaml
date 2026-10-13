@@ -1,0 +1,250 @@
+# WP98 — EIGRP on int_loopback. EIGHT fields, not thirteen.
+#
+# WHY EIGHT AND NOT THIRTEEN
+#   Measured against the body the CONTROLLER is running, `int_loopback.template@27cd9ce7e671b5f3`,
+#   on 2026-09-19. The installed parent declares eight of the family's thirteen and does NOT
+#   declare five:
+#
+#       ENABLE_EIGRP_IPV6_ROUTING
+#       EIGRP_IPV4_DISTRIBUTE_LIST_PREFIX_LIST   EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION
+#       EIGRP_IPV6_DISTRIBUTE_LIST_PREFIX_LIST   EIGRP_IPV6_DISTRIBUTE_LIST_DIRECTION
+#
+#   Registering any of those five would be the silent-drop failure this registry exists to
+#   prevent: NDFC discards an nvPair the parent does not declare, the module reports success, and
+#   the device gets nothing. Slice 0b_22's uniformity across the three overlay parents is NOT
+#   evidence about this one -- uniformity is a finding each time, and here it does not hold.
+#
+#   The local copy used for this measurement was verified byte-identical to the controller's body
+#   (both 50042 bytes, sha256[16] 27cd9ce7e671b5f3) before any attribute was read from it.
+#
+# THIS PARENT WAS EMPTY OF EIGRP UNTIL PHASE 29
+#   Phase 26 recorded that the installed int_loopback contained no EIGRP at all. The body running
+#   today declares all eight, because the phase-29 upload -- performed to get the nineteen OSPF
+#   fields declared -- carried EIGRP with it. An unplanned side effect, measured rather than
+#   assumed, and the reason these eight moved from `Blocked` to registrable.
+#
+# THE GATE IS THE SAME, AND SO ARE THE THREE REFUSALS
+#   `EIGRP_PROCESS_TAG` has no default, and all seven booleans are IsShow-gated on
+#   `EIGRP_PROCESS_TAG!=''`. The parent's DSL wraps the whole creation block in
+#   `if eigrpProcessTag != "":` (:841). Nothing fires on its own.
+#
+#   The three template-enforced refusals of slice 0b_22 exist on this parent too, verified by
+#   line number in the installed body:
+#
+#       :440  if eigrpOptionSelected and eigrpProcessTag == "":      tagless option
+#       :447  if eigrpNoIpv4Passive and eigrpIpv4Passive:            the passive pair
+#       :454  if enableEigrpBfd and disableEigrpBfd:                 the BFD pair
+#
+#   As in 0b_22, these rows do NOT duplicate those rules. NDFC already implements them and fails
+#   loudly. The engine validates membership and transports the string.
+#
+# ALL SEVEN CHILDREN ARE INSTALLED, AND ALL SEVEN COMMANDS WERE MEASURED ON HARDWARE
+#   Read from the parent's DSL rather than matched by name -- the int_vlan blocker was a child
+#   whose name matched no pattern. Zero absent. Each child's CLI was then probed on FAB4
+#   (nxos64-cs.10.6.2.F.bin) through NDFC, on a loopback, before this slice was written:
+#
+#       ENABLE_EIGRP_ROUTING    eigrp_interface_router_11_1          ip router eigrp <tag>
+#       EIGRP_IPV4_PASSIVE      eigrp_interface_ip_passive_11_1      ip passive-interface eigrp <tag>
+#       EIGRP_NO_IPV4_PASSIVE   eigrp_interface_no_ip_passive_11_1   no ip passive-interface eigrp <tag>
+#       EIGRP_NO_IPV6_PASSIVE   eigrp_interface_no_ipv6_passive_11_1 no ipv6 passive-interface eigrp <tag>
+#       ENABLE_EIGRP_SHUTDOWN   eigrp_interface_shutdown_11_1        ip eigrp <tag> shutdown
+#       ENABLE_EIGRP_BFD        eigrp_interface_bfd_11_1             ip eigrp <tag> bfd
+#       DISABLE_EIGRP_BFD       eigrp_interface_bfd_disable_11_1     ip eigrp <tag> bfd disable
+#
+#   All seven ACCEPTED. `EIGRP_PROCESS_TAG` emits no CLI of its own; it is the tag the other seven
+#   interpolate. See phase34-fab4-eigrp-soporte.
+#
+#   Two of those seven needed `feature bfd`, which FAB1 had from the fabric and FAB4 did not.
+#   `ip eigrp <tag> bfd` first returned "CLI command is invalid" for that reason alone. The same
+#   string had already meant "the image lacks this command" for `dampening` in phase 33, and in the
+#   same run it also meant "not attempted, because an earlier command aborted the block". Three
+#   causes, one message. None of these eight rows may be read as evidence about the others.
+#
+# THE REGEX IS NOT REGISTERED, AND THAT IS A LIMIT, NOT AN OVERSIGHT
+#   All four parents declare `regularExpr=^[a-zA-Z0-9_.:-]*$` on EIGRP_PROCESS_TAG. The registry
+#   has no field for it: the generator's allowlist carries min_length/max_length/min_value/
+#   max_value/valid_values and nothing pattern-shaped, and the engine's string validator only
+#   enforces max_length. So `max_length: 20` is registered and the pattern is not, exactly as in
+#   slice 0b_22.
+#
+#   Consequence, stated rather than left to be discovered: a tag containing a character outside
+#   that class passes the module's validation and is refused by NDFC. That is fail-loud at the
+#   controller, not a silent drop, so it is acceptable -- but it is a gap between what the module
+#   checks and what the template requires, and it belongs to all four parents equally.
+#
+# THE FABRIC'S OWN LINE ON A LOOPBACK
+#   A user loopback in FAB4 carries `ip router ospf UNDERLAY area 0.0.0.0` from the fabric itself.
+#   The live round must not read it as residue from these bindings.
+
+bindings:
+  - parent_template: int_loopback
+    parent_nvpair: eigrpProcessTag
+    profile_key: eigrp_process_tag
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: string
+    string_compare: unverified
+    # PR725-EIGRP-ALL-001 Experimento A: medido en vivo 2026-09-29 sobre los cuatro
+    # sujetos de BETA_EIGRP/L1-F4, en contexto que NUNCA llevo una opcion `passive`.
+    # TRANSICION COORDINADA, no retiro independiente: el validador 1 del parent
+    # RECHAZA la peticion si queda cualquier opcion activa con el tag vacio, asi que
+    # `enable_eigrp_routing` se apago en la MISMA peticion. Eso es una imposicion del
+    # producto, no una eleccion, y se registra como tal.
+    # READBACK: eigrpProcessTag `EIGRP47` -> `""`. EQUIPO: CERO lineas EIGRP en los
+    # cuatro sujetos -- sin inversa y sin residuo, a diferencia de lo observado
+    # cuando la interfaz habia llevado `passive`. Rerun identico: 0 mutaciones, y
+    # CERO pendientes atribuibles a estos sujetos.
+    # LIMITE: un cierre de compuerta agrupado NO valida por separado el retiro de
+    # cada subordinada; esas se midieron una por una en rM, rD y los alternos.
+    reset_wire: ''
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@27cd9ce7e671b5f3
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpRouting
+    profile_key: enable_eigrp_routing
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@27cd9ce7e671b5f3
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpIpv4Passive
+    profile_key: eigrp_ipv4_passive
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@27cd9ce7e671b5f3
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpNoIpv4Passive
+    profile_key: eigrp_no_ipv4_passive
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@27cd9ce7e671b5f3
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpNoIpv6Passive
+    profile_key: eigrp_no_ipv6_passive
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@27cd9ce7e671b5f3
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpShutdown
+    profile_key: enable_eigrp_shutdown
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@27cd9ce7e671b5f3
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpBfd
+    profile_key: enable_eigrp_bfd
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    # PR725-EIGRP-ALL-001 perfil alterno p3a: medido en vivo 2026-09-29 en los cuatro
+    # sujetos de BETA_EIGRP/L1-F4, con `feature bfd` habilitado por politica de NDFC.
+    # `ip eigrp EIGRP47 bfd` presente tras el apply y AUSENTE tras el clear explicito;
+    # r2 reaplico identico con 0 mutaciones. NO coexiste con disable_eigrp_bfd: el
+    # parent RECHAZA la peticion si ambos van en true, y por eso se midio aparte.
+    # NO se afirma comportamiento OPERATIVO de BFD: la evidencia es de configuracion.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@27cd9ce7e671b5f3
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpBfdDisable
+    profile_key: disable_eigrp_bfd
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    # PR725-EIGRP-ALL-001 perfil alterno p3b: medido en vivo 2026-09-29 en los cuatro
+    # sujetos. `ip eigrp EIGRP47 bfd disable` presente tras el apply y AUSENTE tras el
+    # clear, SIN dejar detras `ip eigrp EIGRP47 bfd` -- comparado por linea completa,
+    # porque una es prefijo de la otra. Excluyente con enable_eigrp_bfd.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_loopback.template@27cd9ce7e671b5f3

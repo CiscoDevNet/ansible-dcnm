@@ -1,0 +1,163 @@
+# PR725-VPC-DOT1Q-001 -- int_vpc_dot1q_tunnel, the native vPC dot1q-tunnel parent.
+#
+# Source of truth: the template INSTALLED on .90 (NDFC 12.6.0.267, installed SMU), captured
+# read-only on 2026-10-01: int_vpc_dot1q_tunnel.template sha256
+# 1eb7a8b6e4f5aba66099aa4c36f56b1491e73ef8f677f57cff8706b0e25c7a94 (990 lines), with its
+# children int_vpc_dot1q_tunnel_po_11_1 (d33a9e48...) and int_vpc_dot1q_tunnel_po_member_11_1
+# (71d5dbf4...). Line numbers below refer to that parent capture.
+#
+# Six rows, the same public keys and types as int_vpc_access_host and
+# int_port_channel_dot1q_tunnel_host. Each one is declared by the parent AND forwarded to the
+# child that emits it:
+#   aclFilter, spanningTreePortType, qosStatsSuppressed, queuingStats -> each peer's
+#     int_vpc_dot1q_tunnel_po_11_1 (port-channel CLI)
+#   lldpTransmit, lldpReceive -> each peer's int_vpc_dot1q_tunnel_po_member_11_1 (member CLI)
+#
+# c2 (PR725-VPC-DOT1Q-001, conditional): every row carries the reset_wire of its explicit
+# neutral -- aclFilter '', spanningTreePortType 'no', the four booleans 'false' -- the same forms
+# measured on the sibling vPC parents, but NOT transferred from them: c2 is loaded by the campaign
+# replay ONLY after stage rM sent these six neutrals explicitly on vpc13 and the device verdict
+# 'cleared' passed on BOTH peers (Po13 and member Ethernet1/6). If any field fails rM, the whole
+# campaign stops and c2 is not used; a partial registration is a new, reviewed candidate.
+# default_template is unchanged, so an omission at the declared default still needs nothing.
+
+- parent_template: int_vpc_dot1q_tunnel
+  parent_nvpair: aclFilter
+  profile_key: acl_filter
+  reset_wire: ''   # c2: registered only after rM 'cleared' passes on BOTH peers
+  applicable_interface_type: vpc
+  applicable_mode: dot1q
+  type: string
+  string_compare: exact
+  min_length: 1
+  max_length: 64
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_dot1q_tunnel.template@1eb7a8b6e4f5aba6#L239,L721
+  effect_rules:
+    - predicate: value_nonempty
+      ndfc_effect: child_policy
+      child_template: int_vpc_dot1q_tunnel_po_11_1
+      cli: "ip port access-group <value> in"
+      phase: current
+
+- parent_template: int_vpc_dot1q_tunnel
+  parent_nvpair: spanningTreePortType
+  profile_key: spanning_tree_port_type
+  reset_wire: 'no'   # c2: registered only after rM 'cleared' passes on BOTH peers
+  applicable_interface_type: vpc
+  applicable_mode: dot1q
+  type: enum
+  valid_values: ["no", "network", "normal"]
+  default_template: "no"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_dot1q_tunnel.template@1eb7a8b6e4f5aba6#L79,L699
+  effect_rules:
+    - predicate: value_network_or_normal
+      ndfc_effect: child_policy
+      child_template: int_vpc_dot1q_tunnel_po_11_1
+      cli: "spanning-tree port type <value> (refused with port_type_fast true)"
+      phase: current
+
+- parent_template: int_vpc_dot1q_tunnel
+  parent_nvpair: qosStatsSuppressed
+  profile_key: disable_qos_stats
+  reset_wire: 'false'   # c2: registered only after rM 'cleared' passes on BOTH peers
+  applicable_interface_type: vpc
+  applicable_mode: dot1q
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_dot1q_tunnel.template@1eb7a8b6e4f5aba6#L225,L718
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_vpc_dot1q_tunnel_po_11_1
+      cli: "' no-stats' suffix of service-policy type qos input <QOS_POLICY> (needs ENABLE_QOS and QOS_POLICY)"
+      phase: current
+
+- parent_template: int_vpc_dot1q_tunnel
+  parent_nvpair: queuingStats
+  profile_key: disable_queuing_stats
+  reset_wire: 'false'   # c2: registered only after rM 'cleared' passes on BOTH peers
+  applicable_interface_type: vpc
+  applicable_mode: dot1q
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_dot1q_tunnel.template@1eb7a8b6e4f5aba6#L233,L719
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_vpc_dot1q_tunnel_po_11_1
+      cli: "' no-stats' suffix of service-policy type queuing output <QUEUING_POLICY> (needs QUEUING_POLICY)"
+      phase: current
+
+- parent_template: int_vpc_dot1q_tunnel
+  parent_nvpair: lldpTransmit
+  profile_key: disable_lldp_transmit
+  reset_wire: 'false'   # c2: registered only after rM 'cleared' passes on BOTH peers
+  applicable_interface_type: vpc
+  applicable_mode: dot1q
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_dot1q_tunnel.template@1eb7a8b6e4f5aba6#L136,L847
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_vpc_dot1q_tunnel_po_member_11_1
+      cli: "no lldp transmit (on each member)"
+      phase: current
+
+- parent_template: int_vpc_dot1q_tunnel
+  parent_nvpair: lldpReceive
+  profile_key: disable_lldp_receive
+  reset_wire: 'false'   # c2: registered only after rM 'cleared' passes on BOTH peers
+  applicable_interface_type: vpc
+  applicable_mode: dot1q
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_dot1q_tunnel.template@1eb7a8b6e4f5aba6#L141,L848
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_vpc_dot1q_tunnel_po_member_11_1
+      cli: "no lldp receive (on each member)"
+      phase: current

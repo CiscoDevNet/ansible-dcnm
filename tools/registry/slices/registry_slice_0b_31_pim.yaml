@@ -1,0 +1,281 @@
+# WP98 — PIM. Ocho filas: tres campos repartidos desigualmente entre cuatro padres.
+#
+#     ENABLE_PIM_SPARSE        4   int_loopback, int_routed_host, int_subif, int_vlan
+#     PIM_DR_PRIORITY          3   int_routed_host, int_subif, int_vlan
+#     ENABLE_PIM_BFD_INSTANCE  1   int_routed_host
+#
+#   Que PIM_DR_PRIORITY no este en int_loopback es correcto y no un hueco: una loopback no
+#   participa en la eleccion de DR. Verificado que el cuerpo de int_loopback no lo declara --
+#   `grep DisplayName="PIM dr priority"` devuelve vacio ahi y una declaracion en los otros tres.
+#
+# MEDIDO CONTRA LOS CUERPOS QUE EL CONTROLADOR CORRE HOY, bajados antes de leerles un atributo:
+#
+#     int_loopback.template@27cd9ce7e671b5f3
+#     int_routed_host.template@65426107b3d1cdcf
+#     int_subif.template@a66388c2f21c5507
+#     int_vlan.template@0efb09af7f837b30
+#     pim_interface.template@27d7ff34de4b9047                (hijo de sparse)
+#     interface_pim_dr_priority.template@83247cad0c81163f    (hijo de dr-priority)
+#     pim_bfd_instance_interface.template@463bffbfe4eaa10f    (hijo de bfd-instance)
+#
+#   Los tres hijos estan INSTALADOS y su contenido leido, no supuesto:
+#       pim_interface                 ->  ip pim sparse-mode
+#       interface_pim_dr_priority     ->  ip pim dr-priority $$PIM_DR_PRIORITY$$
+#       pim_bfd_instance_interface    ->  ip pim bfd-instance
+#
+#   Una linea por campo, sin fusion. A diferencia de BFD (tres campos en una linea), HSRP (dos
+#   mas un nativo) y dampening (seis), aqui "exactamente una linea se movio" vuelve a ser una
+#   asercion con contenido.
+#
+# =====================================================================================
+# LA TRAMPA: EL VALOR 1 NO EMITE LINEA, Y ES EL MINIMO DEL RANGO
+# =====================================================================================
+#
+#   Literal en los tres padres que declaran el campo:
+#
+#       if pimDrPriority != "" and pimDrPriority != "1":
+#           createOrUpdate(... "interface_pim_dr_priority" ...)
+#
+#   y el `except` de la lectura defaultea justo a "1" (int_routed_host:563, int_subif:411,
+#   int_vlan:857).
+#
+#   Lo incomodo es la coincidencia: la declaracion dice `min = 1`, asi que el minimo de la cota
+#   ES el valor mudo. Quien pruebe la cota inferior -- lo natural en una etapa negativa -- va a
+#   ver que no aparece la linea y va a reportar un defecto que no existe.
+#
+#   Es la forma de OSPF_SHUTDOWN en false, pero peor escondida: alli el valor mudo era el default
+#   obvio; aqui es el minimo del rango Y el defaultValue a la vez.
+#
+#   Por eso la ronda separa `p1` (mandar 1 y comprobar que NO emite: comportamiento esperado del
+#   DSL) de `n1` (mandar 0 y comprobar que el ENGINE lo rechaza por la cota). Contar `p1` como
+#   fallo seria el error que esta nota existe para evitar.
+#
+# PIM_DR_PRIORITY ES `long` EN EL TEMPLATE Y SE REGISTRA COMO `integer`
+#
+#       long PIM_DR_PRIORITY { min = 1; max = 4294967295; defaultValue = 1; }
+#
+#   El `type` del registry no es el tipo literal del template: es la clave de
+#   _TYPE_TO_VALIDATOR, cuyo docstring dice "Map a registered binding type to the
+#   validate_list_of_dicts validator type". Ese mapa conoce boolean/enum/string/integer y NO
+#   conoce `long`, asi que registrar `long` haria que gie_validator_type lanzara
+#   GieBindingError -- falla cerrado, que es correcto, pero deja el binding inalcanzable.
+#
+#   Se registra `integer` porque valida exactamente igual: `long` en el DSL de NDFC es un entero
+#   de 64 bits, el int de Python 3 no tiene limite, y 4294967295 cabe de sobra. Ampliar el mapa
+#   del engine con un alias que no cambia la validacion seria mas superficie sin ganancia.
+#
+#   Es el PRIMER campo del registro cuyo tipo declarado no existe en el mapa del engine, y la
+#   decision queda aqui escrita para que no se lea como un descuido al comparar slice y template.
+#
+# LOS TRES CAMPOS SON INDEPENDIENTES -- NO HAY REGLAS QUE EJERCITAR
+#
+#   Cero IsShow en los tres, en los cuatro padres. Cero addErrorReport que los relacione. Los
+#   tres gates son `if` sueltos:
+#
+#       if enablePimSparse == "true":                          (int_routed_host:1246)
+#       if pimDrPriority != "" and pimDrPriority != "1":        (int_routed_host:1253)
+#       if enablePimBfdInstance == "true":                      (int_routed_host:1260)
+#
+#   Asi que esta ronda NO tiene negativas de template, a diferencia de HSRP (seis reglas) y
+#   dampening (cuatro). Sus negativas atacan las cotas del REGISTRY, como en ARP_TIMEOUT.
+#
+#   Y ENABLE_PIM_SPARSE NO es precondicion de PIM_DR_PRIORITY en el DSL: son dos `if`
+#   independientes, asi que el template deja emitir `dr-priority` sin `sparse-mode`. Si NX-OS lo
+#   rechaza, es del equipo y es un hallazgo que vale medir -- el template no contesta esa
+#   pregunta. La etapa `n2` la hace, y se nombra aparte de `n1` porque no es una negativa de la
+#   misma clase: es una pregunta sin respuesta previa, no una regla conocida.
+#
+# CERO deleteChildTemplate PARA PIM EN LOS CUATRO PADRES
+#
+#   Igual que ARP_TIMEOUT. Pero la leccion de ARP es que eso NO predice residuo tras un
+#   `deleted`: borrar la interfaz retira la policy completa y con ella sus hijos, sin necesidad
+#   de un deleteChildTemplate por campo. La prediccion que ARP refuto no se repite aqui.
+#
+#   Lo que SI queda por medir es el otro escenario, el que dejo residuo en EIGRP: seguir
+#   gestionando la interfaz con el booleano APAGADO. Con estos tres gates, poner
+#   enable_pim_sparse: false no instancia el hijo, pero tampoco pide retirar el que ya existe.
+#   Por eso removal_semantics queda `unresolved` en las ocho y la ronda mide las dos cosas
+#   separadas: apagar el campo (r5b) y borrar la interfaz (rX).
+#
+# NO SON NATIVOS DEL MODULO
+#   La regla barata que dejo el fallo de ipv6_addr: grepear el nombre publico en
+#   dcnm_interface.py. Los seis nombres -- las tres claves publicas y los tres nvPairs -- dan 0.
+#   Ninguno le quita el nombre a un arg spec.
+#
+# SOPORTE EN EL EQUIPO
+#   El operador confirma que la plataforma soporta PIM y PIM6; `show feature` los lista como
+#   `disabled`, el mismo cuadro que tenia HSRP antes de funcionar, asi que hay que encender
+#   `feature pim` por politica de NDFC como se hizo con eigrp, bfd y hsrp.
+#
+#   No se da por medido: si el CLI resultara no existir -- el caso de EIGRP con `bfd` y el de
+#   dampening -- eso es un hallazgo y se documenta el limite, sin retirar el registro.
+#
+# MECANISMO: passthrough en las ocho
+#   El modulo escribe los nvPairs del PADRE y es el DSL quien instancia los tres hijos. El
+#   modulo no construye ninguno. Mismo razonamiento que BFD, dampening y ARP_TIMEOUT.
+
+shared_effects: []
+
+bindings:
+
+  # ======================================================= ENABLE_PIM_SPARSE, los cuatro padres
+  - parent_template: int_loopback
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_loopback.template@27cd9ce7e671b5f3#ENABLE_PIM_SPARSE"
+
+  - parent_template: int_routed_host
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1246"
+
+  - parent_template: int_subif
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@a66388c2f21c5507#ENABLE_PIM_SPARSE"
+
+  - parent_template: int_vlan
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#ENABLE_PIM_SPARSE"
+
+  # ================================================== PIM_DR_PRIORITY, sin loopback (no elige DR)
+  #
+  # min: 1 es la cota declarada Y el valor que el DSL calla. Ver la nota de la trampa arriba:
+  # `p1` comprueba el silencio del 1 como comportamiento esperado, `n1` comprueba que el 0 se
+  # rechaza por la cota. El mensaje de ese rechazo debe nombrar el rango -- se arreglo en la
+  # fase 41 y esta es la primera familia que lo ejercita.
+  - parent_template: int_routed_host
+    parent_nvpair: PIM_DR_PRIORITY
+    profile_key: pim_dr_priority
+    reset_wire: '1'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    min: 1
+    max: 4294967295
+    default_template: 1
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1253"
+
+  - parent_template: int_subif
+    parent_nvpair: PIM_DR_PRIORITY
+    profile_key: pim_dr_priority
+    reset_wire: '1'
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    min: 1
+    max: 4294967295
+    default_template: 1
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@a66388c2f21c5507#L870"
+
+  - parent_template: int_vlan
+    parent_nvpair: PIM_DR_PRIORITY
+    profile_key: pim_dr_priority
+    reset_wire: '1'
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    min: 1
+    max: 4294967295
+    default_template: 1
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#L1423"
+
+  # ============================================ ENABLE_PIM_BFD_INSTANCE, solo int_routed_host
+  #
+  # El unico de los cuatro padres que lo declara, y llego con el injerto de la fase 40 -- el
+  # int_routed_host que se subio CONSERVANDO el fix de dhcpServers. El cuerpo vigente
+  # (65426107b3d1cdcf) es ese, y es el mismo hash que citan las filas de ARP_TIMEOUT.
+  - parent_template: int_routed_host
+    parent_nvpair: pimBfdInstance
+    profile_key: enable_pim_bfd_instance
+    reset_wire: 'false'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1260"

@@ -1,0 +1,270 @@
+# Registry slice 0b_16 — int_routed_host, el primer parent ruteado.
+#
+# QUE SE REGISTRA
+#   int_routed_host   5   pol_types[12]["eth_routed"]
+#
+#   Es el parent que un playbook alcanza con `mode: routed` sobre una interfaz Ethernet. El
+#   modulo arma la clave de politica como <type>_<mode>; "eth_routed" existe en pol_types y
+#   resuelve a int_routed_host. Los otros templates ruteados NO se registran aqui:
+#
+#     int_routed_host_sub_11_1   subinterfaz, otro parent
+#     int_port_channel_routed*   port-channel ruteado, otro parent
+#     int_fabric_loopback_11_1   ya cubierto por el slice 0b
+#
+# MECANISMO: passthrough en los cinco. POR QUE, AUNQUE LOS CINCO DELEGUEN
+#   Este parent casi no emite CLI por si mismo. Los cinco campos terminan en un template hijo:
+#
+#     DISABLE_LLDP           interface_lldp_disable              (gate de creacion)
+#     DISABLE_BFD_ECHO       bfd_no_echo_interface               (gate de creacion)
+#     IPV4_ACL_IN            interface_ip_access_group_in_11_1   (gate + valor)
+#     DISABLE_QOS_STATS      interface_qos_service_policy        (parametro DISABLE_STATS)
+#     DISABLE_QUEUING_STATS  interface_queuing_service_policy    (parametro DISABLE_STATS)
+#
+#   Esa delegacion NO decide el mecanismo. Vale el precedente que ya fijo el slice 0b_15:
+#   `mechanism` dice quien es dueño de la validacion, del guardia de parent invalido, del
+#   prof_spec generico, del carry-forward y de la conversion a forma de cable — no dice como
+#   esta hecho el template por dentro. int_routed_host no tiene maquinaria dedicada para
+#   ninguna de esas cinco piezas. Registrarlo child_pti lo dejaria exento de la conversion a
+#   forma de cable y reviviria el defecto de los booleanos ya corregido (un bool nativo
+#   comparado contra el "true" que devuelve NDFC nunca converge).
+#
+#   El precedente literal ya estaba en la tabla: int_port_channel_trunk_host::DISABLE_LLDP
+#   tambien delega a un hijo y esta registrado passthrough, validado en vivo.
+#
+# LOS CINCO TEMPLATES HIJO EXISTEN EN EL CONTROLADOR
+#   GET /configtemplate/rest/config/templates/<nombre> en 12.6.0.267, los cinco 200 con cuerpo
+#   real. Importa porque un hijo ausente NO da error: el nvPair del padre viaja, la llamada
+#   responde exito y no sale CLI. El CLI de cada hijo se leyo del controlador, no se dedujo.
+#
+# LOS DOS DE STATS TRAEN IsShow — Y AQUI SI ES ALCANZABLE
+#   DISABLE_QOS_STATS      IsShow="ENABLE_QOS==true"
+#   DISABLE_QUEUING_STATS  IsShow="QUEUING_POLICY!=''"
+#
+#   No son gate de nada: el hijo lo crea la politica (`if qosPolicyName:` / `if QUEUING_POLICY:`)
+#   y el booleano viaja como parametro DISABLE_STATS. Sin andamiaje de QoS transportan bien y no
+#   producen CLI — el mismo hueco que tuvo el port-channel dot1q. La diferencia es que aqui el
+#   andamiaje ya es nativo de eth_prof_spec_routed_host (enable_qos / qos_policy /
+#   queuing_policy), asi que sale del data model sin parchar el modulo.
+#
+# ARP_TIMEOUT SE QUEDA FUERA DE ESTE SLICE, A PROPOSITO
+#   int_routed_host tambien declara ARP_TIMEOUT (L187) y el binding estaba escrito. Se saco al
+#   descubrir que int_subif e int_vlan lo declaran igual, y que los TRES son alcanzables desde
+#   un playbook: pol_types trae "sub_int_subint" -> int_subif y "svi_vlan" -> int_vlan ademas de
+#   "eth_routed". Comprometerlo solo en el parent ruteado haria que el modulo respondiera "no
+#   soportado en esta interfaz" en los otros dos — que es falso, y es justo el defecto que esta
+#   tabla existe para evitar.
+#
+#   El generador lo hace cumplir por si solo: rechaza una fila que reclama un profile_key
+#   publico ya comprometido desde un parent no comprometido, en vez de saltarsela en silencio.
+#   Fue el generador, no una revision manual, quien detuvo el intento.
+#
+#   Entra como un lote de tres parents, con su prof_spec y su corrida en vivo propios. Dos cosas
+#   ya medidas que ese lote debe conservar:
+#
+#     - La declaracion es `integer ARP_TIMEOUT;` — sin defaultValue, sin minimo, sin maximo. Pero
+#       el cuerpo SI valida: `if int(arpTimeout) <= 0` corta con "ARP timeout must be a positive
+#       integer" (L636). La cota existe y vive en el cuerpo, no en el tipo. El schema solo tiene
+#       min_length/max_length para strings, asi que un 0 o un negativo NO lo rechaza el motor:
+#       lo rechaza el controlador.
+#     - No debe llevar default_template. Afirmar un default que el template no declara haria que
+#       el motor leyera una ausencia del controlador como match.
+#
+# REMOCION: NO VERIFICADA, POR ESO unresolved EN LOS CINCO
+#   Los tres gates son `if <valor> == "true":` / `!= "":` seguidos de createOrUpdate. NO hay
+#   rama else que borre el hijo — a diferencia del par de OSPF del slice 0b, que si trae un
+#   `value_false -> delete` explicito.
+#
+#   Eso NO prueba que el hijo sobreviva al quitar el valor: el modelo PTI es declarativo y NDFC
+#   podria reconciliar y borrar lo que la pasada nueva no creo. No se asume ninguna de las dos.
+#   removal_semantics: medido -- ver la nota de REMOCION arriba.
+#
+#
+# REMOCION: MEDIDA EN VIVO (corrida r1..r4 del 15sep2026)
+#   Estos bindings pasan de `unresolved` a `preserves_on_absent`. El valor es nuevo en el
+#   vocabulario: antes solo existian "no sabemos" y "omitir borra", y ninguno describia lo que
+#   resulto ser cierto. Son DOS comportamientos distintos y conviene no confundirlos:
+#
+#     r3  el valor cambia a su forma inerte (false / "")  ->  el CLI SE RETIRA del dispositivo
+#     r4  el campo se OMITE del payload                   ->  el valor SOBREVIVE intacto
+#
+#   removal_semantics habla de la segunda. Marcarlos `deletes_on_absent` habria sido FALSO: la
+#   omision no borra, preserva -- que es exactamente el contrato que emit_when: explicit_only
+#   ya declara, ahora comprobado en el dispositivo y no solo en el diseño.
+#
+#   Lo de r3 tambien importa y no tiene campo propio: el template no trae rama `else` que borre
+#   el hijo, asi que NO estaba dicho si NDFC lo retiraria. Lo hace -- reconcilia y elimina lo
+#   que la pasada nueva no crea. Verificado en el switch, no en el controlador.
+#
+# QUE NO PRUEBA ESTE SLICE
+#   evidence_ref apunta a la declaracion en el template: prueba que el parametro EXISTE y donde,
+#   y el CLI de cada hijo se leyo del controlador. No prueba que el binding FUNCIONE extremo a
+#   extremo. Eso lo cierra la corrida r1→r4 sobre leaf-A/104 contra el ToR, pendiente al
+#   escribir esto.
+
+- parent_template: int_routed_host
+  parent_nvpair: DISABLE_LLDP
+  profile_key: disable_lldp
+  applicable_interface_type: eth
+  applicable_mode: routed
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: unresolved
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_routed_host.template#L65
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: interface_lldp_disable
+      cli: "no lldp transmit / no lldp receive"
+      phase: current
+      evidence_ref: int_routed_host.template#L803
+    - predicate: value_false
+      ndfc_effect: silent_noop
+      phase: current
+      evidence_ref: int_routed_host.template#L803
+
+- parent_template: int_routed_host
+  parent_nvpair: bfdEcho
+  profile_key: disable_bfd_echo
+  applicable_interface_type: eth
+  applicable_mode: routed
+  type: boolean
+  reset_wire: 'false'
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_routed_host.template#L130
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: bfd_no_echo_interface
+      cli: "no bfd echo"
+      phase: current
+      evidence_ref: int_routed_host.template#L817
+    - predicate: value_false
+      ndfc_effect: silent_noop
+      phase: current
+      evidence_ref: int_routed_host.template#L817
+
+- parent_template: int_routed_host
+  parent_nvpair: ipv4AclIn
+  profile_key: ipv4_acl_in
+  reset_wire: ''
+  applicable_interface_type: eth
+  applicable_mode: routed
+  type: string
+  string_compare: exact
+  min_length: 1
+  max_length: 64
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_routed_host.template#L190
+  effect_rules:
+    - predicate: value_present
+      ndfc_effect: child_policy
+      child_template: interface_ip_access_group_in_11_1
+      cli: "ip access-group <IPV4_ACL_IN> in"
+      phase: current
+      evidence_ref: int_routed_host.template#L969
+    - predicate: value_empty
+      ndfc_effect: silent_noop
+      phase: current
+      evidence_ref: int_routed_host.template#L969
+
+- parent_template: int_routed_host
+  parent_nvpair: qosStatsSuppressed
+  profile_key: disable_qos_stats
+  applicable_interface_type: eth
+  applicable_mode: routed
+  type: boolean
+  # G33 F1-s2: medido en vivo, apply+clear en leaf-A Ethernet1/22, 2026-09-23, con
+  # ENABLE_QOS=true y QOS_POLICY=port_qos_policy -- una politica que YA existe en el chasis,
+  # leida antes de usarla, no inventada. El clear dejo el nvPair en "false" y la linea
+  # `service-policy type qos input port_qos_policy` SOBREVIVIO sin el fragmento ` no-stats`,
+  # mientras la de queuing conservo el suyo. Confirma en el equipo los dos primeros
+  # effect_rules de abajo, que hasta ahora solo estaban declarados.
+  reset_wire: "false"
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_routed_host.template#L279
+  effect_rules:
+    - predicate: value_true_and_qos_policy_resolvable
+      ndfc_effect: inline_config
+      child_template: interface_qos_service_policy
+      cli: "service-policy type qos input <policy> no-stats"
+      phase: current
+      evidence_ref: int_routed_host.template#L1022
+    - predicate: value_false_and_qos_policy_resolvable
+      ndfc_effect: inline_config
+      child_template: interface_qos_service_policy
+      cli: "service-policy type qos input <policy>"
+      phase: current
+      evidence_ref: int_routed_host.template#L1022
+    - predicate: enable_qos_false_or_policy_unresolvable
+      ndfc_effect: silent_noop
+      phase: current
+      evidence_ref: int_routed_host.template#L1017
+
+- parent_template: int_routed_host
+  parent_nvpair: queuingStats
+  profile_key: disable_queuing_stats
+  applicable_interface_type: eth
+  applicable_mode: routed
+  type: boolean
+  # G33 F2-s2: medido en vivo, apply+clear en leaf-A Ethernet1/22, 2026-09-23, con
+  # QUEUING_POLICY=port_queuing_policy (existente en el chasis). El clear dejo el nvPair en
+  # "false" y la linea `service-policy type queuing output port_queuing_policy` SOBREVIVIO sin
+  # ` no-stats`, mientras la de qos conservo el suyo: las dos direcciones son independientes.
+  reset_wire: "false"
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_routed_host.template#L287
+  effect_rules:
+    - predicate: value_true_and_queuing_policy_set
+      ndfc_effect: inline_config
+      child_template: interface_queuing_service_policy
+      cli: "service-policy type queuing output <policy> no-stats"
+      phase: current
+      evidence_ref: int_routed_host.template#L1032
+    - predicate: value_false_and_queuing_policy_set
+      ndfc_effect: inline_config
+      child_template: interface_queuing_service_policy
+      cli: "service-policy type queuing output <policy>"
+      phase: current
+      evidence_ref: int_routed_host.template#L1032
+    - predicate: queuing_policy_empty
+      ndfc_effect: silent_noop
+      phase: current
+      evidence_ref: int_routed_host.template#L1027

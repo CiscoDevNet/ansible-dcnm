@@ -14,15 +14,25 @@ The curated `profile_key` in the registry is authoritative. It is never derived 
 lower-casing an nvPair name; a row whose profile_key does not match the committed value is
 rejected rather than rewritten.
 
-Usage: python3 gie_generate_binding_table.py <registry_yaml> [<more_yaml> ...] <output_py>
+Usage (explicit):  python3 gie_generate_binding_table.py <registry_yaml> [<more_yaml> ...] <output_py>
+Usage (in repo):    python3 tools/gie_generate_binding_table.py --check        # regenerate in memory from tools/registry/slices,
+                                                                          # fail if it differs from the versioned table
+                    python3 tools/gie_generate_binding_table.py --regenerate   # rewrite plugins/module_utils/gie_binding_table.py
+                    (both accept --slices DIR and --table FILE; see tools/registry/README.md)
 Deterministic: same input -> byte-identical output (sorted keys, fixed formatting, provenance
 sha256 over the compiled rows).
 """
+import difflib
+import glob
 import hashlib
 import json
+import os
 import sys
 
-import yaml
+try:
+    import yaml
+except ImportError:  # pragma: no cover - environment, not logic
+    raise SystemExit("PyYAML is required to read the registry slices (it is installed with ansible-core; otherwise: pip install PyYAML)")
 
 COMMITTED_BINDINGS = {
     # WITHDRAWN: the three fabric-loopback OSPF-auth bindings.
@@ -621,9 +631,9 @@ COMMITTED_BINDINGS = {
     #
     # Two template rules (:450, :457) provide negative test cases.
     #
-    # Validated live on the Leaf-105/106 vPC pair (domain 105), using a disposable Po510 on
+    # Validated live on a lab vPC pair, using a disposable Po510 on
     # Eth1/7-1/8. An earlier comment incorrectly excluded device validation based on
-    # observations from Leaf-103, which is not a vPC peer. Testing the actual pair showed:
+    # observations from a lab leaf that is not a vPC peer. Testing the actual pair showed:
     #
     #   NX-OS rejects a second peer-link in the domain; NDFC does not check this:
     #       ERROR: Operation failed: [vPC Peer-link has already been configured on po500]
@@ -872,9 +882,8 @@ COMMITTED_PROFILE_KEYS = set(COMMITTED_BINDINGS.values())
 
 # Per-row registry schema, enforced HERE rather than by a separate checker script.
 #
-# WHY HERE. There were two standalone validators under
-# evidence/generic-interface-engine/ -- registry-schema/registry_schema_check.py (42 lines) and
-# registry/registry_schema_check.py (454 lines) -- and BOTH had been dead for four lots without
+# WHY HERE. There were two standalone validator scripts kept outside this
+# repository (42 and 454 lines) -- and BOTH had been dead for four lots without
 # anyone noticing, for different reasons: the first still expected a flat list and every slice is
 # now a mapping with a `bindings:` key, the second required a `sensitive` field that only one
 # surviving slice declares. Nothing broke loudly because nothing ran them. A validator you have
@@ -1097,24 +1106,97 @@ def render(rows):
     return "\n".join(lines) + "\n"
 
 
-def main(*paths):
-    if len(paths) < 2:
-        raise SystemExit(__doc__)
-    slice_paths, out_path = list(paths[:-1]), paths[-1]
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_SLICES_DIR = os.path.join(REPO_ROOT, "tools", "registry", "slices")
+DEFAULT_TABLE = os.path.join(REPO_ROOT, "plugins", "module_utils", "gie_binding_table.py")
+
+
+def slice_paths(directory=DEFAULT_SLICES_DIR):
+    """The registry slices of ``directory`` in a stable order: file name, byte-wise (locale independent)."""
+    found = sorted(glob.glob(os.path.join(directory, "registry_slice_*.yaml")),
+                   key=lambda path: os.path.basename(path).encode("utf-8"))
+    if not found:
+        raise SystemExit("no registry_slice_*.yaml found in {0}".format(directory))
+    return found
+
+
+def build(paths):
+    """(text, rows) compiled from the given slice files. Pure: nothing is written."""
     slice_rows = []
-    for p in slice_paths:
-        doc = yaml.safe_load(open(p))
+    for p in paths:
+        with open(p, encoding="utf-8") as handle:
+            doc = yaml.safe_load(handle)
         if isinstance(doc, dict):
             doc = doc.get("bindings", [])
         slice_rows.extend(doc or [])
     rows = compile_rows(slice_rows)
     assert len(rows) == len(COMMITTED_BINDINGS), \
         f"expected {len(COMMITTED_BINDINGS)} committed bindings, compiled {len(rows)}"
-    open(out_path, "w").write(render(rows))
+    return render(rows), rows
+
+
+def _write(text, out_path):
+    with open(out_path, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
+
+
+def main(*paths):
+    if len(paths) < 2:
+        raise SystemExit(__doc__)
+    slice_files, out_path = list(paths[:-1]), paths[-1]
+    text, rows = build(slice_files)
+    _write(text, out_path)
     print(f"compiled {len(rows)} bindings -> {out_path}")
     for r in rows:
         print("  ", r["parent_template"], "::", r["parent_nvpair"], "->", r["mechanism"])
 
 
+def check(slices_dir=DEFAULT_SLICES_DIR, table=DEFAULT_TABLE):
+    """Regenerate in memory from ``slices_dir`` and compare, byte for byte, with the versioned ``table``.
+
+    Returns 0 when identical, 1 when they diverge (with the first differing lines), never writes the table.
+    """
+    files = slice_paths(slices_dir)
+    text, rows = build(files)
+    with open(table, "rb") as handle:
+        versioned = handle.read()
+    generated = text.encode("utf-8")
+    if generated == versioned:
+        print("OK: {0} bindings from {1} slices reproduce {2} byte for byte (sha256 {3})".format(
+            len(rows), len(files), os.path.relpath(table, REPO_ROOT), hashlib.sha256(generated).hexdigest()))
+        return 0
+    diff = list(difflib.unified_diff(
+        versioned.decode("utf-8").splitlines(), text.splitlines(),
+        fromfile="versioned " + os.path.relpath(table, REPO_ROOT), tofile="regenerated from sources", lineterm="", n=1))
+    print("DIVERGENCE: the registry sources do not reproduce the versioned binding table.", file=sys.stderr)
+    print("\n".join(diff[:40]), file=sys.stderr)
+    print("Review the source change, then run: python3 tools/gie_generate_binding_table.py --regenerate", file=sys.stderr)
+    return 1
+
+
+def cli(argv):
+    if not argv or not argv[0].startswith("--"):
+        return main(*argv)
+    slices_dir, table, mode = DEFAULT_SLICES_DIR, DEFAULT_TABLE, None
+    args = list(argv)
+    while args:
+        arg = args.pop(0)
+        if arg in ("--check", "--regenerate"):
+            mode = arg
+        elif arg in ("--slices", "--table") and args:
+            value = os.path.abspath(args.pop(0))
+            slices_dir, table = (value, table) if arg == "--slices" else (slices_dir, value)
+        else:
+            raise SystemExit(__doc__)
+    if mode == "--check":
+        return check(slices_dir, table)
+    if mode == "--regenerate":
+        text, rows = build(slice_paths(slices_dir))
+        _write(text, table)
+        print("regenerated {0} bindings -> {1}".format(len(rows), os.path.relpath(table, REPO_ROOT)))
+        return 0
+    raise SystemExit(__doc__)
+
+
 if __name__ == "__main__":
-    sys.exit(main(*sys.argv[1:]))
+    sys.exit(cli(sys.argv[1:]))

@@ -1,0 +1,35 @@
+# PR725 ingress QoS (IQ1) -- registry companion qosStatsSuppressed of the vPC PVLAN parent.
+#
+# Same public key, type, reset form and mechanism as the sibling vPC parents (int_vpc_access_host, int_vpc_trunk_host,
+# int_vpc_dot1q_tunnel: disable_qos_stats, passthrough, reset 'false', min 12.6.0.267) and as the C1 vPC PVLAN rows
+# (registry_slice_c1_pvlan_companions.yaml). Source: the template INSTALLED on the test ND (A-CAPTURE-1 20261009T173043Z)
+#   int_vpc_pvlan_host  106ac645fae9ae2151e97e3267e08e6c457afbea1e932cf4a7cd2e78ffaaf5c6  (declaration L167-170, interfaceOptions L251)
+#   int_vpc_pvlan_po    3c9991a26958f5dc1ceed99eae9687b1dcd835bff1f3b809ba0eabb13d73fa79  (declaration L100-103, use L305-309)
+# reset_wire is INFERRED from the siblings, NOT measured on a PVLAN parent. No `validated_on`.
+# The child renders the ' no-stats' suffix only on `service-policy type qos input <QOS_POLICY>`, i.e. with ENABLE_QOS true and a
+# QOS_POLICY. On the INSTALLED revision the child line is the defective literal `type ENABLE_QOS input` and the parent never hands
+# ENABLE_QOS/QOS_POLICY to the children (coordination/ALPHA_VPC_QUEUING_ANALYSIS.md, engineering/QVPC-ENG-3): the binding itself only
+# transports qosStatsSuppressed (which the parent does hand down through interfaceOptions); the PVLAN helper models the corrected
+# child and refuses any controller state that does not follow it.
+
+- parent_template: int_vpc_pvlan_host
+  parent_nvpair: qosStatsSuppressed
+  profile_key: disable_qos_stats
+  reset_wire: 'false'   # inferred from the sibling parents; NOT measured on a PVLAN parent
+  applicable_interface_type: vpc
+  applicable_mode: pvlan
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_pvlan_host@106ac645#L167,L251,L655,L685; int_vpc_pvlan_po@3c9991a2#L100,L305-309
+  effect_rules:
+    - predicate: value_true_with_enabled_qos_policy
+      ndfc_effect: child_policy
+      child_template: int_vpc_pvlan_po
+      cli: service-policy type qos input <policy> no-stats
+      phase: current

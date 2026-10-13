@@ -1,0 +1,363 @@
+# WP98 — OSPF on int_vlan. First bindings ever registered for this parent.
+#
+# EXTRACTED FROM THIS TEMPLATE, NOT COPIED FROM int_routed_host.
+#   The three OSPF parents model the same concepts DIFFERENTLY, which is why the table is keyed
+#   by (parent_template, parent_nvpair) and why copying a slice would have registered nvPairs
+#   that do not exist here:
+#
+#       concept      int_routed_host        int_subif                int_vlan
+#       passive      OSPF_PASSIVE_MODE      OSPF_PASSIVE_INTERFACE   OSPF_PASSIVE_MODE
+#                    enum                   BOOLEAN                  enum
+#       bfd          OSPF_BFD_MODE          OSPF_BFD                 OSPF_BFD_MODE
+#                    enum                   BOOLEAN                  enum
+#       retransmit   absent                 OSPF_RETRANSMIT_INTERVAL OSPF_RETRANSMIT_INTERVAL
+#
+#   Every type, default, range and length below is read from the installed template
+#   (sha cee4cfc1d8a66d57), never inferred from a sibling parent.
+#
+# applicable_interface_type / applicable_mode
+#   These are DESCRIPTIVE: nothing in the engine or the module reads them -- resolve_binding
+#   matches on parent_template alone. They are still set to the module's own vocabulary, since
+#   `pol_ind_str = delem["type"] + "_" + profile["mode"]` is what selects the policy, and a
+#   reviewer comparing the registry against a playbook should see the same words.
+#
+# MODULE WIRING
+#   This parent had NO engine hook before this slice. Two calls were added to dcnm_interface.py,
+#   mirroring the eth path exactly: gie_extend_prof_spec in its validator and
+#   gie_contribute_nvpairs in its builder. No feature-specific key was added to either.
+#
+# THE FIVE AUTHENTICATION FIELDS ARE EXCLUDED
+#   ENABLE_OSPF_AUTH, OSPF_AUTH_KEY, OSPF_AUTHENTICATION_KEY, OSPF_AUTH_KEY_ID and
+#   OSPF_AUTHENTICATION_KEY_TYPE carry or gate secrets and go in their own lot, on all parents
+#   at once, so the mechanism decision is made once rather than three times.
+#
+# MECHANISM IS passthrough THROUGHOUT
+#   None owns a dedicated validation path. test_gie_mechanism_contract.py fails if a child_pti
+#   binding is registered without an implementation that actually guards it.
+#
+# REMOVAL SEMANTICS
+#   unresolved, as on int_routed_host: the template creates a child per field and never deletes
+#   one. Withdrawal is contract A per the architect, pending s5.
+
+bindings:
+  - parent_template: int_vlan
+    parent_nvpair: ospf
+    profile_key: enable_ospf
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: OSPF_AREA_ID
+    profile_key: ospf_area_id
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: case_irrelevant
+    reset_wire: '0.0.0.0'
+    default_template: 0.0.0.0
+    min_length: 1
+    max_length: 15
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfBfdMode
+    wire_values: {no_change: noChange, enable: enable, disable: disable}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_bfd_mode
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, enable, disable]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfCost
+    profile_key: ospf_cost
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
+    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_COST -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
+    # READBACK MEDIDO = STRING VACIO ("42" -> ""), no predeterminado por la propuesta.
+    # Desaparecio `ip ospf cost 42`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
+    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
+    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
+    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfDeadInterval
+    profile_key: ospf_dead_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
+    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_DEAD_INTERVAL -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
+    # READBACK MEDIDO = STRING VACIO ("44" -> ""), no predeterminado por la propuesta.
+    # Desaparecio `ip ospf dead-interval 44`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
+    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
+    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
+    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfHelloInterval
+    profile_key: ospf_hello_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
+    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_HELLO_INTERVAL -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
+    # READBACK MEDIDO = STRING VACIO ("11" -> ""), no predeterminado por la propuesta.
+    # Desaparecio `ip ospf hello-interval 11`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
+    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
+    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
+    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfMtuIgnore
+    profile_key: ospf_mtu_ignore
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-beta
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfNetworkType
+    wire_values: {no_change: noChange, broadcast: broadcast, point_to_point: pointToPoint}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_network_type
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, broadcast, point_to_point]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfPassiveMode
+    wire_values: {no_change: noChange, passive: passive, no_passive: noPassive}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_passive_mode
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, passive, no_passive]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfPriority
+    profile_key: ospf_priority
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
+    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_PRIORITY -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
+    # READBACK MEDIDO = STRING VACIO ("77" -> ""), no predeterminado por la propuesta.
+    # Desaparecio `ip ospf priority 77`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
+    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
+    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
+    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfRetransmitInterval
+    profile_key: ospf_retransmit_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
+    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_RETRANSMIT_INTERVAL -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
+    # READBACK MEDIDO = STRING VACIO ("9" -> ""), no predeterminado por la propuesta.
+    # Desaparecio `ip ospf retransmit-interval 9`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
+    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
+    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
+    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfShutdown
+    profile_key: ospf_shutdown
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-beta
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfTag
+    profile_key: ospf_tag
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: unverified
+    min_length: 1
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfTransmitDelay
+    profile_key: ospf_transmit_delay
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
+    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_TRANSMIT_DELAY -> "".
+    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
+    # READBACK MEDIDO = STRING VACIO ("3" -> ""), no predeterminado por la propuesta.
+    # Desaparecio `ip ospf transmit-delay 3`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
+    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
+    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
+    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 450
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57

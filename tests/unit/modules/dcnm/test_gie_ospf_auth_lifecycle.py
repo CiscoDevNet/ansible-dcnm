@@ -28,8 +28,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_contribute_nvpairs,
     gie_invalid_parent_key,
     gie_validate_binding_value,
+    gie_withdrawal_action,
     GieBindingError,
     GIE_ENABLED_PATCH_VERSIONS,
+    GIE_WITHDRAW_NONE,
+    GIE_WITHDRAW_RESET,
+    GIE_WITHDRAW_UNCLASSIFIED,
+    GIE_WITHDRAW_UNSUPPORTED,
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
     resolve_binding,
@@ -208,25 +213,33 @@ def test_clearing_a_key_travels_as_an_empty_string(parent):
     assert emitted["ospfAuthenticationKey"] == ""
 
 
-@pytest.mark.parametrize("parent", PARENTS)
-def test_the_removal_semantics_are_recorded_as_unresolved(parent):
-    """Honest pinning: what `deleted`/`overridden` do to these fields is NOT established.
+# What withdrawal does to each field when it is OMITTED under replaced / overridden. Decided by the engine from the compiled
+# `reset_wire` and `default_template` (gie_withdrawal_action), measured here on the shipped table. Three fields have a verified
+# reset and are withdrawn with it. The other two have none and FAIL CLOSED (never a silent success), so no key is ever blanked
+# by guesswork. This replaces an older test that pinned the registry note `removal_semantics: unresolved` by reading a YAML file
+# outside the collection (and skipped when it was not found): that note is registry-only documentation, the engine does not read
+# it, and the behaviour it described is now defined, and tested, by the withdrawal contract below.
+WITHDRAWAL_CONTRACT = [
+    # (public key, a configured HAVE value, expected action, expected wire value)
+    ("enable_ospf_auth", "true", GIE_WITHDRAW_RESET, "false"),
+    ("ospf_auth_key_id", "7", GIE_WITHDRAW_RESET, "1"),
+    ("ospf_authentication_key", KEY_A, GIE_WITHDRAW_RESET, ""),
+    ("ospf_authentication_key_type", "7", GIE_WITHDRAW_UNSUPPORTED, None),
+    ("ospf_auth_key", KEY_A, GIE_WITHDRAW_UNCLASSIFIED, None),
+]
 
-    The registry says `removal_semantics: unresolved` for all fifteen. Overridden-with-an-empty
-    config is the path behind two defects already, and it is not in the offline matrix. This
-    asserts the admission rather than a behaviour, so that resolving it is a deliberate act.
-    """
-    import yaml
-    import os
-    slice_path = os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "..", "..", "..", "..",
-        "evidence", "generic-interface-engine", "registry",
-        "registry_slice_0b_21_ospf_auth.yaml")
-    if not os.path.exists(slice_path):
-        pytest.skip("registry slice not reachable from the installed collection tree")
-    rows = yaml.safe_load(open(slice_path))["bindings"]
-    for row in (r for r in rows if r["parent_template"] == parent):
-        assert row["removal_semantics"] == "unresolved"
+
+@pytest.mark.parametrize("parent", PARENTS)
+@pytest.mark.parametrize("key, have, action, wire", WITHDRAWAL_CONTRACT)
+def test_omitting_a_configured_field_follows_its_registered_reset_or_fails_closed(parent, key, have, action, wire):
+    assert gie_withdrawal_action(parent, key, have, NDFC, PATCH) == (action, wire)
+
+
+@pytest.mark.parametrize("parent", PARENTS)
+def test_a_field_already_at_its_reset_has_nothing_to_withdraw(parent):
+    assert gie_withdrawal_action(parent, "enable_ospf_auth", "false", NDFC, PATCH) == (GIE_WITHDRAW_NONE, None)
+    assert gie_withdrawal_action(parent, "ospf_auth_key_id", "1", NDFC, PATCH) == (GIE_WITHDRAW_NONE, None)
+    assert gie_withdrawal_action(parent, "ospf_authentication_key", "", NDFC, PATCH) == (GIE_WITHDRAW_NONE, None)
 
 
 # =====================================================================================
