@@ -1,0 +1,359 @@
+# Registry slice 0b_14 — los CUATRO campos de host que los parents de PORT-CHANNEL tambien
+# declaran y que no estaban registrados.
+#
+# POR QUE EXISTE ESTE SLICE
+#   Cada campo se registro en su propia fase, mirando solo los parents que estaban bajo prueba
+#   en ese momento. Con SPANNING_TREE_PORT_TYPE se probaba sobre ethernet, se registraron los
+#   dos parents de ethernet, y no se pregunto donde mas existia el campo.
+#
+#   Un barrido de los 98 templates encontro 92 declaraciones de los 11 nvPairs registrados,
+#   contra 22 filas en la tabla. FLOWCONTROL es el unico campo con cobertura completa, y es
+#   exactamente el unico donde ese barrido si se hizo en su momento.
+#
+#   Este slice cierra los 12 huecos de port-channel. Los 3 de DISABLE_LLDP llevan una nota
+#   aparte al final: se registran para MEDIR si el valor llega al miembro.
+#   Quedan tambien los de vPC y los de routed/subif/vlan/loopback, en slices aparte.
+#
+# POR QUE EL FALLO ERA INVISIBLE
+#   Un binding no registrado no falla: simplemente no existe. El modulo responde
+#   "'<campo>' is not supported on this interface" -- una frase que resulta FALSA, porque el
+#   template si lo declara. Quien no lo soportaba era el registry.
+#
+#   Y los tests de integridad fijan el conjunto que decidimos registrar, asi que confirmaban
+#   nuestra propia omision.
+#
+# MECANISMO: passthrough en los doce
+#   `mechanism` NO describe lo que NDFC hace con el valor; describe quien es dueño de la
+#   validacion y del carry-forward. `child_pti` significa "un validador dedicado del modulo lo
+#   gobierna" -- el caso de la clave OSPF, con su atomicidad de par, su rango y la exclusion de
+#   keychain.
+#
+#   Ninguno de estos doce necesita eso: el motor les basta, igual que a sus pares de ethernet.
+#
+#   Tres de ellos emiten CLI en el PROPIO padre -- verificado leyendo el DSL:
+#     SPANNING_TREE_PORT_TYPE  ->  spanning-tree port type {}
+#     DISABLE_QOS_STATS        ->  service-policy type qos input {}{}
+#     DISABLE_QUEUING_STATS    ->  service-policy type queuing output {}{}
+#   DISABLE_LLDP es el cuarto y si delega; ver su nota al final.
+#
+# METADATOS LEIDOS, NO COPIADOS
+#   Se verificaron las doce declaraciones en los tres templates. Los tres son identicos entre
+#   si e identicos a sus pares de ethernet:
+#     SPANNING_TREE_PORT_TYPE  enum    no,network,normal   defaultValue=no
+#     DISABLE_LLDP             boolean                     defaultValue=false
+#     DISABLE_QOS_STATS        boolean                     defaultValue=false
+#     DISABLE_QUEUING_STATS    boolean                     defaultValue=false
+#
+# Sin `default_template`, por la misma razon que en los parents de ethernet: registrar el
+# default convertiria la omision en "poner el default" en lugar de "preservar", y al ser
+# passthrough el campo entra al carry-forward.
+#
+# DEPENDENCIAS, heredadas de las anotaciones IsShow de cada template
+#   SPANNING_TREE_PORT_TYPE  PORTTYPE_FAST_ENABLED != true
+#   DISABLE_QOS_STATS        ENABLE_QOS == true  Y un QOS_POLICY resoluble
+#   DISABLE_QUEUING_STATS    QUEUING_POLICY != ''
+#   Las mismas que en ethernet, y por el mismo motivo no se registran: la precondicion vive en
+#   campos que el registry no conoce.
+#
+# ------------------------------------------------------------------------------------
+# DISABLE_LLDP en los _host: REGISTRADO PARA MEDIRLO, no porque se sepa que funciona
+# ------------------------------------------------------------------------------------
+#   A diferencia de los tres campos de arriba, el padre NO emite el CLI: pasa el valor a la
+#   policy del puerto MIEMBRO, y el miembro escribe 'no lldp transmit' / 'no lldp receive'.
+#
+#   Hay una decision previa que difiere los SEIS bindings de DISABLE_LLDP sobre templates
+#   *_member_11_1, con una razon solida: esos parents viven en pol_pc_member_types y no en
+#   pol_types, y la clave de policy se arma como <type>_<mode>, asi que NINGUNA combinacion que
+#   un usuario pueda escribir resuelve a ellos. Ese diferimiento SIGUE EN PIE.
+#
+#   Los _host son otro caso y ese es el dato nuevo: SI son alcanzables (type: pc + mode:
+#   trunk/access/dot1q). La pregunta de si el valor llega al miembro por la cadena del template
+#   es EMPIRICA, no de criterio, y el lab la contesta:
+#
+#       mandar disable_lldp: true a port-channel32
+#       -> aparece 'no lldp transmit' en Ethernet1/4, su puerto miembro?
+#
+#   Se registran para medir eso. Si el CLI aparece, queda confirmado con evidencia. Si no
+#   aparece, el diferimiento se extiende a los _host -- documentado con una medicion en lugar de
+#   una suposicion, que es la unica forma de cerrarlo bien.
+#
+#   PENDIENTE DE VALIDACION EN VIVO al momento de escribir esto.
+
+- parent_template: int_port_channel_access_host
+  parent_nvpair: DISABLE_LLDP
+  profile_key: disable_lldp
+  applicable_interface_type: pc
+  applicable_mode: access
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_access_host.template#DISABLE_LLDP
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_access_member_11_1
+      cli: no lldp transmit / no lldp receive
+      phase: current
+
+- parent_template: int_port_channel_trunk_host
+  parent_nvpair: DISABLE_LLDP
+  profile_key: disable_lldp
+  applicable_interface_type: pc
+  applicable_mode: trunk
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_trunk_host.template#DISABLE_LLDP
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_trunk_member_11_1
+      cli: no lldp transmit / no lldp receive
+      phase: current
+
+- parent_template: int_port_channel_dot1q_tunnel_host
+  parent_nvpair: DISABLE_LLDP
+  profile_key: disable_lldp
+  applicable_interface_type: pc
+  applicable_mode: dot1q
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_dot1q_tunnel_host.template#DISABLE_LLDP
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_dot1q_tunnel_member_11_1
+      cli: no lldp transmit / no lldp receive
+      phase: current
+
+# ------------------------------------------------------ SPANNING_TREE_PORT_TYPE ---
+- parent_template: int_port_channel_access_host
+  parent_nvpair: spanningTreePortType
+  reset_wire: "no"   # G25 B1: medido en vivo, apply+clear en Port-channel301
+  profile_key: spanning_tree_port_type
+  applicable_interface_type: pc
+  applicable_mode: access
+  type: enum
+  valid_values: ["no", network, normal]
+  default_template: "no"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_access_host.template#SPANNING_TREE_PORT_TYPE
+  effect_rules:
+    - predicate: value_network_or_normal
+      ndfc_effect: inline_config
+      cli: spanning-tree port type <value>
+      phase: current
+
+- parent_template: int_port_channel_trunk_host
+  parent_nvpair: spanningTreePortType
+  reset_wire: "no"   # G25 B1: medido en vivo, apply+clear en Port-channel302
+  profile_key: spanning_tree_port_type
+  applicable_interface_type: pc
+  applicable_mode: trunk
+  type: enum
+  valid_values: ["no", network, normal]
+  default_template: "no"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_trunk_host.template#SPANNING_TREE_PORT_TYPE
+  effect_rules:
+    - predicate: value_network_or_normal
+      ndfc_effect: inline_config
+      cli: spanning-tree port type <value>
+      phase: current
+
+- parent_template: int_port_channel_dot1q_tunnel_host
+  parent_nvpair: spanningTreePortType
+  reset_wire: "no"   # G25 B1: medido en vivo, apply+clear en Port-channel303
+  profile_key: spanning_tree_port_type
+  applicable_interface_type: pc
+  applicable_mode: dot1q
+  type: enum
+  valid_values: ["no", network, normal]
+  default_template: "no"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_dot1q_tunnel_host.template#SPANNING_TREE_PORT_TYPE
+  effect_rules:
+    - predicate: value_network_or_normal
+      ndfc_effect: inline_config
+      cli: spanning-tree port type <value>
+      phase: current
+
+# ------------------------------------------------------------ DISABLE_QOS_STATS ---
+- parent_template: int_port_channel_access_host
+  parent_nvpair: qosStatsSuppressed
+  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel301
+  profile_key: disable_qos_stats
+  applicable_interface_type: pc
+  applicable_mode: access
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_access_host.template#DISABLE_QOS_STATS
+  effect_rules:
+    - predicate: value_true_and_qos_policy_resolvable
+      ndfc_effect: inline_config
+      cli: service-policy type qos input <policy> no-stats
+      phase: current
+    - predicate: enable_qos_false_or_policy_unresolvable
+      ndfc_effect: silent_noop
+      phase: current
+
+- parent_template: int_port_channel_trunk_host
+  parent_nvpair: qosStatsSuppressed
+  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel302
+  profile_key: disable_qos_stats
+  applicable_interface_type: pc
+  applicable_mode: trunk
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_trunk_host.template#DISABLE_QOS_STATS
+  effect_rules:
+    - predicate: value_true_and_qos_policy_resolvable
+      ndfc_effect: inline_config
+      cli: service-policy type qos input <policy> no-stats
+      phase: current
+    - predicate: enable_qos_false_or_policy_unresolvable
+      ndfc_effect: silent_noop
+      phase: current
+
+- parent_template: int_port_channel_dot1q_tunnel_host
+  parent_nvpair: qosStatsSuppressed
+  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel303
+  profile_key: disable_qos_stats
+  applicable_interface_type: pc
+  applicable_mode: dot1q
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_dot1q_tunnel_host.template#DISABLE_QOS_STATS
+  effect_rules:
+    - predicate: value_true_and_qos_policy_resolvable
+      ndfc_effect: inline_config
+      cli: service-policy type qos input <policy> no-stats
+      phase: current
+    - predicate: enable_qos_false_or_policy_unresolvable
+      ndfc_effect: silent_noop
+      phase: current
+
+# -------------------------------------------------------- DISABLE_QUEUING_STATS ---
+- parent_template: int_port_channel_access_host
+  parent_nvpair: queuingStats
+  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel301
+  profile_key: disable_queuing_stats
+  applicable_interface_type: pc
+  applicable_mode: access
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_access_host.template#DISABLE_QUEUING_STATS
+  effect_rules:
+    - predicate: value_true_and_queuing_policy_set
+      ndfc_effect: inline_config
+      cli: service-policy type queuing output <policy> no-stats
+      phase: current
+    - predicate: queuing_policy_empty
+      ndfc_effect: silent_noop
+      phase: current
+
+- parent_template: int_port_channel_trunk_host
+  parent_nvpair: queuingStats
+  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel302
+  profile_key: disable_queuing_stats
+  applicable_interface_type: pc
+  applicable_mode: trunk
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_trunk_host.template#DISABLE_QUEUING_STATS
+  effect_rules:
+    - predicate: value_true_and_queuing_policy_set
+      ndfc_effect: inline_config
+      cli: service-policy type queuing output <policy> no-stats
+      phase: current
+    - predicate: queuing_policy_empty
+      ndfc_effect: silent_noop
+      phase: current
+
+- parent_template: int_port_channel_dot1q_tunnel_host
+  parent_nvpair: queuingStats
+  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel303
+  profile_key: disable_queuing_stats
+  applicable_interface_type: pc
+  applicable_mode: dot1q
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_dot1q_tunnel_host.template#DISABLE_QUEUING_STATS
+  effect_rules:
+    - predicate: value_true_and_queuing_policy_set
+      ndfc_effect: inline_config
+      cli: service-policy type queuing output <policy> no-stats
+      phase: current
+    - predicate: queuing_policy_empty
+      ndfc_effect: silent_noop
+      phase: current

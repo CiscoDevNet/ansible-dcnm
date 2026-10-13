@@ -1,0 +1,332 @@
+# WP98 — the five OSPF authentication fields, on all three overlay parents at once.
+#
+# WHY ONE SLICE FOR THREE PARENTS
+#   The other OSPF slices are per parent, because the three templates model the same concepts
+#   DIFFERENTLY (passive is an enum on routed and vlan, a boolean on subif; retransmit is absent
+#   on routed). Authentication is the exception: all five fields are byte-identical in type,
+#   default, range and valid values across int_routed_host, int_subif and int_vlan. That was
+#   read from the three templates, not assumed -- and it is the reason the mechanism decision is
+#   made once here rather than three times.
+#
+# WHERE THESE FACTS COME FROM
+#   int_routed_host : <internal evidence record>
+#   int_subif       : templates/new engineering templates/14sep2026/int_subif.template
+#   int_vlan        : templates/new engineering templates/14sep2026/int_vlan.template
+#
+#   The subif and vlan files were confirmed to be the source behind the existing OSPF slices by
+#   replaying every non-auth field already registered for those parents against them: 14 of 14
+#   matched on type, min and max. The `evidence_ref` shas below are of the API-returned template
+#   content, which is why they do not equal the sha256 of these files.
+#
+# THIS IS NOT THE LOOPBACK CASE
+#   Retired slice 0b_10 registered OSPF auth on int_fabric_loopback_11_1. That was withdrawn
+#   because authentication on a FABRIC loopback is underlay authentication that fabricSettings
+#   owns, and the interface value was a mere override a keychain setting deletes. On these three
+#   parents the fabric has no part in it: the feature is self-contained on the interface, which
+#   is exactly why the two global validators that blocked it were removed.
+#
+# no_log
+#   TWO of the five carry key material: OSPF_AUTH_KEY and OSPF_AUTHENTICATION_KEY. They are the
+#   only rows marked `no_log: true` in the whole registry.
+#
+#   The key ID and the encryption-type selector are deliberately NOT marked. Ansible scrubs by
+#   STRING MATCH, so marking OSPF_AUTH_KEY_ID would make it replace the bare digits of that id
+#   -- "1", or "7" -- everywhere they appear in every result, corrupting unrelated output while
+#   protecting nothing. An id is not a secret; neither is "3".
+#
+#   `no_log` is ONE property with two consumers: the module registers these keys' values for
+#   scrubbing on arrival, over the whole config, and the engine emits `no_log=True` in the
+#   generated prof_spec entry. It replaced the old `sensitive` annotation, which nothing read.
+##
+# THE ENCRYPTION-TYPE SELECTOR IS A STRING, AND ITS VALUES LOOK LIKE NUMBERS
+#   The template declares `enum OSPF_AUTHENTICATION_KEY_TYPE { validValues=0,3,7; }`. Every enum
+#   in this registry maps to the `str` validator, because nvPairs are a string-valued map and
+#   NDFC returns "3", not 3. So the valid values are QUOTED here and a playbook must write
+#   `ospf_authentication_key_type: "3"`.
+#
+#   This is a sharp edge worth naming: for every other enum the values are words, so nobody was
+#   ever tempted to write them unquoted. Here `3` is the natural thing to type and it is
+#   REJECTED -- deliberately, by the same rule that rejects "false" for a boolean. The engine
+#   does not coerce raw types, because a module that quietly reinterprets what the operator
+#   wrote is how a playbook ends up meaning something other than it says. The rejection names
+#   the expected type.
+#
+# WHY THE KEY IS A PLAIN STRING WITH NO LENGTH BOUNDS
+#   The template declares `string OSPF_AUTH_KEY;` with no braces at all -- no default, no
+#   min_length, no max_length. NDFC's description says "in 3DES encrypted form", but the
+#   template does not enforce a shape and neither do we: a bound invented here would reject
+#   valid controller input. Validation of the encrypted form belongs to NDFC.
+
+bindings:
+  - parent_template: int_routed_host
+    parent_nvpair: ospfAuthentication
+    profile_key: enable_ospf_auth
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@e20773437cd7c0e3
+
+  - parent_template: int_routed_host
+    parent_nvpair: OSPF_AUTH_KEY_ID
+    profile_key: ospf_auth_key_id
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    reset_wire: '1'
+    default_template: 1
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@e20773437cd7c0e3
+
+  - parent_template: int_routed_host
+    parent_nvpair: OSPF_AUTH_KEY
+    profile_key: ospf_auth_key
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@e20773437cd7c0e3
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfAuthenticationKeyType
+    profile_key: ospf_authentication_key_type
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    valid_values: ["0", "3", "7"]
+    default_template: "3"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@e20773437cd7c0e3
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfAuthenticationKey
+    profile_key: ospf_authentication_key
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@e20773437cd7c0e3
+
+  - parent_template: int_subif
+    parent_nvpair: ospfAuthentication
+    profile_key: enable_ospf_auth
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: OSPF_AUTH_KEY_ID
+    profile_key: ospf_auth_key_id
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    reset_wire: '1'
+    default_template: 1
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: OSPF_AUTH_KEY
+    profile_key: ospf_auth_key
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: exact
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfAuthenticationKeyType
+    profile_key: ospf_authentication_key_type
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: enum
+    valid_values: ["0", "3", "7"]
+    default_template: "3"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfAuthenticationKey
+    profile_key: ospf_authentication_key
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfAuthentication
+    profile_key: enable_ospf_auth
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: OSPF_AUTH_KEY_ID
+    profile_key: ospf_auth_key_id
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    reset_wire: '1'
+    default_template: 1
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: OSPF_AUTH_KEY
+    profile_key: ospf_auth_key
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: exact
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfAuthenticationKeyType
+    profile_key: ospf_authentication_key_type
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    valid_values: ["0", "3", "7"]
+    default_template: "3"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfAuthenticationKey
+    profile_key: ospf_authentication_key
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57

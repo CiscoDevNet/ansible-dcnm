@@ -1,0 +1,91 @@
+# Registry slice 0b_11 — FLOWCONTROL_SEND sobre interfaces ethernet de host.
+#
+# Companera directa de FLOWCONTROL_RECEIVE (slice 0b, A1.5), con forma IDENTICA. Las dos
+# declaraciones viven juntas en los mismos dos templates:
+#
+#   int_trunk_host:152   enum FLOWCONTROL_RECEIVE { validValues=on,off; defaultValue=off; }
+#   int_trunk_host:158   enum FLOWCONTROL_SEND    { validValues=on,off; defaultValue=off; }
+#   int_access_host:137  (receive, idem)
+#   int_access_host:143  (send, idem)
+#
+# Barrido de los 90+ templates: SOLO estos dos parents llevan FLOWCONTROL. Ni port-channel,
+# ni vPC, ni dot1q. Estas dos filas cierran el universo del campo.
+#
+# MECANISMO: passthrough. El DSL consume el valor en linea, sin crear ningun hijo:
+#
+#   int_trunk_host:588   if flowcontrolSend == "on":
+#   int_trunk_host:589       config_builder.add_config('flowcontrol send on', ...)
+#
+# Solo "on" emite CLI, asi que "off" es una ruta de apagado real y simetrica. Eso es lo que
+# le da a este campo la ruta de borrado que al par de clave OSPF le falta (evidencia doc 29
+# y doc 31): apagar es un VALOR VALIDO, no vaciar el campo.
+#
+# Al ser passthrough entra al carry-forward de HAVE, por lo que omitir la clave PRESERVA el
+# valor actual del controlador en vez de ser un no-op silencioso. Medido para `receive` en
+# la etapa f4 de los dos parents (doc 31).
+#
+# Sin `default_template`: el default del template es "off", pero registrarlo convertiria la
+# omision en "poner off" en lugar de "preservar". La omision ya esta cubierta por el
+# carry-forward, que es el comportamiento correcto y el que se midio.
+
+- parent_template: int_trunk_host
+  parent_nvpair: flowcontrolSend
+  reset_wire: "off"
+  profile_key: flowcontrol_send
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: enum
+  valid_values:
+    - "on"
+    - "off"
+  default_template: "off"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_trunk_host.template#L158
+  effect_rules:
+    - predicate: value_on
+      ndfc_effect: inline_config
+      cli: flowcontrol send on
+      phase: current
+      evidence_ref: int_trunk_host.template#L588
+    - predicate: value_off
+      ndfc_effect: no_config
+      phase: current
+      # "off" no emite CLI. El motor de compliance de NDFC genera el `no` por su cuenta
+      # cuando la linea desaparece del intent; medido para `receive` en f3 (doc 31).
+      evidence_ref: int_trunk_host.template#L588
+
+- parent_template: int_access_host
+  parent_nvpair: flowcontrolSend
+  reset_wire: "off"
+  profile_key: flowcontrol_send
+  applicable_interface_type: eth
+  applicable_mode: access
+  type: enum
+  valid_values:
+    - "on"
+    - "off"
+  default_template: "off"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_access_host.template#L143
+  effect_rules:
+    - predicate: value_on
+      ndfc_effect: inline_config
+      cli: flowcontrol send on
+      phase: current
+      evidence_ref: int_access_host.template#L349
+    - predicate: value_off
+      ndfc_effect: no_config
+      phase: current
+      evidence_ref: int_access_host.template#L349

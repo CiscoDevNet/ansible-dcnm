@@ -1,0 +1,163 @@
+# Phase 0B — slice 6: Dampening on int_routed_host (conditional-composition canary).
+# Offline, design-only. No engine, no live. Format B, one shared effect + conditional_requirements.
+# UNLIKE BFD: gate=true with no values is valid (required_when_gate: []). The finer rules
+# (verified in child interface_dampening.template#L55-67 + IsShow/IsMandatory) are expressed
+# as conditional_requirements. Ranges from catalog. removal_semantics: unresolved.
+shared_effects:
+  - effect_id: dampening@int_routed_host
+    parent_template: int_routed_host
+    child_template: interface_dampening
+    gate_nvpair: ENABLE_DAMPENING
+    predicate: gate_true
+    ndfc_effect: create_or_update
+    relationship: base
+    phase: current
+    removal_semantics: unresolved
+    required_when_gate: []          # none unconditionally required (ENABLE alone is valid)
+    value_bindings:
+      - {source_parent_nvpair: dampeningHalfLife,     target_child_nvpair: DAMPENING_HALF_LIFE,     transform: identity}
+      - {source_parent_nvpair: dampeningReuse,         target_child_nvpair: DAMPENING_REUSE,         transform: identity}
+      - {source_parent_nvpair: dampeningSuppress,      target_child_nvpair: DAMPENING_SUPPRESS,      transform: identity}
+      - {source_parent_nvpair: dampeningMaxSuppress,  target_child_nvpair: DAMPENING_MAX_SUPPRESS,  transform: identity}
+      - {source_parent_nvpair: dampeningRestart,       target_child_nvpair: DAMPENING_RESTART,       transform: identity}
+      - {source_parent_nvpair: dampeningRestartPenalty, target_child_nvpair: DAMPENING_RESTART_PENALTY, transform: identity}
+    conditional_eval: explicit_intent   # conditions evaluate over EXPLICIT intent, before defaults/HAVE
+    conditional_requirements:
+      # 6: any explicit dampening value requires the gate (avoids silent no-op)
+      - kind: requires_gate
+        params: [DAMPENING_HALF_LIFE, DAMPENING_REUSE, DAMPENING_SUPPRESS, DAMPENING_MAX_SUPPRESS, DAMPENING_RESTART, DAMPENING_RESTART_PENALTY]
+        evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L790"
+      # 3a: reuse/suppress/max_suppress are all-or-none
+      - kind: all_or_none
+        params: [DAMPENING_REUSE, DAMPENING_SUPPRESS, DAMPENING_MAX_SUPPRESS]
+        evidence_ref: "interface_dampening.template#L28"
+      # 3b: that group requires half_life
+      - kind: requires
+        if_present: [DAMPENING_REUSE]
+        then_required: [DAMPENING_HALF_LIFE]
+        evidence_ref: "interface_dampening.template#L22"
+      # 4: restart=true requires the full group + half_life
+      - kind: if_true_requires
+        if_true: DAMPENING_RESTART
+        then_required: [DAMPENING_HALF_LIFE, DAMPENING_REUSE, DAMPENING_SUPPRESS, DAMPENING_MAX_SUPPRESS]
+        evidence_ref: "interface_dampening.template#L55"
+      # 5: restart_penalty requires restart=true
+      - kind: requires_true
+        if_present: [DAMPENING_RESTART_PENALTY]
+        then_true: DAMPENING_RESTART
+        evidence_ref: "interface_dampening.template#L45"
+    evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L794"
+
+bindings:
+  - {parent_template: int_routed_host, parent_nvpair: dampening, profile_key: enable_dampening,
+     applicable_interface_type: eth, applicable_mode: routed, type: boolean, default_template: false,
+     reset_wire: 'false',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: gate, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L790"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningHalfLife, profile_key: dampening_half_life,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 30,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L796"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningReuse, profile_key: dampening_reuse,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 20000,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L797"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningSuppress, profile_key: dampening_suppress,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 20000,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L798"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningMaxSuppress, profile_key: dampening_max_suppress,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 255,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L799"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningRestart, profile_key: dampening_restart,
+     applicable_interface_type: eth, applicable_mode: routed, type: boolean, default_template: false,
+     reset_wire: 'false',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L800"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningRestartPenalty, profile_key: dampening_restart_penalty,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 20000,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L801"}
+
+# =====================================================================================
+# CORRECCION 2026-09-20 — el mecanismo de las siete filas de dampening: child_pti -> passthrough
+# =====================================================================================
+#
+# Estas siete llevaban escritas desde este slice y NUNCA llegaron a la tabla: no estaban en
+# COMMITTED_BINDINGS, y el generador salta en silencio una fila que no este en esa lista. Es
+# exactamente lo que habia pasado con las ocho de BFD.
+#
+# POR QUE passthrough Y NO child_pti
+#   El modulo escribe los valores en los nvPairs del PADRE y es el DSL de int_routed_host el que
+#   instancia `interface_dampening` con ellos (:1186-1196 del cuerpo instalado). El modulo no
+#   construye el hijo. Ese es el mismo razonamiento por el que las ocho de BFD se corrigieron, y
+#   ahi la ronda en vivo lo confirmo midiendo la linea en el equipo.
+#
+#   Aqui esa confirmacion NO se puede hacer, y conviene decirlo en vez de dejarlo implicito:
+#   `dampening` no existe en el NX-OS de estos switches.
+#
+# EL CLI NO EXISTE EN NINGUNA DE LAS DOS IMAGENES DEL LAB
+#   Sondeado por NDFC con el comando que el hijo produce:
+#
+#     FAB1  nxos64-cs-lite.10.5.5.M   `dampening 10 1500 3000 60` -> CLI command is invalid
+#     FAB4  nxos64-cs.10.6.2.F        `dampening 10 1500 3000 60` -> CLI command is invalid
+#
+#   La fase 33 lo midio en FAB1 y lo atribuyo a la imagen lite. FAB4 corre la COMPLETA -- la que
+#   si soporta EIGRP, que la lite no -- y tambien lo rechaza. La causa no es "lite": el comando
+#   no esta en el NX-OS de C9300v. Eso corrige el hallazgo anterior.
+#
+# ALCANCE DE LO QUE SE PUEDE VALIDAR
+#   Capa de dispositivo: IMPOSIBLE. Ningun valor de estos siete producira una linea aqui.
+#   Capa de controlador: SI. El POST evalua el template antes del deploy, asi que las cuatro
+#   reglas de dependencia se ejercitan y el read-back se lee.
+#
+# CUATRO NIVELES DE DEPENDENCIA -- la cadena mas profunda del registro
+#       ENABLE_DAMPENING                 boolean, defaultValue=false
+#         DAMPENING_HALF_LIFE            1..30      IsShow ENABLE==true
+#           DAMPENING_REUSE              1..20000   IsShow ENABLE && HALF_LIFE!=''
+#           DAMPENING_SUPPRESS           1..20000   idem
+#           DAMPENING_MAX_SUPPRESS       1..255     idem
+#           DAMPENING_RESTART            boolean    IsShow ENABLE && REUSE!=''
+#             DAMPENING_RESTART_PENALTY  1..20000   IsShow ENABLE && RESTART==true
+#
+# CUATRO REGLAS DEL TEMPLATE, NINGUNA NUESTRA
+#       "Dampening half-life is required when reuse, suppress, or max suppress is configured."
+#       "Dampening reuse, suppress, and max suppress must be configured together."
+#       "Dampening restart can only be configured with half-life, reuse, suppress, and max
+#        suppress values."
+#       "Dampening restart penalty requires dampening restart to be enabled."
+#
+#   La segunda liga TRES campos registrados entre si -- la primera de ese tipo en el registro;
+#   HSRP tenia pares. NDFC las impone en el POST, que es justo lo que las hace medibles aqui.
+#
+# SEIS CAMPOS EN UNA SOLA LINEA, CON CINCO VARIANTES
+#   Del hijo interface_dampening, instalado:
+#       dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS restart $RESTART_PENALTY
+#       dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS restart
+#       dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS
+#       dampening $HALF_LIFE
+#       dampening
+#   BFD fundia tres campos en una linea y HSRP dos mas un nativo; aqui son seis y la forma de la
+#   linea cambia segun cuales esten puestos. Si algun dia corre en hardware que lo soporte,
+#   contar lineas no probara nada.
+#
+#   SOLO int_routed_host declara dampening: int_subif, int_vlan e int_loopback, 0 de 7.
