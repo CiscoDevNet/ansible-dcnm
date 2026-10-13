@@ -202,9 +202,13 @@ def test_vpc_one_peer_freeform_change_stays_a_refused_unilateral_update():
         (["ip port access-group A in"], "'ip port access-group' command"),
         (["interface Ethernet1/9"], "'interface' command"),
         (["  sgt 10"], "indented sub-command"),
-        (["a\nb"], "one command"),
+        # PO-VPC text parity: a list entry holding a line break is checked line by line (each line must pass); a text is accepted the
+        # same way, so these used to be "one command" / "list of strings" refusals and are now the per-line ones below.
+        (["logging event port link-status\n  sgt 10"], "indented sub-command"),
+        ("logging event port link-status\r\nswitchport mode trunk", "copies to every member"),
+        ("no ip redirects, x", "must not contain a comma"),
+        (5, "list of strings"),
         ([""], "is empty"),
-        ("no ip redirects", "list of strings"),
     ],
 )
 def test_freeform_rule_refuses_before_any_request(cmds, needle):

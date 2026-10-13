@@ -1741,17 +1741,19 @@ PO_FREEFORM_RESERVED = ("switchport", "private-vlan", "channel-group", "vpc", "i
 
 def po_freeform_errors(key, value):
     """RC1: raw validation of a port-channel / vPC freeform list (`cmds`, `peerN_cmds`): one top-level command per entry, none that the
-    controller would copy to the members, none in a field a structured key owns. The message names the field, never a whole command."""
-    if not isinstance(value, list) or not all(isinstance(x, str) for x in value):
-        return ["%s must be a list of strings" % key]
+    controller would copy to the members, none in a field a structured key owns. The message names the field, never a whole command.
+    A text (how NaC renders freeform_config) and list entries holding line breaks are checked line by line (cmds_lines, indentation kept);
+    the index is the line's position after that split. A text with a comma is refused, as for Ethernet."""
+    lines = cmds_lines(value)
+    if lines is None:
+        if isinstance(value, str):
+            return ["%s given as text must not contain a comma; use a list of strings" % key]
+        return ["%s must be a list of strings (or a text with one command per line)" % key]
     errors = []
-    for index, line in enumerate(value):
+    for index, line in enumerate(lines):
         where = "%s[%d]" % (key, index)
         if not line.strip():
             errors.append("%s is empty" % where)
-            continue
-        if "\n" in line or "\r" in line:
-            errors.append("%s must hold one command (no line break)" % where)
             continue
         if line != line.lstrip():
             errors.append("%s is an indented sub-command; sub-mode blocks are not modeled in a port-channel freeform" % where)
@@ -1781,11 +1783,19 @@ def stored_freeform_errors(key, text):
 
 def freeform_request(cmds):
     """RC2 (L1): the commands of ONE freeform request, stripped, with exact duplicates dropped and the order of first appearance kept, so a
-    repeated entry is never stored twice (an idempotency comparison that counts lines would otherwise see a change on every run)."""
+    repeated entry is never stored twice (an idempotency comparison that counts lines would otherwise see a change on every run).
+    A text or a list entry holding line breaks contributes its lines (cmds_lines); a text is never iterated character by character."""
+    if cmds is None:
+        return []
+    lines = cmds_lines(cmds)
+    if lines is None:
+        raise PvlanError("freeform commands must be a list of strings or a text without a comma")
     out = []
-    for line in cmds or []:
+    for line in lines:
         text = line.strip()
-        if text not in out:
+        # A blank line is never a command: validation refuses one in a list, and the empty text (NaC's omitted freeform_config) reaches
+        # the builders as [""] through Ansible's list conversion.
+        if text and text not in out:
             out.append(text)
     return out
 
