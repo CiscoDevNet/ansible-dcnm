@@ -59,7 +59,10 @@ def legs_of(r=None, order=(SN1, SN2)):
         (lambda r: r.update(pvlan_mapping=[{"primary_vlan": 1, "secondary_vlans": "2"}]), "pvlan_mapping is not valid for pvlan_mode 'host'"),
         (lambda r: r.update(native_vlan="5"), "not implemented for a vPC"),
         (lambda r: r.update(pc_mode="bogus"), "pc_mode must be one of"),
-        (lambda r: r.update(peer1_description=""), "peer1_description must be a single-line"),
+        # A1-CLEAR: "" is now the explicit clear (accepted; test_dcnm_intf_pvlan_vpc_a1_description_clear.py); the single-line and length rules stay.
+        (lambda r: r.update(peer1_description="a\nb"), "peer1_description must be a single-line"),
+        (lambda r: r.update(peer2_description="a\rb"), "peer2_description must be a single-line"),
+        (lambda r: r.update(peer1_description="x" * 255), "peer1_description must be a single-line"),
         (lambda r: r.update(admin_state="no"), "admin_state must be a boolean"),
         (lambda r: r.update(peer1_description=None), "must not be null"),
     ],
