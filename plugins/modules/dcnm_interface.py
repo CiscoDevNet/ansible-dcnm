@@ -6940,7 +6940,8 @@ class DcnmIntf:
                     serialNumber,
                 )
                 if response_identity is None:
-                    read_reason_note_detail(self, serialNumber, "record {0}.{1} serialNumber/interfaceType does not identify the queried switch".format(index, sub))
+                    read_reason_note_detail(self, serialNumber,
+                                            "record {0}.{1} serialNumber/interfaceType does not identify the queried switch".format(index, sub))
                     self.dcnm_intf_mark_detail_unavailable(serialNumber)
                     return
                 if not isinstance(intf.get("nvPairs"), dict):
