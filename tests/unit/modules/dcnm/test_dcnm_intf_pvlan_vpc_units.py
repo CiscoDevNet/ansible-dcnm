@@ -213,8 +213,9 @@ def test_replaced_states_the_complete_model():
 
 
 def test_a_change_reaching_one_peer_only_is_refused_not_applied():
-    for peer, key in ((1, "peer1_description"), (2, "peer2_description")):
-        r = raw(**{key: "only-this-peer"})
+    # A1: the description of one peer alone is supported (see test_dcnm_intf_pvlan_vpc_a1_description.py); a one-peer freeform is still refused
+    for peer, key in ((1, "peer1_cmds"), (2, "peer2_cmds")):
+        r = raw(**{key: ["logging event port link-status"]})
         out = P.reconcile_vpc("merged", r, VPC, legs_of(r), P.VPC_HOST_POLICY, have_of())
         assert not out["update"] and any("changes only peer %d" % peer in x for x in out["blocked"]), out
     r = raw(peer1_description="x", peer2_description="y")  # both peers: symmetric, allowed

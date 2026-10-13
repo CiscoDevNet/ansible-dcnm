@@ -639,10 +639,11 @@ def test_an_admin_state_change_is_refused_before_the_intent_changes_because_the_
 
 
 def test_unilateral_update_is_refused_before_the_modify():
-    for key in ("peer1_description", "peer2_description"):
+    # A1: the description of ONE peer is now supported (test_dcnm_intf_pvlan_vpc_a1_description.py); the freeform of one peer is still refused
+    for key in ("peer1_cmds", "peer2_cmds"):
         ctrl = created_ctrl()
         converged_previews(ctrl)
-        status, result = run_vpc(ctrl, [vpc_item(**{key: "one-peer-only"})], state="merged")
+        status, result = run_vpc(ctrl, [vpc_item(**{key: ["logging event port link-status"]})], state="merged")
         assert status == "fail" and "not implemented" in result["msg"] and "changes only peer" in result["msg"], result.get("msg")
         assert ctrl.writes() == [] and ctrl.modifies() == []
 
