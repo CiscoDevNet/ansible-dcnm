@@ -86,7 +86,7 @@ def measure(sizes, repeats):
     rows = []
     for n in sizes:
         for label, fn in scenarios(n):
-            runs = [fn() for _ in range(repeats)]
+            runs = [fn() for _repeat in range(repeats)]
             last = runs[-1]
             rows.append({
                 "interfaces": n,
