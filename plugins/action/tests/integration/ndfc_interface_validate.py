@@ -105,6 +105,9 @@ class ActionModule(ActionBase):
         readback -> 'missing'; a different normalized value -> 'different'. nvPairs the test did not request, and other
         controller metadata, are ignored (DeepDiff's dictionary_item_added is dropped by process_deepdiff). Fields in
         `ignore_fields` are left out of both sides. Sensitive values are never reported, only their key names.
+        When the readback holds several entries for one identity, EVERY entry must hold the requested values: the verdict
+        never depends on which entry comes first. Identical entries, or entries that differ only in nvPairs the test did
+        not request, still pass.
         Returns {} when everything requested matches.
         """
         differences = {}
@@ -116,7 +119,7 @@ class ActionModule(ActionBase):
         actual = {}
         for policy in ndfc_data.get("response") or []:
             for interface in policy.get("interfaces") or []:
-                actual.setdefault(self._interface_key(interface), interface.get("nvPairs") or {})
+                actual.setdefault(self._interface_key(interface), []).append(interface.get("nvPairs") or {})
         for policy in expected_data.get("response") or []:
             for interface in policy.get("interfaces") or []:
                 key = self._interface_key(interface)
@@ -125,25 +128,36 @@ class ActionModule(ActionBase):
                     differences[label] = "interface not found in the readback"
                     continue
                 want = dict((k, v) for k, v in (interface.get("nvPairs") or {}).items() if k not in ignore_fields)
-                have = dict((k, v) for k, v in actual[key].items() if k not in ignore_fields)
-                diff = process_deepdiff(DeepDiff(want, have), keys_to_ignore=ignore_fields, ignore_extra_fields=True)
-                if not diff:
-                    continue
-                entry = {}
-                for path in diff.get("dictionary_item_removed", []):
-                    entry.setdefault("missing", []).append(self._path_key(path))
-                for change in ("values_changed", "type_changes"):
-                    for path, values in (diff.get(change) or {}).items():
-                        nvpair = self._path_key(path)
-                        if r2_is_sensitive(nvpair):
-                            entry.setdefault("different", {})[nvpair] = {"expected": R2_REDACTED, "actual": R2_REDACTED}
-                        else:
-                            entry.setdefault("different", {})[nvpair] = {"expected": values.get("old_value"), "actual": values.get("new_value")}
-                for other in set(diff) - set(("dictionary_item_removed", "values_changed", "type_changes")):
-                    entry.setdefault("other", []).append(other)
-                if entry:
-                    differences[label] = entry
+                found = [self._entry_differences(want, nvpairs, ignore_fields) for nvpairs in actual[key]]
+                if len(found) == 1:
+                    if found[0]:
+                        differences[label] = found[0]
+                elif any(found):
+                    differences[label] = {
+                        "ambiguous_readback": "{0} readback entries for this interface; each must hold the requested values".format(len(found)),
+                        "entries": dict(("#{0}".format(index + 1), entry or "matches") for index, entry in enumerate(found)),
+                    }
         return differences
+
+    def _entry_differences(self, want, nvpairs, ignore_fields):
+        """Differences between the requested nvPairs and ONE readback entry ({} when every requested value matches)."""
+        have = dict((k, v) for k, v in nvpairs.items() if k not in ignore_fields)
+        diff = process_deepdiff(DeepDiff(want, have), keys_to_ignore=ignore_fields, ignore_extra_fields=True)
+        entry = {}
+        if not diff:
+            return entry
+        for path in diff.get("dictionary_item_removed", []):
+            entry.setdefault("missing", []).append(self._path_key(path))
+        for change in ("values_changed", "type_changes"):
+            for path, values in (diff.get(change) or {}).items():
+                nvpair = self._path_key(path)
+                if r2_is_sensitive(nvpair):
+                    entry.setdefault("different", {})[nvpair] = {"expected": R2_REDACTED, "actual": R2_REDACTED}
+                else:
+                    entry.setdefault("different", {})[nvpair] = {"expected": values.get("old_value"), "actual": values.get("new_value")}
+        for other in set(diff) - set(("dictionary_item_removed", "values_changed", "type_changes")):
+            entry.setdefault("other", []).append(other)
+        return entry
 
     @staticmethod
     def _path_key(path):
