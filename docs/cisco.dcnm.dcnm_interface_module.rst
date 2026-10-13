@@ -2663,6 +2663,7 @@ Parameters
                         <div>Source interface for DHCP relay. Valid interfaces are Ethernet, port-channel or loopback.</div>
                         <div>Independent of the DHCP server addresses; it can be set on its own.</div>
                         <div>An explicit empty string clears a configured source interface, also under <code>merged</code>; an omitted value is preserved under <code>merged</code> and reset under <code>replaced</code> and <code>overridden</code> (NOT LIVE TESTED).</div>
+                        <div>The nvPair name depends on the installed <code>int_vlan</code> body and is selected by <code>patch_version</code> (legacy <code>DHCP_RELAY_SRC_INTF</code>, SMU body <code>dhcpRelaySourceInterface</code>).</div>
                 </td>
             </tr>
             <tr>
@@ -2736,6 +2737,7 @@ Parameters
                 <td>
                         <div>DHCP relay server address.</div>
                         <div>An explicit empty string clears a configured address, also under <code>merged</code>, together with its <code>vrf_dhcp4</code>; an omitted value is preserved under <code>merged</code> and reset under <code>replaced</code> and <code>overridden</code> (NOT LIVE TESTED).</div>
+                        <div>The nvPair name depends on the installed <code>int_vlan</code> body and is selected by <code>patch_version</code> (legacy <code>dhcpServerAddr4</code>, SMU body <code>dhcpServerAddress4</code>).</div>
                 </td>
             </tr>
             <tr>
@@ -3966,6 +3968,7 @@ Parameters
                 <td>
                         <div>Declares the installed Nexus Dashboard/NDFC patch context so the module can trust the installed interface templates to carry the registered profile fields the generic binding registry manages (for example <code>acl_filter</code>, <code>flowcontrol_receive</code>, <code>ospf_cost</code>, <code>disable_lldp_transmit</code>/<code>disable_lldp_receive</code> and the other registered fields documented per interface profile).</div>
                         <div>This is a capability declaration the caller makes; it is never sent to the controller, never part of the interface payload, and never part of the computed diff.</div>
+                        <div>The same declaration selects the nvPair names of two native SVI fields of <code>int_vlan</code>, because the installed parent template names them differently in its two bodies - with a supported value <code>dhcp_server_addr4</code> and <code>dhcp_relay_src_intf</code> use <code>dhcpServerAddress4</code> and <code>dhcpRelaySourceInterface</code> (the body served with the activated SMU <code>4.3.1.0175006011</code>); without it they keep <code>dhcpServerAddr4</code> and <code>DHCP_RELAY_SRC_INTF</code>. These two fields stay native (an absent value does not reject them), only one family is ever sent, and the controller is not probed. A controller that serves the SMU body must be paired with this declaration (NOT LIVE TESTED; <code>4.4.1</code> or later is an assumption of the shared selector, not an observation).</div>
                         <div>Accepts the exact SMU string <code>4.3.1.0175006011</code> or a numeric Nexus Dashboard release <code>4.4.1</code> or later, matching the version policy of <code>dcnm_network</code>. ND release strings require at least three dot-separated numeric components; additional build components must also be numeric. The first three components are compared numerically. No whitespace or suffixes are accepted. For example, <code>4.4.1.10</code> and <code>4.10.0</code> are supported, while <code>4.4.0</code>, <code>4.4</code>, <code>4.4.1-rc1</code> and adjacent unapproved <code>4.3.1</code> SMU builds are rejected.</div>
                         <div>This is a SECOND, independent requirement on top of each registered field&#x27;s existing minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a supported patch/ND release, and that release does not bypass a field&#x27;s NDFC floor or its <code>smu_unsupported</code> exclusion when one exists; both conditions must hold together before a registered field is configurable.</div>
                         <div>There is no enabling default anywhere in the module. When this is omitted, null, empty, malformed, or unsupported, the module rejects the ENTIRE invocation before any configuration or deployment request is sent, as soon as any config entry sets a registered field explicitly -- including a native/legacy-only entry earlier in the same task list, per the normal invocation-wide preflight this module already applies to its other validation failures.</div>
