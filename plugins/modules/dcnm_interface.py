@@ -81,6 +81,14 @@ options:
       fields documented per interface profile).
     - This is a capability declaration the caller makes; it is never sent to the controller,
       never part of the interface payload, and never part of the computed diff.
+    - The same declaration selects the nvPair names of two native SVI fields of C(int_vlan), because the
+      installed parent template names them differently in its two bodies - with a supported value
+      C(dhcp_server_addr4) and C(dhcp_relay_src_intf) use C(dhcpServerAddress4) and
+      C(dhcpRelaySourceInterface) (the body served with the activated SMU C(4.3.1.0175006011)); without it
+      they keep C(dhcpServerAddr4) and C(DHCP_RELAY_SRC_INTF). These two fields stay native (an absent
+      value does not reject them), only one family is ever sent, and the controller is not probed. A
+      controller that serves the SMU body must be paired with this declaration (NOT LIVE TESTED; C(4.4.1)
+      or later is an assumption of the shared selector, not an observation).
     - Accepts the exact SMU string C(4.3.1.0175006011) or a numeric Nexus Dashboard
       release C(4.4.1) or later, matching the version policy of C(dcnm_network).
       ND release strings require at least three dot-separated numeric components;
@@ -1328,6 +1336,8 @@ options:
             - DHCP relay server address.
             - An explicit empty string clears a configured address, also under C(merged), together with its C(vrf_dhcp4);
               an omitted value is preserved under C(merged) and reset under C(replaced) and C(overridden) (NOT LIVE TESTED).
+            - The nvPair name depends on the installed C(int_vlan) body and is selected by C(patch_version)
+              (legacy C(dhcpServerAddr4), SMU body C(dhcpServerAddress4)).
             type: str
             default: ""
           vrf_dhcp4:
@@ -1340,6 +1350,8 @@ options:
             description:
             - Source interface for DHCP relay. Valid interfaces are Ethernet, port-channel or loopback.
             - Independent of the DHCP server addresses; it can be set on its own.
+            - The nvPair name depends on the installed C(int_vlan) body and is selected by C(patch_version)
+              (legacy C(DHCP_RELAY_SRC_INTF), SMU body C(dhcpRelaySourceInterface)).
             - An explicit empty string clears a configured source interface, also under C(merged); an omitted value is preserved
               under C(merged) and reset under C(replaced) and C(overridden) (NOT LIVE TESTED).
             type: str
@@ -2811,6 +2823,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_carry_forward_bindings,
     gie_withdrawal_action,
     gie_binding_is_owned_elsewhere,
+    gie_patch_supported,
     GIE_READONLY_METADATA_NVPAIRS,
     GIE_WITHDRAW_NONE,
     GIE_WITHDRAW_RESET,
@@ -2961,6 +2974,27 @@ SVI_DHCP4_FIELDS = (
     ("vrf_dhcp4", "vrfDhcp4"),
     ("dhcp_relay_src_intf", "DHCP_RELAY_SRC_INTF"),
 )
+# F3 template compatibility. The int_vlan parent template names the fourth server and the relay source differently in two bodies (sha256 of the
+# full bodies; verbatim declaration excerpts are the oracle of tests/unit/modules/dcnm/test_dcnm_intf_svi_dhcp4_template_compat.py):
+#   0efb09af7f837b30b7a5dde37e7d4e7604fdd2fc4ca92ff6338e227802fde1a3  dhcpServerAddr4      DHCP_RELAY_SRC_INTF       (the legacy tuple above)
+#   f32ef5863d8757759154f5992eba9f009ecdf68425f8be9d58e5a0bb416313e4  dhcpServerAddress4   dhcpRelaySourceInterface  (the tuple below)
+# vrfDhcp4 is unchanged. NDFC reports 12.6.0.267 for both bodies, so the controller version cannot choose; the body that carries the activated SMU
+# 4.3.1.0175006011 (the ND upgrade history lists it with fixDetails naming dcnm-configtemplate) is f32ef586, and the existing patch_version
+# capability (gie_patch_supported: that SMU, or a numeric ND release >= 4.4.1 -- the latter is an assumption of the existing selector, not an
+# observation) is what already selects the SMU-schema names of the registered int_vlan fields. The same selector chooses these names. A missing or
+# unapproved patch keeps the legacy names, as for every native field; the module never sends both and never probes the controller.
+SVI_DHCP4_FIELDS_SMU = (
+    ("dhcp_server_addr4", "dhcpServerAddress4"),
+    ("vrf_dhcp4", "vrfDhcp4"),
+    ("dhcp_relay_src_intf", "dhcpRelaySourceInterface"),
+)
+
+
+def svi_dhcp4_fields(patch_version=None):
+    """(profile key, nvPair) of the three SVI DHCP4 fields for the int_vlan body that ``patch_version`` selects (see SVI_DHCP4_FIELDS_SMU)."""
+    return SVI_DHCP4_FIELDS_SMU if gie_patch_supported(patch_version) else SVI_DHCP4_FIELDS
+
+
 SVI_ADDRESS_LIST_MAX = 16
 SVI_ADDRESS_LISTS = {
     "secondary_gws": {
@@ -3376,11 +3410,13 @@ class DcnmIntf:
             "dhcpServerAddr2": "dhcp_server_addr2",
             "dhcpServerAddr3": "dhcp_server_addr3",
             "dhcpServerAddr4": "dhcp_server_addr4",
+            "dhcpServerAddress4": "dhcp_server_addr4",
             "vrfDhcp1": "vrf_dhcp1",
             "vrfDhcp2": "vrf_dhcp2",
             "vrfDhcp3": "vrf_dhcp3",
             "vrfDhcp4": "vrf_dhcp4",
             "DHCP_RELAY_SRC_INTF": "dhcp_relay_src_intf",
+            "dhcpRelaySourceInterface": "dhcp_relay_src_intf",
             "advSubnetInUnderlay": "adv_subnet_in_unbderlay",
             "ENABLE_NETFLOW": "enable_netflow",
             "NETFLOW_MONITOR": "netflow_monitor",
@@ -6525,19 +6561,22 @@ class DcnmIntf:
             # The guard costs nothing on a controller that does return the keys and keeps the
             # module working on one that does not. An SVI with no DHCP relay produces exactly
             # the payload it produced before this change.
+            # F3 template compatibility: the nvPair names of server 4 and of the relay source follow the int_vlan body the patch_version
+            # selects (svi_dhcp4_fields); vrfDhcp4 is the same in both.
+            dhcp4 = dict(svi_dhcp4_fields(self.patch_version))
             if str(delem[profile].get("dhcp_server_addr4", "")) != "":
-                intf["interfaces"][0]["nvPairs"]["dhcpServerAddr4"] = str(
+                intf["interfaces"][0]["nvPairs"][dhcp4["dhcp_server_addr4"]] = str(
                     delem[profile]["dhcp_server_addr4"]
                 )
                 # vrfDhcp4 hangs off the server, mirroring the template's
-                # IsShow="dhcpServerAddr4!=null". Empty means "the interface VRF".
-                intf["interfaces"][0]["nvPairs"]["vrfDhcp4"] = str(
+                # IsShow="<server 4>!=null". Empty means "the interface VRF".
+                intf["interfaces"][0]["nvPairs"][dhcp4["vrf_dhcp4"]] = str(
                     delem[profile]["vrf_dhcp4"]
                 )
             # Independent of every server: the relay source interface has no IsShow and gets
             # its own guard.
             if str(delem[profile].get("dhcp_relay_src_intf", "")) != "":
-                intf["interfaces"][0]["nvPairs"]["DHCP_RELAY_SRC_INTF"] = str(
+                intf["interfaces"][0]["nvPairs"][dhcp4["dhcp_relay_src_intf"]] = str(
                     delem[profile]["dhcp_relay_src_intf"]
                 )
             intf["interfaces"][0]["nvPairs"]["advSubnetInUnderlay"] = str(
@@ -7600,7 +7639,8 @@ class DcnmIntf:
 
         server_cleared = False
         written = False
-        for profile_key, nvpair in SVI_DHCP4_FIELDS:
+        fields = svi_dhcp4_fields(self.patch_version)
+        for profile_key, nvpair in fields:
             if profile_key == "vrf_dhcp4" or nvpair in want_nv:
                 continue
             authored = profile_key in pb_keys
@@ -7614,7 +7654,7 @@ class DcnmIntf:
                 nv_keys.append(nvpair)
             written = True
             server_cleared = server_cleared or profile_key == "dhcp_server_addr4"
-        vrf_key = "vrfDhcp4"
+        vrf_key = dict(fields)["vrf_dhcp4"]
         if vrf_key not in want_nv and configured(vrf_key):
             vrf_authored = "vrf_dhcp4" in pb_keys
             if server_cleared or state in ("replaced", "overridden") or vrf_authored:
