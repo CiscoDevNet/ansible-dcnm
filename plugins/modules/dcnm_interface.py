@@ -476,7 +476,8 @@ options:
               the description of both peers, or the PVLAN native/allowed VLANs of both peers), a change
               of the description of ONE peer alone (C(peer1_description) or C(peer2_description), only while
               C(copy_description) is false; the other peer keeps its value and is still checked to stay
-              unchanged; NOT LIVE TESTED), a change
+              unchanged; an explicit empty string clears the description of that peer, while an omitted
+              description keeps it; NOT LIVE TESTED), a change
               of the members of one peer or both, and C(state=deleted) of the vPC, all with C(deploy)
               true when a deployment is wanted. Refused before any change is sent - a C(pvlan_mode)
               change, a field the mode does not take, a PCID change, a PCID different from the vPC id (both

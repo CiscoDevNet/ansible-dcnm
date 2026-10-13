@@ -3350,8 +3350,10 @@ def vpc_not_implemented(profile, ifname):
         desc = peer + "_description"
         if desc in profile and profile[desc] is not None:
             value = profile[desc]
-            if not isinstance(value, str) or not 1 <= len(value) <= 254 or "\n" in value:
-                reasons.append("%s must be a single-line string of 1-254 characters" % desc)
+            # A1-CLEAR: an explicit "" is the request to clear THIS peer's description (merged; omission still keeps it). Any other value
+            # stays a single-line string (no LF, no CR) of at most 254 characters.
+            if not isinstance(value, str) or len(value) > 254 or "\n" in value or "\r" in value:
+                reasons.append("%s must be a single-line string of at most 254 characters (\"\" clears that peer's description)" % desc)
         reasons += _vpc_peer_trunk_errors(profile, peer, mode)
         if profile.get(peer + "_cmds") is not None:
             reasons += po_freeform_errors(peer + "_cmds", profile[peer + "_cmds"])
