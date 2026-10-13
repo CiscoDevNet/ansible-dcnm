@@ -125,6 +125,33 @@ NEGOTIATE_CAPABILITY_LINE = "no negotiate auto"
 _SPEED_LINE = re.compile(r"^speed [0-9]+$")
 # Freeform lines that would manage PVLAN or switchport mode outside the structured fields.
 _CONF_FORBIDDEN = re.compile(r"private-vlan|^\s*(no\s+)?switchport\b", re.IGNORECASE)
+_LINE_BREAK = re.compile(r"\r\n|\r|\n")
+
+
+def cmds_lines(value):
+    """PVLAN Ethernet `cmds` as a list of lines, or None if not accepted.
+
+    A list of strings is the documented form. A text (how NAC renders freeform_config) is split into its lines; a text with a
+    comma is refused, since the regular Ethernet path would split it there. List entries holding line breaks are split too."""
+    if isinstance(value, str):
+        if "," in value:
+            return None
+        lines = _LINE_BREAK.split(value) if value else []
+        if lines and lines[-1] == "":
+            lines.pop()
+        return lines
+    if isinstance(value, list) and all(isinstance(x, str) for x in value):
+        out = []
+        for entry in value:
+            if _LINE_BREAK.search(entry):
+                parts = _LINE_BREAK.split(entry)
+                if parts and parts[-1] == "":
+                    parts.pop()
+                out.extend(parts)
+            else:
+                out.append(entry)
+        return out
+    return None
 
 
 class PvlanError(ValueError):
@@ -421,9 +448,12 @@ def _companion_errors(profile):
         elif kind == "duplex" and value not in ("auto", "full", "half"):
             errors.append("duplex must be 'auto', 'full' or 'half'")
         elif kind == "conf":
-            if not isinstance(value, list) or not all(isinstance(x, str) for x in value):
-                errors.append("cmds must be a list of strings")
-            elif any(_CONF_FORBIDDEN.search(x) for x in value):
+            lines = cmds_lines(value)
+            if lines is None and isinstance(value, str):
+                errors.append("cmds given as text must not contain a comma; use a list of strings")
+            elif lines is None:
+                errors.append("cmds must be a list of strings (or a text with one command per line)")
+            elif any(_CONF_FORBIDDEN.search(x) for x in lines):
                 errors.append("cmds must not manage private-vlan or switchport settings; use the structured pvlan fields")
     if profile.get("qos_policy") and profile.get("enable_qos") is False:
         errors.append("qos_policy requires enable_qos true")
@@ -564,7 +594,7 @@ def companion_wire(key, value):
     if kind == "bool":
         return _bool_wire(value)
     if kind == "conf":
-        return "\n".join(value)
+        return "\n".join(cmds_lines(value))
     if kind in ("bpdu", "speed"):
         return canonical_native(kind, value)
     return value
@@ -681,7 +711,7 @@ def reconcile(state, raw_profile, ifname, have_policy, have_nv, ndfc_version=Non
             value = companion_wire(key, raw_profile[key])
             if kind == "conf" and merged and same_policy and have_raw:
                 have_lines = str(have_raw).split("\n")
-                extra = [l for l in raw_profile[key] if l not in have_lines]
+                extra = [l for l in cmds_lines(raw_profile[key]) if l not in have_lines]
                 value = "\n".join(have_lines + extra) if extra else have_raw
         elif merged and same_policy and have_raw is not None:
             value = have_raw
