@@ -1771,17 +1771,23 @@ def test_flowcontrol_send_reaches_the_action_plugin_schema():
     It is a plain dict in schemas.py, so a new profile key that is registered but not added
     there simply disappears from the pydantic model. Nothing else in the engine would catch
     that, which is why it is pinned here.
-    """
-    import importlib.util
 
-    path = (
-        Path(gie_binding_table.__file__).resolve().parents[2]
-        / "plugins" / "action" / "tests" / "plugin_utils"
-        / "pydantic_schemas" / "dcnm_interface" / "schemas.py"
-    )
-    source = path.read_text(encoding="utf-8")
-    assert '"flowcontrol_send": "flowcontrolSend"' in source
-    assert '"flowcontrol_receive": "flowcontrolReceive"' in source
+    PR725 R2 moved the registered keys from the legacy map to the checker's own table
+    (R2_REGISTERED_BINDINGS), so the pin checks that table and, behaviourally, that the nvPair
+    survives the expected-data construction and the pydantic model.
+    """
+    _assert_reaches_action_plugin_schema("trunk", "flowcontrol_send", "flowcontrolSend", "on")
+    _assert_reaches_action_plugin_schema("trunk", "flowcontrol_receive", "flowcontrolReceive", "off")
+
+
+def _assert_reaches_action_plugin_schema(mode, profile_key, nvpair, value):
+    from ansible_collections.cisco.dcnm.plugins.action.tests.plugin_utils.pydantic_schemas.dcnm_interface import schemas
+
+    assert schemas.R2_REGISTERED_BINDINGS[profile_key][0] == nvpair
+    config = [{"name": "eth1/21", "type": "eth", "switch": ["192.0.2.11"], "profile": {"mode": mode, profile_key: value}}]
+    expected = schemas.DcnmInterfaceQuerySchema.yaml_config_to_dict(config, "fabric-a", {"192.0.2.11": "SN0000000A1"}, diagnostics=[])
+    parsed = schemas.DcnmInterfaceQuerySchema.model_validate(expected).model_dump(exclude_none=True)
+    assert parsed["response"][0]["interfaces"][0]["nvPairs"][nvpair] == value
 
 
 # ---- SPANNING_TREE_PORT_TYPE: the first registered field that is not independent ----
@@ -1877,13 +1883,8 @@ def test_spanning_tree_public_documentation_warns_about_port_type_fast():
 
 
 def test_spanning_tree_reaches_the_action_plugin_schema():
-    path = (
-        Path(gie_binding_table.__file__).resolve().parents[2]
-        / "plugins" / "action" / "tests" / "plugin_utils"
-        / "pydantic_schemas" / "dcnm_interface" / "schemas.py"
-    )
-    source = path.read_text(encoding="utf-8")
-    assert '"spanning_tree_port_type": "spanningTreePortType"' in source
+    _assert_reaches_action_plugin_schema("trunk", "spanning_tree_port_type", "spanningTreePortType", "network")
+    _assert_reaches_action_plugin_schema("access", "spanning_tree_port_type", "spanningTreePortType", "normal")
 
 
 if __name__ == "__main__":
