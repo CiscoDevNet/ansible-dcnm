@@ -538,6 +538,7 @@ Parameters
                 </td>
                 <td>
                         <div>Commands to be included in the configuration under this interface</div>
+                        <div>In <code>mode=pvlan</code> a text is also accepted, one command per line; a text with a comma is refused.</div>
                 </td>
             </tr>
             <tr>
