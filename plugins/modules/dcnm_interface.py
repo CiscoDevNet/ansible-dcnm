@@ -88,7 +88,9 @@ options:
       they keep C(dhcpServerAddr4) and C(DHCP_RELAY_SRC_INTF). These two fields stay native (an absent
       value does not reject them), only one family is ever sent, and the controller is not probed. A
       controller that serves the SMU body must be paired with this declaration (NOT LIVE TESTED; C(4.4.1)
-      or later is an assumption of the shared selector, not an observation).
+      or later is an assumption of the shared selector, not an observation). When an SVI's stored values
+      carry the other body's names, setting, clearing or (replaced/overridden) resetting these fields is
+      refused before any change is sent.
     - Accepts the exact SMU string C(4.3.1.0175006011) or a numeric Nexus Dashboard
       release C(4.4.1) or later, matching the version policy of C(dcnm_network).
       ND release strings require at least three dot-separated numeric components;
@@ -3345,6 +3347,9 @@ class DcnmIntf:
         # F2: registered fields a reset-to-default (named deleted, overridden) must withdraw but
         # cannot, one entry per interface and field. Raised ONCE by main(), before anything is sent.
         self.default_reset_blocked = []
+        # D-F3-1: SVIs whose stored nvPairs carry the other int_vlan body's DHCP4 / relay-source names than the ones
+        # patch_version selects. Raised ONCE by main(), before anything is sent.
+        self.svi_dhcp4_family_blocked = []
         # Native PVLAN: refusals collected during comparison/preflight and raised once by
         # main() before any write; per-target pre/post state for the pre-deploy gate.
         self.pvlan_blocked = []
@@ -7632,6 +7637,22 @@ class DcnmIntf:
         """
         have_nv = next((intf[ik] for intf in have_entries if isinstance(intf.get(ik), dict)), None)
         if have_nv is None:
+            return False
+
+        # D-F3-1: the stored nvPairs name the template body. When they carry the OTHER body's server-4 / relay-source keys (even
+        # blank, or next to the selected ones) and this request sets, clears or (replaced/overridden) resets these fields, the
+        # selected names would miss the stored values and only the shared vrfDhcp4 would move. Refused before any write; the
+        # family is never switched or guessed. Absence of both families is not a mismatch.
+        selected = svi_dhcp4_fields(self.patch_version)
+        other = SVI_DHCP4_FIELDS if selected is SVI_DHCP4_FIELDS_SMU else SVI_DHCP4_FIELDS_SMU
+        foreign = sorted(nv for key, nv in other if key != "vrf_dhcp4" and nv in have_nv)
+        relevant = state in ("replaced", "overridden") or any(key in pb_keys for key, _nv in selected)
+        if foreign and relevant:
+            self.svi_dhcp4_family_blocked.append({
+                "interface": name,
+                "selected": [nv for key, nv in selected if key != "vrf_dhcp4"],
+                "observed": foreign,
+            })
             return False
 
         def configured(nvpair):
@@ -13895,6 +13916,25 @@ def main():
     # PVLAN target, raised once and before anything is sent (check mode included).
     if module.params["state"] != "query":
         dcnm_intf.dcnm_intf_pvlan_preflight()
+
+    if dcnm_intf.svi_dhcp4_family_blocked:
+        # D-F3-1: names only, never values; the declared patch_version is not corrected or guessed.
+        parts = [
+            "Interface {0}: patch_version {1} selects the int_vlan DHCP field names {2}, but the interface's current "
+            "nvPairs carry {3} from the other int_vlan template body; the DHCP server 4 / relay source change would "
+            "miss the stored values.".format(
+                b["interface"],
+                "'{0}'".format(dcnm_intf.patch_version) if dcnm_intf.patch_version else "(not declared)",
+                "/".join(b["selected"]),
+                "/".join(b["observed"]),
+            )
+            for b in dcnm_intf.svi_dhcp4_family_blocked
+        ]
+        parts.append(
+            "No configuration or deployment request was sent. Verify patch_version and the int_vlan template "
+            "installed on the controller."
+        )
+        module.fail_json(msg=" ".join(parts), **dcnm_intf.result)
 
     if dcnm_intf.withdrawal_blocked:
         unsupported = sorted(

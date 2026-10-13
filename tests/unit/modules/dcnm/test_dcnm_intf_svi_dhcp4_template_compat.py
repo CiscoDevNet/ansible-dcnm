@@ -241,12 +241,18 @@ class TestSviDhcp4TemplateCompat(f3.TestSviDhcp4Clear):
             assert second == {}, (family, state, "second run from the resulting HAVE is a no-op", second)
 
     def test_f3tc_without_a_patch_a_controller_of_the_smu_family_is_not_addressed_with_its_names(self):
-        """A missing patch keeps native behavior (legacy names), as for every native field. It does NOT probe the controller's family: a
-        controller that serves the SMU body and a run without patch_version still send the legacy names (see RESULT.md, limits). Pinned so that
-        a future change to this contract is a conscious one."""
+        """A missing patch keeps the legacy names and never probes or switches the family. Since D-F3-1 (conscious change of the contract
+        pinned here): when the stored nvPairs carry the SMU names, that DHCP4 change is refused before any write instead of sending legacy
+        names that would miss the stored values (only vrfDhcp4 would move)."""
         have = self.have_of(SMU, "192.200.1.4", "blue", "loopback0")
-        got = self.reported(self.scenario("merged", profile=CLEAR, have=have, patch=None))
-        assert not (set(got) & {SMU["dhcp_server_addr4"], SMU["dhcp_relay_src_intf"]}), "no SMU names without the selector"
+        try:
+            self.scenario("merged", profile=CLEAR, have=have, patch=None)
+        except AssertionError as exc:
+            assert "No configuration or deployment request was sent" in str(exc), exc
+        else:
+            raise AssertionError("the contradictory family must be refused")
+        sent = [c for c in self.run_dcnm_send.call_args_list if len(c.args) >= 2 and c.args[1] in ("POST", "PUT", "DELETE")]
+        assert sent == [], "no write; in particular no SMU names without the selector and no legacy names against SMU storage"
 
 
 def _generate_family_cases():
