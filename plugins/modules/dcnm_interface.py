@@ -3214,6 +3214,63 @@ def svi_address_list_same(left, right):
     return dict(left) == dict(right)
 
 
+def _read_reason_key(stage, serial):
+    authority = DcnmIntf._dcnm_intf_authority_key(serial)
+    return (stage, authority.casefold()) if authority else None
+
+
+def _read_reasons(obj):
+    # Stored in the instance dict so it also works on objects built without __init__.
+    return obj.__dict__.setdefault("read_failure_reasons", {})
+
+
+def read_reason_note(obj, stage, serial, reason):
+    """Diagnostics only: record why this read of `stage` for this serial is not authoritative (controlled text)."""
+    key = _read_reason_key(stage, serial)
+    if key is not None:
+        _read_reasons(obj)[key] = reason
+
+
+def read_reason_note_detail(obj, serial, reason):
+    """A detail read that was actually attempted and rejected: its reason, and the serial's last real failure (what spent the budget)."""
+    read_reason_note(obj, "detail", serial, reason)
+    read_reason_note(obj, "detail-last-failure", serial, reason)
+
+
+def read_reason_clear(obj, stage, serial):
+    key = _read_reason_key(stage, serial)
+    if key is not None:
+        _read_reasons(obj).pop(key, None)
+
+
+def read_reason_get(obj, stage, serial):
+    key = _read_reason_key(stage, serial)
+    return _read_reasons(obj).get(key) if key is not None else None
+
+
+def read_reason_suffix(obj, stage, serial):
+    reason = read_reason_get(obj, stage, serial)
+    return " ({0})".format(reason) if reason else ""
+
+
+def response_failure_reason(resp, attempts):
+    """Controlled reason for a GET answer that is not a usable RETURN_CODE 200 envelope: the observed numeric status, or the
+    category of what came back. Never the body, a message or a header."""
+    if resp is None:
+        return "no response (transport error) after {0} attempt(s)".format(attempts)
+    if isinstance(resp, dict):
+        code = resp.get("RETURN_CODE")
+        # The readers accept `RETURN_CODE == 200`; the same comparison here, so classifying a failure never tightens what they accept.
+        if code == 200:
+            return "the response DATA is not a list" if not isinstance(resp.get("DATA"), list) else None
+        if isinstance(code, int) and not isinstance(code, bool):
+            return "HTTP {0} after {1} attempt(s)".format(code, attempts)
+        return "the response has no integer status"
+    if resp == []:
+        return "the response body is empty"
+    return "the response is not an object"
+
+
 class DcnmIntf:
     """
     Dcnm Interface methods, properties, and resources for all states.
@@ -3336,6 +3393,10 @@ class DcnmIntf:
         self.intf_detail_failed_reads = {}
         self.have_all_cached_snos = set()
         self.have_all_failed_snos = set()
+        # Diagnostics only: why the LAST read of a stage ("summary", "detail", "policies") for one serial was not authoritative.
+        # Controlled text (status number, field name, entry index, failure category), never response content. Cleared when that
+        # read starts again, succeeds or its authority is invalidated. No decision reads it.
+        self.read_failure_reasons = {}
         self.have_breakout_cached_snos = set()
         self.have_breakout_failed_snos = set()
         self._replace_have_lookup = {}
@@ -4600,6 +4661,8 @@ class DcnmIntf:
         if key is None:
             return
         self.intf_detail_failed_reads.pop(key, None)
+        # Diagnostics follow the same refund: a validated answer ends the "last failed read" this serial's budget was spent on.
+        read_reason_clear(self, "detail-last-failure", serialNumber)
 
     def dcnm_intf_mark_detail_unavailable(self, serialNumber):
         """Mark the logical identity and every covered physical serial failed."""
@@ -6803,10 +6866,16 @@ class DcnmIntf:
             return
 
         self.dcnm_intf_invalidate_serial_authority(serialNumber)
+        read_reason_clear(self, "detail", serialNumber)
 
         # Invalidation above runs first on purpose: a skipped read must not leave
         # a stale cache entry behind that would let the authority guard pass.
         if self._dcnm_intf_read_budget_exhausted(serialNumber):
+            last = read_reason_get(self, "detail-last-failure", serialNumber)
+            skipped = "read skipped: the read budget of this serial is exhausted (no request sent)"
+            if last:
+                skipped += "; last failed read: {0}".format(last)
+            read_reason_note(self, "detail", serialNumber, skipped)
             self.dcnm_intf_mark_detail_unavailable(serialNumber)
             return
 
@@ -6828,33 +6897,40 @@ class DcnmIntf:
             return
 
         if not (isinstance(resp, dict) and resp.get("RETURN_CODE") == 200):
+            read_reason_note_detail(self, serialNumber, response_failure_reason(resp, 3))
             self.dcnm_intf_mark_detail_unavailable(serialNumber)
             return
 
         data = resp.get("DATA")
         if not isinstance(data, list):
+            read_reason_note_detail(self, serialNumber, "the response DATA is not a list")
             self.dcnm_intf_mark_detail_unavailable(serialNumber)
             return
 
         entries = {}
-        for item in data:
+        for index, item in enumerate(data):
             if not isinstance(item, dict):
+                read_reason_note_detail(self, serialNumber, "item {0} is not an object".format(index))
                 self.dcnm_intf_mark_detail_unavailable(serialNumber)
                 return
             policy = item.get("policy")
             if not isinstance(policy, str) or policy.strip() == "":
+                read_reason_note_detail(self, serialNumber, "item {0} has no policy name".format(index))
                 self.dcnm_intf_mark_detail_unavailable(serialNumber)
                 return
             interfaces = item.get("interfaces")
             if not isinstance(interfaces, list) or not interfaces:
+                read_reason_note_detail(self, serialNumber, "item {0} has no interfaces list".format(index))
                 self.dcnm_intf_mark_detail_unavailable(serialNumber)
                 return
-            for intf in interfaces:
+            for sub, intf in enumerate(interfaces):
                 if not isinstance(intf, dict):
+                    read_reason_note_detail(self, serialNumber, "record {0}.{1} is not an object".format(index, sub))
                     self.dcnm_intf_mark_detail_unavailable(serialNumber)
                     return
                 if_name = intf.get("ifName")
                 if not isinstance(if_name, str) or if_name.strip() == "":
+                    read_reason_note_detail(self, serialNumber, "record {0}.{1} has no ifName".format(index, sub))
                     self.dcnm_intf_mark_detail_unavailable(serialNumber)
                     return
                 response_identity = self._dcnm_intf_bulk_response_identity(
@@ -6864,13 +6940,16 @@ class DcnmIntf:
                     serialNumber,
                 )
                 if response_identity is None:
+                    read_reason_note_detail(self, serialNumber, "record {0}.{1} serialNumber/interfaceType does not identify the queried switch".format(index, sub))
                     self.dcnm_intf_mark_detail_unavailable(serialNumber)
                     return
                 if not isinstance(intf.get("nvPairs"), dict):
+                    read_reason_note_detail(self, serialNumber, "record {0}.{1} lacks the nvPairs object".format(index, sub))
                     self.dcnm_intf_mark_detail_unavailable(serialNumber)
                     return
                 cache_key = (response_identity, if_name.lower())
                 if cache_key in entries:
+                    read_reason_note_detail(self, serialNumber, "record {0}.{1} duplicates an earlier record of the same interface".format(index, sub))
                     self.dcnm_intf_mark_detail_unavailable(serialNumber)
                     return
                 single_item = {k: item[k] for k in item if k != "interfaces"}
@@ -7196,6 +7275,10 @@ class DcnmIntf:
             for key in self.intf_detail_authoritative_absent_keys
             if key[0] not in affected
         }
+        affected_reason_keys = {key.casefold() for key in affected if isinstance(key, str)}
+        reasons = _read_reasons(self)
+        for key in [key for key in reasons if key[0] == "detail" and key[1] in affected_reason_keys]:
+            reasons.pop(key, None)
 
     def dcnm_intf_get_intf_info_from_dcnm(self, intf):
 
@@ -7226,39 +7309,49 @@ class DcnmIntf:
         ]
         self.have_all_cached_snos.difference_update(covered)
         self.have_all_failed_snos.difference_update(covered)
+        read_reason_clear(self, "summary", sno)
         path = self.paths["IF_DETAIL_WITH_SNO"].format(query_serial)
         resp = self._dcnm_intf_get_with_retries(path)
         data = resp.get("DATA") if isinstance(resp, dict) else None
 
-        if not (
-            isinstance(resp, dict)
-            and resp.get("RETURN_CODE") == 200
-            and isinstance(data, list)
-            and all(
-                isinstance(item, dict)
-                and isinstance(item.get("ifName"), str)
-                and item.get("ifName")
-                and isinstance(item.get("serialNo"), str)
-                and item.get("serialNo")
-                and self._dcnm_intf_serial_parts(item["serialNo"])
-                and {
-                    part.casefold()
-                    for part in self._dcnm_intf_serial_parts(item["serialNo"])
-                }.issubset(known_serials)
-                and isinstance(item.get("fabricName"), str)
-                and item.get("fabricName")
-                and isinstance(item.get("ifType"), str)
-                and item.get("ifType")
-                and "isPhysical" in item
-                and "markDeleted" in item
-                and "alias" in item
-                and "deleteReason" in item
-                and isinstance(item.get("complianceStatus"), str)
-                and item.get("complianceStatus")
-                and "underlayPolicies" in item
-                for item in data
-            )
-        ):
+        # The entry contract, written ONCE and evaluated in this order with short-circuit, so the decision and the diagnostic
+        # (the first unmet requirement) cannot drift apart. Labels name the requirement, never a value.
+        def nonempty_str(field):
+            return lambda item: isinstance(item.get(field), str) and bool(item.get(field))
+
+        def present(field):
+            return lambda item: field in item
+
+        entry_checks = (
+            ("field ifName missing or empty", nonempty_str("ifName")),
+            ("field serialNo missing or empty", nonempty_str("serialNo")),
+            ("field serialNo is not one or two serials", lambda item: bool(self._dcnm_intf_serial_parts(item["serialNo"]))),
+            ("field serialNo names a switch outside the fabric inventory",
+             lambda item: {part.casefold() for part in self._dcnm_intf_serial_parts(item["serialNo"])}.issubset(known_serials)),
+            ("field fabricName missing or empty", nonempty_str("fabricName")),
+            ("field ifType missing or empty", nonempty_str("ifType")),
+            ("field isPhysical missing", present("isPhysical")),
+            ("field markDeleted missing", present("markDeleted")),
+            ("field alias missing", present("alias")),
+            ("field deleteReason missing", present("deleteReason")),
+            ("field complianceStatus missing or empty", nonempty_str("complianceStatus")),
+            ("field underlayPolicies missing", present("underlayPolicies")),
+        )
+
+        def entry_problem(item):
+            if not isinstance(item, dict):
+                return "is not an object"
+            for label, check in entry_checks:
+                if not check(item):
+                    return label
+            return None
+
+        reason = response_failure_reason(resp, 3)
+        if reason is None:
+            reason = next(("entry {0}: {1}".format(index, problem)
+                           for index, problem in ((i, entry_problem(item)) for i, item in enumerate(data)) if problem), None)
+        if reason is not None:
+            read_reason_note(self, "summary", sno, reason)
             self.have_all_failed_snos.update(covered or {authority})
             return False
 
@@ -7697,10 +7790,15 @@ class DcnmIntf:
     def dcnm_intf_pvlan_read_policies(self, sno):
         """Legacy policy list of a switch, read once per invocation; None when not authoritative."""
         if sno not in self.pvlan_policies:
+            read_reason_clear(self, "policies", sno)
             resp = dcnm_send(self.module, "GET", self.paths["PVLAN_SWITCH_POLICIES"].format(self._dcnm_intf_query_serial(sno)))
             data = resp.get("DATA") if isinstance(resp, dict) and resp.get("RETURN_CODE") == 200 else None
             ok = isinstance(data, list) and all(isinstance(p, dict) for p in data)
             self.pvlan_policies[sno] = data if ok else None
+            if not ok:
+                reason = response_failure_reason(resp, 1) or next(
+                    ("element {0} is not an object".format(i) for i, p in enumerate(data) if not isinstance(p, dict)), None)
+                read_reason_note(self, "policies", sno, reason or "the policy list is not usable")
         return self.pvlan_policies[sno]
 
     def dcnm_intf_pvlan_check_ownership(self, name, sno, detail_policy, detail_nv=None, if_type="INTERFACE_ETHERNET",
@@ -8806,8 +8904,10 @@ class DcnmIntf:
 
     def dcnm_intf_pvlan_vpc_read_leg(self, serial, vpc_name, po_name, member):
         """Fresh SNAPSHOT of one peer: interface summary entries, the child Po and member details, and the live policy list.
-        A read that cannot be made authoritative is recorded as a problem and as "unreadable"/None, never as absence."""
-        snap = {"serial": serial, "problems": [], "summary": {"po": [], "member": [], "vpc": []}, "summary_ok": False,
+        A read that cannot be made authoritative is recorded as a problem and as "unreadable"/None, never as absence.
+        `causes`: the same failures once per read stage of this peer (no interface names), with the reader's controlled reason, so a
+        refusal can name the read that failed without repeating one cause per interface or per member."""
+        snap = {"serial": serial, "problems": [], "causes": [], "summary": {"po": [], "member": [], "vpc": []}, "summary_ok": False,
                 "po": "unreadable", "member": "unreadable", "policies": None}
         if self.dcnm_intf_get_have_all_with_sno(serial):
             snap["summary_ok"] = True
@@ -8819,18 +8919,28 @@ class DcnmIntf:
                     if serial.casefold() in parts and (label == "vpc") == (len(parts) == 2):
                         snap["summary"][label].append(copy.deepcopy(h))
         else:
-            snap["problems"].append("the interface summary of {0} could not be read authoritatively".format(serial))
+            cause = "the interface summary of {0} could not be read authoritatively{1}".format(
+                serial, read_reason_suffix(self, "summary", serial))
+            snap["problems"].append(cause)
+            snap["causes"].append(cause)
         self.dcnm_intf_bulk_fetch_intf_info(serial, refresh=True)
         for key, name, kind in (("po", po_name, "INTERFACE_PORT_CHANNEL"), ("member", member, "INTERFACE_ETHERNET")):
             if self.dcnm_intf_detail_unavailable(name, serial):
-                snap["problems"].append("the detail of {0} on {1} could not be read authoritatively".format(name, serial))
+                reason = read_reason_suffix(self, "detail", serial)
+                snap["problems"].append("the detail of {0} on {1} could not be read authoritatively{2}".format(name, serial, reason))
+                cause = "the interface detail of {0} could not be read authoritatively{1}".format(serial, reason)
+                if cause not in snap["causes"]:
+                    snap["causes"].append(cause)
                 continue
             found = self.dcnm_intf_get_intf_info(name, serial, kind)
             snap[key] = copy.deepcopy(found) if isinstance(found, dict) else None  # None: authoritatively absent
         self.pvlan_policies.pop(serial, None)
         policies = self.dcnm_intf_pvlan_read_policies(serial)
         if policies is None:
-            snap["problems"].append("the switch policy list of {0} could not be read authoritatively".format(serial))
+            cause = "the switch policy list of {0} could not be read authoritatively{1}".format(
+                serial, read_reason_suffix(self, "policies", serial))
+            snap["problems"].append(cause)
+            snap["causes"].append(cause)
         else:
             snap["policies"] = copy.deepcopy(policies)
         return snap
@@ -9109,6 +9219,16 @@ class DcnmIntf:
             if claimed.setdefault(claim_key, name.lower()) != name.lower():
                 problems.append((member, leg["serial"], "the playbook also assigns it to {0}".format(claimed[claim_key])))
         removed_legs = []
+        snap_reported = set()
+
+        def report_snapshot(snap):
+            # As dcnm_intf_pvlan_vpc_verify does: name the read that could not be made authoritative (stage, serial, controlled reason),
+            # once per peer and cause, next to the general refusal it explains. Nothing here changes what is refused.
+            for cause in snap["causes"]:
+                if (snap["serial"], cause) not in snap_reported:
+                    snap_reported.add((snap["serial"], cause))
+                    problems.append((name, snap["serial"], cause))
+
         if creates:
             parent_known = [h for snap in snaps for h in snap["summary"]["vpc"]]
             if parent_known:
@@ -9117,6 +9237,7 @@ class DcnmIntf:
                 problems += [(name, snap["serial"], m) for m in self.dcnm_intf_pvlan_vpc_absent_problems(snap, name, leg["po_name"])]
                 problems += [(leg["member"], snap["serial"], m) for m in
                              self.dcnm_intf_pvlan_vpc_member_baseline(snap, leg["member"], new_nv.get("PVLAN_MODE"))]
+                report_snapshot(snap)
         else:
             problems += [(name, sno, m) for m in self.dcnm_intf_pvlan_vpc_parent_problems(name, snaps, have_policy, have_nv)]
             for leg, snap in zip(legs, snaps):
@@ -9136,6 +9257,10 @@ class DcnmIntf:
                 expected_member = pvlan_vpc_leg_models(have_nv, leg["index"], name, self.dcnm_intf_pvlan_vpc_nv(snap["member"]), True)[1][1]
                 problems += [(name, snap["serial"], m) for m in
                              self.dcnm_intf_pvlan_vpc_present_problems(snap, name, leg["po_name"], leg["member"], expected, expected_member)]
+            if any(leg["joining"] for leg in legs):
+                # A member joins: every peer's read (joining or kept) gates the invocation, so every unreadable one is named.
+                for snap in snaps:
+                    report_snapshot(snap)
             removed_legs, removed_problems = self.dcnm_intf_pvlan_vpc_register_removed(name, sno, legs, result, have_nv, deploy)
             problems += removed_problems
         if problems:
