@@ -1,0 +1,69 @@
+# Phase 0B — first registry slice (3 bindings). Offline, design-only. No engine, no live.
+# Keyed by (parent_template, parent_nvpair). mechanism vocabulary: ledger inline_passthrough -> passthrough.
+# NOTE: enum values "on"/"off" are quoted — in YAML 1.1 bare on/off parse as booleans.
+- parent_template: int_access_host
+  parent_nvpair: flowcontrolReceive
+  profile_key: flowcontrol_receive
+  applicable_interface_type: eth
+  applicable_mode: access
+  type: enum
+  reset_wire: "off"          # measured live: W-E1 f, 2026-09-22
+  valid_values: ["on", "off"]
+  default_template: "off"          # template default; NEVER emitted when the user omits the field
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []                 # inline CLI on the parent; no child PTI
+  evidence_ref: "int_access_host.template#L513"
+
+- parent_template: int_trunk_host
+  parent_nvpair: flowcontrolReceive
+  reset_wire: "off"
+  profile_key: flowcontrol_receive
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: enum
+  valid_values: ["on", "off"]
+  default_template: "off"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []
+  evidence_ref: "int_trunk_host.template#L586"
+
+- parent_template: int_fabric_loopback_11_1
+  parent_nvpair: ENABLE_OSPF_AUTH_MESSAGE_DIGEST
+  profile_key: enable_ospf_auth_message_digest
+  applicable_interface_type: lo
+  applicable_mode: fabric
+  type: boolean
+  default_template: false          # native boolean; NEVER emitted when omitted
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: child_pti
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  evidence_ref: "int_fabric_loopback_11_1.template#L453"
+  effect_rules:
+    - predicate: value_true_no_effective_keychain
+      ndfc_effect: create
+      child_template: ospf_interface_auth_message_digest_11_1
+      relationship: base
+      phase: current
+      evidence_ref: "int_fabric_loopback_11_1.template#L453"
+    - predicate: value_false
+      ndfc_effect: delete
+      child_template: ospf_interface_auth_message_digest_11_1
+      relationship: base
+      phase: current
+      evidence_ref: "int_fabric_loopback_11_1.template#L456"

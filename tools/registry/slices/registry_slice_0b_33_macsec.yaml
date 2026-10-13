@@ -1,0 +1,243 @@
+# WP98 — MACSEC. Cuatro filas, todas en int_routed_host: es el unico padre que las declara.
+#
+#     ENABLE_MACSEC_INTERFACE_POLICY   boolean, defaultValue=false
+#     MACSEC_KEY_CHAIN_NAME            string 1..64   IsShow + IsMandatory ==true
+#     MACSEC_POLICY_NAME               string 1..64   IsShow + IsMandatory ==true
+#     MACSEC_FALLBACK_KEY_CHAIN_NAME   string 1..64   IsShow ==true, IsMandatory=false
+#
+# MEDIDO CONTRA LOS CUERPOS QUE EL CONTROLADOR CORRE HOY:
+#     int_routed_host.template@65426107b3d1cdcf
+#     macsec_fallback_interface.template@8dd97793d5056594   (el hijo)
+#
+# LOS CUATRO CAMPOS SON NOMBRES, NO SECRETOS
+#   Son punteros a una keychain y a una policy que viven en el switch. El valor que se transporta
+#   es un nombre, asi que `no_log: false` en los cuatro: marcarlos no_log haria que Ansible
+#   scrubbeara por coincidencia de cadena el nombre de la keychain en TODA la salida, corrompiendo
+#   texto no relacionado sin proteger nada -- el mismo razonamiento por el que OSPF_AUTH_KEY_ID no
+#   es no_log.
+#
+#   El material de clave vive en la keychain, que NO la crea este modulo.
+#
+# EL HIJO TIENE DOS RAMAS, Y UNA SOLA CORRIDA SOLO EJERCITA UNA
+#     if ($$FALLBACK_KEY_CHAIN_NAME$$ != "") {
+#       macsec keychain $$KEY_CHAIN_NAME$$ policy $$POLICY_NAME$$ fallback-keychain $$FALLBACK...$$
+#     } else {
+#       macsec keychain $$KEY_CHAIN_NAME$$ policy $$POLICY_NAME$$
+#     }
+#   Por eso la ronda tiene r1 (con fallback) y r1b (sin fallback).
+#
+# LOS NOMBRES DEL PADRE Y DEL HIJO NO COINCIDEN -- misma forma que IPv6_LINK_LOCAL
+#     padre  MACSEC_KEY_CHAIN_NAME           ->  hijo  KEY_CHAIN_NAME
+#     padre  MACSEC_POLICY_NAME              ->  hijo  POLICY_NAME
+#     padre  MACSEC_FALLBACK_KEY_CHAIN_NAME  ->  hijo  FALLBACK_KEY_CHAIN_NAME
+#   El padre traduce al llamar al hijo (int_routed_host:1217-1225). Estas filas llevan la forma
+#   del PADRE, que es donde el modulo escribe. La del hijo es la que se ve al leer el CLI y es la
+#   equivocada aqui.
+#
+# LA REGLA DEL TEMPLATE, GRATIS PARA LA NEGATIVA
+#     "MACsec keychain and policy are required when MACsec interface policy is enabled."
+#   (int_routed_host:928-934, disparada por enableMacsecInterfacePolicy=="true" y keychain o
+#   policy vacios). Forma de HSRP: un habilitador y campos que cuelgan de el por IsShow.
+#
+# =====================================================================================
+# LO QUE LA SONDA MIDIO ANTES DE ESCRIBIR ESTO (FAB4, L1-F4, nxos64-cs.10.6.2.F)
+# =====================================================================================
+#
+#   1. `feature macsec` YA ESTABA ENCENDIDA -- `macsec 1 enabled`. A diferencia de eigrp, bfd,
+#      hsrp y pim, no hubo que activarla. FAB1 la lee `disabled`, que es otra imagen.
+#
+#   2. EL CLI EXISTE Y FUNCIONA. La linea
+#          macsec keychain WP98-KC-NO-EXISTE policy system-default-macsec-policy
+#      aterrizo en Ethernet1/10. Contrasta con dampening, cuyo CLI no existe en la plataforma.
+#
+#   3. LA POLICY NO HAY QUE CREARLA: `show macsec policy` lista
+#      `system-default-macsec-policy` (GCM-AES-XPN-256). La KEYCHAIN si: el switch tiene CERO.
+#      Medido CONTANDO, no listando -- `show running-config | include "^key chain" | count` --
+#      porque una linea `key chain X` menciona `key` y la regla del proyecto es omitirla entera.
+#
+#   4. ASIMETRIA: NX-OS VALIDA LA POLICY Y NO LA KEYCHAIN.
+#
+#      La sonda midio que una KEYCHAIN inexistente se acepta y se aplica -- la interfaz queda con
+#      una referencia colgante y nada avisa. De ahi escribi aqui que "ni NDFC ni NX-OS comprueban
+#      que exista", y eso GENERALIZABA MAL: la etapa r4 de la ronda mando un POLICY inexistente y
+#      el deploy fallo con 500:
+#
+#          ERROR: internal error: Failed to find policy WP98-POL-R4
+#
+#      Asi que el equipo SI comprueba la policy, ruidosamente, y NO comprueba la keychain. Esa
+#      asimetria es el hallazgo del lote y salio de un fallo de la propia etapa, no de un diseno
+#      previo. Ver phase44.
+#
+#      CONSECUENCIA PARA EL ALCANCE DE ESTE LOTE: el CLI aterriza con o sin keychain, asi que los
+#      cuatro bindings se pueden validar end-to-end sin montar material de clave. Lo que NO se
+#      valida asi es que macsec establezca sesion, que es estado operacional y no transporte.
+#
+# NO SON NATIVOS
+#   `enable_macsec_interface_policy`, `macsec_key_chain_name`, `macsec_policy_name` y
+#   `macsec_fallback_key_chain_name` dan 0 usos en dcnm_interface.py. Las cuatro grafias de los
+#   nvPairs, tambien 0.
+#
+# TIPOS: boolean y string, los dos que el registry ya conoce. Sin decision de tipo, a diferencia
+#   de `long` en PIM_DR_PRIORITY y `ipV6Address` en IPv6_LINK_LOCAL.
+#
+# RETIRADA: MEDIDA. Ningun padre llama deleteChildTemplate para este hijo, y ya se sabia que eso
+#   no predice residuo -- ARP y PIM lo midieron en contra. Aqui se midio en vivo, no se predijo.
+#
+# =====================================================================================
+# LO QUE MIDIO PR725-MACSEC-ALL-001 (BETA_EIGRP / L1-F4 / Ethernet1/64, 2026-09-29)
+# =====================================================================================
+#
+#   EL CAMINO PUBLICO SI EXPRESA EL CLEAR, pese a `min_length: 1`.
+#   `gie_validate_binding_value` devuelve temprano para `""` en un binding string PLANO
+#   (sin `valid_values`) en AMBAS direcciones, ANTES de llegar al control de longitud --
+#   exencion revisada en `gie_engine.py:380`, precedente ACL_FILTER. Asi que NO hizo falta
+#   ninguna sonda guardada ni otro cliente: los cuatro resets viajaron por el modulo.
+#   Verificado offline contra el motor instalado y despues en vivo.
+#
+#   EL ACOPLAMIENTO LO IMPONE EL PRODUCTO, y esta MEDIDO, no leido de la plantilla.
+#   Control negativo en vivo, desde compuerta ENCENDIDA con keychain y policy puestas:
+#       keychain -> ""  con la compuerta en true  ==>  RECHAZADO por el controlador
+#           "Template [int_routed_host] - Validation failed for following fields:
+#            [macsecKeyChainName]"
+#       policy   -> ""  con la compuerta en true  ==>  RECHAZADO, [macsecPolicyName]
+#   Los dos con HTTP 207 por item, `changed=false`, y una lectura FRESCA posterior
+#   IDENTICA a la previa: rechazo SIN mutacion. Por eso la retirada de la compuerta y de
+#   los dos mandatorios es CONJUNTA -- imposicion del producto, no eleccion del ingeniero.
+#
+#   LA UNICA RETIRADA INDEPENDIENTE QUE ESTE CONJUNTO ADMITE es la del fallback, porque es
+#   el unico IsShow que NO es IsMandatory. Se midio sola, en `r1b`, y ademas ejercita la
+#   rama B del hijo: misma transicion, dos resultados.
+#
+#   LO QUE **NO** SE MIDIO, y por tanto no se afirma: que keychain y policy pudieran
+#   retirarse POR SEPARADO. No pueden mientras la compuerta este encendida, y con ella
+#   apagada se van en la misma peticion. Es COBERTURA COORDINADA para esas dos y para la
+#   compuerta; INDEPENDIENTE solo para el fallback.
+#
+#   TAMPOCO SE AFIRMA NADA DEL PLANO OPERATIVO: que la linea CLI entre y salga no prueba
+#   sesion MACsec, MKA ni trafico cifrado, y con la keychain ausente casi con certeza no
+#   hay sesion. El alcance medido es configuracion y retirada.
+
+shared_effects: []
+
+bindings:
+
+  - parent_template: int_routed_host
+    parent_nvpair: macsecInterfacePolicy
+    profile_key: enable_macsec_interface_policy
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # PR725-MACSEC-ALL-001 rM: medido en vivo 2026-09-29 sobre Ethernet1/64 de
+    # BETA_EIGRP/L1-F4. Clear explicito por el camino publico, `false` nativo.
+    # READBACK: macsecInterfacePolicy `true` -> `false`.
+    # EQUIPO: la linea `macsec keychain ... policy ...` del hijo estaba presente antes
+    # y AUSENTE despues; estrofa sin lineas no explicadas; contexto base intacto
+    # (`no switchport`, `mtu 9216`, `ip address <lab-ip>/24`, `no shutdown`).
+    # Rerun identico: changed=false, 0 mutaciones, 0 pendientes de este sujeto.
+    # COORDINADO, no independiente: la retirada viajo en la MISMA peticion que la de
+    # keychain y policy, porque el template los exige mientras la compuerta este
+    # encendida. Control negativo en vivo: los dos rechazados por nombre de campo,
+    # sin mutacion. Imposicion del producto, registrada como tal.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1217"
+
+  - parent_template: int_routed_host
+    parent_nvpair: macsecKeyChainName
+    profile_key: macsec_key_chain_name
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    # PR725-MACSEC-ALL-001 rM: medido en vivo 2026-09-29 sobre Ethernet1/64 de
+    # BETA_EIGRP/L1-F4. Clear explicito por el camino publico -- `""` lo acepta el
+    # contrato, ver `gie_engine.py:380`, pese al `min_length: 1` de abajo.
+    # READBACK: macsecKeyChainName `MACSEC64KC` -> `""`.
+    # EQUIPO: la linea del hijo desaparecio entera; contexto base intacto; sin lineas
+    # no explicadas. Rerun identico: 0 mutaciones, 0 pendientes de este sujeto.
+    # COORDINADO: no se puede retirar con la compuerta encendida -- el controlador lo
+    # RECHAZA por nombre ("Validation failed for following fields: [macsecKeyChainName]")
+    # sin mutar nada. NO se afirma retirada independiente de este campo.
+    reset_wire: ''
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L107"
+
+  - parent_template: int_routed_host
+    parent_nvpair: macsecPolicyName
+    profile_key: macsec_policy_name
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    # PR725-MACSEC-ALL-001 rM: medido en vivo 2026-09-29 sobre Ethernet1/64 de
+    # BETA_EIGRP/L1-F4. Clear explicito por el camino publico, misma exencion de `""`.
+    # READBACK: macsecPolicyName `MACSEC64POL` -> `""`.
+    # EQUIPO: la linea del hijo desaparecio entera; contexto base intacto; sin lineas
+    # no explicadas. Rerun identico: 0 mutaciones, 0 pendientes de este sujeto.
+    # COORDINADO: con la compuerta encendida el controlador lo RECHAZA por nombre
+    # ("Validation failed for following fields: [macsecPolicyName]") sin mutar nada.
+    # NO se afirma retirada independiente de este campo.
+    # ASIMETRIA YA CONOCIDA, y sigue valiendo: NX-OS VALIDA la policy y NO la keychain.
+    # Una policy inexistente tumba el deploy con 500; una keychain inexistente se acepta.
+    reset_wire: ''
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L113"
+
+  - parent_template: int_routed_host
+    parent_nvpair: macsecFallbackKeyChainName
+    profile_key: macsec_fallback_key_chain_name
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    # PR725-MACSEC-ALL-001 r1b: medido en vivo 2026-09-29 sobre Ethernet1/64 de
+    # BETA_EIGRP/L1-F4. **RETIRADA INDEPENDIENTE**, y la UNICA de las cuatro que este
+    # conjunto admite: es el unico IsShow que NO es IsMandatory, asi que se retira con
+    # la compuerta ENCENDIDA y con keychain y policy INTACTAS.
+    # READBACK: macsecFallbackKeyChainName `MACSEC64FBKC` -> `""`, con
+    # macsecInterfacePolicy=`true`, keychain y policy sin tocar.
+    # EQUIPO: el hijo cambio de rama, no de presencia. Linea COMPLETA antes
+    #     macsec keychain MACSEC64KC policy MACSEC64POL fallback-keychain MACSEC64FBKC
+    # linea COMPLETA despues
+    #     macsec keychain MACSEC64KC policy MACSEC64POL
+    # que es PREFIJO EXACTO de la anterior: adjudicado por linea completa, nunca por
+    # subcadena, o la rama A habria puntuado como rama B.
+    # Rerun identico: changed=false, 0 mutaciones, 0 pendientes de este sujeto.
+    reset_wire: ''
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L119"

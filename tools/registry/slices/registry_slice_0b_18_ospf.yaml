@@ -1,0 +1,177 @@
+# WP98 — OSPF on int_routed_host. VERTICAL SLICE: the four bindings needed to exercise
+# child_pti on a ROUTED parent for the first time.
+#
+# WHY FOUR AND NOT ONE
+#   Every OSPF field on this template is gated IsShow="ENABLE_OSPF==true", so no single
+#   field can be exercised alone. The smallest thing that produces observable CLI is the
+#   gate, the process tag, the area, and one value field. OSPF_COST is that value field:
+#   an integer with unambiguous CLI (`ip ospf cost N`), no secret, and no dependency on an
+#   adjacency actually forming.
+#
+# WHY THIS IS NOT YET THE OTHER 52
+#   The template creates a child per field and NEVER deletes one. `deleteChildTemplate`
+#   exists and is called three times -- twice for ip-redirects, never for OSPF. The only
+#   thing that clears an OSPF child is delete(), which drops every PTI on the interface.
+#
+#   So `removal_semantics` is "unresolved" on all four ON PURPOSE. Reading the template
+#   tells us what setting a value creates; it does not tell us what clearing one does, and
+#   this project has been burned before by treating a template reading as a measurement.
+#   The slice includes a removal step precisely to settle it.
+#
+# WHAT THE TEMPLATE ITSELF SETTLES
+#   OSPF_TAG and OSPF_AREA_ID carry IsMandatory="ENABLE_OSPF==true", so required_when_gate
+#   is the template's declaration and not our judgement call. Both feed the SAME base child
+#   (ospf_interface_11_1), which is why they are a shared effect with the gate rather than
+#   three independent bindings.
+#
+#   The gate uses the `== true` form, which per the 17-nvPair rule does not suffer the
+#   "absent reads as non-empty" failure that `!= ""` mandatory rules do.
+#
+#
+# MECHANISM IS passthrough, NOT child_pti -- corrected after the tests rejected it.
+#   The phase-0 ledger predicted child_pti for all 56 OSPF fields and I copied that. It is
+#   wrong, and test_delegation_to_a_child_template_does_not_make_it_child_pti exists to say
+#   so: delegating to a child template inside NDFC is not what child_pti marks in this table.
+#   child_pti marks a binding that owns a dedicated compat path -- the fabric-loopback OSPF-MD
+#   trio, with its own HAVE reconciliation. Nothing here has one.
+#
+#   The consequence of getting it wrong is not cosmetic: gie_guarded_keys collects only
+#   passthrough keys, so a mislabelled binding is routed AROUND the generic invalid-parent
+#   guard. The four routed bindings already in the table (DISABLE_LLDP, DISABLE_BFD_ECHO and
+#   friends) also delegate to children and are all passthrough. These follow them.
+#
+# OSPF_TAG IS DELIBERATELY NOT 'UNDERLAY'
+#   The fabric runs its underlay in a process NDFC manages. A routed host port peering with
+#   an external neighbour must not join it. The lab uses WP98.
+
+shared_effects:
+  - effect_id: ospf_base@int_routed_host
+    parent_template: int_routed_host
+    child_template: ospf_interface_11_1
+    gate_nvpair: ENABLE_OSPF
+    predicate: gate_true
+    ndfc_effect: create_or_update
+    relationship: base
+    phase: current
+    removal_semantics: unresolved
+    required_when_gate:
+      - OSPF_TAG
+      - OSPF_AREA_ID
+    value_bindings:
+      - source_parent_nvpair: ospfTag
+        target_child_nvpair: OSPF_TAG
+        transform: identity
+      - source_parent_nvpair: OSPF_AREA_ID
+        target_child_nvpair: OSPF_AREA_ID
+        transform: identity
+    evidence_ref: int_routed_host.template#L1454
+
+bindings:
+  - parent_template: int_routed_host
+    parent_nvpair: ospf
+    profile_key: enable_ospf
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template#L220
+    effect_id: ospf_base@int_routed_host
+    effect_role: gate
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfTag
+    profile_key: ospf_tag
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: unverified
+    min_length: 1
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template#L225
+    effect_id: ospf_base@int_routed_host
+    effect_role: value_source
+    required_when_gate: true
+
+  - parent_template: int_routed_host
+    parent_nvpair: OSPF_AREA_ID
+    profile_key: ospf_area_id
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: case_irrelevant
+    reset_wire: '0.0.0.0'
+    min_length: 1
+    max_length: 15
+    default_template: 0.0.0.0
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template#L231
+    effect_id: ospf_base@int_routed_host
+    effect_role: value_source
+    required_when_gate: true
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfCost
+    profile_key: ospf_cost
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    # G37 P2-ospfcost-probe: MEDIDO EN VIVO en leaf-A Ethernet1/20, 2026-09-24, NDFC 12.6.0.267 /
+    # NX-OS 10.5(5). El entero publico rechaza "" antes de construir peticion, asi que el valor de
+    # alambre se midio con un POST raw de bulk modify preservante (array de 1 DTO, 70 nvPairs del
+    # readback fresco, solo este campo a ""), respuesta 207 Multi-Status con un unico SUCCESS.
+    #
+    # LA REPRESENTACION DEL READBACK ES STRING VACIO ("42" -> ""), no ausente ni null ni un
+    # default materializado. En el equipo desaparecio `ip ospf cost 42` y SOBREVIVIO
+    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, no se
+    # apago la feature para retirar el valor. Todos los demas nvPairs identicos, In-Sync.
+    #
+    # ESTO RESUELVE removal_semantics PARA ESTA FILA. El template crea un hijo por campo y nunca
+    # llama deleteChildTemplate para OSPF, que es la razon registrada de "unresolved"; medido,
+    # limpiar el nvPair del padre a "" SI retira la linea del hijo.
+    reset_wire: ""
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template#L273
+    effect_rules:
+      - predicate: value_present
+        ndfc_effect: create_or_update
+        child_template: ospf_interface_cost_11_1
+        value_bindings:
+          - source_parent_nvpair: ospfCost
+            target_child_nvpair: OSPF_COST
+            transform: identity
+        relationship: base
+        phase: current
+        evidence_ref: int_routed_host.template#L1363

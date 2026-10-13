@@ -1,0 +1,65 @@
+# CANDIDATE — READY GROUP. Parallel line WP98-GIE-PASSTHROUGH-PARALLEL-001.
+# VALIDATED_AGAINST_SNAPSHOT — REVALIDATION_REQUIRED_BEFORE_INTEGRATION
+#
+# Group: READY (no DSL dependency). 2 of the 9 integrable candidates.
+# GUARD_MODE carries NO IsShow condition on either parent — verified in the template DSL,
+# not assumed. It is an unconditional standalone CLI command on the parent.
+#
+# mechanism: passthrough, effect_rules: []. Offline, design-only. No engine, no live.
+#
+# applicable_interface_type/mode are the module's literal argspec values, inverted from
+# pol_types[12] (dcnm_interface.py#L2180-2203):
+#   int_trunk_host = eth/trunk   int_port_channel_trunk_host = pc/trunk
+# argspec choices: type #L101, pc mode #L117, eth mode #L564.
+#
+# GUARD_MODE is one of the six mixed-mechanism names: int_vpc_trunk_host::GUARD_MODE is
+# child_pti in the ledger and is deliberately NOT included here.
+#
+# CORRECCION (slice 0b_15): la frase de arriba usa `child_pti` en el sentido del TEMPLATE --
+# "el padre reparte el valor a un hijo" -- que es cierto para vPC. Pero `mechanism` en el
+# motor significa otra cosa: quien es dueño de la validacion, del guardia de parent invalido,
+# del prof_spec generico, del carry-forward y de la conversion a forma de cable. vPC no tiene
+# maquinaria propia para ninguna de esas, asi que sus bindings se registraron como
+# `passthrough`, igual que int_port_channel_trunk_host::DISABLE_LLDP, que tambien delega.
+# Verificado en vivo antes de registrar: ver registry_slice_0b_15.yaml.
+#
+# YAML 1.1: bare no/on/off/yes parse as booleans -> every enum value is quoted.
+# default_template is template metadata ONLY; NEVER emitted when the user omits the field.
+
+- parent_template: int_trunk_host
+  parent_nvpair: GUARD_MODE
+  reset_wire: "no"
+  profile_key: guard_mode
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: enum
+  valid_values: ["root", "none", "loop", "no"]
+  default_template: "no"           # decl int_trunk_host.template#L45 — no IsShow
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []                 # inline CLI on the parent; no child PTI
+  evidence_ref: "int_trunk_host.template#L603"
+
+- parent_template: int_port_channel_trunk_host
+  parent_nvpair: GUARD_MODE
+  reset_wire: "no"   # G25 B1: medido en vivo, apply+clear en Port-channel302
+  profile_key: guard_mode
+  applicable_interface_type: pc
+  applicable_mode: trunk
+  type: enum
+  valid_values: ["root", "none", "loop", "no"]
+  default_template: "no"           # decl int_port_channel_trunk_host.template#L50 — no IsShow
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []
+  evidence_ref: "int_port_channel_trunk_host.template#L620"
