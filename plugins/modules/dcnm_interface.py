@@ -10229,33 +10229,75 @@ class DcnmIntf:
                 + "No further deployment was sent.", True)
         return benign
 
+    def dcnm_intf_pvlan_verify_rounds(self, targets):
+        """R2: the reads of the non-vPC post-deploy verification, planned per switch and poll round.
+
+        Each round reads the summary of every switch that still has an unconverged target ONCE and judges all of its targets on that same
+        answer (identity by serial and interface; a missing, duplicated or rejected answer proves nothing). At most 6 rounds and one 5 s
+        wait between rounds, so every target keeps the 6 polls it had and the total wait stays bounded. After the rounds, every switch with
+        a converged target gets ONE forced bulk refresh, and the detail of each of its converged targets is taken from that read (or, when
+        the bulk read fails, by the existing per-interface fallback of dcnm_intf_get_intf_info).
+        Returns ({key: last status}, {key: detail}) for this call only: nothing is kept for another phase or invocation, and nothing read
+        before the deploy is used (the summary is always read and the bulk always refreshed here)."""
+        by_serial, seen = {}, set()
+        for target in targets:
+            key = (target["sno"], target["name"].lower())
+            if key not in seen:
+                seen.add(key)
+                by_serial.setdefault(target["sno"], []).append(target)
+        status = dict((key, None) for key in seen)
+        pending = dict((sno, list(tgts)) for sno, tgts in by_serial.items())
+        for attempt in range(6):
+            for sno in list(pending):
+                if not self.dcnm_intf_get_have_all_with_sno(sno):
+                    continue
+                for target in pending[sno]:
+                    name = target["name"]
+                    entry = [h for h in self.have_all if str(h.get("ifName", "")).lower() == name.lower()
+                             and h.get("serialNo") == sno]
+                    status[(sno, name.lower())] = entry[0].get("complianceStatus") if len(entry) == 1 else None
+                pending[sno] = [t for t in pending[sno] if status[(sno, t["name"].lower())] != "In-Sync"]
+                if not pending[sno]:
+                    del pending[sno]
+            if not pending:
+                break
+            if attempt < 5:
+                time.sleep(5)
+        detail = {}
+        for sno, tgts in by_serial.items():
+            converged = [t for t in tgts if status[(sno, t["name"].lower())] == "In-Sync"]
+            if not converged:
+                continue
+            self.dcnm_intf_bulk_fetch_intf_info(sno, refresh=True)
+            for target in converged:
+                detail[(sno, target["name"].lower())] = self.dcnm_intf_get_intf_info(
+                    target["name"], sno, "INTERFACE_PORT_CHANNEL" if target.get("kind") == "po" else "INTERFACE_ETHERNET")
+        return status, detail
+
     def dcnm_intf_pvlan_verify_after_deploy(self, items):
-        """Bounded, non-mutating convergence and intent readback for deployed PVLAN targets."""
+        """Bounded, non-mutating convergence and intent readback for deployed PVLAN targets.
+
+        R2: the non-vPC targets are read per switch and poll round (dcnm_intf_pvlan_verify_rounds), planned when the first of them is
+        reached and kept only for this call; every target is still judged here, in item order, with the same checks and messages. vPC
+        targets keep their own verifier at their own position."""
         pv = self.dcnm_intf_pvlan_items(items)
+        rounds = None
         for it in pv:
             target = self.pvlan_targets[(it["serialNumber"], str(it["ifName"]).lower())]
             if target.get("kind") == "vpc":
                 self.dcnm_intf_pvlan_vpc_verify(target)
                 continue
+            if rounds is None:
+                non_vpc = [self.pvlan_targets[(i["serialNumber"], str(i["ifName"]).lower())] for i in pv]
+                rounds = self.dcnm_intf_pvlan_verify_rounds([t for t in non_vpc if t.get("kind") != "vpc"])
             sno, name = target["sno"], target["name"]
-            status = None
-            for attempt in range(6):
-                if self.dcnm_intf_get_have_all_with_sno(sno):
-                    entry = [h for h in self.have_all if str(h.get("ifName", "")).lower() == name.lower()
-                             and h.get("serialNo") == sno]
-                    status = entry[0].get("complianceStatus") if len(entry) == 1 else None
-                    if status == "In-Sync":
-                        break
-                if attempt < 5:
-                    time.sleep(5)
+            status = rounds[0][(sno, name.lower())]
             if status != "In-Sync":
                 self.module.fail_json(
                     msg="Interface {0} on {1} was deployed but did not reach In-Sync (last status {2}). "
                     "No further deployment was sent.".format(name, sno, status), **self.result
                 )
-            self.dcnm_intf_bulk_fetch_intf_info(sno, refresh=True)
-            detail = self.dcnm_intf_get_intf_info(
-                name, sno, "INTERFACE_PORT_CHANNEL" if target.get("kind") == "po" else "INTERFACE_ETHERNET")
+            detail = rounds[1].get((sno, name.lower()))
             post_policy, post_nv = target["post"]
             if not isinstance(detail, dict) or detail.get("policy") != post_policy:
                 self.module.fail_json(
