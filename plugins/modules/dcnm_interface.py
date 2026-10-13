@@ -10793,6 +10793,20 @@ class DcnmIntf:
             for want_breakout in self.want_breakout:
                 want_intf = want_breakout["interfaces"][0]["ifName"]
                 want_serialnumber = want_breakout["interfaces"][0]["serialNumber"]
+                # We cannot create breakout interfaces on pre-provisioned / unmanageable
+                # devices. Posting a breakout to such a switch returns NDFC 500
+                # "Invalid Interface". Skip them (mirrors the have-side guard above).
+                if want_serialnumber not in self.manageable.values():
+                    self.changed_dict[0]["skipped"].append(
+                        {
+                            "Name": want_intf,
+                            "serialNumber": want_serialnumber,
+                            "Reason": "Switch is in preprovision state or not manageable",
+                        }
+                    )
+                    continue
+                # A skipped switch sends nothing, so it needs no authoritative breakout summary;
+                # a manageable one still does before create / no-op is decided.
                 self.dcnm_intf_require_summary_authority(
                     want_serialnumber, endpoint="breakout"
                 )
