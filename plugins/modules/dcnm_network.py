@@ -3412,15 +3412,14 @@ class DcnmNetwork:
         diff_deploy = self.diff_deploy
         diff_undeploy = self.diff_undeploy
 
+        want_create_names = {net["networkName"] for net in self.want_create}
+
         for have_a in self.have_attach:
             # This block will take care of deleting all the networks that are only present on ND but not on playbook
             # The "if not found" block will go through all attachments under those networks and update them so that
             # they will be detached and also the network name will be added to delete payload.
 
-            found = next(
-                (net for net in self.want_create if net["networkName"] == have_a["networkName"]),
-                None,
-            )
+            found = have_a["networkName"] in want_create_names
 
             to_del = []
             if not found:
@@ -3469,44 +3468,44 @@ class DcnmNetwork:
         diff_attach = self.diff_attach
         diff_deploy = self.diff_deploy
 
+        want_create_names = {net["networkName"] for net in self.want_create}
+        want_attach_by_name = {}
+        for want_a in self.want_attach:
+            want_attach_by_name.setdefault(want_a["networkName"], want_a)
+
         for have_a in self.have_attach:
             r_net_list = []
             h_in_w = False
-            for want_a in self.want_attach:
+            want_a = want_attach_by_name.get(have_a["networkName"])
+            if want_a is not None:
                 # This block will take care of deleting any attachments that are present only on DCNM
                 # but, not on the playbook. In this case, the playbook will have a network and few attaches under it,
                 # but, the attaches may be different to what the ND has for the same network.
-                if have_a["networkName"] == want_a["networkName"]:
-                    h_in_w = True
-                    atch_h = have_a["lanAttachList"]
-                    atch_w = want_a.get("lanAttachList")
+                h_in_w = True
+                atch_h = have_a["lanAttachList"]
+                atch_w = want_a.get("lanAttachList")
 
-                    for a_h in atch_h:
-                        if not a_h["isAttached"]:
-                            continue
-                        a_match = False
+                for a_h in atch_h:
+                    if not a_h["isAttached"]:
+                        continue
+                    a_match = False
 
-                        if atch_w:
-                            for a_w in atch_w:
-                                if a_h["serialNumber"] == a_w["serialNumber"]:
-                                    # Have is already in diff, no need to continue looking for it.
-                                    a_match = True
-                                    break
-                        if not a_match:
-                            del a_h["isAttached"]
-                            a_h.update({"deployment": False})
-                            r_net_list.append(a_h)
-                    break
+                    if atch_w:
+                        for a_w in atch_w:
+                            if a_h["serialNumber"] == a_w["serialNumber"]:
+                                # Have is already in diff, no need to continue looking for it.
+                                a_match = True
+                                break
+                    if not a_match:
+                        del a_h["isAttached"]
+                        a_h.update({"deployment": False})
+                        r_net_list.append(a_h)
 
             if not h_in_w:
                 # This block will take care of deleting all the attachments which are in ND but
                 # are not mentioned in the playbook. The playbook just has the network, but, does not have any attach
                 # under it.
-                found = next(
-                    (net for net in self.want_create if net["networkName"] == have_a["networkName"]),
-                    None,
-                )
-                if found:
+                if have_a["networkName"] in want_create_names:
                     atch_h = have_a["lanAttachList"]
                     for a_h in atch_h:
                         if not a_h["isAttached"]:
